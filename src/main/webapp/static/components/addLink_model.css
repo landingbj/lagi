@@ -1,0 +1,142 @@
+.link-model-form {
+    width: 1000px;
+}
+.link-model-form .btn{
+    margin-top: 0px;
+}
+.link-model-form .left_box, .link-model-form .right_box{
+    display: inline-block;
+    width: 51%;
+    float: left;
+}
+.link-model-form .right_box{
+    width: 48%;
+}
+.link-model-form .form i {
+    font-size: 14px;
+    margin-left: 0;
+}
+.link-model-form .form .linkTest_result{
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+.link-model-form .form span {
+    margin-right: 20px;
+}
+.link-model-form .left_box span, .link-model-form .right_box span{
+    margin-left: 0px;
+}
+.link-model-form .isJumpBox {
+    display: block;
+}
+.link-model-form .form input[type="radio"] {
+    margin-right: 0;
+}
+.link-model-form .outJumpBox {
+    width: 230px;
+    height: 60px;
+    overflow: auto;
+    vertical-align: top;
+    display: inline-block;
+    border: 1px solid #43799B;
+    background-color: #184073;
+}
+.link-model-form .outJumpBox ul {
+    width: 100%;
+}
+.link-model-form .http-type{
+	display: inline-block;
+}
+.link-model-form .isJumpBox.hide, .http-type.hide {
+    display: none;
+}
+.link-model-form .form .usable{
+    margin-bottom:0px;
+}
+.link-model-form .showBox {
+    position: relative;
+    display: inline-block;
+}
+.link-model-form .showBox .blind {
+    background: url(../images/sprites.png) -261px -393px no-repeat;
+}
+.link-model-form .showBox .lighting {
+    background: url(../images/sprites.png) -39px -261px no-repeat;
+}
+.link-model-form .showBox .eyes {
+    position: absolute;
+    top: 0;
+    left: 346px;
+    width: 24px;
+    height: 22px;
+    margin-left: -25px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+.link-model-form .workControl {
+    display: inline-block;
+}
+.link-model-form .right_box span{
+    width: 90px;
+}
+.link-model-form .userGrouppBox {
+    display: inline-block;
+    vertical-align: top;
+    width: 221px;
+    height: 91px;
+    max-height: 140px;
+    overflow: auto;
+    border: 1px solid #43799B;
+    background-color: #184073;
+    padding-top: 10px;
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+.link-model-form .userGroupp .grou {
+    display: inline-block;
+    padding: 0 5px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 4px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 12px;
+    margin-bottom: 6px;
+    margin-left: 4px;
+    color: #fff;
+    padding-right: 17px;
+}
+.link-model-form .form .userGrouppBox em {
+    vertical-align: initial;
+    color: white;
+    margin-right: 0;
+}
+.link-model-form .userGroupp .grou b {
+    font-size: 16px;
+    display: inline-block;
+    cursor: pointer;
+    color: white;
+}
+.link-model-form .btn{
+    margin-top: 0px;
+}
+.link-model-form .linkTest {
+    background-color: #014A97;
+    color: #fff;
+}
+.popup .form .taskSystem.add_lU .head{
+	position: relative;
+}
+.popup .form .taskSystem.add_lU .selText{
+	display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    z-index: 10;
+    opacity: 0;
+}

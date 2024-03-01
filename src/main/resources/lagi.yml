@@ -1,0 +1,98 @@
+system_title: Lagi
+
+LLM:
+  backends:
+    - name: qa-test
+      type: Landing-QA
+      enable: false
+      priority: 1
+      model: qa
+
+    - name: tree-test
+      type: Landing-Tree
+      enable: false
+      priority: 1
+      model: tree
+
+    - name: turing-test
+      type: Turing
+      enable: false
+      priority: 10
+      model: turing
+
+    - name: vicuna-test1
+      type: Vicuna
+      enable: false
+      priority: 100
+      model: /mnt/data/vicuna-13b-v1.5-16k
+      api_address: http://localhost:8090/v1/chat/completions
+
+    - name: gpt-test
+      type: GPT
+      enable: true
+      priority: 1
+      model: gpt-3.5-turbo-1106
+      api_key: your-api-key
+
+    - name: qwen-test
+      type: Qwen
+      enable: false
+      priority: 200
+      model: qwen-turbo
+      api_key: your-api-key
+
+ASR:
+  backends:
+    - name: asr-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+TTS:
+  backends:
+    - name: tts-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+image_generation:
+  backends:
+    - name: image-generation-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+image_captioning:
+  backends:
+    - name: image-captioning-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+image_enhance:
+  backends:
+    - name: image-enhance-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+video_generation:
+  backends:
+    - name: video-generation-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+video_track:
+  backends:
+    - name: video-track-test1
+      type: Landing
+      enable: true
+      priority: 10
+
+video_enhance:
+  backends:
+    - name: video-enhance-test1
+      type: Landing
+      enable: true
+      priority: 10

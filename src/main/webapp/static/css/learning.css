@@ -1,0 +1,677 @@
+html {
+	width: 100%;
+	height: 100%;
+	min-height: 618px;
+	min-width: 1200px;
+	position: relative;
+	z-index: -10;
+}
+
+body {
+	background: #0D204D;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+}
+
+label {
+	color: white;
+}
+
+#url-div,#db-info,#file-upload,#excel-upload {
+	display: none;
+	position: relative;
+	height: 200px;
+}
+
+#excel-upload #columnNames {
+	display: none;
+	margin-top: 1em;
+	margin-left: 1em;
+}
+
+#pairColumnDiv .pairSelectDiv1,#pairColumnDiv .pairSelectDiv2 {
+	display: inline;
+	float: left;
+}
+
+.pairSelectDiv2 {
+	margin-left: 1em;
+}
+
+#uploadTextFile,#uploadExcel,#uploadPairExcel {
+	display: none;
+}
+
+#pair_excel_upload #pairColumnDiv,#pair_excel_upload,#db-url,#tableNames,#fieldNames
+	{
+	display: none;
+}
+
+.pairExcelReadButton {
+	margin-top: 124px;
+}
+
+#pairSheetDiv label,#pairColumnDiv label {
+	margin: 6px 0px;
+}
+
+#pair_excel_upload {
+	position: relative;
+}
+
+#pair_excel_upload .btn_upload,#pair_excel_upload select {
+	margin-bottom: 0px;
+}
+
+#db-url {
+	display: block;
+	margin: 10px 0;
+}
+
+.content {
+	display: none;
+	position: fixed;
+	top: 50%;
+	margin-top: -150px;
+	background: #fff;
+	z-index: 201;
+	left: 50%;
+	margin-left: -150px;
+	border-radius: 5px;
+	padding: 0.5em;
+}
+
+#sheetNames {
+	display: none;
+	margin-top: 1em;
+}
+
+.table100 {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 5px;
+}
+
+.td35 {
+	height: 35px;
+	padding: 2px;
+}
+
+.td25 {
+	height: 25px;
+	padding: 2px;
+}
+
+.td15 {
+	height: 15px;
+	padding: 2px;
+}
+
+.content input,.content select {
+	margin-bottom: 2px;
+}
+
+.content .db_btn {
+	font-size: 14px;
+	color: white;
+	height: 36px;
+	width: 60px;
+	background-color: #2D68EA;
+	border: 0px solid #000000;
+	border-radius: 5px;
+}
+
+.checkbox-grid {
+	padding: 30px;
+}
+
+.checkbox-grid label {
+	width: 200px;
+	display: inline-block;
+}
+
+.required {
+	display: none;
+}
+
+.keyword_div {
+	width: 100%;
+}
+
+.selected_keyword_div {
+	display: inline-block;
+}
+
+.keyword_group {
+	float: left;
+	width: 95%;
+}
+
+.keyword_tag {
+	float: left;
+	width: 5%;
+}
+
+.keyword_tag label {
+	width: 100%;
+	color: #A9A9A9;
+	font-weight: bold;
+}
+
+.keywordGroupDiv {
+	background-color: white;
+	border: 0px solid #000000;
+	border-radius: 3px;
+	margin-bottom: 1em;
+	padding: 0.8em 0.8em;
+}
+
+.checkbox-grid br {
+	display: none;
+}
+
+.option_label {
+	color: #A9A9A9;
+	font-weight: bold;
+}
+
+.no_choice_label {
+	color: #ff8000;
+	font-weight: bold;
+}
+
+.moreLabel {
+	color: white;
+	font-weight: bold;
+	font-size: 16px;
+}
+
+.selected_option {
+	display: inline-block;
+}
+
+.keyword_area .keyword_option {
+	color: black;
+}
+
+.selected_option .keyword {
+	margin: 0 0.2em 0 0;
+}
+
+.keyword_option .keyword {
+	margin: 0 0.2em 0 0;
+	color: white;
+}
+
+.keyword_area label {
+	margin-bottom: 0;
+}
+
+hr {
+	display: lock;
+	margin-top: 0.8em;
+	margin-bottom: 0.5em;
+	margin-left: auto;
+	margin-right: auto;
+	border-style: inset;
+	border-width: 0.5px;
+}
+
+h2 {
+	color: white;
+}
+
+#left,#right {
+	padding-top: 10px;
+}
+
+#left {
+	color: white;
+	font-family: Arial;
+	font-size: 14px;
+	font-weight: normal;
+	line-height: 20px;
+}
+
+.tg td {
+	width: 200px;
+}
+
+.treeDiv {
+	float: left;
+	margin-right: 20px;
+	overflow: auto;
+	width: 300;
+	height: 280;
+}
+
+.keyword {
+	margin-top: 10px;
+}
+
+#selectionTable,#structureTable {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+#progressStatus {
+	display: none;
+	margin-top: 5em;
+	width: 100%;
+	background-color: #ddd;
+}
+
+#progressBar {
+	width: 0%;
+	height: 35px;
+	background-color: #4CAF50;
+	text-align: center;
+	line-height: 32px;
+	color: black;
+}
+
+.keyword_confirm_div {
+	width: 100%;
+	float: left;
+	margin-top: 2em;
+}
+
+.keyword_confirm_label {
+	float: left;
+	margin-left: 30px;
+}
+
+.keyword_advanced_confirm {
+	float: right;
+	margin-right: 30px;
+}
+
+#keyword_confirm_checkbox {
+	float: right;
+}
+
+.keyword_area {
+	display: none;
+}
+
+.btn-div {
+	margin-top: 1em;
+}
+
+.struct_confirm_div {
+	width: 100%;
+	float: left;
+	margin-top: 1em;
+}
+
+.struct_confirm_label {
+	float: left;
+	margin-left: 20px;
+}
+
+.struct_advanced_confirm {
+	float: right;
+	margin-right: 20px;
+}
+
+#struct_confirm_checkbox {
+	float: right;
+}
+
+.singleTree {
+	display: none;
+}
+
+.singleLabel {
+	display: none;
+}
+
+.learn_confirm_label {
+	float: left;
+}
+
+#learn_confirm_checkbox {
+	float: right;
+}
+
+.moreLabel {
+	margin-left: 20px;
+	pointer-events: none;
+}
+
+.lead.title {
+	color: white;
+	font-family: Arial;
+	font-size: 17px;
+}
+
+.btnFinish,.btnAdvanced,#toLearnBtn {
+	font-size: 18px;
+	color: white;
+	height: 40px;
+	width: 108px;
+	background-color: #2D68EA;
+	border: 0px solid #000000;
+	border-radius: 5px;
+}
+
+.learn_buttons {
+	display: none;
+	width: 1080px;
+	margin: 20px auto;
+}
+
+.btnAdvanced {
+	float: right;
+}
+
+.disabledButton {
+	color: lightgray;
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.seach_body {
+	width: 1080px;
+	height: 238px;
+	margin: 20px auto;
+}
+
+.upload_div {
+	display: inline-block;
+	margin-left: 180px;
+}
+
+.unformatted_data_div {
+	float: left;
+	margin-right: 20px;
+}
+
+.formatted_data_div {
+	float: left;
+	margin-right: 20px;
+}
+
+.accurate_data_div {
+	float: left;
+}
+
+.text_data_div {
+	float: left;
+	margin-right: 20px;
+}
+
+.URL_data_div {
+	float: left;
+	margin-right: 20px;
+}
+
+.formatted_Excel_data_div {
+	float: left;
+	margin-right: 20px;
+}
+
+.DB_data_div {
+	float: left;
+	margin-right: 20px;
+}
+
+.accurate_data_div {
+	float: left;
+}
+
+.btnUpload {
+	float: left;
+	text-align: center;
+	width: 200px;
+	height: 198px;
+	background-color: #122D6B;
+	border-radius: 10px;
+	cursor: pointer;
+}
+
+.btnUploadText {
+	color: aliceblue;
+	font-size: 16px;
+	margin-top: 40px;
+}
+
+#btn_text {
+	height: 58px;
+	margin-top: 60px;
+}
+
+.text_upload {
+	float: left;
+	text-align: center;
+	margin: 20px;
+	width: 160px;
+	height: 198px;
+}
+
+.URL_upload {
+	float: left;
+	text-align: center;
+	margin: 20px;
+	width: 200px;
+	height: 198px;
+}
+
+.formatted_Excel_upload {
+	float: left;
+	text-align: center;
+	margin: 20px;
+	width: 160px;
+	height: 198px;
+}
+
+.DB_upload {
+	float: left;
+	text-align: center;
+	margin: 20px;
+	width: 160px;
+	height: 198px;
+}
+
+.accurate_Excel_upload {
+	float: left;
+	text-align: center;
+	margin: 20px;
+	width: 160px;
+	height: 198px;
+}
+
+.btn_upload {
+	height: 40px;
+	width: 83px;
+	color: #fff;
+	background-image: url( "../images/browse.png");
+	background-repeat: no-repeat;
+	background-position: 10px, center;
+	background-color: #2D68EA;
+	line-height: 40px;
+	text-align: right;
+	padding: 0px 15px 0px 0px;
+	font-size: 14px;
+	outline: none;
+	cursor: pointer;
+	border: 0px solid #000000;
+	border-radius: 60px;
+}
+
+.uploadFileLabel {
+	display: inline-block;
+}
+
+.uploadSpan {
+	color: white;
+	font-size: 14px;
+	margin-left: 1em;
+	display: inline-block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1;
+}
+
+.uploadSpan {
+	width: 10em;
+	max-width: 10em;
+}
+
+.btnCancel {
+	font-size: 14px;
+	color: white;
+	height: 36px;
+	width: 98px;
+	background-color: #E47482;
+	border: 0px solid #000000;
+	border-radius: 5px;
+}
+
+.textBtnCancel,.excelBtnCancel,.urlBtnCancel,.dbBtnCancel {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+}
+
+.pairBtnCancel {
+	float: left;
+}
+
+.btn_read {
+	display: none;
+	float: left;
+	margin-left: 1em;
+}
+
+#url {
+	width: 20em;
+	padding: 4px 6px;
+	height: 26px;
+	margin-bottom: 0px;
+	margin-right: 1em;
+}
+
+.btn_learn,.returnBtn {
+	font-size: 14px;
+	color: white;
+	height: 36px;
+	width: 98px;
+	border: 0px solid #000000;
+	border-radius: 5px;
+}
+
+.btn_learn {
+	background-color: #2D68EA;
+	margin-left: 1em;
+}
+
+.returnBtn {
+	background-color: #E47482;
+}
+
+.btnUploadTitleDiv {
+	height: 20px;
+	margin-bottom: 20px;
+}
+
+.btnUploadTitle {
+	color: aliceblue;
+	font-size: 16px;
+	width: 200px;
+	float: left;
+}
+
+.formatedTitle,.pairedDataTitle {
+	margin-left: 240px;
+}
+
+.currentDataSource {
+	display: none;
+	margin-left: 200px;
+}
+/*-----------------------------------------------*/
+.learn_confirm_div {
+	width: 1050px;
+	height: 2em;
+	margin: 3em auto 1em;
+}
+
+.learn_confirm_div label {
+	font-size: 16px;
+}
+
+.learn_advanced_confirm {
+	float: right;
+}
+
+.head {
+	width: 990px;
+	margin: 0 auto 2em;
+}
+
+.head label {
+	display: inline;
+}
+
+.head select {
+	margin-bottom: 0;
+}
+
+.main {
+	background: #112D6C;
+	width: 1050px;
+	margin: 1em auto;
+	height: 41em;
+	padding-top: 2em;
+}
+
+.main_list {
+	background: #11224E;
+	overflow-y: auto;
+	height: 32em;
+	width: 990px;
+	margin: 0 auto;
+}
+
+.main_list h2 {
+	margin-left: 1em;
+}
+
+.entry_row {
+	display: inline-block;
+	margin-bottom: 1em;
+}
+
+.entry_row .entry {
+	margin-right: 2em;
+}
+
+#nodesSection,#hybridsSection,#edgesSection {
+	width: 950px;
+	margin-left: 1em;
+}
+
+.btn_div {
+	width: 990px;
+	margin: 1em auto 2em;
+}
+
+#categorySelect {
+	margin-left: 1em;
+}
+
+.btn_div button {
+	float: right;
+	margin-left: 2em;
+}
+
+.nodeRow,.hybridRow,.edgesSection {
+	width: 160px;
+	margin-bottom: 0;
+}

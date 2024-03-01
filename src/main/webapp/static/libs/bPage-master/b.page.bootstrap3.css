@@ -1,0 +1,146 @@
+@CHARSET "UTF-8";
+
+div.bPage {
+	margin: 0px;
+	margin-bottom: 10px;
+	display: block;
+}
+div.bPage li.bPageList {
+	
+}
+div.bPage li.bPageList a {
+	line-height: 20px;
+	height: 20px;
+}
+div.bPage li.bPageList select{
+/* 	margin: 0px; */
+	width: auto !important;
+	vertical-align: middle;
+	height: 20px;
+	line-height: 20px;
+	font-size: 12px;
+	padding: 0px;
+	margin-top: -1px;
+	display: inline-block;
+	/* border: 1px solid #CCCCCC; */
+}
+div.bPage.bPageRight{
+	text-align: right;
+}
+
+
+/**
+ * 分页条样式（基于Bootstrap2的样式进行调整）
+ */
+ /*
+div.bPage {
+	margin: 0px;
+	padding: 0px;
+	height: 24px;
+	line-height: 24px;
+	width: 100%;
+	border-top: 1px solid #DDDDDD;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    display: block;
+}
+*/
+div.bPage ul {
+    display: inline-block;
+    margin-bottom: 0;
+    margin-left: 0;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    padding: 0px;
+   /*  border:1px solid #115bae; */
+}
+div.bPage li{
+	text-align: center;
+	display: inline;
+	box-sizing: border-box;
+}
+div.bPage > ul > li > a {
+	margin: 0px;
+	/* border: 1px solid #dddddd; */
+	border-radius: 0px;
+	padding: 1px 5px;
+	line-height: 20px;
+	box-shadow:         none;
+	-moz-box-shadow:    none;
+	-webkit-box-shadow: none;
+	/* background-color: white; */
+	
+	float: left;
+    text-decoration: none;
+    
+    border-left-width: 0;
+    box-sizing: content-box;
+}
+
+div.bPage li.csFirstPage a,
+div.bPage li.csPreviousPage a,
+div.bPage li.csNextPage a,
+div.bPage li.csLastPage a {
+	width: 30px;
+}
+div.bPage li.csFirstPage a{
+	border-left: 0px;
+}
+div.bPage li.csLastPage a{
+	border-right: 0px;
+}
+div.bPage>ul>li.disabled>a{
+	/* color: #999999; */
+	cursor: default;
+}
+div.bPage>ul>li.disabled>a:hover {
+	color: #fff;
+	background-color:#276fba ;
+}
+div.bPage>ul>li>a:hover {
+	color: #fff; 
+	background-color:#276fba ;
+	border-radius: 4px;
+}
+
+div.bPage>ul>li.pageInfoBox>a {
+	width: 176px;
+	text-align: center;
+	/* padding-left: 4px;
+	padding-right: 4px; */
+}
+
+div.bPage ul > li:first-child > a,
+div.bPage ul > li:first-child > span {
+    /* border-left-width: 1px;
+    -webkit-border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    -webkit-border-top-left-radius: 4px;
+    border-top-left-radius: 4px;
+    -moz-border-radius-bottomleft: 4px;
+    -moz-border-radius-topleft: 4px; */
+}
+div.bPage ul > li:last-child > a,
+div.bPage ul > li:last-child > span {
+    /* -webkit-border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    -webkit-border-top-right-radius: 4px;
+    border-top-right-radius: 4px;
+    -moz-border-radius-bottomright: 4px;
+    -moz-border-radius-topright: 4px; */
+}
+div.bPage ul > .active > a,
+div.bPage ul > .active > span {
+    color: #fff;
+    cursor: default;
+    color: #276fba  ;
+    border-radius: 4px;
+}
+div.bPage a{
+	color:#cbd9ea;
+}

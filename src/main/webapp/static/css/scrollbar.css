@@ -1,0 +1,50 @@
+.mCS-my-theme.mCSB_scrollTools {
+	width: 6px;
+}
+
+.mCSB_inside>.mCSB_container {
+	margin-right: 10px;
+}
+
+.mCS-my-theme.mCSB_scrollTools .mCSB_draggerContainer {
+	background: #142f6a;
+	border-radius: 10px;
+}
+
+.mCS-my-theme.mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
+	background: #4577d4;
+	border-radius: 10px;
+}
+
+.mCS-my-theme.mCSB_scrollTools .mCSB_draggerRail {
+	background: #142f6a;
+	box-shadow: 0 0 30px #5474ff;
+}
+
+.mCS-my-theme.mCSB_scrollTools .mCSB_dragger:hover .mCSB_dragger_bar {
+	background-color: #669cff;
+	background-color: rgba(102, 156, 255, 0.85);
+	filter: "alpha(opacity=85)";
+	-ms-filter: "alpha(opacity=85)";
+}
+
+.mCS-my-theme.mCSB_scrollTools .mCSB_dragger:active .mCSB_dragger_bar,.mCS-my-theme.mCSB_scrollTools .mCSB_dragger.mCSB_dragger_onDrag .mCSB_dragger_bar
+	{
+	background-color: #669cff;
+	background-color: rgba(102, 156, 255, 0.9);
+	filter: "alpha(opacity=90)";
+	-ms-filter: "alpha(opacity=90)";
+}
+
+.mCS-my-theme.mCSB_scrollTools.mCSB_scrollTools_horizontal {
+	height: 6px;
+}
+
+.mCS-my-theme.mCSB_scrollTools.mCSB_scrollTools_horizontal .mCSB_dragger .mCSB_dragger_bar
+	{
+	margin: 0 auto;
+}
+
+.mCSB_container_wrapper {
+	margin-bottom: 10px;
+}

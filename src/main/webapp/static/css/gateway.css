@@ -1,0 +1,103 @@
+body {
+	height: 100vh;
+	margin: 0;
+}
+
+.titleDiv {
+	background: #112D6C;
+	height: 5em;
+}
+
+.mainDiv {
+	background: #0D1F4D;
+	height: calc(100% - 5em);
+}
+
+.fileManager {
+	height: 100%;
+}
+
+.fileTree,.fileEditor {
+	height: 90%;
+	float: left;
+}
+
+.fileTree {
+	margin: 2% 0 0 3%;
+	background: #112D6C;
+	width: 15%;
+	color: white;
+}
+
+.fileEditor {
+	width: 75%;
+	margin: 2% 0 0 3%;
+	background: #112D6C;
+}
+
+.title {
+    color: white;
+    padding: 1em 0 0 3%;
+    font-size: 1.5em;
+}
+
+.buttonDiv {
+    height: 2.5em;
+    margin: 1em 0 0 1em;
+}
+
+.editor {
+	width: calc(100% - 2em);
+	height: calc(100% - 7em - 1px);
+	background: #0D1F4D;
+	margin: 1em;
+}
+
+.configContent {
+	border: none;
+	color: white;
+	background: #0D1F4D;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+}
+
+hr {
+	width: calc(100% - 2em);
+}
+
+.btn {
+	color: white;
+	height: 32px;
+	padding-left: 26px;
+	border: 0 solid #000;
+	cursor: pointer;
+}
+
+.saveBtn {
+	display: none;
+}
+
+.btn.editBtn {
+	background: url(../../static/images/edit.png) no-repeat 0 center;
+}
+
+.btn.saveBtn {
+	background: url(../../static/images/save.png) no-repeat 0 center;
+}
+
+.btn.startBtn {
+	background: url(../../static/images/start.png) no-repeat 0 center;
+}
+
+.btn.stopBtn {
+	background: url(../../static/images/stop.png) no-repeat 0 center;
+}
+
+.btn.restartBtn {
+	background: url(../../static/images/restart.png) no-repeat 0 center;
+}
+
+.btn.monitorBtn {
+	background: url(../../static/images/monitor.png) no-repeat 0 center;
+}
