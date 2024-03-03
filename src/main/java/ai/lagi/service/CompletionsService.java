@@ -26,12 +26,7 @@ import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
 import ai.mr.container.FastDirectContainer;
-import ai.mr.mapper.llm.GPTMapper;
-import ai.mr.mapper.llm.QwenMapper;
-import ai.mr.mapper.llm.VicunaMapper;
-import ai.mr.mapper.llm.QaPairMapper;
-import ai.mr.mapper.llm.SimulatingTreeMapper;
-import ai.mr.mapper.llm.TulingMapper;
+import ai.mr.mapper.llm.*;
 import ai.mr.reducer.llm.QaReducer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -120,6 +115,8 @@ public class CompletionsService {
             mapper = new GPTMapper();
         } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_Qwen)) {
             mapper = new QwenMapper();
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
+            mapper = new ErnieMapper();
         }
         return mapper;
     }

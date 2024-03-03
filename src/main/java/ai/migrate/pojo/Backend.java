@@ -8,6 +8,7 @@ public class Backend {
     private String model;
     private String api_address;
     private String api_key;
+    private String secret_key;
 
     public Integer getPriority() {
         return priority;
@@ -63,5 +64,13 @@ public class Backend {
 
     public void setEnable(Boolean enable) {
         this.enable = enable;
+    }
+
+    public String getSecret_key() {
+        return secret_key;
+    }
+
+    public void setSecret_key(String secret_key) {
+        this.secret_key = secret_key;
     }
 }

@@ -41,6 +41,14 @@ LLM:
       model: qwen-turbo
       api_key: your-api-key
 
+    - name: ernie-test
+      type: Ernie
+      enable: false
+      priority: 100
+      model: ERNIE-Bot-turbo
+      api_key: your-api-key
+      secret_key: your-secret-key
+
 ASR:
   backends:
     - name: asr-test1
