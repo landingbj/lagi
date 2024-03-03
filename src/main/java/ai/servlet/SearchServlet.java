@@ -381,8 +381,6 @@ public class SearchServlet extends HttpServlet {
 	}
 	
     private List<ChatResponseWithContext> getResponseList(List<ChatMessage> messages, String category, HttpSession session){ 
-        String questionStr = gson.toJson(messages);
-        
         ChatCompletionRequest request = new ChatCompletionRequest();
         request.setCategory(category);
         request.setMessages(messages);
@@ -396,9 +394,12 @@ public class SearchServlet extends HttpServlet {
             ChatCompletionUtil.setLastMessage(request, prompt);
         }
         ChatCompletionResult result = completionsService.completions(request);
+		if (result == null) {
+			return null;
+		}
         List<ChatResponseWithContext> responseList = new ArrayList<>();
         ChatResponseWithContext chatResponseWithContext = new ChatResponseWithContext();
-        if (indexSearchDataList != null && indexSearchDataList.size() > 0) {
+        if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexSearchData = indexSearchDataList.get(0);
             chatResponseWithContext.setContext(indexSearchData.getText());
             chatResponseWithContext.setCategory(category);

@@ -12,7 +12,7 @@
  */
 
 /**
- * 
+ *
  */
 package ai.lagi.service;
 
@@ -36,6 +36,7 @@ import ai.mr.reducer.llm.QaReducer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
+import ai.utils.SensitiveWordUtil;
 import weixin.tools.TulingThread;
 
 public class CompletionsService {
@@ -96,6 +97,9 @@ public class CompletionsService {
             List<ChatCompletionResult> resultMatrix = (List<ChatCompletionResult>) contain.Init().running();
             if (resultMatrix.get(0) != null) {
                 answer = resultMatrix.get(0);
+                if (SensitiveWordUtil.containSensitiveWord(answer)) {
+                    return null;
+                }
             }
         }
 
