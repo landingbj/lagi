@@ -39,7 +39,9 @@ public class LlmApiServlet extends BaseServlet {
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-        chatCompletionRequest = ChatCompletionUtil.addVectorDBContext(chatCompletionRequest);
+        if (chatCompletionRequest.getCategory() != null) {
+            chatCompletionRequest = ChatCompletionUtil.addVectorDBContext(chatCompletionRequest);
+        }
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         responsePrint(resp, toJson(result));
     }
