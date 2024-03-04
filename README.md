@@ -1,27 +1,27 @@
-简体中文| [English](README_en.md)
+[简体中文](README_zh.md)| English
 
-### **项目简介**
+### **Introduction**
 
-Lagi是由北京联动北方科技有限公司精心打造的一款针对于大模型开源社区的强大力量和企业应用部署之间存在的显著差距而设计的解决方案。它是一款企业级的复合多模态大模型中间件，旨在桥接这一鸿沟，通过提供一个既安全又专业的平台，使得企业能够以低成本、高效率地方式定制并部署大模型。
+Lagi is a solution designed by Beijing Landing Technologies Co.,Ltd. specifically for the significant gap between the powerful forces of the large model open-source community and enterprise application deployment. It is an enterprise-level composite multimodal large model middleware aimed at bridging this gap, by providing a secure and professional platform, enabling enterprises to customize and deploy large models in a low-cost, efficient manner.
 
-### 在线Demo
+### Online Demo
 
-为了让用户能够直观感受到Lagi的强大功能和便捷性，我们提供了一个在线Demo。您可以通过以下链接访问并体验：[https://lagi.saasai.top](https://lagi.saasai.top/)。
+To allow users to intuitively experience the powerful functionality and convenience of Lagi, we offer an online demo. You can visit and experience it through the following link: [https://lagi.saasai.top](https://lagi.saasai.top/).
 
-### 快速开始
+### Quick Start
 
-对于开发者而言，我们提供了简便的方法来编译和运行Lagi应用。您可以选择使用maven命令行工具进行封包，或者通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。请确保您的JDK版本至少满足8的要求。
+For developers, we provide a simple way to compile and run the Lagi application. You can choose to use the Maven command-line tool to package, or run it through mainstream Integrated Development Environments (IDEs) like IntelliJ IDEA. Please ensure your JDK version meets at least the requirements of version 8.
 
-#### 方法一：使用maven命令
+#### Method 1: Using Maven Command
 
-首先，您需要克隆Lagi项目的仓库，并切换到项目目录：
+First, you need to clone the Lagi project repository and switch to the project directory:
 
 ```shell
 git clone https://github.com/landingbj/lagi.git
 cd lagi
 ```
 
-接下来，修改`src/main/resources/lagi.yml`配置文件，将其中的大语言模型API_KEY或SECRET_KEY替换为您自己的密钥，并根据需要将启用的模型的`enable`字段设置为`true`。详细的配置方法可参见[配置文档](docs/config_zh.md)。
+Next, modify the `src/main/resources/lagi.yml` configuration file, replace the large language model API_KEY or SECRET_KEY with your own keys, and set the `enable` field of the model you wish to activate to `true` as needed. Detailed configuration methods can be seen in the [configuration documentation](docs/config_en.md).
 
 ```yaml
 - name: gpt-test
@@ -32,18 +32,18 @@ cd lagi
   api_key: your-apikey
 ```
 
-然后，使用maven命令进行项目封包，封包完成后的war文件将会在`target`目录下生成：
+Then, use the Maven command to package the project, and the packaged war file will be generated in the `target` directory:
 
 ```shell
 mvn package
 ```
 
-最后，将生成的war包部署到Tomcat服务器中。启动Tomcat后，通过浏览器访问对应的端口，即可查看Lagi的具体页面。
+Finally, deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the specific page of Lagi by accessing the corresponding port through a browser.
 
-#### 方法二：使用IDE
+#### Method 2: Using IDE
 
-如果您更习惯使用IDE进行开发，可以直接使用IntelliJ IDEA等主流IDE打开Lagi项目。将项目作为web工程发布到Tomcat服务器中后，就可以通过浏览器访问相应的端口，查看Lagi的界面。
+If you prefer to use an IDE for development, you can directly open the Lagi project with mainstream IDEs like IntelliJ IDEA. After publishing the project as a web project to the Tomcat server, you can view the interface of Lagi by accessing the respective port through a browser.
 
-### API接口
+### API
 
-Lagi项目还提供了多个RESTful API接口，方便用户将AI服务集成到自己的应用中。我们为开发者准备了详尽的[API接口文档](docs/API_zh.md)，您可以参考文档了解如何使用这些API来丰富您的应用功能。
+The Lagi project also provides multiple RESTful API interfaces, facilitating users to integrate AI services into their own applications. We have prepared detailed [API documentation](docs/API_en.md) for developers, which you can refer to understand how to use these APIs to enrich your application features.
