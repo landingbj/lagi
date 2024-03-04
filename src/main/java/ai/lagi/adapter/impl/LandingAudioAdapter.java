@@ -38,7 +38,7 @@ public class LandingAudioAdapter implements IAudioAdapter {
         Text2VoiceEntity text2VoiceEntity = new Text2VoiceEntity();
         text2VoiceEntity.setText(param.getText());
         text2VoiceEntity.setModel("default");
-        text2VoiceEntity.setEmotion("default");
+        text2VoiceEntity.setEmotion(param.getEmotion());
         Object[] params = { gson.toJson(text2VoiceEntity) };
         String[] result = call.callWS(AiServiceInfo.WSVocUrl, "text2Voice", params);
         Response response = gson.fromJson(result[0], Response.class);

@@ -11,6 +11,8 @@ public class TTSRequestParam {
     private Integer speech_rate;
     private Integer pitch_rate;
 
+    private String emotion;
+
     public String getAppkey() {
         return appkey;
     }
@@ -81,5 +83,13 @@ public class TTSRequestParam {
 
     public void setPitch_rate(Integer pitch_rate) {
         this.pitch_rate = pitch_rate;
+    }
+
+    public String getEmotion() {
+        return emotion;
+    }
+
+    public void setEmotion(String emotion) {
+        this.emotion = emotion;
     }
 }

@@ -13,11 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import ai.client.AiServiceCall;
 import ai.client.AiServiceInfo;
 import ai.lagi.service.ImageGenerationService;
-import ai.migrate.pojo.Configuration;
-import ai.migrate.pojo.ImageGenerationRequest;
-import ai.migrate.pojo.ImageGenerationResult;
-import ai.migrate.pojo.Response;
-import ai.migrate.pojo.Txt2imgRequest;
+import ai.migrate.pojo.*;
 import ai.service.pojo.CaptionRequest;
 import ai.service.pojo.EnhanceImageRequest;
 import ai.utils.DownloadUtils;
@@ -72,13 +68,28 @@ public class ApiService {
     public String enhanceImage(String lastImageFile, HttpServletRequest req) throws IOException {
         File file = new File(lastImageFile);
         String imageUrl = FileUploadUtil.enhanceImageUpload(file);
+
+        ServletContext context = req.getServletContext();
+        String rootPath = context.getRealPath("");
+        String filePath = rootPath + "static/img/enhance/";
+        File tempDir = new File( filePath);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+
         EnhanceImageRequest request = new EnhanceImageRequest();
         request.setImageUrl(imageUrl);
         Object[] params = { gson.toJson(request) };
         String[] result = call.callWS(AiServiceInfo.WSImgUrl, "enhanceImage", params);
-        return result[0].replace("data", "enhanceImageUrl");
+        Response response = gson.fromJson(result[0], Response.class);
+        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(response.getData(), "png",filePath);
+
+        JsonObject finalResult = new JsonObject();
+        finalResult.addProperty("enhanceImageUrl", "static/img/enhance/" + whisperResponse1.getMsg());
+        finalResult.addProperty("status", "success");
+        return gson.toJson(finalResult);
     }
-    
+
     public String generateVideoByText(String content, HttpServletRequest req) throws IOException {
         ServletContext context = req.getServletContext();
         String rootPath = context.getRealPath("");
@@ -115,9 +126,20 @@ public class ApiService {
         CaptionRequest request = new CaptionRequest();
         request.setImageUrl(url);
 
+        ServletContext context = req.getServletContext();
+        String rootPath = context.getRealPath("");
+        String filePath = rootPath + "static/img/split/";
+        File tempDir = new File( filePath);
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+
         Object[] params = { gson.toJson(request) };
         String[] result = call.callWS(AiServiceInfo.WSImgUrl, "caption", params);
-        return result[0];
+        ImageToTextResponse response = gson.fromJson(result[0], ImageToTextResponse.class);
+        WhisperResponse whisperResponse = DownloadUtils.downloadFile(response.getSamUrl(), "png", filePath);
+        response.setSamUrl("static/img/split/" + whisperResponse.getMsg());
+        return gson.toJson(response);
     }
     
     public String motInference(String lastVideoFile, HttpServletRequest req) throws IOException {

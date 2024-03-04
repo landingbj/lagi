@@ -87,6 +87,7 @@ public class AudioServlet extends BaseServlet {
         } else {
             TTSRequestParam ttsRequestParam = new TTSRequestParam();
             ttsRequestParam.setText(text2VoiceEntity.getText());
+            ttsRequestParam.setEmotion(text2VoiceEntity.getEmotion());
             TTSResult result = audioService.tts(ttsRequestParam);
 //            String result = audioService.text2Voice(text2VoiceEntity);
             if (result == null || result.getStatus() == LagiGlobal.TTS_STATUS_FAILURE) {
