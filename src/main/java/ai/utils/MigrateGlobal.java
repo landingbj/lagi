@@ -30,13 +30,16 @@ public class MigrateGlobal {
     public static String AI_SERVICE_URL;
     public static String STABLE_DIFFUSION_URL;
     public static String ESRGAN_URL;
+    public static String ADD_INDEXES_URL;
 
     static {
         VICUNA_INDEX_URL = "http://ec2-52-82-51-248.cn-northwest-1.compute.amazonaws.com.cn:8200";
         ADD_DOC_INDEX_URL = VICUNA_INDEX_URL + "/index/add_doc";
         LLMConfig.SEARCH_INDEX_URL = VICUNA_INDEX_URL + "/v2/index/search";
+        ADD_INDEXES_URL = VICUNA_INDEX_URL + "/v2/index/add_indexes";
+
         FILE_PROCESS_URL = "http://ec2-52-82-51-248.cn-northwest-1.compute.amazonaws.com.cn:8200";
-        EXTRACT_CONTENT_URL = FILE_PROCESS_URL + "/file/extract_content";
+        EXTRACT_CONTENT_URL = FILE_PROCESS_URL + "/file/extract_content_with_image";
         EXTRACT_CONTENT_WITHOUT_IMAGE_URL = FILE_PROCESS_URL + "/file/extract_content_without_image";
         ADD_DOCS_CUSTOM_URL = VICUNA_INDEX_URL + "/index/add_docs_custom";
         AI_SERVICE_URL = "http://ai.landingbj.com";

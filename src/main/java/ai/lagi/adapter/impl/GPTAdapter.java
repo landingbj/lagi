@@ -30,6 +30,7 @@ public class GPTAdapter implements ILlmAdapter {
         headers.put("Content-Type", "application/json");
         headers.put("Authorization", "Bearer " + backendConfig.getApi_key());
         String jsonResult = null;
+        request.setCategory(null);
         try {
             jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, request, HTTP_TIMEOUT);
         } catch (IOException e) {

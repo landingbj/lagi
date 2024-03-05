@@ -12,19 +12,15 @@ import java.io.Reader;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import ai.migrate.pojo.*;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -34,10 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import ai.learning.trigger.ArticleTrigger;
 import ai.learning.trigger.ITrigger;
-import ai.migrate.pojo.AddDocsCustomResponse;
-import ai.migrate.pojo.Document;
-import ai.migrate.pojo.ExtractContentResponse;
-import ai.migrate.pojo.Response;
 import ai.migrate.service.FileService;
 import ai.migrate.service.VectorDbService;
 import ai.utils.AiGlobal;
@@ -322,89 +314,57 @@ public class UploadFileServlet extends HttpServlet {
         out.flush();
         out.close();
     }
-    
-    
+
+
     public class AddDocIndex extends Thread {
-        private List<Document> docs;
         private VectorDbService vectorDbService = new VectorDbService();
-        private String extString;
         private File file;
         private String category;
-        private String content;
         private String filename;
-        private String extractFilepath;
-        
+
         public AddDocIndex(File file, String extString, String category, String filename, String content) {
             this.file = file;
             this.category = category;
             this.filename = filename;
-            this.content = content;
-            this.extString = extString;
         }
-        
+
         public void run() {
-            docs = new ArrayList<>();
-            if (".pdf".equals(extString) || ".doc".equals(extString) || ".docx".equals(extString)) {
-                try {
-                    ExtractContentResponse response = fileService.extractContentWithoutImage(file);
-                    docs = response.getData();
-                    extractFilepath = response.getFilepath();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                for (Document doc : docs) {
-                    doc.setCategory(category);
-                    doc.setFilename(filename);
-                    doc.setFilepath(file.getAbsolutePath());
-                }
-            } else {
-                Document doc = new Document();
-                doc.setCategory(category);
-                doc.setFilename(filename);
-                doc.setFilepath(file.getAbsolutePath());
-                doc.setText(content);
-                docs.add(doc);
-            }
+            addDocIndexes();
+        }
+
+        private void addDocIndexes() {
+            Map<String, Object> metadatas = new HashMap<>();
+
+            UUID uuid = UUID.randomUUID();
+            String fileId = uuid.toString().replace("-", "");
+
+            String filepath = file.getAbsolutePath();
+
+            metadatas.put("filename", filename);
+            metadatas.put("category", category);
+            metadatas.put("weight", 1);
+            metadatas.put("filepath", filepath);
+            metadatas.put("file_id", fileId);
+
+            List<FileInfo> fileList = new ArrayList<>();
             try {
-                addDocIndex(docs);
+                ExtractContentResponse response = fileService.extractContent(file);
+                List<Document> docs = response.getData();
+                for (Document doc : docs) {
+                    FileInfo fileInfo = new FileInfo();
+                    fileInfo.setText(doc.getText());
+                    Map<String, Object> tmpMetadatas = new HashMap<>();
+                    for (Map.Entry<String, Object> entry : metadatas.entrySet()) {
+                        tmpMetadatas.put(entry.getKey(), entry.getValue());
+                    }
+                    tmpMetadatas.put("image", doc.getImage());
+                    fileInfo.setMetadatas(tmpMetadatas);
+                    fileList.add(fileInfo);
+                }
+                vectorDbService.addIndexes(fileList);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        
-        private boolean addDocIndex(List<Document> docs) throws IOException {
-            Map<String, String> header = new HashMap<String, String>();
-            header.put("Content-type", "application/json");
-            String result = null;
-            
-            if (".pdf".equals(extString) || ".doc".equals(extString) || ".docx".equals(extString)) {
-                for (int i = 0; i < docs.size(); i ++) {
-                    docs.get(i).setDoc_id(i);
-                }
-                AddDocsCustomResponse addDocsCustomResponse = vectorDbService.addDocsCustom(docs);
-                List<Document> docList = addDocsCustomResponse.getData();
-                Map<Integer, String> docIdMap = new HashMap<>();
-                for (Document doc : docList) {
-                    docIdMap.put(doc.getDoc_id(), doc.getId());
-                }
-                ExtractContentResponse response = fileService.extractContent(extractFilepath);
-                List<Document> updateDocList = response.getData();
-                for (int i = 0; i < updateDocList.size(); i ++) {
-                    updateDocList.get(i).setId(docIdMap.get(i));
-                }
-                result = vectorDbService.updateDocImage(updateDocList);
-            } else {
-                result = vectorDbService.addDocs(docs);
-            }
-            
-            if (result == null) {
-                return false;
-            }
-            Response response = gson.fromJson(result, Response.class);
-            if (response.getStatus().equals("success")) {
-                return true;
-            }
-            return false;
         }
     }
 	

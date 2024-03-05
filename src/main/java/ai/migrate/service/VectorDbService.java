@@ -5,14 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.migrate.pojo.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import ai.migrate.pojo.AddDocsCustomResponse;
-import ai.migrate.pojo.Document;
-import ai.migrate.pojo.IndexSearchRequest;
-import ai.migrate.pojo.LcsResponse;
 import ai.utils.HttpServiceCall;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
@@ -90,6 +87,13 @@ public class VectorDbService {
             }
         }
         return false;
+    }
+
+    public AddDocsCustomResponse addIndexes(List<FileInfo> fileList) throws IOException {
+        Map<String, String> header = new HashMap<String, String>();
+        header.put("Content-type", "application/json");
+        String result = HttpUtil.httpPost(MigrateGlobal.ADD_INDEXES_URL, header, fileList);
+        return gson.fromJson(result, AddDocsCustomResponse.class);
     }
 
     public boolean isValidJson(String json) {
