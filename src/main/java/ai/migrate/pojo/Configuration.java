@@ -2,6 +2,7 @@ package ai.migrate.pojo;
 
 public class Configuration {
     private String system_title;
+    private String default_category;
     private LLM LLM;
     private ASR ASR;
     private TTS TTS;
@@ -90,5 +91,13 @@ public class Configuration {
 
     public void setVideo_enhance(VideoEnhance video_enhance) {
         this.video_enhance = video_enhance;
+    }
+
+    public String getDefault_category() {
+        return default_category;
+    }
+
+    public void setDefault_category(String default_category) {
+        this.default_category = default_category;
     }
 }

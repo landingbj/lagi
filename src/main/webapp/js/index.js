@@ -1,98 +1,65 @@
 window.category = "";
-window.onload = function() {
+window.onload = function () {
     window.category = getCookie("category");
     var categoryTmp = window.category;
-    if(categoryTmp== "" || categoryTmp==undefined){
-       getCategory();
+    if (categoryTmp === "" || categoryTmp === undefined) {
+        getCategory("");
+    } else {
+        getCategory(categoryTmp);
     }
     initHelloPage();
     loadTheme();
-    // loadConversationNav();
     showPromptNav();
-    // loadConversationsView();
 }
 
-function setCookie(cname,cvalue,exdays)
-{
-  var d = new Date();
-  d.setTime(d.getTime()+(exdays*24*60*60*1000));
-  var expires = "expires="+d.toGMTString();
-  console.log("到这里了");
-  document.cookie = "category=" + cvalue + "; " + expires;
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires=" + d.toGMTString();
+    document.cookie = "category=" + cvalue + "; " + expires;
 }
 
-function getCookie(cname)
-{
+function getCookie(cname) {
     console.log(123);
-  var name = cname + "=";
-  var ca = document.cookie.split(';');
-  for(var i=0; i<ca.length; i++) 
-  {
-    var c = ca[i].trim();
-    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
-  }
-  return "";
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+    }
+    return "";
 }
 
 
 function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0,
             v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
 
-function getCategory(){
-	$.ajax({
-		type : "GET",
-		url : "user/getRandomCategory",
-		success : function(res) {
-			var category = '';
-			if (res.status === 'success') {
-				category = res.data;
-			} else {
-			    category = generateUUID().replaceAll("-","");
-			}
-			setCookie("category", category, 180);
-			window.category = category;
-		},
-		error: function(res) {
-			var category = generateUUID().replaceAll("-","");
-			setCookie("category", category, 180);
-			window.category = category;
-		}
-	});
+function getCategory(currentCategory) {
+    $.ajax({
+        type: "GET",
+        url: "user/getRandomCategory?currentCategory=" + currentCategory,
+        success: function (res) {
+            var category = 'temp';
+            if (res.status === 'success') {
+                category = res.data.category;
+                setCookie("category", category, 180);
+            } else {
+                setCookie("category", category, 1);
+            }
+            window.category = category;
+        },
+        error: function (res) {
+            var category = 'temp';
+            setCookie("category", category, 1);
+            window.category = category;
+        }
+    });
 }
-// function checkCookie()
-// {
-//   var username=getCookie("username");
-//   if (username!="")
-//   {
-//     alert("Welcome again " + username);
-//   }
-//   else 
-//   {
-//     username = prompt("Please enter your name:","");
-//     if (username!="" && username!=null)
-//     {
-//       setCookie("username",username,365);
-//     }
-//   }
-// }
-
-// *******************************事件绑定 开始*****************************************************
-// 监听回车按钮 执行查询
-// $(document).keyup(function(event){  
-//     if(event.keyCode ==13){  
-//         query();
-//     }  
-// }); 
-
-// 绑定查询按钮 
-//$('#queryBtn').on("click", function(){
-//    query();
-//});
 
 // *******************************事件绑定 结束*****************************************************
 
@@ -105,13 +72,13 @@ var querying = false;
 // var theme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "light" ;
 var themes = ["light", "dark"];
 var themeIndex = 0;
-var themeHtmls =[
+var themeHtmls = [
     `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
     stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
   </svg>
   Dark mode`,
-  `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
+    `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
     stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="5"></circle>
     <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -129,7 +96,6 @@ var themeHtmls =[
 var queryUrl = "search/questionAnswer";
 
 var channelId = 437;
-
 
 
 // *******************************全局变量 结束*****************************************************
@@ -152,7 +118,7 @@ function changeTheme(el) {
     console.log("theme", themes[themeIndex]);
     chooseTheme();
     // dom 层
-    that.prop('data-theme', themeIndex );
+    that.prop('data-theme', themeIndex);
     that.empty();
     that.append(themeHtmls[themeIndex]);
 }
@@ -173,35 +139,35 @@ function query() {
     let queryString = $('#queryContent').val();
     console.log("queryString", queryString, isBlank(queryString));
     $('#queryContent').val('');
-    if(isBlank(queryString)) {
-        return ;
+    if (isBlank(queryString)) {
+        return;
     }
-    if(querying) {
+    if (querying) {
         console.log("正在查询");
-        return ;
+        return;
     }
     querying = true;
     // 执行访问远程访问，调用 qury 访问
-    if(chatIndex == -1) {
+    if (chatIndex == -1) {
         newChat();
     }
     // 修改按钮 内容为加载中
     disableQueryBtn();
     // 添加chat
-    let answerJq = addOneChat({"question":queryString});
+    let answerJq = addOneChat({"question": queryString});
     // 测试
-sleep(200).then(() => {
-    // 调用接口拿到结果
-    let answer = getAnswer(queryString);
-    // 跟新答案
-    console.log(answerJq);
-    fillAnswer(answerJq, answer)
-    // answerJq.text(answer);
+    sleep(200).then(() => {
+        // 调用接口拿到结果
+        let answer = getAnswer(queryString);
+        // 跟新答案
+        console.log(answerJq);
+        fillAnswer(answerJq, answer)
+        // answerJq.text(answer);
 
-    enableQueryBtn();
-    querying = false;
-})
-    
+        enableQueryBtn();
+        querying = false;
+    })
+
 }
 
 function disableQueryBtn() {
@@ -233,11 +199,11 @@ function getAnswer(question) {
     var result = '';
     var paras = {
         "messages": [
-            {"role":"user", "content": question}
-                    ],
-            "category": window.category,
-            "channelId": channelId
-            // 这里最后不能写死
+            {"role": "user", "content": question}
+        ],
+        "category": window.category,
+        "channelId": channelId
+        // 这里最后不能写死
     };
     console.log("paras", paras);
     $.ajax({
@@ -247,37 +213,36 @@ function getAnswer(question) {
         async: false,
         data: JSON.stringify(paras),
 //        async: false,
-        success: function(json) {
+        success: function (json) {
 //        	defer.resolve(json);
             var res = $.parseJSON(JSON.stringify(json));    //这里需要修改解析方式
             console.log(res);
-            if(res !=null && res.status=="success"){
-            	// 将json对象与uuid一起写入到session中
-            	var uuid = getUuid();
-                storageJson(uuid,json);
-         	   // 获取回答的个数
-         	   var length =res.data.length;
-         	   var textArr = new Array();
-         	   var refFileArr = new Array();
-         	   var refPathArr = new Array();
-         	   for(var  i=0;i<length;i++){
-         		   textArr.push(res.data[i].text);
-         		   refFileArr.push(res.data[i].filename);
-         		   refPathArr.push(res.data[i].filepath);
-         	   }
-         	   // 修改内容
-                result = textArr[0];	   
+            if (res != null && res.status == "success") {
+                // 将json对象与uuid一起写入到session中
+                var uuid = getUuid();
+                storageJson(uuid, json);
+                // 获取回答的个数
+                var length = res.data.length;
+                var textArr = new Array();
+                var refFileArr = new Array();
+                var refPathArr = new Array();
+                for (var i = 0; i < length; i++) {
+                    textArr.push(res.data[i].text);
+                    refFileArr.push(res.data[i].filename);
+                    refPathArr.push(res.data[i].filepath);
+                }
+                // 修改内容
+                result = textArr[0];
             }
         },
-        error: function(){
+        error: function () {
             alert("返回失败");
 
         }
-        
-        });
+
+    });
     return result;
 }
-
 
 
 function newChat() {
@@ -288,7 +253,6 @@ function newChat() {
 }
 
 
-
 function showStopBox() {
     $('#stopChat').prop("display", true);
 }
@@ -296,37 +260,37 @@ function showStopBox() {
 let inputMaxHeight = 0;
 let inputMinHeight = 0;
 
-$("#queryBox textarea").on("input", function(){
+$("#queryBox textarea").on("input", function () {
     let el = $(this);
-    if(document.body.clientWidth >= 900) {
-        if(inputMinHeight != 0) {
+    if (document.body.clientWidth >= 900) {
+        if (inputMinHeight != 0) {
             el.height(inputMinHeight);
         }
-        return ;
+        return;
     }
     flexibleTextarea(el);
 });
 
 function flexibleTextarea(el) {
-    if(inputMaxHeight == 0) {
-        inputMaxHeight =  el.height() * 5;
+    if (inputMaxHeight == 0) {
+        inputMaxHeight = el.height() * 5;
         inputMinHeight = el.height();
     }
-    
+
     // 缩小
     hideStretch();
     el.height(inputMinHeight);
     let curHeight = el.prop('scrollHeight');
-    if(inputMaxHeight >= curHeight) {
+    if (inputMaxHeight >= curHeight) {
         el.height(curHeight);
     } else {
         // 扩展到最大
         el.height(inputMaxHeight);
     }
-    if( el.height() > (inputMinHeight*2) ) {
+    if (el.height() > (inputMinHeight * 2)) {
         showStretch();
     }
-    
+
 }
 
 function showStretch() {
@@ -344,8 +308,8 @@ function showTextareaMask() {
     // 同步输入
     $('#textareaCopy').val($("#queryBox textarea").val());
     // 动画
-    $('#textareaMask').offset({top:y, let:x});
-    $('#textareaMask').animate({top:'0'});
+    $('#textareaMask').offset({top: y, let: x});
+    $('#textareaMask').animate({top: '0'});
 
 }
 
@@ -359,20 +323,18 @@ function hideTextareaMask() {
     flexibleTextarea($('#queryBox textarea'));
 }
 
-$("#textareaCopy").on("input", function(){
+$("#textareaCopy").on("input", function () {
     $("#queryBox textarea").val($(this).val());
 });
 
 
-
-
-window.addEventListener('resize', function(){
+window.addEventListener('resize', function () {
     let el = $("#queryBox textarea");
-    if(document.body.clientWidth >= 900) {
-        if(inputMinHeight != 0) {
+    if (document.body.clientWidth >= 900) {
+        if (inputMinHeight != 0) {
             el.height(inputMinHeight);
         }
-        return ;
+        return;
     }
     flexibleTextarea(el);
 });

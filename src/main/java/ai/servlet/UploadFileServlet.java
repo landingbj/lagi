@@ -1,16 +1,9 @@
 package ai.servlet;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -21,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.migrate.pojo.*;
+import ai.migrate.service.UploadFileService;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -45,49 +40,108 @@ import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
 
 public class UploadFileServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-	
-	private static final int FILE_MAX_BYTE_SIZE   = AiGlobal.FILE_PARTITION_CHUNK_SIZE;
-	private static final boolean _APPROACH_HADOOP = AiGlobal.IS_HADOOP;
-	
-	private Gson gson = new Gson();
-	private ITrigger acTrigger = new ArticleTrigger();
-	private FileService fileService = new FileService();
-	
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setCharacterEncoding("UTF-8");
-		resp.setHeader("Content-Type", "text/html;charset=utf-8");
+    private static final long serialVersionUID = 1L;
 
-		String url = req.getRequestURI();
-		String method = url.substring(url.lastIndexOf("/") + 1);
+    private static final int FILE_MAX_BYTE_SIZE = AiGlobal.FILE_PARTITION_CHUNK_SIZE;
+    private static final boolean _APPROACH_HADOOP = AiGlobal.IS_HADOOP;
 
-		if (method.equals("uploadLearningFile")) {
-			this.uploadLearningFile(req, resp);
-		} else if(method.equals("downloadFile")){
-			this.downloadFile(req, resp);
-    	} else if(method.equals("uploadImageFile")) {
-    	    this.uploadImageFile(req, resp);
-    	}else if(method.equals("uploadVideoFile")) {
-    	    this.uploadVideoFile(req, resp);
-    	}
-	}
+    private Gson gson = new Gson();
+    private FileService fileService = new FileService();
+    private VectorDbService vectorDbService = new VectorDbService();
+    private UploadFileService uploadFileService = new UploadFileService();
 
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		this.doGet(req, resp);
-	}
-	
-	// 下载文件
-	private void downloadFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
-		
-		String filePath = req.getParameter("filePath");
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setHeader("Content-Type", "text/html;charset=utf-8");
+
+        String url = req.getRequestURI();
+        String method = url.substring(url.lastIndexOf("/") + 1);
+
+        if (method.equals("uploadLearningFile")) {
+            this.uploadLearningFile(req, resp);
+        } else if (method.equals("downloadFile")) {
+            this.downloadFile(req, resp);
+        } else if (method.equals("uploadImageFile")) {
+            this.uploadImageFile(req, resp);
+        } else if (method.equals("uploadVideoFile")) {
+            this.uploadVideoFile(req, resp);
+        } else if (method.equals("deleteFile")) {
+            this.deleteFile(req, resp);
+        } else if (method.equals("getUploadFileList")) {
+            this.getUploadFileList(req, resp);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.doGet(req, resp);
+    }
+
+    private void deleteFile(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        req.setCharacterEncoding("utf-8");
+        resp.setContentType("application/json;charset=utf-8");
+        List<String> idList = gson.fromJson(requestToJson(req), new TypeToken<List<String>>() {
+        }.getType());
+        String result = vectorDbService.deleteDoc(idList);
+        if (result != null) {
+            uploadFileService.deleteUploadFile(idList);
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(result);
+        out.flush();
+        out.close();
+    }
+
+    private void getUploadFileList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        int pageSize = Integer.MAX_VALUE;
+        int pageNumber = 1;
+
+        String category = req.getParameter("category");
+
+        if (req.getParameter("pageNumber") != null) {
+            pageSize = Integer.parseInt(req.getParameter("pageSize"));
+            pageNumber = Integer.parseInt(req.getParameter("pageNumber"));
+        }
+
+        Map<String, Object> map = new HashMap<>();
+        List<UploadFile> result = null;
+        int totalRow = 0;
+        try {
+            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category);
+            totalRow = uploadFileService.getTotalRow(category);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (result != null) {
+            map.put("status", "success");
+            int totalPage = (int) Math.ceil((double) totalRow / pageSize);
+            map.put("totalRow", totalRow);
+            map.put("totalPage", totalPage);
+            map.put("pageNumber", pageNumber);
+            map.put("pageSize", pageSize);
+            map.put("data", result);
+        } else {
+            map.put("status", "failed");
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+    }
+
+    // 下载文件
+    private void downloadFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        String filePath = req.getParameter("filePath");
         String fileName = req.getParameter("fileName");
         // 设置响应内容类型
         resp.setContentType("application/pdf");
         String encodedFileName = URLEncoder.encode(fileName, "UTF-8");
         resp.setHeader("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"");
-        
+
         // 读取文件并写入响应流
         try {
             FileInputStream fileInputStream = new FileInputStream(filePath);
@@ -102,11 +156,11 @@ public class UploadFileServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-	}
-	
+    }
+
     private void uploadVideoFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
-        
+
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "failed");
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -117,14 +171,14 @@ public class UploadFileServlet extends HttpServlet {
         if (!new File(filePath).isDirectory()) {
             new File(filePath).mkdirs();
         }
-        
+
         String lastFilePath = "";
-        
+
         try {
             // 存储文件
             List<?> fileItems = upload.parseRequest(req);
             Iterator<?> it = fileItems.iterator();
-            
+
             while (it.hasNext()) {
                 FileItem fi = (FileItem) it.next();
                 if (!fi.isFormField()) {
@@ -145,16 +199,16 @@ public class UploadFileServlet extends HttpServlet {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-        } 
+        }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
         out.close();
     }
-	
+
     private void uploadImageFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
-        
+
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "failed");
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -165,14 +219,14 @@ public class UploadFileServlet extends HttpServlet {
         if (!new File(filePath).isDirectory()) {
             new File(filePath).mkdirs();
         }
-        
+
         String lastFilePath = "";
-        
+
         try {
             // 存储文件
             List<?> fileItems = upload.parseRequest(req);
             Iterator<?> it = fileItems.iterator();
-            
+
             while (it.hasNext()) {
                 FileItem fi = (FileItem) it.next();
                 if (!fi.isFormField()) {
@@ -193,19 +247,19 @@ public class UploadFileServlet extends HttpServlet {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-        } 
+        }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
         out.close();
     }
-	
-	private void uploadLearningFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+    private void uploadLearningFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
         session.setAttribute("uploadProgress", 0);
-        
+
         String category = req.getParameter("category");
-        
+
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", false);
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -216,18 +270,18 @@ public class UploadFileServlet extends HttpServlet {
         if (!new File(filePath).isDirectory()) {
             new File(filePath).mkdirs();
         }
-        
+
         List<File> files = new ArrayList<>();
         Map<String, String> realNameMap = new HashMap<String, String>();
-        
+
         try {
             // 存储文件
             List<?> fileItems = upload.parseRequest(req);
             Iterator<?> it = fileItems.iterator();
-            
+
             while (it.hasNext()) {
                 FileItem fi = (FileItem) it.next();
-                            
+
                 if (!fi.isFormField()) {
                     String fileName = fi.getName();
                     File file = null;
@@ -239,9 +293,9 @@ public class UploadFileServlet extends HttpServlet {
                         String lastFilePath = filePath + File.separator + newName;
                         file = new File(lastFilePath);
                         session.setAttribute(newName, file.toString());
-                        session.setAttribute("lastFilePath",lastFilePath);
+                        session.setAttribute("lastFilePath", lastFilePath);
                     } while (file.exists());
-                    
+
                     if (_APPROACH_HADOOP) {
                         HadoopUtil.createFileByInputStream(fi.getInputStream(), AiGlobal.KGRAPH_HADOOP_DIR + newName);
                     } else {
@@ -257,25 +311,25 @@ public class UploadFileServlet extends HttpServlet {
         } catch (Exception ex) {
             jsonResult.put("msg", "解析文件出现错误");
             ex.printStackTrace();
-        } 
-        
+        }
+
         session.setAttribute("uploadProgress", 20);
         List<String> jsonArray = new ArrayList<>();
-        
+
         if (files.size() != 0) {
             String content = "";
-            
+
             for (File file : files) {
                 String extString = file.getName().substring(file.getName().lastIndexOf("."));
-                
+
                 InputStream in = null;
-                
+
                 if (_APPROACH_HADOOP) {
                     in = HadoopUtil.getInputStream(AiGlobal.KGRAPH_HADOOP_DIR + file.getName());
                 } else {
                     in = new FileInputStream(file);
                 }
-                
+
                 if (".doc".equals(extString) || ".docx".equals(extString)) {
                     content = WordUtils.getContentsByWord(in, extString);
                 } else if (".txt".equals(extString)) {
@@ -286,7 +340,7 @@ public class UploadFileServlet extends HttpServlet {
                     jsonResult.put("msg", "请选择Word/PDF/Txt文件");
                 }
                 in.close();
-                
+
                 if (!StringUtils.isEmpty(content)) {
                     String fileName = file.getName().replace(extString, "");
                     List<String> fileList = splitFile(fileName, content, FILE_MAX_BYTE_SIZE);
@@ -301,14 +355,14 @@ public class UploadFileServlet extends HttpServlet {
                 jsonResult.put("result", true);
             }
         }
-        
+
         session.setAttribute("uploadFiles", new LinkedList<String>(jsonArray));
         if (!jsonResult.containsKey("msg")) {
             jsonResult.put("file", jsonArray.get(0));
             jsonResult.put("result", true);
             jsonResult.put("status", true);
         }
-        
+
         PrintWriter out = resp.getWriter();
         out.write(jsonResult.toJSONString());
         out.flush();
@@ -342,7 +396,6 @@ public class UploadFileServlet extends HttpServlet {
 
             metadatas.put("filename", filename);
             metadatas.put("category", category);
-            metadatas.put("weight", 1);
             metadatas.put("filepath", filepath);
             metadatas.put("file_id", fileId);
 
@@ -361,69 +414,92 @@ public class UploadFileServlet extends HttpServlet {
                     fileInfo.setMetadatas(tmpMetadatas);
                     fileList.add(fileInfo);
                 }
-                vectorDbService.addIndexes(fileList);
-            } catch (IOException e) {
+                AddDocsCustomResponse resp = vectorDbService.addIndexes(fileList);
+                if (resp != null && resp.getStatus().equals("success")) {
+                    UploadFile entity = new UploadFile();
+                    entity.setCategory(category);
+                    entity.setFilename(filename);
+                    entity.setFilepath(filepath);
+                    entity.setFileId(fileId);
+                    uploadFileService.addUploadFile(entity);
+                }
+            } catch (IOException | SQLException e) {
                 e.printStackTrace();
             }
         }
     }
-	
-	private List<String> splitFile(String fileName, String fileContent, int maxByteSize) throws IOException {
-		String destDir = this.getServletContext().getRealPath(AiGlobal.DIR_TEMP);
-		File tmpFile = new File(destDir);
-		if (!tmpFile.exists()) {
-			tmpFile.mkdir();
-		}
-		
-		List<String> result = new ArrayList<>();
-		String regx = "[。？！.；;!\\?]";
-		String[] strs = fileContent.split(regx);
 
-		int fileIdx = 1;
+    private List<String> splitFile(String fileName, String fileContent, int maxByteSize) throws IOException {
+        String destDir = this.getServletContext().getRealPath(AiGlobal.DIR_TEMP);
+        File tmpFile = new File(destDir);
+        if (!tmpFile.exists()) {
+            tmpFile.mkdir();
+        }
 
-		StringBuilder chunk = new StringBuilder();
-		for (int i = 0; i < strs.length; i++) {
-			chunk.append(strs[i]).append(";");
-			if (chunk.toString().getBytes(StandardCharsets.UTF_8).length > FILE_MAX_BYTE_SIZE) {
-				String name = fileName + "_" + fileIdx++ + ".txt";
-				if (_APPROACH_HADOOP) {
-					InputStream in =  IOUtils.toInputStream(chunk.toString(), StandardCharsets.UTF_8);
-					HadoopUtil.createFileByInputStream(in, AiGlobal.KGRAPH_HADOOP_DIR + name);
-				} else {
-					FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
-				}
-				result.add(name);
-				chunk = new StringBuilder();
-			}
-		}
+        List<String> result = new ArrayList<>();
+        String regx = "[。？！.；;!\\?]";
+        String[] strs = fileContent.split(regx);
 
-		if (chunk.length() > 0) {
-			String name = fileName + "_" + fileIdx + ".txt";
-			FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
-			result.add(name);
-		}
-		return result;
-	}
-	
-	private String getString(InputStream in) {
-		String str = "";
-		try {
-			BufferedInputStream bis = new BufferedInputStream(in);
-			CharsetDetector cd = new CharsetDetector();
-			cd.setText(bis);
-			CharsetMatch cm = cd.detect();
-			if (cm != null) {
-				Reader reader = cm.getReader();
-				str = IOUtils.toString(reader);
-			} else {
-				str = IOUtils.toString(in, StandardCharsets.UTF_8.name());
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        int fileIdx = 1;
 
-		return str;
-	}
+        StringBuilder chunk = new StringBuilder();
+        for (int i = 0; i < strs.length; i++) {
+            chunk.append(strs[i]).append(";");
+            if (chunk.toString().getBytes(StandardCharsets.UTF_8).length > FILE_MAX_BYTE_SIZE) {
+                String name = fileName + "_" + fileIdx++ + ".txt";
+                if (_APPROACH_HADOOP) {
+                    InputStream in = IOUtils.toInputStream(chunk.toString(), StandardCharsets.UTF_8);
+                    HadoopUtil.createFileByInputStream(in, AiGlobal.KGRAPH_HADOOP_DIR + name);
+                } else {
+                    FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
+                }
+                result.add(name);
+                chunk = new StringBuilder();
+            }
+        }
+
+        if (chunk.length() > 0) {
+            String name = fileName + "_" + fileIdx + ".txt";
+            FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
+            result.add(name);
+        }
+        return result;
+    }
+
+    private String getString(InputStream in) {
+        String str = "";
+        try {
+            BufferedInputStream bis = new BufferedInputStream(in);
+            CharsetDetector cd = new CharsetDetector();
+            cd.setText(bis);
+            CharsetMatch cm = cd.detect();
+            if (cm != null) {
+                Reader reader = cm.getReader();
+                str = IOUtils.toString(reader);
+            } else {
+                str = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return str;
+    }
+
+    protected String requestToJson(HttpServletRequest request) throws IOException {
+        InputStream in = request.getInputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len = 0;
+        while ((len = in.read(buffer)) != -1) {
+            out.write(buffer, 0, len);
+        }
+        out.close();
+        in.close();
+
+        String json = new String(out.toByteArray(), "utf-8");
+        return json;
+    }
 }

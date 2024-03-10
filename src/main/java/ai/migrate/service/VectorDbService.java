@@ -1,6 +1,7 @@
 package ai.migrate.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,23 +27,32 @@ public class VectorDbService {
         String result = HttpUtil.httpPost(MigrateGlobal.ADD_DOCS_INDEX_URL, header, docs);
         return result;
     }
-    
+
     public String updateDocImage(List<Document> docs) throws IOException {
         Map<String, String> header = new HashMap<String, String>();
         header.put("Content-type", "application/json");
         String result = HttpUtil.httpPost(MigrateGlobal.UPDATE_DOC_IMAGE_URL, header, docs);
         return result;
     }
-    
+
     public AddDocsCustomResponse addDocsCustom(List<Document> docs) throws IOException {
         Map<String, String> header = new HashMap<String, String>();
         header.put("Content-type", "application/json");
         String result = HttpUtil.httpPost(MigrateGlobal.ADD_DOCS_CUSTOM_URL, header, docs);
         return gson.fromJson(result, AddDocsCustomResponse.class);
     }
-    
+
     public String deleteDoc(List<String> idList) throws IOException {
-        String result = HttpServiceCall.httpPost(MigrateGlobal.DELETE_DOC_INDEX_URL, gson.toJson(idList));
+        List<String> whereList = new ArrayList<>();
+        for (String id : idList) {
+            Map<String, String> whereMap = new HashMap<>();
+            whereMap.put("file_id", id);
+            String where = gson.toJson(whereMap);
+            whereList.add(where);
+        }
+        Map<String, String> header = new HashMap<>();
+        header.put("Content-type", "application/json");
+        String result = HttpUtil.httpPost(MigrateGlobal.DELETE_DOC_INDEX_URL, header, whereList);
         return result;
     }
 
@@ -59,7 +69,7 @@ public class VectorDbService {
         String result = HttpUtil.httpPost(MigrateGlobal.SEARCH_DOC_INDEX_URL, header, request);
         return result;
     }
-    
+
     public String addInstruction(String json, String category) throws IOException {
         JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
         jsonObject.addProperty("category", category);

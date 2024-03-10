@@ -37,6 +37,7 @@ public class MigrateGlobal {
         ADD_DOC_INDEX_URL = VICUNA_INDEX_URL + "/index/add_doc";
         LLMConfig.SEARCH_INDEX_URL = VICUNA_INDEX_URL + "/v2/index/search";
         ADD_INDEXES_URL = VICUNA_INDEX_URL + "/v2/index/add_indexes";
+        DELETE_DOC_INDEX_URL = VICUNA_INDEX_URL + "/v2/index/delete_indexes";
 
         FILE_PROCESS_URL = "http://ec2-52-82-51-248.cn-northwest-1.compute.amazonaws.com.cn:8200";
         EXTRACT_CONTENT_URL = FILE_PROCESS_URL + "/file/extract_content_with_image";

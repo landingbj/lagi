@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import ai.migrate.pojo.Configuration;
 import ai.migrate.service.UserService;
 import ai.utils.LagiGlobal;
+import com.google.gson.JsonObject;
 
 public class UserServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
@@ -40,11 +41,21 @@ public class UserServlet extends BaseServlet {
 
     private void getRandomCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        String category = userService.getRandomCategory();
+        String currentCategory = req.getParameter("currentCategory");
+        JsonObject data = new JsonObject();
+        String category = config.getDefault_category();
+        if (category == null) {
+            if (currentCategory.isEmpty()) {
+                category = userService.getRandomCategory();
+            } else {
+                category = currentCategory;
+            }
+        }
+        data.addProperty("category", category);
         Map<String, Object> map = new HashMap<>();
         if (category != null) {
             map.put("status", "success");
-            map.put("data", category);
+            map.put("data", data);
         } else {
             map.put("status", "failed");
         }
