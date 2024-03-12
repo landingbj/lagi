@@ -1,8 +1,9 @@
 let queryLock = false;
 var PromptDialog = 0;
 // 绑定页面回车事件
-$(document).keyup(function (event) {
-    if (event.keyCode == 13) {
+$('#queryContent').keydown(function (event) {
+    if (event.keyCode === 13) {
+        event.preventDefault();
         textQuery();
     }
 });
