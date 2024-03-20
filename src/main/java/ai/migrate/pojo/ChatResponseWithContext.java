@@ -9,7 +9,7 @@ public class ChatResponseWithContext {
     private List<String> filename;
     private List<String> filepath;
     private String author;
-    private Double distance;
+    private Float distance;
     private String image;
     private List<String> imageList; 
     private String context;
@@ -62,11 +62,11 @@ public class ChatResponseWithContext {
         this.author = author;
     }
 
-    public Double getDistance() {
+    public Float getDistance() {
         return distance;
     }
 
-    public void setDistance(Double distance) {
+    public void setDistance(Float distance) {
         this.distance = distance;
     }
 

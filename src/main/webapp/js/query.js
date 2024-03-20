@@ -27,7 +27,6 @@ function textQuery() {
 
     // 隐藏非对话内容
     hideHelloContent();
-
     $('#queryBox textarea').val('');
     let conversation = {user: {question: question}, robot: {answer: ''}}
     let robootAnswerJq = newConversation(conversation);
@@ -38,24 +37,18 @@ function textQuery() {
 
 const CONVERSATION_CONTEXT = [];
 
-// 判断是否生成指令集
-
 function getTextResult(question, robootAnswerJq, conversation) {
-
-    var category = window.category;
     var result = '';
     var paras = {
         "category": window.category,
-        // "category": "dgmeta",
         "messages": CONVERSATION_CONTEXT.concat([
             {"role": "user", "content": question}
         ]),
-        "channelId": channelId
-        // 这里最后不能写死
+        "channelId": channelId,
+        "stream": false
     };
 
-    console.log("paras", paras);
-    var queryUrl = "search/questionAnswer";
+    var queryUrl = "search/detectIntent";
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
@@ -74,87 +67,48 @@ function getTextResult(question, robootAnswerJq, conversation) {
                     let p = robootAnswerJq.parent().parent().parent();
                     p.children('.idx').children('.appendVoice').children('audio').hide();
                     p.children('.idx').children('.appendVoice').children('select').hide();
-                } 
+                }
                 // 判断生成指令集
-                else if(res.instructions!=null){
+                else if (res.instructions != null) {
                     var instructions = JSON.stringify(res.instructions, null, 2);
                     result = syntaxHighlight(instructions);
                     robootAnswerJq.html("<pre>" + result + "</pre>");
                     answer = result;
                 }
                 // 判断图生文
-                else if(res.samUrl != null){
-                    var result = "您所上传的图片的意思是：<br><b>类别</b>：" + res.classification + "<br><b>描述</b>：" + res.caption + "<br>" +
-                    		"<b>分割后的图片</b>：  <img src='" + res.samUrl + "' alt='Image'><br>";
+                else if (res.samUrl != null) {
+                    result = "您所上传的图片的意思是：<br><b>类别</b>：" + res.classification + "<br><b>描述</b>：" + res.caption + "<br>" +
+                        "<b>分割后的图片</b>：  <img src='" + res.samUrl + "' alt='Image'><br>";
                     robootAnswerJq.html(result);
                     let p = robootAnswerJq.parent().parent().parent();
                     p.children('.idx').children('.appendVoice').children('audio').hide();
                     p.children('.idx').children('.appendVoice').children('select').hide();
                     answer = result;
-                }
-                
-                else if(res.enhanceImageUrl != null){
-                    var result = "加强后的图片如下：<br>" + "<img src='" + res.enhanceImageUrl + "' alt='Image'><br>";
+                } else if (res.enhanceImageUrl != null) {
+                    result = "加强后的图片如下：<br>" + "<img src='" + res.enhanceImageUrl + "' alt='Image'><br>";
                     robootAnswerJq.html(result);
                     answer = result;
-                }
-                
-                else if(res.svdVideoUrl != null){
-                    var result = "<video id='media' src='" + res.svdVideoUrl + "' controls width='400px' heigt='400px'></video>";
+                } else if (res.svdVideoUrl != null) {
+                    result = "<video id='media' src='" + res.svdVideoUrl + "' controls width='400px' heigt='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
-                }
-                
-                else if(res.type != null && res.type === 'mot'){
-                    var result = "<video id='media' src='" + res.data + "' controls width='400px' heigt='400px'></video>";
+                } else if (res.type != null && res.type === 'mot') {
+                     result = "<video id='media' src='" + res.data + "' controls width='400px' heigt='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
-                }
-                
-                else if(res.type != null && res.type === 'mmediting'){
-                    var result = "<video id='media' src='" + res.data + "' controls width='400px' heigt='400px'></video>";
+                } else if (res.type != null && res.type === 'mmediting') {
+                     result = "<video id='media' src='" + res.data + "' controls width='400px' heigt='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
-                }
-                
-                // 图文混排,普通的对话
-                else {
-                    var json = res.data[0];
-                    var a = `
-                    <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>
-                    `
-                    // console.log("图片为"+json.imageList);
-                    var t = json.text;
-                    t = t.replaceAll("\n", "<br>");
-                    result = `
-                            ${t} <br>
-                            ${json.imageList != undefined ? `<img src='${json.imageList[0]}' alt='Image'>` : ""}
-                            ${json.filename != undefined ? `附件:${a}` : ""}<br>
-                            
-                    `
-                    console.log("result", result);
-                    
-                    CONVERSATION_CONTEXT.push({"role": "user", "content": question});
-                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": json.text});
-                    
-                    answer = result;
-
-                    txtTovoice(json.text, "default");
-
-                    // answer=result;
-                    // // answer+= voice;
-                    robootAnswerJq.html(answer);
-                    answer = result;
-                    // 替换掉图片等标签
-                    // answer =answer.replace(/<img[^>]*>/g, "替换的内容");
-
-
-                    enableQueryBtn();
-                    querying = false;
+                } else {
+                    if (paras["stream"]) {
+                        streamOutput(paras, question, robootAnswerJq);
+                    } else {
+                        generalOutput(paras, question, robootAnswerJq);
+                    }
                 }
             } else {
-//                alert("调用失败");
-            	robootAnswerJq.html("调用失败！");
+                robootAnswerJq.html("调用失败！");
                 answer = '调用失败! ';
             }
             $('#queryBox textarea').val('');
@@ -163,7 +117,6 @@ function getTextResult(question, robootAnswerJq, conversation) {
             addConv(conversation);
         },
         error: function () {
-//            alert("返回失败");
             $('#queryBox textarea').val('');
             queryLock = false;
             robootAnswerJq.html("调用失败！");
@@ -173,6 +126,92 @@ function getTextResult(question, robootAnswerJq, conversation) {
 
     });
     return result;
+}
+
+function generalOutput(paras, question, robootAnswerJq) {
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "search/questionAnswer",
+        data: JSON.stringify(paras),
+        success: function (res) {
+            var json = res.data[0];
+            var a = `
+                    <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>
+                    `
+            var t = json.text;
+            t = t.replaceAll("\n", "<br>");
+            result = `
+                            ${t} <br>
+                            ${json.imageList != undefined ? `<img src='${json.imageList[0]}' alt='Image'>` : ""}
+                            ${json.filename != undefined ? `附件:${a}` : ""}<br>
+                    `
+            CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+            CONVERSATION_CONTEXT.push({"role": "assistant", "content": json.text});
+
+            txtTovoice(json.text, "default");
+            robootAnswerJq.html(result);
+            enableQueryBtn();
+            querying = false;
+        }
+    });
+}
+
+function streamOutput(paras, question, robootAnswerJq) {
+    async function generateStream(paras) {
+        const response = await fetch('search/questionAnswer', {
+            method: "POST",
+            cache: "no-cache",
+            keepalive: true,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "text/event-stream",
+            },
+            body: JSON.stringify(paras),
+        });
+
+        const reader = response.body.getReader();
+        let fullText = '';
+        let flag = true;
+        while (flag) {
+            const {value, done} = await reader.read();
+            let chunkStr = new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+            const chunkArray = chunkStr.split("\n\n");
+            for (let i = 0; i < chunkArray.length; i++) {
+                let chunk = chunkArray[i];
+                if (chunk === "[DONE]") {
+                    CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                    flag = false;
+                    break;
+                }
+                var json = JSON.parse(chunk);
+                var a = `
+                                    <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>
+                                    `
+                var t = json.text;
+                t = t.replaceAll("\n", "<br>");
+                fullText += t;
+                result = `
+                                        ${fullText} <br>
+                                        ${json.imageList != undefined ? `<img src='${json.imageList[0]}' alt='Image'>` : ""}
+                                        ${json.filename != undefined ? `附件:${a}` : ""}<br>
+                                `
+                robootAnswerJq.html(result);
+            }
+        }
+    }
+
+    generateStream(paras).then(r => {
+        answer = result;
+        let lastAnswer = CONVERSATION_CONTEXT[CONVERSATION_CONTEXT.length - 1]["content"]
+        txtTovoice(lastAnswer, "default");
+        enableQueryBtn();
+        querying = false;
+    }).catch((err) => {
+        enableQueryBtn();
+        querying = false;
+    });
 }
 
 
@@ -194,12 +233,3 @@ function syntaxHighlight(json) {
         return '<span class="' + cls + '">' + match + '</span>';
     });
 }
-
-// function (filename){
-//     if(filename==undefined){
-//         return ""
-//     }
-//     else{
-
-//     }
-// }

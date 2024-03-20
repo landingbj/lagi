@@ -43,7 +43,12 @@ public class UserServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         String currentCategory = req.getParameter("currentCategory");
         JsonObject data = new JsonObject();
-        String category = config.getDefault_category();
+        String category;
+        if (config.getVector_store() == null) {
+            category = null;
+        } else {
+            category = config.getVector_store().getDefault_category();
+        }
         if (category == null) {
             if (currentCategory.isEmpty()) {
                 category = userService.getRandomCategory();

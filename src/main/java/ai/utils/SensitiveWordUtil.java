@@ -34,6 +34,13 @@ public class SensitiveWordUtil {
         return false;
     }
 
+    public static boolean containSensitiveWord(String message) {
+        if (ahoCorasick.containsAny( message.toLowerCase())) {
+            return true;
+        }
+        return false;
+    }
+
     private static List<String> readSensitiveWordJson() {
         String respath = "/sensitive_word.json";
         String content = "{}";

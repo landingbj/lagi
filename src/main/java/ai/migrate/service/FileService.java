@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.migrate.pojo.Document;
 import ai.migrate.pojo.ExtractContentResponse;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
@@ -35,5 +36,19 @@ public class FileService {
         String returnStr = HttpUtil.multipartUpload(MigrateGlobal.EXTRACT_CONTENT_URL, fileParmName, fileList, formParmMap);
         ExtractContentResponse response = gson.fromJson(returnStr, ExtractContentResponse.class);
         return response;
+    }
+
+    public List<Document> splitChunks(String content, int chunkSize) {
+        List<Document> result = new ArrayList<>();
+        int start = 0;
+        while (start < content.length()) {
+            int end = Math.min(start + chunkSize, content.length());
+            String text = content.substring(start, end).replaceAll("\\s+", " ");
+            Document doc = new Document();
+            doc.setText(text);
+            result.add(doc);
+            start = end;
+        }
+        return result;
     }
 }

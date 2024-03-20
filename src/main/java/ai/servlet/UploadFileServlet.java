@@ -15,6 +15,7 @@ import javax.servlet.http.HttpSession;
 
 import ai.migrate.pojo.*;
 import ai.migrate.service.UploadFileService;
+import ai.utils.LagiGlobal;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -47,7 +48,9 @@ public class UploadFileServlet extends HttpServlet {
 
     private Gson gson = new Gson();
     private FileService fileService = new FileService();
-    private VectorDbService vectorDbService = new VectorDbService();
+
+    private static Configuration config = LagiGlobal.config;
+    private VectorDbService vectorDbService = new VectorDbService(config);
     private UploadFileService uploadFileService = new UploadFileService();
 
     @Override
@@ -305,9 +308,6 @@ public class UploadFileServlet extends HttpServlet {
                     realNameMap.put(file.getName(), fileName);
                 }
             }
-
-            // 解析文件
-
         } catch (Exception ex) {
             jsonResult.put("msg", "解析文件出现错误");
             ex.printStackTrace();
@@ -351,16 +351,13 @@ public class UploadFileServlet extends HttpServlet {
                 session.setAttribute("uploadProgress", 40);
             }
             if (jsonArray.size() > 0) {
-                jsonResult.put("keywords", jsonArray);
                 jsonResult.put("result", true);
             }
         }
 
         session.setAttribute("uploadFiles", new LinkedList<String>(jsonArray));
         if (!jsonResult.containsKey("msg")) {
-            jsonResult.put("file", jsonArray.get(0));
             jsonResult.put("result", true);
-            jsonResult.put("status", true);
         }
 
         PrintWriter out = resp.getWriter();
@@ -371,15 +368,18 @@ public class UploadFileServlet extends HttpServlet {
 
 
     public class AddDocIndex extends Thread {
-        private VectorDbService vectorDbService = new VectorDbService();
+        private VectorDbService vectorDbService = new VectorDbService(config);
         private File file;
         private String category;
         private String filename;
+
+        private String content;
 
         public AddDocIndex(File file, String extString, String category, String filename, String content) {
             this.file = file;
             this.category = category;
             this.filename = filename;
+            this.content = content;
         }
 
         public void run() {
@@ -389,8 +389,7 @@ public class UploadFileServlet extends HttpServlet {
         private void addDocIndexes() {
             Map<String, Object> metadatas = new HashMap<>();
 
-            UUID uuid = UUID.randomUUID();
-            String fileId = uuid.toString().replace("-", "");
+            String fileId = UUID.randomUUID().toString().replace("-", "");
 
             String filepath = file.getAbsolutePath();
 
@@ -401,28 +400,31 @@ public class UploadFileServlet extends HttpServlet {
 
             List<FileInfo> fileList = new ArrayList<>();
             try {
-                ExtractContentResponse response = fileService.extractContent(file);
-                List<Document> docs = response.getData();
+//                ExtractContentResponse response = fileService.extractContent(file);
+//                List<Document> docs = response.getData();
+                List<Document> docs = fileService.splitChunks(this.content, 512);
                 for (Document doc : docs) {
                     FileInfo fileInfo = new FileInfo();
+                    String embeddingId = UUID.randomUUID().toString().replace("-", "");
+                    fileInfo.setEmbedding_id(embeddingId);
                     fileInfo.setText(doc.getText());
                     Map<String, Object> tmpMetadatas = new HashMap<>();
                     for (Map.Entry<String, Object> entry : metadatas.entrySet()) {
                         tmpMetadatas.put(entry.getKey(), entry.getValue());
                     }
-                    tmpMetadatas.put("image", doc.getImage());
+                    if (doc.getImage() != null) {
+                        tmpMetadatas.put("image", doc.getImage());
+                    }
                     fileInfo.setMetadatas(tmpMetadatas);
                     fileList.add(fileInfo);
                 }
-                AddDocsCustomResponse resp = vectorDbService.addIndexes(fileList);
-                if (resp != null && resp.getStatus().equals("success")) {
-                    UploadFile entity = new UploadFile();
-                    entity.setCategory(category);
-                    entity.setFilename(filename);
-                    entity.setFilepath(filepath);
-                    entity.setFileId(fileId);
-                    uploadFileService.addUploadFile(entity);
-                }
+                vectorDbService.addIndexes(fileList);
+                UploadFile entity = new UploadFile();
+                entity.setCategory(category);
+                entity.setFilename(filename);
+                entity.setFilepath(filepath);
+                entity.setFileId(fileId);
+                uploadFileService.addUploadFile(entity);
             } catch (IOException | SQLException e) {
                 e.printStackTrace();
             }

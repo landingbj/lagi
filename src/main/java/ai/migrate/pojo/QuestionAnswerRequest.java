@@ -9,6 +9,16 @@ public class QuestionAnswerRequest {
 	private Integer channelId;
 	private List<ChatMessage> messages;
 
+	private Boolean stream;
+
+	public Boolean getStream() {
+		return stream;
+	}
+
+	public void setStream(Boolean stream) {
+		this.stream = stream;
+	}
+
 	public String getCategory() {
 		return category;
 	}

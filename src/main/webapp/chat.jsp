@@ -18,13 +18,12 @@
   <link rel="stylesheet" href="css/pagev2.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/chat.css?ver=${initParam.version}">
 </head>
+<noscript>
+  <strong>We're sorry but chatai doesn't work properly without JavaScript enabled. Please enable it to
+    continue.
+  </strong>
+</noscript>
 
-<body>
-  <noscript>
-    <strong>We're sorry but chatai doesn't work properly without JavaScript enabled. Please enable it to
-      continue.
-    </strong>
-  </noscript>
 
   <body class="antialiased">
     <div id="__next">
@@ -174,7 +173,7 @@
                 <!-- 隐藏文本遮罩 -->
                 <div  class="w-full h-full absolute top-14 z-10 bg-white " id="textareaMask" style="display: none;">
                   <div class="w-8 h-8 bg-gray-100" style="border-radius: 24px;" onclick="hideTextareaMask()">
-                    <svg class="w-8 h-8" t="1703233241892" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg>
+                    <svg class="w-8 h-8 icon" t="1703233241892" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg>
                   </div>
                   <textarea class="w-full h-full"  id = "textareaCopy"></textarea>
                 </div>
@@ -348,6 +347,7 @@
     <!-- mobile debug 插件 -->
     <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
     <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="libs/sse.js?ver=${initParam.version}"></script>
     <script src="js/common.js?ver=${initParam.version}"></script>
     <script src="js/hello.js?ver=${initParam.version}"></script>
     <script src="js/chat.js?ver=${initParam.version}"></script>

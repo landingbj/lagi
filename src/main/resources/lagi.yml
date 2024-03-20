@@ -1,53 +1,20 @@
 system_title: Lagi
 
 LLM:
+  embedding:
+    type: Random
   backends:
-    - name: qa-test
-      type: Landing-QA
-      enable: false
-      priority: 1
-      model: qa
-
-    - name: tree-test
-      type: Landing-Tree
-      enable: false
-      priority: 1
-      model: tree
-
-    - name: turing-test
-      type: Turing
-      enable: false
-      priority: 10
-      model: turing
-
     - name: vicuna-test1
       type: Vicuna
-      enable: false
+      enable: true
       priority: 100
       model: /mnt/data/vicuna-13b-v1.5-16k
-      api_address: http://localhost:8090/v1/chat/completions
+      api_address: http://116.255.226.214:8090/v1/chat/completions
 
-    - name: gpt-test
-      type: GPT
-      enable: true
-      priority: 1
-      model: gpt-3.5-turbo-1106
-      api_key: your-api-key
-
-    - name: qwen-test
-      type: Qwen
-      enable: false
-      priority: 200
-      model: qwen-turbo
-      api_key: your-api-key
-
-    - name: ernie-test
-      type: Ernie
-      enable: false
-      priority: 100
-      model: ERNIE-Bot-turbo
-      api_key: your-api-key
-      secret_key: your-secret-key
+vector_store:
+  type: Chroma
+  default_category: demoll5
+  url: http://localhost:8000
 
 ASR:
   backends:

@@ -34,3 +34,4 @@ build/
 ### Mac OS ###
 .DS_Store
 /samples/
+/src/test/java/zxw/

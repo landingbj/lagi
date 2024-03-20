@@ -2,8 +2,8 @@ package ai.migrate.pojo;
 
 public class Configuration {
     private String system_title;
-    private String default_category;
     private LLM LLM;
+    private VectorStoreConfig vector_store;
     private ASR ASR;
     private TTS TTS;
     private ImageGeneration image_generation;
@@ -93,11 +93,11 @@ public class Configuration {
         this.video_enhance = video_enhance;
     }
 
-    public String getDefault_category() {
-        return default_category;
+    public VectorStoreConfig getVector_store() {
+        return vector_store;
     }
 
-    public void setDefault_category(String default_category) {
-        this.default_category = default_category;
+    public void setVector_store(VectorStoreConfig vector_store) {
+        this.vector_store = vector_store;
     }
 }
