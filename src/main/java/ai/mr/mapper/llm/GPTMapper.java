@@ -13,38 +13,27 @@
 
 package ai.mr.mapper.llm;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import org.apache.commons.lang3.StringEscapeUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import ai.lagi.adapter.impl.GPTAdapter;
-import ai.lagi.adapter.impl.VicunaAdapter;
 import ai.learn.questionAnswer.QuestionAnswerUtil;
 import ai.learning.pojo.IndexSearchData;
 import ai.learning.service.ChatCompletionService;
 import ai.learning.service.IndexSearchService;
 import ai.learning.service.OpenAIService;
-import ai.learning.service.VicunaCompletionService;
 import ai.migrate.pojo.Backend;
 import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.openai.pojo.ChatMessage;
-import ai.openai.pojo.ChatRequestWithContext;
-import ai.openai.pojo.ChatResponseWithContext;
+import ai.openai.pojo.*;
 import ai.qa.AiGlobalQA;
-import ai.qa.LLMConfig;
 import ai.utils.LagiGlobal;
-import ai.utils.LRUCache;
 import ai.utils.StringUtils;
 import ai.utils.qa.ChatCompletionUtil;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class GPTMapper extends BaseMapper implements IMapper {
     private Gson gson = new Gson();

@@ -1,34 +1,24 @@
 package ai.migrate.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-
 import ai.client.AiServiceCall;
 import ai.client.AiServiceInfo;
 import ai.lagi.service.ImageGenerationService;
 import ai.migrate.pojo.*;
-import ai.service.pojo.CaptionRequest;
-import ai.service.pojo.EnhanceImageRequest;
 import ai.utils.DownloadUtils;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
 import ai.utils.WhisperResponse;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 public class ApiService {
-    private AiService aiService = new AiService();
-    private TranslateService translateService = new TranslateService();
     private Gson gson = new Gson();
     private ImageService imageService = new ImageService();
     private VideoService videoService = new VideoService();

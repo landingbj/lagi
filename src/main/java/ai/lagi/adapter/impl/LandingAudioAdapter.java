@@ -13,7 +13,7 @@ import ai.migrate.pojo.AudioRequestParam;
 import ai.migrate.pojo.TTSRequestParam;
 import ai.migrate.pojo.TTSResult;
 import ai.migrate.pojo.Text2VoiceEntity;
-import ai.service.pojo.AsrRequest;
+import ai.migrate.pojo.AsrRequest;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
 

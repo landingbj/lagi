@@ -13,7 +13,7 @@ public class LagiGlobal {
 
     static {
         Yaml yaml = new Yaml(new Constructor(Configuration.class, new LoaderOptions()));
-        try (InputStream inputStream = ServiceInfoConfig.class.getResourceAsStream("/lagi.yml");) {
+        try (InputStream inputStream = LagiGlobal.class.getResourceAsStream("/lagi.yml");) {
             config = yaml.load(inputStream);
         } catch (Exception e) {
             e.printStackTrace();

@@ -24,12 +24,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import ai.learning.trigger.ArticleTrigger;
-import ai.learning.trigger.ITrigger;
 import ai.migrate.service.FileService;
 import ai.migrate.service.VectorDbService;
 import ai.utils.AiGlobal;
-import ai.utils.HadoopUtil;
 import ai.utils.MigrateGlobal;
 import ai.utils.pdf.PdfUtil;
 import ai.utils.word.WordUtils;
@@ -44,7 +41,6 @@ public class UploadFileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final int FILE_MAX_BYTE_SIZE = AiGlobal.FILE_PARTITION_CHUNK_SIZE;
-    private static final boolean _APPROACH_HADOOP = AiGlobal.IS_HADOOP;
 
     private Gson gson = new Gson();
     private FileService fileService = new FileService();
@@ -299,11 +295,7 @@ public class UploadFileServlet extends HttpServlet {
                         session.setAttribute("lastFilePath", lastFilePath);
                     } while (file.exists());
 
-                    if (_APPROACH_HADOOP) {
-                        HadoopUtil.createFileByInputStream(fi.getInputStream(), AiGlobal.KGRAPH_HADOOP_DIR + newName);
-                    } else {
-                        fi.write(file);
-                    }
+                    fi.write(file);
                     files.add(file);
                     realNameMap.put(file.getName(), fileName);
                 }
@@ -324,11 +316,9 @@ public class UploadFileServlet extends HttpServlet {
 
                 InputStream in = null;
 
-                if (_APPROACH_HADOOP) {
-                    in = HadoopUtil.getInputStream(AiGlobal.KGRAPH_HADOOP_DIR + file.getName());
-                } else {
-                    in = new FileInputStream(file);
-                }
+
+                in = new FileInputStream(file);
+
 
                 if (".doc".equals(extString) || ".docx".equals(extString)) {
                     content = WordUtils.getContentsByWord(in, extString);
@@ -451,12 +441,9 @@ public class UploadFileServlet extends HttpServlet {
             chunk.append(strs[i]).append(";");
             if (chunk.toString().getBytes(StandardCharsets.UTF_8).length > FILE_MAX_BYTE_SIZE) {
                 String name = fileName + "_" + fileIdx++ + ".txt";
-                if (_APPROACH_HADOOP) {
-                    InputStream in = IOUtils.toInputStream(chunk.toString(), StandardCharsets.UTF_8);
-                    HadoopUtil.createFileByInputStream(in, AiGlobal.KGRAPH_HADOOP_DIR + name);
-                } else {
-                    FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
-                }
+
+                FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
+
                 result.add(name);
                 chunk = new StringBuilder();
             }

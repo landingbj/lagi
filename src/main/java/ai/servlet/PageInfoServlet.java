@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ai.annotation.Get;
-import ai.annotation.Param;
-import ai.dto.Prompt;
+import ai.servlet.annotation.Get;
+import ai.servlet.annotation.Param;
+import ai.servlet.dto.Prompt;
 
 public class PageInfoServlet extends RestfulServlet{
 	

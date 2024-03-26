@@ -6,8 +6,8 @@ import com.google.gson.Gson;
 import ai.client.AiServiceCall;
 import ai.client.AiServiceInfo;
 import ai.migrate.pojo.Response;
-import ai.service.pojo.MmeditingInferenceRequest;
-import ai.service.pojo.MotInferenceRequest;
+import ai.migrate.pojo.MmeditingInferenceRequest;
+import ai.migrate.pojo.MotInferenceRequest;
 import ai.utils.FileUploadUtil;
 
 public class VideoService {

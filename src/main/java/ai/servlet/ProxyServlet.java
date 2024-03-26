@@ -273,7 +273,6 @@ public class ProxyServlet extends HttpServlet {
   }
 
   /**
-   * Called from {@link #init(jakarta.servlet.ServletConfig)}.
    * HttpClient offers many opportunities for customization.
    * In any case, it should be thread-safe.
    */
@@ -749,7 +748,6 @@ public class ProxyServlet extends HttpServlet {
   }
 
   /**
-   * Allow overrides of {@link jakarta.servlet.http.HttpServletRequest#getPathInfo()}.
    * Useful when url-pattern of servlet-mapping (web.xml) requires manipulation.
    */
   protected String rewritePathInfoFromRequest(HttpServletRequest servletRequest) {

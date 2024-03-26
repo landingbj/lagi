@@ -63,10 +63,6 @@ public class SearchServlet extends HttpServlet {
 
     private VectorDbService vectorDbService = new VectorDbService(config);
 
-    static {
-        ServiceInfoConfig.setAiServer(MigrateGlobal.AI_SERVICE_URL);
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

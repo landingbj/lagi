@@ -13,7 +13,6 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.servlet.BaseServlet;
 import ai.utils.LagiGlobal;
-import ai.utils.MigrateGlobal;
 
 public class LlmApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
@@ -21,9 +20,6 @@ public class LlmApiServlet extends BaseServlet {
     private static Configuration config = LagiGlobal.config;
     private CompletionsService completionsService = new CompletionsService(config);
     private VectorDbService vectorDbService = new VectorDbService(config);
-    static {
-        MigrateGlobal.init();
-    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
