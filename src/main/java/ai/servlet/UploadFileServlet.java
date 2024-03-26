@@ -383,7 +383,9 @@ public class UploadFileServlet extends HttpServlet {
         }
 
         public void run() {
-            addDocIndexes();
+            if (vectorDbService.vectorStoreEnabled()) {
+                addDocIndexes();
+            }
         }
 
         private void addDocIndexes() {
@@ -418,7 +420,7 @@ public class UploadFileServlet extends HttpServlet {
                     fileInfo.setMetadatas(tmpMetadatas);
                     fileList.add(fileInfo);
                 }
-                vectorDbService.addIndexes(fileList);
+                vectorDbService.addIndexes(fileList, category);
                 UploadFile entity = new UploadFile();
                 entity.setCategory(category);
                 entity.setFilename(filename);

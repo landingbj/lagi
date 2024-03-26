@@ -2,16 +2,25 @@ package ai.migrate.pojo;
 
 public class EmbeddingConfig {
     private String type;
-    private String openai_api_key;
+    private String api_key;
     private String model_name;
     private String api_endpoint;
+    private String secret_key;
 
-    public String getOpenai_api_key() {
-        return openai_api_key;
+    public String getSecret_key() {
+        return secret_key;
     }
 
-    public void setOpenai_api_key(String openai_api_key) {
-        this.openai_api_key = openai_api_key;
+    public void setSecret_key(String secret_key) {
+        this.secret_key = secret_key;
+    }
+
+    public String getApi_key() {
+        return api_key;
+    }
+
+    public void setApi_key(String api_key) {
+        this.api_key = api_key;
     }
 
     public String getModel_name() {

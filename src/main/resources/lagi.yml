@@ -2,18 +2,34 @@ system_title: Lagi
 
 LLM:
   embedding:
-    type: Random
+    type: Landing
+    api_endpoint: http://ec2-52-82-51-248.cn-northwest-1.compute.amazonaws.com.cn:8200/v2/index/embeddings
   backends:
-    - name: vicuna-test1
-      type: Vicuna
+    - name: gpt-test
+      type: GPT
       enable: true
+      priority: 1
+      model: gpt-3.5-turbo-1106
+      api_key: your-api-key
+
+    - name: qwen-test
+      type: Qwen
+      enable: false
+      priority: 200
+      model: qwen-turbo
+      api_key: your-api-key
+
+    - name: ernie-test
+      type: Ernie
+      enable: false
       priority: 100
-      model: /mnt/data/vicuna-13b-v1.5-16k
-      api_address: http://116.255.226.214:8090/v1/chat/completions
+      model: ERNIE-Bot-turbo
+      api_key: your-api-key
+      secret_key: your-secret-key
 
 vector_store:
   type: Chroma
-  default_category: demoll5
+  default_category: default
   url: http://localhost:8000
 
 ASR:

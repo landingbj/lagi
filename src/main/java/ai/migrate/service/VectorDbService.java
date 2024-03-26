@@ -1,25 +1,24 @@
 package ai.migrate.service;
 
-import java.io.IOException;
-import java.util.*;
-
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.*;
-import ai.vector.VectorStoreService;
-import ai.vector.pojo.QueryCondition;
-import ai.vector.pojo.IndexRecord;
-import ai.vector.pojo.UpsertRecord;
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import ai.migrate.pojo.Configuration;
+import ai.migrate.pojo.FileInfo;
+import ai.migrate.pojo.IndexSearchData;
+import ai.migrate.pojo.VectorStoreConfig;
+import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
-
+import ai.utils.qa.ChatCompletionUtil;
+import ai.vector.VectorStoreService;
+import ai.vector.pojo.IndexRecord;
+import ai.vector.pojo.QueryCondition;
+import ai.vector.pojo.UpsertRecord;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import org.apache.commons.lang3.ObjectUtils;
+
+import java.io.IOException;
+import java.util.*;
 
 public class VectorDbService {
     private Gson gson = new Gson();
@@ -29,28 +28,16 @@ public class VectorDbService {
     public VectorDbService(Configuration config) {
         VectorStoreConfig vectorStoreConfig = config.getVector_store();
         Embeddings embeddingFunction = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
-        vectorStoreService = new VectorStoreService(vectorStoreConfig, embeddingFunction);
+        if (vectorStoreConfig != null) {
+            vectorStoreService = new VectorStoreService(vectorStoreConfig, embeddingFunction);
+        }
     }
 
-    public String addDocs(List<Document> docs) throws IOException {
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.ADD_DOCS_INDEX_URL, header, docs);
-        return result;
-    }
-
-    public String updateDocImage(List<Document> docs) throws IOException {
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.UPDATE_DOC_IMAGE_URL, header, docs);
-        return result;
-    }
-
-    public AddDocsCustomResponse addDocsCustom(List<Document> docs) throws IOException {
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.ADD_DOCS_CUSTOM_URL, header, docs);
-        return gson.fromJson(result, AddDocsCustomResponse.class);
+    public boolean vectorStoreEnabled() {
+        if (vectorStoreService != null) {
+            return true;
+        }
+        return false;
     }
 
     public String deleteDoc(List<String> idList) throws IOException {
@@ -67,35 +54,19 @@ public class VectorDbService {
         return result;
     }
 
-    public String addDoc(Document doc) throws IOException {
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.ADD_DOC_INDEX_URL, header, doc);
-        return result;
-    }
-
-    public String search(IndexSearchRequest request) throws IOException {
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.SEARCH_DOC_INDEX_URL, header, request);
-        return result;
-    }
-
-    public List<IndexSearchData> search(String question) {
-        int similarity_top_k = 1;
-        double similarity_cutoff = 1;
-        int parentDepth = 0;
-        int childDepth = 0;
-        Map<String, String> where = new HashMap<>();
-        List<IndexSearchData> result = new ArrayList<>();
-        List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where);
-        for (IndexSearchData indexSearchData : indexSearchDataList) {
-            result.add(extendText(parentDepth, childDepth, indexSearchData));
+    public ChatCompletionRequest addVectorDBContext(ChatCompletionRequest request) {
+        String lastMessage = ChatCompletionUtil.getLastMessage(request);
+        List<IndexSearchData> indexSearchDataList = search(lastMessage, request.getCategory());
+        if (indexSearchDataList == null) {
+            return request;
         }
-        return result;
+        String contextText = indexSearchDataList.get(0).getText();
+        String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
+        ChatCompletionUtil.setLastMessage(request, prompt);
+        return request;
     }
 
-    public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data) {
+    private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data) {
         String text = data.getText();
         String parentId = data.getParentId();
         int parentCount = 0;
@@ -126,14 +97,14 @@ public class VectorDbService {
         return data;
     }
 
-    public IndexSearchData getParentIndex(String parentId) {
+    private IndexSearchData getParentIndex(String parentId) {
         if (parentId == null) {
             return null;
         }
         return toIndexSearchData(vectorStoreService.fetch(parentId));
     }
 
-    public IndexSearchData getChildIndex(String parentId) {
+    private IndexSearchData getChildIndex(String parentId) {
         IndexSearchData result = null;
         Map<String, String> where = new HashMap<>();
         where.put("parent_id", parentId);
@@ -146,13 +117,31 @@ public class VectorDbService {
         return result;
     }
 
-    public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff, Map<String, String> where) {
+    public List<IndexSearchData> search(String question, String category) {
+        int similarity_top_k = 1;
+        double similarity_cutoff = 1;
+        int parentDepth = 0;
+        int childDepth = 0;
+        Map<String, String> where = new HashMap<>();
+        List<IndexSearchData> result = new ArrayList<>();
+
+        ObjectUtils.defaultIfNull(category, "");
+
+        List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+        for (IndexSearchData indexSearchData : indexSearchDataList) {
+            result.add(extendText(parentDepth, childDepth, indexSearchData));
+        }
+        return result;
+    }
+
+    private List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
+                                         Map<String, String> where, String category) {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
         queryCondition.setN(similarity_top_k);
         queryCondition.setWhere(where);
-        List<IndexRecord> indexRecords = vectorStoreService.query(queryCondition);
+        List<IndexRecord> indexRecords = vectorStoreService.query(queryCondition, category);
         for (IndexRecord indexRecord : indexRecords) {
             if (indexRecord.getDistance() > similarity_cutoff) {
                 continue;
@@ -180,36 +169,7 @@ public class VectorDbService {
         return indexSearchData;
     }
 
-    public String addInstruction(String json, String category) throws IOException {
-        JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
-        jsonObject.addProperty("category", category);
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.ADD_INSTRUCTION_URL, header, jsonObject);
-        return result;
-    }
-
-    public LcsResponse getAnswerByLcs(String question, String category) throws IOException {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("question", question);
-        jsonObject.addProperty("category", category);
-        Map<String, String> header = new HashMap<String, String>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.GET_ANSWER_BY_LCS_URL, header, jsonObject);
-        return gson.fromJson(result, LcsResponse.class);
-    }
-
-    public boolean isLcsRequest(String content) {
-        if (isValidJson(content)) {
-            JsonObject jsonObject = gson.fromJson(content, JsonObject.class);
-            if (jsonObject.has("question") && jsonObject.has("answer")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void addIndexes(List<FileInfo> fileList) throws IOException {
+    public void addIndexes(List<FileInfo> fileList, String category) throws IOException {
         List<UpsertRecord> upsertRecords = new ArrayList<>();
         for (FileInfo fileInfo : fileList) {
             upsertRecords.add(convertToUpsertRecord(fileInfo));
@@ -218,7 +178,7 @@ public class VectorDbService {
             String parentId = upsertRecords.get(i - 1).getId();
             upsertRecords.get(i).getMetadata().put("parent_id", parentId);
         }
-        vectorStoreService.upsert(upsertRecords);
+        vectorStoreService.upsert(upsertRecords, category);
     }
 
     private UpsertRecord convertToUpsertRecord(FileInfo fileInfo) {
@@ -233,18 +193,5 @@ public class VectorDbService {
         upsertRecord.setMetadata(metadata);
 
         return upsertRecord;
-    }
-
-    public boolean isValidJson(String json) {
-        try {
-            new JSONObject(json);
-        } catch (JSONException e) {
-            try {
-                new JSONArray(json);
-            } catch (JSONException ne) {
-                return false;
-            }
-        }
-        return true;
     }
 }

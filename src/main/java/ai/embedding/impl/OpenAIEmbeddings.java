@@ -18,7 +18,7 @@ public class OpenAIEmbeddings implements Embeddings {
     private Gson gson = new Gson();
 
     public OpenAIEmbeddings(EmbeddingConfig config) {
-        this.openAIAPIKey = config.getOpenai_api_key();
+        this.openAIAPIKey = config.getApi_key();
         this.modelName = config.getModel_name();
         this.apiEndpoint = config.getApi_endpoint();
     }
@@ -100,21 +100,6 @@ public class OpenAIEmbeddings implements Embeddings {
         public OpenAIEmbeddings.Builder withApiEndpoint(String apiEndpoint) {
             this.apiEndpoint = apiEndpoint;
             return this;
-        }
-    }
-
-    public static void main(String[] args) {
-        Embeddings openAIEmbeddings = OpenAIEmbeddings.Builder()
-                .withOpenAIAPIKey("sk-DQPkkEw6IRRCIGwqFJiagSAnK28D95cQTnlbUHDd9T3Bidns")
-                .withModelName("D:/Workspaces/Data/opt-350m")
-                .withApiEndpoint("http://localhost:8090/v1/embeddings")
-                .build();
-        List<String> docs = new ArrayList<>();
-        docs.add("Hello world1");
-        docs.add("Hello world2");
-        List<List<Float>> result = openAIEmbeddings.createEmbedding(docs);
-        for (List<Float> embedding : result) {
-            System.out.println(embedding);
         }
     }
 }

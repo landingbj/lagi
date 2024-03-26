@@ -28,8 +28,24 @@ public class VectorStoreService {
         this.vectorStore.upsert(upsertRecords);
     }
 
+    public void upsert(List<UpsertRecord> upsertRecords, String category) {
+        this.vectorStore.upsert(upsertRecords, category);
+    }
+
     public List<IndexRecord> query(QueryCondition queryCondition) {
         return this.vectorStore.query(queryCondition);
+    }
+
+    public List<IndexRecord> query(QueryCondition queryCondition, String category) {
+        return this.vectorStore.query(queryCondition, category);
+    }
+
+    public List<IndexRecord> fetch(List<String> ids) {
+        return this.vectorStore.fetch(ids);
+    }
+
+    public List<IndexRecord> fetch(List<String> ids, String category) {
+        return this.vectorStore.fetch(ids, category);
     }
 
     public IndexRecord fetch(String id) {
@@ -40,9 +56,5 @@ public class VectorStoreService {
             result = indexRecords.get(0);
         }
         return result;
-    }
-
-    public List<IndexRecord> fetch(List<String> ids) {
-        return this.vectorStore.fetch(ids);
     }
 }

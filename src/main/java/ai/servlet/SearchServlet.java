@@ -61,7 +61,7 @@ public class SearchServlet extends HttpServlet {
     private AudioService audioService = new AudioService(config);
     private CompletionsService completionsService = new CompletionsService(config);
 
-    private VectorDbService  vectorDbService = new VectorDbService(config);
+    private VectorDbService vectorDbService = new VectorDbService(config);
 
     static {
         ServiceInfoConfig.setAiServer(MigrateGlobal.AI_SERVICE_URL);
@@ -531,20 +531,15 @@ public class SearchServlet extends HttpServlet {
         request.setTemperature(LLMConfig.TEMPERATURE);
         request.setMax_tokens(LLMConfig.LLM_MAX_TOKENS);
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
-        List<IndexSearchData> indexSearchDataList = vectorDbService.search(lastMessage);
-
-        System.out.println("indexSearchDataList: " + indexSearchDataList);
-
+        List<IndexSearchData> indexSearchDataList = null;
+        if (vectorDbService.vectorStoreEnabled()) {
+            indexSearchDataList = vectorDbService.search(lastMessage, category);
+        }
         if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             String contextText = indexSearchDataList.get(0).getText();
             String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
             ChatCompletionUtil.setLastMessage(request, prompt);
         }
-//        ChatCompletionResult result = completionsService.completions(request);
-//		if (result == null) {
-//			return null;
-//		}
-//        List<ChatResponseWithContext> responseList = new ArrayList<>();
         ChatResponseWithContext chatResponseWithContext = new ChatResponseWithContext();
         if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexSearchData = indexSearchDataList.get(0);
@@ -556,8 +551,6 @@ public class SearchServlet extends HttpServlet {
             chatResponseWithContext.setFilepath(indexSearchData.getFilepath());
             chatResponseWithContext.setIndexId(indexSearchData.getId());
         }
-//        chatResponseWithContext.setText(result.getChoices().get(0).getMessage().getContent());
-//        responseList.add(chatResponseWithContext);
         ChatSession chatSession = new ChatSession();
         chatSession.setChatCompletionRequest(request);
         chatSession.setChatResponseWithContext(chatResponseWithContext);
@@ -567,9 +560,7 @@ public class SearchServlet extends HttpServlet {
     private ChatSession callQuestionAnswer(QuestionAnswerRequest qaRequest, String category, HttpSession session) throws IOException {
         List<ChatMessage> messages = qaRequest.getMessages();
         ChatSession chatSession = getResponseList(messages, category, session);
-
         String question = messages.get(messages.size() - 1).getContent();
-
         ChatResponseWithContext response = chatSession.getChatResponseWithContext();
         if (response != null) {
             double threshold = 0.33d;

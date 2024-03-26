@@ -34,23 +34,34 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     private CustomEmbeddingFunction embeddingFunction;
-    private Collection collection;
+    private Map<String, String> colMetadata;
+    private VectorStoreConfig config;
+    private Client client;
 
     public ChromaVectorStore(VectorStoreConfig config, Embeddings embeddingFunction) {
+        this.config = config;
         this.embeddingFunction = new CustomEmbeddingFunction(embeddingFunction);
-        Client client = new Client(config.getUrl());
-        Map<String, String> colMetadata = new LinkedTreeMap<>();
+        client = new Client(config.getUrl());
+        colMetadata = new LinkedTreeMap<>();
         colMetadata.put("hnsw:space", config.getMetric());
         colMetadata.put("embedding_function", this.embeddingFunction.getClass().getName());
+    }
+
+    private Collection getCollection(String category) {
+        Collection collection = null;
         try {
-            collection = client.createCollection(config.getDefault_category(), colMetadata,
-                    true, this.embeddingFunction);
+            collection = client.createCollection(category, colMetadata, true, this.embeddingFunction);
         } catch (ApiException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+        return collection;
     }
 
     public void upsert(List<UpsertRecord> upsertRecords) {
+        upsert(upsertRecords, this.config.getDefault_category());
+    }
+
+    public void upsert(List<UpsertRecord> upsertRecords, String category) {
         List<String> documents = new ArrayList<>();
         List<Map<String, String>> metadatas = new ArrayList<>();
         List<String> ids = new ArrayList<>();
@@ -60,19 +71,25 @@ public class ChromaVectorStore implements VectorStore {
             ids.add(upsertRecord.getId());
         }
         List<List<Float>> embeddings = this.embeddingFunction.createEmbedding(documents);
+        Collection collection = getCollection(category);
         try {
-            this.collection.upsert(embeddings, metadatas, documents, ids);
+            collection.upsert(embeddings, metadatas, documents, ids);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
     }
 
     public List<IndexRecord> query(QueryCondition queryCondition) {
+        return query(queryCondition, this.config.getDefault_category());
+    }
+
+    public List<IndexRecord> query(QueryCondition queryCondition, String category) {
         List<IndexRecord> result = new ArrayList<>();
         List<String> queryTexts = Collections.singletonList(queryCondition.getText());
         Integer n = queryCondition.getN();
         Map<String, String> where = queryCondition.getWhere();
         Collection.QueryResponse qr = null;
+        Collection collection = getCollection(category);
         try {
             qr = collection.query(queryTexts, n, where, null, null);
         } catch (ApiException e) {
@@ -93,8 +110,13 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     public List<IndexRecord> fetch(List<String> ids) {
+        return fetch(ids, this.config.getDefault_category());
+    }
+
+    public List<IndexRecord> fetch(List<String> ids, String category) {
         List<IndexRecord> result = new ArrayList<>();
         Collection.GetResult gr;
+        Collection collection = getCollection(category);
         try {
             gr = collection.get(ids, null, null);
         } catch (ApiException e) {

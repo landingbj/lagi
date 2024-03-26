@@ -1,7 +1,6 @@
 package ai.embedding;
 
-import ai.embedding.impl.OpenAIEmbeddings;
-import ai.embedding.impl.RandomEmbeddings;
+import ai.embedding.impl.*;
 import ai.migrate.pojo.EmbeddingConfig;
 
 public class EmbeddingFactory {
@@ -11,6 +10,12 @@ public class EmbeddingFactory {
             return new OpenAIEmbeddings(config);
         } else if (EmbeddingConstant.EMBEDDING_TYPE_RANDOM.equalsIgnoreCase(type)) {
             return new RandomEmbeddings(config);
+        } else if (EmbeddingConstant.EMBEDDING_TYPE_ERNIE.equalsIgnoreCase(type)) {
+            return new ErnieEmbeddings(config);
+        } else if (EmbeddingConstant.EMBEDDING_TYPE_QWEN.equalsIgnoreCase(type)) {
+            return new QwenEmbeddings(config);
+        } else if (EmbeddingConstant.EMBEDDING_TYPE_LANDING.equalsIgnoreCase(type)) {
+            return new LandingEmbeddings(config);
         }
         throw new IllegalArgumentException("Invalid type: " + type);
     }

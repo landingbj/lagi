@@ -37,7 +37,7 @@ public class PineconeVectorStore implements VectorStore {
         pineconeClient = new PineconeClient(pineconeClientConfig);
     }
 
-    public static Struct generateMetadataStruct(Map<String, String> metadata) {
+    private Struct generateMetadataStruct(Map<String, String> metadata) {
         Struct.Builder builder = Struct.newBuilder();
         for (Map.Entry<String, String> entry : metadata.entrySet()) {
             builder.putFields(entry.getKey(), Value.newBuilder().setStringValue(entry.getValue()).build());
@@ -45,7 +45,7 @@ public class PineconeVectorStore implements VectorStore {
         return builder.build();
     }
 
-    public static Struct generateWhereStruct(Map<String, String> where) {
+    private Struct generateWhereStruct(Map<String, String> where) {
         Struct.Builder builder = Struct.newBuilder();
         for (Map.Entry<String, String> entry : where.entrySet()) {
             builder.putFields(entry.getKey(), Value.newBuilder().setStringValue(entry.getValue()).build());
@@ -54,6 +54,9 @@ public class PineconeVectorStore implements VectorStore {
     }
 
     public void upsert(List<UpsertRecord> upsertRecords) {
+        upsert(upsertRecords, this.config.getDefault_category());
+    }
+    public void upsert(List<UpsertRecord> upsertRecords, String category) {
         List<String> documents = new ArrayList<>();
         List<Map<String, String>> metadatas = new ArrayList<>();
         List<String> ids = new ArrayList<>();
@@ -72,7 +75,7 @@ public class PineconeVectorStore implements VectorStore {
         try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
             List<List<Float>> embeddings = embeddingFunction.createEmbedding(documents);
             UpsertRequest.Builder builder = UpsertRequest.newBuilder()
-                    .setNamespace(this.config.getDefault_category());
+                    .setNamespace(category);
             for (int i = 0; i < ids.size(); i++) {
                 Struct metadataStrut = generateMetadataStruct(metadatas.get(i));
                 Vector vector = Vector.newBuilder()
@@ -90,6 +93,10 @@ public class PineconeVectorStore implements VectorStore {
     }
 
     public List<IndexRecord> query(QueryCondition queryCondition) {
+        return query(queryCondition, this.config.getDefault_category());
+    }
+
+    public List<IndexRecord> query(QueryCondition queryCondition, String category) {
         String text = queryCondition.getText();
         Integer n = queryCondition.getN();
         Map<String, String> where = queryCondition.getWhere();
@@ -101,7 +108,7 @@ public class PineconeVectorStore implements VectorStore {
             Iterable<Float> iterable = embeddingFunction.createEmbedding(text);
             QueryRequest queryRequest = QueryRequest.newBuilder()
                     .addAllVector(iterable)
-                    .setNamespace(this.config.getDefault_category())
+                    .setNamespace(category)
                     .setTopK(n)
                     .setIncludeMetadata(true)
                     .setFilter(whereStruct)
@@ -113,8 +120,11 @@ public class PineconeVectorStore implements VectorStore {
         return result;
     }
 
-    @Override
     public List<IndexRecord> fetch(List<String> ids) {
+        return fetch(ids, this.config.getDefault_category());
+    }
+
+    public List<IndexRecord> fetch(List<String> ids, String category) {
         List<IndexRecord> result = new ArrayList<>();
         PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
                 .withIndexName(this.config.getIndex_name());
@@ -122,7 +132,7 @@ public class PineconeVectorStore implements VectorStore {
             for (String id : ids) {
                 QueryRequest queryRequest = QueryRequest.newBuilder()
                         .setId(id)
-                        .setNamespace(this.config.getDefault_category())
+                        .setNamespace(category)
                         .setIncludeMetadata(true)
                         .setTopK(1)
                         .build();
