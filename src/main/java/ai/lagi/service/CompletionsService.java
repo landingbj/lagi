@@ -20,6 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.lagi.adapter.ILlmAdapter;
+import ai.lagi.adapter.impl.ErnieAdapter;
+import ai.lagi.adapter.impl.GPTAdapter;
+import ai.lagi.adapter.impl.QwenAdapter;
+import ai.lagi.adapter.impl.VicunaAdapter;
 import ai.migrate.pojo.Backend;
 import ai.migrate.pojo.Configuration;
 import ai.mr.IMapper;
@@ -32,6 +37,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
 import ai.utils.SensitiveWordUtil;
+import io.reactivex.Observable;
 import weixin.tools.TulingThread;
 
 public class CompletionsService {
@@ -47,8 +53,19 @@ public class CompletionsService {
         }
     }
 
+    private Backend steamBackendConfig;
+
     public CompletionsService(Configuration config) {
         this.config = config;
+        String steamBackend = this.config.getLLM().getSteam_backend();
+        for (Backend backend : this.config.getLLM().getBackends()) {
+            if (backend.getName().equals(steamBackend)) {
+                steamBackendConfig = backend;
+            }
+        }
+        if (steamBackendConfig == null) {
+            throw new RuntimeException("No steam_backend parameter was specified.");
+        }
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
@@ -99,6 +116,29 @@ public class CompletionsService {
         }
 
         return answer;
+    }
+
+    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        ILlmAdapter adapter = getAdapter(this.steamBackendConfig);
+        if (!this.steamBackendConfig.getEnable()) {
+            throw new RuntimeException("Steam backend is not enabled.");
+        }
+        return adapter.streamCompletions(chatCompletionRequest);
+    }
+
+    private ILlmAdapter getAdapter(Backend backendConfig) {
+        String type = backendConfig.getType();
+        ILlmAdapter adapter = null;
+        if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_VICUNA)) {
+            adapter = new VicunaAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_GPT)) {
+            adapter = new GPTAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_Qwen)) {
+            adapter = new QwenAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
+            adapter = new ErnieAdapter(backendConfig);
+        }
+        return adapter;
     }
 
     private IMapper getMapper(String type) {

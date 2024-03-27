@@ -54,17 +54,13 @@ public class VectorDbService {
         return result;
     }
 
-    public ChatCompletionRequest addVectorDBContext(ChatCompletionRequest request) {
+    public List<IndexSearchData> search(ChatCompletionRequest request) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
         List<IndexSearchData> indexSearchDataList = search(lastMessage, request.getCategory());
-        if (indexSearchDataList == null) {
-            return request;
-        }
-        String contextText = indexSearchDataList.get(0).getText();
-        String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
-        ChatCompletionUtil.setLastMessage(request, prompt);
-        return request;
+        return indexSearchDataList;
     }
+
+
 
     private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data) {
         String text = data.getText();
@@ -106,6 +102,9 @@ public class VectorDbService {
 
     private IndexSearchData getChildIndex(String parentId) {
         IndexSearchData result = null;
+        if (parentId == null) {
+            return null;
+        }
         Map<String, String> where = new HashMap<>();
         where.put("parent_id", parentId);
         QueryCondition queryCondition = new QueryCondition();
@@ -119,14 +118,12 @@ public class VectorDbService {
 
     public List<IndexSearchData> search(String question, String category) {
         int similarity_top_k = 1;
-        double similarity_cutoff = 1;
-        int parentDepth = 0;
-        int childDepth = 0;
+        double similarity_cutoff = 0.5;
+        int parentDepth = 2;
+        int childDepth = 2;
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> result = new ArrayList<>();
-
-        ObjectUtils.defaultIfNull(category, "");
-
+        category = ObjectUtils.defaultIfNull(category, "");
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
         for (IndexSearchData indexSearchData : indexSearchDataList) {
             result.add(extendText(parentDepth, childDepth, indexSearchData));
@@ -152,7 +149,7 @@ public class VectorDbService {
         return result;
     }
 
-    private static IndexSearchData toIndexSearchData(IndexRecord indexRecord) {
+    private IndexSearchData toIndexSearchData(IndexRecord indexRecord) {
         if (indexRecord == null) {
             return null;
         }

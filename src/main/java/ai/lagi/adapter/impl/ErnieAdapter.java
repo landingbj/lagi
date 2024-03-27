@@ -1,6 +1,7 @@
 package ai.lagi.adapter.impl;
 
 import ai.lagi.adapter.ILlmAdapter;
+import ai.lagi.utils.MappingIterable;
 import ai.migrate.pojo.Backend;
 import ai.openai.pojo.*;
 import ai.utils.qa.ChatCompletionUtil;
@@ -10,17 +11,18 @@ import com.baidubce.qianfan.model.chat.ChatRequest;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import com.baidubce.qianfan.model.chat.Message;
 import com.baidubce.qianfan.model.constant.ModelEndpoint;
+import io.reactivex.Observable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 public class ErnieAdapter implements ILlmAdapter {
     private Backend backendConfig;
-    private String endpoint;
 
     public ErnieAdapter(Backend backendConfig) {
         this.backendConfig = backendConfig;
-        endpoint = ModelEndpoint.getEndpoint(ModelEndpoint.CHAT, this.backendConfig.getModel());
     }
 
     @Override
@@ -33,6 +35,16 @@ public class ErnieAdapter implements ILlmAdapter {
         return convertResponse(response);
     }
 
+    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        String secretKey = this.backendConfig.getSecret_key();
+        String apiKey = this.backendConfig.getApi_key();
+        Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
+        ChatRequest request = convertRequest(chatCompletionRequest);
+        Iterator<ChatResponse> iterator = qianfan.chatCompletionStream(request);
+        Iterable<ChatCompletionResult> iterable = new MappingIterable<>(() -> iterator, this::convertResponse);
+        return Observable.fromIterable(iterable);
+    }
+
     private ChatRequest convertRequest(ChatCompletionRequest request) {
         ChatRequest result = new ChatRequest();
         List<Message> messages = new ArrayList<>();
@@ -42,10 +54,12 @@ public class ErnieAdapter implements ILlmAdapter {
             message.setContent(chatMessage.getContent());
             messages.add(message);
         }
+        String model = Optional.ofNullable(request.getModel()).orElse(backendConfig.getModel());
+        String finalEndpoint = ModelEndpoint.getEndpoint("chat", model, null);
+        result.setEndpoint(finalEndpoint);
         result.setMessages(messages);
         result.setTemperature(request.getTemperature());
         result.setMaxOutputTokens(request.getMax_tokens());
-        result.setEndpoint(endpoint);
         return result;
     }
 

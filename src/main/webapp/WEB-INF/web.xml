@@ -13,29 +13,6 @@
 		<welcome-file>chat.jsp</welcome-file>
 	</welcome-file-list>
 
-	<mime-mapping>
-		<extension>jnlp</extension>
-		<mime-type>application/x-java-jnlp-file</mime-type>
-	</mime-mapping>
-
-	<filter>
-		<filter-name>SSOFilter</filter-name>
-		<filter-class>ai.utils.SSOFilter</filter-class>
-	</filter>
-	<filter-mapping>
-		<filter-name>SSOFilter</filter-name>
-		<url-pattern>/admin/*</url-pattern>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>SSOFilter</filter-name>
-		<url-pattern>/gateway/*</url-pattern>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>SSOFilter</filter-name>
-		<url-pattern>/common/*</url-pattern>
-	</filter-mapping>
-
-	<!-- 跨域 -->
 	<filter>
 		<filter-name>CORS</filter-name>
 		<filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>

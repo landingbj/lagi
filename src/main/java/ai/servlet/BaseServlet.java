@@ -34,7 +34,7 @@ import com.google.gson.JsonElement;
 
 public abstract class BaseServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private Gson gson = new Gson();
+	protected Gson gson = new Gson();
 
 	protected <T> T queryToObj(HttpServletRequest req, Class<T> classOfT) throws IOException {
 		Map<String, String> query = getQueryData(req);

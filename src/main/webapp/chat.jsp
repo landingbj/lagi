@@ -346,7 +346,7 @@
     </div>
     <!-- mobile debug 插件 -->
     <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
-    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="libs/jquery-3.1.1.min.js"></script>
     <script src="libs/sse.js?ver=${initParam.version}"></script>
     <script src="js/common.js?ver=${initParam.version}"></script>
     <script src="js/hello.js?ver=${initParam.version}"></script>

@@ -31,7 +31,7 @@ import ai.utils.MigrateGlobal;
 import ai.utils.pdf.PdfUtil;
 import ai.utils.word.WordUtils;
 
-import com.alibaba.fastjson.JSONObject;
+//import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.ibm.icu.text.CharsetDetector;
@@ -259,8 +259,9 @@ public class UploadFileServlet extends HttpServlet {
 
         String category = req.getParameter("category");
 
-        JSONObject jsonResult = new JSONObject();
-        jsonResult.put("result", false);
+//        JSONObject jsonResult = new JSONObject();
+        JsonObject jsonResult = new JsonObject();
+        jsonResult.addProperty("result", false);
         DiskFileItemFactory factory = new DiskFileItemFactory();
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
@@ -301,7 +302,7 @@ public class UploadFileServlet extends HttpServlet {
                 }
             }
         } catch (Exception ex) {
-            jsonResult.put("msg", "解析文件出现错误");
+            jsonResult.addProperty("msg", "解析文件出现错误");
             ex.printStackTrace();
         }
 
@@ -327,7 +328,7 @@ public class UploadFileServlet extends HttpServlet {
                 } else if (".pdf".equals(extString)) {
                     content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
                 } else {
-                    jsonResult.put("msg", "请选择Word/PDF/Txt文件");
+                    jsonResult.addProperty("msg", "请选择Word/PDF/Txt文件");
                 }
                 in.close();
 
@@ -341,17 +342,17 @@ public class UploadFileServlet extends HttpServlet {
                 session.setAttribute("uploadProgress", 40);
             }
             if (jsonArray.size() > 0) {
-                jsonResult.put("result", true);
+                jsonResult.addProperty("result", true);
             }
         }
 
         session.setAttribute("uploadFiles", new LinkedList<String>(jsonArray));
-        if (!jsonResult.containsKey("msg")) {
-            jsonResult.put("result", true);
+        if (!jsonResult.has("msg")) {
+            jsonResult.addProperty("result", true);
         }
 
         PrintWriter out = resp.getWriter();
-        out.write(jsonResult.toJSONString());
+        out.write(gson.toJson(jsonResult));
         out.flush();
         out.close();
     }

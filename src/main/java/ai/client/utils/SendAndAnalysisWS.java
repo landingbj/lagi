@@ -21,12 +21,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
+import org.slf4j.LoggerFactory;
 
 public class SendAndAnalysisWS {
 
@@ -56,7 +57,7 @@ public class SendAndAnalysisWS {
                 in = new InputStreamReader(httpConn.getInputStream(), "UTF-8");
             }
             else {
-                Logger logger = Logger.getLogger(SendAndAnalysisWS.class.getName());
+                Logger logger = LoggerFactory.getLogger(SendAndAnalysisWS.class.getName());
                 logger.error("soap响应报文错误!");
             }
 

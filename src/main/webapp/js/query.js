@@ -135,6 +135,10 @@ function generalOutput(paras, question, robootAnswerJq) {
         url: "search/questionAnswer",
         data: JSON.stringify(paras),
         success: function (res) {
+            if (res === null || res.status === "failed") {
+                robootAnswerJq.html("调用失败！");
+                return;
+            }
             var json = res.data[0];
             var a = `
                     <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>

@@ -6,6 +6,16 @@ public class LLM {
     private EmbeddingConfig embedding;
     private List<Backend> backends;
 
+    private String steam_backend;
+
+    public String getSteam_backend() {
+        return steam_backend;
+    }
+
+    public void setSteam_backend(String steam_backend) {
+        this.steam_backend = steam_backend;
+    }
+
     public List<Backend> getBackends() {
         return backends;
     }
@@ -27,6 +37,7 @@ public class LLM {
         return "LLM{" +
                 "embedding=" + embedding +
                 ", backends=" + backends +
+                ", steam_backend='" + steam_backend + '\'' +
                 '}';
     }
 }

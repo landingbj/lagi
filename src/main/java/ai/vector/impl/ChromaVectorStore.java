@@ -85,11 +85,20 @@ public class ChromaVectorStore implements VectorStore {
 
     public List<IndexRecord> query(QueryCondition queryCondition, String category) {
         List<IndexRecord> result = new ArrayList<>();
+        Collection collection = getCollection(category);
+        Collection.GetResult gr;
+        if (queryCondition.getText() == null) {
+            try {
+                gr = collection.get(null, queryCondition.getWhere(), null);
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
+            return getIndexRecords(result, gr);
+        }
         List<String> queryTexts = Collections.singletonList(queryCondition.getText());
         Integer n = queryCondition.getN();
         Map<String, String> where = queryCondition.getWhere();
         Collection.QueryResponse qr = null;
-        Collection collection = getCollection(category);
         try {
             qr = collection.query(queryTexts, n, where, null, null);
         } catch (ApiException e) {
@@ -109,6 +118,18 @@ public class ChromaVectorStore implements VectorStore {
         return result;
     }
 
+    private List<IndexRecord> getIndexRecords(List<IndexRecord> result, Collection.GetResult gr) {
+        for (int i = 0; i < gr.getDocuments().size(); i++) {
+            IndexRecord indexRecord = IndexRecord.newBuilder()
+                    .withDocument(gr.getDocuments().get(i))
+                    .withId(gr.getIds().get(i))
+                    .withMetadata(gr.getMetadatas().get(i))
+                    .build();
+            result.add(indexRecord);
+        }
+        return result;
+    }
+
     public List<IndexRecord> fetch(List<String> ids) {
         return fetch(ids, this.config.getDefault_category());
     }
@@ -122,15 +143,7 @@ public class ChromaVectorStore implements VectorStore {
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
-        for (int i = 0; i < gr.getDocuments().size(); i++) {
-            IndexRecord indexRecord = IndexRecord.newBuilder()
-                    .withDocument(gr.getDocuments().get(i))
-                    .withId(gr.getIds().get(i))
-                    .withMetadata(gr.getMetadatas().get(i))
-                    .build();
-            result.add(indexRecord);
-        }
-        return result;
+        return getIndexRecords(result, gr);
     }
 
     public void update() {

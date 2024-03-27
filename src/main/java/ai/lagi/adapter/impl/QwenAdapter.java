@@ -1,32 +1,27 @@
 package ai.lagi.adapter.impl;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.google.gson.Gson;
-
 import ai.lagi.adapter.ILlmAdapter;
-import ai.lagi.pojo.QwenCompletionRequest;
-import ai.lagi.pojo.QwenInput;
-import ai.lagi.pojo.QwenMessage;
-import ai.lagi.pojo.QwenParameters;
-import ai.lagi.pojo.QwenResponse;
+import ai.lagi.utils.MappingIterable;
 import ai.migrate.pojo.Backend;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.qa.ChatCompletionUtil;
-import ai.utils.qa.HttpUtil;
+import com.alibaba.dashscope.aigc.generation.Generation;
+import com.alibaba.dashscope.aigc.generation.GenerationParam;
+import com.alibaba.dashscope.aigc.generation.GenerationResult;
+import com.alibaba.dashscope.common.Message;
+import com.alibaba.dashscope.exception.InputRequiredException;
+import com.alibaba.dashscope.exception.NoApiKeyException;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class QwenAdapter implements ILlmAdapter {
-    private static Gson gson = new Gson();
-    private static final String COMPLETIONS_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
-    private static final int HTTP_TIMEOUT = -15 * 1000;
-
     private Backend backendConfig;
 
     public QwenAdapter(Backend backendConfig) {
@@ -35,48 +30,60 @@ public class QwenAdapter implements ILlmAdapter {
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest request) {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + backendConfig.getApi_key());
-        String jsonResult = null;
+        Generation gen = new Generation();
+        GenerationParam param = convertRequest(request);
+        GenerationResult result;
         try {
-            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, convertRequest(request), HTTP_TIMEOUT);
-        } catch (IOException e) {
-            e.printStackTrace();
+            result = gen.call(param);
+        } catch (NoApiKeyException | InputRequiredException e) {
+            throw new RuntimeException(e);
         }
-        if (jsonResult == null) {
-            return null;
-        }
-        QwenResponse response = gson.fromJson(jsonResult, QwenResponse.class);
-        if (response == null || response.getOutput() == null) {
-            return null;
-        }
-        return convertResponse(response);
+        return convertResponse(result);
     }
 
-    private QwenCompletionRequest convertRequest(ChatCompletionRequest request) {
-        QwenCompletionRequest result = new QwenCompletionRequest();
-        result.setModel(request.getModel());
-        List<QwenMessage> messages = new ArrayList<>();
+    @Override
+    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        Generation gen = new Generation();
+        GenerationParam param = convertRequest(chatCompletionRequest);
+        Flowable<GenerationResult> result = null;
+        try {
+            result = gen.streamCall(param);
+        } catch (NoApiKeyException | InputRequiredException e) {
+            throw new RuntimeException(e);
+        }
+        Iterable<GenerationResult> resultIterable = result.blockingIterable();
+        Iterable<ChatCompletionResult> iterable = new MappingIterable<>(resultIterable, this::convertResponse);
+        return Observable.fromIterable(iterable);
+    }
+
+    private GenerationParam convertRequest(ChatCompletionRequest request) {
+        List<Message> messages = new ArrayList<>();
         for (ChatMessage chatMessage : request.getMessages()) {
-            QwenMessage qwenMessage = new QwenMessage();
-            qwenMessage.setRole(chatMessage.getRole());
-            qwenMessage.setContent(chatMessage.getContent());
-            messages.add(qwenMessage);
+            Message msg = Message.builder()
+                    .role(chatMessage.getRole())
+                    .content(chatMessage.getContent())
+                    .build();
+            messages.add(msg);
         }
-        QwenInput qwenInput = new QwenInput();
-        qwenInput.setMessages(messages);
-        result.setInput(qwenInput);
-        QwenParameters qwenParameters = new QwenParameters();
-        qwenParameters.setMax_tokens(request.getMax_tokens());
-        qwenParameters.setTemperature(request.getTemperature());
-        result.setParameters(qwenParameters);
-        return result;
+
+        boolean stream = Optional.ofNullable(request.getStream()).orElse(false);
+        String model = Optional.ofNullable(request.getModel()).orElse(backendConfig.getModel());
+
+        return GenerationParam.builder()
+                .apiKey(backendConfig.getApi_key())
+                .model(model)
+                .messages(messages)
+                .resultFormat(GenerationParam.ResultFormat.MESSAGE)
+                .maxTokens(request.getMax_tokens())
+                .temperature((float) request.getTemperature())
+                .enableSearch(stream)
+                .incrementalOutput(stream)
+                .build();
     }
 
-    private ChatCompletionResult convertResponse(QwenResponse response) {
+    private ChatCompletionResult convertResponse(GenerationResult response) {
         ChatCompletionResult result = new ChatCompletionResult();
-        result.setId(response.getRequest_id());
+        result.setId(response.getRequestId());
         result.setCreated(ChatCompletionUtil.getCurrentUnixTimestamp());
         result.setModel(this.backendConfig.getModel());
         ChatCompletionChoice choice = new ChatCompletionChoice();
@@ -85,7 +92,7 @@ public class QwenAdapter implements ILlmAdapter {
         chatMessage.setContent(response.getOutput().getText());
         chatMessage.setRole("assistant");
         choice.setMessage(chatMessage);
-        choice.setFinish_reason(response.getOutput().getFinish_reason());
+        choice.setFinish_reason(response.getOutput().getFinishReason());
         List<ChatCompletionChoice> choices = new ArrayList<>();
         choices.add(choice);
         result.setChoices(choices);
