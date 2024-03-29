@@ -4,75 +4,6 @@
 var lastFilePath = "";
 let mediaRecorder = null;
 let audioData = [];
-let pressStartTime; // 记录按下按钮的时间戳
-let pressEndTime; // 记录松开按钮的时间戳
-// 记录录音是否正在进行中
-let isRecording = false;
-
-// 长按事件处理程序
-var resAudioData = null;
-
-// function startRecording() {
-//     console.log("开始录音");
-//     navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-//     navigator.mediaDevices.getUserMedia({
-//             audio: true
-//         })
-//         .then((stream) => {
-//             mediaRecorder = new MediaRecorder(stream, {
-//                 mimeType: "audio/webm",
-//             });
-
-//             mediaRecorder.start();
-//             isRecording = true;
-
-//             mediaRecorder.addEventListener("dataavailable", (ev) => {
-//                 audioData.push(ev.data);
-//             });
-
-//             mediaRecorder.addEventListener("stop", () => {
-//                 audioData = new Blob(audioData, {
-//                     type: "audio/mp3"
-//                 });
-//                 resAudioData = audioData
-//                 console.log(audioData);
-//             });
-//         })
-//         .catch((info) => {
-//         	$("#voiceIcon").css("background", "");
-//             alert("无法获取麦克风权限！错误信息：" + info);
-//         });
-// }
-
-
-// function getRecorderPermission() {
-
-//     navigator.mediaDevices.getUserMedia  = navigator.mediaDevices.getUserMedia || navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-//     if(navigator.mediaDevices.getUserMedia) {
-//         console.log("支持");
-//         navigator.mediaDevices.getUserMedia({
-//             audio: true
-//         })
-//         .then()
-//         .catch((info) => {
-//         	$("#voiceIcon").css("background", "");
-//             alert("无法获取麦克风权限！错误信息：" + info);
-//         });
-//     } else {
-//         alert("无法获取麦克风权限");
-//     }
-// }
-
-
-// 停止录音
-// function stopRecording() {
-//     console.log("停止录音");
-//     console.log("isRecording为" + isRecording);
-//     if (isRecording) {
-//         mediaRecorder.stop();
-//         isRecording = false;
-//     }
-// }
 
 // 播放录音
 function playRecording() {
@@ -101,104 +32,14 @@ voiceButton.addEventListener("mousemove", (e) => {
 // 松开按钮停止录音
 voiceButton.addEventListener("mouseup", () => {
     clearTimeout(timeOutEvent);
-    console.log("长按结束");
-    // alert("长按结束!!!");
-    // finishRecord();
     Recoder.stop();
 });
-
-// function doRecord() {
-//     navigator.permissions.query(
-//         { name: 'microphone' }
-//     ).then(function(permissionStatus){
-
-//         console.log(permissionStatus.state); // granted, denied, prompt
-//         if (permissionStatus.state !== 'prompt') {
-//             pressStartTime = new Date().getTime();
-//             $("#voiceIcon").css("background", "#eeeeee");
-//             startRecording();
-//         } else {
-//             getRecorderPermission();
-//         }
-//         permissionStatus.onchange = function(){
-//             console.log("Permission changed to " + this.state);
-//         }
-//     })
-// }
-
-// function finishRecord() {
-//     if (!isRecording) {
-// 		return;
-// 	}
-//     pressEndTime = new Date().getTime();
-//     $("#voiceIcon").css("background", "");
-//     const pressDuration = pressEndTime - pressStartTime;
-//     stopRecording();
-//     if (audioData == null) {
-//         console.log("录音为空")
-//         return false;
-//     }
-//     setTimeout(() => {
-//         const formData = new FormData();
-
-//         if (!(audioData instanceof Blob)) {
-//             // audioData
-//         }
-
-//         // 将MP3音频文件添加到FormData对象
-//         const audioDataPost = new Blob([audioData], {
-//             type: 'audio/mp3'
-//         });
-//         formData.append('audioFile', audioDataPost, 'audiofile.mp3');
-
-//         const xhr = new XMLHttpRequest();
-//         xhr.open('POST', '/search/uploadVoice', true);
-//         xhr.setRequestHeader('Access-Control-Allow-Origin', 'localhost');
-//         xhr.setRequestHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-//         xhr.setRequestHeader('Access-Control-Allow-Headers', 'Content-Type');
-//         xhr.setRequestHeader('Access-Control-Allow-Credentials', 'true');
-//         console.log("开始上传");
-
-//         xhr.onload = function () {
-//             if (xhr.status === 200) {
-//                 console.log('上传成功');
-//                 const responseText = xhr.responseText;
-//                 // 这是 返回的结果
-//                 if (responseText != "") {
-//                     try {
-
-//                         var json = JSON.parse(responseText);
-//                         if (json.code == 1) {
-//                             console.log(json.msg)
-//                             $('#queryBox textarea').val(json.msg);
-//                         }
-//                     } catch {
-//                         alert("转换失败");
-//                     }
-//                 } else {
-//                     alert("转换失败");
-//                 }
-//                 console.log(responseText);
-//             } else {
-
-//                 alert("转换失败");
-//             }
-//         };
-
-//         xhr.send(formData);
-//         console.log(audioData);
-//         audioData = [];
-//     }, 500); // 半秒延迟
-// }
-
 
 var timeOutEvent = 0;
 $(function () {
     $("#voiceIcon").on({
         touchstart: function (e) {
             longPress();
-            // timeOutEvent = setTimeout(()=>{longPress()},500);
-            // e.preventDefault();;
         },
         touchmove: function () {
             clearTimeout(timeOutEvent);
@@ -209,9 +50,6 @@ $(function () {
             if (timeOutEvent != 0) {
                 alert("你这是点击，不是长按");
             }
-            console.log("长按结束");
-            // alert("长按结束!!!");
-            // finishRecord();
             Recoder.stop();
             return false;
         }
@@ -220,7 +58,6 @@ $(function () {
 
 function longPress() {
     timeOutEvent = 0;
-    console.log("长按事件触发发");
     Recoder.start();
 }
 
@@ -257,8 +94,6 @@ forwardButton.addEventListener("click", () => {
 
 // 获取当前的IP地址和端口号的示例函数
 function getCurrentIpAddressAndPort() {
-
-
     const currentUrl = window.location.href;
     // 获取currentUrl的主机地址
     const currentHost = new URL(currentUrl).host;
@@ -319,7 +154,6 @@ function txtTovoice(txt, emotion) {
                         }
                     });
                 }
-
                 console.log('响应数据:', responseText);
             } else {
                 // 请求失败，处理错误
@@ -473,18 +307,14 @@ fileUploadButton.addEventListener("click", function () {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         // 请求成功，可以在这里处理服务器的响应
-                        console.log("上传成功");
-                        console.log(xhr.responseText);
                         responseText = xhr.responseText;
                         if (responseText != "") {
-                            // try{
-
                             var json = JSON.parse(responseText);
                             if (fileStatus == 'pic') {
                                 if (json.status === "success") {
                                     var question = "您所上传的图片名称为：" + selectedFile.name;
                                     var result = "已经收到您上传的图片。如果您想生成视频，请输入\"视频生成\"。" +
-                                    		"如果您想增强图片，请输入\"图像增强\"。如果您想使用AI描述图片，请输入\"看图说话\"。";
+                                        "如果您想增强图片，请输入\"图像增强\"。如果您想使用AI描述图片，请输入\"看图说话\"。";
                                     lastFilePath = json.filePath;
                                     textQuery1(question, result, fileStatus);
                                 } else {
@@ -492,7 +322,7 @@ fileUploadButton.addEventListener("click", function () {
                                     return;
                                 }
                             } else if (fileStatus == "doc") {
-                                if (json.status == true) {
+                                if (json.status == "success") {
 
                                     // var question = "您所上传的文档文件名称为：" + selectedFile.name;
                                     // var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。"
@@ -500,7 +330,7 @@ fileUploadButton.addEventListener("click", function () {
                                     var question = "您所上传的文档文件名称为：" + selectedFile.name;
                                     var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。"
                                     lastFilePath = json.filePath;
-                                    console.log("文件为"+lastFilePath)
+                                    console.log("文件为" + lastFilePath)
                                     textQuery1(question, result, fileStatus);
                                 } else {
                                     alert("上传失败")
@@ -530,7 +360,7 @@ fileUploadButton.addEventListener("click", function () {
                                 if (json.status == "success") {
                                     var question = "您所上传的视频文件名称为：" + selectedFile.name;
                                     var result = "已经收到您上传的视频。如果您想视频追踪，请输入\"视频追踪\"。" +
-                                    		"如果您想视频增强，请输入\"视频增强\"。";
+                                        "如果您想视频增强，请输入\"视频增强\"。";
                                     lastFilePath = json.filePath;
                                     textQuery1(question, result, fileStatus);
                                 } else {
@@ -625,14 +455,11 @@ async function voiceToTxt(selectedFile) {
 function textToVoice(emotionSelect) {
     var text = $(emotionSelect).parent().parent().parent().find('.result-streaming').text().trim();
     var emotion = $(emotionSelect).find("option:selected").val();
-    console.log('textToVoice', text, emotion);
 
     const audioElement = $(emotionSelect).parent().find('.myAudio1')[0];
     const playButton = $(emotionSelect).parent().find('.playIcon1')[0];
     const audioSource = $(emotionSelect).parent().find("audioSource1")[0];
     audioElement.src = "";
-
-//    return;
 
     $.ajax({
         type: "POST",
@@ -666,23 +493,12 @@ function textToVoice(emotionSelect) {
 
         }
     });
-
-
     return;
-   
-
 }
 
 $(document).on("change", ".emotionSelect", function () {
-//	var text = $(this).parent().parent().parent().find('.result-streaming').text().trim();
-//	console.log(text);
-//    var t = this;
-//    var num = $(".idx  .emotionSelect").index(t);
-//    var selectElement = document.getElementsByClassName("emotionSelect")[num];
-//    var emotion = selectElement.value;
     textToVoice(this);
 })
-
 
 function remoteSolve(blob) {
     const formData = new FormData();
@@ -694,7 +510,6 @@ function remoteSolve(blob) {
     xhr.setRequestHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     xhr.setRequestHeader('Access-Control-Allow-Headers', 'Content-Type');
     xhr.setRequestHeader('Access-Control-Allow-Credentials', 'true');
-    console.log("开始上传");
     xhr.onload = function () {
         if (xhr.status === 200) {
             console.log('上传成功');
@@ -792,7 +607,7 @@ var Recoder = {
                     // 录制开始
                     _mediaRecorder.start();
                 }, () => {
-                	$("#voiceIcon").css("background", "");
+                    $("#voiceIcon").css("background", "");
                     console.log("打开失败!");
                 });
             } else {

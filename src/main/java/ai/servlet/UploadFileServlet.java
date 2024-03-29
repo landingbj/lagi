@@ -3,6 +3,7 @@ package ai.servlet;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -39,12 +40,8 @@ import com.ibm.icu.text.CharsetMatch;
 
 public class UploadFileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
-    private static final int FILE_MAX_BYTE_SIZE = AiGlobal.FILE_PARTITION_CHUNK_SIZE;
-
     private Gson gson = new Gson();
     private FileService fileService = new FileService();
-
     private static Configuration config = LagiGlobal.config;
     private VectorDbService vectorDbService = new VectorDbService(config);
     private UploadFileService uploadFileService = new UploadFileService();
@@ -77,8 +74,7 @@ public class UploadFileServlet extends HttpServlet {
         this.doGet(req, resp);
     }
 
-    private void deleteFile(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    private void deleteFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("utf-8");
         resp.setContentType("application/json;charset=utf-8");
         List<String> idList = gson.fromJson(requestToJson(req), new TypeToken<List<String>>() {
@@ -132,7 +128,7 @@ public class UploadFileServlet extends HttpServlet {
     }
 
     // 下载文件
-    private void downloadFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void downloadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String filePath = req.getParameter("filePath");
         String fileName = req.getParameter("fileName");
@@ -205,7 +201,7 @@ public class UploadFileServlet extends HttpServlet {
         out.close();
     }
 
-    private void uploadImageFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void uploadImageFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession();
 
         JsonObject jsonResult = new JsonObject();
@@ -255,13 +251,9 @@ public class UploadFileServlet extends HttpServlet {
 
     private void uploadLearningFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
-        session.setAttribute("uploadProgress", 0);
-
         String category = req.getParameter("category");
-
-//        JSONObject jsonResult = new JSONObject();
         JsonObject jsonResult = new JsonObject();
-        jsonResult.addProperty("result", false);
+        jsonResult.addProperty("status", "success");
         DiskFileItemFactory factory = new DiskFileItemFactory();
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
@@ -272,20 +264,17 @@ public class UploadFileServlet extends HttpServlet {
         }
 
         List<File> files = new ArrayList<>();
-        Map<String, String> realNameMap = new HashMap<String, String>();
+        Map<String, String> realNameMap = new HashMap<>();
 
         try {
-            // 存储文件
             List<?> fileItems = upload.parseRequest(req);
-            Iterator<?> it = fileItems.iterator();
-
-            while (it.hasNext()) {
-                FileItem fi = (FileItem) it.next();
+            for (Object fileItem : fileItems) {
+                FileItem fi = (FileItem) fileItem;
 
                 if (!fi.isFormField()) {
                     String fileName = fi.getName();
-                    File file = null;
-                    String newName = null;
+                    File file;
+                    String newName;
                     do {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
@@ -306,51 +295,38 @@ public class UploadFileServlet extends HttpServlet {
             ex.printStackTrace();
         }
 
-        session.setAttribute("uploadProgress", 20);
-        List<String> jsonArray = new ArrayList<>();
-
-        if (files.size() != 0) {
+        if (!files.isEmpty()) {
             String content = "";
 
             for (File file : files) {
                 String extString = file.getName().substring(file.getName().lastIndexOf("."));
-
-                InputStream in = null;
-
-
-                in = new FileInputStream(file);
-
-
-                if (".doc".equals(extString) || ".docx".equals(extString)) {
-                    content = WordUtils.getContentsByWord(in, extString);
-                } else if (".txt".equals(extString)) {
-                    content = getString(in);
-                } else if (".pdf".equals(extString)) {
-                    content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
-                } else {
-                    jsonResult.addProperty("msg", "请选择Word/PDF/Txt文件");
+                InputStream in = Files.newInputStream(file.toPath());
+                switch (extString) {
+                    case ".doc":
+                    case ".docx":
+                        content = WordUtils.getContentsByWord(in, extString);
+                        break;
+                    case ".txt":
+                        content = getString(in);
+                        break;
+                    case ".pdf":
+                        content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
+                        break;
+                    default:
+                        jsonResult.addProperty("msg", "请选择Word/PDF/Txt文件");
+                        break;
                 }
                 in.close();
 
                 if (!StringUtils.isEmpty(content)) {
-                    String fileName = file.getName().replace(extString, "");
-                    List<String> fileList = splitFile(fileName, content, FILE_MAX_BYTE_SIZE);
-                    jsonArray.addAll(fileList);
                     String filename = realNameMap.get(file.getName());
-                    new AddDocIndex(file, extString, category, filename, content).start();
+                    new AddDocIndex(file, category, filename, content).start();
                 }
-                session.setAttribute("uploadProgress", 40);
-            }
-            if (jsonArray.size() > 0) {
-                jsonResult.addProperty("result", true);
             }
         }
-
-        session.setAttribute("uploadFiles", new LinkedList<String>(jsonArray));
         if (!jsonResult.has("msg")) {
-            jsonResult.addProperty("result", true);
+            jsonResult.addProperty("status", "success");
         }
-
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
@@ -366,7 +342,7 @@ public class UploadFileServlet extends HttpServlet {
 
         private String content;
 
-        public AddDocIndex(File file, String extString, String category, String filename, String content) {
+        public AddDocIndex(File file, String category, String filename, String content) {
             this.file = file;
             this.category = category;
             this.filename = filename;
@@ -381,9 +357,7 @@ public class UploadFileServlet extends HttpServlet {
 
         private void addDocIndexes() {
             Map<String, Object> metadatas = new HashMap<>();
-
             String fileId = UUID.randomUUID().toString().replace("-", "");
-
             String filepath = file.getAbsolutePath();
 
             metadatas.put("filename", filename);
@@ -393,18 +367,20 @@ public class UploadFileServlet extends HttpServlet {
 
             List<FileInfo> fileList = new ArrayList<>();
             try {
-//                ExtractContentResponse response = fileService.extractContent(file);
-//                List<Document> docs = response.getData();
-                List<Document> docs = fileService.splitChunks(this.content, 512);
+                List<Document> docs;
+                if (LagiGlobal.IMAGE_EXTRACT_ENABLE) {
+                    ExtractContentResponse response = fileService.extractContent(file);
+                    docs = response.getData();
+                } else {
+                    docs = fileService.splitChunks(this.content, 512);
+                }
+
                 for (Document doc : docs) {
                     FileInfo fileInfo = new FileInfo();
                     String embeddingId = UUID.randomUUID().toString().replace("-", "");
                     fileInfo.setEmbedding_id(embeddingId);
                     fileInfo.setText(doc.getText());
-                    Map<String, Object> tmpMetadatas = new HashMap<>();
-                    for (Map.Entry<String, Object> entry : metadatas.entrySet()) {
-                        tmpMetadatas.put(entry.getKey(), entry.getValue());
-                    }
+                    Map<String, Object> tmpMetadatas = new HashMap<>(metadatas);
                     if (doc.getImage() != null) {
                         tmpMetadatas.put("image", doc.getImage());
                     }
@@ -424,40 +400,6 @@ public class UploadFileServlet extends HttpServlet {
         }
     }
 
-    private List<String> splitFile(String fileName, String fileContent, int maxByteSize) throws IOException {
-        String destDir = this.getServletContext().getRealPath(AiGlobal.DIR_TEMP);
-        File tmpFile = new File(destDir);
-        if (!tmpFile.exists()) {
-            tmpFile.mkdir();
-        }
-
-        List<String> result = new ArrayList<>();
-        String regx = "[。？！.；;!\\?]";
-        String[] strs = fileContent.split(regx);
-
-        int fileIdx = 1;
-
-        StringBuilder chunk = new StringBuilder();
-        for (int i = 0; i < strs.length; i++) {
-            chunk.append(strs[i]).append(";");
-            if (chunk.toString().getBytes(StandardCharsets.UTF_8).length > FILE_MAX_BYTE_SIZE) {
-                String name = fileName + "_" + fileIdx++ + ".txt";
-
-                FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
-
-                result.add(name);
-                chunk = new StringBuilder();
-            }
-        }
-
-        if (chunk.length() > 0) {
-            String name = fileName + "_" + fileIdx + ".txt";
-            FileUtils.writeStringToFile(new File(destDir + "/" + name), chunk.toString(), StandardCharsets.UTF_8);
-            result.add(name);
-        }
-        return result;
-    }
-
     private String getString(InputStream in) {
         String str = "";
         try {
@@ -469,10 +411,8 @@ public class UploadFileServlet extends HttpServlet {
                 Reader reader = cm.getReader();
                 str = IOUtils.toString(reader);
             } else {
-                str = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+                str = IOUtils.toString(in, StandardCharsets.UTF_8);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -484,14 +424,12 @@ public class UploadFileServlet extends HttpServlet {
         InputStream in = request.getInputStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];
-        int len = 0;
+        int len;
         while ((len = in.read(buffer)) != -1) {
             out.write(buffer, 0, len);
         }
         out.close();
         in.close();
-
-        String json = new String(out.toByteArray(), "utf-8");
-        return json;
+        return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 }

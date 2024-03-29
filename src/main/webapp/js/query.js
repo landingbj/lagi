@@ -44,8 +44,9 @@ function getTextResult(question, robootAnswerJq, conversation) {
         "messages": CONVERSATION_CONTEXT.concat([
             {"role": "user", "content": question}
         ]),
-        "channelId": channelId,
-        "stream": false
+        "temperature": 0.8,
+        "max_tokens": 1024,
+        "stream": true
     };
 
     var queryUrl = "search/detectIntent";
@@ -56,9 +57,9 @@ function getTextResult(question, robootAnswerJq, conversation) {
         data: JSON.stringify(paras),
         success: function (res) {
             let answer = '';
-            if (res != null && res.status == "success") {
+            if (res != null && res.status === "success") {
                 // 判断文生图
-                if (res.result != undefined) {
+                if (res.result !== undefined) {
                     result = `
                         <img src='${res.result}' alt='Image' style="width: 320px;">
                     `
@@ -89,15 +90,15 @@ function getTextResult(question, robootAnswerJq, conversation) {
                     robootAnswerJq.html(result);
                     answer = result;
                 } else if (res.svdVideoUrl != null) {
-                    result = "<video id='media' src='" + res.svdVideoUrl + "' controls width='400px' heigt='400px'></video>";
+                    result = "<video id='media' src='" + res.svdVideoUrl + "' controls width='400px' height='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
                 } else if (res.type != null && res.type === 'mot') {
-                     result = "<video id='media' src='" + res.data + "' controls width='400px' heigt='400px'></video>";
+                     result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
                 } else if (res.type != null && res.type === 'mmediting') {
-                     result = "<video id='media' src='" + res.data + "' controls width='400px' heigt='400px'></video>";
+                     result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
                 } else {
@@ -132,9 +133,10 @@ function generalOutput(paras, question, robootAnswerJq) {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: "search/questionAnswer",
+        url: "v1/chat/completions",
         data: JSON.stringify(paras),
         success: function (res) {
+
             if (res === null || res.status === "failed") {
                 robootAnswerJq.html("调用失败！");
                 return;
@@ -163,7 +165,7 @@ function generalOutput(paras, question, robootAnswerJq) {
 
 function streamOutput(paras, question, robootAnswerJq) {
     async function generateStream(paras) {
-        const response = await fetch('search/questionAnswer', {
+        const response = await fetch('v1/chat/completions', {
             method: "POST",
             cache: "no-cache",
             keepalive: true,
@@ -190,31 +192,43 @@ function streamOutput(paras, question, robootAnswerJq) {
                     break;
                 }
                 var json = JSON.parse(chunk);
-                var a = `
-                                    <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>
-                                    `
-                var t = json.text;
+                if (json.choices === undefined || json.choices.length === 0) {
+                    queryLock = false;
+                    robootAnswerJq.html("调用失败！");
+                    break
+                }
+                var chatMessage = json.choices[0].message;
+                var a = '<a style="color: #666;text-decoration: none;" ' +
+                    'href="uploadFile/downloadFile?filePath=' + chatMessage.filepath + '&fileName=' +
+                    chatMessage.filename + '">' + chatMessage.filename + '</a>';
+
+                if (chatMessage.content === undefined) {
+                    continue;
+                }
+                var t = chatMessage.content;
                 t = t.replaceAll("\n", "<br>");
                 fullText += t;
                 result = `
-                                        ${fullText} <br>
-                                        ${json.imageList != undefined ? `<img src='${json.imageList[0]}' alt='Image'>` : ""}
-                                        ${json.filename != undefined ? `附件:${a}` : ""}<br>
-                                `
+                        ${fullText} <br>
+                        ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
+                        ${chatMessage.filename !== undefined ? `附件:${a}` : ""}<br>
+                        `
                 robootAnswerJq.html(result);
             }
         }
     }
 
     generateStream(paras).then(r => {
-        answer = result;
         let lastAnswer = CONVERSATION_CONTEXT[CONVERSATION_CONTEXT.length - 1]["content"]
         txtTovoice(lastAnswer, "default");
         enableQueryBtn();
         querying = false;
     }).catch((err) => {
+        console.error(err);
         enableQueryBtn();
         querying = false;
+        queryLock = false;
+        robootAnswerJq.html("调用失败！");
     });
 }
 

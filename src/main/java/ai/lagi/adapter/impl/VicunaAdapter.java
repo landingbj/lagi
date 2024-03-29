@@ -23,18 +23,20 @@ public class VicunaAdapter implements ILlmAdapter {
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 15 * 1000;
     private final Backend backendConfig;
+
     public VicunaAdapter(Backend backendConfig) {
         this.backendConfig = backendConfig;
     }
 
     @Override
-    public ChatCompletionResult completions(ChatCompletionRequest request) {
+    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
+        setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("Authorization", "Bearer " + backendConfig.getApi_key());
         String jsonResult = null;
         try {
-            jsonResult = HttpUtil.httpPost(backendConfig.getApi_address(), headers, request, HTTP_TIMEOUT);
+            jsonResult = HttpUtil.httpPost(backendConfig.getApi_address(), headers, chatCompletionRequest, HTTP_TIMEOUT);
         } catch (IOException e) {
             logger.error("", e);
         }
@@ -50,6 +52,7 @@ public class VicunaAdapter implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        setDefaultModel(chatCompletionRequest);
         String apiUrl = backendConfig.getApi_address();
         String json = gson.toJson(chatCompletionRequest);
         String apiKey = backendConfig.getApi_key();
@@ -57,11 +60,21 @@ public class VicunaAdapter implements ILlmAdapter {
             if (e.equals("[DONE]")) {
                 return null;
             }
-            return gson.fromJson(e, ChatCompletionResult.class);
+            ChatCompletionResult result = gson.fromJson(e, ChatCompletionResult.class);
+            result.getChoices().forEach(choice -> {
+                choice.setMessage(choice.getDelta());
+                choice.setDelta(null);
+            });
+            return result;
         };
-        ObservableList<ChatCompletionResult> result =
-                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, convertFunc);
+        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, convertFunc);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
+    }
+
+    private void setDefaultModel(ChatCompletionRequest request) {
+        if (request.getModel() == null) {
+            request.setModel(backendConfig.getModel());
+        }
     }
 }

@@ -31,14 +31,14 @@ public class GPTAdapter implements ILlmAdapter {
     }
 
     @Override
-    public ChatCompletionResult completions(ChatCompletionRequest request) {
+    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("Authorization", "Bearer " + backendConfig.getApi_key());
         String jsonResult = null;
-        request.setCategory(null);
+        chatCompletionRequest.setCategory(null);
         try {
-            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, request, HTTP_TIMEOUT);
+            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
         } catch (IOException e) {
             logger.error("", e);
         }
@@ -54,17 +54,21 @@ public class GPTAdapter implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        String apiUrl = COMPLETIONS_URL;
         String json = gson.toJson(chatCompletionRequest);
         String apiKey = backendConfig.getApi_key();
         Function<String, ChatCompletionResult> convertFunc = e -> {
             if (e.equals("[DONE]")) {
                 return null;
             }
-            return gson.fromJson(e, ChatCompletionResult.class);
+            ChatCompletionResult result = gson.fromJson(e, ChatCompletionResult.class);
+            result.getChoices().forEach(choice -> {
+                choice.setMessage(choice.getDelta());
+                choice.setDelta(null);
+            });
+            return result;
         };
         ObservableList<ChatCompletionResult> result =
-                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, convertFunc);
+                ServerSentEventUtil.streamCompletions(json, COMPLETIONS_URL, apiKey, convertFunc);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }

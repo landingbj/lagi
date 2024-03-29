@@ -20,7 +20,6 @@ function setCookie(cname, cvalue, exdays) {
 }
 
 function getCookie(cname) {
-    console.log(123);
     var name = cname + "=";
     var ca = document.cookie.split(';');
     for (var i = 0; i < ca.length; i++) {
@@ -115,7 +114,6 @@ function changeTheme(el) {
     let that = $(el);
     let th = that.prop('data-theme');
     themeIndex = th == 0 ? 1 : 0;
-    console.log("theme", themes[themeIndex]);
     chooseTheme();
     // dom 层
     that.prop('data-theme', themeIndex);
@@ -137,7 +135,6 @@ function chooseTheme() {
 function query() {
     // 获取文档内容
     let queryString = $('#queryContent').val();
-    console.log("queryString", queryString, isBlank(queryString));
     $('#queryContent').val('');
     if (isBlank(queryString)) {
         return;
@@ -160,10 +157,7 @@ function query() {
         // 调用接口拿到结果
         let answer = getAnswer(queryString);
         // 跟新答案
-        console.log(answerJq);
         fillAnswer(answerJq, answer)
-        // answerJq.text(answer);
-
         enableQueryBtn();
         querying = false;
     })
@@ -205,7 +199,6 @@ function getAnswer(question) {
         "channelId": channelId
         // 这里最后不能写死
     };
-    console.log("paras", paras);
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
@@ -216,7 +209,6 @@ function getAnswer(question) {
         success: function (json) {
 //        	defer.resolve(json);
             var res = $.parseJSON(JSON.stringify(json));    //这里需要修改解析方式
-            console.log(res);
             if (res != null && res.status == "success") {
                 // 将json对象与uuid一起写入到session中
                 var uuid = getUuid();

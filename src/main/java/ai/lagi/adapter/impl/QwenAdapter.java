@@ -29,9 +29,9 @@ public class QwenAdapter implements ILlmAdapter {
     }
 
     @Override
-    public ChatCompletionResult completions(ChatCompletionRequest request) {
+    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         Generation gen = new Generation();
-        GenerationParam param = convertRequest(request);
+        GenerationParam param = convertRequest(chatCompletionRequest);
         GenerationResult result;
         try {
             result = gen.call(param);

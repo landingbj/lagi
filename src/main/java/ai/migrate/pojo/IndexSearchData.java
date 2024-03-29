@@ -11,6 +11,15 @@ public class IndexSearchData {
     private List<String> filepath;
     private Float distance;
     private String image;
+    private List<String> imageList;
+
+    public List<String> getImageList() {
+        return imageList;
+    }
+
+    public void setImageList(List<String> imageList) {
+        this.imageList = imageList;
+    }
 
     public String getParentId() {
         return parentId;

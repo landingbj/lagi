@@ -19,7 +19,8 @@ public class LagiGlobal {
             e.printStackTrace();
         }
     }
-    
+
+    public static final boolean IMAGE_EXTRACT_ENABLE = false;
     public static final String CHAT_COMPLETION_REQUEST = "ChatCompletionRequest";
     public static final String CHAT_COMPLETION_CONFIG = "ChatCompletionConfig";
 

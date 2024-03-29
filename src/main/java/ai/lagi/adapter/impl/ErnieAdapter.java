@@ -35,6 +35,7 @@ public class ErnieAdapter implements ILlmAdapter {
         return convertResponse(response);
     }
 
+    @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         String secretKey = this.backendConfig.getSecret_key();
         String apiKey = this.backendConfig.getApi_key();
