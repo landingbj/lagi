@@ -34,7 +34,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-/samples/
-/src/test/java/zxw/
+/lagi-web/samples/
+/lagi-web/src/test/java/zxw/
 /tomcat*
-/src/main/webapp/static/
+/lagi-web/src/main/webapp/static/
