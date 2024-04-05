@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import ai.index.BaseIndex;
 import ai.migrate.db.Conn;
-import ai.migrate.pojo.UserEntity;
+import ai.common.pojo.UserEntity;
 
 public class UserDao {
 	public int addTempCategory(UserEntity entity) throws SQLException {

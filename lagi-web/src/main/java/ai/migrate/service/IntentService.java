@@ -1,7 +1,7 @@
 package ai.migrate.service;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
 
 public class IntentService {
     private static AiServiceCall call = new AiServiceCall();

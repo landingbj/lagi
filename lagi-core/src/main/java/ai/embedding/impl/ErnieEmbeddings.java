@@ -1,7 +1,7 @@
 package ai.embedding.impl;
 
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.EmbeddingConfig;
+import ai.common.pojo.EmbeddingConfig;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.core.auth.Auth;
 import com.baidubce.qianfan.model.embedding.EmbeddingResponse;

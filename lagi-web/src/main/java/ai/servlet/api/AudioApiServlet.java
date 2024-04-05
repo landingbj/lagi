@@ -12,12 +12,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import ai.lagi.service.AudioService;
-import ai.migrate.pojo.AsrResult;
-import ai.migrate.pojo.AudioRequestParam;
-import ai.migrate.pojo.Configuration;
-import ai.migrate.pojo.TTSRequestParam;
-import ai.migrate.pojo.TTSResult;
+import ai.audio.service.AudioService;
+import ai.common.pojo.AsrResult;
+import ai.common.pojo.AudioRequestParam;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.TTSRequestParam;
+import ai.common.pojo.TTSResult;
 import ai.servlet.BaseServlet;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;

@@ -1,9 +1,9 @@
 package ai.migrate.service;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
-import ai.lagi.service.ImageGenerationService;
-import ai.migrate.pojo.*;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
+import ai.common.pojo.*;
+import ai.image.service.ImageGenerationService;
 import ai.utils.DownloadUtils;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;

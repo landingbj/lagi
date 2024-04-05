@@ -6,7 +6,7 @@ import java.util.List;
 
 import ai.migrate.dao.UploadFileDao;
 import ai.migrate.db.Conn;
-import ai.migrate.pojo.UploadFile;
+import ai.common.pojo.UploadFile;
 
 public class UploadFileService {
     private UploadFileDao uploadFileDao = new UploadFileDao();

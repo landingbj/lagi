@@ -1,7 +1,7 @@
 package ai.vector.impl;
 
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.VectorStoreConfig;
+import ai.common.pojo.VectorStoreConfig;
 import ai.vector.VectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
@@ -31,9 +31,9 @@ public class PineconeVectorStore implements VectorStore {
         this.embeddingFunction = embeddingFunction;
         this.config = config;
         pineconeClientConfig = new PineconeClientConfig()
-                .withApiKey(config.getApi_key())
+                .withApiKey(config.getApiKey())
                 .withEnvironment(config.getEnvironment())
-                .withProjectName(config.getProject_name());
+                .withProjectName(config.getProjectName());
         pineconeClient = new PineconeClient(pineconeClientConfig);
     }
 
@@ -54,7 +54,7 @@ public class PineconeVectorStore implements VectorStore {
     }
 
     public void upsert(List<UpsertRecord> upsertRecords) {
-        upsert(upsertRecords, this.config.getDefault_category());
+        upsert(upsertRecords, this.config.getDefaultCategory());
     }
     public void upsert(List<UpsertRecord> upsertRecords, String category) {
         List<String> documents = new ArrayList<>();
@@ -71,7 +71,7 @@ public class PineconeVectorStore implements VectorStore {
             ids.add(upsertRecord.getId());
         }
         PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
-                .withIndexName(this.config.getIndex_name());
+                .withIndexName(this.config.getIndexName());
         try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
             List<List<Float>> embeddings = embeddingFunction.createEmbedding(documents);
             UpsertRequest.Builder builder = UpsertRequest.newBuilder()
@@ -93,7 +93,7 @@ public class PineconeVectorStore implements VectorStore {
     }
 
     public List<IndexRecord> query(QueryCondition queryCondition) {
-        return query(queryCondition, this.config.getDefault_category());
+        return query(queryCondition, this.config.getDefaultCategory());
     }
 
     public List<IndexRecord> query(QueryCondition queryCondition, String category) {
@@ -103,7 +103,7 @@ public class PineconeVectorStore implements VectorStore {
         Struct whereStruct = generateWhereStruct(where);
         List<IndexRecord> result = new ArrayList<>();
         PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
-                .withIndexName(this.config.getIndex_name());
+                .withIndexName(this.config.getIndexName());
         try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
             Iterable<Float> iterable = embeddingFunction.createEmbedding(text);
             QueryRequest queryRequest = QueryRequest.newBuilder()
@@ -121,13 +121,13 @@ public class PineconeVectorStore implements VectorStore {
     }
 
     public List<IndexRecord> fetch(List<String> ids) {
-        return fetch(ids, this.config.getDefault_category());
+        return fetch(ids, this.config.getDefaultCategory());
     }
 
     public List<IndexRecord> fetch(List<String> ids, String category) {
         List<IndexRecord> result = new ArrayList<>();
         PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
-                .withIndexName(this.config.getIndex_name());
+                .withIndexName(this.config.getIndexName());
         try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
             for (String id : ids) {
                 QueryRequest queryRequest = QueryRequest.newBuilder()

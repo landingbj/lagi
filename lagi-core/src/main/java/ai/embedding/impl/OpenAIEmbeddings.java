@@ -3,7 +3,7 @@ package ai.embedding.impl;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.embedding.pojo.OpenAIEmbeddingResponse;
-import ai.migrate.pojo.EmbeddingConfig;
+import ai.common.pojo.EmbeddingConfig;
 import com.google.gson.Gson;
 import okhttp3.*;
 

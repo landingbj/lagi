@@ -4,10 +4,10 @@ import java.io.File;
 
 import com.google.gson.Gson;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
-import ai.migrate.pojo.Response;
-import ai.migrate.pojo.GenerateVideoRequest;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
+import ai.common.pojo.Response;
+import ai.common.pojo.GenerateVideoRequest;
 import ai.utils.FileUploadUtil;
 
 public class ImageService {

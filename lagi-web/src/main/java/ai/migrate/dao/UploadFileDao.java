@@ -8,7 +8,7 @@ import java.util.List;
 import ai.dao.IConn;
 import ai.index.BaseIndex;
 import ai.migrate.db.Conn;
-import ai.migrate.pojo.UploadFile;
+import ai.common.pojo.UploadFile;
 
 public class UploadFileDao {
     public int deleteUploadFile(String fileId, Conn conn) throws SQLException {

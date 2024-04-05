@@ -4,7 +4,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.UUID;
 import ai.migrate.dao.UserDao;
-import ai.migrate.pojo.UserEntity;
+import ai.common.pojo.UserEntity;
 
 public class UserService {
 	private UserDao userDao = new UserDao();

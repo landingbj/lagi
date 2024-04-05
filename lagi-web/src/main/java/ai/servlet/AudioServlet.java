@@ -1,10 +1,10 @@
 package ai.servlet;
 
-import ai.lagi.service.AudioService;
-import ai.migrate.pojo.Configuration;
-import ai.migrate.pojo.TTSRequestParam;
-import ai.migrate.pojo.TTSResult;
-import ai.migrate.pojo.Text2VoiceEntity;
+import ai.audio.service.AudioService;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.TTSRequestParam;
+import ai.common.pojo.TTSResult;
+import ai.common.pojo.Text2VoiceEntity;
 import ai.utils.DownloadUtils;
 import ai.utils.LagiGlobal;
 import ai.utils.WhisperResponse;

@@ -13,7 +13,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import ai.client.AiServiceInfo;
+import ai.common.client.AiServiceInfo;
 
 public class HttpServiceCall {
 

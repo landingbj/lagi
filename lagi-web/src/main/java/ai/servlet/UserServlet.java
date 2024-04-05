@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 
-import ai.migrate.pojo.Configuration;
+import ai.common.pojo.Configuration;
 import ai.migrate.service.UserService;
 import ai.utils.LagiGlobal;
 import com.google.gson.JsonObject;
@@ -44,10 +44,10 @@ public class UserServlet extends BaseServlet {
         String currentCategory = req.getParameter("currentCategory");
         JsonObject data = new JsonObject();
         String category;
-        if (config.getVector_store() == null) {
+        if (config.getVectorStore() == null) {
             category = null;
         } else {
-            category = config.getVector_store().getDefault_category();
+            category = config.getVectorStore().getDefaultCategory();
         }
         if (category == null) {
             if (currentCategory.isEmpty()) {
@@ -71,7 +71,7 @@ public class UserServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         Map<String, Object> map = new HashMap<>();
         map.put("status", "success");
-        map.put("data", config.getSystem_title());
+        map.put("data", config.getSystemTitle());
         responsePrint(resp, gson.toJson(map));
     }
 }

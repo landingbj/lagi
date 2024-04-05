@@ -8,8 +8,8 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 
-import ai.client.AiServiceCall;
-import ai.migrate.pojo.Response;
+import ai.common.client.AiServiceCall;
+import ai.common.pojo.Response;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
 

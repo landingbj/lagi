@@ -35,6 +35,6 @@ build/
 .DS_Store
 
 /lagi-web/samples/
-/lagi-web/src/test/java/zxw/
+/lagi-core/src/test/java/zxw/
 /tomcat*
 /lagi-web/src/main/webapp/static/

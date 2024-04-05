@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import ai.migrate.pojo.*;
+import ai.common.pojo.*;
 import ai.migrate.service.UploadFileService;
 import ai.utils.LagiGlobal;
 import com.google.gson.reflect.TypeToken;

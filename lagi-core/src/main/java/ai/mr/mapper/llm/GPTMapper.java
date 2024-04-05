@@ -13,13 +13,13 @@
 
 package ai.mr.mapper.llm;
 
-import ai.lagi.adapter.impl.GPTAdapter;
+import ai.llm.adapter.impl.GPTAdapter;
 import ai.learn.questionAnswer.QuestionAnswerUtil;
 import ai.learning.pojo.IndexSearchData;
 import ai.learning.service.ChatCompletionService;
 import ai.learning.service.IndexSearchService;
 import ai.learning.service.OpenAIService;
-import ai.migrate.pojo.Backend;
+import ai.common.pojo.Backend;
 import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.*;

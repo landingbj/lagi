@@ -1,8 +1,12 @@
 package ai.embedding.impl;
 
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
 import ai.embedding.Embeddings;
+import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.embedding.pojo.OpenAIEmbeddingResponse;
-import ai.migrate.pojo.EmbeddingConfig;
+import ai.common.pojo.EmbeddingConfig;
+import ai.learning.pojo.QaPairResponse;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import okhttp3.*;
@@ -13,33 +17,22 @@ import java.util.Collections;
 import java.util.List;
 
 public class LandingEmbeddings implements Embeddings {
-    private Gson gson = new Gson();
-    private String apiEndpoint;
+    private final Gson gson = new Gson();
+    private static final AiServiceCall call = new AiServiceCall();
 
     public LandingEmbeddings(EmbeddingConfig config) {
-        this.apiEndpoint = config.getApi_endpoint();
     }
 
     @Override
     public List<List<Float>> createEmbedding(List<String> docs) {
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .build();
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.add("input", gson.toJsonTree(docs));
-        MediaType JSON = MediaType.get("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(gson.toJson(jsonObject), JSON);
-        Request request = new Request.Builder()
-                .url(apiEndpoint)
-                .post(body)
-                .build();
+        OpenAIEmbeddingRequest request = new OpenAIEmbeddingRequest();
+        request.setInput(docs);
+        Object[] params = {gson.toJson(request)};
+        String json = call.callWS(AiServiceInfo.WSKngUrl, "embeddings", params)[0];
+        OpenAIEmbeddingResponse embeddingResponse = gson.fromJson(json, OpenAIEmbeddingResponse.class);
         List<List<Float>> result = new ArrayList<>();
-        try (Response response = client.newCall(request).execute()) {
-            OpenAIEmbeddingResponse embeddingResponse = gson.fromJson(response.body().string(), OpenAIEmbeddingResponse.class);
-            for (OpenAIEmbeddingResponse.EmbeddingData data : embeddingResponse.getData()) {
-                result.add(data.getEmbedding());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        for (OpenAIEmbeddingResponse.EmbeddingData data : embeddingResponse.getData()) {
+            result.add(data.getEmbedding());
         }
         return result;
     }

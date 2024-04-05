@@ -15,8 +15,8 @@ package ai.mr.mapper.llm;
 
 import java.util.ArrayList;
 import java.util.List;
-import ai.lagi.adapter.impl.QwenAdapter;
-import ai.migrate.pojo.Backend;
+import ai.llm.adapter.impl.QwenAdapter;
+import ai.common.pojo.Backend;
 import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;

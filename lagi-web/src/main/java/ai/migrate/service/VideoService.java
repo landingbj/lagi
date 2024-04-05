@@ -3,11 +3,11 @@ package ai.migrate.service;
 import java.io.File;
 import com.google.gson.Gson;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
-import ai.migrate.pojo.Response;
-import ai.migrate.pojo.MmeditingInferenceRequest;
-import ai.migrate.pojo.MotInferenceRequest;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
+import ai.common.pojo.Response;
+import ai.common.pojo.MmeditingInferenceRequest;
+import ai.common.pojo.MotInferenceRequest;
 import ai.utils.FileUploadUtil;
 
 public class VideoService {

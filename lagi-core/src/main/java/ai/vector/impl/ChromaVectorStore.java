@@ -1,7 +1,7 @@
 package ai.vector.impl;
 
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.VectorStoreConfig;
+import ai.common.pojo.VectorStoreConfig;
 import ai.vector.VectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
@@ -58,7 +58,7 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     public void upsert(List<UpsertRecord> upsertRecords) {
-        upsert(upsertRecords, this.config.getDefault_category());
+        upsert(upsertRecords, this.config.getDefaultCategory());
     }
 
     public void upsert(List<UpsertRecord> upsertRecords, String category) {
@@ -80,7 +80,7 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     public List<IndexRecord> query(QueryCondition queryCondition) {
-        return query(queryCondition, this.config.getDefault_category());
+        return query(queryCondition, this.config.getDefaultCategory());
     }
 
     public List<IndexRecord> query(QueryCondition queryCondition, String category) {
@@ -131,7 +131,7 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     public List<IndexRecord> fetch(List<String> ids) {
-        return fetch(ids, this.config.getDefault_category());
+        return fetch(ids, this.config.getDefaultCategory());
     }
 
     public List<IndexRecord> fetch(List<String> ids, String category) {

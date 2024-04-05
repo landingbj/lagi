@@ -1,7 +1,7 @@
 package ai.embedding.impl;
 
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.EmbeddingConfig;
+import ai.common.pojo.EmbeddingConfig;
 import com.alibaba.dashscope.embeddings.*;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 

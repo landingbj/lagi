@@ -2,10 +2,10 @@ package ai.migrate.service;
 
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.Configuration;
-import ai.migrate.pojo.FileInfo;
-import ai.migrate.pojo.IndexSearchData;
-import ai.migrate.pojo.VectorStoreConfig;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.FileInfo;
+import ai.common.pojo.IndexSearchData;
+import ai.common.pojo.VectorStoreConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
@@ -26,7 +26,7 @@ public class VectorDbService {
     private VectorStoreService vectorStoreService;
 
     public VectorDbService(Configuration config) {
-        VectorStoreConfig vectorStoreConfig = config.getVector_store();
+        VectorStoreConfig vectorStoreConfig = config.getVectorStore();
         Embeddings embeddingFunction = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
         if (vectorStoreConfig != null) {
             vectorStoreService = new VectorStoreService(vectorStoreConfig, embeddingFunction);

@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
 
-import ai.migrate.pojo.QuestionAnswerRequest;
+import ai.common.pojo.QuestionAnswerRequest;
 import ai.migrate.service.ApiService;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.AiGlobal;

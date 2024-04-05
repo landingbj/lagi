@@ -2,19 +2,20 @@ package ai.utils;
 
 import java.io.InputStream;
 
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import ai.migrate.pojo.Configuration;
+import ai.common.pojo.Configuration;
 
 public class LagiGlobal {
     public static Configuration config;
 
     static {
-        Yaml yaml = new Yaml(new Constructor(Configuration.class, new LoaderOptions()));
         try (InputStream inputStream = LagiGlobal.class.getResourceAsStream("/lagi.yml");) {
-            config = yaml.load(inputStream);
+            ObjectMapper mapper = new YAMLMapper();
+            mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+            config = mapper.readValue(inputStream, Configuration.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -24,9 +25,11 @@ public class LagiGlobal {
     public static final String CHAT_COMPLETION_REQUEST = "ChatCompletionRequest";
     public static final String CHAT_COMPLETION_CONFIG = "ChatCompletionConfig";
 
-    public static final String LLM_TYPE_QA = "Landing-QA";
-    public static final String LLM_TYPE_TREE = "Landing-Tree";
-    public static final String LLM_TYPE_TURING = "Turing";
+    public static final String LANDING_MODEL_QA = "qa";
+    public static final String LANDING_MODEL_TREE = "tree";
+    public static final String LANDING_MODEL_TURING = "turing";
+
+    public static final String LLM_TYPE_LANDING = "Landing";
     public static final String LLM_TYPE_VICUNA = "Vicuna";
     public static final String LLM_TYPE_GPT = "GPT";
     public static final String LLM_TYPE_Qwen = "Qwen";

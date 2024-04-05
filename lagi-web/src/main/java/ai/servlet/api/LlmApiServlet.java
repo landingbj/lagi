@@ -4,16 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import ai.lagi.service.CompletionsService;
-import ai.migrate.pojo.Configuration;
-import ai.migrate.pojo.IndexSearchData;
+import ai.embedding.EmbeddingFactory;
+import ai.embedding.Embeddings;
+import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.service.CompletionsService;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.IndexSearchData;
 import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -47,6 +52,8 @@ public class LlmApiServlet extends BaseServlet {
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("completions")) {
             this.completions(req, resp);
+        } else if (method.equals("embeddings")) {
+            this.embeddings(req, resp);
         }
     }
 
@@ -140,5 +147,19 @@ public class LlmApiServlet extends BaseServlet {
         String contextText = indexSearchDataList.get(0).getText();
         String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
+    }
+
+    private void embeddings(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        OpenAIEmbeddingRequest request = gson.fromJson(requestToJson(req), OpenAIEmbeddingRequest.class);
+        Embeddings embeddings = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
+        List<List<Float>> embeddingDataList = embeddings.createEmbedding(request.getInput());
+        Map<String, Object> result = new HashMap<>();
+        if (embeddingDataList.isEmpty()) {
+            result.put("status", "failed");
+        } else {
+            result.put("status", "success");
+            result.put("data", embeddingDataList);
+        }
+        responsePrint(resp, toJson(result));
     }
 }

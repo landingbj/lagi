@@ -16,9 +16,9 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
-import ai.migrate.pojo.InstructionsResponse;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
+import ai.common.pojo.InstructionsResponse;
 import ai.utils.pdf.PdfUtil;
 import ai.utils.word.WordUtils;
 

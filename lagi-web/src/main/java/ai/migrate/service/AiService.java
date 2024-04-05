@@ -5,9 +5,9 @@ import java.io.IOException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
-import ai.migrate.pojo.Txt2imgRequest;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
+import ai.common.pojo.Txt2imgRequest;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.HttpServiceCall;

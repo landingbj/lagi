@@ -6,10 +6,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import ai.lagi.service.ImageGenerationService;
-import ai.migrate.pojo.Configuration;
-import ai.migrate.pojo.ImageGenerationRequest;
-import ai.migrate.pojo.ImageGenerationResult;
+import ai.image.service.ImageGenerationService;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.ImageGenerationRequest;
+import ai.common.pojo.ImageGenerationResult;
 import ai.servlet.BaseServlet;
 import ai.utils.LagiGlobal;
 

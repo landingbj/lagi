@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
-import ai.migrate.pojo.*;
+import ai.common.pojo.*;
 import ai.migrate.service.VectorDbService;
 import ai.utils.*;
 import okhttp3.MediaType;
@@ -37,10 +37,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
-import ai.client.AiServiceCall;
-import ai.client.AiServiceInfo;
-import ai.lagi.service.AudioService;
-import ai.lagi.service.CompletionsService;
+import ai.common.client.AiServiceCall;
+import ai.common.client.AiServiceInfo;
+import ai.audio.service.AudioService;
+import ai.llm.service.CompletionsService;
 import ai.learn.questionAnswer.KShingleFilter;
 import ai.migrate.service.ApiService;
 import ai.migrate.service.IntentService;

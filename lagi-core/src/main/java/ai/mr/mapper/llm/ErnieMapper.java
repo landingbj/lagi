@@ -13,9 +13,9 @@
 
 package ai.mr.mapper.llm;
 
-import ai.lagi.adapter.ILlmAdapter;
-import ai.lagi.adapter.impl.ErnieAdapter;
-import ai.migrate.pojo.Backend;
+import ai.llm.adapter.ILlmAdapter;
+import ai.llm.adapter.impl.ErnieAdapter;
+import ai.common.pojo.Backend;
 import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;

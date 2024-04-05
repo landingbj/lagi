@@ -1,7 +1,7 @@
 package ai.vector;
 
 import ai.embedding.Embeddings;
-import ai.migrate.pojo.VectorStoreConfig;
+import ai.common.pojo.VectorStoreConfig;
 import ai.vector.impl.ChromaVectorStore;
 import ai.vector.impl.PineconeVectorStore;
 import ai.vector.pojo.QueryCondition;

@@ -9,8 +9,8 @@
 
 package ai.mr.mapper.llm;
 
-import ai.lagi.adapter.impl.VicunaAdapter;
-import ai.migrate.pojo.Backend;
+import ai.llm.adapter.impl.VicunaAdapter;
+import ai.common.pojo.Backend;
 import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;

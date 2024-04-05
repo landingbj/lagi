@@ -125,6 +125,10 @@
 		<servlet-name>llm</servlet-name>
 		<url-pattern>/v1/chat/completions</url-pattern>
 	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>llm</servlet-name>
+		<url-pattern>/v1/embeddings</url-pattern>
+	</servlet-mapping>
 	
 	<servlet>
 		<servlet-name>asr</servlet-name>

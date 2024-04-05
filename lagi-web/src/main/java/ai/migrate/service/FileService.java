@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ai.migrate.pojo.Document;
-import ai.migrate.pojo.ExtractContentResponse;
+import ai.common.pojo.Document;
+import ai.common.pojo.ExtractContentResponse;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
 
