@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class LlmApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
     private CompletionsService completionsService = new CompletionsService(config);
     private VectorDbService vectorDbService = new VectorDbService(config);
 

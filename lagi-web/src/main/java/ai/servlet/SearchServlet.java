@@ -57,7 +57,7 @@ public class SearchServlet extends HttpServlet {
     private IntentService intentService = new IntentService();
     private Gson gson = new Gson();
 
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
     private AudioService audioService = new AudioService(config);
     private CompletionsService completionsService = new CompletionsService(config);
 

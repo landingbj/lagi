@@ -40,7 +40,7 @@ public class UploadFileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Gson gson = new Gson();
     private FileService fileService = new FileService();
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
     private VectorDbService vectorDbService = new VectorDbService(config);
     private UploadFileService uploadFileService = new UploadFileService();
 

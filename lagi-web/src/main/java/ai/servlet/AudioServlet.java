@@ -7,6 +7,7 @@ import ai.common.pojo.TTSResult;
 import ai.common.pojo.Text2VoiceEntity;
 import ai.utils.DownloadUtils;
 import ai.utils.LagiGlobal;
+import ai.utils.MigrateGlobal;
 import ai.utils.WhisperResponse;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -38,7 +39,7 @@ public class AudioServlet extends BaseServlet {
         cache = initCache(CACHE_SIZE, EXPIRE_SECONDS);
     }
     
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
     private AudioService audioService = new AudioService(config);
 
     @Override

@@ -21,11 +21,12 @@ import ai.common.pojo.TTSResult;
 import ai.servlet.BaseServlet;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
+import ai.utils.MigrateGlobal;
 
 public class AudioApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
 
     private AudioService audioService = new AudioService(config);
 

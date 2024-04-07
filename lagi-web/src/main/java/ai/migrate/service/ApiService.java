@@ -4,10 +4,7 @@ import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.common.pojo.*;
 import ai.image.service.ImageGenerationService;
-import ai.utils.DownloadUtils;
-import ai.utils.FileUploadUtil;
-import ai.utils.LagiGlobal;
-import ai.utils.WhisperResponse;
+import ai.utils.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -23,7 +20,7 @@ public class ApiService {
     private ImageService imageService = new ImageService();
     private VideoService videoService = new VideoService();
     private AiServiceCall call = new AiServiceCall();
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
     private ImageGenerationService imageGenerationService = new ImageGenerationService(config);
     
     public String generateImage(String content, HttpServletRequest req) throws IOException {

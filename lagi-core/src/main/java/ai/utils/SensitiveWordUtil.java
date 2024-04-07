@@ -44,8 +44,11 @@ public class SensitiveWordUtil {
     private static List<String> readSensitiveWordJson() {
         String respath = "/sensitive_word.json";
         String content = "{}";
-
+        List<String> result = new ArrayList<>();
         try (InputStream in = SensitiveWordUtil.class.getResourceAsStream(respath);) {
+            if (in == null) {
+                return result;
+            }
             content = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -54,7 +57,6 @@ public class SensitiveWordUtil {
         Type listType = new TypeToken<List<String>>() {
         }.getType();
         List<String> tempResult = new Gson().fromJson(content, listType);
-        List<String> result = new ArrayList<>();
         for (String word : tempResult) {
             result.add(word.toLowerCase());
         }

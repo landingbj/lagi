@@ -8,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import ai.utils.MigrateGlobal;
 import com.google.gson.Gson;
 
 import ai.common.pojo.Configuration;
@@ -19,7 +20,7 @@ public class UserServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
     protected Gson gson = new Gson();
     private UserService userService = new UserService();
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

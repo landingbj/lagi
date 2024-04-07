@@ -12,10 +12,11 @@ import ai.common.pojo.ImageGenerationRequest;
 import ai.common.pojo.ImageGenerationResult;
 import ai.servlet.BaseServlet;
 import ai.utils.LagiGlobal;
+import ai.utils.MigrateGlobal;
 
 public class ImageApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
-    private static Configuration config = LagiGlobal.config;
+    private static Configuration config = MigrateGlobal.config;
     private ImageGenerationService imageGenerationService = new ImageGenerationService(config);
 
     @Override

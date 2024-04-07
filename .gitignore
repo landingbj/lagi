@@ -38,3 +38,4 @@ build/
 /lagi-core/src/test/java/zxw/
 /tomcat*
 /lagi-web/src/main/webapp/static/
+/lagi-examples/
