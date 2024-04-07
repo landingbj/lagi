@@ -19,6 +19,8 @@ public class EmbeddingFactory {
             return new LandingEmbeddings(config);
         } else if (EmbeddingConstant.EMBEDDING_TYPE_ZHIPU.equalsIgnoreCase(type)) {
             return new ZhipuEmbeddings(config);
+        } else if (EmbeddingConstant.EMBEDDING_TYPE_BAICHUAN.equalsIgnoreCase(type)) {
+            return new BaichuanEmbeddings(config);
         }
 
         throw new IllegalArgumentException("Invalid type: " + type);
