@@ -123,6 +123,11 @@
             <version>0.1.4</version>
         </dependency>
         <dependency>
+            <groupId>cn.bigmodel.openapi</groupId>
+            <artifactId>oapi-java-sdk</artifactId>
+            <version>release-V4-2.0.2</version>
+        </dependency>
+        <dependency>
             <groupId>io.pinecone</groupId>
             <artifactId>pinecone-client</artifactId>
             <version>0.8.0</version>

@@ -1,30 +1,30 @@
 package ai.llm.adapter.impl;
 
+import ai.common.pojo.Backend;
+import ai.common.utils.ObservableList;
+import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.ServerSentEventUtil;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+import ai.utils.qa.HttpUtil;
+import com.google.gson.Gson;
+import io.reactivex.Observable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import ai.common.utils.ObservableList;
-import ai.llm.utils.ServerSentEventUtil;
-import com.google.gson.Gson;
-
-import ai.llm.adapter.ILlmAdapter;
-import ai.common.pojo.Backend;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.utils.qa.HttpUtil;
-import io.reactivex.Observable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class VicunaAdapter implements ILlmAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(VicunaAdapter.class);
+public class MoonshotAdapter implements ILlmAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 5 * 1000;
     private final Backend backendConfig;
+    private static final String COMPLETIONS_URL = "https://api.moonshot.cn/v1/chat/completions";
 
-    public VicunaAdapter(Backend backendConfig) {
+    public MoonshotAdapter(Backend backendConfig) {
         this.backendConfig = backendConfig;
     }
 
@@ -36,7 +36,7 @@ public class VicunaAdapter implements ILlmAdapter {
         headers.put("Authorization", "Bearer " + backendConfig.getApiKey());
         String jsonResult = null;
         try {
-            jsonResult = HttpUtil.httpPost(backendConfig.getApiAddress(), headers, chatCompletionRequest, HTTP_TIMEOUT);
+            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
         } catch (IOException e) {
             logger.error("", e);
         }
@@ -53,7 +53,6 @@ public class VicunaAdapter implements ILlmAdapter {
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
-        String apiUrl = backendConfig.getApiAddress();
         String json = gson.toJson(chatCompletionRequest);
         String apiKey = backendConfig.getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
@@ -67,7 +66,7 @@ public class VicunaAdapter implements ILlmAdapter {
             });
             return result;
         };
-        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, convertFunc);
+        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, COMPLETIONS_URL, apiKey, convertFunc);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }

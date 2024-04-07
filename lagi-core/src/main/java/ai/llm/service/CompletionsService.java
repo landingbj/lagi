@@ -128,6 +128,12 @@ public class CompletionsService {
             adapter = new QwenAdapter(backendConfig);
         } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
             adapter = new ErnieAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ZHIPU)) {
+            adapter = new ZhipuAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_MOONSHOT)) {
+            adapter = new MoonshotAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
+            adapter = new BaichuanAdapter(backendConfig);
         }
         return adapter;
     }
@@ -144,6 +150,12 @@ public class CompletionsService {
             mapper = new QwenMapper();
         } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
             mapper = new ErnieMapper();
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ZHIPU)) {
+            mapper = new ZhipuMapper();
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_MOONSHOT)) {
+            mapper = new MoonshotMapper();
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
+            mapper = new BaichuanMapper();
         }
         return mapper;
     }

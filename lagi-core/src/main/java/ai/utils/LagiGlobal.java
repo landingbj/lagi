@@ -57,6 +57,9 @@ public class LagiGlobal {
     public static final String LLM_TYPE_GPT = "GPT";
     public static final String LLM_TYPE_Qwen = "Qwen";
     public static final String LLM_TYPE_ERNIE = "Ernie";
+    public static final String LLM_TYPE_ZHIPU = "Zhipu";
+    public static final String LLM_TYPE_MOONSHOT = "Moonshot";
+    public static final String LLM_TYPE_BAICHUAN = "Baichuan";
 
     public static final String AUDIO_TYPE_LANDING = "Landing";
     public static final String AUDIO_TYPE_ALIBABA = "Alibaba";
