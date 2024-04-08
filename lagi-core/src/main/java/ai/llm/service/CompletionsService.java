@@ -134,6 +134,8 @@ public class CompletionsService {
             adapter = new MoonshotAdapter(backendConfig);
         } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
             adapter = new BaichuanAdapter(backendConfig);
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_SPARK)) {
+            adapter = new SparkAdapter(backendConfig);
         }
         return adapter;
     }
@@ -156,6 +158,8 @@ public class CompletionsService {
             mapper = new MoonshotMapper();
         } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
             mapper = new BaichuanMapper();
+        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_SPARK)) {
+            mapper = new SparkMapper();
         }
         return mapper;
     }

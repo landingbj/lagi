@@ -9,6 +9,15 @@ public class Backend {
     private String apiAddress;
     private String apiKey;
     private String secretKey;
+    private String appId;
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
     public Integer getPriority() {
         return priority;
