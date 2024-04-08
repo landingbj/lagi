@@ -12,6 +12,8 @@ import ai.vector.impl.PineconeVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import tech.amikos.chromadb.Collection;
+import tech.amikos.chromadb.handler.ApiException;
 
 import java.io.File;
 import java.io.IOException;
@@ -117,5 +119,21 @@ public class VectorStoreService {
             result = indexRecords.get(0);
         }
         return result;
+    }
+
+    public void delete(List<String> ids) {
+        this.vectorStore.delete(ids);
+    }
+
+    public void delete(List<String> ids, String category) {
+        this.vectorStore.delete(ids, category);
+    }
+
+    public void deleteWhere(List<Map<String, String>> whereList) {
+        this.vectorStore.deleteWhere(whereList);
+    }
+
+    public void deleteWhere(List<Map<String, String>> whereList, String category) {
+        this.vectorStore.deleteWhere(whereList, category);
     }
 }

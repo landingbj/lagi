@@ -41,18 +41,14 @@ public class VectorDbService {
         return false;
     }
 
-    public String deleteDoc(List<String> idList) throws IOException {
-        List<String> whereList = new ArrayList<>();
+    public void deleteDoc(List<String> idList) {
+        List<Map<String, String>> whereList = new ArrayList<>();
         for (String id : idList) {
-            Map<String, String> whereMap = new HashMap<>();
-            whereMap.put("file_id", id);
-            String where = gson.toJson(whereMap);
+            Map<String, String> where = new HashMap<>();
+            where.put("file_id", id);
             whereList.add(where);
         }
-        Map<String, String> header = new HashMap<>();
-        header.put("Content-type", "application/json");
-        String result = HttpUtil.httpPost(MigrateGlobal.DELETE_DOC_INDEX_URL, header, whereList);
-        return result;
+        vectorStoreService.deleteWhere(whereList);
     }
 
     public List<IndexSearchData> search(ChatCompletionRequest request) {

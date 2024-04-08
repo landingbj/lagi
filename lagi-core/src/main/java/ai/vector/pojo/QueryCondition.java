@@ -1,11 +1,12 @@
 package ai.vector.pojo;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class QueryCondition {
     private String text;
     private Integer n;
-    private Map<String, String> where;
+    private Map<String, String> where = new HashMap<>();
 
     public String getText() {
         return text;

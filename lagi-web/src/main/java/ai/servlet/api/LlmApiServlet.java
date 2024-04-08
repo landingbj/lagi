@@ -93,7 +93,6 @@ public class LlmApiServlet extends BaseServlet {
                 List<String> imageList = getImageFiles(indexData, req);
                 for (int i = 0; i < result.getChoices().size(); i++) {
                     ChatMessage message = result.getChoices().get(i).getMessage();
-                    message.setContent("");
                     message.setContext(indexData.getText());
                     message.setFilename(indexData.getFilename());
                     message.setFilepath(indexData.getFilepath());

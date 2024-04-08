@@ -69,12 +69,12 @@ public class UploadFileServlet extends HttpServlet {
         resp.setContentType("application/json;charset=utf-8");
         List<String> idList = gson.fromJson(requestToJson(req), new TypeToken<List<String>>() {
         }.getType());
-        String result = vectorDbService.deleteDoc(idList);
-        if (result != null) {
-            uploadFileService.deleteUploadFile(idList);
-        }
+        vectorDbService.deleteDoc(idList);
+        uploadFileService.deleteUploadFile(idList);
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
         PrintWriter out = resp.getWriter();
-        out.print(result);
+        out.print(gson.toJson(map));
         out.flush();
         out.close();
     }

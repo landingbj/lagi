@@ -149,6 +149,33 @@ public class ChromaVectorStore implements VectorStore {
     public void update() {
     }
 
-    public void delete() {
+    public void delete(List<String> ids) {
+        this.delete(ids, this.config.getDefaultCategory());
+    }
+
+    public void delete(List<String> ids, String category) {
+        Collection collection = getCollection(category);
+        try {
+            collection.deleteWithIds(ids);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void deleteWhere(List<Map<String, String>> whereList) {
+        deleteWhere(whereList, this.config.getDefaultCategory());
+    }
+
+    @Override
+    public void deleteWhere(List<Map<String, String>> whereList, String category) {
+        Collection collection = getCollection(category);
+        try {
+            for (Map<String, String> where : whereList) {
+                collection.deleteWhere(where);
+            }
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

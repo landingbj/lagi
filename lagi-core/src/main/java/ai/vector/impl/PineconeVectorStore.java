@@ -56,6 +56,7 @@ public class PineconeVectorStore implements VectorStore {
     public void upsert(List<UpsertRecord> upsertRecords) {
         upsert(upsertRecords, this.config.getDefaultCategory());
     }
+
     public void upsert(List<UpsertRecord> upsertRecords, String category) {
         List<String> documents = new ArrayList<>();
         List<Map<String, String>> metadatas = new ArrayList<>();
@@ -144,6 +145,49 @@ public class PineconeVectorStore implements VectorStore {
         return result;
     }
 
+    @Override
+    public void delete(List<String> ids) {
+        this.delete(ids, this.config.getDefaultCategory());
+    }
+
+    @Override
+    public void delete(List<String> ids, String category) {
+        PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
+                .withIndexName(this.config.getIndexName());
+        try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
+            DeleteRequest deleteRequest = DeleteRequest.newBuilder()
+                    .setNamespace(category)
+                    .addAllIds(ids)
+                    .build();
+            connection.getBlockingStub().delete(deleteRequest);
+        } catch (PineconeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void deleteWhere(List<Map<String, String>> where) {
+        deleteWhere(where, this.config.getDefaultCategory());
+    }
+
+    @Override
+    public void deleteWhere(List<Map<String, String>> whereList, String category) {
+        PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
+                .withIndexName(this.config.getIndexName());
+        try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
+            for (Map<String, String> where : whereList) {
+                Struct whereStruct = generateWhereStruct(where);
+                DeleteRequest deleteRequest = DeleteRequest.newBuilder()
+                        .setNamespace(category)
+                        .setFilter(whereStruct)
+                        .build();
+                connection.getBlockingStub().delete(deleteRequest);
+            }
+        } catch (PineconeException e) {
+            e.printStackTrace();
+        }
+    }
+
     private List<IndexRecord> query(PineconeConnection connection, QueryRequest queryRequest) {
         List<IndexRecord> result = new ArrayList<>();
         QueryResponse queryResponse = connection.getBlockingStub().query(queryRequest);
@@ -172,8 +216,5 @@ public class PineconeVectorStore implements VectorStore {
     }
 
     public void update() {
-    }
-
-    public void delete() {
     }
 }
