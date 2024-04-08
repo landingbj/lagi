@@ -3,7 +3,6 @@ package ai.servlet;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -16,25 +15,18 @@ import javax.servlet.http.HttpSession;
 
 import ai.common.pojo.*;
 import ai.migrate.service.UploadFileService;
-import ai.utils.LagiGlobal;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import ai.migrate.service.FileService;
+import ai.vector.FileService;
 import ai.migrate.service.VectorDbService;
 import ai.utils.MigrateGlobal;
-import ai.utils.pdf.PdfUtil;
-import ai.utils.word.WordUtils;
 
-//import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.ibm.icu.text.CharsetDetector;
-import com.ibm.icu.text.CharsetMatch;
 
 public class UploadFileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -297,28 +289,10 @@ public class UploadFileServlet extends HttpServlet {
             String content = "";
 
             for (File file : files) {
-                String extString = file.getName().substring(file.getName().lastIndexOf("."));
-                InputStream in = Files.newInputStream(file.toPath());
-                switch (extString) {
-                    case ".doc":
-                    case ".docx":
-                        content = WordUtils.getContentsByWord(in, extString);
-                        break;
-                    case ".txt":
-                        content = getString(in);
-                        break;
-                    case ".pdf":
-                        content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
-                        break;
-                    default:
-                        jsonResult.addProperty("msg", "请选择Word/PDF/Txt文件");
-                        break;
-                }
-                in.close();
-
+                content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
-                    new AddDocIndex(file, category, filename, content).start();
+                    new AddDocIndex(file, category, filename).start();
                 }
             }
         }
@@ -333,18 +307,15 @@ public class UploadFileServlet extends HttpServlet {
 
 
     public class AddDocIndex extends Thread {
-        private VectorDbService vectorDbService = new VectorDbService(config);
-        private File file;
-        private String category;
-        private String filename;
+        private final VectorDbService vectorDbService = new VectorDbService(config);
+        private final File file;
+        private final String category;
+        private final String filename;
 
-        private String content;
-
-        public AddDocIndex(File file, String category, String filename, String content) {
+        public AddDocIndex(File file, String category, String filename) {
             this.file = file;
             this.category = category;
             this.filename = filename;
-            this.content = content;
         }
 
         public void run() {
@@ -363,29 +334,8 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("filepath", filepath);
             metadatas.put("file_id", fileId);
 
-            List<FileInfo> fileList = new ArrayList<>();
             try {
-                List<Document> docs;
-                if (LagiGlobal.IMAGE_EXTRACT_ENABLE) {
-                    ExtractContentResponse response = fileService.extractContent(file);
-                    docs = response.getData();
-                } else {
-                    docs = fileService.splitChunks(this.content, 512);
-                }
-
-                for (Document doc : docs) {
-                    FileInfo fileInfo = new FileInfo();
-                    String embeddingId = UUID.randomUUID().toString().replace("-", "");
-                    fileInfo.setEmbedding_id(embeddingId);
-                    fileInfo.setText(doc.getText());
-                    Map<String, Object> tmpMetadatas = new HashMap<>(metadatas);
-                    if (doc.getImage() != null) {
-                        tmpMetadatas.put("image", doc.getImage());
-                    }
-                    fileInfo.setMetadatas(tmpMetadatas);
-                    fileList.add(fileInfo);
-                }
-                vectorDbService.addIndexes(fileList, category);
+                vectorDbService.addFileVectors(this.file, metadatas, category);
                 UploadFile entity = new UploadFile();
                 entity.setCategory(category);
                 entity.setFilename(filename);
@@ -396,26 +346,6 @@ public class UploadFileServlet extends HttpServlet {
                 e.printStackTrace();
             }
         }
-    }
-
-    private String getString(InputStream in) {
-        String str = "";
-        try {
-            BufferedInputStream bis = new BufferedInputStream(in);
-            CharsetDetector cd = new CharsetDetector();
-            cd.setText(bis);
-            CharsetMatch cm = cd.detect();
-            if (cm != null) {
-                Reader reader = cm.getReader();
-                str = IOUtils.toString(reader);
-            } else {
-                str = IOUtils.toString(in, StandardCharsets.UTF_8);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return str;
     }
 
     protected String requestToJson(HttpServletRequest request) throws IOException {

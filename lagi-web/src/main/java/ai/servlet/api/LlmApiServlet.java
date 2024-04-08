@@ -87,6 +87,19 @@ public class LlmApiServlet extends BaseServlet {
             out.close();
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+            if (result != null && !result.getChoices().isEmpty()
+                    && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                IndexSearchData indexData = indexSearchDataList.get(0);
+                List<String> imageList = getImageFiles(indexData, req);
+                for (int i = 0; i < result.getChoices().size(); i++) {
+                    ChatMessage message = result.getChoices().get(i).getMessage();
+                    message.setContent("");
+                    message.setContext(indexData.getText());
+                    message.setFilename(indexData.getFilename());
+                    message.setFilepath(indexData.getFilepath());
+                    message.setImageList(imageList);
+                }
+            }
             responsePrint(resp, toJson(result));
         }
     }

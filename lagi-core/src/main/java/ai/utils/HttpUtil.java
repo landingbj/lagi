@@ -1,14 +1,6 @@
 package ai.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import com.google.gson.Gson;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -31,7 +23,14 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class HttpUtil {
 	private static int _HTTP_TIME_OUT = 4 * 100;
@@ -180,7 +179,7 @@ public class HttpUtil {
         for (File file: fileList) {
             builder.addPart(fileParmName, new FileBody(file, ContentType.DEFAULT_BINARY));
         }
-        for (Map.Entry<String, String> entry: formParmMap.entrySet()) {
+        for (Entry<String, String> entry: formParmMap.entrySet()) {
             builder.addPart(entry.getKey(), new StringBody(entry.getValue(), ContentType.MULTIPART_FORM_DATA));
         }
         final HttpEntity entity = builder.build();

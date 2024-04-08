@@ -17,6 +17,7 @@ import ai.vector.pojo.UpsertRecord;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.ObjectUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -60,7 +61,9 @@ public class VectorDbService {
         return indexSearchDataList;
     }
 
-
+    public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
+        vectorStoreService.addFileVectors(file, metadatas, category);
+    }
 
     private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data) {
         String text = data.getText();
