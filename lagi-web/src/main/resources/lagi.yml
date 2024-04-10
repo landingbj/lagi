@@ -7,6 +7,18 @@ models:
     priority: 10
     model: turing
     api_key: your-api-key # http://saas.landingbj.com/
+  - name: landing-qa
+    type: Landing
+    enable: false
+    priority: 10
+    model: qa
+    api_key: your-api-key # http://saas.landingbj.com/
+  - name: landing-tree
+    type: Landing
+    enable: false
+    priority: 10
+    model: tree
+    api_key: your-api-key # http://saas.landingbj.com/
   - name: vicuna
     type: Vicuna
     enable: true
@@ -24,18 +36,43 @@ models:
     enable: false
     priority: 200
     model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
-    # 帮助文档 https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
-    api_key: your-api-key # 获取地址  https://bailian.console.aliyun.com/#/home
+    # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
+    api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
   - name: ernie
     type: Ernie
     enable: false
     priority: 100
     model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
-    # api_key secret_key 获取帮助文档 https://developer.baidu.com/article/detail.html?id=1089328
-    # 获取地址 https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
+    # help document https://developer.baidu.com/article/detail.html?id=1089328
+    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
     api_key: your-api-key
     secret_key: your-secret-key
-
+  - name: zhipu
+    type: Zhipu
+    enable: false
+    priority: 200
+    model: glm-3-turbo # glm-4, glm-4v
+    api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
+  - name: moonshot
+    type: Moonshot
+    enable: false
+    priority: 1
+    model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
+    api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
+  - name: baichuan
+    type: Baichuan
+    enable: false
+    priority: 1
+    model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
+    api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
+  - name: spark
+    type: Spark
+    enable: true
+    priority: 100
+    model: v1.1 # V1.5,V2.0,V3.0,3.5
+    app_id: 3d876db8  # url address https://console.xfyun.cn/app/myapp
+    api_key: your-api-key # url address https://console.xfyun.cn/app/myapp
+    secret_key: your-secret-key # url address https://console.xfyun.cn/app/myapp
 
 vectors:
   - name: Chroma
