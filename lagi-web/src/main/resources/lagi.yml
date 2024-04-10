@@ -19,13 +19,13 @@ models:
     priority: 10
     model: tree
     api_key: your-api-key # http://saas.landingbj.com/
-  - name: vicuna
+  - name: fastchat
     type: Vicuna
     enable: true
     priority: 100
-    model: vicuna-13b
+    model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
     api_address: http://localhost:8090/v1/chat/completions
-  - name: gpt
+  - name: chatgpt
     type: GPT
     enable: false
     priority: 1
@@ -47,13 +47,13 @@ models:
     #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
     api_key: your-api-key
     secret_key: your-secret-key
-  - name: zhipu
+  - name: chatglm
     type: Zhipu
     enable: false
     priority: 200
     model: glm-3-turbo # glm-4, glm-4v
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
-  - name: moonshot
+  - name: kimi
     type: Moonshot
     enable: false
     priority: 1
@@ -86,7 +86,7 @@ functions:
     type: Landing
     api_endpoint: http://ai.landingbj.com
 
-  stream_backend: vicuna
+  stream_backend: fastchat
 
   ASR:
     backends:
