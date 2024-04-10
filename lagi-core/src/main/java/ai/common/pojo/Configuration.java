@@ -1,7 +1,11 @@
 package ai.common.pojo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.ToString;
 
+@ToString
+@Builder
 public class Configuration {
     private String systemTitle;
     @JsonProperty("LLM")

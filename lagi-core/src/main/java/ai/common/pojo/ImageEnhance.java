@@ -1,7 +1,10 @@
 package ai.common.pojo;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public class ImageEnhance {
     private List<Backend> backends;
 

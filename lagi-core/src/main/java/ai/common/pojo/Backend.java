@@ -1,5 +1,10 @@
 package ai.common.pojo;
 
+import lombok.Data;
+import lombok.ToString;
+
+@ToString
+@Data
 public class Backend {
     private String name;
     private String type;
