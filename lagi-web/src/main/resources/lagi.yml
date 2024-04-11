@@ -1,38 +1,42 @@
 system_title: Lagi
 
 models:
-  # landingbj
+  # The turing model is a language model provided by LandingBJ
   - name: landing
     type: Landing
     enable: true
     model: turing
     api_key: your-api-key # http://saas.landingbj.com/
+
+  # The qa model is a language model provided by LandingBJ
   - name: landing-qa
     type: Landing
     enable: false
     model: qa
     api_key: your-api-key # http://saas.landingbj.com/
+
+  # The tree model is a language model provided by LandingBJ
   - name: landing-tree
     type: Landing
     enable: false
     model: tree
     api_key: your-api-key # http://saas.landingbj.com/
 
-    # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
+  # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
   - name: fastchat
     type: Vicuna
     enable: true
     model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
     api_address: http://localhost:8090/v1/chat/completions
 
-    # ChatGPT is a state-of-the-art language model developed by OpenAI
+  # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
     enable: false
     model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
     api_key: your-api-key # https://platform.openai.com/
 
-    #  qwen (Tongyi Qianwen) is an advanced large-scale language model developed by Alibaba Cloud
+  #  qwen (Tongyi Qianwen) is an advanced large-scale language model developed by Alibaba Cloud
   - name: qwen
     type: Qwen
     enable: false
@@ -40,7 +44,7 @@ models:
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
 
-    #  ERNIE Bot (wen xin yi yan) is an advanced large-scale language model developed by Baidu
+  #  ERNIE Bot (wen xin yi yan) is an advanced large-scale language model developed by Baidu
   - name: ernie
     type: Ernie
     enable: false
@@ -50,28 +54,28 @@ models:
     api_key: your-api-key
     secret_key: your-secret-key
 
-    #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
+  #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
     type: Zhipu
     enable: false
     model: glm-3-turbo # glm-4, glm-4v
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
 
-    # Kimi is an intelligent assistant product developed by Moonshot AI.
+  # Kimi is an intelligent assistant product developed by Moonshot AI.
   - name: kimi
     type: Moonshot
     enable: false
     model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
     api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
 
-    # Baichuan is a new generation of open source large language model launched by Baichuan AI
+  # Baichuan is a new generation of open source large language model launched by Baichuan AI
   - name: baichuan
     type: Baichuan
     enable: false
     model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
-    # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
+  # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: Spark
     enable: true
@@ -81,17 +85,25 @@ models:
     secret_key: your-secret-key # url address https://console.xfyun.cn/app/myapp
 
 vectors:
+  # Chroma is an AI-native open-source embedding database
+  # The official website is https://www.trychroma.com/
   - name: Chroma
     default_category: default
     url: http://localhost:8000
 
+  # Pinecone is a vector database for building large-scale machine learning applications
+  # The official website is https://www.pinecone.io/
+  - name: Pinecone
+    default_category: default
+    environment: your-environment
+    project_name: your-project-name
+    index_name: your-index-name
+    api_key: your-api-key
 
 functions:
-
   embedding:
     type: Landing
     api_endpoint: http://ai.landingbj.com
-
   stream_backend: fastchat
 
   ASR:
@@ -148,4 +160,3 @@ functions:
         type: Landing
         enable: true
         priority: 10
-
