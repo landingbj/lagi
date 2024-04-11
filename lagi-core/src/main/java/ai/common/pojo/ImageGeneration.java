@@ -1,7 +1,9 @@
 package ai.common.pojo;
 
-import java.util.List;
+import lombok.Builder;
 
+import java.util.List;
+@Builder
 public class ImageGeneration {
     private List<Backend> backends;
 

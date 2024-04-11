@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import ai.config.AbstractConfiguration;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,6 +40,18 @@ public class LagiGlobal {
         mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         try {
             config = mapper.readValue(inputStream, Configuration.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static AbstractConfiguration loadConfig(InputStream inputStream,  Class<?extends AbstractConfiguration> cls) {
+        ObjectMapper mapper = new YAMLMapper();
+        mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        try {
+            AbstractConfiguration aConfig = mapper.readValue(inputStream, cls);
+            config = aConfig.transformToConfiguration();
+            return aConfig;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

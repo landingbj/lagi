@@ -1,8 +1,13 @@
 package ai.common.pojo;
 
 import ai.vector.VectorStoreConstant;
+import lombok.Data;
+import lombok.ToString;
 
+@ToString
+@Data
 public class VectorStoreConfig {
+    private String name;
     private String type;
     private String defaultCategory;
     private String url;

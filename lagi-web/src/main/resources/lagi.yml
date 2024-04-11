@@ -1,104 +1,151 @@
 system_title: Lagi
 
-LLM:
+models:
+  # landingbj
+  - name: landing
+    type: Landing
+    enable: true
+    model: turing
+    api_key: your-api-key # http://saas.landingbj.com/
+  - name: landing-qa
+    type: Landing
+    enable: false
+    model: qa
+    api_key: your-api-key # http://saas.landingbj.com/
+  - name: landing-tree
+    type: Landing
+    enable: false
+    model: tree
+    api_key: your-api-key # http://saas.landingbj.com/
+
+    # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
+  - name: fastchat
+    type: Vicuna
+    enable: true
+    model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+    api_address: http://localhost:8090/v1/chat/completions
+
+    # ChatGPT is a state-of-the-art language model developed by OpenAI
+  - name: chatgpt
+    type: GPT
+    enable: false
+    model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
+    api_key: your-api-key # https://platform.openai.com/
+
+    #  qwen (Tongyi Qianwen) is an advanced large-scale language model developed by Alibaba Cloud
+  - name: qwen
+    type: Qwen
+    enable: false
+    model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
+    # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
+    api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
+
+    #  ERNIE Bot (wen xin yi yan) is an advanced large-scale language model developed by Baidu
+  - name: ernie
+    type: Ernie
+    enable: false
+    model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
+    # help document https://developer.baidu.com/article/detail.html?id=1089328
+    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
+    api_key: your-api-key
+    secret_key: your-secret-key
+
+    #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
+  - name: chatglm
+    type: Zhipu
+    enable: false
+    model: glm-3-turbo # glm-4, glm-4v
+    api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
+
+    # Kimi is an intelligent assistant product developed by Moonshot AI.
+  - name: kimi
+    type: Moonshot
+    enable: false
+    model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
+    api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
+
+    # Baichuan is a new generation of open source large language model launched by Baichuan AI
+  - name: baichuan
+    type: Baichuan
+    enable: false
+    model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
+    api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
+
+    # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
+  - name: spark
+    type: Spark
+    enable: true
+    model: v1.1 # V1.5,V2.0,V3.0,3.5
+    app_id: 3d876db8  # url address https://console.xfyun.cn/app/myapp
+    api_key: your-api-key # url address https://console.xfyun.cn/app/myapp
+    secret_key: your-secret-key # url address https://console.xfyun.cn/app/myapp
+
+vectors:
+  - name: Chroma
+    default_category: default
+    url: http://localhost:8000
+
+
+functions:
+
   embedding:
     type: Landing
     api_endpoint: http://ai.landingbj.com
-  backends:
-    - name: landing-test
-      type: Landing
-      enable: false
-      priority: 10
-      model: turing
-      api_key: your-api-key
 
-    - name: vicuna-test
-      type: Vicuna
-      enable: true
-      priority: 100
-      model: vicuna-13b
-      api_address: http://localhost:8090/v1/chat/completions
+  stream_backend: fastchat
 
-    - name: gpt-test
-      type: GPT
-      enable: false
-      priority: 1
-      model: gpt-3.5-turbo-1106
-      api_key: your-api-key
+  ASR:
+    backends:
+      - name: asr
+        type: Landing
+        enable: true
+        priority: 10
+  TTS:
+    backends:
+      - name: tts
+        type: Landing
+        enable: true
+        priority: 10
 
-    - name: qwen-test
-      type: Qwen
-      enable: false
-      priority: 200
-      model: qwen-turbo
-      api_key: your-api-key
+  image2generation:
+    backends:
+      - name: image-generation
+        type: Landing
+        enable: true
+        priority: 10
 
-    - name: ernie-test
-      type: Ernie
-      enable: false
-      priority: 100
-      model: ERNIE-Bot-turbo
-      api_key: your-api-key
-      secret_key: your-secret-key
-  stream_backend: vicuna-test
+  image2captioning:
+    backends:
+      - name: image-captioning
+        type: Landing
+        enable: true
+        priority: 10
 
-vector_store:
-  type: Chroma
-  default_category: default
-  url: http://localhost:8000
+  image2enhance:
+    backends:
+      - name: image-enhance
+        type: Landing
+        enable: true
+        priority: 10
 
-ASR:
-  backends:
-    - name: asr-test1
-      type: Landing
-      enable: true
-      priority: 10
+  video2generation:
+    backends:
+      - name: video-generation
+        type: Landing
+        enable: true
+        priority: 10
 
-TTS:
-  backends:
-    - name: tts-test1
-      type: Landing
-      enable: true
-      priority: 10
+  video2track:
+    backends:
+      - name: video-track
+        type: Landing
+        enable: true
+        priority: 10
 
-image_generation:
-  backends:
-    - name: image-generation-test1
-      type: Landing
-      enable: true
-      priority: 10
+  video2enhance:
+    backends:
+      - name: video-enhance
+        type: Landing
+        enable: true
+        priority: 10
 
-image_captioning:
-  backends:
-    - name: image-captioning-test1
-      type: Landing
-      enable: true
-      priority: 10
-
-image_enhance:
-  backends:
-    - name: image-enhance-test1
-      type: Landing
-      enable: true
-      priority: 10
-
-video_generation:
-  backends:
-    - name: video-generation-test1
-      type: Landing
-      enable: true
-      priority: 10
-
-video_track:
-  backends:
-    - name: video-track-test1
-      type: Landing
-      enable: true
-      priority: 10
-
-video_enhance:
-  backends:
-    - name: video-enhance-test1
-      type: Landing
-      enable: true
-      priority: 10
