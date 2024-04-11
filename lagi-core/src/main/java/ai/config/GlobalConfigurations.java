@@ -10,6 +10,7 @@ import lombok.ToString;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Objects;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -29,7 +30,7 @@ public class GlobalConfigurations extends AbstractConfiguration{
                 backend.setPriority(10);
             }
         });
-        VectorStoreConfig vectorStoreConfig = vectors.get(0);
+        VectorStoreConfig vectorStoreConfig = vectors.stream().filter(vc -> Objects.equals(vc.getName(), functions.getRAG().getName())).findAny().orElse(null);
         if(vectorStoreConfig.getType() == null) {
             vectorStoreConfig.setType(vectorStoreConfig.getName());
         }

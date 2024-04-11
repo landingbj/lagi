@@ -1,5 +1,6 @@
 package ai.config.pojo;
 
+import ai.common.pojo.Backend;
 import ai.common.pojo.EmbeddingConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -11,6 +12,8 @@ public class ModelFunctions {
 
     private EmbeddingConfig embedding;
     private String streamBackend;
+    @JsonProperty("RAG")
+    private Backend RAG;
     @JsonProperty("ASR")
     private ModelFunction ASR;
     @JsonProperty("TTS")

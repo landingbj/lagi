@@ -90,6 +90,9 @@ vectors:
   - name: Chroma
     default_category: default
     url: http://localhost:8000
+  - name: Pinecone
+    default_category: default
+    url: http://localhost:8001
 
   # Pinecone is a vector database for building large-scale machine learning applications
   # The official website is https://www.pinecone.io/
@@ -105,6 +108,9 @@ functions:
     type: Landing
     api_endpoint: http://ai.landingbj.com
   stream_backend: fastchat
+
+  RAG:
+    name: Chroma
 
   ASR:
     backends:
