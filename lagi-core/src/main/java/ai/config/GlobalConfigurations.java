@@ -24,6 +24,11 @@ public class GlobalConfigurations extends AbstractConfiguration{
     @Override
     public Configuration transformToConfiguration() {
         LLM llm = LLM.builder().backends(models).embedding(functions.getEmbedding()).streamBackend(functions.getStreamBackend()).build();
+        llm.getBackends().forEach(backend -> {
+            if(backend.getPriority() == null) {
+                backend.setPriority(10);
+            }
+        });
         VectorStoreConfig vectorStoreConfig = vectors.get(0);
         if(vectorStoreConfig.getType() == null) {
             vectorStoreConfig.setType(vectorStoreConfig.getName());
