@@ -12,6 +12,7 @@ public class Backend {
     private Integer priority;
     private String model;
     private String apiAddress;
+    private String appId;
     private String apiKey;
     private String secretKey;
 
