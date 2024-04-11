@@ -84,6 +84,9 @@ vectors:
   - name: Chroma
     default_category: default
     url: http://localhost:8000
+  - name: Pinecone
+    default_category: default
+    url: http://localhost:8001
 
 
 functions:
@@ -93,6 +96,9 @@ functions:
     api_endpoint: http://ai.landingbj.com
 
   stream_backend: fastchat
+
+  RAG:
+    name: Chroma
 
   ASR:
     backends:

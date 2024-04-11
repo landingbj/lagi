@@ -15,7 +15,6 @@ public class Backend {
     private String appId;
     private String apiKey;
     private String secretKey;
-    private String appId;
 
     public String getAppId() {
         return appId;
