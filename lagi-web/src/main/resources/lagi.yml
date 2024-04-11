@@ -1,6 +1,7 @@
 system_title: Lagi
 
 models:
+  # landingbj
   - name: landing
     type: Landing
     enable: true
@@ -19,18 +20,24 @@ models:
     priority: 10
     model: tree
     api_key: your-api-key # http://saas.landingbj.com/
+
+    # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
   - name: fastchat
     type: Vicuna
     enable: true
     priority: 100
     model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
     api_address: http://localhost:8090/v1/chat/completions
+
+    # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
     enable: false
     priority: 1
     model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
     api_key: your-api-key # https://platform.openai.com/
+
+    #  qwen (Tongyi Qianwen) is an advanced large-scale language model developed by Alibaba Cloud
   - name: qwen
     type: Qwen
     enable: false
@@ -38,6 +45,8 @@ models:
     model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
+
+    #  ERNIE Bot (wen xin yi yan) is an advanced large-scale language model developed by Baidu
   - name: ernie
     type: Ernie
     enable: false
@@ -47,24 +56,32 @@ models:
     #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
     api_key: your-api-key
     secret_key: your-secret-key
+
+    #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
     type: Zhipu
     enable: false
     priority: 200
     model: glm-3-turbo # glm-4, glm-4v
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
+
+    # Kimi is an intelligent assistant product developed by Moonshot AI.
   - name: kimi
     type: Moonshot
     enable: false
     priority: 1
     model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
     api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
+
+    # Baichuan is a new generation of open source large language model launched by Baichuan AI
   - name: baichuan
     type: Baichuan
     enable: false
     priority: 1
     model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
+
+    # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: Spark
     enable: true
