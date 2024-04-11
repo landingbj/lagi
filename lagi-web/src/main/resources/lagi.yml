@@ -4,7 +4,7 @@ models:
   # The turing model is a language model provided by LandingBJ
   - name: landing
     type: Landing
-    enable: true
+    enable: false
     model: turing
     api_key: your-api-key # http://saas.landingbj.com/
 
@@ -25,7 +25,7 @@ models:
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
   - name: fastchat
     type: Vicuna
-    enable: true
+    enable: false
     model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
     api_address: http://localhost:8090/v1/chat/completions
 
@@ -76,13 +76,14 @@ models:
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
-  - name: spark
+  - name: spark-test
     type: Spark
     enable: true
-    model: v1.1 # V1.5,V2.0,V3.0,3.5
-    app_id: 3d876db8  # url address https://console.xfyun.cn/app/myapp
-    api_key: your-api-key # url address https://console.xfyun.cn/app/myapp
-    secret_key: your-secret-key # url address https://console.xfyun.cn/app/myapp
+    priority: 100
+    model: v1.1
+    app_id: your-app-id
+    api_key: your-api-key
+    secret_key: your-secret-key
 
 vectors:
   # Chroma is an AI-native open-source embedding database
