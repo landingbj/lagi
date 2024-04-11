@@ -2,6 +2,7 @@ package ai.utils;
 
 
 import ai.common.pojo.Configuration;
+import ai.config.GlobalConfigurations;
 import ai.qa.LLMConfig;
 
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class MigrateGlobal {
 
     static {
         try (InputStream inputStream = LagiGlobal.class.getResourceAsStream("/lagi.yml");) {
-            LagiGlobal.loadConfig(inputStream);
+            LagiGlobal.loadConfig(inputStream, GlobalConfigurations.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

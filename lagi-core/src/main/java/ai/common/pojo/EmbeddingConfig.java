@@ -1,5 +1,8 @@
 package ai.common.pojo;
 
+import lombok.ToString;
+
+@ToString
 public class EmbeddingConfig {
     private String type;
     private String api_key;

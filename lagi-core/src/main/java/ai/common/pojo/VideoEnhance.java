@@ -1,7 +1,10 @@
 package ai.common.pojo;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public class VideoEnhance {
     private List<Backend> backends;
 
