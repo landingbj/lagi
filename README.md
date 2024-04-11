@@ -21,7 +21,7 @@ git clone https://github.com/landingbj/lagi.git
 cd lagi
 ```
 
-Next, modify the `src/main/resources/lagi.yml` configuration file, replace the large language model API_KEY or SECRET_KEY with your own keys, and set the `enable` field of the model you wish to activate to `true` as needed. Detailed configuration methods can be seen in the [configuration documentation](docs/config_en.md).
+Next, modify the [`src/main/resources/lagi.yml`](lagi-web/src/main/resources/lagi.yml) configuration file, replace the large language model API_KEY or SECRET_KEY with your own keys, and set the `enable` field of the model you wish to activate to `true` as needed. Detailed configuration methods can be seen in the [configuration documentation](docs/config_en.md).
 
 ```yaml
 - name: gpt-test
