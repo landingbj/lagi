@@ -81,12 +81,15 @@ models:
     secret_key: your-secret-key # url address https://console.xfyun.cn/app/myapp
 
 vectors:
+
   - name: Chroma
     default_category: default
-    url: http://localhost:8000
+    url: http://192.168.0.90:8000
+
   - name: Pinecone
-    default_category: default
-    url: http://localhost:8001
+    apiKey: your-api-key
+    projectName: your-project-name
+    environment: your-environment
 
 
 functions:
