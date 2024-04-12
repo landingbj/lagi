@@ -22,7 +22,7 @@ public class GPTAdapter implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAdapter.class);
     private final Gson gson = new Gson();
     private static final String COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions";
-    private static final int HTTP_TIMEOUT = 5 * 1000;
+    private static final int HTTP_TIMEOUT = 15 * 1000;
 
     private final Backend backendConfig;
 
@@ -40,7 +40,6 @@ public class GPTAdapter implements ILlmAdapter {
         chatCompletionRequest.setCategory(null);
         try {
             jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
-            System.out.println(jsonResult);
         } catch (IOException e) {
             logger.error("", e);
         }
@@ -56,6 +55,8 @@ public class GPTAdapter implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        setDefaultModel(chatCompletionRequest);
+        chatCompletionRequest.setCategory(null);
         String json = gson.toJson(chatCompletionRequest);
         String apiKey = backendConfig.getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
