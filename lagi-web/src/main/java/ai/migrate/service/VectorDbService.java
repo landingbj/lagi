@@ -6,6 +6,7 @@ import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.VectorStoreConfig;
 import ai.openai.pojo.ChatCompletionRequest;
+import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
 
 import java.io.File;
@@ -41,11 +42,13 @@ public class VectorDbService {
     }
 
     public List<IndexSearchData> search(String question, String category) {
-        return vectorStoreService.search(question, category);
+        List<IndexSearchData> search = vectorStoreService.search(question, category);
+        return PriorityWordUtil.sortByPriorityWord(search);
     }
 
     public List<IndexSearchData> search(ChatCompletionRequest request) {
-        return vectorStoreService.search(request);
+        List<IndexSearchData> search = vectorStoreService.search(request);
+        return PriorityWordUtil.sortByPriorityWord(search);
     }
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {

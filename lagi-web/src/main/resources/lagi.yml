@@ -76,7 +76,7 @@ models:
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
-  - name: spark-test
+  - name: spark
     type: Spark
     enable: true
     model: v1.1
@@ -110,7 +110,10 @@ functions:
 
   RAG:
     name: Chroma
-
+    similarity_top_k: 10
+    similarity_cutoff: 1
+    parent_depth: 0
+    child_depth: 0
   ASR:
     backends:
       - name: asr
