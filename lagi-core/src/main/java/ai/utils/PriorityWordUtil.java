@@ -44,11 +44,16 @@ public class PriorityWordUtil  {
         return search.stream().sorted((c1, c2)->{
             String m1 = c1.getText().toLowerCase();
             String m2 = c2.getText().toLowerCase();
-            if(ahoCorasick.containsAny(m1)) {
-                return 1;
+            boolean b1 = ahoCorasick.containsAny(m1);
+            boolean b2 = ahoCorasick.containsAny(m2);
+            if(b1 && b2) {
+                return 0;
             }
-            if(ahoCorasick.containsAny(m2)) {
+            if(b1) {
                 return -1;
+            }
+            if(b2) {
+                return 1;
             }
             return 0;
         }).collect(Collectors.toList());

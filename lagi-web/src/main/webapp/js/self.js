@@ -190,7 +190,7 @@ const FILE_SIZE_LIMIT = {
     "docx": WORD_FILE_SIZE_LIMIT,
     "txt": TXT_FILE_SIZE_LIMIT,
     "csv": EXCEL_FILE_SIZE_LIMIT,
-    "xlxs": EXCEL_FILE_SIZE_LIMIT,
+    "xlsx": EXCEL_FILE_SIZE_LIMIT,
     "xls": EXCEL_FILE_SIZE_LIMIT,
     "ppt": PPT_FILE_SIZE_LIMIT,
     "pptx": PPT_FILE_SIZE_LIMIT,
@@ -224,7 +224,7 @@ const fileUploadButton = document.getElementById("addButton");
 fileUploadButton.addEventListener("click", function () {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlxs, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
+    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
     fileInput.style.display = "none";
 
     // 将文件输入元素添加到页面
