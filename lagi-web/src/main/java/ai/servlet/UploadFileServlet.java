@@ -30,12 +30,12 @@ import com.google.gson.JsonObject;
 
 public class UploadFileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private Gson gson = new Gson();
-    private FileService fileService = new FileService();
-    private static Configuration config = MigrateGlobal.config;
-    private VectorDbService vectorDbService = new VectorDbService(config);
-    private UploadFileService uploadFileService = new UploadFileService();
-    private final String UPLOAD_DIR = getServletContext().getRealPath("/upload");
+    private final Gson gson = new Gson();
+    private final FileService fileService = new FileService();
+    private static final Configuration config = MigrateGlobal.config;
+    private final VectorDbService vectorDbService = new VectorDbService(config);
+    private final UploadFileService uploadFileService = new UploadFileService();
+    private static final String UPLOAD_DIR = "/upload";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -153,8 +153,9 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.VIDEO_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.VIDEO_FILE_SIZE_LIMIT);
-        if (!new File(UPLOAD_DIR).isDirectory()) {
-            new File(UPLOAD_DIR).mkdirs();
+        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
         }
 
         String lastFilePath = "";
@@ -168,14 +169,14 @@ public class UploadFileServlet extends HttpServlet {
                 FileItem fi = (FileItem) it.next();
                 if (!fi.isFormField()) {
                     String fileName = fi.getName();
-                    File file = null;
-                    String newName = null;
+                    File file;
+                    String newName;
                     do {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
                         newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        file = new File(UPLOAD_DIR + File.separator + newName);
-                        lastFilePath = UPLOAD_DIR + File.separator + newName;
+                        file = new File(uploadDir + File.separator + newName);
+                        lastFilePath = uploadDir + File.separator + newName;
                         session.setAttribute("last_video_file", lastFilePath);
                         jsonResult.addProperty("status", "success");
                     } while (file.exists());
@@ -200,8 +201,9 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
-        if (!new File(UPLOAD_DIR).isDirectory()) {
-            new File(UPLOAD_DIR).mkdirs();
+        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
         }
 
         String lastFilePath = "";
@@ -221,8 +223,8 @@ public class UploadFileServlet extends HttpServlet {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
                         newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        file = new File(UPLOAD_DIR + File.separator + newName);
-                        lastFilePath = UPLOAD_DIR + File.separator + newName;
+                        file = new File(uploadDir + File.separator + newName);
+                        lastFilePath = uploadDir + File.separator + newName;
                         session.setAttribute("last_image_file", lastFilePath);
                         jsonResult.addProperty("status", "success");
                     } while (file.exists());
@@ -247,8 +249,9 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-        if (!new File(UPLOAD_DIR).isDirectory()) {
-            new File(UPLOAD_DIR).mkdirs();
+        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
         }
 
         List<File> files = new ArrayList<>();
@@ -258,7 +261,6 @@ public class UploadFileServlet extends HttpServlet {
             List<?> fileItems = upload.parseRequest(req);
             for (Object fileItem : fileItems) {
                 FileItem fi = (FileItem) fileItem;
-
                 if (!fi.isFormField()) {
                     String fileName = fi.getName();
                     File file;
@@ -267,12 +269,11 @@ public class UploadFileServlet extends HttpServlet {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
                         newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        String lastFilePath = UPLOAD_DIR + File.separator + newName;
+                        String lastFilePath = uploadDir + File.separator + newName;
                         file = new File(lastFilePath);
                         session.setAttribute(newName, file.toString());
                         session.setAttribute("lastFilePath", lastFilePath);
                     } while (file.exists());
-
                     fi.write(file);
                     files.add(file);
                     realNameMap.put(file.getName(), fileName);
@@ -285,7 +286,6 @@ public class UploadFileServlet extends HttpServlet {
 
         if (!files.isEmpty()) {
             String content = "";
-
             for (File file : files) {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
