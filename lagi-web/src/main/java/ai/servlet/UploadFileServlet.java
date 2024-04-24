@@ -120,7 +120,6 @@ public class UploadFileServlet extends HttpServlet {
 
     // 下载文件
     private void downloadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
         String filePath = req.getParameter("filePath");
         String fileName = req.getParameter("fileName");
         // 设置响应内容类型
@@ -128,12 +127,13 @@ public class UploadFileServlet extends HttpServlet {
         String encodedFileName = URLEncoder.encode(fileName, "UTF-8");
         resp.setHeader("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"");
 
+        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
         // 读取文件并写入响应流
         try {
-            FileInputStream fileInputStream = new FileInputStream(UPLOAD_DIR + File.separator + filePath);
+            FileInputStream fileInputStream = new FileInputStream(uploadDir + File.separator + filePath);
             OutputStream outputStream = resp.getOutputStream();
             byte[] buffer = new byte[4096];
-            int bytesRead = -1;
+            int bytesRead;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
