@@ -5,12 +5,15 @@ import ai.servlet.dto.VectorQueryRequest;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
+import com.google.gson.JsonObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class VectorApiServlet extends BaseServlet {
     private final VectorStoreService vectorStoreService = new VectorStoreService();
@@ -33,11 +36,18 @@ public class VectorApiServlet extends BaseServlet {
         queryCondition.setN(vectorQueryRequest.getN());
         queryCondition.setText(vectorQueryRequest.getText());
         queryCondition.setWhere(vectorQueryRequest.getWhere());
-        List<IndexRecord> result;
+        List<IndexRecord> recordList;
         if (vectorQueryRequest.getCategory() == null) {
-            result = vectorStoreService.query(queryCondition);
+            recordList = vectorStoreService.query(queryCondition);
         } else {
-            result = vectorStoreService.query(queryCondition, vectorQueryRequest.getCategory());
+            recordList = vectorStoreService.query(queryCondition, vectorQueryRequest.getCategory());
+        }
+        Map<String, Object> result = new HashMap<>();
+        if (recordList.isEmpty()) {
+            result.put("status", "failed");
+        } else {
+            result.put("status", "success");
+            result.put("data", recordList);
         }
         responsePrint(resp, toJson(result));
     }
