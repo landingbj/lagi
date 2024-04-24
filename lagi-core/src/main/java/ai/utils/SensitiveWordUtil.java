@@ -2,24 +2,14 @@ package ai.utils;
 
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionResult;
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SensitiveWordUtil {
     private static final AhoCorasick ahoCorasick = new AhoCorasick();
 
     static {
-        List<String> sensitiveWordList = readSensitiveWordJson();
+        List<String> sensitiveWordList = JsonFileLoadUtil.readWordListJson("/sensitive_word.json");
         ahoCorasick.addWords(sensitiveWordList);
     }
 
@@ -41,25 +31,4 @@ public class SensitiveWordUtil {
         return false;
     }
 
-    private static List<String> readSensitiveWordJson() {
-        String respath = "/sensitive_word.json";
-        String content = "{}";
-        List<String> result = new ArrayList<>();
-        try (InputStream in = SensitiveWordUtil.class.getResourceAsStream(respath);) {
-            if (in == null) {
-                return result;
-            }
-            content = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Type listType = new TypeToken<List<String>>() {
-        }.getType();
-        List<String> tempResult = new Gson().fromJson(content, listType);
-        for (String word : tempResult) {
-            result.add(word.toLowerCase());
-        }
-        return result;
-    }
 }

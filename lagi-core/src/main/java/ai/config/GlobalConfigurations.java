@@ -31,8 +31,15 @@ public class GlobalConfigurations extends AbstractConfiguration{
             }
         });
         VectorStoreConfig vectorStoreConfig = vectors.stream().filter(vc -> Objects.equals(vc.getName(), functions.getRAG().getName())).findAny().orElse(null);
-        if(vectorStoreConfig.getType() == null) {
-            vectorStoreConfig.setType(vectorStoreConfig.getName());
+
+        if(vectorStoreConfig != null ) {
+            if(vectorStoreConfig.getType() == null) {
+                vectorStoreConfig.setType(vectorStoreConfig.getName());
+            }
+            vectorStoreConfig.setSimilarityTopK(functions.getRAG().getSimilarityTopK());
+            vectorStoreConfig.setSimilarityCutoff(functions.getRAG().getSimilarityCutoff());
+            vectorStoreConfig.setParentDepth(functions.getRAG().getParentDepth());
+            vectorStoreConfig.setChildDepth(functions.getRAG().getChildDepth());
         }
         return Configuration.builder()
                 .systemTitle(systemTitle)
@@ -50,10 +57,10 @@ public class GlobalConfigurations extends AbstractConfiguration{
     }
 
     public static void main(String[] args) throws IOException {
-        File file = new File("C:\\lz\\work\\lagi\\lagi-web\\src\\main\\resources\\lagi_dev.yml");
+        File file = new File("C:\\lz\\work\\lagi\\lagi-web\\src\\main\\resources\\lagi.yml");
         InputStream inputStream = Files.newInputStream(file.toPath());
-        AbstractConfiguration abstractConfiguration = LagiGlobal.loadConfig(inputStream, GlobalConfigurations.class);
-        System.out.println(abstractConfiguration);
+        GlobalConfigurations globalConfigurations = (GlobalConfigurations)LagiGlobal.loadConfig(inputStream, GlobalConfigurations.class);
+        System.out.println(globalConfigurations);
         Configuration config = LagiGlobal.getConfig();
         System.out.println(config);
     }

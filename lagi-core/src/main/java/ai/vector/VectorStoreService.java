@@ -12,8 +12,6 @@ import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
 import org.apache.commons.lang3.ObjectUtils;
-import tech.amikos.chromadb.Collection;
-import tech.amikos.chromadb.handler.ApiException;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +20,20 @@ import java.util.*;
 public class VectorStoreService {
     private final VectorStore vectorStore;
     private final FileService fileService = new FileService();
+    private final Integer similarityTopK;
+    private final Double similarityCutoff;
+    private final Integer parentDepth;
+    private final Integer childDepth;
 
     public VectorStoreService() {
         this(LagiGlobal.getConfig().getVectorStore(), EmbeddingFactory.getEmbedding());
     }
 
     public VectorStoreService(VectorStoreConfig config, Embeddings embeddingFunction) {
+        similarityTopK = config.getSimilarityTopK();
+        similarityCutoff = config.getSimilarityCutoff();
+        parentDepth = config.getParentDepth();
+        childDepth = config.getChildDepth();
         if (config.getType().equalsIgnoreCase(VectorStoreConstant.VECTOR_STORE_CHROMA)) {
             this.vectorStore = new ChromaVectorStore(config, embeddingFunction);
         } else if (config.getType().equalsIgnoreCase(VectorStoreConstant.VECTOR_STORE_PINECONE)) {
@@ -144,10 +150,10 @@ public class VectorStoreService {
     }
 
     public List<IndexSearchData> search(String question, String category) {
-        int similarity_top_k = 1;
-        double similarity_cutoff = 0.5;
-        int parentDepth = 0;
-        int childDepth = 0;
+        int similarity_top_k = similarityTopK;
+        double similarity_cutoff = similarityCutoff;
+        int parentDepth = this.parentDepth;
+        int childDepth = this.childDepth;
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, "");
