@@ -156,4 +156,13 @@
 		<servlet-name>image_api</servlet-name>
 		<url-pattern>/v1/images/generations</url-pattern>
 	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>vector</servlet-name>
+		<servlet-class>ai.servlet.api.VectorApiServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>vector</servlet-name>
+		<url-pattern>/v1/vector/query</url-pattern>
+	</servlet-mapping>
 </web-app>

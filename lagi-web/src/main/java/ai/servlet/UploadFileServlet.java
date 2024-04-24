@@ -35,6 +35,7 @@ public class UploadFileServlet extends HttpServlet {
     private static Configuration config = MigrateGlobal.config;
     private VectorDbService vectorDbService = new VectorDbService(config);
     private UploadFileService uploadFileService = new UploadFileService();
+    private final String UPLOAD_DIR = getServletContext().getRealPath("/upload");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -129,7 +130,7 @@ public class UploadFileServlet extends HttpServlet {
 
         // 读取文件并写入响应流
         try {
-            FileInputStream fileInputStream = new FileInputStream(filePath);
+            FileInputStream fileInputStream = new FileInputStream(UPLOAD_DIR + File.separator + filePath);
             OutputStream outputStream = resp.getOutputStream();
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
@@ -152,9 +153,8 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.VIDEO_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.VIDEO_FILE_SIZE_LIMIT);
-        String filePath = getServletContext().getRealPath("/upload");
-        if (!new File(filePath).isDirectory()) {
-            new File(filePath).mkdirs();
+        if (!new File(UPLOAD_DIR).isDirectory()) {
+            new File(UPLOAD_DIR).mkdirs();
         }
 
         String lastFilePath = "";
@@ -174,8 +174,8 @@ public class UploadFileServlet extends HttpServlet {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
                         newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        file = new File(filePath + File.separator + newName);
-                        lastFilePath = filePath + File.separator + newName;
+                        file = new File(UPLOAD_DIR + File.separator + newName);
+                        lastFilePath = UPLOAD_DIR + File.separator + newName;
                         session.setAttribute("last_video_file", lastFilePath);
                         jsonResult.addProperty("status", "success");
                     } while (file.exists());
@@ -200,9 +200,8 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
-        String filePath = getServletContext().getRealPath("/upload");
-        if (!new File(filePath).isDirectory()) {
-            new File(filePath).mkdirs();
+        if (!new File(UPLOAD_DIR).isDirectory()) {
+            new File(UPLOAD_DIR).mkdirs();
         }
 
         String lastFilePath = "";
@@ -222,8 +221,8 @@ public class UploadFileServlet extends HttpServlet {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
                         newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        file = new File(filePath + File.separator + newName);
-                        lastFilePath = filePath + File.separator + newName;
+                        file = new File(UPLOAD_DIR + File.separator + newName);
+                        lastFilePath = UPLOAD_DIR + File.separator + newName;
                         session.setAttribute("last_image_file", lastFilePath);
                         jsonResult.addProperty("status", "success");
                     } while (file.exists());
@@ -248,9 +247,8 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-        String filePath = getServletContext().getRealPath("/upload");
-        if (!new File(filePath).isDirectory()) {
-            new File(filePath).mkdirs();
+        if (!new File(UPLOAD_DIR).isDirectory()) {
+            new File(UPLOAD_DIR).mkdirs();
         }
 
         List<File> files = new ArrayList<>();
@@ -269,7 +267,7 @@ public class UploadFileServlet extends HttpServlet {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
                         newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
                         newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        String lastFilePath = filePath + File.separator + newName;
+                        String lastFilePath = UPLOAD_DIR + File.separator + newName;
                         file = new File(lastFilePath);
                         session.setAttribute(newName, file.toString());
                         session.setAttribute("lastFilePath", lastFilePath);
@@ -327,7 +325,7 @@ public class UploadFileServlet extends HttpServlet {
         private void addDocIndexes() {
             Map<String, Object> metadatas = new HashMap<>();
             String fileId = UUID.randomUUID().toString().replace("-", "");
-            String filepath = file.getAbsolutePath();
+            String filepath = file.getName();
 
             metadatas.put("filename", filename);
             metadatas.put("category", category);
