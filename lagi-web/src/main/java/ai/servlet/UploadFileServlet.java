@@ -243,6 +243,7 @@ public class UploadFileServlet extends HttpServlet {
     private void uploadLearningFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
         String category = req.getParameter("category");
+        String level = req.getParameter("level");
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "success");
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -290,7 +291,7 @@ public class UploadFileServlet extends HttpServlet {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
-                    new AddDocIndex(file, category, filename).start();
+                    new AddDocIndex(file, category, filename, level).start();
                 }
             }
         }
@@ -309,11 +310,13 @@ public class UploadFileServlet extends HttpServlet {
         private final File file;
         private final String category;
         private final String filename;
+        private final String level;
 
-        public AddDocIndex(File file, String category, String filename) {
+        public AddDocIndex(File file, String category, String filename, String level) {
             this.file = file;
             this.category = category;
             this.filename = filename;
+            this.level = level;
         }
 
         public void run() {
@@ -331,6 +334,11 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("category", category);
             metadatas.put("filepath", filepath);
             metadatas.put("file_id", fileId);
+            if (level == null) {
+                metadatas.put("level", "user");
+            } else {
+                metadatas.put("level", "system");
+            }
 
             try {
                 vectorDbService.addFileVectors(this.file, metadatas, category);
