@@ -189,10 +189,13 @@ public class VectorStoreService {
         IndexSearchData indexSearchData = new IndexSearchData();
         indexSearchData.setId(indexRecord.getId());
         indexSearchData.setText(indexRecord.getDocument());
-        indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
         indexSearchData.setCategory((String) indexRecord.getMetadata().get("category"));
-        indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
-        indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
+        indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
+        if(!"system".equals(indexSearchData.getLevel())) {
+            indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
+            indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
+            indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
+        }
         indexSearchData.setImage((String) indexRecord.getMetadata().get("image"));
         indexSearchData.setDistance(indexRecord.getDistance());
         indexSearchData.setParentId((String) indexRecord.getMetadata().get("parent_id"));
