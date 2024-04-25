@@ -163,6 +163,6 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>vector</servlet-name>
-		<url-pattern>/v1/vector/query</url-pattern>
+		<url-pattern>/v1/vector/*</url-pattern>
 	</servlet-mapping>
 </web-app>

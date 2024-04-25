@@ -67,6 +67,20 @@ public class VectorStoreService {
         upsertFileVectors(fileList, category);
     }
 
+    public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category, boolean isContextLinked) {
+        for (UpsertRecord upsertRecord : upsertRecords) {
+            String embeddingId = UUID.randomUUID().toString().replace("-", "");
+            upsertRecord.setId(embeddingId);
+        }
+        if (isContextLinked) {
+            for (int i = 1; i < upsertRecords.size(); i++) {
+                String parentId = upsertRecords.get(i - 1).getId();
+                upsertRecords.get(i).getMetadata().put("parent_id", parentId);
+            }
+        }
+        this.upsert(upsertRecords, category);
+    }
+
     private void upsertFileVectors(List<FileInfo> fileList, String category) throws IOException {
         List<UpsertRecord> upsertRecords = new ArrayList<>();
         for (FileInfo fileInfo : fileList) {

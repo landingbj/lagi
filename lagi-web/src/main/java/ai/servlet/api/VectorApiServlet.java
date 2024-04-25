@@ -2,9 +2,11 @@ package ai.servlet.api;
 
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.VectorQueryRequest;
+import ai.servlet.dto.VectorUpsertRequest;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
+import ai.vector.pojo.UpsertRecord;
 import com.google.gson.JsonObject;
 
 import javax.servlet.ServletException;
@@ -26,6 +28,8 @@ public class VectorApiServlet extends BaseServlet {
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("query")) {
             this.query(req, resp);
+        } else if (method.equals("upsert")) {
+            this.upsert(req, resp);
         }
     }
 
@@ -49,6 +53,18 @@ public class VectorApiServlet extends BaseServlet {
             result.put("status", "success");
             result.put("data", recordList);
         }
+        responsePrint(resp, toJson(result));
+    }
+
+    private void upsert(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorUpsertRequest vectorUpsertRequest = reqBodyToObj(req, VectorUpsertRequest.class);
+        List<UpsertRecord> upsertRecords = vectorUpsertRequest.getData();
+        String category = vectorUpsertRequest.getCategory();
+        boolean isContextLinked = vectorUpsertRequest.getContextLinked();
+        vectorStoreService.upsertCustomVectors(upsertRecords, category, isContextLinked);
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
         responsePrint(resp, toJson(result));
     }
 }
