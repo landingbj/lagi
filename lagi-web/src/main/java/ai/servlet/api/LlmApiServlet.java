@@ -130,28 +130,11 @@ public class LlmApiServlet extends BaseServlet {
             List<JsonObject> imageObjectList = gson.fromJson(indexData.getImage(), new TypeToken<List<JsonObject>>() {
             }.getType());
             for (JsonObject image : imageObjectList) {
-                String url = MigrateGlobal.FILE_PROCESS_URL + "/static/" + image.get("path").getAsString();
+                String url = image.get("path").getAsString();
                 imageList.add(url);
             }
         }
-        String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
-        ArrayList<String> result = null;
-        if (imageList != null) {
-            result = new ArrayList<>();
-            for (String url : imageList) {
-                ServletContext context = req.getServletContext();
-                String rootPath = context.getRealPath("");
-                String filePath = rootPath + "static/img/imgList/";
-                File tempDir = new File(filePath);
-                if (!tempDir.exists()) {
-                    tempDir.mkdirs();
-                }
-                WhisperResponse whisperResponse = DownloadUtils.downloadFile(url, "png", filePath);
-                String urlResult = uri + "/static/img/imgList/" + whisperResponse.getMsg();
-                result.add(urlResult);
-            }
-        }
-        return result;
+        return imageList;
     }
 
     private void addVectorDBContext(ChatCompletionRequest request, List<IndexSearchData> indexSearchDataList) {

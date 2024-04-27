@@ -1,12 +1,11 @@
 package ai.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.util.List;
 
+import ai.common.pojo.Backend;
 import ai.config.AbstractConfiguration;
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
+import ai.config.GlobalConfigurations;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -15,6 +14,8 @@ import ai.common.pojo.Configuration;
 
 public class LagiGlobal {
     private static Configuration config;
+
+    public static String LANDING_API_KEY = "your-api-key";
 
     public static Configuration getConfig() {
         return config;
@@ -26,34 +27,41 @@ public class LagiGlobal {
     }
 
     public static void loadConfig(File configFile) {
-        ObjectMapper mapper = new YAMLMapper();
-        mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        InputStream inputStream;
         try {
-            config = mapper.readValue(configFile, Configuration.class);
-        } catch (IOException e) {
+            inputStream = new FileInputStream(configFile);
+        } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+        loadConfig(inputStream, GlobalConfigurations.class);
     }
 
-    public static void loadConfig(InputStream inputStream) {
-        ObjectMapper mapper = new YAMLMapper();
-        mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-        try {
-            config = mapper.readValue(inputStream, Configuration.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static AbstractConfiguration loadConfig(InputStream inputStream,  Class<?extends AbstractConfiguration> cls) {
+    public static AbstractConfiguration loadConfig(InputStream inputStream, Class<? extends AbstractConfiguration> cls) {
         ObjectMapper mapper = new YAMLMapper();
         mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         try {
             AbstractConfiguration aConfig = mapper.readValue(inputStream, cls);
             config = aConfig.transformToConfiguration();
+            setLandingApikey(config);
             return aConfig;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static String getLandingApikey() {
+        return LANDING_API_KEY;
+    }
+
+    private static void setLandingApikey(Configuration config) {
+        List<Backend> backends = config.getLLM().getBackends();
+        for (Backend backend : backends) {
+            if (backend.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
+                String apiKey = backend.getApiKey();
+                if (apiKey.startsWith("sk-") && apiKey.length() == 35) {
+                    LANDING_API_KEY = apiKey;
+                }
+            }
         }
     }
 
@@ -61,7 +69,7 @@ public class LagiGlobal {
     public static final String LLM_ROLE_ASSISTANT = "assistant";
     public static final String LLM_ROLE_SYSTEM = "system";
 
-    public static final boolean IMAGE_EXTRACT_ENABLE = false;
+    public static final boolean IMAGE_EXTRACT_ENABLE = true;
     public static final String CHAT_COMPLETION_REQUEST = "ChatCompletionRequest";
     public static final String CHAT_COMPLETION_CONFIG = "ChatCompletionConfig";
 

@@ -11,6 +11,7 @@ import ai.vector.impl.PineconeVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import com.google.gson.Gson;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.File;
@@ -18,18 +19,21 @@ import java.io.IOException;
 import java.util.*;
 
 public class VectorStoreService {
+    private final Gson gson = new Gson();
     private final VectorStore vectorStore;
     private final FileService fileService = new FileService();
     private final Integer similarityTopK;
     private final Double similarityCutoff;
     private final Integer parentDepth;
     private final Integer childDepth;
+    private final VectorStoreConfig config;
 
     public VectorStoreService() {
         this(LagiGlobal.getConfig().getVectorStore(), EmbeddingFactory.getEmbedding());
     }
 
     public VectorStoreService(VectorStoreConfig config, Embeddings embeddingFunction) {
+        this.config = config;
         similarityTopK = config.getSimilarityTopK();
         similarityCutoff = config.getSimilarityCutoff();
         parentDepth = config.getParentDepth();
@@ -44,22 +48,22 @@ public class VectorStoreService {
     }
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
-        List<Document> docs;
-        if (LagiGlobal.IMAGE_EXTRACT_ENABLE) {
-            ExtractContentResponse response = fileService.extractContent(file);
+        List<FileChunkResponse.Document> docs;
+        FileChunkResponse response = fileService.extractContent(file);
+        if (response != null && response.getStatus().equals("success")) {
             docs = response.getData();
         } else {
             docs = fileService.splitChunks(file, 512);
         }
         List<FileInfo> fileList = new ArrayList<>();
-        for (Document doc : docs) {
+        for (FileChunkResponse.Document doc : docs) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");
             fileInfo.setEmbedding_id(embeddingId);
             fileInfo.setText(doc.getText());
             Map<String, Object> tmpMetadatas = new HashMap<>(metadatas);
-            if (doc.getImage() != null) {
-                tmpMetadatas.put("image", doc.getImage());
+            if (doc.getImages() != null) {
+                tmpMetadatas.put("image", gson.toJson(doc.getImages()));
             }
             fileInfo.setMetadatas(tmpMetadatas);
             fileList.add(fileInfo);
@@ -141,6 +145,16 @@ public class VectorStoreService {
         return result;
     }
 
+    public IndexRecord fetch(String id, String category) {
+        List<String> ids = Collections.singletonList(id);
+        List<IndexRecord> indexRecords = this.vectorStore.fetch(ids, category);
+        IndexRecord result = null;
+        if (indexRecords.size() == 1) {
+            result = indexRecords.get(0);
+        }
+        return result;
+    }
+
     public void delete(List<String> ids) {
         this.vectorStore.delete(ids);
     }
@@ -170,10 +184,10 @@ public class VectorStoreService {
         int childDepth = this.childDepth;
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> result = new ArrayList<>();
-        category = ObjectUtils.defaultIfNull(category, "");
+        category = ObjectUtils.defaultIfNull(category, this.config.getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
         for (IndexSearchData indexSearchData : indexSearchDataList) {
-            result.add(extendText(parentDepth, childDepth, indexSearchData));
+            result.add(extendText(parentDepth, childDepth, indexSearchData, category));
         }
         return result;
     }
@@ -205,7 +219,7 @@ public class VectorStoreService {
         indexSearchData.setText(indexRecord.getDocument());
         indexSearchData.setCategory((String) indexRecord.getMetadata().get("category"));
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
-        if(!"system".equals(indexSearchData.getLevel())) {
+        if (!"system".equals(indexSearchData.getLevel())) {
             indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
             indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
             indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
@@ -216,14 +230,14 @@ public class VectorStoreService {
         return indexSearchData;
     }
 
-    private IndexSearchData getParentIndex(String parentId) {
+    private IndexSearchData getParentIndex(String parentId, String category) {
         if (parentId == null) {
             return null;
         }
-        return toIndexSearchData(this.fetch(parentId));
+        return toIndexSearchData(this.fetch(parentId, category));
     }
 
-    private IndexSearchData getChildIndex(String parentId) {
+    private IndexSearchData getChildIndex(String parentId, String category) {
         IndexSearchData result = null;
         if (parentId == null) {
             return null;
@@ -232,19 +246,19 @@ public class VectorStoreService {
         where.put("parent_id", parentId);
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setWhere(where);
-        List<IndexRecord> indexRecords = this.query(queryCondition);
+        List<IndexRecord> indexRecords = this.query(queryCondition, category);
         if (indexRecords != null && !indexRecords.isEmpty()) {
             result = toIndexSearchData(indexRecords.get(0));
         }
         return result;
     }
 
-    private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data) {
+    private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
         String text = data.getText();
         String parentId = data.getParentId();
         int parentCount = 0;
         for (int i = 0; i < parentDepth; i++) {
-            IndexSearchData parentData = getParentIndex(parentId);
+            IndexSearchData parentData = getParentIndex(parentId, category);
             if (parentData != null) {
                 text = parentData.getText() + text;
                 parentId = parentData.getParentId();
@@ -258,7 +272,7 @@ public class VectorStoreService {
         }
         parentId = data.getId();
         for (int i = 0; i < childDepth; i++) {
-            IndexSearchData childData = getChildIndex(parentId);
+            IndexSearchData childData = getChildIndex(parentId, category);
             if (childData != null) {
                 text = text + childData.getText();
                 parentId = childData.getId();
