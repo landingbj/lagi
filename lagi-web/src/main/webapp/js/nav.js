@@ -17,33 +17,39 @@ let promptNavs = [
         operation:'在Lagi对您的输入内容作出回应的最右侧，点击“默认”按钮，即可看到多种可供选择的情绪音色。选中其中一个音色后，点击旁边的竖着的三个点，即可选择播放及播放倍速。'},
     {id:5, title: '看图说话',exampleImgSrc:'../images/ktsh.png',
         exampleVedioSrc:'../video/ktsh.mp4',
+        status:0,
         prompt:'该功能可自动提取上传图片的信息，并生成对图片的描述，帮助用户理解图片内容。',
         operation:`点击输入框最右侧的文件夹图标，选择图片并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
          已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
          此时请在输入框内输入“看图说话”，Lagi将会对您的请求作出响应。`},
     {id:6, title: '画质增强',exampleImgSrc:'../images/txzq.png',
         exampleVedioSrc:'../video/txzq.mp4',
+        status:0,
         prompt:'该功能可以提升图像清晰度、色彩表现、对比度，并减少噪声和杂点，从而增强图像的视觉效果和可读性',
         operation:`点击输入框最右侧的文件夹图标，选择图片并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
         已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
         此时请在输入框内输入“画质增强”，Lagi将会对您的请求作出响应。`},
     {id:7, title: '图片生成',exampleImgSrc:'../images/tpsc.png',
         exampleVedioSrc:'../video/tpsc.mp4',
+        status:0,
         prompt:'该功能可根据用户的需求，生成精准匹配的图片，为用户提供配图',
         operation:'在输入框内输入您的需求（如“生成一张风景图”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'},
 
     {id:8, title: '视频追踪',exampleImgSrc:'../images/spzz.png',
         exampleVedioSrc:'../video/spzz.mp4',
+        status:0,
         prompt:'该功能可对上传视频的内容进行搜索、编辑和创作视频。跟踪人物进行轨迹绘制，框选等操作。',
         operation:'点击输入框最右侧的文件夹图标，选择视频并点击“打开”，即可上传。Lagi将会自动您的请求做出响应。'},
     {id:9, title: '视频增强',exampleImgSrc:'../images/spzq.png',
         exampleVedioSrc:'../video/spzq.mp4',
+        status:0,
         prompt:'该功能可以显著提升视频的质量和观感体验，让观众享受更加清晰、生动、流畅的画面效果。这些技术在影视制作、视频修复、在线视频流等领域具有广泛的应用前景。',
         operation:`点击输入框最右侧的文件夹图标，选择视频并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
             已经收到您上传的视频。如果您想视频追踪，请输入“视频追踪”。如果您想视频增强，请输入“视频增强”。
             此时请在输入框内输入“视频增强”，Lagi将会对您的请求作出响应。`},
     {id:10, title: '视频生成',exampleImgSrc:'../images/spsc.png',
         exampleVedioSrc:'../video/spsc.mp4',
+        status:0,
         prompt:'该功能可对根据上传的图像，自动生成与之相关的视频。这有助于提高视频的创新性和生产效率，为影视制作、游戏开发、广告创意等领域提供更多的可能性。',
         operation:`点击输入框最右侧的文件夹图标，选择图片并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
          已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
@@ -114,9 +120,16 @@ function genNavItems(navs) {
         if (g != group) {
             g = group;
         }
+        let cls = '';
+        let func = `getPromptDialog(${nav.id})`;
+        if(nav.status === 0) {
+            cls = 'tooltip text-gray-500';
+            func='maintenance()';
+        }
+        
         html += `
         <li class="relative z-[15]" ${style} data-projection-id="7" style="opacity: 1; height: auto;">
-            <a  onclick=getPromptDialog(${nav.id}) class="flex py-2 px-2 items-center gap-3 relative rounded-md hover:bg-default-100 dark:hover:bg-[#2A2B32] cursor-pointer break-all bg-default-50 hover:pr-4 dark:bg-default-900 group">
+            <a  onclick=${func} data-tooltip="维护中" class="${cls} flex py-2 px-2 items-center gap-3 relative rounded-md hover:bg-default-100 dark:hover:bg-[#2A2B32] cursor-pointer break-all bg-default-50 hover:pr-4 dark:bg-default-900 group">
                 <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z">
                     </path>
@@ -126,10 +139,16 @@ function genNavItems(navs) {
                     </div>
                 </div>
             </a>
+            
         </li>
         `;
     }
     return html;
+}
+
+
+function maintenance() {
+
 }
 
 function getPromptDialog(id) {

@@ -101,4 +101,35 @@ pre .null {
 pre .key {
 	color: red;
 }
-  
+
+.tooltip{
+	/* visibility: visible; */
+}
+
+.tooltip:before {
+    content: attr(data-tooltip);
+	position: absolute;
+    left: 50%;
+	top: 0em;
+    display: block;
+    /* font-size: 10px; */
+	color: #f7e9e9;
+	background-color: rgb(0, 0, 0);
+    margin-top: 0.5em;
+    width: 120px;
+    border-radius: 6px;
+    z-index: 99;
+    text-align: center;
+    transition: opacity 0.25s, transform 0.25s;
+    /* border: 1px solid #409eff; */
+}
+
+
+.tooltip:before {
+    opacity: 0;
+}
+
+.tooltip:hover:before {
+    opacity: 1;
+  }
+
