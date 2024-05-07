@@ -1,8 +1,12 @@
 package ai.common.pojo;
 
+import ai.config.pojo.AgentConfig;
+import ai.config.pojo.WorkerConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.ToString;
+
+import java.util.List;
 
 @ToString
 @Builder
@@ -21,6 +25,24 @@ public class Configuration {
     private VideoGeneration videoGeneration;
     private VideoTrack videoTrack;
     private VideoEnhance videoEnhance;
+    private List<AgentConfig> agents;
+    private List<WorkerConfig> workers;
+
+    public List<WorkerConfig> getWorkers() {
+        return workers;
+    }
+
+    public void setWorkers(List<WorkerConfig> workers) {
+        this.workers = workers;
+    }
+
+    public List<AgentConfig> getAgents() {
+        return agents;
+    }
+
+    public void setAgents(List<AgentConfig> agents) {
+        this.agents = agents;
+    }
 
     public String getSystemTitle() {
         return systemTitle;
