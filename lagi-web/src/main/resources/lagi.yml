@@ -101,7 +101,6 @@ vectors:
     api_key: your-api-key
 
 functions:
-
   embedding:
     type: Landing
     api_endpoint: http://ai.landingbj.com
@@ -169,3 +168,32 @@ functions:
         enable: true
         priority: 10
 
+# The following is the configuration of agents, name is the name of the agent,
+# type is the type of the agent, class is the implement class of the agent.
+agents:
+  - name: qq
+    username: your-username
+    class: ai.agent.social.QQAgent
+
+  - name: wechat
+    username: your-username
+    class: ai.agent.social.WechatAgent
+
+  - name: ding
+    username: your-username
+    class: ai.agent.social.DingAgent
+
+# The following is the configuration of workers, name is the name of the worker,
+# agent is the agent used by the worker, class is the implement class of the worker.
+workers:
+  - name: qq-robot
+    agent: qq
+    class: ai.worker.social.RobotWorker
+
+  - name: wechat-robot
+    agent: wechat
+    class: ai.worker.social.RobotWorker
+
+  - name: ding-robot
+    agent: ding
+    class: ai.worker.social.RobotWorker

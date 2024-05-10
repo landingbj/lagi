@@ -1,7 +1,9 @@
 package ai.config;
 
 import ai.common.pojo.*;
+import ai.config.pojo.AgentConfig;
 import ai.config.pojo.ModelFunctions;
+import ai.config.pojo.WorkerConfig;
 import ai.utils.LagiGlobal;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +22,8 @@ public class GlobalConfigurations extends AbstractConfiguration{
     private List<Backend>  models;
     private List<VectorStoreConfig> vectors;
     private ModelFunctions functions;
+    private List<AgentConfig> agents;
+    private List<WorkerConfig> workers;
 
 
     @Override
@@ -53,6 +57,8 @@ public class GlobalConfigurations extends AbstractConfiguration{
                 .videoEnhance(VideoEnhance.builder().backends(functions.getVideo2Enhance().getBackends()).build())
                 .videoGeneration(VideoGeneration.builder().backends(functions.getVideo2Generation().getBackends()).build())
                 .videoTrack(VideoTrack.builder().backends(functions.getVideo2Track().getBackends()).build())
+                .agents(agents)
+                .workers(workers)
                 .build();
     }
 
