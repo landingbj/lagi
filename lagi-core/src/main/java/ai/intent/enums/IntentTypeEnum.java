@@ -23,7 +23,7 @@ public enum IntentTypeEnum {
             "画.*?张.*?图像$"}),
     VIDEO("svd_by_text", new String[]{"生成.*?视频$",
             "生成视频.*?",}),
-    TRANSLATE("translate", new String[]{"翻译.*?语",
+    TRANSLATE("multilanguage", new String[]{"翻译.*?语",
             "翻译.*?文",
             "语.*?翻译",
             "文.*?翻译",
@@ -107,9 +107,11 @@ public enum IntentTypeEnum {
     }
 
     public static void main(String[] args) {
+        String ins = "Please help write a poem";
         List<String> ls = new ArrayList<>();
-        ls.add("画一张狗狗图");
-        boolean matches = IMAGE.matches(ls);
+        ls.add("帮忙");
+        ls.add("Please help write a poem");
+        boolean matches = TRANSLATE.matches(ins,ls);
         System.out.println(matches);
     }
 
