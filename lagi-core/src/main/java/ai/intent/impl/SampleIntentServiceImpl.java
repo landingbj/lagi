@@ -33,7 +33,7 @@ public class SampleIntentServiceImpl implements IntentService {
         IntentTypeEnum[] enums = IntentTypeEnum.values();
         IntentResult intentResult = new IntentResult();
         for(IntentTypeEnum e : enums) {
-            if(e.matches(segments)) {
+            if(e.matches(newMessage ,segments)) {
                 intentResult.setType(e.getName());
             }
         }

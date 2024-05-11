@@ -65,6 +65,47 @@ public enum IntentTypeEnum {
         return false;
     }
 
+    public boolean matches(String instruction, List<String> segments) {
+
+        if(this == IntentTypeEnum.TRANSLATE) {
+            int[] lens = englishLengths(instruction);
+            int max_en_len = lens[0];
+            int total_len = lens[1];
+            double ratio = (double) total_len / (double) max_en_len;
+            if( ratio > 0.1 && max_en_len > 15) {
+                return true;
+            }
+        }
+        for (String segment : segments) {
+            for (String pattern : patterns) {
+                if (Pattern.matches(pattern, segment)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static int[] englishLengths(String s) {
+        int maxContinuousLength = 0;
+        int currentContinuousLength = 0;
+        int totalEnglishLength = 0;
+
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+
+            if (Character.isLetter(ch) && ch <= 127 || Character.isWhitespace(ch)) { // ASCII 字符范围是 0-127
+                currentContinuousLength++;
+                totalEnglishLength++;
+                maxContinuousLength = Math.max(maxContinuousLength, currentContinuousLength);
+            } else {
+                currentContinuousLength = 0;
+            }
+        }
+
+        return new int[]{maxContinuousLength, totalEnglishLength};
+    }
+
     public static void main(String[] args) {
         List<String> ls = new ArrayList<>();
         ls.add("画一张狗狗图");
