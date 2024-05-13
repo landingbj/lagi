@@ -51,6 +51,11 @@ public class VectorDbService {
         return PriorityWordUtil.sortByPriorityWord(search);
     }
 
+    public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
+        List<IndexSearchData> search = vectorStoreService.searchByContext(request);
+        return PriorityWordUtil.sortByPriorityWord(search);
+    }
+
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         vectorStoreService.addFileVectors(file, metadatas, category);
     }

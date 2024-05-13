@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -15,6 +16,8 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import ai.common.pojo.*;
+import ai.intent.impl.SampleIntentServiceImpl;
+import ai.intent.pojo.IntentResult;
 import ai.migrate.service.VectorDbService;
 import ai.utils.*;
 import okhttp3.MediaType;
@@ -62,6 +65,7 @@ public class SearchServlet extends HttpServlet {
     private CompletionsService completionsService = new CompletionsService(config);
 
     private VectorDbService vectorDbService = new VectorDbService(config);
+    private ai.intent.IntentService sampleIntentService = new SampleIntentServiceImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -287,8 +291,10 @@ public class SearchServlet extends HttpServlet {
 
         ObjectMapper objectMapper = new ObjectMapper();
         String content = messages.get(messages.size() - 1).getContent().trim();
-        String intent = intentService.detectIntent(content);
-
+//        String intent = intentService.detectIntent(content);
+        List<String> msg = messages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
+        IntentResult intentResult = sampleIntentService.detectIntent(msg);
+        String intent = intentResult.getType();
         PrintWriter out = resp.getWriter();
 
         String result = "{\"status\":\"failed\"}";

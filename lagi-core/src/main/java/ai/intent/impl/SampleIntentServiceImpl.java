@@ -40,7 +40,7 @@ public class SampleIntentServiceImpl implements IntentService {
         if(intentResult.getType() == null) {
             intentResult.setType(IntentTypeEnum.TEXT.getName());
         }
-        intentResult.setStatus(IntentStatusEnum.getStatusByContents(messages, punctuations, 0.5).getName());
+        intentResult.setStatus(IntentStatusEnum.getStatusByContents(messages, punctuations).getName());
         return intentResult;
     }
 

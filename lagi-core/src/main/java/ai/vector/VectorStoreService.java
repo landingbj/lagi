@@ -3,7 +3,12 @@ package ai.vector;
 import ai.common.pojo.*;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
+import ai.intent.IntentService;
+import ai.intent.enums.IntentStatusEnum;
+import ai.intent.impl.SampleIntentServiceImpl;
+import ai.intent.pojo.IntentResult;
 import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.ChromaVectorStore;
@@ -17,6 +22,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class VectorStoreService {
     private final Gson gson = new Gson();
@@ -27,6 +33,8 @@ public class VectorStoreService {
     private final Integer parentDepth;
     private final Integer childDepth;
     private final VectorStoreConfig config;
+
+    private IntentService intentService = new SampleIntentServiceImpl();
 
     public VectorStoreService() {
         this(LagiGlobal.getConfig().getVectorStore(), EmbeddingFactory.getEmbedding());
@@ -175,6 +183,23 @@ public class VectorStoreService {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
         List<IndexSearchData> indexSearchDataList = search(lastMessage, request.getCategory());
         return indexSearchDataList;
+    }
+
+    public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
+        List<ChatMessage> messages = request.getMessages();
+        List<String> collect = messages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
+        IntentResult intentResult = intentService.detectIntent(collect);
+        String question = null;
+        if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
+            List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
+            if(userMessages.size() > 1) {
+                question = userMessages.get(userMessages.size() - 2).getContent().trim();
+            }
+        }
+        if(question == null) {
+            question = ChatCompletionUtil.getLastMessage(request);
+        }
+        return search(question, request.getCategory());
     }
 
     public List<IndexSearchData> search(String question, String category) {

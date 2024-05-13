@@ -62,7 +62,7 @@ public class LlmApiServlet extends BaseServlet {
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
         List<IndexSearchData> indexSearchDataList;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
-            indexSearchDataList = vectorDbService.search(chatCompletionRequest);
+            indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 addVectorDBContext(chatCompletionRequest, indexSearchDataList);
             }
