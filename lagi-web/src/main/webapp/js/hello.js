@@ -11,11 +11,20 @@ let introTable = [
     [{title:"测试3", content:"内容3"},{title:"测试4", content:"内容4"},],
 ]
 
+let agent_title = 'AI智能体';
+let agent_tools = [
+    {name:'社交圈', bind_func: 'socialCircles', available:true},
+    {name:'视频流', bind_func: 'notifyAvailable', available:false},
+    {name:'语音流', bind_func: 'notifyAvailable', available:false},
+    {name:'传感器', bind_func: 'notifyAvailable', available:false},
+    {name:'工控线', bind_func: 'notifyAvailable', available:false},
+]
 
 function initHelloPage() {
     initTopTile();
     initModelSlide();
     initIntroduces();
+    initAgentTool();
 }
 
 
@@ -188,4 +197,24 @@ function initTopTile() {
 			$('#topTitle h1 span').html(topTile);
 		}
 	});
+}
+
+
+function initAgentTool() {
+    $('#agent-head').html(agent_title);
+    $('#agent-tools').empty();
+    for (let index = 0; index < agent_tools.length; index++) {
+        const agent = agent_tools[index];
+        let html = `<li class=" pl-5  ${agent.available ? '' : 'not-available'}" onclick="${agent.bind_func}()" >> ${agent.name}</li>`;
+        $('#agent-tools').append(html);
+    }
+}
+
+
+function socialCircles() {
+    console.log('社交圈');
+}
+
+function notifyAvailable() {
+    // alert('功能不可用');
 }

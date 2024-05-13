@@ -133,3 +133,45 @@ pre .key {
     opacity: 1;
   }
 
+.agent-pannel{
+	background-color: white;
+    bottom: -8.5em;
+	border: 1px solid #51B4EF;
+	border-top: none;
+	border-bottom: none;
+	border-radius: 5px;
+	box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em
+		rgba(0, 0, 0, 0.3);
+}
+
+.agent-pannel ul {
+	color: #292727;
+}
+
+.agent-pannel ul li {
+	cursor: pointer;
+	font-size: 1em;
+	
+}
+
+.agent-pannel ul li:hover {
+	background-color: #c7e6f8;
+	color: rgb(14, 13, 13);
+}
+
+
+.agent-head {
+	background-color: #51B4EF;
+	color: white;
+	border-bottom: 1px solid #4d4d4d;
+}
+
+@media (max-width:900px) {
+	.agent-pannel{
+		bottom: 0.5em;
+	}
+}
+
+.not-available{
+	color: #888181;
+}

@@ -644,3 +644,14 @@ var Recoder = {
         mediaRecorder = null;
     }
 }
+
+
+
+const agentButton = document.getElementById("agentButton");
+agentButton.addEventListener("click", function (e) {
+    $('#agent-container').toggle();
+    $(document).one("click", function(){
+        $("#agent-container").hide();
+    });
+    e.stopPropagation();
+});
