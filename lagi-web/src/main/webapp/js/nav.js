@@ -1,3 +1,5 @@
+let SOCIAL_NAV_KEY = 'sjjr';
+
 let promptNavs = [
     {id:1, key:'znwd' , title: '智能问答',exampleImgSrc:'../images/znwd.png',
         exampleVedioSrc:'../video/znwd.mp4',
@@ -73,7 +75,14 @@ let promptNavs = [
         operation:'在输入框内输入您的需求（如“知识图谱的概念”），并点击右侧Logo发送需求，Lagi将会对您作出响应。',
         group : 2
     },
-    // {id:14, title: '数据服务',exampleImgSrc:'../images/sjfw.png',
+
+    {id:14, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'../images/twhp.png',
+        exampleVedioSrc:'../video/twhp.mp4',
+        prompt:'该功能通过接入社交软件，通过RPA和大模型技术自动化社交软件的相关操作。',
+        operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
+        group : 2
+    },
+    // {id:15, title: '数据服务',exampleImgSrc:'../images/sjfw.png',
     //        exampleVedioSrc:'../video/sjfw.mp4',
     //        prompt:'该功能可根据用户提出的问题或需求，以图文并茂的方式为用户提供更加直观、形象和生动的信息和服务，在提高信息传达效果的同时，还能增加用户的阅读体验的，提高人们的工作效率和生活品质。',
     //       operation:'在输入框内输入您的需求（如“知识图谱的概念”），并点击右侧Logo发送需求，Lagi将会对您作出响应。',
@@ -174,6 +183,8 @@ function maintenance() {
 
 }
 
+let currentPromptDialog;
+
 function getPromptDialog(id) {
     let nav = null;
     for (let index = 0; index < promptNavs.length; index++) {
@@ -194,6 +205,7 @@ function getPromptDialog(id) {
     </video>
     `;
     clearTimeout(timer);
+    currentPromptDialog = nav;
     typing(0, answer, answerJq, addRobotDialog, vedioHtml);
 }
 
@@ -210,16 +222,44 @@ function typing (i, str, jq, callback, ...args) {
         }
         timer = setTimeout(()=>{
             typing(i, str, jq, callback, args)
-        } , 30)
+        } , 3)
     }
     else {
         jq.html(str);//结束打字,移除 _ 光标
         clearTimeout(timer);
         callback(args);
+
+        if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
+            // addRobotDialog("请问您想接入哪款社交软件");
+
+             getAppListHtml();
+        }
     }
 }
 
 function backToHello() {
     $('#item-content').empty();
     showHelloContent();
+    currentPromptDialog = undefined;
+}
+
+function getAppListHtml() {
+    let html = '';
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/getAppList",
+        success: function(res) {
+            res.data.forEach((app) => {
+                let appName = app.appName;
+                let appIcon = app.appIcon;
+                html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
+            });
+            let prompt = '<div>请问您想接入哪款社交软件</div>';
+            addRobotDialog(prompt + html + '</br>');
+        },
+        error: function(){
+            html = '返回失败';
+        }
+    });
 }

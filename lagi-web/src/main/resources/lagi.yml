@@ -76,13 +76,14 @@ models:
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
-  - name: spark
+  - name: spark-test
     type: Spark
     enable: true
+    priority: 100
     model: v1.1
-    app_id: your-app-id
-    api_key: your-api-key
-    secret_key: your-secret-key
+    app_id: 3d876db8
+    api_key: e8f583c8cfe7ae78d249f5eafb1aa384
+    secret_key: NGJlY2RmZWM3NjE4Zjg3MmFjMmQ4MWI5
 
 vectors:
   # Chroma is an AI-native open-source embedding database
@@ -105,7 +106,7 @@ functions:
     type: Landing
     api_endpoint: http://ai.landingbj.com
 
-  stream_backend: fastchat
+  stream_backend: spark-test
 
   RAG:
     name: Chroma
@@ -172,15 +173,15 @@ functions:
 # type is the type of the agent, class is the implement class of the agent.
 agents:
   - name: qq
-    username: your-username
+    api_key: your-api-key
     class: ai.agent.social.QQAgent
 
   - name: wechat
-    username: your-username
+    api_key: your-api-key
     class: ai.agent.social.WechatAgent
 
   - name: ding
-    username: your-username
+    api_key: your-api-key
     class: ai.agent.social.DingAgent
 
 # The following is the configuration of workers, name is the name of the worker,

@@ -73,7 +73,6 @@ public class ZhipuAdapter implements ILlmAdapter {
         ChatCompletionResult result = new ChatCompletionResult();
         result.setId(modelData.getId());
         result.setCreated(modelData.getCreated());
-        result.setModel(modelData.getModel());
         List<ChatCompletionChoice> choices = new ArrayList<>();
         for (int i = 0; i < modelData.getChoices().size(); i++) {
             ChatCompletionChoice choice = new ChatCompletionChoice();

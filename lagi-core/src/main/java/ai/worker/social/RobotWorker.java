@@ -14,7 +14,7 @@ public class RobotWorker extends SocialWorker {
     private final String username;
 
     public RobotWorker(AgentConfig agentConfig) {
-        this.username = agentConfig.getUsername();
+        this.username = agentConfig.getApiKey();
         SocialAgentParam param = SocialAgentParam.builder()
                 .username(username)
                 .robotFlag(AgentGlobal.ENABLE_FLAG)

@@ -43,7 +43,6 @@ Enter a prompt to get an answer from the large model.
   "id": "chatcmpl-W9Hp9zbUjE572UKvPZvybz",
   "object": "chat.completion",
   "created": 1709287530,
-  "model": "/mnt/data/vicuna-13b-v1.5-16k",
   "choices": [
     {
       "index": 0,
@@ -77,7 +76,6 @@ Status Code **200**
 | » id                 | string   | true     | Unique identifier                                            |
 | » object             | string   | true     | Object type                                                  |
 | » created            | integer  | true     | Unix timestamp (seconds) when the chat was created           |
-| » model              | string   | true     | Model used                                                   |
 | » choices            | [object] | true     | List of choices                                              |
 | »» index             | integer  | false    | Index of the object                                          |
 | »» message           | object   | false    | Returned message                                             |

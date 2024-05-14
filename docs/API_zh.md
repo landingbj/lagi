@@ -43,7 +43,6 @@ POST /v1/chat/completions
   "id": "chatcmpl-W9Hp9zbUjE572UKvPZvybz",
   "object": "chat.completion",
   "created": 1709287530,
-  "model": "/mnt/data/vicuna-13b-v1.5-16k",
   "choices": [
     {
       "index": 0,
@@ -76,8 +75,7 @@ POST /v1/chat/completions
 | -------------------- | -------- | ----- | ------------------------------------------------------------ |
 | » id                 | string   | true  | 唯一标识符                                                   |
 | » object             | string   | true  | 对象类型                                                     |
-| » created            | integer  | true  | 聊天完成创建时的Unix时间戳（秒）                             |
-| » model              | string   | true  | 使用的模型                                                   |
+| » created            | integer  | true  | 聊天完成创建时的Unix时间戳（秒）                             | 
 | » choices            | [object] | true  | 选择的列表                                                   |
 | »» index             | integer  | false | 对象的索引                                                   |
 | »» message           | object   | false | 返回的消息                                                   |

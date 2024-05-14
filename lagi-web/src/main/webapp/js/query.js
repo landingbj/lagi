@@ -29,9 +29,14 @@ function textQuery() {
     hideHelloContent();
     $('#queryBox textarea').val('');
     let conversation = {user: {question: question}, robot: {answer: ''}}
-    let robootAnswerJq = newConversation(conversation);
     sleep(200).then(() => {
-        getTextResult(question.trim(), robootAnswerJq, conversation);
+        if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
+            // addRobotDialog("请问您想接入哪款社交软件");
+            getAppListHtml();
+        } else {
+            let robotAnswerJq = newConversation(conversation);
+            getTextResult(question.trim(), robotAnswerJq, conversation);
+        }
     })
 }
 

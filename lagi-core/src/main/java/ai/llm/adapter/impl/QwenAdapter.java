@@ -85,7 +85,6 @@ public class QwenAdapter implements ILlmAdapter {
         ChatCompletionResult result = new ChatCompletionResult();
         result.setId(response.getRequestId());
         result.setCreated(ChatCompletionUtil.getCurrentUnixTimestamp());
-        result.setModel(this.backendConfig.getModel());
         ChatCompletionChoice choice = new ChatCompletionChoice();
         choice.setIndex(0);
         ChatMessage chatMessage = new ChatMessage();

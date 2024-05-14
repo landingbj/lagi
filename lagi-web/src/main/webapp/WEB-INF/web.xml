@@ -165,4 +165,13 @@
 		<servlet-name>vector</servlet-name>
 		<url-pattern>/v1/vector/*</url-pattern>
 	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>RpaServlet</servlet-name>
+		<servlet-class>ai.servlet.RpaServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>RpaServlet</servlet-name>
+		<url-pattern>/v1/rpa/*</url-pattern>
+	</servlet-mapping>
 </web-app>

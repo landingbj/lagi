@@ -8,5 +8,5 @@ public class AgentConfig {
     private String name;
     @JsonProperty("class")
     private String agentClass;
-    private String username;
+    private String apiKey;
 }

@@ -175,3 +175,17 @@ pre .key {
 .not-available{
 	color: #888181;
 }
+
+.appType {
+	display: inline-block;
+	margin: 0.5em 0.5em 0 0;
+}
+
+.appType img {
+	width: 3.5em;
+}
+
+.appTypeName {
+	text-align: center;
+	font-size: 0.8em;
+}

@@ -103,7 +103,6 @@ public class SparkAdapter implements ILlmAdapter {
     private ChatCompletionResult convertResponse(SparkSyncChatResponse response) {
         ChatCompletionResult result = new ChatCompletionResult();
         result.setCreated(ChatCompletionUtil.getCurrentUnixTimestamp());
-        result.setModel(this.backendConfig.getModel());
         ChatCompletionChoice choice = new ChatCompletionChoice();
         choice.setIndex(0);
         ChatMessage chatMessage = new ChatMessage();
@@ -125,7 +124,6 @@ public class SparkAdapter implements ILlmAdapter {
     private ChatCompletionResult convertStreamResponse(SparkResponse response) {
         ChatCompletionResult result = new ChatCompletionResult();
         result.setCreated(ChatCompletionUtil.getCurrentUnixTimestamp());
-        result.setModel(this.backendConfig.getModel());
         ChatCompletionChoice choice = new ChatCompletionChoice();
         choice.setIndex(0);
         ChatMessage chatMessage = new ChatMessage();

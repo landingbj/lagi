@@ -7,6 +7,7 @@ import ai.agent.exception.StartAgentException;
 import ai.agent.exception.StopAgentException;
 import ai.agent.exception.TerminateAgentException;
 import ai.agent.pojo.*;
+import ai.agent.service.RpaService;
 import ai.utils.OkHttpUtil;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -19,6 +20,8 @@ import java.util.Map;
 public abstract class SocialAgent extends Agent {
     private static final String SAAS_URL = AgentGlobal.SAAS_URL;
     private static final Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+
+    private final RpaService rpaService = new RpaService();
 
     private final String appId;
     private final String username;
@@ -53,16 +56,7 @@ public abstract class SocialAgent extends Agent {
 
     @Override
     public void terminate() {
-        String url = SAAS_URL + "/saas/closeAccount";
-        Map<String, String> params = new HashMap<>();
-        params.put("username", username);
-        String json = null;
-        try {
-            json = OkHttpUtil.post(url, gson.toJson(params));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        RpaResponse response = gson.fromJson(json, RpaResponse.class);
+        RpaResponse response = rpaService.closeAccount(username);
         if (response.getStatus().equals("failed")) {
             throw new TerminateAgentException();
         }
@@ -138,45 +132,21 @@ public abstract class SocialAgent extends Agent {
     }
 
     public GetLoginQrCodeResponse getLoginQrCode() {
-        String url = SAAS_URL + "/" + "getLoginQrCode";
-        Map<String, String> params = new HashMap<>();
-        params.put("appId", appId);
-        params.put("username", username);
-        String json;
-        try {
-            json = OkHttpUtil.get(url, params);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return gson.fromJson(json, GetLoginQrCodeResponse.class);
+        return rpaService.getLoginQrCode(appId, username);
     }
 
     public StatusResponse getAuthStatus() {
-        String url = SAAS_URL + "/" + "getAuthStatus";
-        return getStatusResponse(url);
+        return rpaService.getAuthStatus(appId, username);
     }
 
     public StatusResponse getLoginStatus() {
-        String url = SAAS_URL + "/saas/" + "getLoginStatus";
-        return getStatusResponse(url);
+        return rpaService.getLoginStatus(appId, username);
     }
 
     public String getUsername() {
         return username;
     }
 
-    private StatusResponse getStatusResponse(String url) {
-        Map<String, String> params = new HashMap<>();
-        params.put("appId", appId);
-        params.put("username", username);
-        String json;
-        try {
-            json = OkHttpUtil.get(url, params);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return gson.fromJson(json, StatusResponse.class);
-    }
 
     private void sleep(long millis) {
         try {
