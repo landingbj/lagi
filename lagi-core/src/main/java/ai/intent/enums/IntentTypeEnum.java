@@ -9,6 +9,12 @@ import java.util.regex.Pattern;
 @Getter
 public enum IntentTypeEnum {
 
+    INSTRUCTION("instruction", new String[]{"生成指令集"}),
+    ESRGAN("esrgan", new String[]{"图像增强"}),
+    SVD("svd", new String[]{"视频生成"}),
+    IMAGE_TO_TEXT("imaget-to-text", new String[]{"看图说话"}),
+    MMTRACKING("mmtracking", new String[]{"视频追踪"}),
+    MMEDITING("mmediting", new String[]{"视频增强"}),
     IMAGE("image", new String[]{"生成.*?图$",
             "生成.*?图片$",
             "生成.*?图像$",
