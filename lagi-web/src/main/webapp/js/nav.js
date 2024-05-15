@@ -254,6 +254,9 @@ function getAppListHtml() {
                 let appName = app.appName;
                 let appIcon = app.appIcon;
                 html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
+                console.log(app.appId, app.appName);
+
+                SOCIAL_APP_MAP.set(app.appId.toString(), app.appName);
             });
             let prompt = '<div>请问您想接入哪款社交软件</div>';
             addRobotDialog(prompt + html + '</br>');

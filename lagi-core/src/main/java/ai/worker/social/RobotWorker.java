@@ -1,10 +1,12 @@
 package ai.worker.social;
 
+import ai.agent.Agent;
 import ai.agent.AgentFactory;
 import ai.agent.AgentGlobal;
 import ai.agent.pojo.SocialAgentParam;
 import ai.agent.pojo.SocialReceiveData;
 import ai.agent.pojo.SocialSendData;
+import ai.agent.social.SocialAgent;
 import ai.config.pojo.AgentConfig;
 
 
@@ -25,13 +27,23 @@ public class RobotWorker extends SocialWorker {
         this.agent = AgentFactory.getAgent(agentConfig, param);
     }
 
+    public RobotWorker(SocialAgent agent) {
+        SocialAgentParam param = agent.getParam();
+        this.username = param.getUsername();
+        this.agent = agent;
+    }
+
     @Override
     public void work() {
         this.running = true;
         agent.connect();
         agent.start();
+        System.out.println(111);
+
         while (running) {
+            System.out.println(22);
             SocialReceiveData receiveData = (SocialReceiveData) agent.receive();
+            System.out.println(receiveData);
             if (receiveData.getStatus().equals(AgentGlobal.SUCCESS)) {
                 String text = getCompletionResult(receiveData.getData());
                 SocialSendData sendData = new SocialSendData();

@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 public class SocialAgentParam extends AgentParam {
+    private String appId;
     private String username;
     private String robotFlag;
     private String timerFlag;

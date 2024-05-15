@@ -42,6 +42,6 @@ public class AgentGlobal {
     public static final String ENABLE_FLAG = "1";
     public static final String DISABLE_FLAG = "0";
 
-    public static final String SAAS_URL = "http://saas.landingbj.com";
-//    public static final String SAAS_URL = "http://localhost:8080";
+//    public static final String SAAS_URL = "http://saas.landingbj.com";
+    public static final String SAAS_URL = "http://localhost:8090";
 }

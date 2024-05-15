@@ -14,22 +14,26 @@ function setCurConvId(convId) {
 }
 
 
-function newConversation(conv) {
-    let chatHtml = `
-<div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group dark:bg-gray-800">
-<div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
-    <div class="w-[30px] flex flex-col relative items-end">
-        <div class="relative flex"><span style="box-sizing: border-box; display: inline-block; overflow: hidden; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; position: relative; max-width: 100%;"><span style="box-sizing: border-box; display: block; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; max-width: 100%;"><img aria-hidden="true" src="data:image/png;base64,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" alt="huamn" style="display: block; max-width: 100%; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px;"></span></span>
+function newConversation(conv, questionEnable=true, answerEnable=true) {
+
+    let questionDiv = `
+        <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group dark:bg-gray-800">
+            <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
+                <div class="w-[30px] flex flex-col relative items-end">
+                    <div class="relative flex"><span style="box-sizing: border-box; display: inline-block; overflow: hidden; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; position: relative; max-width: 100%;"><span style="box-sizing: border-box; display: block; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; max-width: 100%;"><img aria-hidden="true" src="data:image/png;base64,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" alt="huamn" style="display: block; max-width: 100%; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px;"></span></span>
+                    </div>
+                </div>
+                <div  class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
+                    <div class="flex flex-grow flex-col gap-3">
+                        <div class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap">${conv.user.question} </div>
+                    </div>
+                    <div class="flex justify-between"></div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div  class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
-        <div class="flex flex-grow flex-col gap-3">
-            <div class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap">${conv.user.question} </div>
-        </div>
-        <div class="flex justify-between"></div>
-    </div>
-</div>
-</div>
+        `;
+
+    let answerDiv = `
 <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
     <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
         <div class="w-[30px] flex flex-col relative items-end">
@@ -41,7 +45,7 @@ function newConversation(conv) {
             <div class="flex flex-grow flex-col gap-3">
                 <div class="min-h-[20px] flex flex-col items-start gap-4">
                     <div class="markdown prose-r w-full break-words dark:prose-invert light result-streaming">
-                        ${conv.robot.answer == '' ? '<p></p>' : conv.robot.answer} 
+                        ${conv.robot.answer === '' ? '<p></p>' : conv.robot.answer} 
                     </div>
                 </div>
             </div>
@@ -60,7 +64,7 @@ function newConversation(conv) {
                     <source class="audioSource1" src="">
                     </audio>
                     <button class="playIcon1"  style="display:none">
-                        <svg  class="playSvg"  style="width: 24px;height: 24px;"  t="1695352126205" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5751" width="200" height="200"><path d="M128 138.666667c0-47.232 33.322667-66.666667 74.176-43.562667l663.146667 374.954667c40.96 23.168 40.853333 60.8 0 83.882666L202.176 928.896C161.216 952.064 128 932.565333 128 885.333333v-746.666666z" fill="#3D3D3D" p-id="5752"></path></svg>
+                        <svg  class="playSvg icon"  style="width: 24px;height: 24px;"  t="1695352126205"  viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5751" width="200" height="200"><path d="M128 138.666667c0-47.232 33.322667-66.666667 74.176-43.562667l663.146667 374.954667c40.96 23.168 40.853333 60.8 0 83.882666L202.176 928.896C161.216 952.064 128 932.565333 128 885.333333v-746.666666z" fill="#3D3D3D" p-id="5752"></path></svg>
                     </button>
                     <select class="emotionSelect audio-select" style="color:black" id="emotionSelectId">
                         <option value="default">默认</option>
@@ -76,9 +80,14 @@ function newConversation(conv) {
             </div>
         </div>
     </div>
-</div>
-</div>
     `;
+    if (!questionEnable) {
+        questionDiv = '';
+    }
+    if (!answerEnable) {
+        answerDiv = '';
+    }
+    let chatHtml = questionDiv + answerDiv;
     $('#item-content').append(chatHtml);
     $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
     return $($(' .markdown')[$('.markdown').length - 1]);
@@ -88,6 +97,11 @@ function newConversation(conv) {
 function newRobotStartDialog(robotAnswer) {
     $('#item-content').empty();
     return addRobotDialog(robotAnswer)
+}
+
+function addUserDialog(userQuestion) {
+    let conversation = {user: {question: userQuestion}, robot: {answer: ''}}
+    newConversation(conversation, true, false);
 }
 
 function addRobotDialog(robotAnswer) {

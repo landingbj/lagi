@@ -6,6 +6,7 @@ import java.util.List;
 import ai.common.pojo.Backend;
 import ai.config.AbstractConfiguration;
 import ai.config.GlobalConfigurations;
+import ai.config.pojo.AgentConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -16,6 +17,8 @@ public class LagiGlobal {
     private static Configuration config;
 
     public static String LANDING_API_KEY = "your-api-key";
+
+    public static String AGENT_API_KEY = "your-api-key";
 
     public static Configuration getConfig() {
         return config;
@@ -43,6 +46,7 @@ public class LagiGlobal {
             AbstractConfiguration aConfig = mapper.readValue(inputStream, cls);
             config = aConfig.transformToConfiguration();
             setLandingApikey(config);
+            setAgentApiKey(config);
             return aConfig;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -61,6 +65,20 @@ public class LagiGlobal {
                 if (apiKey.startsWith("sk-") && apiKey.length() == 35) {
                     LANDING_API_KEY = apiKey;
                 }
+            }
+        }
+    }
+
+    public static String getAgentApiKey() {
+        return AGENT_API_KEY;
+    }
+
+    private static void setAgentApiKey(Configuration config) {
+        List<AgentConfig> agents = config.getAgents();
+        for (AgentConfig agent : agents) {
+            if (agent.getApiKey() != null) {
+                AGENT_API_KEY = agent.getApiKey();
+                break;
             }
         }
     }

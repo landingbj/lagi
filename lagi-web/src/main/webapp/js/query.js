@@ -31,13 +31,239 @@ function textQuery() {
     let conversation = {user: {question: question}, robot: {answer: ''}}
     sleep(200).then(() => {
         if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
-            // addRobotDialog("请问您想接入哪款社交软件");
-            getAppListHtml();
+            socialAgentsConversation(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
             getTextResult(question.trim(), robotAnswerJq, conversation);
         }
     })
+}
+
+const GET_QR_CODE = "GET_QR_CODE";
+const TIMER_WHO = "TIMER_WHO";
+const TIMER_WHAT = "TIMER_WHAT";
+const TIMER_WHEN = "TIMER_WHEN";
+const ROBOT_ENABLE = "ROBOT_ENABLE";
+const SOCIAL_AUTH_APP = [];
+const SOCIAL_CHANEL = {};
+const SOCIAL_PROMPT_STEPS = new Map();
+SOCIAL_PROMPT_STEPS.set(GET_QR_CODE, 0);
+SOCIAL_PROMPT_STEPS.set(TIMER_WHO, 0);
+SOCIAL_PROMPT_STEPS.set(TIMER_WHAT, 0);
+SOCIAL_PROMPT_STEPS.set(TIMER_WHEN, 0);
+SOCIAL_PROMPT_STEPS.set(ROBOT_ENABLE, 0);
+const SOCIAL_APP_MAP = new Map();
+
+const TIMER_DATA = {};
+
+function setSocialPromptStepDone(step) {
+    SOCIAL_PROMPT_STEPS.set(step, 1);
+}
+
+function resetSocialPromptStep() {
+    SOCIAL_PROMPT_STEPS.forEach((value, key) => {
+        SOCIAL_PROMPT_STEPS.set(key, 0);
+    });
+    SOCIAL_AUTH_APP.length = 0;
+}
+
+function getNextSocialPromptStep() {
+    let nextStep = '';
+    for (let [key, value] of SOCIAL_PROMPT_STEPS) {
+        console.log(key + ': ' + value);
+        if (value === 0) {
+            nextStep = key;
+            console.log(nextStep)
+            break;
+        }
+    }
+    return nextStep;
+}
+
+function socialAgentsConversation(question) {
+    let questionHtml = '<div>' + question + '</div>';
+    addUserDialog(questionHtml);
+
+    let nextStep = getNextSocialPromptStep();
+    console.log('nextStep: ' + nextStep);
+    nextPrompt(nextStep, question);
+}
+
+function nextPrompt(action, prompt) {
+    if (action === TIMER_WHO) {
+        TIMER_DATA["contact"] = prompt;
+        addRobotDialog( '请问您想发什么消息？</br>');
+        setSocialPromptStepDone(action);
+        unlockInput();
+        return;
+    } else if (action === TIMER_WHAT) {
+        TIMER_DATA["message"] = prompt;
+        addRobotDialog( '现在吗？还是之后具体什么时间？</br>');
+        setSocialPromptStepDone(action);
+        unlockInput();
+        return;
+    } else if (action === TIMER_WHEN) {
+        getStandardTime(action, prompt);
+        return;
+    }  else if (action === ROBOT_ENABLE) {
+        startRobot(action, prompt);
+        return;
+    }
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/nextPrompt",
+        data: JSON.stringify({"action": action, "prompt": prompt}),
+        success: function (res) {
+            if (res.status === "failed") {
+
+            } else {
+                if (action === GET_QR_CODE) {
+                    let appIdList = res.appId.split(',');
+                    SOCIAL_CHANEL["appIdList"] = JSON.parse(JSON.stringify(appIdList));;
+                    let username = res.username;
+                    let channelId = res.channelId;
+                    if (appIdList.length > 0) {
+                        SOCIAL_AUTH_APP.push(...appIdList);
+                        let appId = appIdList[0];
+                        SOCIAL_CHANEL["appId"] = appId;
+                        SOCIAL_CHANEL["username"] = username;
+                        SOCIAL_CHANEL["channelId"] = channelId;
+                        getLoginQrCode(appId, username);
+                    }
+                }
+            }
+        },
+        error: function () {
+            returnFailedResponse();
+        }
+    });
+}
+
+function getStandardTime(action, prompt) {
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/getStandardTime",
+        data: JSON.stringify({"action": action, "prompt": prompt}),
+        success: function (res) {
+            if (res.status === "success") {
+                TIMER_DATA["sendTime"] = res.data;
+                TIMER_DATA["appId"] = SOCIAL_CHANEL["appId"];
+                TIMER_DATA["channelId"]= SOCIAL_CHANEL["channelId"];
+
+                addRobotDialog( '已收到您的指令，请等待好消息。</br>');
+                setSocialPromptStepDone(action);
+                unlockInput();
+                addTimerTask();
+            }
+        },
+        error: function () {
+            returnFailedResponse();
+        }
+    });
+}
+
+function startRobot(prompt) {
+    let startRobotRequest = {
+        prompt: prompt,
+        appIdList: SOCIAL_CHANEL["appIdList"],
+        username: SOCIAL_CHANEL["username"],
+    };
+
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/startRobot",
+        data: JSON.stringify(startRobotRequest),
+        success: function (res) {
+            if (res.status === "success" && res.robotEnable) {
+                addRobotDialog( '好的，协助您默认打理半个小时。</br>');
+            }
+            setSocialPromptStepDone(action);
+        },
+        error: function () {
+            returnFailedResponse();
+        }
+    });
+
+}
+
+function addTimerTask() {
+    console.log('TIMER_DATA', TIMER_DATA)
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/addTimerTask",
+        data: JSON.stringify(TIMER_DATA),
+        success: function (res) {
+            if (res.status === "failed") {
+            } else {
+            }
+            addRobotDialog( '您需要将后续会话，委托给助理自动答复吗？</br>');
+        },
+        error: function () {
+            returnFailedResponse();
+        }
+    });
+}
+
+function getLoginQrCode(appId, username) {
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/getLoginQrCode",
+        data: {"appId": appId, "username": username},
+        success: function (res) {
+            if (res.status === 10) {
+                console.log(SOCIAL_APP_MAP)
+                let appName = SOCIAL_APP_MAP.get(appId);
+                let qrCodeUrl = res.image_url;
+                let html = '<div>请扫描以下'+ appName + '的二维码授权：</div></br><img src="' + qrCodeUrl + '" alt="二维码" />';
+                addRobotDialog(html + '</br>');
+                getLoginStatus(appId, username);
+            }
+            console.log(res);
+        },
+        error: function () {
+            returnFailedResponse();
+        }
+    });
+}
+
+function returnFailedResponse() {
+    addRobotDialog('调用失败!</br>');
+}
+
+function unlockInput() {
+    $('#queryBox textarea').val('');
+    queryLock = false;
+}
+
+function getLoginStatus(appId, username) {
+    let html = '';
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: "/v1/rpa/getLoginStatus",
+        data: {"appId": appId, "username": username},
+        success: function (res) {
+            SOCIAL_AUTH_APP.shift();
+            if (SOCIAL_AUTH_APP.length > 0) {
+                let nextAppId = SOCIAL_AUTH_APP[0];
+                let nextUsername = SOCIAL_CHANEL["username"];
+                getLoginQrCode(nextAppId, nextUsername);
+            } else {
+                setSocialPromptStepDone(GET_QR_CODE);
+                unlockInput();
+                addRobotDialog( '请问您想给谁发消息(需要您存在的通讯录中的人名或群名)。</br>');
+            }
+            console.log(res);
+        },
+        error: function () {
+            returnFailedResponse();
+        }
+    });
 }
 
 const CONVERSATION_CONTEXT = [];
@@ -99,11 +325,11 @@ function getTextResult(question, robootAnswerJq, conversation) {
                     robootAnswerJq.html(result);
                     answer = result;
                 } else if (res.type != null && res.type === 'mot') {
-                     result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
+                    result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
                 } else if (res.type != null && res.type === 'mmediting') {
-                     result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
+                    result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
                     robootAnswerJq.html(result);
                     answer = result;
                 } else {

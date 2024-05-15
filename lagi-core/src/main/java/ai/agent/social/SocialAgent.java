@@ -29,6 +29,7 @@ public abstract class SocialAgent extends Agent {
     private final String timerFlag;
     private final String repeaterFlag;
     private final String guideFlag;
+    private final SocialAgentParam param;
 
     protected SocialAgent(String appId, SocialAgentParam param) {
         this.appId = appId;
@@ -37,21 +38,26 @@ public abstract class SocialAgent extends Agent {
         this.timerFlag = param.getTimerFlag();
         this.repeaterFlag = param.getRepeaterFlag();
         this.guideFlag = param.getGuideFlag();
+        this.param = param;
+    }
+
+    public SocialAgentParam getParam() {
+        return param;
     }
 
     @Override
     public void connect() {
         long startTime = System.currentTimeMillis();
         long authTimeout = AgentGlobal.AUTH_TIMEOUT;
-        StatusResponse authStatusResponse = this.getAuthStatus();
-        while (authStatusResponse.getStatus() != AgentGlobal.LOGIN_SUCCESS
-                && System.currentTimeMillis() - startTime < authTimeout) {
-            sleep(AgentGlobal.SLEEP_INTERVAL);
-            authStatusResponse = this.getAuthStatus();
-        }
-        if (authStatusResponse.getStatus() != AgentGlobal.LOGIN_SUCCESS) {
-            throw new ConnectionTimeoutException();
-        }
+//        StatusResponse authStatusResponse = this.getAuthStatus();
+//        while (authStatusResponse.getStatus() != AgentGlobal.LOGIN_SUCCESS
+//                && System.currentTimeMillis() - startTime < authTimeout) {
+//            sleep(AgentGlobal.SLEEP_INTERVAL);
+//            authStatusResponse = this.getAuthStatus();
+//        }
+//        if (authStatusResponse.getStatus() != AgentGlobal.LOGIN_SUCCESS) {
+//            throw new ConnectionTimeoutException();
+//        }
     }
 
     @Override
@@ -80,7 +86,7 @@ public abstract class SocialAgent extends Agent {
         }
         RpaResponse response = gson.fromJson(json, RpaResponse.class);
         if (response.getStatus().equals("failed")) {
-            throw new StartAgentException();
+//            throw new StartAgentException();
         }
     }
 
@@ -98,7 +104,7 @@ public abstract class SocialAgent extends Agent {
         }
         RpaResponse response = gson.fromJson(json, RpaResponse.class);
         if (response.getStatus().equals("failed")) {
-            throw new StopAgentException();
+//            throw new StopAgentException();
         }
     }
 
@@ -139,7 +145,7 @@ public abstract class SocialAgent extends Agent {
         return rpaService.getAuthStatus(appId, username);
     }
 
-    public StatusResponse getLoginStatus() {
+    public RpaResponse getLoginStatus() {
         return rpaService.getLoginStatus(appId, username);
     }
 

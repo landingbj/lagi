@@ -33,6 +33,7 @@ public class FileService {
         Map<String, String> headers = new HashMap<>();
         headers.put("Authorization", "Bearer " + LagiGlobal.getLandingApikey());
         String returnStr = HttpUtil.multipartUpload(EXTRACT_CONTENT_URL, fileParmName, fileList, formParmMap, headers);
+        System.out.println(returnStr);
         return gson.fromJson(returnStr, FileChunkResponse.class);
     }
 
