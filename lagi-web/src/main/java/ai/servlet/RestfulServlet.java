@@ -21,6 +21,7 @@ import ai.servlet.annotation.Post;
 import ai.servlet.exceptions.RRException;
 import ai.response.RestfulResponse;
 import ai.utils.StringUtils;
+import cn.hutool.core.convert.Convert;
 
 /**
  * @program: RestfulServlet
@@ -149,6 +150,7 @@ public class RestfulServlet extends BaseServlet {
             if (type == String.class) {
                 return pStr;
             }
+            return Convert.convert(type, pStr);
         } catch (Exception e) {
         }
         return null;

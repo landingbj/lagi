@@ -51,7 +51,7 @@ public class MigrateGlobal {
     public static final String INSTRUCTION_TYPE_IMAGE = "image";
     public static final String INSTRUCTION_TYPE_TEXT = "text";
     public static final String INSTRUCTION_TYPE_INSTRUCTION = "instruction";
-    public static final String INSTRUCTION_TYPE_IMAGE_TO_TEXT = "imaget-to-text";
+    public static final String INSTRUCTION_TYPE_IMAGE_TO_TEXT = "image-to-text";
     public static final String INSTRUCTION_TYPE_MMTRACKING = "mmtracking";
     public static final String INSTRUCTION_TYPE_MMEDITING = "mmediting";
     public static final String INSTRUCTION_TYPE_SVD = "svd";

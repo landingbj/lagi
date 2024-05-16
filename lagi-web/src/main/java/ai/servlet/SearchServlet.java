@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -19,6 +18,8 @@ import ai.common.pojo.*;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
 import ai.migrate.service.VectorDbService;
+import ai.servlet.annotation.Body;
+import ai.servlet.annotation.Post;
 import ai.utils.*;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -54,7 +55,7 @@ import ai.qa.LLMConfig;
 import ai.utils.qa.ChatCompletionUtil;
 
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 1024 * 1024 * 5, maxRequestSize = 1024 * 1024 * 5)
-public class SearchServlet extends HttpServlet {
+public class SearchServlet extends RestfulServlet {
     private static final long serialVersionUID = 1L;
     private ApiService apiService = new ApiService();
     private IntentService intentService = new IntentService();
@@ -67,28 +68,9 @@ public class SearchServlet extends HttpServlet {
     private VectorDbService vectorDbService = new VectorDbService(config);
     private ai.intent.IntentService sampleIntentService = new SampleIntentServiceImpl();
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
 
-        String url = req.getRequestURI();
-        String method = url.substring(url.lastIndexOf("/") + 1);
-
-        if (method.equals("questionAnswer")) {
-            this.questionAnswer(req, resp);
-        } else if (method.equals("uploadVoice")) {
-            this.uploadVoice(req, resp);
-        } else if (method.equals("uploadFile")) {
-            this.uploadFile(req, resp);
-        } else if (method.equals("detectIntent")) {
-            this.detectIntent(req, resp);
-        } else if (method.equals("generateExam")) {
-            this.generateExam(req, resp);
-        }
-    }
-
-    private void generateExam(HttpServletRequest req, HttpServletResponse resp)
+    @Post("generateExam")
+    public void generateExam(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String jsonString = IOUtils.toString(req.getInputStream(),
@@ -127,13 +109,10 @@ public class SearchServlet extends HttpServlet {
 
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        this.doGet(req, resp);
-    }
 
-    private void uploadVoice(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    @Post("uploadVoice")
+    public void uploadVoice(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String allowedOrigin = "https://localhost";
         response.setHeader("Access-Control-Allow-Origin", allowedOrigin);
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -194,7 +173,8 @@ public class SearchServlet extends HttpServlet {
         return gson.toJson(new WhisperResponse(1, "识别失败"));
     }
 
-    private void uploadFile(HttpServletRequest request,
+    @Post("uploadFile")
+    public void uploadFile(HttpServletRequest request,
                             HttpServletResponse response) throws ServletException, IOException {
         String allowedOrigin = "https://localhost";
         response.setCharacterEncoding("UTF-8");
@@ -277,7 +257,8 @@ public class SearchServlet extends HttpServlet {
         return null;
     }
 
-    private void detectIntent(HttpServletRequest req, HttpServletResponse resp)
+    @Post("detectIntent")
+    public void detectIntent(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         HttpSession session = req.getSession();
@@ -342,7 +323,8 @@ public class SearchServlet extends HttpServlet {
         out.close();
     }
 
-    private void questionAnswer(HttpServletRequest req, HttpServletResponse resp)
+    @Post("questionAnswer")
+    public void questionAnswer(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         HttpSession session = req.getSession();
 
@@ -595,5 +577,13 @@ public class SearchServlet extends HttpServlet {
 
         }
         return chatSession;
+    }
+
+    @Post("intentDetect")
+    public String intentDetect(@Body QuestionAnswerRequest qaRequest) {
+        List<ChatMessage> messages = qaRequest.getMessages();
+        List<String> msg = messages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
+        IntentResult intentResult = sampleIntentService.detectIntent(msg);
+        return intentResult.getType();
     }
 }

@@ -12,7 +12,7 @@ public enum IntentTypeEnum {
     INSTRUCTION("instruction", new String[]{"生成指令集"}),
     ESRGAN("esrgan", new String[]{"图像增强"}),
     SVD("svd", new String[]{"视频生成"}),
-    IMAGE_TO_TEXT("imaget-to-text", new String[]{"看图说话"}),
+    IMAGE_TO_TEXT("image-to-text", new String[]{"看图说话"}),
     MMTRACKING("mmtracking", new String[]{"视频追踪"}),
     MMEDITING("mmediting", new String[]{"视频增强"}),
     IMAGE("image", new String[]{"生成.*?图$",
@@ -26,7 +26,8 @@ public enum IntentTypeEnum {
             "画一张.*?图像$",
             "画.*?张.*?图$",
             "画.*?张.*?图片$",
-            "画.*?张.*?图像$"}),
+            "画.*?张.*?图像$",
+            "(请|帮忙|帮|帮助)?(生成|画|绘制|给出).*?(张|副|幅).*?(画|图像|图片|图|肖像)"}),
     VIDEO("svd_by_text", new String[]{"生成.*?视频$",
             "生成视频.*?",}),
     TRANSLATE("multilanguage", new String[]{"翻译.*?语",
@@ -116,9 +117,12 @@ public enum IntentTypeEnum {
         String ins = "Please help write a poem";
         List<String> ls = new ArrayList<>();
         ls.add("帮忙");
-        ls.add("Please help write a poem");
-        boolean matches = TRANSLATE.matches(ins,ls);
-        System.out.println(matches);
+        ls.add("画一副山水画");
+        for(IntentTypeEnum e : IntentTypeEnum.values()) {
+            if(e.matches(ls)) {
+                System.out.println(e.name);
+            }
+        }
     }
 
 }
