@@ -8,10 +8,10 @@ POST /v1/chat/completions
 
 ```json
 {
-  "model": "D:/Workspaces/Data/opt-350m",
+  "model": "gpt-3.5-turbo-1106",
   "temperature": 0.8,
   "max_tokens": 500,
-  "category": "bj_gov",
+  "category": "xxxx",
   "messages": [
     {
       "role": "user",

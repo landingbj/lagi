@@ -20,7 +20,7 @@ import com.ibm.icu.text.CharsetMatch;
 import org.apache.commons.io.IOUtils;
 
 public class FileService {
-    private static final String FILE_PROCESS_URL = "http://saas.landingbj.com";
+    private static final String FILE_PROCESS_URL = "https://saas.landingbj.com";
     private static final String EXTRACT_CONTENT_URL = FILE_PROCESS_URL + "/saas/extractContentWithImage";
 
     private final Gson gson = new Gson();
