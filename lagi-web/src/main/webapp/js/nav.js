@@ -76,8 +76,8 @@ let promptNavs = [
         group : 2
     },
 
-    {id:14, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'../images/twhp.png',
-        exampleVedioSrc:'../video/twhp.mp4',
+    {id:14, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'',
+        exampleVedioSrc:'../video/sjjr.mp4',
         prompt:'该功能通过接入社交软件，通过RPA和大模型技术自动化社交软件的相关操作。',
         operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
         group : 2
@@ -230,9 +230,8 @@ function typing (i, str, jq, callback, ...args) {
         callback(args);
 
         if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
-            // addRobotDialog("请问您想接入哪款社交软件");
-
-             getAppListHtml();
+            resetSocialPromptStep();
+            getAppListHtml();
         }
     }
 }
@@ -254,8 +253,6 @@ function getAppListHtml() {
                 let appName = app.appName;
                 let appIcon = app.appIcon;
                 html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
-                console.log(app.appId, app.appName);
-
                 SOCIAL_APP_MAP.set(app.appId.toString(), app.appName);
             });
             let prompt = '<div>请问您想接入哪款社交软件</div>';

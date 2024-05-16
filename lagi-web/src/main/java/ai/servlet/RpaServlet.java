@@ -69,10 +69,6 @@ public class RpaServlet extends BaseServlet {
         String appId = req.getParameter("appId");
         String username = req.getParameter("username");
         GetLoginQrCodeResponse response = rpaService.getLoginQrCode(appId, username);
-//        String json = "{\n" +
-//                "    \"image_url\": \"http://www.saasai.top/saas/getRpaImage?channelId=38&imageName=qrcode_2_1715681097196.png\",\n" +
-//                "    \"status\": 10\n" +
-//                "}";
         responsePrint(resp, gson.toJson(response));
     }
 
@@ -94,8 +90,8 @@ public class RpaServlet extends BaseServlet {
     private void getStandardTime(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         StandardTimeRequest nextPromptRequest = gson.fromJson(requestToJson(req), StandardTimeRequest.class);
-//        String standardTime = rpaService.getStandardTime(nextPromptRequest.getPrompt());
-        String standardTime = "2024-08-01 03:10:20";
+        String standardTime = rpaService.getStandardTime(nextPromptRequest.getPrompt());
+//        String standardTime = "2024-08-01 03:10:20";
         Map<String, Object> map = new HashMap<>();
         if (standardTime != null) {
             map.put("status", "success");

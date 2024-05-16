@@ -173,15 +173,15 @@ functions:
 # type is the type of the agent, class is the implement class of the agent.
 agents:
   - name: qq
-    api_key: your-api-key
+    api_key: random-key
     class: ai.agent.social.QQAgent
 
   - name: wechat
-    api_key: your-api-key
+    api_key: random-key
     class: ai.agent.social.WechatAgent
 
   - name: ding
-    api_key: your-api-key
+    api_key: random-key
     class: ai.agent.social.DingAgent
 
 # The following is the configuration of workers, name is the name of the worker,

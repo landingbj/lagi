@@ -2,7 +2,6 @@ package ai.agent.service;
 
 import ai.agent.AgentFactory;
 import ai.agent.AgentGlobal;
-import ai.agent.exception.TerminateAgentException;
 import ai.agent.pojo.*;
 import ai.agent.social.SocialAgent;
 import ai.llm.service.CompletionsService;
@@ -18,14 +17,16 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RpaService {
     private static final String SAAS_URL = AgentGlobal.SAAS_URL;
-    //    private static final Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     private static final Gson gson = new Gson();
+    private static final String patternString = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}";
+    private static final Pattern pattern = Pattern.compile(patternString);
 
     private final CompletionsService completionsService = new CompletionsService(LagiGlobal.getConfig());
-
 
     public StatusResponse getAuthStatus(String appId, String username) {
         String url = SAAS_URL + "/" + "getAuthStatus";
@@ -60,10 +61,11 @@ public class RpaService {
     }
 
     public GetLoginQrCodeResponse getLoginQrCode(String appId, String username) {
-        String url = "http://saas.landingbj.com" + "/" + "getLoginQrCode";
+        String url = SAAS_URL + "/" + "getLoginQrCode";
         Map<String, String> params = new HashMap<>();
         params.put("appId", appId);
-        params.put("username", "女儿红");
+//        params.put("username", "女儿红");
+        params.put("username", username);
         String json;
         try {
             json = OkHttpUtil.get(url, params);
@@ -104,7 +106,6 @@ public class RpaService {
         Map<String, String> params = new HashMap<>();
         Map<String, String> headers = new HashMap<>();
         headers.put("Authorization", "Bearer " + LagiGlobal.getAgentApiKey());
-        System.out.println(headers);
         String json;
         try {
             json = OkHttpUtil.get(url, params, headers);
@@ -118,7 +119,7 @@ public class RpaService {
         ChatCompletionRequest chatCompletionRequest = getTimeCompletionRequest(prompt);
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         if (!result.getChoices().isEmpty()) {
-            return result.getChoices().get(0).getMessage().getContent();
+            return extractDatetime(result.getChoices().get(0).getMessage().getContent());
         }
         return null;
     }
@@ -132,7 +133,6 @@ public class RpaService {
         ChatMessage message = new ChatMessage();
         message.setRole("user");
         String date = formatDate(new Date());
-        System.out.println(date);
         String content = "当前时间是：" + date + "。把下面的文字转换成时间，格式为yyyy-MM-dd HH:mm:ss，例如：2022-01-01 03:10:20，结果只返回时间部分。\n";
         message.setContent(content + prompt);
         messages.add(message);
@@ -166,8 +166,6 @@ public class RpaService {
         params.put("repeatHour", "0");
         params.put("repeatMinute", "0");
 
-        System.out.println(params);
-
         String url = SAAS_URL + "/addRpaTask";
         String json = null;
         try {
@@ -176,8 +174,6 @@ public class RpaService {
             e.printStackTrace();
         }
         RpaResponse response = gson.fromJson(json, RpaResponse.class);
-
-
         return response;
     }
 
@@ -221,7 +217,7 @@ public class RpaService {
         return false;
     }
 
-    private static ChatCompletionRequest getAffirmativeCompletionRequest(String prompt) {
+    private ChatCompletionRequest getAffirmativeCompletionRequest(String prompt) {
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
         chatCompletionRequest.setStream(false);
@@ -234,6 +230,15 @@ public class RpaService {
         messages.add(message);
         chatCompletionRequest.setMessages(messages);
         return chatCompletionRequest;
+    }
+
+    private String extractDatetime(String text) {
+        Matcher matcher = pattern.matcher(text);
+        String datetimeStrings = null;
+        while (matcher.find()) {
+            datetimeStrings = matcher.group();
+        }
+        return datetimeStrings;
     }
 
     public static class WorkerThread extends Thread {

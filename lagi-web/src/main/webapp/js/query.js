@@ -70,10 +70,8 @@ function resetSocialPromptStep() {
 function getNextSocialPromptStep() {
     let nextStep = '';
     for (let [key, value] of SOCIAL_PROMPT_STEPS) {
-        console.log(key + ': ' + value);
         if (value === 0) {
             nextStep = key;
-            console.log(nextStep)
             break;
         }
     }
@@ -83,9 +81,7 @@ function getNextSocialPromptStep() {
 function socialAgentsConversation(question) {
     let questionHtml = '<div>' + question + '</div>';
     addUserDialog(questionHtml);
-
     let nextStep = getNextSocialPromptStep();
-    console.log('nextStep: ' + nextStep);
     nextPrompt(nextStep, question);
 }
 
@@ -151,12 +147,13 @@ function getStandardTime(action, prompt) {
                 TIMER_DATA["sendTime"] = res.data;
                 TIMER_DATA["appId"] = SOCIAL_CHANEL["appId"];
                 TIMER_DATA["channelId"]= SOCIAL_CHANEL["channelId"];
-
                 addRobotDialog( '已收到您的指令，请等待好消息。</br>');
                 setSocialPromptStepDone(action);
-                unlockInput();
                 addTimerTask();
+            } else {
+                addRobotDialog( '现在吗？还是之后具体什么时间？</br>');
             }
+            unlockInput();
         },
         error: function () {
             returnFailedResponse();
@@ -181,12 +178,12 @@ function startRobot(prompt, action) {
                 addRobotDialog( '好的，协助您默认打理半个小时。</br>');
             }
             setSocialPromptStepDone(action);
+            resetSocialPromptStep();
         },
         error: function () {
             returnFailedResponse();
         }
     });
-
 }
 
 function addTimerTask() {
@@ -216,14 +213,12 @@ function getLoginQrCode(appId, username) {
         data: {"appId": appId, "username": username},
         success: function (res) {
             if (res.status === 10) {
-                console.log(SOCIAL_APP_MAP)
                 let appName = SOCIAL_APP_MAP.get(appId);
                 let qrCodeUrl = res.image_url;
                 let html = '<div>请扫描以下'+ appName + '的二维码授权：</div></br><img src="' + qrCodeUrl + '" alt="二维码" />';
                 addRobotDialog(html + '</br>');
                 getLoginStatus(appId, username);
             }
-            console.log(res);
         },
         error: function () {
             returnFailedResponse();
@@ -233,6 +228,7 @@ function getLoginQrCode(appId, username) {
 
 function returnFailedResponse() {
     addRobotDialog('调用失败!</br>');
+    unlockInput();
 }
 
 function unlockInput() {
