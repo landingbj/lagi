@@ -68,12 +68,12 @@ public class RpaServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String appId = req.getParameter("appId");
         String username = req.getParameter("username");
-//        GetLoginQrCodeResponse response = rpaService.getLoginQrCode(appId, username);
-        String json = "{\n" +
-                "    \"image_url\": \"http://www.saasai.top/saas/getRpaImage?channelId=38&imageName=qrcode_2_1715681097196.png\",\n" +
-                "    \"status\": 10\n" +
-                "}";
-        responsePrint(resp, json);
+        GetLoginQrCodeResponse response = rpaService.getLoginQrCode(appId, username);
+//        String json = "{\n" +
+//                "    \"image_url\": \"http://www.saasai.top/saas/getRpaImage?channelId=38&imageName=qrcode_2_1715681097196.png\",\n" +
+//                "    \"status\": 10\n" +
+//                "}";
+        responsePrint(resp, gson.toJson(response));
     }
 
     private void nextPrompt(HttpServletRequest req, HttpServletResponse resp) throws IOException {

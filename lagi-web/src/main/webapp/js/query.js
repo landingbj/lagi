@@ -164,7 +164,7 @@ function getStandardTime(action, prompt) {
     });
 }
 
-function startRobot(prompt) {
+function startRobot(prompt, action) {
     let startRobotRequest = {
         prompt: prompt,
         appIdList: SOCIAL_CHANEL["appIdList"],
