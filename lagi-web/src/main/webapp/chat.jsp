@@ -236,22 +236,27 @@
                         </div>
                       </div>
                       <!-- ***********************输入框前form end******************************** -->
-                      <div id = "agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
-                        <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 "  >
-                          <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center"></div>
-                          <ul id = "agent-tools" class="pb-2">
-                            <!-- <li class=" pl-5  " >社交圈</li>
-                            <li class=" pl-5  not-available" >视频流</li>
-                            <li class=" pl-5  not-available" >语音流</li>
-                            <li class=" pl-5  not-available">传感器</li>
-                            <li class=" pl-5  not-available">工控线</li> -->
-                            <!-- <li class=" pl-5 pb-2">工控线</li> -->
-                          </ul>
-                        </div>
-                        </div>
+
+                     
+
                       <!-- ***********************输入框******************************** -->
+                      
                       <div class="flex w-full " id="queryBox">
-                        
+
+                        <div id = "agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
+                          <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 "  >
+                            <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center"></div>
+                            <ul id = "agent-tools" class="pb-2">
+                              <!-- <li class=" pl-5  " >社交圈</li>
+                              <li class=" pl-5  not-available" >视频流</li>
+                              <li class=" pl-5  not-available" >语音流</li>
+                              <li class=" pl-5  not-available">传感器</li>
+                              <li class=" pl-5  not-available">工控线</li> -->
+                              <!-- <li class=" pl-5 pb-2">工控线</li> -->
+                            </ul>
+                          </div>
+                          </div>
+
                         <div class="flex-col-reverse w-10 m-0 relative">
                           
                           <div  class="absolute top-0  ml-2" style="display: none;" id = "textareaScretch"  onclick="showTextareaMask()">
@@ -261,7 +266,7 @@
                           </div>
                           <div id="voiceIcon" class="absolute bottom-0 ml-2">
                             <svg id="voiceSvg"
-                              style="width: 24px;height: 24px;" t="1694870288752" class="icon" viewBox="0 0 1024 1024"
+                              style="width: 24px;height: 24px; margin-bottom: 5px;" t="1694870288752" class="icon" viewBox="0 0 1024 1024"
                               version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4046" width="200" height="200">
                               <path
                                 d="M446.2 705.9c-99.1 0-180.2-81.1-180.2-180.2V245.4c0-99.1 81.1-180.2 180.2-180.2s180.2 81.1 180.2 180.2v280.3c0 99.1-81.1 180.2-180.2 180.2z"
@@ -289,16 +294,16 @@
                           </button>
                           <!-- ******************发送按钮关闭***************************** -->
                         </div>
-
+                        
                         <div id="agentButton" class=" flex-col-reverse m-2 flex-bottom">
-                          <img style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain;" t="1694871462493" class=" icon"
+                          <img style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 1px;" t="1694871462493" class=" icon"
                           alt="agent"
                           src="images/agent.png"
                           />
                         </div>
-                        
+
                         <div id="addButton" class=" flex-col-reverse m-2 flex-bottom"><svg id="addSvg"
-                            style="width: 24px;height: 24px; float: left;right: 100px;" t="1694871462493" class=" icon"
+                            style="width: 26px;height: 26px; float: left;right: 100px; margin-bottom: 0px;" t="1694871462493" class=" icon"
                             viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6730"
                             width="200" height="200">
                             <path
