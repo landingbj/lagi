@@ -51,8 +51,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        req.setCharacterEncoding("UTF-8");
-        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        resp.setContentType("application/json;charset=utf-8");
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
         List<IndexSearchData> indexSearchDataList;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
@@ -63,8 +62,8 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
-        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
+            resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
             Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
             PrintWriter out = resp.getWriter();
             final ChatCompletionResult[] lastResult = {null};

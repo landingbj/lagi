@@ -71,7 +71,7 @@ public class CompletionsService {
                         Map<String, Object> params = new HashMap<String, Object>();
                         params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
                         params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                        IMapper mapper = getMapper(backend.getType());
+                        IMapper mapper = getMapper(backend);
                         mapper.setParameters(params);
                         mapper.setPriority(backend.getPriority());
                         contain.registerMapper(mapper);
@@ -85,7 +85,7 @@ public class CompletionsService {
                     Map<String, Object> params = new HashMap<String, Object>();
                     params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
                     params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                    IMapper mapper = getMapper(backend.getType());
+                    IMapper mapper = getMapper(backend);
                     mapper.setParameters(params);
                     mapper.setPriority(backend.getPriority());
                     contain.registerMapper(mapper);
@@ -120,27 +120,10 @@ public class CompletionsService {
         return LLMManager.getAdapter(backendConfig.getName());
     }
 
-    private IMapper getMapper(String type) {
-        IMapper mapper = null;
-        if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
-            mapper = new LandingMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_VICUNA)) {
-            mapper = new VicunaMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_GPT)) {
-            mapper = new GPTMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_Qwen)) {
-            mapper = new QwenMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
-            mapper = new ErnieMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ZHIPU)) {
-            mapper = new ZhipuMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_MOONSHOT)) {
-            mapper = new MoonshotMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
-            mapper = new BaichuanMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_SPARK)) {
-            mapper = new SparkMapper();
+    private IMapper getMapper(Backend backendConfig) {
+        if(backendConfig.getType().equals(LagiGlobal.LLM_TYPE_LANDING)) {
+            return  new LandingMapper();
         }
-        return mapper;
+        return new UniversalMapper(getAdapter(backendConfig));
     }
 }
