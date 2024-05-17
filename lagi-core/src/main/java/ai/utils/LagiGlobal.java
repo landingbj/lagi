@@ -104,7 +104,7 @@ public class LagiGlobal {
     public static final String LLM_TYPE_MOONSHOT = "Moonshot";
     public static final String LLM_TYPE_BAICHUAN = "Baichuan";
     public static final String LLM_TYPE_SPARK = "Spark";
-
+    public static final String LLM_TYPE_SENSECHAT = "SenseChat";
     public static final String AUDIO_TYPE_LANDING = "Landing";
     public static final String AUDIO_TYPE_ALIBABA = "Alibaba";
 

@@ -3,10 +3,10 @@ package ai.servlet.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -28,8 +28,12 @@ import ai.utils.LagiGlobal;
 import ai.utils.MigrateGlobal;
 import ai.utils.WhisperResponse;
 import ai.utils.qa.ChatCompletionUtil;
+import com.google.common.base.Utf8;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.sun.javaws.Main;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +46,7 @@ public class LlmApiServlet extends BaseServlet {
     private VectorDbService vectorDbService = new VectorDbService(config);
 
     private Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
+    private ChatCompletionResult data;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -57,7 +62,9 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json;charset=utf-8");
+        //请求最先来到这里-----
+        req.setCharacterEncoding("UTF-8");
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
         List<IndexSearchData> indexSearchDataList;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
@@ -68,15 +75,27 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
+            System.out.println("第一步completions+来到这块了");
             Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
-            resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
             PrintWriter out = resp.getWriter();
             final ChatCompletionResult[] lastResult = {null};
             observable.subscribe(
                     data -> {
                         lastResult[0] = data;
-                        out.print("data: " + gson.toJson(data) + "\n\n");
+//                        data.getChoices().forEach(choice -> {
+//                            try {
+//                                System.out.println("这里打印的就是这个的值"+gson.toJson(choice.getDelta()));
+//                                //System.out.println(new String(choice.getMessage().getContent().toString().getBytes("GBK"),StandardCharsets.UTF_8));
+//                            } catch (Exception e) {
+//
+//                            }
+//                        });
+                        String msg = gson.toJson(data);
+                        //String msg = new String(gson.toJson(data).getBytes(Charset.forName("GBK")), StandardCharsets.UTF_8) ;
+                        //msg = msg.replace("?", "");
+                        out.print("data: " + msg + "\n\n");
                         out.flush();
                     },
                     e -> logger.error("", e),
@@ -101,7 +120,6 @@ public class LlmApiServlet extends BaseServlet {
             responsePrint(resp, toJson(result));
         }
     }
-
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList,
                            HttpServletRequest req, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()

@@ -85,6 +85,14 @@ models:
     api_key: e8f583c8cfe7ae78d249f5eafb1aa384
     secret_key: NGJlY2RmZWM3NjE4Zjg3MmFjMmQ4MWI5
 
+    #SenseChat(ri ri xin) is a large language model developed by Shangtang
+  - name: SenseChat
+    type: SenseChat
+    enable: true
+    model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
+    api_key: your-api-key
+    secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
+
 vectors:
   # Chroma is an AI-native open-source embedding database
   # The official website is https://www.trychroma.com/
