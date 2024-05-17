@@ -46,13 +46,8 @@ public class VectorStoreService {
         similarityCutoff = config.getSimilarityCutoff();
         parentDepth = config.getParentDepth();
         childDepth = config.getChildDepth();
-        if (config.getType().equalsIgnoreCase(VectorStoreConstant.VECTOR_STORE_CHROMA)) {
-            this.vectorStore = new ChromaVectorStore(config, embeddingFunction);
-        } else if (config.getType().equalsIgnoreCase(VectorStoreConstant.VECTOR_STORE_PINECONE)) {
-            this.vectorStore = new PineconeVectorStore(config, embeddingFunction);
-        } else {
-            throw new IllegalArgumentException("Unsupported vector store type: " + config.getType());
-        }
+        // todo 改为类加载方式加载
+        this.vectorStore = VectorStoreManager.getVectorStore();
     }
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {

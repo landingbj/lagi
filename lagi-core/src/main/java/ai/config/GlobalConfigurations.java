@@ -4,12 +4,20 @@ import ai.common.pojo.*;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.ModelFunctions;
 import ai.config.pojo.WorkerConfig;
+import ai.embedding.EmbeddingFactory;
+import ai.embedding.Embeddings;
+import ai.llm.LLMManager;
+import ai.llm.adapter.ILlmAdapter;
 import ai.utils.LagiGlobal;
+import ai.vector.VectorStore;
+import ai.vector.VectorStoreManager;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
@@ -25,9 +33,48 @@ public class GlobalConfigurations extends AbstractConfiguration{
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
 
+    @PostConstruct
+    private void init() {
+        registerVectorStore();
+        registerLLM();
+    }
+
+    private void registerVectorStore() {
+        vectors.stream().filter((vc)-> Objects.equals(vc.getName(), functions.getRAG().getName()))
+                .forEach(vectorStoreConfig -> {
+            try {
+                String name = vectorStoreConfig.getName();
+                String driver = vectorStoreConfig.getDriver();
+                Class<?> clazz = Class.forName(driver);
+                Constructor<?> constructor = clazz.getConstructor(VectorStoreConfig.class, Embeddings.class);
+                VectorStore vs = (VectorStore) constructor.newInstance(vectorStoreConfig, EmbeddingFactory.getEmbedding(functions.getEmbedding()));
+                VectorStoreManager.registerVectorStore(name, vs);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private void registerLLM() {
+        models.forEach(model->{
+            try {
+                String name = model.getName();
+                String driver = model.getDriver();
+                Class<?> clazz = Class.forName(driver);
+                Constructor<?> constructor = clazz.getConstructor(Backend.class);
+                ILlmAdapter llmAdapter = (ILlmAdapter) constructor.newInstance(model);
+                LLMManager.registerAdapter(name, llmAdapter);
+            }catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+
 
     @Override
     public Configuration transformToConfiguration() {
+        init();
         LLM llm = LLM.builder().backends(models).embedding(functions.getEmbedding()).streamBackend(functions.getStreamBackend()).build();
         llm.getBackends().forEach(backend -> {
             if(backend.getPriority() == null) {
@@ -69,5 +116,7 @@ public class GlobalConfigurations extends AbstractConfiguration{
         System.out.println(globalConfigurations);
         Configuration config = LagiGlobal.getConfig();
         System.out.println(config);
+        VectorStore vectorStore = VectorStoreManager.getVectorStore();
+        System.out.println(vectorStore);
     }
 }
