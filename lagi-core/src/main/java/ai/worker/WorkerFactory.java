@@ -36,7 +36,7 @@ public class WorkerFactory {
         if (agentConfig == null) {
             throw new RuntimeException("Agent not found");
         }
-        if (workerConfig.getWorkerClass().equals(WorkerGlobal.ROBOT_WORKER_CLASS)) {
+        if (workerConfig.getDriver().equals(WorkerGlobal.ROBOT_WORKER_CLASS)) {
             return new RobotWorker(agentConfig);
         } else {
             throw new RuntimeException("Worker not found");

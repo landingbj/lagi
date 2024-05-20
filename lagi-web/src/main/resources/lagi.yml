@@ -6,6 +6,7 @@ models:
     type: Landing
     enable: false
     model: turing
+    driver: ai.llm.adapter.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # The qa model is a language model provided by LandingBJ
@@ -13,6 +14,7 @@ models:
     type: Landing
     enable: false
     model: qa
+    driver: ai.llm.adapter.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # The tree model is a language model provided by LandingBJ
@@ -20,6 +22,7 @@ models:
     type: Landing
     enable: false
     model: tree
+    driver: ai.llm.adapter.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
@@ -27,13 +30,15 @@ models:
     type: Vicuna
     enable: false
     model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+    driver: ai.llm.adapter.impl.VicunaAdapter
     api_address: http://localhost:8090/v1/chat/completions
 
   # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
-    enable: false
+    enable: true
     model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
+    driver: ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
   #  qwen (Tongyi Qianwen) is an advanced large-scale language model developed by Alibaba Cloud
@@ -41,6 +46,7 @@ models:
     type: Qwen
     enable: false
     model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
+    driver: ai.llm.adapter.impl.QwenAdapter
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
 
@@ -49,6 +55,7 @@ models:
     type: Ernie
     enable: false
     model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
+    driver: ai.llm.adapter.impl.ErnieAdapter
     # help document https://developer.baidu.com/article/detail.html?id=1089328
     #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
     api_key: your-api-key
@@ -57,15 +64,17 @@ models:
   #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
     type: Zhipu
-    enable: false
+    enable: true
     model: glm-3-turbo # glm-4, glm-4v
+    driver: ai.llm.adapter.impl.ZhipuAdapter
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
 
   # Kimi is an intelligent assistant product developed by Moonshot AI.
   - name: kimi
     type: Moonshot
-    enable: false
+    enable: true
     model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
+    driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
 
   # Baichuan is a new generation of open source large language model launched by Baichuan AI
@@ -73,28 +82,40 @@ models:
     type: Baichuan
     enable: false
     model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
+    driver: ai.llm.adapter.impl.BaichuanAdapter
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
-  - name: spark-test
+  - name: spark
     type: Spark
     enable: true
-    priority: 100
     model: v1.1
-    app_id: 3d876db8
-    api_key: e8f583c8cfe7ae78d249f5eafb1aa384
-    secret_key: NGJlY2RmZWM3NjE4Zjg3MmFjMmQ4MWI5
+    driver: ai.llm.adapter.impl.SparkAdapter
+    app_id: your-app-id
+    api_key: your-api-key  # https://console.xfyun.cn/
+    secret_key: your-secret-key  # https://console.xfyun.cn/
+
+    #SenseChat(ri ri xin) is a large language model developed by Shangtang
+  - name: SenseChat
+    type: SenseChat
+    enable: true
+    model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
+    driver: ai.llm.adapter.impl.SenseChatAdapter
+    api_key: your-api-key
+    secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
 
 vectors:
   # Chroma is an AI-native open-source embedding database
   # The official website is https://www.trychroma.com/
   - name: Chroma
+    driver : ai.vector.impl.ChromaVectorStore
     default_category: default
     url: http://localhost:8000
 
   # Pinecone is a vector database for building large-scale machine learning applications
   # The official website is https://www.pinecone.io/
   - name: Pinecone
+    driver : ai.vector.impl.PineconeVectorStore
     default_category: default
     environment: your-environment
     project_name: your-project-name
@@ -102,11 +123,12 @@ vectors:
     api_key: your-api-key
 
 functions:
+
   embedding:
     type: Landing
     api_endpoint: http://ai.landingbj.com
 
-  stream_backend: spark-test
+  stream_backend: kimi
 
   RAG:
     name: Chroma
@@ -173,28 +195,28 @@ functions:
 # type is the type of the agent, class is the implement class of the agent.
 agents:
   - name: qq
-    api_key: random-key
-    class: ai.agent.social.QQAgent
+    api_key: your-api-key
+    driver: ai.agent.social.QQAgent
 
   - name: wechat
-    api_key: random-key
-    class: ai.agent.social.WechatAgent
+    api_key: your-api-key
+    driver: ai.agent.social.WechatAgent
 
   - name: ding
-    api_key: random-key
-    class: ai.agent.social.DingAgent
+    api_key: your-api-key
+    driver: ai.agent.social.DingAgent
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
 workers:
   - name: qq-robot
     agent: qq
-    class: ai.worker.social.RobotWorker
+    driver: ai.worker.social.RobotWorker
 
   - name: wechat-robot
     agent: wechat
-    class: ai.worker.social.RobotWorker
+    driver: ai.worker.social.RobotWorker
 
   - name: ding-robot
     agent: ding
-    class: ai.worker.social.RobotWorker
+    driver: ai.worker.social.RobotWorker

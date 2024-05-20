@@ -1,12 +1,8 @@
 package ai.servlet.api;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,10 +19,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
-import ai.utils.DownloadUtils;
-import ai.utils.LagiGlobal;
 import ai.utils.MigrateGlobal;
-import ai.utils.WhisperResponse;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -42,6 +35,7 @@ public class LlmApiServlet extends BaseServlet {
     private VectorDbService vectorDbService = new VectorDbService(config);
 
     private Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
+    private ChatCompletionResult data;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -69,14 +63,15 @@ public class LlmApiServlet extends BaseServlet {
             indexSearchDataList = null;
         }
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
-            Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+            Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
             PrintWriter out = resp.getWriter();
             final ChatCompletionResult[] lastResult = {null};
             observable.subscribe(
                     data -> {
                         lastResult[0] = data;
-                        out.print("data: " + gson.toJson(data) + "\n\n");
+                        String msg = gson.toJson(data);
+                        out.print("data: " + msg + "\n\n");
                         out.flush();
                     },
                     e -> logger.error("", e),
@@ -101,7 +96,6 @@ public class LlmApiServlet extends BaseServlet {
             responsePrint(resp, toJson(result));
         }
     }
-
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList,
                            HttpServletRequest req, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()

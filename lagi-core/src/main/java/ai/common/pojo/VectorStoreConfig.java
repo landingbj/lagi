@@ -8,6 +8,7 @@ import lombok.ToString;
 @Data
 public class VectorStoreConfig {
     private String name;
+    private String driver;
     private String type;
     private String defaultCategory;
     private String url;

@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.llm.LLMManager;
 import ai.llm.adapter.ILlmAdapter;
-import ai.llm.adapter.impl.*;
 import ai.common.pojo.Backend;
 import ai.common.pojo.Configuration;
 import ai.mr.IMapper;
@@ -44,6 +44,7 @@ public class CompletionsService {
 
     private Backend streamBackendConfig;
 
+
     public CompletionsService(Configuration config) {
         this.config = config;
         String streamBackend = this.config.getLLM().getStreamBackend();
@@ -70,7 +71,7 @@ public class CompletionsService {
                         Map<String, Object> params = new HashMap<String, Object>();
                         params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
                         params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                        IMapper mapper = getMapper(backend.getType());
+                        IMapper mapper = getMapper(backend);
                         mapper.setParameters(params);
                         mapper.setPriority(backend.getPriority());
                         contain.registerMapper(mapper);
@@ -84,7 +85,7 @@ public class CompletionsService {
                     Map<String, Object> params = new HashMap<String, Object>();
                     params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
                     params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                    IMapper mapper = getMapper(backend.getType());
+                    IMapper mapper = getMapper(backend);
                     mapper.setParameters(params);
                     mapper.setPriority(backend.getPriority());
                     contain.registerMapper(mapper);
@@ -116,51 +117,13 @@ public class CompletionsService {
     }
 
     private ILlmAdapter getAdapter(Backend backendConfig) {
-        String type = backendConfig.getType();
-        ILlmAdapter adapter = null;
-        if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
-            adapter = new LandingAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_VICUNA)) {
-            adapter = new VicunaAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_GPT)) {
-            adapter = new GPTAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_Qwen)) {
-            adapter = new QwenAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
-            adapter = new ErnieAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ZHIPU)) {
-            adapter = new ZhipuAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_MOONSHOT)) {
-            adapter = new MoonshotAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
-            adapter = new BaichuanAdapter(backendConfig);
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_SPARK)) {
-            adapter = new SparkAdapter(backendConfig);
-        }
-        return adapter;
+        return LLMManager.getAdapter(backendConfig.getName());
     }
 
-    private IMapper getMapper(String type) {
-        IMapper mapper = null;
-        if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
-            mapper = new LandingMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_VICUNA)) {
-            mapper = new VicunaMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_GPT)) {
-            mapper = new GPTMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_Qwen)) {
-            mapper = new QwenMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ERNIE)) {
-            mapper = new ErnieMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_ZHIPU)) {
-            mapper = new ZhipuMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_MOONSHOT)) {
-            mapper = new MoonshotMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_BAICHUAN)) {
-            mapper = new BaichuanMapper();
-        } else if (type.equalsIgnoreCase(LagiGlobal.LLM_TYPE_SPARK)) {
-            mapper = new SparkMapper();
+    private IMapper getMapper(Backend backendConfig) {
+        if(backendConfig.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
+            return  new LandingMapper();
         }
-        return mapper;
+        return new UniversalMapper(getAdapter(backendConfig));
     }
 }

@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class WorkerConfig {
     private String name;
-    @JsonProperty("class")
-    private String workerClass;
+    @JsonProperty("driver")
+    private String driver;
     private String agent;
 }
