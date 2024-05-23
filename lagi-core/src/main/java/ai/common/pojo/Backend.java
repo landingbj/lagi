@@ -3,7 +3,6 @@ package ai.common.pojo;
 import lombok.Data;
 import lombok.ToString;
 
-@ToString
 @Data
 public class Backend {
     private String name;
@@ -16,5 +15,7 @@ public class Backend {
     private String appId;
     private String apiKey;
     private String secretKey;
-
+    private String appKey;
+    private String accessKeyId;
+    private String accessKeySecret;
 }

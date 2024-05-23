@@ -36,7 +36,7 @@ models:
   # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
-    enable: true
+    enable: false
     model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
     driver: ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
@@ -64,7 +64,7 @@ models:
   #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
     type: Zhipu
-    enable: true
+    enable: false
     model: glm-3-turbo # glm-4, glm-4v
     driver: ai.llm.adapter.impl.ZhipuAdapter
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
@@ -72,7 +72,7 @@ models:
   # Kimi is an intelligent assistant product developed by Moonshot AI.
   - name: kimi
     type: Moonshot
-    enable: true
+    enable: false
     model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
@@ -85,10 +85,9 @@ models:
     driver: ai.llm.adapter.impl.BaichuanAdapter
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
-  # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: Spark
-    enable: true
+    enable: false
     model: v1.1
     driver: ai.llm.adapter.impl.SparkAdapter
     app_id: your-app-id
@@ -98,24 +97,32 @@ models:
     #SenseChat(ri ri xin) is a large language model developed by Shangtang
   - name: SenseChat
     type: SenseChat
-    enable: true
+    enable: false
     model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
     driver: ai.llm.adapter.impl.SenseChatAdapter
     api_key: your-api-key
     secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
 
+  # Gemini is a family of multimodal large language models developed by Google DeepMind.
+  - name: gemini
+    type: Gemini
+    enable: true
+    model: gemini-1.5-flash-latest # gemini-1.5-flash-latest, gemini-1.0-pro, gemini-1.5-pro-latest
+    driver: ai.llm.adapter.impl.GeminiAdapter
+    api_key: your-api-key
+
 vectors:
   # Chroma is an AI-native open-source embedding database
   # The official website is https://www.trychroma.com/
   - name: Chroma
-    driver : ai.vector.impl.ChromaVectorStore
+    driver: ai.vector.impl.ChromaVectorStore
     default_category: default
     url: http://localhost:8000
 
   # Pinecone is a vector database for building large-scale machine learning applications
   # The official website is https://www.pinecone.io/
   - name: Pinecone
-    driver : ai.vector.impl.PineconeVectorStore
+    driver: ai.vector.impl.PineconeVectorStore
     default_category: default
     environment: your-environment
     project_name: your-project-name
@@ -123,29 +130,35 @@ vectors:
     api_key: your-api-key
 
 functions:
-
   embedding:
     type: Landing
     api_endpoint: http://ai.landingbj.com
 
-  stream_backend: kimi
+  stream_backend: gemini
 
   RAG:
     name: Chroma
     similarity_top_k: 10
-    similarity_cutoff: 1
-    parent_depth: 0
-    child_depth: 0
+    similarity_cutoff: 0.5
+    parent_depth: 1
+    child_depth: 1
+
   ASR:
     backends:
       - name: asr
-        type: Landing
+        type: Alibaba
+        driver: ai.audio.adapter.impl.AlibabaAudioAdapter
         enable: true
         priority: 10
+        app_key: your-app-key
+        access_key_id: your-access-key-id
+        access_key_secret: your-access-key-secret
+
   TTS:
     backends:
       - name: tts
         type: Landing
+        driver: ai.audio.adapter.impl.LandingAudioAdapter
         enable: true
         priority: 10
 

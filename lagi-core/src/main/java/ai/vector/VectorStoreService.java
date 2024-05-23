@@ -241,8 +241,12 @@ public class VectorStoreService {
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
         if (!"system".equals(indexSearchData.getLevel())) {
             indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
-            indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
-            indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
+            if (indexRecord.getMetadata().get("filename") != null) {
+                indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
+            }
+            if (indexRecord.getMetadata().get("filepath") != null) {
+                indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
+            }
         }
         indexSearchData.setImage((String) indexRecord.getMetadata().get("image"));
         indexSearchData.setDistance(indexRecord.getDistance());

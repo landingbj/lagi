@@ -9,20 +9,32 @@ import okhttp3.sse.EventSources;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class ServerSentEventUtil {
     public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func) {
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url(apiUrl)
-                .header("Authorization", "Bearer " + apiKey)
+        OkHttpClient client = new OkHttpClient.Builder()
+                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+
+        Request.Builder requestBuilder = new Request.Builder();
+        if (apiKey != null) {
+            requestBuilder.header("Authorization", "Bearer " + apiKey);
+        }
+
+        Request request = requestBuilder.url(apiUrl)
                 .header("Accept", "text/event-stream")
                 .post(RequestBody.create(json, MediaType.parse("application/json")))
                 .build();
 
         EventSource.Factory factory = EventSources.createFactory(client);
         ObservableList<ChatCompletionResult> result = new ObservableList<>();
+
         factory.newEventSource(request, new EventSourceListener() {
             @Override
             public void onOpen(@NotNull EventSource eventSource, @NotNull Response response) {

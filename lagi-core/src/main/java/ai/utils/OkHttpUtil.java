@@ -3,12 +3,21 @@ package ai.utils;
 
 import okhttp3.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class OkHttpUtil {
-    private static final OkHttpClient client = new OkHttpClient();
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build();
 
     public static String get(String url) throws IOException {
         Request request = new Request.Builder()
@@ -61,13 +70,37 @@ public class OkHttpUtil {
     }
 
     public static String post(String url, String json) throws IOException {
+        return post(url, new HashMap<>(), new HashMap<>(), json);
+    }
+
+    public static String post(String url, Map<String, String> params, String json) throws IOException {
+        return post(url, new HashMap<>(), params, json);
+    }
+
+    public static String post(String url, Map<String, String> headers, Map<String, String> params, String json) throws IOException {
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
+
+        if (params != null) {
+            for (Map.Entry<String, String> param : params.entrySet()) {
+                urlBuilder.addQueryParameter(param.getKey(), param.getValue());
+            }
+        }
+        HttpUrl finalUrl = urlBuilder.build();
+
         RequestBody body = RequestBody.create(json, JSON);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(finalUrl)
+                .post(body);
+
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                requestBuilder.addHeader(header.getKey(), header.getValue());
+            }
+        }
+
+        Request request = requestBuilder.build();
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
@@ -92,5 +125,36 @@ public class OkHttpUtil {
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
             return response.body().string();
         }
+    }
+
+    public static String postFile(String url, HashMap<String, String> headers, String fileName) {
+        RequestBody body;
+        File file = new File(fileName);
+        if (!file.isFile()) {
+            return null;
+        } else {
+            body = RequestBody.create(MediaType.parse("application/octet-stream"), file);
+        }
+        Headers.Builder hb = new Headers.Builder();
+        if (headers != null && !headers.isEmpty()) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                hb.add(entry.getKey(), entry.getValue());
+            }
+        }
+        Request request = new Request.Builder()
+                .url(url)
+                .headers(hb.build())
+                .post(body)
+                .build();
+
+        String ret = null;
+        try {
+            Response s = client.newCall(request).execute();
+            ret = s.body().string();
+            s.close();
+        } catch (IOException e) {
+            System.err.println("get result error " + e.getMessage());
+        }
+        return ret;
     }
 }

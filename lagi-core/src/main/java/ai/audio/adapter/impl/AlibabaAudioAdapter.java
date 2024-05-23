@@ -1,37 +1,34 @@
 package ai.audio.adapter.impl;
 
-import java.io.File;
-
 import ai.audio.adapter.IAudioAdapter;
 import ai.audio.service.AlibabaAsrService;
-import ai.common.pojo.*;
-import com.google.gson.Gson;
-
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
+import ai.common.pojo.*;
 import ai.learning.pojo.Response;
-import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
+import com.google.gson.Gson;
 
-public class LandingAudioAdapter implements IAudioAdapter {
-    private Gson gson = new Gson();
-    private AiServiceCall call = new AiServiceCall();
+import java.io.File;
+
+public class AlibabaAudioAdapter implements IAudioAdapter {
+    private final Gson gson = new Gson();
+    private final AiServiceCall call = new AiServiceCall();
     private final Backend backendConfig;
+    private final AlibabaAsrService asrService;
 
-    public LandingAudioAdapter(Backend backendConfig) {
+    public AlibabaAudioAdapter(Backend backendConfig) {
         this.backendConfig = backendConfig;
+        this.asrService = new AlibabaAsrService(
+                backendConfig.getAppKey(),
+                backendConfig.getAccessKeyId(),
+                backendConfig.getAccessKeySecret()
+        );
     }
 
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
-        String url = FileUploadUtil.asrUpload(audio);
-        AsrRequest asrRequest = new AsrRequest();
-        asrRequest.setLang("Chinese");
-        asrRequest.setAudioUrl(url);
-        Object[] params = { gson.toJson(asrRequest) };
-        String[] result = call.callWS(AiServiceInfo.WSVocUrl, "asr", params);
-        Response response = gson.fromJson(result[0], Response.class);
-        return toAsrResult(response);
+        return gson.fromJson(asrService.asr(audio), AsrResult.class);
     }
 
     @Override
@@ -40,21 +37,10 @@ public class LandingAudioAdapter implements IAudioAdapter {
         text2VoiceEntity.setText(param.getText());
         text2VoiceEntity.setModel("default");
         text2VoiceEntity.setEmotion(param.getEmotion());
-        Object[] params = { gson.toJson(text2VoiceEntity) };
+        Object[] params = {gson.toJson(text2VoiceEntity)};
         String[] result = call.callWS(AiServiceInfo.WSVocUrl, "text2Voice", params);
         Response response = gson.fromJson(result[0], Response.class);
         return toTTSResult(response);
-    }
-
-    private AsrResult toAsrResult(Response response) {
-        AsrResult result = new AsrResult();
-        if (response.getStatus().equals("success")) {
-            result.setStatus(LagiGlobal.ASR_STATUS_SUCCESS);
-            result.setResult(response.getData());
-        } else {
-            result.setStatus(LagiGlobal.ASR_STATUS_FAILURE);
-        }
-        return result;
     }
 
     private TTSResult toTTSResult(Response response) {

@@ -2,6 +2,7 @@ package ai.audio.service;
 
 import java.io.File;
 
+import ai.audio.AudioManager;
 import ai.audio.adapter.IAudioAdapter;
 import ai.audio.adapter.impl.LandingAudioAdapter;
 import ai.common.pojo.ASR;
@@ -38,7 +39,7 @@ public class AudioService {
         int maxPriority = Integer.MIN_VALUE;
         for (Backend backend : asrConfig.getBackends()) {
             if (backend.getEnable() && backend.getPriority() > maxPriority) {
-                adapter = getAudioAdapter(backend.getType());
+                adapter = AudioManager.getASRAdapter(backend.getName());
             }
         }
         return adapter;
@@ -49,17 +50,8 @@ public class AudioService {
         int maxPriority = Integer.MIN_VALUE;
         for (Backend backend : ttsConfig.getBackends()) {
             if (backend.getEnable() && backend.getPriority() > maxPriority) {
-                adapter = getAudioAdapter(backend.getType());
+                adapter = AudioManager.getTTSAdapter(backend.getName());
             }
-        }
-        return adapter;
-    }
-
-    private IAudioAdapter getAudioAdapter(String type) {
-        IAudioAdapter adapter = null;
-        if (type.equals(LagiGlobal.AUDIO_TYPE_LANDING)) {
-            adapter = new LandingAudioAdapter();
-        } else if (type.equals(LagiGlobal.AUDIO_TYPE_ALIBABA)) {
         }
         return adapter;
     }
