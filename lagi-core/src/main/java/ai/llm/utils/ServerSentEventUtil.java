@@ -17,7 +17,7 @@ import java.util.function.Function;
 public class ServerSentEventUtil {
     public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func) {
         OkHttpClient client = new OkHttpClient.Builder()
-                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
+//                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
