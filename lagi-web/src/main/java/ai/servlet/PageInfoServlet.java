@@ -3,10 +3,12 @@ package ai.servlet;
 import java.util.*;
 
 import ai.common.pojo.Configuration;
+import ai.common.pojo.VectorStoreConfig;
 import ai.servlet.annotation.Get;
 import ai.servlet.annotation.Param;
 import ai.servlet.dto.Prompt;
 import ai.utils.MigrateGlobal;
+import ai.vector.VectorStoreService;
 
 public class PageInfoServlet extends RestfulServlet{
 	
@@ -28,7 +30,7 @@ public class PageInfoServlet extends RestfulServlet{
 		prompts.add(new Prompt("家常菜谱","请告诉我红烧猪蹄的做法和注意事项"));
 		prompts.add(new Prompt("社恐交际","应酬时想以茶代酒该怎么高情商发言？"));
 		prompts.add(new Prompt("“社恐”交际","如何不带脏字的骂人？"));
-
+		VectorStoreConfig vectorStoreConfig = new VectorStoreService().getVectorStoreConfig();
 		// 智能问答 配置检测
 
 		long llmCount = config.getLLM().getBackends().stream().filter(backend -> {
@@ -68,7 +70,7 @@ public class PageInfoServlet extends RestfulServlet{
 			return backend.getEnable();
 		}).count();
 		navMap.put("spsc", count > 0 ? 1 :0);
-		navMap.put("kjsx", config.getVectorStore() != null  ? 1 :0);
+		navMap.put("kjsx", vectorStoreConfig != null  ? 1 :0);
 		// aiservice
 		navMap.put("zlsc", 1);
 

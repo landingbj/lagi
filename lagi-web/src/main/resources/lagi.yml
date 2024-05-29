@@ -1,105 +1,132 @@
-system_title: Lagi
+system_title: Lag[i]
 
 models:
   # The turing model is a language model provided by LandingBJ
   - name: landing
     type: Landing
     enable: false
-    model: turing
-    driver: ai.llm.adapter.impl.LandingAdapter
+    drivers:
+      - model: turing
+        driver: ai.llm.adapter.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # The qa model is a language model provided by LandingBJ
   - name: landing-qa
     type: Landing
     enable: false
-    model: qa
-    driver: ai.llm.adapter.impl.LandingAdapter
+    drivers:
+      - model: qa
+        driver: ai.llm.adapter.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # The tree model is a language model provided by LandingBJ
   - name: landing-tree
     type: Landing
     enable: false
-    model: tree
-    driver: ai.llm.adapter.impl.LandingAdapter
+    drivers:
+      - model: tree
+        driver: ai.llm.adapter.impl.LandingAdapter
+    api_key: your-api-key # http://saas.landingbj.com/
+
+  # The landing-tts   is an intelligent voice model.
+  - name: landing-audio
+    type: Landing
+    enable: true
+    drivers:
+      - model: tts
+        driver: ai.audio.adapter.impl.LandingAudioAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
   - name: fastchat
     type: Vicuna
     enable: false
-    model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
-    driver: ai.llm.adapter.impl.VicunaAdapter
+    drivers:
+      - model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+        driver: ai.llm.adapter.impl.VicunaAdapter
     api_address: http://localhost:8090/v1/chat/completions
 
   # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
     enable: false
-    model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
-    driver: ai.llm.adapter.impl.GPTAdapter
+    drivers:
+      - model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
+        driver:  ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
-  #  qwen (Tongyi Qianwen) is an advanced large-scale language model developed by Alibaba Cloud
+  #  qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
   - name: qwen
     type: Qwen
     enable: false
-    model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
-    driver: ai.llm.adapter.impl.QwenAdapter
+    drivers:
+      - model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
+        driver: ai.llm.adapter.impl.QwenAdapter
+      - model: asr
+        driver: ai.audio.adapter.impl.AlibabaAudioAdapter
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
+    access_key_id: your-access-key-id
+    access_key_secret: your-access-key-secret
 
-  #  ERNIE Bot (wen xin yi yan) is an advanced large-scale language model developed by Baidu
+  #  ERNIE Bot (WenxinYiyan) is an advanced large-scale language model developed by Baidu
   - name: ernie
     type: Ernie
-    enable: false
-    model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
-    driver: ai.llm.adapter.impl.ErnieAdapter
+    enable: true
+    drivers:
+      - model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
+        driver: ai.llm.adapter.impl.ErnieAdapter
     # help document https://developer.baidu.com/article/detail.html?id=1089328
     #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
+    app_id: your-api-id
     api_key: your-api-key
     secret_key: your-secret-key
 
-  #  Zhipu AI(chatglm) is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
+  #  chatGLM is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
     type: Zhipu
     enable: false
-    model: glm-3-turbo # glm-4, glm-4v
-    driver: ai.llm.adapter.impl.ZhipuAdapter
+    drivers:
+      - model: glm-3-turbo # glm-4, glm-4v
+        driver: ai.llm.adapter.impl.ZhipuAdapter
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
 
   # Kimi is an intelligent assistant product developed by Moonshot AI.
   - name: kimi
     type: Moonshot
-    enable: false
-    model: moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
-    driver: ai.llm.adapter.impl.MoonshotAdapter
-    api_key: your-api-key #  url address https://platform.moonshot.cn/console/api-keys
+    enable: true
+    drivers:
+      - model:  moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
+        driver: ai.llm.adapter.impl.MoonshotAdapter
+    api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
 
   # Baichuan is a new generation of open source large language model launched by Baichuan AI
   - name: baichuan
     type: Baichuan
     enable: false
-    model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
-    driver: ai.llm.adapter.impl.BaichuanAdapter
+    drivers:
+      - model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
+        driver: ai.llm.adapter.impl.BaichuanAdapter
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
+  # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: Spark
     enable: false
-    model: v1.1
-    driver: ai.llm.adapter.impl.SparkAdapter
+    drivers:
+      - model: v1.1
+        driver: ai.llm.adapter.impl.SparkAdapter
     app_id: your-app-id
     api_key: your-api-key  # https://console.xfyun.cn/
     secret_key: your-secret-key  # https://console.xfyun.cn/
 
-    #SenseChat(ri ri xin) is a large language model developed by Shangtang
+    #SenseChat(RiRiXin) is a large language model developed by Shangtang
   - name: SenseChat
     type: SenseChat
     enable: false
-    model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
-    driver: ai.llm.adapter.impl.SenseChatAdapter
+    drivers:
+      - model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
+        driver: ai.llm.adapter.impl.SenseChatAdapter
     api_key: your-api-key
     secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
 
@@ -107,102 +134,131 @@ models:
   - name: gemini
     type: Gemini
     enable: true
-    model: gemini-1.5-flash-latest # gemini-1.5-flash-latest, gemini-1.0-pro, gemini-1.5-pro-latest
-    driver: ai.llm.adapter.impl.GeminiAdapter
+    drivers:
+      - model: gemini-1.5-flash-latest # gemini-1.5-flash-latest, gemini-1.0-pro, gemini-1.5-pro-latest
+        driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
 vectors:
   # Chroma is an AI-native open-source embedding database
   # The official website is https://www.trychroma.com/
   - name: Chroma
-    driver: ai.vector.impl.ChromaVectorStore
+    driver : ai.vector.impl.ChromaVectorStore
     default_category: default
+    similarity_top_k: 10
+    similarity_cutoff: 0.5
+    parent_depth: 1
+    child_depth: 1
     url: http://localhost:8000
+
 
   # Pinecone is a vector database for building large-scale machine learning applications
   # The official website is https://www.pinecone.io/
   - name: Pinecone
     driver: ai.vector.impl.PineconeVectorStore
     default_category: default
+    similarity_top_k: 10
+    similarity_cutoff: 0.5
+    parent_depth: 1
+    child_depth: 1
     environment: your-environment
     project_name: your-project-name
     index_name: your-index-name
     api_key: your-api-key
 
-functions:
-  embedding:
-    type: Landing
-    api_endpoint: http://ai.landingbj.com
 
-  stream_backend: gemini
+functions:
+
+  embedding:
+    - backend: landing
+      type: Landing
+      api_endpoint: http://ai.landingbj.com
+
+
+  chat:
+    - backend: kimi
+      model: moonshot-v1-8k
+      enable: true
+      stream: true
+      priority: 100
+
+    - backend: chatgpt
+      model: gpt-3.5-turbo-1106
+      enable: true
+      stream: true
+      priority: 30
+
+    - backend: chatglm
+      model: glm-3-turbo
+      enable: true
+      stream: false
+      priority: 10
+
+    - backend: ernie
+      model: ERNIE-Bot-turbo
+      enable: true
+      stream: false
+      priority: 60
 
   RAG:
-    name: Chroma
-    similarity_top_k: 10
-    similarity_cutoff: 0.5
-    parent_depth: 1
-    child_depth: 1
+    - backend: Chroma
+      enable: true
+      priority: 10
 
-  ASR:
-    backends:
-      - name: asr
-        type: Alibaba
-        driver: ai.audio.adapter.impl.AlibabaAudioAdapter
-        enable: true
-        priority: 10
-        app_key: your-app-key
-        access_key_id: your-access-key-id
-        access_key_secret: your-access-key-secret
 
-  TTS:
-    backends:
-      - name: tts
-        type: Landing
-        driver: ai.audio.adapter.impl.LandingAudioAdapter
-        enable: true
-        priority: 10
+  speech2text:
+    - backend: qwen
+      model: asr
+      enable: true
+      priority: 10
 
-  image2generation:
-    backends:
-      - name: image-generation
-        type: Landing
-        enable: true
-        priority: 10
+  text2speech:
+    - backend: landing-audio
+      model: tts
+      enable: true
+      priority: 10
 
-  image2captioning:
-    backends:
-      - name: image-captioning
-        type: Landing
-        enable: true
-        priority: 10
+  text2image:
+    - backend: Landing
+      model: text2image
+      enable: true
+      priority: 10
+
+  image2text:
+    - backend: Landing
+      model: image2text
+      enable: true
+      priority: 10
 
   image2enhance:
-    backends:
-      - name: image-enhance
-        type: Landing
-        enable: true
-        priority: 10
+    - backend: Landing
+      model: image2enhance
+      enable: true
+      priority: 10
 
-  video2generation:
-    backends:
-      - name: video-generation
-        type: Landing
-        enable: true
-        priority: 10
+  text2video:
+    - backend: Landing
+      model: text2video
+      enable: true
+      priority: 10
+
+  image2video:
+    - backend: Landing
+      model: image2video
+      enable: true
+      priority: 10
 
   video2track:
-    backends:
-      - name: video-track
-        type: Landing
-        enable: true
-        priority: 10
+    - backend: Landing
+      model: video2track
+      enable: true
+      priority: 10
 
   video2enhance:
-    backends:
-      - name: video-enhance
-        type: Landing
-        enable: true
-        priority: 10
+    - backend: Landing
+      model: video2enhance
+      enable: true
+      priority: 10
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.
@@ -224,12 +280,12 @@ agents:
 workers:
   - name: qq-robot
     agent: qq
-    driver: ai.worker.social.RobotWorker
+    worker: ai.worker.social.RobotWorker
 
   - name: wechat-robot
     agent: wechat
-    driver: ai.worker.social.RobotWorker
+    worker: ai.worker.social.RobotWorker
 
   - name: ding-robot
     agent: ding
-    driver: ai.worker.social.RobotWorker
+    worker: ai.worker.social.RobotWorker

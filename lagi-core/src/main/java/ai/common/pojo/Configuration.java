@@ -4,17 +4,19 @@ import ai.config.pojo.AgentConfig;
 import ai.config.pojo.WorkerConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
+import lombok.Data;
 import lombok.ToString;
 
 import java.util.List;
 
+@Data
 @ToString
 @Builder
 public class Configuration {
     private String systemTitle;
     @JsonProperty("LLM")
     private LLM LLM;
-    private VectorStoreConfig vectorStore;
+    private List<VectorStoreConfig> vectorStores;
     @JsonProperty("ASR")
     private ASR ASR;
     @JsonProperty("TTS")
@@ -60,13 +62,6 @@ public class Configuration {
         this.LLM = LLM;
     }
 
-    public VectorStoreConfig getVectorStore() {
-        return vectorStore;
-    }
-
-    public void setVectorStore(VectorStoreConfig vectorStore) {
-        this.vectorStore = vectorStore;
-    }
 
     public ai.common.pojo.ASR getASR() {
         return ASR;

@@ -11,6 +11,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
+import ai.vector.impl.BaseVectorStore;
 import ai.vector.impl.ChromaVectorStore;
 import ai.vector.impl.PineconeVectorStore;
 import ai.vector.pojo.QueryCondition;
@@ -26,28 +27,18 @@ import java.util.stream.Collectors;
 
 public class VectorStoreService {
     private final Gson gson = new Gson();
-    private final VectorStore vectorStore;
+    private final BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
-    private final Integer similarityTopK;
-    private final Double similarityCutoff;
-    private final Integer parentDepth;
-    private final Integer childDepth;
-    private final VectorStoreConfig config;
 
     private IntentService intentService = new SampleIntentServiceImpl();
 
+
     public VectorStoreService() {
-        this(LagiGlobal.getConfig().getVectorStore(), EmbeddingFactory.getEmbedding());
+        this.vectorStore = VectorStoreManager.getVectorStore();
     }
 
-    public VectorStoreService(VectorStoreConfig config, Embeddings embeddingFunction) {
-        this.config = config;
-        similarityTopK = config.getSimilarityTopK();
-        similarityCutoff = config.getSimilarityCutoff();
-        parentDepth = config.getParentDepth();
-        childDepth = config.getChildDepth();
-        // todo 改为类加载方式加载
-        this.vectorStore = VectorStoreManager.getVectorStore();
+    public VectorStoreConfig getVectorStoreConfig() {
+        return vectorStore.getConfig();
     }
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
@@ -198,13 +189,13 @@ public class VectorStoreService {
     }
 
     public List<IndexSearchData> search(String question, String category) {
-        int similarity_top_k = similarityTopK;
-        double similarity_cutoff = similarityCutoff;
-        int parentDepth = this.parentDepth;
-        int childDepth = this.childDepth;
+        int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
+        double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
+        int parentDepth = vectorStore.getConfig().getParentDepth();
+        int childDepth = vectorStore.getConfig().getChildDepth();
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> result = new ArrayList<>();
-        category = ObjectUtils.defaultIfNull(category, this.config.getDefaultCategory());
+        category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
         for (IndexSearchData indexSearchData : indexSearchDataList) {
             result.add(extendText(parentDepth, childDepth, indexSearchData, category));

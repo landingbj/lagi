@@ -39,7 +39,7 @@ public class AudioService {
         int maxPriority = Integer.MIN_VALUE;
         for (Backend backend : asrConfig.getBackends()) {
             if (backend.getEnable() && backend.getPriority() > maxPriority) {
-                adapter = AudioManager.getASRAdapter(backend.getName());
+                adapter = AudioManager.getASRAdapter(backend.getBackend());
             }
         }
         return adapter;
@@ -50,7 +50,7 @@ public class AudioService {
         int maxPriority = Integer.MIN_VALUE;
         for (Backend backend : ttsConfig.getBackends()) {
             if (backend.getEnable() && backend.getPriority() > maxPriority) {
-                adapter = AudioManager.getTTSAdapter(backend.getName());
+                adapter = AudioManager.getTTSAdapter(backend.getBackend());
             }
         }
         return adapter;

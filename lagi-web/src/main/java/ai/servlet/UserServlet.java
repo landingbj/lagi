@@ -8,12 +8,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import ai.common.pojo.VectorStoreConfig;
 import ai.utils.MigrateGlobal;
+import ai.vector.VectorStoreService;
 import com.google.gson.Gson;
 
 import ai.common.pojo.Configuration;
 import ai.migrate.service.UserService;
-import ai.utils.LagiGlobal;
 import com.google.gson.JsonObject;
 
 public class UserServlet extends BaseServlet {
@@ -45,10 +46,11 @@ public class UserServlet extends BaseServlet {
         String currentCategory = req.getParameter("currentCategory");
         JsonObject data = new JsonObject();
         String category;
-        if (config.getVectorStore() == null) {
+        VectorStoreConfig vectorStoreConfig = new VectorStoreService().getVectorStoreConfig();
+        if (vectorStoreConfig == null) {
             category = null;
         } else {
-            category = config.getVectorStore().getDefaultCategory();
+            category = vectorStoreConfig.getDefaultCategory();
         }
         if (category == null) {
             if (currentCategory.isEmpty()) {

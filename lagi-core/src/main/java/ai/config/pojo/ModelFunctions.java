@@ -1,33 +1,41 @@
 package ai.config.pojo;
 
+import ai.common.pojo.Backend;
+import ai.common.pojo.BackendMatch;
 import ai.common.pojo.EmbeddingConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.List;
+
 @ToString
 @Data
 public class ModelFunctions {
 
-    private EmbeddingConfig embedding;
+    private List<EmbeddingConfig> embedding;
     private String streamBackend;
+    @JsonProperty("chat")
+    private List<Backend> chat;
     @JsonProperty("RAG")
-    private RAGFunction RAG;
-    @JsonProperty("ASR")
-    private ModelFunction ASR;
-    @JsonProperty("TTS")
-    private ModelFunction TTS;
-    @JsonProperty("image2generation")
-    private ModelFunction image2Generation;
-    @JsonProperty("image2captioning")
-    private ModelFunction image2Captioning;
+    private List<Backend> RAG;
+    @JsonProperty("speech2text")
+    private List<Backend> speech2text;
+    @JsonProperty("text2speech")
+    private List<Backend> text2speech;
+    @JsonProperty("text2image")
+    private List<Backend> text2image;
+    @JsonProperty("image2text")
+    private List<Backend> image2text;
     @JsonProperty("image2enhance")
-    private ModelFunction image2Enhance;
-    @JsonProperty("video2generation")
-    private ModelFunction video2Generation;
+    private List<Backend> image2Enhance;
+    @JsonProperty("text2video")
+    private List<Backend> text2video;
+    @JsonProperty("image2video")
+    private List<Backend> image2video;
     @JsonProperty("video2track")
-    private ModelFunction video2Track;
+    private List<Backend> video2Track;
     @JsonProperty("video2enhance")
-    private ModelFunction video2Enhance;
+    private List<Backend> video2Enhance;
 
 }

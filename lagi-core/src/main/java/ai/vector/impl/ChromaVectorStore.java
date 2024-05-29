@@ -2,7 +2,6 @@ package ai.vector.impl;
 
 import ai.embedding.Embeddings;
 import ai.common.pojo.VectorStoreConfig;
-import ai.vector.VectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -14,7 +13,7 @@ import tech.amikos.chromadb.handler.ApiException;
 
 import java.util.*;
 
-public class ChromaVectorStore implements VectorStore {
+public class ChromaVectorStore extends BaseVectorStore {
     public static class CustomEmbeddingFunction implements EmbeddingFunction {
         private Embeddings ef;
 
@@ -35,7 +34,6 @@ public class ChromaVectorStore implements VectorStore {
 
     private CustomEmbeddingFunction embeddingFunction;
     private Map<String, String> colMetadata;
-    private VectorStoreConfig config;
     private Client client;
 
     public ChromaVectorStore(VectorStoreConfig config, Embeddings embeddingFunction) {

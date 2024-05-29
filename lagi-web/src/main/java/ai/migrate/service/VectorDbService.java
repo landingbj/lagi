@@ -17,11 +17,9 @@ public class VectorDbService {
     private VectorStoreService vectorStoreService;
 
     public VectorDbService(Configuration config) {
-        VectorStoreConfig vectorStoreConfig = config.getVectorStore();
-        Embeddings embeddingFunction = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
-        if (vectorStoreConfig != null) {
-            vectorStoreService = new VectorStoreService(vectorStoreConfig, embeddingFunction);
-        }
+//        Embeddings embeddingFunction = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
+        vectorStoreService = new VectorStoreService();
+
     }
 
     public boolean vectorStoreEnabled() {

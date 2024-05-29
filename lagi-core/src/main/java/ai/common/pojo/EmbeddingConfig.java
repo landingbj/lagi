@@ -1,9 +1,12 @@
 package ai.common.pojo;
 
+import lombok.Data;
 import lombok.ToString;
 
+@Data
 @ToString
 public class EmbeddingConfig {
+    private String backend;
     private String type;
     private String api_key;
     private String model_name;

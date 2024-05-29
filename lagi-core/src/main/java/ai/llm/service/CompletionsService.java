@@ -11,6 +11,8 @@ package ai.llm.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import ai.llm.LLMManager;
 import ai.llm.adapter.ILlmAdapter;
@@ -42,20 +44,25 @@ public class CompletionsService {
         }
     }
 
-    private Backend streamBackendConfig;
+    private List<Backend> chatBackends;
 
 
     public CompletionsService(Configuration config) {
         this.config = config;
-        String streamBackend = this.config.getLLM().getStreamBackend();
-        for (Backend backend : this.config.getLLM().getBackends()) {
-            if (backend.getName().equals(streamBackend)) {
-                streamBackendConfig = backend;
+        this.chatBackends = this.config.getLLM().getChatBackends().stream().sorted((b1, b2) ->{
+            if(Objects.equals(b1.getPriority(), b2.getPriority())) {
+                return 0;
             }
+            if(b1.getPriority() - b2.getPriority() > 0) {
+                return -1;
+            }
+            return 1;
+        }).collect(Collectors.toList());
+
+        if(chatBackends.isEmpty()) {
+            throw new RuntimeException("No stream backend matched");
         }
-        if (streamBackendConfig == null) {
-            throw new RuntimeException("No stream_backend parameter was specified.");
-        }
+
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
@@ -109,11 +116,15 @@ public class CompletionsService {
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        ILlmAdapter adapter = getAdapter(this.streamBackendConfig);
-        if (!this.streamBackendConfig.getEnable()) {
-            throw new RuntimeException("Stream backend is not enabled.");
+        for(Backend backend : this.chatBackends) {
+            ILlmAdapter adapter = getAdapter(backend);
+            try {
+                return adapter.streamCompletions(chatCompletionRequest);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        return adapter.streamCompletions(chatCompletionRequest);
+        throw new RuntimeException("Stream backend is not enabled.");
     }
 
     private ILlmAdapter getAdapter(Backend backendConfig) {

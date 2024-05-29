@@ -13,21 +13,32 @@ import ai.llm.adapter.ILlmAdapter;
 import ai.utils.LagiGlobal;
 import ai.vector.VectorStore;
 import ai.vector.VectorStoreManager;
+import ai.vector.impl.BaseVectorStore;
+import cn.hutool.core.bean.BeanUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Data
 public class GlobalConfigurations extends AbstractConfiguration {
+    private Logger logger = LoggerFactory.getLogger(GlobalConfigurations.class);
+
     private String systemTitle;
     private List<Backend> models;
     private List<VectorStoreConfig> vectors;
@@ -37,125 +48,130 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     @PostConstruct
     private void init() {
-        registerVectorStore();
-        registerLLM();
-        registerASR();
-        registerTTS();
+
+        Map<String, Backend> modelMap = models.stream().collect(Collectors.toMap(Backend::getName, model -> model));
+        Map<String, VectorStoreConfig> vectorMap = vectors.stream().collect(Collectors.toMap(VectorStoreConfig::getName, vectorStoreConfig -> vectorStoreConfig));
+        registerVectorStore(vectorMap);
+        registerLLM(modelMap);
+        registerASR(modelMap);
+        registerTTS(modelMap);
     }
 
-    private void registerVectorStore() {
-        vectors.stream().filter((vc) -> Objects.equals(vc.getName(), functions.getRAG().getName()))
-                .forEach(vectorStoreConfig -> {
+    private  void  register(Map<String, Backend> modelMap, List<Backend> functions, BiConsumer<Class<?>,Backend> consumer) {
+        if(functions == null) {
+            return;
+        }
+        functions.stream().filter(Backend::getEnable).forEach(func->{
+            Backend model = modelMap.get(func.getBackend());
+            for (Driver driver : model.getDrivers()) {
+                if(Objects.equals(driver.getModel(), func.getModel())) {
                     try {
-                        String name = vectorStoreConfig.getName();
-                        String driver = vectorStoreConfig.getDriver();
-                        Class<?> clazz = Class.forName(driver);
-                        Constructor<?> constructor = clazz.getConstructor(VectorStoreConfig.class, Embeddings.class);
-                        VectorStore vs = (VectorStore) constructor.newInstance(vectorStoreConfig, EmbeddingFactory.getEmbedding(functions.getEmbedding()));
-                        VectorStoreManager.registerVectorStore(name, vs);
+                        Class<?> clazz = Class.forName(driver.getDriver());
+                        Backend backend = new Backend();
+                        BeanUtil.copyProperties(model, backend, "drivers");
+                        backend.setModel(func.getModel());
+                        backend.setBackend(func.getBackend());
+                        backend.setStream(func.getStream());
+                        consumer.accept(clazz, backend);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        logger.error(e.getMessage());
                     }
-                });
-    }
-
-    private void registerLLM() {
-        models.forEach(model -> {
-            try {
-                if (model.getEnable()) {
-                    String name = model.getName();
-                    String driver = model.getDriver();
-                    Class<?> clazz = Class.forName(driver);
-                    Constructor<?> constructor = clazz.getConstructor(Backend.class);
-                    ILlmAdapter llmAdapter = (ILlmAdapter) constructor.newInstance(model);
-                    LLMManager.registerAdapter(name, llmAdapter);
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
         });
     }
 
-    private void registerASR() {
-        if (functions.getASR() == null) {
-            return;
-        }
-        List<Backend> backends = functions.getASR().getBackends();
-        if (backends.isEmpty()) {
-            return;
-        }
-        functions.getASR().getBackends().forEach(model -> {
+    private void registerVectorStore(Map<String, VectorStoreConfig> vectorMap) {
+        functions.getRAG().stream().filter(Backend::getEnable)
+                .map(rc->vectorMap.get(rc.getBackend()))
+                .filter(Objects::nonNull)
+                .forEach(vectorStoreConfig -> {
             try {
-                if (model.getEnable()) {
-                    String name = model.getName();
-                    String driver = model.getDriver();
-                    Class<?> clazz = Class.forName(driver);
-                    Constructor<?> constructor = clazz.getConstructor(Backend.class);
-                    IAudioAdapter adapter = (IAudioAdapter) constructor.newInstance(model);
-                    AudioManager.registerASRAdapter(name, adapter);
-                }
+                String name = vectorStoreConfig.getName();
+                String driver = vectorStoreConfig.getDriver();
+                Class<?> clazz = Class.forName(driver);
+                Constructor<?> constructor = clazz.getConstructor(VectorStoreConfig.class, Embeddings.class);
+                BaseVectorStore vs = (BaseVectorStore) constructor.newInstance(vectorStoreConfig, EmbeddingFactory.getEmbedding(functions.getEmbedding().get(0)));
+                VectorStoreManager.registerVectorStore(name, vs);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                logger.error("registerVectorStore ("+vectorStoreConfig.getName()+")error");
             }
         });
     }
 
-    private void registerTTS() {
-        if (functions.getTTS() == null) {
-            return;
-        }
-        List<Backend> backends = functions.getTTS().getBackends();
-        if (backends.isEmpty()) {
-            return;
-        }
-        functions.getTTS().getBackends().forEach(model -> {
+    private void registerLLM(Map<String, Backend> modelMap) {
+        register(modelMap, functions.getChat(), (clazz, llm) -> {
             try {
-                if (model.getEnable()) {
-                    String name = model.getName();
-                    String driver = model.getDriver();
-                    Class<?> clazz = Class.forName(driver);
-                    Constructor<?> constructor = clazz.getConstructor(Backend.class);
-                    IAudioAdapter adapter = (IAudioAdapter) constructor.newInstance(model);
-                    AudioManager.registerTTSAdapter(name, adapter);
-                }
+                Constructor<?> constructor = clazz.getConstructor(Backend.class);
+                ILlmAdapter llmAdapter = (ILlmAdapter) constructor.newInstance(llm);
+                LLMManager.registerAdapter(llm.getName(), llmAdapter);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                logger.error("registerLLM ("+llm.getName()+")error");
             }
         });
+    }
+
+    private void registerASR( Map<String, Backend> modelMap) {
+
+        register(modelMap, functions.getSpeech2text(), (clazz, asr) -> {
+            try {
+                Constructor<?> constructor = clazz.getConstructor(Backend.class);
+                IAudioAdapter adapter = (IAudioAdapter) constructor.newInstance(asr);
+                AudioManager.registerASRAdapter(asr.getName(), adapter);
+            } catch (Exception e) {
+                logger.error("registerASR ("+asr.getName()+")error");
+            }
+        });
+
+    }
+
+    private void registerTTS( Map<String, Backend> modelMap) {
+
+        register(modelMap, functions.getText2speech(), (clazz, tts) -> {
+            try {
+                Constructor<?> constructor = clazz.getConstructor(Backend.class);
+                IAudioAdapter adapter = (IAudioAdapter) constructor.newInstance(tts);
+                AudioManager.registerTTSAdapter(tts.getName(), adapter);
+            } catch (Exception e) {
+                logger.error("registerTTS ("+tts.getName()+")error");
+            }
+        });
+
     }
 
     @Override
     public Configuration transformToConfiguration() {
         init();
-        LLM llm = LLM.builder().backends(models).embedding(functions.getEmbedding()).streamBackend(functions.getStreamBackend()).build();
+        List<Backend> chatBackends = functions.getChat().stream().map(backendMatch -> {
+            Optional<Backend> any = models.stream().filter(backend -> backend.getEnable() && backendMatch.getEnable() && backendMatch.getBackend().equals(backend.getName())).findAny();
+            Backend backend = any.orElse(null);
+            if(backend != null) {
+                backend.setPriority(backendMatch.getPriority());
+            }
+            return backend;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        LLM llm = LLM.builder().backends(models).embedding(functions.getEmbedding().get(0))
+                .streamBackend(functions.getStreamBackend())
+                .chatBackends(chatBackends)
+                .build();
         llm.getBackends().forEach(backend -> {
             if (backend.getPriority() == null) {
                 backend.setPriority(10);
             }
         });
-        VectorStoreConfig vectorStoreConfig = vectors.stream().filter(vc -> Objects.equals(vc.getName(), functions.getRAG().getName())).findAny().orElse(null);
 
-        if (vectorStoreConfig != null) {
-            if (vectorStoreConfig.getType() == null) {
-                vectorStoreConfig.setType(vectorStoreConfig.getName());
-            }
-            vectorStoreConfig.setSimilarityTopK(functions.getRAG().getSimilarityTopK());
-            vectorStoreConfig.setSimilarityCutoff(functions.getRAG().getSimilarityCutoff());
-            vectorStoreConfig.setParentDepth(functions.getRAG().getParentDepth());
-            vectorStoreConfig.setChildDepth(functions.getRAG().getChildDepth());
-        }
         return Configuration.builder()
                 .systemTitle(systemTitle)
-                .vectorStore(vectorStoreConfig)
+                .vectorStores(vectors)
                 .LLM(llm)
-                .ASR(ASR.builder().backends(functions.getASR().getBackends()).build())
-                .TTS(TTS.builder().backends(functions.getTTS().getBackends()).build())
-                .imageEnhance(ImageEnhance.builder().backends(functions.getImage2Enhance().getBackends()).build())
-                .imageGeneration(ImageGeneration.builder().backends(functions.getImage2Generation().getBackends()).build())
-                .imageCaptioning(ImageCaptioning.builder().backends(functions.getImage2Captioning().getBackends()).build())
-                .videoEnhance(VideoEnhance.builder().backends(functions.getVideo2Enhance().getBackends()).build())
-                .videoGeneration(VideoGeneration.builder().backends(functions.getVideo2Generation().getBackends()).build())
-                .videoTrack(VideoTrack.builder().backends(functions.getVideo2Track().getBackends()).build())
+                .ASR(ASR.builder().backends(functions.getSpeech2text()).build())
+                .TTS(TTS.builder().backends(functions.getText2speech()).build())
+                .imageEnhance(ImageEnhance.builder().backends(functions.getImage2Enhance()).build())
+                .imageGeneration(ImageGeneration.builder().backends(functions.getText2image()).build())
+                .imageCaptioning(ImageCaptioning.builder().backends(functions.getImage2text()).build())
+                .videoEnhance(VideoEnhance.builder().backends(functions.getVideo2Enhance()).build())
+                .videoGeneration(VideoGeneration.builder().backends(functions.getImage2video()).build())
+                .videoTrack(VideoTrack.builder().backends(functions.getVideo2Track()).build())
                 .agents(agents)
                 .workers(workers)
                 .build();
