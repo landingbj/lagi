@@ -6,7 +6,7 @@ Lag[i]是由北京联动北方科技有限公司精心打造的一款针对于�
 
 ### 在线Demo
 
-为了让用户能够直观感受到Lag[i]的强大功能和便捷性，我们提供了一个在线Demo。您可以通过以下链接访问并体验：[https://lagi.saasai.top](https://lagi.saasai.top/)。
+为了让用户能够直观感受到Lag[i]的强大功能和便捷性，我们提供了一个在线Demo。您可以通过以下链接访问并体验：[https://lagi.landingbj.com](https://lagi.landingbj.com/)。
 
 ### 快速开始
 
@@ -41,8 +41,10 @@ mvn package
 最后，将生成的war包部署到Tomcat服务器中。启动Tomcat后，通过浏览器访问对应的端口，即可查看Lag[i]的具体页面。
 
 #### 方法二：使用IDE
-
 如果您更习惯使用IDE进行开发，可以直接使用IntelliJ IDEA等主流IDE打开Lag[i]项目。将项目作为web工程发布到Tomcat服务器中后，就可以通过浏览器访问相应的端口，查看Lag[i]的界面。
+
+##### 注意
+该项目为maven项目，请确保您已安装并配置了maven环境。
 
 ### API接口
 

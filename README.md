@@ -6,7 +6,7 @@ Lag[i] is a solution designed by Beijing Landing Technologies Co.,Ltd. specifica
 
 ### Online Demo
 
-To allow users to intuitively experience the powerful functionality and convenience of Lag[i], we offer an online demo. You can visit and experience it through the following link: [https://lagi.saasai.top](https://lagi.saasai.top/).
+To allow users to intuitively experience the powerful functionality and convenience of Lag[i], we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).
 
 ### Quick Start
 
