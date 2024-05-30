@@ -31,9 +31,9 @@ public class VideoServlet extends BaseServlet {
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
 
-        if (method.equals("motInference")) {
+        if (method.equals("motInference") || method.equals("video2tracking")) {
             this.motInference(req, resp);
-        } else if (method.equals("mmeditingInference")) {
+        } else if (method.equals("mmeditingInference") || method.equals("video2enchance")) {
             this.mmeditingInference(req, resp);
         }
     }

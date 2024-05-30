@@ -45,7 +45,7 @@ public class UploadFileServlet extends HttpServlet {
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
 
-        if (method.equals("uploadLearningFile")) {
+        if (method.equals("uploadLearningFile") || method.equals("upload")) {
             this.uploadLearningFile(req, resp);
         } else if (method.equals("downloadFile")) {
             this.downloadFile(req, resp);

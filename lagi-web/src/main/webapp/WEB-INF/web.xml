@@ -61,7 +61,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>image</servlet-name>
+		<url-pattern>/image/image2text</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>image</servlet-name>
 		<url-pattern>/image/generateVideo</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>image</servlet-name>
+		<url-pattern>/image/image2video</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>image</servlet-name>
@@ -70,6 +78,11 @@
 	<servlet-mapping>
 		<servlet-name>image</servlet-name>
 		<url-pattern>/image/enhanceImage</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>image</servlet-name>
+		<url-pattern>/image/image2enhance</url-pattern>
 	</servlet-mapping>
 
 	<servlet>
@@ -87,6 +100,10 @@
 	<servlet-mapping>
 		<servlet-name>UploadFile</servlet-name>
 		<url-pattern>/uploadFile/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>UploadFile</servlet-name>
+		<url-pattern>/training/*</url-pattern>
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>audio</servlet-name>
@@ -106,7 +123,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>video</servlet-name>
+		<url-pattern>/video/video2tracking</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>video</servlet-name>
 		<url-pattern>/video/mmeditingInference</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>video</servlet-name>
+		<url-pattern>/video/video2enchance</url-pattern>
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>user</servlet-name>
@@ -127,6 +152,10 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>llm</servlet-name>
+		<url-pattern>/chat/completions</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>llm</servlet-name>
 		<url-pattern>/v1/embeddings</url-pattern>
 	</servlet-mapping>
 	
@@ -138,6 +167,11 @@
 		<servlet-name>asr</servlet-name>
 		<url-pattern>/v1/asr</url-pattern>
 	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>asr</servlet-name>
+		<url-pattern>/audio/speech2text</url-pattern>
+	</servlet-mapping>
 	
 	<servlet>
 		<servlet-name>tts</servlet-name>
@@ -147,7 +181,10 @@
 		<servlet-name>tts</servlet-name>
 		<url-pattern>/v1/tts</url-pattern>
 	</servlet-mapping>
-	
+	<servlet-mapping>
+		<servlet-name>tts</servlet-name>
+		<url-pattern>/audio/text2speech</url-pattern>
+	</servlet-mapping>
 	<servlet>
 		<servlet-name>image_api</servlet-name>
 		<servlet-class>ai.servlet.api.ImageApiServlet</servlet-class>
@@ -155,6 +192,11 @@
 	<servlet-mapping>
 		<servlet-name>image_api</servlet-name>
 		<url-pattern>/v1/images/generations</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>image_api</servlet-name>
+		<url-pattern>/image/text2image</url-pattern>
 	</servlet-mapping>
 
 	<servlet>

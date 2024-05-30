@@ -36,7 +36,7 @@ public class AudioApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
-        if (method.equals("asr")) {
+        if (method.equals("asr") || method.equals("speech2text")) {
             this.asr(req, resp);
         }
     }
@@ -47,7 +47,7 @@ public class AudioApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
-        if (method.equals("tts")) {
+        if (method.equals("tts") || method.equals("text2speech")) {
             this.tts(req, resp);
         }
     }

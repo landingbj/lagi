@@ -38,13 +38,13 @@ public class ImageServlet extends BaseServlet {
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
 
-        if (method.equals("generateVideo")) {
+        if (method.equals("generateVideo") || method.equals("image2video")) {
             this.generateVideo(req, resp);
-        } else if (method.equals("imageToText")) {
+        } else if (method.equals("imageToText") || method.equals("image2text")) {
             this.imageToText(req, resp);
         } else if (method.equals("generateImage")) {
             this.generateImage(req, resp);
-        } else if (method.equals("enhanceImage")) {
+        } else if (method.equals("enhanceImage") || method.equals("image2enhance")) {
             this.enhanceImage(req, resp);
         }
     }

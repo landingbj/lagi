@@ -25,7 +25,7 @@ public class ImageApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
-        if (method.equals("generations")) {
+        if (method.equals("generations") || method.equals("text2image")) {
             this.generations(req, resp);
         }
     }
