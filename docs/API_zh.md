@@ -461,7 +461,7 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 
 ## 视频增强
 
-POST /video/video2enchance
+POST /video/video2enhance
 
 上传一段视频实现视频插帧。
 

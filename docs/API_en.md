@@ -453,7 +453,7 @@ Status Code **200**
 
 ## Video Enhancement
 
-POST /video/video2enchance
+POST /video/video2enhance
 
 Upload a video for video frame interpolation.
 
