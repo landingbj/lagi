@@ -1,6 +1,6 @@
 ## Completions Interface
 
-POST /v1/chat/completions
+POST /chat/completions
 
 Enter a prompt to get an answer from the large model.
 
@@ -90,7 +90,7 @@ Status Code **200**
 
 ## Speech Recognition
 
-POST /v1/asr
+POST /audio/speech2text
 
 The speech recognition interface returns the text after recognition.
 
@@ -134,7 +134,7 @@ Status Code **200**
 
 ## Text-to-Speech
 
-GET /v1/tts
+GET /audio/text2speech
 
 Enter text to return a spoken audio file.
 
@@ -161,7 +161,7 @@ Enter text to return a spoken audio file.
 
 ## Image Generation
 
-POST /v1/images/generations
+POST /image/text2image
 
 Enter a command to generate images and return images.
 
@@ -214,7 +214,7 @@ Status Code **200**
 
 ## Upload Private Training Files
 
-POST /uploadFile/uploadLearningFile
+POST /training/upload
 
 Upload private training files, supporting txt, word, pdf formats.
 
@@ -260,7 +260,7 @@ Status Code **200**
 
 ## Image Captioning
 
-POST /image/imageToText
+POST /image/image2text
 
 Upload an image and return a description of the image.
 
@@ -311,7 +311,7 @@ Status Code **200**
 
 ## Video Tracking
 
-POST /video/motInference
+POST /video/video2tracking
 
 Upload a video for video tracking.
 
@@ -358,7 +358,7 @@ Status Code **200**
 
 ## Image Enhancement
 
-POST /image/enhanceImage
+POST /image/image2enhance
 
 Upload an image to enhance a blurry image.
 
@@ -405,9 +405,9 @@ Status Code **200**
 | » status          | string | true     | Status of the result          |
 
 
-## Video Generation
+## Picture to video
 
-POST /image/generateVideo
+POST /image/image2video
 
 Upload an image and generate a short video based on that image.
 
@@ -453,7 +453,7 @@ Status Code **200**
 
 ## Video Enhancement
 
-POST /video/mmeditingInference
+POST /video/video2enchance
 
 Upload a video for video frame interpolation.
 

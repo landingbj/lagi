@@ -1,6 +1,6 @@
 ## 问答接口
 
-POST /v1/chat/completions
+POST /chat/completions
 
 输入prompt，获取大模型的回答。
 
@@ -91,7 +91,7 @@ POST /v1/chat/completions
 
 ## 语音识别
 
-POST /v1/asr
+POST /audio/speech2text
 
 语音识别接口，返回识别后的文字。
 
@@ -136,7 +136,7 @@ POST /v1/asr
 
 ## 文字转语音
 
-GET /v1/tts
+GET /audio/text2speech
 
 输入文字，返回播报的语音文件。
 
@@ -164,7 +164,7 @@ GET /v1/tts
 
 ## 图片生成
 
-POST /v1/images/generations
+POST /image/text2image
 
 输入生成图片的指令返回图片。
 
@@ -218,7 +218,7 @@ POST /v1/images/generations
 
 ## 上传私训学习文件
 
-POST /uploadFile/uploadLearningFile
+POST /training/upload
 
 上传私训学习文件，支持txt、word、pdf格式
 
@@ -265,7 +265,7 @@ fileToUpload: file://D:/知识图谱.pdf
 
 ## 看图说话
 
-POST /image/imageToText
+POST /image/image2text
 
 上传一张图片返回图片的描述。
 
@@ -317,7 +317,7 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 
 ## 视频追踪
 
-POST /video/motInference
+POST /video/video2tracking
 
 上传一段视频实现视频追踪。
 
@@ -365,7 +365,7 @@ file: file://D:\Test\Datasets\Video\demo.mp4
 
 ## 图像增强
 
-POST /image/enhanceImage
+POST /image/image2enhance
 
 上传一张图片可以将模糊的图片进行增强。
 
@@ -411,9 +411,9 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 
 
 
-## 视频生成
+## 图生视频
 
-POST /image/generateVideo
+POST /image/image2video
 
 上传一张图片，然后根据该图片生成一个短视频。
 
@@ -461,7 +461,7 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 
 ## 视频增强
 
-POST /video/mmeditingInference
+POST /video/video2enchance
 
 上传一段视频实现视频插帧。
 
