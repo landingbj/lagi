@@ -2,12 +2,15 @@ package ai.config;
 
 import ai.audio.AudioManager;
 import ai.audio.adapter.IAudioAdapter;
+import ai.common.ModelService;
 import ai.common.pojo.*;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.ModelFunctions;
 import ai.config.pojo.WorkerConfig;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
+import ai.image.ImageManager;
+import ai.image.adapter.IImage2TextAdapter;
 import ai.llm.LLMManager;
 import ai.llm.adapter.ILlmAdapter;
 import ai.utils.LagiGlobal;
@@ -18,7 +21,6 @@ import cn.hutool.core.bean.BeanUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         registerLLM(modelMap);
         registerASR(modelMap);
         registerTTS(modelMap);
+        registerImage2Text(modelMap);
     }
 
     private  void  register(Map<String, Backend> modelMap, List<Backend> functions, BiConsumer<Class<?>,Backend> consumer) {
@@ -72,6 +75,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
                         backend.setModel(func.getModel());
                         backend.setBackend(func.getBackend());
                         backend.setStream(func.getStream());
+                        backend.setPriority(func.getPriority());
                         consumer.accept(clazz, backend);
                     } catch (Exception e) {
                         logger.error(e.getMessage());
@@ -137,6 +141,20 @@ public class GlobalConfigurations extends AbstractConfiguration {
             }
         });
 
+    }
+
+    private void registerImage2Text(Map<String, Backend> modelMap) {
+        register(modelMap, functions.getImage2text(), (clazz, image2Text) -> {
+            try {
+                Constructor<?> constructor = clazz.getConstructor();
+                IImage2TextAdapter adapter = (IImage2TextAdapter) constructor.newInstance();
+                ModelService modelService = (ModelService) adapter;
+                BeanUtil.copyProperties(image2Text, modelService);
+                ImageManager.registerImage2TextAdapter(image2Text.getBackend(), adapter);
+            } catch (Exception e) {
+                logger.error("register image2Text ("+image2Text.getName()+")error");
+            }
+        });
     }
 
     @Override

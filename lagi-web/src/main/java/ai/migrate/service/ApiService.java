@@ -3,6 +3,7 @@ package ai.migrate.service;
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.common.pojo.*;
+import ai.image.service.AllImageService;
 import ai.image.service.ImageGenerationService;
 import ai.utils.*;
 import com.google.gson.Gson;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class ApiService {
     private Gson gson = new Gson();
@@ -22,6 +24,7 @@ public class ApiService {
     private AiServiceCall call = new AiServiceCall();
     private static Configuration config = MigrateGlobal.config;
     private ImageGenerationService imageGenerationService = new ImageGenerationService(config);
+    private AllImageService allImageService = new AllImageService();
     
     public String generateImage(String content, HttpServletRequest req) throws IOException {
         ServletContext context = req.getServletContext();
@@ -108,25 +111,23 @@ public class ApiService {
     
     public String imageToText(String lastImageFile, HttpServletRequest req) throws IOException {
         File file = new File(lastImageFile);
-        String url = FileUploadUtil.imageCaptioningUpload(file);
-        
-        CaptionRequest request = new CaptionRequest();
-        request.setImageUrl(url);
-
-        ServletContext context = req.getServletContext();
-        String rootPath = context.getRealPath("");
-        String filePath = rootPath + "static/img/split/";
-        File tempDir = new File( filePath);
-        if (!tempDir.exists()) {
-            tempDir.mkdirs();
+        ImageToTextResponse text = allImageService.toText(FileRequest.builder().imageUrl(file.getAbsolutePath()).build());
+        if(text.getSamUrl() == null) {
+            ServletContext context = req.getServletContext();
+            String rootPath = context.getRealPath("");
+            String filePath = rootPath + "static/img/split/";
+            File tempDir = new File(filePath);
+            if(!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+            String filename = UUID.randomUUID() + ".png";
+            FileUtils.copyFile(file, new File(filePath, filename));
+            text.setSamUrl("static/img/split/" + filename);
         }
-
-        Object[] params = { gson.toJson(request) };
-        String[] result = call.callWS(AiServiceInfo.WSImgUrl, "caption", params);
-        ImageToTextResponse response = gson.fromJson(result[0], ImageToTextResponse.class);
-        WhisperResponse whisperResponse = DownloadUtils.downloadFile(response.getSamUrl(), "png", filePath);
-        response.setSamUrl("static/img/split/" + whisperResponse.getMsg());
-        return gson.toJson(response);
+        if(text.getClassification() == null) {
+            text.setClassification("");
+        }
+        return gson.toJson(text);
     }
     
     public String motInference(String lastVideoFile, HttpServletRequest req) throws IOException {

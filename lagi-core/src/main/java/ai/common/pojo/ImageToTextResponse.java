@@ -1,40 +1,24 @@
 package ai.common.pojo;
 
+import lombok.Data;
+
+@Data
 public class ImageToTextResponse {
     private String classification;
     private String caption;
     private String samUrl;
     private String status;
 
-    public String getClassification() {
-        return classification;
+    public static ImageToTextResponse error() {
+        ImageToTextResponse res = new ImageToTextResponse();
+        res.setStatus("failed");
+        return res;
     }
 
-    public void setClassification(String classification) {
-        this.classification = classification;
-    }
-
-    public String getCaption() {
-        return caption;
-    }
-
-    public void setCaption(String caption) {
-        this.caption = caption;
-    }
-
-    public String getSamUrl() {
-        return samUrl;
-    }
-
-    public void setSamUrl(String samUrl) {
-        this.samUrl = samUrl;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+    public static ImageToTextResponse success(String caption) {
+        ImageToTextResponse res = new ImageToTextResponse();
+        res.setStatus("success");
+        res.setCaption(caption);
+        return res;
     }
 }
