@@ -33,7 +33,7 @@ public class VideoServlet extends BaseServlet {
 
         if (method.equals("motInference") || method.equals("video2tracking")) {
             this.motInference(req, resp);
-        } else if (method.equals("mmeditingInference") || method.equals("video2enchance")) {
+        } else if (method.equals("mmeditingInference") || method.equals("video2enhance")) {
             this.mmeditingInference(req, resp);
         }
     }

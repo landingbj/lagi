@@ -131,7 +131,7 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>video</servlet-name>
-		<url-pattern>/video/video2enchance</url-pattern>
+		<url-pattern>/video/video2enhance</url-pattern>
 	</servlet-mapping>
 	<servlet>
 		<servlet-name>user</servlet-name>
