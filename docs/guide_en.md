@@ -10,7 +10,7 @@ ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest)
 Get the answer results of the large model conversation at once   
 Parameters：  
   chatCompletionRequest - Session request parameters include the model used by the session, the context of the session, and some model parameters 
-Returns： An object containing the results of the large model, the object's choices property, contains the answer text returned by the large model
+Returns： An object containing the results of the large model, the object's choices property, contains the answer text returned by the large model   
 Example：
 ```java
 CompletionsService completionsService = new CompletionsService(config);
