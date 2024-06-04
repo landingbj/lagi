@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import ai.llm.LLMManager;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
 import ai.common.pojo.Configuration;
+import ai.managers.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
@@ -49,23 +49,24 @@ public class CompletionsService {
 
     public CompletionsService(Configuration config) {
         this.config = config;
-        this.chatBackends = this.config.getLLM().getChatBackends().stream().sorted((b1, b2) ->{
-            if(Objects.equals(b1.getPriority(), b2.getPriority())) {
-                return 0;
-            }
-            if(b1.getPriority() - b2.getPriority() > 0) {
-                return -1;
-            }
-            return 1;
-        }).collect(Collectors.toList());
-
-        if(chatBackends.isEmpty()) {
-            throw new RuntimeException("No stream backend matched");
-        }
+//        this.chatBackends = this.config.getLLM().getChatBackends().stream().sorted((b1, b2) ->{
+//            if(Objects.equals(b1.getPriority(), b2.getPriority())) {
+//                return 0;
+//            }
+//            if(b1.getPriority() - b2.getPriority() > 0) {
+//                return -1;
+//            }
+//            return 1;
+//        }).collect(Collectors.toList());
+//
+//        if(chatBackends.isEmpty()) {
+//            throw new RuntimeException("No stream backend matched");
+//        }
 
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
+        // TODO 2024/6/4 转为manager 管理
         ChatCompletionResult answer = null;
 
         try (IRContainer contain = new FastDirectContainer()) {
@@ -116,19 +117,20 @@ public class CompletionsService {
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        for(Backend backend : this.chatBackends) {
-            ILlmAdapter adapter = getAdapter(backend);
-            try {
+        for (ILlmAdapter adapter : getAdapters()) {
+            if(adapter !=null) {
                 return adapter.streamCompletions(chatCompletionRequest);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
         throw new RuntimeException("Stream backend is not enabled.");
     }
 
+    private List<ILlmAdapter> getAdapters() {
+        return LlmManager.getInstance().getAdapters();
+    }
+
     private ILlmAdapter getAdapter(Backend backendConfig) {
-        return LLMManager.getAdapter(backendConfig.getName());
+        return LlmManager.getInstance().getAdapter(backendConfig.getName());
     }
 
     private IMapper getMapper(Backend backendConfig) {
@@ -137,4 +139,5 @@ public class CompletionsService {
         }
         return new UniversalMapper(getAdapter(backendConfig));
     }
+    
 }

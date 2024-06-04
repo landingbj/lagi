@@ -14,5 +14,6 @@ public class ModelService {
     protected String accessKeyId;
     protected String accessKeySecret;
     protected Integer priority;
+    protected String model;
 
 }

@@ -1,19 +1,15 @@
 package ai.vector;
 
 import ai.common.pojo.*;
-import ai.embedding.EmbeddingFactory;
-import ai.embedding.Embeddings;
 import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
+import ai.managers.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
-import ai.vector.impl.ChromaVectorStore;
-import ai.vector.impl.PineconeVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -34,7 +30,7 @@ public class VectorStoreService {
 
 
     public VectorStoreService() {
-        this.vectorStore = VectorStoreManager.getVectorStore();
+        this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
     }
 
     public VectorStoreConfig getVectorStoreConfig() {

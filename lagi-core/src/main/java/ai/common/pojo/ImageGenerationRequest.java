@@ -1,5 +1,12 @@
 package ai.common.pojo;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ImageGenerationRequest {
     private String prompt;
     private String model;
