@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class LandingAdapter implements ILlmAdapter {
+public class LandingAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(LandingAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 15 * 1000;

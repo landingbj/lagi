@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class MoonshotAdapter implements ILlmAdapter {
+public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 5 * 1000;

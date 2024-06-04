@@ -28,7 +28,7 @@ public class AudioApiServlet extends BaseServlet {
 
     private static Configuration config = MigrateGlobal.config;
 
-    private AudioService audioService = new AudioService(config);
+    private AudioService audioService = new AudioService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

@@ -21,15 +21,15 @@ public class AIManager<T> {
     private final Map<String, T> aiMap = new ConcurrentHashMap<>();
 
     public void register(List<Backend> models, List<Backend> functions) {
+        if(functions == null) {
+            return;
+        }
         models.forEach(model->{
             if(model.getModel() != null && model.getDriver() != null) {
                 model.setDrivers(Lists.newArrayList(new Driver(model.getModel(), model.getDriver())));
             }
         });
         Map<String, Backend> modelMap = models.stream().collect(Collectors.toMap(Backend::getName, model -> model));
-        if(functions == null) {
-            return;
-        }
         functions.stream().filter(Backend::getEnable).forEach(func->{
             Backend model =  modelMap.get(func.getBackend());
             if(model == null) {
@@ -82,7 +82,7 @@ public class AIManager<T> {
                 ModelService modelService = (ModelService) adapter;
                 BeanUtil.copyProperties(backend, modelService, "drivers");
             }
-            register(backend.getBackend(), adapter);
+            register(backend.getModel(), adapter);
         }
     }
 

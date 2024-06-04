@@ -14,7 +14,7 @@ ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest)
 返回： 一个包含大模型结果的对象,对象的 choices属性，包含着大模型的返回的回答文本
 示例：
 ```java
-CompletionsService completionsService = new CompletionsService(config);
+CompletionsService completionsService = new CompletionsService();
 ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
 String text = result.getChoices().get(0).getMessage().getContent();
 ```
@@ -31,7 +31,7 @@ chatCompletionRequest - 对话请求参数包含对话使用的模型,对话的�
 示例：
 ```java
 HttpServletResponse resp;
-CompletionsService completionsService = new CompletionsService(config);
+CompletionsService completionsService = new CompletionsService();
 Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
 PrintWriter out = resp.getWriter();
 final ChatCompletionResult[] lastResult = {null};

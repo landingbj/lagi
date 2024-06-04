@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -19,7 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-public class GeminiAdapter implements ILlmAdapter {
+public class GeminiAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GeminiAdapter.class);
     private final Gson gson = new Gson();
     private static final String COMPLETIONS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";

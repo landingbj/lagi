@@ -15,7 +15,7 @@ import java.util.List;
 public abstract class SocialWorker extends Worker {
     protected Agent agent;
 
-    protected CompletionsService completionsService = new CompletionsService(LagiGlobal.getConfig());
+    protected CompletionsService completionsService = new CompletionsService();
 
     protected String getCompletionResult(String question) {
         ChatCompletionRequest chatCompletionRequest = getChatCompletionRequest(question);

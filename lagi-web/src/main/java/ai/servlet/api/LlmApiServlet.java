@@ -31,7 +31,7 @@ public class LlmApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
     private static Configuration config = MigrateGlobal.config;
-    private CompletionsService completionsService = new CompletionsService(config);
+    private CompletionsService completionsService = new CompletionsService();
     private VectorDbService vectorDbService = new VectorDbService(config);
 
     private Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);

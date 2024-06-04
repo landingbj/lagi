@@ -13,7 +13,7 @@ Parameters：
 Returns： An object containing the results of the large model, the object's choices property, contains the answer text returned by the large model   
 Example：
 ```java
-CompletionsService completionsService = new CompletionsService(config);
+CompletionsService completionsService = new CompletionsService();
 ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
 String text = result.getChoices().get(0).getMessage().getContent();
 ```
@@ -30,7 +30,7 @@ Returns： Session request parameters include the model used by the session, the
 Example：
 ```java
 HttpServletResponse resp;
-CompletionsService completionsService = new CompletionsService(config);
+CompletionsService completionsService = new CompletionsService();
 Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
 PrintWriter out = resp.getWriter();
 final ChatCompletionResult[] lastResult = {null};

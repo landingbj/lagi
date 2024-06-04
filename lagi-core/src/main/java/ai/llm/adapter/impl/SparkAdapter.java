@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class SparkAdapter implements ILlmAdapter {
+public class SparkAdapter extends ModelService implements ILlmAdapter {
     private final Backend backendConfig;
     private final SparkClient sparkClient;
 

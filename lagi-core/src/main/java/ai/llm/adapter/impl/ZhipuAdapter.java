@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.MappingIterable;
 import ai.llm.adapter.ILlmAdapter;
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ZhipuAdapter implements ILlmAdapter {
+public class ZhipuAdapter extends ModelService implements ILlmAdapter {
     private final Backend backendConfig;
     private final ClientV4 client;
 
