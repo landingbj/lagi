@@ -26,7 +26,7 @@ Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCom
 Returns the results of a large model conversation using a stream   
 Parameters：  
   chatCompletionRequest - Session request parameters include the model used by the session, the context of the session, and a set of model parameters    
-Returns： Session request parameters include the model used by the session, the context of the session, and a set of model parameters
+Returns： Session request parameters include the model used by the session, the context of the session, and a set of model parameters   
 Example：
 ```java
 HttpServletResponse resp;
