@@ -5,6 +5,8 @@ import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.enums.IntentTypeEnum;
 import ai.intent.pojo.IntentResult;
+import ai.openai.pojo.ChatMessage;
+import ai.utils.StoppingWordUtil;
 import cn.hutool.core.util.StrUtil;
 
 import java.util.Arrays;
@@ -24,8 +26,9 @@ public class SampleIntentServiceImpl implements IntentService {
 
 
     @Override
-    public IntentResult detectIntent(List<String> messages) {
-        if(messages == null || messages.isEmpty()) {
+    public IntentResult detectIntent(List<ChatMessage> chatMessages) {
+        List<String> messages = chatMessages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
+        if(messages.isEmpty()) {
             return null;
         }
         String newMessage = messages.get(messages.size() - 1);
@@ -41,14 +44,24 @@ public class SampleIntentServiceImpl implements IntentService {
             intentResult.setType(IntentTypeEnum.TEXT.getName());
         }
         intentResult.setStatus(IntentStatusEnum.getStatusByContents(messages, punctuations).getName());
+        // TODO 2024/6/4 当状态是 completion 是获取停止词没有不处理， 有一个:设置为continued, 设置continued index, 有多个 返回最新的不同的一个 的 continued index
+        if(intentResult.getStatus().equals(IntentStatusEnum.COMPLETION.getName())) {
+            List<Integer> stoppingIndex = StoppingWordUtil.getStoppingIndex(chatMessages);
+            if(stoppingIndex.isEmpty()) {
+                return intentResult;
+            }
+            int lastIndex = stoppingIndex.get(stoppingIndex.size() - 1);
+            intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
+            intentResult.setContinuedIndex(lastIndex);
+        }
         return intentResult;
     }
 
     public static void main(String[] args) {
-        SampleIntentServiceImpl sampleIntentService = new SampleIntentServiceImpl();
-        List<String> strings = sampleIntentService.splitByPunctuation("你好。画一张狗狗图");
-        System.out.println(strings);
-        IntentResult intentResult = sampleIntentService.detectIntent(strings);
-        System.out.println(intentResult);
+//        SampleIntentServiceImpl sampleIntentService = new SampleIntentServiceImpl();
+//        List<String> strings = sampleIntentService.splitByPunctuation("你好。画一张狗狗图");
+//        System.out.println(strings);
+//        IntentResult intentResult = sampleIntentService.detectIntent(strings);
+//        System.out.println(intentResult);
     }
 }

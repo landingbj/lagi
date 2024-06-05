@@ -18,4 +18,6 @@ public class IntentResult {
      * continue 、 completion
      */
     private String status;
+
+    private Integer continuedIndex;
 }
