@@ -173,7 +173,8 @@ public class VectorStoreService {
         String question = null;
         if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
             if(intentResult.getContinuedIndex() != null) {
-                question = messages.get(intentResult.getContinuedIndex()).getContent();
+                String source = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]")[0];
+                question = source + "," + ChatCompletionUtil.getLastMessage(request);
             }
             else {
                 List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());

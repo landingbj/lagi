@@ -41,18 +41,16 @@ public class PriorityWordUtil  {
 
 
     public static List<IndexSearchData> sortByPriorityWord(List<IndexSearchData> search) {
-        // TODO 2024/6/4 将过滤筛选的方式变成乘系数放大的方式   如果包含关键字   (1/distance) * (1.2, 1.5 、1.8，2.5 ...)   不包含就是  (1/distance) * 1
         return search.stream().sorted((c1, c2)->{
             String m1 = c1.getText().toLowerCase();
             String m2 = c2.getText().toLowerCase();
             boolean b1 = ahoCorasick.containsAny(m1);
             boolean b2 = ahoCorasick.containsAny(m2);
-            double cons = 1.2;
-            Double cp1 = (1 / c1.getDistance()) * (b1 ? cons: 1);
-            Double cp2 = (1 / c2.getDistance()) * (b2 ? cons: 1);
-            return cp1.compareTo(cp2) * -1;
+            double cons = 1.000007639697643;
+            Double cp1 = c1.getDistance() / (b1 ? cons: 1);
+            Double cp2 = c2.getDistance() / (b2 ? cons: 1);
+            return cp1.compareTo(cp2);
         }).collect(Collectors.toList());
     }
-
 
 }

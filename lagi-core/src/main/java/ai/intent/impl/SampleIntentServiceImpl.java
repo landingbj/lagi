@@ -44,15 +44,15 @@ public class SampleIntentServiceImpl implements IntentService {
             intentResult.setType(IntentTypeEnum.TEXT.getName());
         }
         intentResult.setStatus(IntentStatusEnum.getStatusByContents(messages, punctuations).getName());
-        // TODO 2024/6/4 当状态是 completion 是获取停止词没有不处理， 有一个:设置为continued, 设置continued index, 有多个 返回最新的不同的一个 的 continued index
-        if(intentResult.getStatus().equals(IntentStatusEnum.COMPLETION.getName())) {
-            List<Integer> stoppingIndex = StoppingWordUtil.getStoppingIndex(chatMessages);
-            if(stoppingIndex.isEmpty()) {
-                return intentResult;
-            }
+        List<Integer> stoppingIndex = StoppingWordUtil.getStoppingIndex(chatMessages);
+        if(!stoppingIndex.isEmpty()) {
             int lastIndex = stoppingIndex.get(stoppingIndex.size() - 1);
-            intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
-            intentResult.setContinuedIndex(lastIndex);
+            if(lastIndex != chatMessages.size() -1) {
+                intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
+                intentResult.setContinuedIndex(lastIndex);
+            } else {
+                intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
+            }
         }
         return intentResult;
     }
