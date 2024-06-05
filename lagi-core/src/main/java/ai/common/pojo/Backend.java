@@ -1,11 +1,11 @@
 package ai.common.pojo;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Data

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.utils.ServerSentEventUtil;
 import com.google.gson.Gson;
@@ -18,7 +19,7 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GPTAdapter implements ILlmAdapter {
+public class GPTAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAdapter.class);
     private final Gson gson = new Gson();
     private static final String COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions";

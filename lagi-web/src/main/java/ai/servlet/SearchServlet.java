@@ -62,8 +62,8 @@ public class SearchServlet extends RestfulServlet {
     private Gson gson = new Gson();
 
     private static Configuration config = MigrateGlobal.config;
-    private AudioService audioService = new AudioService(config);
-    private CompletionsService completionsService = new CompletionsService(config);
+    private AudioService audioService = new AudioService();
+    private CompletionsService completionsService = new CompletionsService();
 
     private VectorDbService vectorDbService = new VectorDbService(config);
     private ai.intent.IntentService sampleIntentService = new SampleIntentServiceImpl();

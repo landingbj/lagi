@@ -26,7 +26,7 @@ public class RpaService {
     private static final String patternString = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}";
     private static final Pattern pattern = Pattern.compile(patternString);
 
-    private final CompletionsService completionsService = new CompletionsService(LagiGlobal.getConfig());
+    private final CompletionsService completionsService = new CompletionsService();
 
     public StatusResponse getAuthStatus(String appId, String username) {
         String url = SAAS_URL + "/" + "getAuthStatus";

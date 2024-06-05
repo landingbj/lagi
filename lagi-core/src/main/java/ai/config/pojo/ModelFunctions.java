@@ -1,7 +1,6 @@
 package ai.config.pojo;
 
 import ai.common.pojo.Backend;
-import ai.common.pojo.BackendMatch;
 import ai.common.pojo.EmbeddingConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

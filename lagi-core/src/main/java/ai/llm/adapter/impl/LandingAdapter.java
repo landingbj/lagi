@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,12 +18,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class LandingAdapter implements ILlmAdapter {
+public class LandingAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(LandingAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 15 * 1000;
     private final Backend backendConfig;
-    private static final String API_ADDRESS = "http://lagi.saasai.top:8090/api/v1/chat/completions";
+    private static final String API_ADDRESS = "http://ai.landingbj.com/v1/chat/completions";
 
     public LandingAdapter(Backend backendConfig) {
         this.backendConfig = backendConfig;
@@ -31,7 +32,6 @@ public class LandingAdapter implements ILlmAdapter {
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("Authorization", "Bearer " + backendConfig.getApiKey());
@@ -53,7 +53,6 @@ public class LandingAdapter implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
         String apiUrl = backendConfig.getApiAddress();
         String json = gson.toJson(chatCompletionRequest);
         String apiKey = backendConfig.getApiKey();
@@ -71,9 +70,5 @@ public class LandingAdapter implements ILlmAdapter {
         ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, convertFunc);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
-    }
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        request.setModel(null);
     }
 }

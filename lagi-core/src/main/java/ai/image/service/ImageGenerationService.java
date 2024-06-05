@@ -1,7 +1,7 @@
 package ai.image.service;
 
 import ai.image.adapter.IImageGenerationAdapter;
-import ai.image.adapter.impl.LandingImageGenerationAdapter;
+import ai.image.adapter.impl.LandingImageAdapter;
 import ai.common.pojo.Backend;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.ImageGeneration;
@@ -36,7 +36,7 @@ public class ImageGenerationService {
     private IImageGenerationAdapter getAdapter(String type) {
         IImageGenerationAdapter adapter = null;
         if (type.equals(LagiGlobal.IMAGE_TYPE_LANDING)) {
-            adapter = new LandingImageGenerationAdapter();
+            adapter = new LandingImageAdapter();
         } else if (type.equals(LagiGlobal.IMAGE_TYPE_ALIBABA)) {
             // adapter = new SimulatingTreeMapper();
         }

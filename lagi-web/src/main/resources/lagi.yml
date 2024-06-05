@@ -1,31 +1,12 @@
 system_title: Lag[i]
 
 models:
-  # The turing model is a language model provided by LandingBJ
+  # This a language model provided by LandingBJ
   - name: landing
     type: Landing
     enable: false
-    drivers:
-      - model: turing
-        driver: ai.llm.adapter.impl.LandingAdapter
-    api_key: your-api-key # http://saas.landingbj.com/
-
-  # The qa model is a language model provided by LandingBJ
-  - name: landing-qa
-    type: Landing
-    enable: false
-    drivers:
-      - model: qa
-        driver: ai.llm.adapter.impl.LandingAdapter
-    api_key: your-api-key # http://saas.landingbj.com/
-
-  # The tree model is a language model provided by LandingBJ
-  - name: landing-tree
-    type: Landing
-    enable: false
-    drivers:
-      - model: tree
-        driver: ai.llm.adapter.impl.LandingAdapter
+    model: turing,qa,tree,proxy
+    driver: ai.llm.adapter.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # The landing-tts   is an intelligent voice model.

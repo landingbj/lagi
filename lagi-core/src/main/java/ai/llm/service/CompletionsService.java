@@ -11,13 +11,12 @@ package ai.llm.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
-import ai.llm.LLMManager;
+import ai.common.ModelService;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
-import ai.common.pojo.Configuration;
+import ai.llm.adapter.impl.LandingAdapter;
+import ai.managers.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
@@ -28,13 +27,13 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
 import ai.utils.SensitiveWordUtil;
+import cn.hutool.core.bean.BeanUtil;
 import io.reactivex.Observable;
 import weixin.tools.TulingThread;
 
 public class CompletionsService {
     private static TulingThread tulingProcessor = null;
 
-    private Configuration config;
 
     static {
         if (tulingProcessor == null) {
@@ -44,39 +43,38 @@ public class CompletionsService {
         }
     }
 
-    private List<Backend> chatBackends;
 
-
-    public CompletionsService(Configuration config) {
-        this.config = config;
-        this.chatBackends = this.config.getLLM().getChatBackends().stream().sorted((b1, b2) ->{
-            if(Objects.equals(b1.getPriority(), b2.getPriority())) {
-                return 0;
-            }
-            if(b1.getPriority() - b2.getPriority() > 0) {
-                return -1;
-            }
-            return 1;
-        }).collect(Collectors.toList());
-
-        if(chatBackends.isEmpty()) {
-            throw new RuntimeException("No stream backend matched");
-        }
-
-    }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
+        // TODO 2024/6/4 转为manager 管理
         ChatCompletionResult answer = null;
-
         try (IRContainer contain = new FastDirectContainer()) {
             if (chatCompletionRequest.getModel() != null) {
-                for (Backend backend : this.config.getLLM().getBackends()) {
-                    if (!backend.getEnable()) {
-                        continue;
+                LlmManager.getInstance().getAdapters().stream().filter(adapter -> {
+                    if (adapter instanceof ModelService) {
+                        ModelService modelService = (ModelService) adapter;
+                        return modelService.getModel().equals(chatCompletionRequest.getModel());
                     }
-                    if (chatCompletionRequest.getModel().equals(backend.getModel())) {
-                        Map<String, Object> params = new HashMap<String, Object>();
+                    return false;
+                }).findAny().ifPresent(adapter -> {
+                    Map<String, Object> params = new HashMap<>();
+                    params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
+                    Backend backend = new Backend();
+                    BeanUtil.copyProperties((ModelService )adapter, backend);
+                    params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
+                    IMapper mapper = getMapper(backend);
+                    mapper.setParameters(params);
+                    mapper.setPriority(backend.getPriority());
+                    contain.registerMapper(mapper);
+                });
+            } else {
+                for (ILlmAdapter adapter: LlmManager.getInstance().getAdapters()) {
+                    if(adapter instanceof ModelService) {
+                        ModelService modelService = (ModelService) adapter;
+                        Map<String, Object> params = new HashMap<>();
                         params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
+                        Backend backend = new Backend();
+                        BeanUtil.copyProperties(modelService, backend);
                         params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
                         IMapper mapper = getMapper(backend);
                         mapper.setParameters(params);
@@ -84,21 +82,7 @@ public class CompletionsService {
                         contain.registerMapper(mapper);
                     }
                 }
-            } else {
-                for (Backend backend : this.config.getLLM().getBackends()) {
-                    if (!backend.getEnable()) {
-                        continue;
-                    }
-                    Map<String, Object> params = new HashMap<String, Object>();
-                    params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
-                    params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                    IMapper mapper = getMapper(backend);
-                    mapper.setParameters(params);
-                    mapper.setPriority(backend.getPriority());
-                    contain.registerMapper(mapper);
-                }
             }
-
             IReducer qaReducer = new QaReducer();
             contain.registerReducer(qaReducer);
 
@@ -116,19 +100,24 @@ public class CompletionsService {
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        for(Backend backend : this.chatBackends) {
-            ILlmAdapter adapter = getAdapter(backend);
-            try {
+        for (ILlmAdapter adapter : getAdapters()) {
+            if(adapter !=null) {
                 return adapter.streamCompletions(chatCompletionRequest);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
         throw new RuntimeException("Stream backend is not enabled.");
     }
 
+    private List<ILlmAdapter> getAdapters() {
+        return LlmManager.getInstance().getAdapters();
+    }
+
     private ILlmAdapter getAdapter(Backend backendConfig) {
-        return LLMManager.getAdapter(backendConfig.getName());
+        return LlmManager.getInstance().getAdapter(backendConfig.getModel());
+    }
+
+    private ILlmAdapter getAdapter(String key) {
+        return LlmManager.getInstance().getAdapter(key);
     }
 
     private IMapper getMapper(Backend backendConfig) {
@@ -137,4 +126,12 @@ public class CompletionsService {
         }
         return new UniversalMapper(getAdapter(backendConfig));
     }
+
+    private IMapper getMapper(ILlmAdapter adapter) {
+        if(adapter instanceof LandingAdapter) {
+            return  new LandingMapper();
+        }
+        return new UniversalMapper(adapter);
+    }
+    
 }

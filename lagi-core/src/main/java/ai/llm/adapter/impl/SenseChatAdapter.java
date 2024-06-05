@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.llm.adapter.ILlmAdapter;
 import ai.openai.pojo.*;
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class SenseChatAdapter implements ILlmAdapter {
+public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(SenseChatAdapter.class);
     private static final String COMPLETIONS_URL = "https://api.sensenova.cn/v1/llm/chat-completions";

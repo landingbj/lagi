@@ -6,18 +6,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import ai.image.service.ImageGenerationService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.ImageGenerationRequest;
 import ai.common.pojo.ImageGenerationResult;
+import ai.image.service.AllImageService;
 import ai.servlet.BaseServlet;
-import ai.utils.LagiGlobal;
 import ai.utils.MigrateGlobal;
 
 public class ImageApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
     private static Configuration config = MigrateGlobal.config;
-    private ImageGenerationService imageGenerationService = new ImageGenerationService(config);
+    private AllImageService imageService = new AllImageService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -33,7 +32,7 @@ public class ImageApiServlet extends BaseServlet {
     private void generations(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         ImageGenerationRequest request = reqBodyToObj(req, ImageGenerationRequest.class);
-        ImageGenerationResult result = imageGenerationService.generations(request);
+        ImageGenerationResult result = imageService.generations(request);
         responsePrint(resp, toJson(result));
     }
 }

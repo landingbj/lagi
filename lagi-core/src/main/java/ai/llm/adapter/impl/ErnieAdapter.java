@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.common.ModelService;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.utils.MappingIterable;
 import ai.common.pojo.Backend;
@@ -18,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-public class ErnieAdapter implements ILlmAdapter {
+public class ErnieAdapter extends ModelService implements ILlmAdapter {
     private Backend backendConfig;
 
     public ErnieAdapter(Backend backendConfig) {

@@ -1,11 +1,10 @@
 package ai.migrate.service;
 
 import ai.common.client.AiServiceCall;
-import ai.common.client.AiServiceInfo;
 import ai.common.pojo.*;
 import ai.image.service.AllImageService;
-import ai.image.service.ImageGenerationService;
 import ai.utils.*;
+import ai.video.service.AllVideoService;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -19,11 +18,10 @@ import java.util.UUID;
 
 public class ApiService {
     private Gson gson = new Gson();
-    private ImageService imageService = new ImageService();
-    private VideoService videoService = new VideoService();
+    private ai.migrate.service.ImageService imageService = new ai.migrate.service.ImageService();
+    private AllVideoService videoService = new AllVideoService();
     private AiServiceCall call = new AiServiceCall();
     private static Configuration config = MigrateGlobal.config;
-    private ImageGenerationService imageGenerationService = new ImageGenerationService(config);
     private AllImageService allImageService = new AllImageService();
     
     public String generateImage(String content, HttpServletRequest req) throws IOException {
@@ -43,7 +41,7 @@ public class ApiService {
     public WhisperResponse generateImage(String content, String filePath) throws IOException {
         ImageGenerationRequest request = new ImageGenerationRequest();
         request.setPrompt(content);
-        ImageGenerationResult imageGenerationResult = imageGenerationService.generations(request);
+        ImageGenerationResult imageGenerationResult = allImageService.generations(request);
         
         String url = imageGenerationResult.getData().get(0).getUrl();
 
@@ -67,12 +65,8 @@ public class ApiService {
             tempDir.mkdirs();
         }
 
-        EnhanceImageRequest request = new EnhanceImageRequest();
-        request.setImageUrl(imageUrl);
-        Object[] params = { gson.toJson(request) };
-        String[] result = call.callWS(AiServiceInfo.WSImgUrl, "enhanceImage", params);
-        Response response = gson.fromJson(result[0], Response.class);
-        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(response.getData(), "png",filePath);
+        ImageEnhanceResult enhance = allImageService.enhance(imageUrl);
+        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(enhance.getEnhancedUrl(), "png",filePath);
 
         JsonObject finalResult = new JsonObject();
         finalResult.addProperty("enhanceImageUrl", "static/img/enhance/" + whisperResponse1.getMsg());
@@ -92,7 +86,7 @@ public class ApiService {
 
     public String generateVideo(String lastImageFile, HttpServletRequest req) throws IOException {
         File file = new File(lastImageFile);
-        String imageUrl = imageService.generateVideo(file);
+        String imageUrl = videoService.image2Video(file.getAbsolutePath()).getUrl();
         
         ServletContext context = req.getServletContext();
         String rootPath = context.getRealPath("");
@@ -132,10 +126,9 @@ public class ApiService {
     
     public String motInference(String lastVideoFile, HttpServletRequest req) throws IOException {
         File file = new File(lastVideoFile);
-        Response respose = videoService.motInference(file);
+        VideoGenerationResult track = videoService.track(file.getAbsolutePath());
         JsonObject result = new JsonObject();
-        
-        if (respose == null) {
+        if (track != null) {
             result.addProperty("status", "failed");
             return gson.toJson(result);
         }
@@ -148,7 +141,7 @@ public class ApiService {
             tempDir.mkdirs();
         }
         
-        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(respose.getData(), "mp4", filePath);
+        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(track.getUrl(), "mp4", filePath);
         result.addProperty("data", "static/video/"+whisperResponse1.getMsg());
         result.addProperty("type", "mot");
         result.addProperty("status", "success");
@@ -157,10 +150,10 @@ public class ApiService {
     
     public String mmeditingInference(String lastVideoFile, HttpServletRequest req) throws IOException {
         File file = new File(lastVideoFile);
-        Response respose = videoService.mmeditingInference(file);
+        VideoGenerationResult enhance = videoService.enhance(file.getAbsolutePath());
         JsonObject result = new JsonObject();
         
-        if (respose == null) {
+        if (enhance == null) {
             result.addProperty("status", "failed");
             return gson.toJson(result);
         }
@@ -173,7 +166,7 @@ public class ApiService {
             tempDir.mkdirs();
         }
         
-        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(respose.getData(), "mp4", filePath);
+        WhisperResponse whisperResponse1= DownloadUtils.downloadFile(enhance.getUrl(), "mp4", filePath);
         result.addProperty("data", "static/video/"+whisperResponse1.getMsg());
         result.addProperty("type", "mmediting");
         result.addProperty("status", "success");

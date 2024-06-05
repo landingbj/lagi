@@ -3,6 +3,9 @@ package ai.image.adapter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import ai.common.pojo.EnhanceImageRequest;
+import ai.common.pojo.ImageEnhanceResult;
+import ai.image.adapter.ImageEnhanceAdapter;
 import com.google.gson.Gson;
 
 import ai.common.client.AiServiceCall;
@@ -12,7 +15,7 @@ import ai.learning.pojo.Response;
 import ai.common.pojo.ImageGenerationRequest;
 import ai.common.pojo.ImageGenerationResult;
 
-public class LandingImageGenerationAdapter implements IImageGenerationAdapter {
+public class LandingImageAdapter implements IImageGenerationAdapter, ImageEnhanceAdapter {
     private Gson gson = new Gson();
     private AiServiceCall call = new AiServiceCall();
 
@@ -33,5 +36,15 @@ public class LandingImageGenerationAdapter implements IImageGenerationAdapter {
         result.setCreated(System.currentTimeMillis() / 1000L);
         result.setData(datas);
         return result;
+    }
+
+    @Override
+    public ImageEnhanceResult enhance(String imageUrl) {
+        EnhanceImageRequest request = new EnhanceImageRequest();
+        request.setImageUrl(imageUrl);
+        Object[] params = { gson.toJson(request) };
+        String[] result = call.callWS(AiServiceInfo.WSImgUrl, "enhanceImage", params);
+        ai.common.pojo.Response response = gson.fromJson(result[0], ai.common.pojo.Response.class);
+        return ImageEnhanceResult.builder().enhancedUrl(response.getData()).build();
     }
 }
