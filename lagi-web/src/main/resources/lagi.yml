@@ -5,7 +5,6 @@ models:
   - name: landing
     type: Landing
     enable: false
-    model:
     drivers:
       - model: turing,qa,tree,proxy
         driver: ai.llm.adapter.impl.LandingAdapter
