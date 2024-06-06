@@ -273,8 +273,8 @@ public class SearchServlet extends RestfulServlet {
         ObjectMapper objectMapper = new ObjectMapper();
         String content = messages.get(messages.size() - 1).getContent().trim();
 //        String intent = intentService.detectIntent(content);
-        List<String> msg = messages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
-        IntentResult intentResult = sampleIntentService.detectIntent(msg);
+
+        IntentResult intentResult = sampleIntentService.detectIntent(messages);
         String intent = intentResult.getType();
         PrintWriter out = resp.getWriter();
 
@@ -582,8 +582,7 @@ public class SearchServlet extends RestfulServlet {
     @Post("intentDetect")
     public String intentDetect(@Body QuestionAnswerRequest qaRequest) {
         List<ChatMessage> messages = qaRequest.getMessages();
-        List<String> msg = messages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
-        IntentResult intentResult = sampleIntentService.detectIntent(msg);
+        IntentResult intentResult = sampleIntentService.detectIntent(messages);
         return intentResult.getType();
     }
 }

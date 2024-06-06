@@ -169,13 +169,18 @@ public class VectorStoreService {
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
-        List<String> collect = messages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
-        IntentResult intentResult = intentService.detectIntent(collect);
+        IntentResult intentResult = intentService.detectIntent(messages);
         String question = null;
         if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
-            List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
-            if(userMessages.size() > 1) {
-                question = userMessages.get(userMessages.size() - 2).getContent().trim();
+            if(intentResult.getContinuedIndex() != null) {
+                String source = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]")[0];
+                question = source + "," + ChatCompletionUtil.getLastMessage(request);
+            }
+            else {
+                List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
+                if(userMessages.size() > 1) {
+                    question = userMessages.get(userMessages.size() - 2).getContent().trim();
+                }
             }
         }
         if(question == null) {

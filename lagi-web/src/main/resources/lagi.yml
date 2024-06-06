@@ -5,35 +5,31 @@ models:
   - name: landing
     type: Landing
     enable: false
-    model: turing,qa,tree,proxy
-    driver: ai.llm.adapter.impl.LandingAdapter
-    api_key: your-api-key # http://saas.landingbj.com/
-
-  # The landing-tts   is an intelligent voice model.
-  - name: landing-audio
-    type: Landing
-    enable: true
     drivers:
-      - model: tts
+      - model: turing,qa,tree,proxy
+        driver: ai.llm.adapter.impl.LandingAdapter
+      - model: image
+        driver: ai.image.adapter.impl.LandingImageAdapter
+      - model: tts,asr
         driver: ai.audio.adapter.impl.LandingAudioAdapter
+      - model: video
+        driver: ai.video.adapter.impl.LandingVideoAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
   - name: fastchat
     type: Vicuna
     enable: false
-    drivers:
-      - model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
-        driver: ai.llm.adapter.impl.VicunaAdapter
+    model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+    driver: ai.llm.adapter.impl.VicunaAdapter
     api_address: http://localhost:8090/v1/chat/completions
 
   # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
     enable: false
-    drivers:
-      - model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
-        driver:  ai.llm.adapter.impl.GPTAdapter
+    model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
+    driver:  ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
   #  qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
@@ -57,6 +53,8 @@ models:
     drivers:
       - model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
         driver: ai.llm.adapter.impl.ErnieAdapter
+      - model: Fuyu-8B
+        driver: ai.image.adapter.impl.BaiduImageAdapter
     # help document https://developer.baidu.com/article/detail.html?id=1089328
     #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
     app_id: your-api-id
@@ -67,36 +65,32 @@ models:
   - name: chatglm
     type: Zhipu
     enable: false
-    drivers:
-      - model: glm-3-turbo # glm-4, glm-4v
-        driver: ai.llm.adapter.impl.ZhipuAdapter
+    model: glm-3-turbo # glm-4, glm-4v
+    driver: ai.llm.adapter.impl.ZhipuAdapter
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
 
   # Kimi is an intelligent assistant product developed by Moonshot AI.
   - name: kimi
     type: Moonshot
     enable: true
-    drivers:
-      - model:  moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
-        driver: ai.llm.adapter.impl.MoonshotAdapter
+    model:  moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
+    driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
 
   # Baichuan is a new generation of open source large language model launched by Baichuan AI
   - name: baichuan
     type: Baichuan
     enable: false
-    drivers:
-      - model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
-        driver: ai.llm.adapter.impl.BaichuanAdapter
+    model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
+    driver: ai.llm.adapter.impl.BaichuanAdapter
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: Spark
     enable: false
-    drivers:
-      - model: v1.1
-        driver: ai.llm.adapter.impl.SparkAdapter
+    model: v1.1
+    driver: ai.llm.adapter.impl.SparkAdapter
     app_id: your-app-id
     api_key: your-api-key  # https://console.xfyun.cn/
     secret_key: your-secret-key  # https://console.xfyun.cn/
@@ -105,9 +99,8 @@ models:
   - name: SenseChat
     type: SenseChat
     enable: false
-    drivers:
-      - model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
-        driver: ai.llm.adapter.impl.SenseChatAdapter
+    model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
+    driver: ai.llm.adapter.impl.SenseChatAdapter
     api_key: your-api-key
     secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
 
@@ -115,9 +108,8 @@ models:
   - name: gemini
     type: Gemini
     enable: true
-    drivers:
-      - model: gemini-1.5-flash-latest # gemini-1.5-flash-latest, gemini-1.0-pro, gemini-1.5-pro-latest
-        driver: ai.llm.adapter.impl.GeminiAdapter
+    model: gemini-1.5-flash-latest # gemini-1.5-flash-latest, gemini-1.0-pro, gemini-1.5-pro-latest
+    driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
 vectors:
@@ -194,50 +186,50 @@ functions:
       priority: 10
 
   text2speech:
-    - backend: landing-audio
+    - backend: landing
       model: tts
       enable: true
       priority: 10
 
   text2image:
-    - backend: Landing
-      model: text2image
+    - backend: landing
+      model: image
       enable: true
       priority: 10
 
   image2text:
-    - backend: Landing
-      model: image2text
+    - backend: ernie
+      model: Fuyu-8B
       enable: true
       priority: 10
 
   image2enhance:
-    - backend: Landing
-      model: image2enhance
+    - backend: landing
+      model: image
       enable: true
       priority: 10
 
   text2video:
-    - backend: Landing
-      model: text2video
+    - backend: landing
+      model: video
       enable: true
       priority: 10
 
   image2video:
-    - backend: Landing
-      model: image2video
+    - backend: landing
+      model: video
       enable: true
       priority: 10
 
   video2track:
-    - backend: Landing
-      model: video2track
+    - backend: landing
+      model: video
       enable: true
       priority: 10
 
   video2enhance:
-    - backend: Landing
-      model: video2enhance
+    - backend: landing
+      model: video
       enable: true
       priority: 10
 

@@ -46,18 +46,11 @@ public class PriorityWordUtil  {
             String m2 = c2.getText().toLowerCase();
             boolean b1 = ahoCorasick.containsAny(m1);
             boolean b2 = ahoCorasick.containsAny(m2);
-            if(b1 && b2) {
-                return 0;
-            }
-            if(b1) {
-                return -1;
-            }
-            if(b2) {
-                return 1;
-            }
-            return 0;
+            double cons = 1.000007639697643;
+            Double cp1 = c1.getDistance() / (b1 ? cons: 1);
+            Double cp2 = c2.getDistance() / (b2 ? cons: 1);
+            return cp1.compareTo(cp2);
         }).collect(Collectors.toList());
     }
-
 
 }
