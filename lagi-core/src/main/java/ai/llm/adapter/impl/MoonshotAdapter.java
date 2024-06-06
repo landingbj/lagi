@@ -1,7 +1,6 @@
 package ai.llm.adapter.impl;
 
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.utils.ServerSentEventUtil;
@@ -22,19 +21,14 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 5 * 1000;
-    private final Backend backendConfig;
     private static final String COMPLETIONS_URL = "https://api.moonshot.cn/v1/chat/completions";
-
-    public MoonshotAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + backendConfig.getApiKey());
+        headers.put("Authorization", "Bearer " + getApiKey());
         String jsonResult = null;
         try {
             jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
@@ -55,7 +49,7 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         String json = gson.toJson(chatCompletionRequest);
-        String apiKey = backendConfig.getApiKey();
+        String apiKey = getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
             if (e.equals("[DONE]")) {
                 return null;
@@ -74,7 +68,7 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
 
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
-            request.setModel(backendConfig.getModel());
+            request.setModel(getModel());
         }
     }
 }

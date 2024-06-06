@@ -16,5 +16,6 @@ public class ModelService {
     protected Integer priority;
     protected String model;
     protected String type;
+    protected String apiAddress;
 
 }

@@ -32,22 +32,17 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class SparkAdapter extends ModelService implements ILlmAdapter {
-    private final Backend backendConfig;
-    private final SparkClient sparkClient;
 
-    public SparkAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-        sparkClient = new SparkClient();
-        sparkClient.appid = this.backendConfig.getAppId();
-        sparkClient.apiSecret = this.backendConfig.getSecretKey();
-        sparkClient.apiKey = this.backendConfig.getApiKey();
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         SparkRequest sparkRequest = convertRequest(chatCompletionRequest);
         SparkSyncChatResponse chatResponse = null;
         try {
+            SparkClient sparkClient = new SparkClient();
+            sparkClient.appid = getAppId();
+            sparkClient.apiSecret = getSecretKey();
+            sparkClient.apiKey = getApiKey();
             chatResponse = sparkClient.chatSync(sparkRequest);
         } catch (SparkException e) {
             e.printStackTrace();
@@ -63,6 +58,10 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
         SparkRequest sparkRequest = convertRequest(chatCompletionRequest);
         ObservableList<ChatCompletionResult> observableList = new ObservableList<>();
         Function<SparkResponse, ChatCompletionResult> func = this::convertStreamResponse;
+        SparkClient sparkClient = new SparkClient();
+        sparkClient.appid = getAppId();
+        sparkClient.apiSecret = getSecretKey();
+        sparkClient.apiKey = getApiKey();
         sparkClient.chatStream(sparkRequest, new SparkCustomListener(observableList, func));
         Iterable<ChatCompletionResult> iterable = observableList.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
@@ -79,7 +78,7 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
                 messages.add(SparkMessage.systemContent(chatMessage.getContent()));
             }
         }
-        String model = Optional.ofNullable(request.getModel()).orElse(backendConfig.getModel());
+        String model = Optional.ofNullable(request.getModel()).orElse(getModel());
         SparkApiVersion apiVersion;
         if (model.equals(SparkApiVersion.V1_5.getVersion())) {
             apiVersion = SparkApiVersion.V1_5;

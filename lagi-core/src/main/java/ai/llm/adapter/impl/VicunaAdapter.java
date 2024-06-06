@@ -23,21 +23,17 @@ public class VicunaAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VicunaAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 5 * 1000;
-    private final Backend backendConfig;
 
-    public VicunaAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + backendConfig.getApiKey());
+        headers.put("Authorization", "Bearer " + getApiKey());
         String jsonResult = null;
         try {
-            jsonResult = HttpUtil.httpPost(backendConfig.getApiAddress(), headers, chatCompletionRequest, HTTP_TIMEOUT);
+            jsonResult = HttpUtil.httpPost(getApiAddress(), headers, chatCompletionRequest, HTTP_TIMEOUT);
         } catch (IOException e) {
             logger.error("", e);
         }
@@ -54,9 +50,9 @@ public class VicunaAdapter extends ModelService implements ILlmAdapter {
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
-        String apiUrl = backendConfig.getApiAddress();
+        String apiUrl = getApiAddress();
         String json = gson.toJson(chatCompletionRequest);
-        String apiKey = backendConfig.getApiKey();
+        String apiKey = getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
             if (e.equals("[DONE]")) {
                 return null;
@@ -75,7 +71,7 @@ public class VicunaAdapter extends ModelService implements ILlmAdapter {
 
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
-            request.setModel(backendConfig.getModel());
+            request.setModel(getModel());
         }
     }
 }

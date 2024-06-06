@@ -23,11 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class QwenAdapter extends ModelService implements ILlmAdapter {
-    private Backend backendConfig;
 
-    public QwenAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
+
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
@@ -68,10 +65,10 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         }
 
         boolean stream = Optional.ofNullable(request.getStream()).orElse(false);
-        String model = Optional.ofNullable(request.getModel()).orElse(backendConfig.getModel());
+        String model = Optional.ofNullable(request.getModel()).orElse(getModel());
 
         return GenerationParam.builder()
-                .apiKey(backendConfig.getApiKey())
+                .apiKey(getApiKey())
                 .model(model)
                 .messages(messages)
                 .resultFormat(GenerationParam.ResultFormat.MESSAGE)

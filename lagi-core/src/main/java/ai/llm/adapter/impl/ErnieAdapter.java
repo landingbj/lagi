@@ -20,16 +20,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class ErnieAdapter extends ModelService implements ILlmAdapter {
-    private Backend backendConfig;
 
-    public ErnieAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        String secretKey = this.backendConfig.getSecretKey();
-        String apiKey = this.backendConfig.getApiKey();
+        String secretKey = this.getSecretKey();
+        String apiKey = this.getApiKey();
         Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
         ChatRequest request = convertRequest(chatCompletionRequest);
         ChatResponse response = qianfan.chatCompletion(request);
@@ -38,8 +34,8 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        String secretKey = this.backendConfig.getSecretKey();
-        String apiKey = this.backendConfig.getApiKey();
+        String secretKey = this.getSecretKey();
+        String apiKey = this.getApiKey();
         Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
         ChatRequest request = convertRequest(chatCompletionRequest);
         Iterator<ChatResponse> iterator = qianfan.chatCompletionStream(request);
@@ -56,7 +52,7 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
             message.setContent(chatMessage.getContent());
             messages.add(message);
         }
-        String model = Optional.ofNullable(request.getModel()).orElse(backendConfig.getModel());
+        String model = Optional.ofNullable(request.getModel()).orElse(getModel());
         String finalEndpoint = ModelEndpoint.getEndpoint("chat", model, null);
         result.setEndpoint(finalEndpoint);
         result.setMessages(messages);

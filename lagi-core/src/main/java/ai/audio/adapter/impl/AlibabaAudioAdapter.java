@@ -2,6 +2,7 @@ package ai.audio.adapter.impl;
 
 import ai.audio.adapter.IAudioAdapter;
 import ai.audio.service.AlibabaAsrService;
+import ai.common.ModelService;
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.common.pojo.*;
@@ -11,23 +12,18 @@ import com.google.gson.Gson;
 
 import java.io.File;
 
-public class AlibabaAudioAdapter implements IAudioAdapter {
+public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
     private final Gson gson = new Gson();
     private final AiServiceCall call = new AiServiceCall();
-    private final Backend backendConfig;
-    private final AlibabaAsrService asrService;
 
-    public AlibabaAudioAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-        this.asrService = new AlibabaAsrService(
-                backendConfig.getAppKey(),
-                backendConfig.getAccessKeyId(),
-                backendConfig.getAccessKeySecret()
-        );
-    }
 
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
+        AlibabaAsrService asrService = new AlibabaAsrService(
+                getAppKey(),
+                getAccessKeyId(),
+                getAccessKeySecret()
+        );
         return gson.fromJson(asrService.asr(audio), AsrResult.class);
     }
 
