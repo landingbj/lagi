@@ -21,18 +21,16 @@ models:
   - name: fastchat
     type: Vicuna
     enable: false
-    drivers:
-      - model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
-        driver: ai.llm.adapter.impl.VicunaAdapter
+    model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+    driver: ai.llm.adapter.impl.VicunaAdapter
     api_address: http://localhost:8090/v1/chat/completions
 
   # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
     type: GPT
     enable: false
-    drivers:
-      - model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
-        driver:  ai.llm.adapter.impl.GPTAdapter
+    model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
+    driver:  ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
   #  qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
@@ -76,7 +74,6 @@ models:
   - name: kimi
     type: Moonshot
     enable: true
-    drivers:
     model:  moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
@@ -85,7 +82,6 @@ models:
   - name: baichuan
     type: Baichuan
     enable: false
-    drivers:
     model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
     driver: ai.llm.adapter.impl.BaichuanAdapter
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
@@ -94,7 +90,6 @@ models:
   - name: spark
     type: Spark
     enable: false
-    drivers:
     model: v1.1
     driver: ai.llm.adapter.impl.SparkAdapter
     app_id: your-app-id
