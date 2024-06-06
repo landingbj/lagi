@@ -11,7 +11,6 @@ import ai.llm.utils.ServerSentEventUtil;
 import com.google.gson.Gson;
 
 import ai.llm.adapter.ILlmAdapter;
-import ai.common.pojo.Backend;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.qa.HttpUtil;
@@ -25,18 +24,14 @@ public class GPTAdapter extends ModelService implements ILlmAdapter {
     private static final String COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions";
     private static final int HTTP_TIMEOUT = 15 * 1000;
 
-    private final Backend backendConfig;
 
-    public GPTAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + backendConfig.getApiKey());
+        headers.put("Authorization", "Bearer " + getApiKey());
         String jsonResult = null;
         chatCompletionRequest.setCategory(null);
         try {
@@ -59,7 +54,7 @@ public class GPTAdapter extends ModelService implements ILlmAdapter {
         setDefaultModel(chatCompletionRequest);
         chatCompletionRequest.setCategory(null);
         String json = gson.toJson(chatCompletionRequest);
-        String apiKey = backendConfig.getApiKey();
+        String apiKey = getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
             if (e.equals("[DONE]")) {
                 return null;
@@ -79,7 +74,7 @@ public class GPTAdapter extends ModelService implements ILlmAdapter {
 
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
-            request.setModel(backendConfig.getModel());
+            request.setModel(getModel());
         }
     }
 }

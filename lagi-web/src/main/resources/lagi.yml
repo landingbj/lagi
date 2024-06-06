@@ -1,7 +1,7 @@
 system_title: Lag[i]
 
 models:
-  # This a language model provided by LandingBJ
+  # Landing is a MOE model provided by Beijing Landing Technologies
   - name: landing
     type: Landing
     enable: false
@@ -20,7 +20,7 @@ models:
   - name: fastchat
     type: Vicuna
     enable: false
-    model: vicuna-13b # vicuna-7b, vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+    model: vicuna-13b,vicuna-7b,vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
     driver: ai.llm.adapter.impl.VicunaAdapter
     api_address: http://localhost:8090/v1/chat/completions
 
@@ -28,7 +28,7 @@ models:
   - name: chatgpt
     type: GPT
     enable: false
-    model: gpt-3.5-turbo-1106 # gpt-4-1106-preview
+    model: gpt-3.5-turbo,gpt-4-1106-preview
     driver:  ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
@@ -37,7 +37,7 @@ models:
     type: Qwen
     enable: false
     drivers:
-      - model: qwen-turbo # qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
+      - model: qwen-turbo,qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
         driver: ai.llm.adapter.impl.QwenAdapter
       - model: asr
         driver: ai.audio.adapter.impl.AlibabaAudioAdapter
@@ -51,7 +51,7 @@ models:
     type: Ernie
     enable: true
     drivers:
-      - model: ERNIE-Bot-turbo # ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
+      - model: ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
         driver: ai.llm.adapter.impl.ErnieAdapter
       - model: Fuyu-8B
         driver: ai.image.adapter.impl.BaiduImageAdapter
@@ -65,7 +65,7 @@ models:
   - name: chatglm
     type: Zhipu
     enable: false
-    model: glm-3-turbo # glm-4, glm-4v
+    model: glm-3-turbo,glm-4, glm-4v
     driver: ai.llm.adapter.impl.ZhipuAdapter
     api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
 
@@ -73,7 +73,7 @@ models:
   - name: kimi
     type: Moonshot
     enable: true
-    model:  moonshot-v1-8k # moonshot-v1-32k,moonshot-v1-128k
+    model:  moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
 
@@ -81,7 +81,7 @@ models:
   - name: baichuan
     type: Baichuan
     enable: false
-    model: Baichuan2-Turbo # Baichuan2-Turbo-192k,Baichuan2-53B
+    model: Baichuan2-Turbo,Baichuan2-Turbo-192k,Baichuan2-53B
     driver: ai.llm.adapter.impl.BaichuanAdapter
     api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
 
@@ -99,7 +99,7 @@ models:
   - name: SenseChat
     type: SenseChat
     enable: false
-    model: SenseChat-Turbo #SenseChat-FunctionCall #SenseChat-5  #SenseChat-128K #SenseChat-32K #SenseChat
+    model: SenseChat-Turbo,SenseChat-FunctionCall,SenseChat-5,SenseChat-128K,SenseChat-32K #SenseChat
     driver: ai.llm.adapter.impl.SenseChatAdapter
     api_key: your-api-key
     secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
@@ -108,14 +108,14 @@ models:
   - name: gemini
     type: Gemini
     enable: true
-    model: gemini-1.5-flash-latest # gemini-1.5-flash-latest, gemini-1.0-pro, gemini-1.5-pro-latest
+    model: gemini-1.5-flash-latest,gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.5-pro-latest
     driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
 vectors:
   # Chroma is an AI-native open-source embedding database
   # The official website is https://www.trychroma.com/
-  - name: Chroma
+  - name: chroma
     driver : ai.vector.impl.ChromaVectorStore
     default_category: default
     similarity_top_k: 10
@@ -127,7 +127,7 @@ vectors:
 
   # Pinecone is a vector database for building large-scale machine learning applications
   # The official website is https://www.pinecone.io/
-  - name: Pinecone
+  - name: pinecone
     driver: ai.vector.impl.PineconeVectorStore
     default_category: default
     similarity_top_k: 10
@@ -156,25 +156,25 @@ functions:
       priority: 100
 
     - backend: chatgpt
-      model: gpt-3.5-turbo-1106
+      model: gpt-3.5-turbo
       enable: true
       stream: true
-      priority: 30
+      priority: 90
 
     - backend: chatglm
       model: glm-3-turbo
-      enable: true
+      enable: false
       stream: false
       priority: 10
 
     - backend: ernie
       model: ERNIE-Bot-turbo
-      enable: true
+      enable: false
       stream: false
       priority: 60
 
   RAG:
-    - backend: Chroma
+    - backend: chroma
       enable: true
       priority: 10
 

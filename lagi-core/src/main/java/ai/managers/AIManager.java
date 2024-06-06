@@ -68,11 +68,11 @@ public class AIManager<T> {
         Constructor<?> constructor = null;
         T adapter = null;
         try {
-            constructor = clazz.getConstructor(Backend.class);
-            adapter = (T)constructor.newInstance(backend);
+            adapter = (T) clazz.newInstance();
         } catch (Exception e) {
             try {
-                adapter = (T) clazz.newInstance();
+                constructor = clazz.getConstructor(Backend.class);
+                adapter = (T)constructor.newInstance(backend);
             } catch (Exception error) {
                 log.error(error.getMessage());
             }

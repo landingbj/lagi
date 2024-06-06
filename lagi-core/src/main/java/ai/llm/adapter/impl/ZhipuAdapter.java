@@ -1,18 +1,14 @@
 package ai.llm.adapter.impl;
 
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
 import ai.common.utils.MappingIterable;
 import ai.llm.adapter.ILlmAdapter;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.qa.ChatCompletionUtil;
-import com.alibaba.dashscope.aigc.generation.Generation;
 import com.zhipu.oapi.ClientV4;
 import com.zhipu.oapi.Constants;
-import com.zhipu.oapi.service.v4.model.ChatMessageAccumulator;
 import com.zhipu.oapi.service.v4.model.ModelApiResponse;
 import com.zhipu.oapi.service.v4.model.ModelData;
 import io.reactivex.Observable;
@@ -22,22 +18,18 @@ import java.util.List;
 import java.util.Optional;
 
 public class ZhipuAdapter extends ModelService implements ILlmAdapter {
-    private final Backend backendConfig;
-    private final ClientV4 client;
 
-    public ZhipuAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-        client = new ClientV4.Builder(backendConfig.getApiKey()).build();
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
+        ClientV4 client = new ClientV4.Builder(getApiKey()).build();
         ModelApiResponse invokeModelApiResp = client.invokeModelApi(convertRequest(chatCompletionRequest));
         return convertResponse(invokeModelApiResp.getData());
     }
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        ClientV4 client = new ClientV4.Builder(getApiKey()).build();
         ModelApiResponse sseModelApiResp = client.invokeModelApi(convertRequest(chatCompletionRequest));
         Iterable<ModelData> resultIterable = sseModelApiResp.getFlowable().blockingIterable();
         Iterable<ChatCompletionResult> iterable = new MappingIterable<>(resultIterable, this::convertResponse);
@@ -53,7 +45,7 @@ public class ZhipuAdapter extends ModelService implements ILlmAdapter {
         }
 
         boolean stream = Optional.ofNullable(request.getStream()).orElse(false);
-        String model = Optional.ofNullable(request.getModel()).orElse(backendConfig.getModel());
+        String model = Optional.ofNullable(request.getModel()).orElse(getModel());
 
         String invokeMethod = Constants.invokeMethod;
         if (request.getStream()) {

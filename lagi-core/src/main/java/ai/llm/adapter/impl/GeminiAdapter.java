@@ -26,17 +26,13 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
     private static final String COMPLETIONS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     private static final String STEAM_COMPLETIONS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent";
 
-    private final Backend backendConfig;
 
-    public GeminiAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        String url = COMPLETIONS_URL.replace("{model}", backendConfig.getModel());
+        String url = COMPLETIONS_URL.replace("{model}", getModel());
         Map<String, String> params = new HashMap<>();
-        params.put("key", backendConfig.getApiKey());
+        params.put("key", getApiKey());
         String jsonResult = null;
         GeminiRequest geminiRequest = convertRequest(chatCompletionRequest);
         try {
@@ -57,8 +53,8 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         String json = gson.toJson(convertRequest(chatCompletionRequest));
-        String apiKey = backendConfig.getApiKey();
-        String url = STEAM_COMPLETIONS_URL.replace("{model}", backendConfig.getModel()) + "?key=" + apiKey + "&alt=sse";
+        String apiKey = getApiKey();
+        String url = STEAM_COMPLETIONS_URL.replace("{model}", getModel()) + "?key=" + apiKey + "&alt=sse";
         Function<String, ChatCompletionResult> convertFunc = e -> {
             GeminiResponse result = gson.fromJson(e, GeminiResponse.class);
             return convertResponse(result);

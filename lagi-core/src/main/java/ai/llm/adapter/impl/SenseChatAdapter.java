@@ -20,20 +20,15 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     private static final String COMPLETIONS_URL = "https://api.sensenova.cn/v1/llm/chat-completions";
     private static final int HTTP_TIMEOUT = 15 * 1000;
 
-    private final Backend backendConfig;
-
-    public SenseChatAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        String token = sign(backendConfig.getApiKey(),  backendConfig.getSecretKey());
+        String token = sign(getApiKey(),  getSecretKey());
         headers.put("Authorization", "Bearer " + token);
         String jsonResult = null;
-        chatCompletionRequest.setModel(backendConfig.getModel());
+        chatCompletionRequest.setModel(getModel());
         chatCompletionRequest.setStream(false);
         try {
             jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, gson.toJson(chatCompletionRequest), HTTP_TIMEOUT);
@@ -77,7 +72,7 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     }
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
-            request.setModel(backendConfig.getModel());
+            request.setModel(getModel());
         }
     }
     static String sign(String ak,String sk) {

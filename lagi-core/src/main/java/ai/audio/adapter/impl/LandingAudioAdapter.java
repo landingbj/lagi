@@ -3,7 +3,7 @@ package ai.audio.adapter.impl;
 import java.io.File;
 
 import ai.audio.adapter.IAudioAdapter;
-import ai.audio.service.AlibabaAsrService;
+import ai.common.ModelService;
 import ai.common.pojo.*;
 import com.google.gson.Gson;
 
@@ -13,14 +13,9 @@ import ai.learning.pojo.Response;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
 
-public class LandingAudioAdapter implements IAudioAdapter {
+public class LandingAudioAdapter extends ModelService implements IAudioAdapter {
     private Gson gson = new Gson();
     private AiServiceCall call = new AiServiceCall();
-    private final Backend backendConfig;
-
-    public LandingAudioAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
