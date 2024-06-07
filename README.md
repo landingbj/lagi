@@ -48,5 +48,5 @@ If you prefer to use an IDE for development, you can directly open the Lag[i] pr
 
 The Lag[i] project also provides multiple RESTful API interfaces, facilitating users to integrate AI services into their own applications. We have prepared detailed [API documentation](docs/API_en.md) for developers, which you can refer to understand how to use these APIs to enrich your application features.
 
-### Large Language model function Invocation Guide
-To help you better understand and use Lag[i], we have provided you with an exhaustive [Large Language model function Invocation Guide](docs/guide_en.md). You can refer to the documentation to understand the structure and content of the project so that you can quickly invoke the relevant functionality and develop large model applications efficiently.
+### Model code invocation guide
+To help you better understand and use Lag[i], we have provided you with an exhaustive [Model code invocation guide](docs/guide_en.md). You can refer to the documentation to understand the structure and content of the project so that you can quickly invoke the relevant functionality and develop large model applications efficiently.
