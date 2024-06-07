@@ -16,7 +16,7 @@ import ai.common.pojo.Configuration;
 public class LagiGlobal {
     private static Configuration config;
 
-    public static String LANDING_API_KEY = "your-api-key";
+    public static String LANDING_API_KEY;
 
     public static String AGENT_API_KEY = "your-api-key";
 
@@ -62,7 +62,7 @@ public class LagiGlobal {
         for (Backend backend : backends) {
             if (backend.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
                 String apiKey = backend.getApiKey();
-                if (apiKey.startsWith("sk-") && apiKey.length() == 35) {
+                if (apiKey != null && apiKey.startsWith("sk-") && apiKey.length() == 35) {
                     LANDING_API_KEY = apiKey;
                 }
             }

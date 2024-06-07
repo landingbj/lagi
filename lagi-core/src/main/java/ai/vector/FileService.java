@@ -31,6 +31,9 @@ public class FileService {
         List<File> fileList = new ArrayList<>();
         fileList.add(file);
         Map<String, String> headers = new HashMap<>();
+        if (LagiGlobal.getLandingApikey() == null) {
+            return null;
+        }
         headers.put("Authorization", "Bearer " + LagiGlobal.getLandingApikey());
         String returnStr = HttpUtil.multipartUpload(EXTRACT_CONTENT_URL, fileParmName, fileList, formParmMap, headers);
         System.out.println(returnStr);
