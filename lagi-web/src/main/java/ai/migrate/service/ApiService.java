@@ -3,6 +3,7 @@ package ai.migrate.service;
 import ai.common.client.AiServiceCall;
 import ai.common.pojo.*;
 import ai.image.service.AllImageService;
+import ai.translate.TranslateService;
 import ai.utils.*;
 import ai.video.service.AllVideoService;
 import com.google.gson.Gson;
@@ -14,15 +15,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ApiService {
     private Gson gson = new Gson();
-    private ai.migrate.service.ImageService imageService = new ai.migrate.service.ImageService();
+    private ImageService imageService = new ImageService();
     private AllVideoService videoService = new AllVideoService();
     private AiServiceCall call = new AiServiceCall();
     private static Configuration config = MigrateGlobal.config;
     private AllImageService allImageService = new AllImageService();
+    private TranslateService translateService = new TranslateService();
     
     public String generateImage(String content, HttpServletRequest req) throws IOException {
         ServletContext context = req.getServletContext();
@@ -40,17 +44,35 @@ public class ApiService {
     
     public WhisperResponse generateImage(String content, String filePath) throws IOException {
         ImageGenerationRequest request = new ImageGenerationRequest();
-        request.setPrompt(content);
-        ImageGenerationResult imageGenerationResult = allImageService.generations(request);
-        
-        String url = imageGenerationResult.getData().get(0).getUrl();
-
-        File tempDir = new File(filePath);
-        if (!tempDir.exists()) {
-            tempDir.mkdirs();
+        String english = translateService.toEnglish(content);
+        if(english != null) {
+            request.setPrompt(english);
+        } else {
+            request.setPrompt(content);
         }
-        WhisperResponse whisperResponse1 = DownloadUtils.downloadFile(url, "png", filePath);
-        return whisperResponse1;
+        ImageGenerationResult imageGenerationResult = allImageService.generations(request);
+        AtomicReference<WhisperResponse> whisperResponse1 = new AtomicReference<>();
+        Optional.ofNullable(imageGenerationResult).ifPresent(r->{
+            if("base64".equals(r.getDataType())) {
+                try {
+                    File file = ImageUtil.base64ToFile(r.getData().get(0).getBase64Image());
+                    File img = new File(filePath, file.getName());
+                    FileUtils.copyFile(file, img);
+                    WhisperResponse whisperResponse = new WhisperResponse(1, img.getName());
+                    whisperResponse1.set(whisperResponse);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                String url = r.getData().get(0).getUrl();
+                File tempDir = new File(filePath);
+                if (!tempDir.exists()) {
+                    tempDir.mkdirs();
+                }
+                whisperResponse1.set(DownloadUtils.downloadFile(url, "png", filePath));
+            }
+        });
+        return whisperResponse1.get();
     }
     
     public String enhanceImage(String lastImageFile, HttpServletRequest req) throws IOException {
@@ -120,6 +142,11 @@ public class ApiService {
         }
         if(text.getClassification() == null) {
             text.setClassification("");
+        }
+
+        String chinese = translateService.toChinese(text.getCaption());
+        if(chinese != null) {
+            text.setCaption(chinese);
         }
         return gson.toJson(text);
     }

@@ -86,9 +86,9 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
     }
 
     private ImageGenerationResult toImageGenerationResult(ai.learning.pojo.Response response) {
-        ImageGenerationResult.Data data = new ImageGenerationResult.Data();
+        ImageGenerationData data = new ImageGenerationData();
         data.setUrl(response.getData());
-        List<ImageGenerationResult.Data> datas = new ArrayList<>();
+        List<ImageGenerationData> datas = new ArrayList<>();
         datas.add(data);
         ImageGenerationResult result = new ImageGenerationResult();
         result.setCreated(System.currentTimeMillis() / 1000L);
