@@ -1,6 +1,7 @@
 package ai.audio.service;
 
 import ai.utils.OkHttpUtil;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -21,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class AlibabaAsrService {
-    private static final LoadingCache<String, String> cache;
+    private static final Cache<String, String> cache;
     private static final int CACHE_SIZE = 100;
     private static final long EXPIRE_SECONDS = 60 * 60 * 24;
 
@@ -202,15 +203,8 @@ public class AlibabaAsrService {
         return processGETRequest(queryStringWithSign);
     }
 
-    private static LoadingCache<String, String> initCache() {
-        CacheLoader<String, String> loader;
-        loader = new CacheLoader<String, String>() {
-            @Override
-            public String load(String key) {
-                return key;
-            }
-        };
+    private static Cache<String, String> initCache() {
         return CacheBuilder.newBuilder().maximumSize(AlibabaAsrService.CACHE_SIZE)
-                .expireAfterWrite(AlibabaAsrService.EXPIRE_SECONDS, TimeUnit.SECONDS).build(loader);
+                .expireAfterWrite(AlibabaAsrService.EXPIRE_SECONDS, TimeUnit.SECONDS).build();
     }
 }
