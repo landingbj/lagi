@@ -27,6 +27,43 @@
           ai_qa.jar;
       ```
 
+## Docker Run
+- **Dockerfile**：
+  ```text
+        # Use the official Tomcat image as the base image
+        FROM tomcat:8.5.46-jdk8-openjdk
+        
+        # Set the working directory
+        WORKDIR /usr/local/tomcat/webapps
+        
+        # Copy the project WAR file into the container
+        COPY myproject.war .
+        
+        # expose port 8080
+        EXPOSE 8080
+        
+        # Start command
+        CMD ["catalina.sh", "run"]
+  ```
+- **How to use**：
+  - Build images
+  >  docker build -t myproject-tomcat:1.0 .
+  - Run the container
+  >  docker run -d -p 8080:8080 myproject-tomcat:1.0
+
+- **Parameter description**：
+    
+    > -d: Run the container as a daemon.   
+
+    > -p 8080:8080: Maps port 8080 of the host machine to port 8080 of the container.  
+
+    > myproject-tomcat:1.0: Specifies the image name and label.   
+- **Note**：
+
+    Make sure your WAR file is built correctly and located in the current directory.   
+    If you have additional configuration or dependencies, you may need to modify the Dockerfile or use Docker Compose for more complex configuration.   
+
+
 ## Text conversation feature
 To use chat function you need to create an instance object of CompletionsService. This object has two methods completions, streamCompletions.
 

@@ -26,7 +26,44 @@
         ai_index.jar;
         ai_qa.jar;
     ```
- 
+
+## Docker Run
+  - **Dockerfile**：
+    ```text
+          # 使用官方 Tomcat 镜像作为基础镜像
+          FROM tomcat:8.5.46-jdk8-openjdk
+          
+          # 设置工作目录
+          WORKDIR /usr/local/tomcat/webapps
+          
+          # 拷贝项目 WAR 文件到容器
+          COPY myproject.war .
+          
+          # 暴露 8080 端口
+          EXPOSE 8080
+          
+          # 启动命令
+          CMD ["catalina.sh", "run"]
+    ```
+  - **使用方式**：
+    - 构建镜像
+    >docker build -t myproject-tomcat:1.0 .
+    - 运行容器
+    >docker run -d -p 8080:8080 myproject-tomcat:1.0
+
+- **参数说明**：
+    
+    >-d：以守护进程方式运行容器。   
+
+    >-p 8080:8080：将宿主机的 8080 端口映射到容器的 8080 端口。  
+  
+    >myproject-tomcat:1.0：指定镜像名称和标签。   
+- **注意**：
+
+    确保您的 WAR 文件已经正确构建并位于当前目录中。
+    如果您有额外的配置或依赖项，可能需要修改 Dockerfile 或者使用 Docker Compose 进行更复杂的配置。
+
+
 ## 文本对话功能
 要使用文本对话功能首先需要创建一个 CompletionsService 的实例对象。 这个对象有两个方法 completions,streamCompletions。
 
