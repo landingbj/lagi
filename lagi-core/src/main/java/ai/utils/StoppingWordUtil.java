@@ -23,7 +23,14 @@ public class StoppingWordUtil {
     }
 
     public static boolean containsStoppingWorlds(String msg) {
-        return ahoCorasick.containsAny(msg);
+        for(String pattern : patterns) {
+            Pattern p = Pattern.compile(pattern);
+            Matcher matcher = p.matcher(msg);
+            if(matcher.find()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static List<Integer> getStoppingIndex(List<ChatMessage> messages) {
