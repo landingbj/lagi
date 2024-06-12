@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
-import ai.llm.pojo.PromptInput;
+import ai.medusa.pojo.PromptInput;
 import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
@@ -33,12 +33,15 @@ import org.slf4j.LoggerFactory;
 public class LlmApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
-    private static Configuration config = MigrateGlobal.config;
-    private CompletionsService completionsService = new CompletionsService();
-    private VectorDbService vectorDbService = new VectorDbService(config);
+    private static final Configuration config = MigrateGlobal.config;
+    private final CompletionsService completionsService = new CompletionsService();
+    private final VectorDbService vectorDbService = new VectorDbService(config);
+    private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
+    private static final CompletionCache completionCache = CompletionCache.getInstance();
 
-    private Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
-    private ChatCompletionResult data;
+    static {
+        completionCache.startProcessingPrompt();
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -53,20 +56,12 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
-    CompletionCache completionCache = CompletionCache.getInstance();
-
-
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-
         PromptInput promptInput = completionCache.getPromptInput(chatCompletionRequest);
-
         ChatCompletionResult chatCompletionResult = completionCache.get(promptInput);
-
-
-        System.out.println("cache hit: " + chatCompletionResult + ", cache size: " + completionCache.size());
 
         if (chatCompletionResult != null) {
             if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
@@ -80,7 +75,6 @@ public class LlmApiServlet extends BaseServlet {
             }
             return;
         }
-
 
         List<IndexSearchData> indexSearchDataList;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
@@ -105,7 +99,7 @@ public class LlmApiServlet extends BaseServlet {
                         if (lastResult[1] == null) {
                             lastResult[1] = data;
                         } else {
-                            for (int i = 0;i < lastResult[1].getChoices().size();i ++) {
+                            for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
                                 ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
                                 ChatCompletionChoice chunkChoice = data.getChoices().get(i);
                                 String chunkContent = chunkChoice.getMessage().getContent();
@@ -141,6 +135,7 @@ public class LlmApiServlet extends BaseServlet {
             responsePrint(resp, toJson(result));
         }
     }
+
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList,
                            HttpServletRequest req, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()

@@ -84,6 +84,18 @@ public class ThreadedProducerConsumerPipeline<T extends Serializable> implements
 		queues.put(consumer, new LinkedBlockingQueue<T>());
 	}
 
+
+	@Override
+	public void connectProducer(Producer<? extends T> producer) {
+		this.producers.add(producer);
+	}
+
+	@Override
+	public void connectConsumer(Consumer<? super T> consumer) {
+		consumers.add(consumer);
+		queues.put(consumer, new LinkedBlockingQueue<T>());
+	}
+
 	@Override
 	public void registerProducerErrorHandler(ProducerConsumerErrorHandler e) {
 		this.producerErrorHandler = e;
@@ -112,9 +124,9 @@ public class ThreadedProducerConsumerPipeline<T extends Serializable> implements
 			this.futures.add(fut);
 		}
 		
-if(_DEBUG_1) {
-	System.out.println("[DEBUG-1] Started Producer Consumer");
-}
+//if(_DEBUG_1) {
+//	System.out.println("[DEBUG-1] Started Producer Consumer");
+//}
 	}
 
 	@Override
@@ -294,18 +306,17 @@ if(_DEBUG_1){
 				// 逐个consumer取Queue中的请求数据，所以是轮询而非并发的
 				for(Consumer<? super T> c : new ArrayList<>(ThreadedProducerConsumerPipeline.this.consumers)) {
 					BlockingQueue<T> queue = queues.get(c);
+
 					try {
 						T data = queue.take();
 						try {
 							c.consume(data);
 						} catch(InterruptedException interrupt) {
-							queue.add(data);
 							throw interrupt;
 						} catch (Exception e) {
 							consumerErrorHandler.handle(e);
-							queue.add(data);
 						} catch(Throwable e) {
-							queue.add(data);
+							e.printStackTrace();
 						}
 					} catch (InterruptedException e) {
 						break;
