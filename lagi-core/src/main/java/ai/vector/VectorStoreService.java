@@ -176,7 +176,7 @@ public class VectorStoreService {
             if(intentResult.getContinuedIndex() != null) {
                 String[] split = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]");
                 String source =  Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
-                question = source + "," + ChatCompletionUtil.getLastMessage(request);
+                question = source  + ChatCompletionUtil.getLastMessage(request);
             }
             else {
                 List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
