@@ -1,4 +1,68 @@
-# 大语言模型功能调用指南
+# 模型代码调用指南
+
+## 概述
+- **介绍**：这份Lag[i]的功能调用指南旨在为您提供清晰、详细的指导，帮助您理解并使用项目中提供的各种 AI 功能。通过这份指南，您可以轻松地将文本对话、语音识别、文字转语音、图片生成等 AI 功能集成到您的应用程序中，实现更智能、更人性化的交互体验。
+- **背景**：随着人工智能技术的飞速发展，越来越多的应用场景需要与 AI 模型进行交互，例如智能客服、语音助手、图像处理等。为了满足这些需求，本项目提供了多种 AI 功能，旨在帮助您轻松地将 AI 技术应用于您的业务场景，提升用户体验和效率。
+
+## 开始之前
+- **配置要求**：您可以选择使用maven命令行工具进行封包，或者通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。请确保您的JDK版本至少满足8的要求。    
+- **引入依赖**：调用相关功能需引入依赖，可以通过 Maven引入或直接导入jar的方式。   
+  ***Maven引入***：
+  - 在项目的pom.xml的dependencies中加入以下内容:
+    ```xml
+        <depxmlendency>
+          <groupId>com.landingbj</groupId>
+          <artifactId>lagi-core</artifactId>
+          <version>1.0.0</version>
+        </depxmlendency>
+    ```
+
+  ***直接导入jar***：
+  - 直接导入lagi-core-1.0.0.jar或导入以下jar，将它们放入到lagi-core的libs目录下即可：
+    ```text
+        ai_bp.jar;
+        ai_core.jar;
+        ai_gather.jar;
+        ai_index.jar;
+        ai_qa.jar;
+    ```
+
+## Docker Run
+  - **Dockerfile**：
+    ```text
+          # 使用官方 Tomcat 镜像作为基础镜像
+          FROM tomcat:8.5.46-jdk8-openjdk
+          
+          # 设置工作目录
+          WORKDIR /usr/local/tomcat/webapps
+          
+          # 拷贝项目 WAR 文件到容器
+          COPY myproject.war .
+          
+          # 暴露 8080 端口
+          EXPOSE 8080
+          
+          # 启动命令
+          CMD ["catalina.sh", "run"]
+    ```
+  - **使用方式**：
+    - 构建镜像
+    >docker build -t myproject-tomcat:1.0 .
+    - 运行容器
+    >docker run -d -p 8080:8080 myproject-tomcat:1.0
+
+- **参数说明**：
+    
+    >-d：以守护进程方式运行容器。   
+
+    >-p 8080:8080：将宿主机的 8080 端口映射到容器的 8080 端口。  
+  
+    >myproject-tomcat:1.0：指定镜像名称和标签。   
+- **注意**：
+
+    确保您的 WAR 文件已经正确构建并位于当前目录中。
+    如果您有额外的配置或依赖项，可能需要修改 Dockerfile 或者使用 Docker Compose 进行更复杂的配置。
+
 
 ## 文本对话功能
 要使用文本对话功能首先需要创建一个 CompletionsService 的实例对象。 这个对象有两个方法 completions,streamCompletions。
@@ -6,18 +70,37 @@
 __completions__  
 
 `
-ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest)
+ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest);
 `  
-一次性获取大模型的对话的回答结果  
-参数：  
-  chatCompletionRequest - 对话请求参数包含对话使用的模型,对话的上下文及一些模型参数  
-返回：  
-一个包含大模型结果的对象,对象的 choices属性，包含着大模型的返回的回答文本
-示例：
+
+一次性获取大模型的对话的回答结果：  
+
+> 请求参数
+
+|名称| 类型                    |说明|
+|---|-----------------------|---|
+|chatCompletionRequest| ChatCompletionRequest |对话请求参数包含对话使用的模型,对话的上下文及一些模型参数|
+
+
+> 返回：  
+
+| 名称                  | 类型                    | 说明                                    |
+|---------------------|-----------------------|---------------------------------------|
+|chatCompletionResult | ChatCompletionResult | 一个包含大模型结果的对象,对象的 choices属性,包含大模型结果的对象 |
+
+> 调用示例：
+
 ```java
-CompletionsService completionsService = new CompletionsService();
-ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-String text = result.getChoices().get(0).getMessage().getContent();
+import ai.llm.service.CompletionsService;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+
+public class Test {
+    CompletionsService completionsService = new CompletionsService();
+    ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+    String text = result.getChoices().get(0).getMessage().getContent();
+}
+
 ```
 
 __streamCompletions__
@@ -25,28 +108,47 @@ __streamCompletions__
 `
 Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest)
 `  
-使用流的方式返回大模型对话的结果  
-参数：  
-chatCompletionRequest - 对话请求参数包含对话使用的模型,对话的上下文及一些模型参数    
-返回：  
-返回一个流的观察者对象。 可以通过这个对象获取流的返回结果, 你可以将写入到 HttpServletResponse 的输出流中  
-示例：
+
+使用流的方式返回大模型对话的结果：  
+
+> 参数：  
+
+|名称| 类型                    |说明|
+|---|-----------------------|---|
+|chatCompletionRequest| ChatCompletionRequest |对话请求参数包含对话使用的模型,对话的上下文及一些模型参数|
+
+> 返回：  
+
+| 名称                  | 类型                                | 说明                                    |
+|---|-----------------------------------|---------------------------------------|
+|observable | Observable\<ChatCompletionResult> | 一个流的观察者对象， 可以通过这个对象获取流的返回结果, 你可以将写入到 HttpServletResponse 的输出流中  |
+ 
+> 调用示例：
 ```java
-HttpServletResponse resp;
-CompletionsService completionsService = new CompletionsService();
-Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
-PrintWriter out = resp.getWriter();
-final ChatCompletionResult[] lastResult = {null};
-observable.subscribe(
-        data -> {
-            lastResult[0] = data;
-            String msg = gson.toJson(data);
-            out.print("data: " + msg + "\n\n");
-            out.flush();
-        },
-        e -> logger.error("", e),
-        () -> extracted(lastResult, indexSearchDataList, req, out)
-);
+
+import ai.llm.service.CompletionsService;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+import com.google.gson.Gson;
+import io.reactivex.rxjava3.core.Observable;
+
+public void Test(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    CompletionsService completionsService = new CompletionsService();
+    Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
+    PrintWriter out = resp.getWriter();
+    final ChatCompletionResult[] lastResult = {null};
+    observable.subscribe(
+            data -> {
+                lastResult[0] = data;
+                String msg = gson.toJson(data);
+                out.print("data: " + msg + "\n\n");
+                out.flush();
+            },
+            e -> logger.error("", e),
+            () -> extracted(lastResult, indexSearchDataList, req, out)
+    );
+}
+
 ```
 
 ## 语音识别功能
@@ -65,17 +167,33 @@ AsrResult asr(String audioFilePath, AudioRequestParam audioRequestParam);
 `  
 
 获取语音识别结果  
-参数：  
+>参数：  
 
-audio - 音频地址，  
-param - 语音识别请求参数。
+|名称| 类型                |说明|
+|---|-------------------|---|
+|audioRequestParam| AudioRequestParam |语音识别请求参数|
+|audioFilePath| String |音频地址|
 
-返回：   
-返回一个 AsrResult 对象，包含语音识别结果集。  
-示例：  
+
+>返回：   
+
+|名称| 类型                |说明|
+|---|-------------------|---|
+|asrResult| AsrResult |语音识别结果集|
+
+>调用示例：  
 ```java
-AudioService audioService = new AudioService();
-AsrResult result = audioService.asr(audio, param);
+import ai.audio.service.AudioService;
+import ai.common.pojo.AsrResult;
+import ai.common.pojo.AudioRequestParam;
+
+public void Test() {
+    AudioRequestParam param;
+    String audio ;
+    AudioService audioService = new AudioService();
+    AsrResult result = audioService.asr(audio, param);
+}
+
 ```
 
 ## 文字转语音功能
@@ -88,20 +206,34 @@ TTSResult tts(TTSRequestParam param);
 `
 
 获取音频文件  
-参数：  
+>参数：
 
-TTSRequestParam - 请求转换的内容和用户模型的配置信息，包含用户的token，以及要转换的文本。
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|param| TTSRequestParam |请求转换的内容和用户模型的配置信息，包含用户的token，以及要转换的文本。|
 
-返回：  
-返回一个 TTSResult 对象，包含文本识别结果集。  
-示例：
+>返回：
+
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|result| TTSResult |TTSResult 对象，包含文本识别结果集。 |
+
+>调用示例：
 
 ```java
-   AudioService audioService = new AudioService();
-   TTSRequestParam ttsRequestParam = new TTSRequestParam();
-   ttsRequestParam.setText(text2VoiceEntity.getText());
-   ttsRequestParam.setEmotion(text2VoiceEntity.getEmotion());
-   TSResult result = audioService.tts(ttsRequestParam);
+import ai.audio.service.AudioService;
+import ai.common.pojo.TTSResult;
+import ai.common.pojo.TTSRequestParam;
+import ai.common.pojo.Text2VoiceEntity;
+
+public void Test() {
+    Text2VoiceEntity text2VoiceEntity;
+    AudioService audioService = new AudioService();
+    TTSRequestParam ttsRequestParam = new TTSRequestParam();
+    ttsRequestParam.setText(text2VoiceEntity.getText());
+    ttsRequestParam.setEmotion(text2VoiceEntity.getEmotion());
+    TSResult result = audioService.tts(ttsRequestParam);
+}
 ```
 
 ## 图片生成功能
@@ -114,17 +246,28 @@ ImageGenerationResult generations(ImageGenerationRequest request);
 `
 
 获取生成图片路径地址  
-参数：
+>参数：  
 
-ImageGenerationRequest - 请求结果集，包含请求文本信息。
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|request| ImageGenerationRequest |请求结果集，包含请求文本信息。 |
 
-返回：  
-返回一个 ImageGenerationResult 对象，请求生成的结果集，包含图片路径地址信息。  
-示例：
+>返回：  
+
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|result| ImageGenerationResult | ImageGenerationResult 对象，包含图片路径地址信息。 |
+> 调用示例：
 
 ```java
-ImageGenerationService service = new ImageGenerationService();
-ImageGenerationResult result = service.generations(request);
+import ai.image.service.ImageGenerationService;
+import ai.common.pojo.ImageGenerationResult;
+import ai.common.pojo.ImageGenerationResult;
+public void Test() {
+    ImageGenerationResult request ;
+    ImageGenerationService service = new ImageGenerationService();
+    ImageGenerationResult result = service.generations(request);
+}
 ```
 
 
@@ -139,41 +282,46 @@ void addFileVectors(File file, Map<String, Object> metadatas, String category) t
 `
 
 上传私训学习文件。  
-参数：
+>参数：
 
-file- 请求上传文件路径地址。
-metadatas- 请求结果集，包含请求文件名，文件类型等信息。  
-category - 文件类型。
-返回：   
-无返回值。
-示例：
+|名称| 类型 |说明|
+|---|---|---|
+|file| File |请求上传文件路径地址。|
+|metadatas| Map<String, Object> |请求结果集，包含请求文件名，文件类型等信息。|
+|category| String |文件类型。|
+>返回：  
+
+无返回值。   
+
+> 调用示例：
 
 ```java
-String fileId = UUID.randomUUID().toString().replace("-", "");
-String filepath = file.getName();
-Map<String, Object> metadatas = new HashMap<>();
-            metadatas.put("filename", filename);
-            metadatas.put("category", category);
-            metadatas.put("filepath", filepath);
-            metadatas.put("file_id", fileId);
-            if (level == null) {
-                    metadatas.put("level", "user");
-            } else {
-                    metadatas.put("level", "system");
-            }
+import ai.migrate.service.VectorDbService;
+import ai.common.pojo.FileRequest;
+import ai.vector.VectorStoreService;
 
-     try {
-          vectorDbService.addFileVectors(this.file, metadatas, category);
-          UploadFile entity = new UploadFile();
-                entity.setCategory(category);
-                entity.setFilename(filename);
-                entity.setFilepath(filepath);
-                entity.setFileId(fileId);
-                uploadFileService.addUploadFile(entity);
-            } catch (IOException | SQLException e) {
-                 e.printStackTrace();
-            }
- }
+public void Test() {
+    String fileId = UUID.randomUUID().toString().replace("-", "");
+    String filepath = file.getName();
+    Map<String, Object> metadatas = new HashMap<>();
+    metadatas.put("filename", filename);
+    metadatas.put("category", category);
+    metadatas.put("filepath", filepath);
+    metadatas.put("file_id", fileId);
+    if (level == null) {
+        metadatas.put("level", "user");
+    } else {
+        metadatas.put("level", "system");
+    }
+
+    try {
+        VectorDbService vectorDbService = new VectorDbService();
+        vectorDbService.addFileVectors(this.file, metadatas, category);
+    } catch (IOException | SQLException e) {
+        e.printStackTrace();
+    }
+}
+
 ```
 
 ## 看图说话功能
@@ -183,22 +331,35 @@ Map<String, Object> metadatas = new HashMap<>();
 __toText__
 
 `
-ImageToTextResponse toText(FileRequest param)
+ImageToTextResponse toText(FileRequest param);
 `
 
 获取生成文本结果集。  
-参数：
+>参数：
 
-FileRequest - 请求结果集，包含图片路径地址信息。
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|param| FileRequest |请求结果集，包含请求图片路径地址信息。|
 
-返回：  
-返回一个 ImageToTextResponse 对象，请求生成的结果集，包含生成文本信息。
-示例：
+>返回：
+
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|result| ImageToTextResponse |一个 ImageToTextResponse 对象，包含生成文本结果集。 |
+>调用示例：
 
 ```java
-AllImageService allImageService = new AllImageService();
-File file = new File(lastImageFile);
-ImageToTextResponse text = allImageService.toText(FileRequest.builder().imageUrl(file.getAbsolutePath()).build());
+import ai.image.service.AllImageService;
+import ai.common.pojo.ImageToTextResponse;
+import ai.common.pojo.FileRequest;
+import java.io.File;
+
+public void Test() {
+    String lastImageFile;
+    AllImageService allImageService = new AllImageService();
+    File file = new File(lastImageFile);
+    ImageToTextResponse text = allImageService.toText(FileRequest.builder().imageUrl(file.getAbsolutePath()).build());
+}
 ```
 
 ## 视频追踪功能
@@ -212,18 +373,32 @@ VideoGenerationResult track(String videoUrl);
 `
 
 获取生成视频结果集。  
-参数：
 
-videoUrl - 请求追踪视频地址。
+>参数：
+> 
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|videoUrl| String |请求追踪视频地址。|
 
-返回：  
-返回一个 VideoGenerationResult 对象，请求生成的结果集，包含生成追踪后视频地址。
-示例：
+>返回：  
+
+|名称| 类型 |说明|
+|---|-------------------------|---|
+|result| VideoGenerationResult |一个 VideoGenerationResult 对象，包含生成视频结果集。 |
+
+> 调用示例：
 
 ```java
-VideoService videoService = new VideoService();
-File file = new File(lastVideoFile);
-VideoGenerationResult track = videoService.track(file.getAbsolutePath());
+import ai.video.service.AllVideoService;
+import ai.common.pojo.VideoGenerationResult;
+import java.io.File;
+
+public void Test() {
+    String lastVideoFile;
+    VideoService videoService = new VideoService();
+    File file = new File(lastVideoFile);
+    VideoGenerationResult track = videoService.track(file.getAbsolutePath());
+}
 ```
 
 ## 图像增强功能
@@ -237,19 +412,32 @@ ImageEnhanceResult enhance(String imageUrl);
 `
 
 获取生成图像结果集。  
-参数：
+>参数：
 
-imageUrl - 请求增强图片地址。
+|名称| 类型 |说明|
+---|---|---|
+|imageUrl| String |请求增强图片地址。|
 
-返回：  
-返回一个 ImageEnhanceResult 对象，请求生成的结果集，包含请求生成增强后图片地址。
-示例：
+>返回：  
+
+|名称| 类型 |说明|
+---|---|---|
+|result| ImageEnhanceResult |ImageEnhanceResult 对象，包含生成图像结果集。 |
+
+> 调用示例：
 
 ```java
-AllImageService allImageService = new AllImageService();
-ImageEnhanceResult enhance = allImageService.enhance(imageUrl);
-```
+import ai.image.service.AllImageService;
+import ai.common.pojo.ImageEnhanceResult;
+import java.io.File;
 
+public void Test() {
+    String imageUrl;
+    AllImageService allImageService = new AllImageService();
+    ImageEnhanceResult enhance = allImageService.enhance(imageUrl);
+}
+
+```
 
 ## 图生视频
 
@@ -262,17 +450,30 @@ VideoGenerationResult image2Video(String imageUrl);
 `
 
 获取生成视频结果集。  
-参数：
+>参数：
 
-imageUrl - 请求生成视频的图片地址。
+|名称| 类型 |说明|
+---|---|---|
+|imageUrl| String |请求生成视频的图片地址。|
 
-返回：  
-返回一个 VideoGenerationResult 对象，请求生成的结果集，包含请求生成视频地址。  
-示例：
+>返回：  
+
+| 名称 | 类型 |说明|
+|----|---|---|
+|result| VideoGenerationResult |VideoGenerationResult 对象，包含生成视频结果集。 | 
+> 调用示例：
 
 ```java
-AllVideoService allVideoService = new  AllVideoService();
-VideoGenerationResult videoGenerationResult = allVideoService.image2Video(imageUrl);
+import ai.video.service.AllVideoService;
+import ai.common.pojo.VideoGenerationResult;
+
+public void Test() {
+    String imageUrl;
+    AllVideoService allVideoService = new  AllVideoService();
+    VideoGenerationResult videoGenerationResult = allVideoService.image2Video(imageUrl);
+}
+
+
 ```
 
 ## 视频增强
@@ -286,15 +487,27 @@ ideoGenerationResult enhance(String videoUrl);
 `
 
 获取生成增强视频结果集。  
-参数：
+>参数：
 
-videoUrl - 请求增强视频地址。
+|名称| 类型 |说明|
+---|---|---|
+|videoUrl| String |请求生成视频地址。|
 
-返回：  
-返回一个 ideoGenerationResult 对象，请求生成的结果集，包含请求生成增强后视频地址。  
-示例：
+>返回：  
+
+|名称| 类型 |说明|
+---|---|---|
+|result| VideoGenerationResult |一个 VideoGenerationResult 对象，包含生成视频结果集。 |
+
+>调用示例：
 
 ```java
-AllVideoService allVideoService = new  AllVideoService();
-VideoGenerationResult videoGenerationResult = allVideoService.enhance(videoUrl);
+import ai.video.service.AllVideoService;
+import ai.common.pojo.VideoGenerationResult;
+
+public void Test() {
+    String videoUrl;
+    AllVideoService allVideoService = new  AllVideoService();
+    VideoGenerationResult videoGenerationResult = allVideoService.enhance(videoUrl);
+}
 ```

@@ -36,5 +36,7 @@ public class ModelFunctions {
     private List<Backend> video2Track;
     @JsonProperty("video2enhance")
     private List<Backend> video2Enhance;
+    @JsonProperty("translate")
+    private List<Backend> translate;
 
 }

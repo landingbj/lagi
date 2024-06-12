@@ -8,6 +8,7 @@ import ai.intent.pojo.IntentResult;
 import ai.managers.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
 import ai.vector.pojo.QueryCondition;
@@ -173,8 +174,9 @@ public class VectorStoreService {
         String question = null;
         if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
             if(intentResult.getContinuedIndex() != null) {
-                String source = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]")[0];
-                question = source + "," + ChatCompletionUtil.getLastMessage(request);
+                String[] split = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]");
+                String source =  Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
+                question = source  + ChatCompletionUtil.getLastMessage(request);
             }
             else {
                 List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());

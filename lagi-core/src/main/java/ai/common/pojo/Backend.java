@@ -25,5 +25,6 @@ public class Backend {
     private String appKey;
     private String accessKeyId;
     private String accessKeySecret;
+    private String securityKey;
     private Boolean stream;
 }

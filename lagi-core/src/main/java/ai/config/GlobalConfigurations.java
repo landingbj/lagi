@@ -43,6 +43,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Image2VideoManager.getInstance().register(models, functions.getImage2video());
         Video2EnhanceManger.getInstance().register(models, functions.getVideo2Enhance());
         Video2TrackManager.getInstance().register(models, functions.getVideo2Track());
+        TranslateManager.getInstance().register(models, functions.getTranslate());
     }
 
 

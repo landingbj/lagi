@@ -3,7 +3,6 @@ package ai.llm.adapter.impl;
 import ai.common.ModelService;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.utils.MappingIterable;
-import ai.common.pojo.Backend;
 import ai.openai.pojo.*;
 import ai.utils.qa.ChatCompletionUtil;
 import com.baidubce.qianfan.Qianfan;
@@ -11,13 +10,13 @@ import com.baidubce.qianfan.core.auth.Auth;
 import com.baidubce.qianfan.model.chat.ChatRequest;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import com.baidubce.qianfan.model.chat.Message;
-import com.baidubce.qianfan.model.constant.ModelEndpoint;
 import io.reactivex.Observable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ErnieAdapter extends ModelService implements ILlmAdapter {
 
@@ -45,18 +44,20 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
 
     private ChatRequest convertRequest(ChatCompletionRequest request) {
         ChatRequest result = new ChatRequest();
-        List<Message> messages = new ArrayList<>();
-        for (ChatMessage chatMessage : request.getMessages()) {
+        List<Message> messages = request.getMessages().stream().map(m->{
             Message message = new Message();
-            message.setRole(chatMessage.getRole());
-            message.setContent(chatMessage.getContent());
-            messages.add(message);
-        }
+            message.setContent(m.getContent());
+            System.out.println(m.getContent());
+            message.setRole(m.getRole());
+            return message;
+        }).collect(Collectors.toList());
+
         String model = Optional.ofNullable(request.getModel()).orElse(getModel());
-        String finalEndpoint = ModelEndpoint.getEndpoint("chat", model, null);
-        result.setEndpoint(finalEndpoint);
+//        String finalEndpoint = new ModelEndpointRetriever(new IAMAuth(apiKey, secretKey)).getEndpoint("chat", model, null);
+//        result.setEndpoint(finalEndpoint);
+        result.setModel(model);
         result.setMessages(messages);
-        result.setTemperature(request.getTemperature());
+        result.setTemperature(request.getTemperature() == 0.0 ? 0.7 : request.getTemperature());
         result.setMaxOutputTokens(request.getMax_tokens());
         return result;
     }
@@ -82,4 +83,6 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
         result.setUsage(usage);
         return result;
     }
+
+
 }

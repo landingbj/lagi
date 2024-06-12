@@ -2,8 +2,6 @@ package ai.common;
 
 
 import lombok.Data;
-import lombok.Getter;
-
 @Data
 public class ModelService {
 
@@ -17,5 +15,6 @@ public class ModelService {
     protected String model;
     protected String type;
     protected String apiAddress;
+    protected String securityKey;
 
 }

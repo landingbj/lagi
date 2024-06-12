@@ -11,12 +11,14 @@ import ai.common.pojo.ImageGenerationRequest;
 import ai.common.pojo.ImageGenerationResult;
 import ai.image.service.AllImageService;
 import ai.servlet.BaseServlet;
-import ai.utils.MigrateGlobal;
+import ai.translate.TranslateService;
+import ai.utils.*;
 
 public class ImageApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
     private static Configuration config = MigrateGlobal.config;
     private AllImageService imageService = new AllImageService();
+    private TranslateService translateService = new TranslateService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -32,6 +34,10 @@ public class ImageApiServlet extends BaseServlet {
     private void generations(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         ImageGenerationRequest request = reqBodyToObj(req, ImageGenerationRequest.class);
+        String english = translateService.toEnglish(request.getPrompt());
+        if(english != null) {
+            request.setPrompt(english);
+        }
         ImageGenerationResult result = imageService.generations(request);
         responsePrint(resp, toJson(result));
     }
