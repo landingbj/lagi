@@ -11,10 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.pojo.PromptInput;
 import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
+import ai.medusa.CompletionCache;
 import ai.migrate.service.VectorDbService;
+import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -50,9 +53,35 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
+    CompletionCache completionCache = CompletionCache.getInstance();
+
+
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+
+        PromptInput promptInput = completionCache.getPromptInput(chatCompletionRequest);
+
+        ChatCompletionResult chatCompletionResult = completionCache.get(promptInput);
+
+
+        System.out.println("cache hit: " + chatCompletionResult + ", cache size: " + completionCache.size());
+
+        if (chatCompletionResult != null) {
+            if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
+                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+                out.print("data: " + toJson(chatCompletionResult) + "\n\n");
+                out.print("data: " + "[DONE]" + "\n\n");
+                out.flush();
+                out.close();
+            } else {
+                responsePrint(resp, toJson(chatCompletionResult));
+            }
+            return;
+        }
+
+
         List<IndexSearchData> indexSearchDataList;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
@@ -65,17 +94,32 @@ public class LlmApiServlet extends BaseServlet {
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
             Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
-            PrintWriter out = resp.getWriter();
-            final ChatCompletionResult[] lastResult = {null};
+            final ChatCompletionResult[] lastResult = {null, null};
             observable.subscribe(
                     data -> {
                         lastResult[0] = data;
                         String msg = gson.toJson(data);
                         out.print("data: " + msg + "\n\n");
                         out.flush();
+
+                        if (lastResult[1] == null) {
+                            lastResult[1] = data;
+                        } else {
+                            for (int i = 0;i < lastResult[1].getChoices().size();i ++) {
+                                ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
+                                ChatCompletionChoice chunkChoice = data.getChoices().get(i);
+                                String chunkContent = chunkChoice.getMessage().getContent();
+                                String content = choice.getMessage().getContent();
+                                choice.getMessage().setContent(content + chunkContent);
+                            }
+                        }
                     },
                     e -> logger.error("", e),
-                    () -> extracted(lastResult, indexSearchDataList, req, out)
+                    () -> {
+                        extracted(lastResult, indexSearchDataList, req, out);
+                        lastResult[0].setChoices(lastResult[1].getChoices());
+                        completionCache.put(promptInput, lastResult[0]);
+                    }
             );
             out.flush();
             out.close();
@@ -93,6 +137,7 @@ public class LlmApiServlet extends BaseServlet {
                     message.setImageList(imageList);
                 }
             }
+            completionCache.put(promptInput, result);
             responsePrint(resp, toJson(result));
         }
     }
