@@ -1,11 +1,11 @@
-package ai.common.pojo;
+package ai.video.pojo;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Builder
 @Data
-public class ImageEnhanceResult {
-    private String type;
+public class VideoJobResponse {
+    private String jobId;
     private String data;
 }

@@ -1,8 +1,10 @@
 package ai.video.adapter;
 
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoGeneratorRequest;
+import ai.video.pojo.VideoJobResponse;
 
 public interface Image2VideoAdapter {
 
-    VideoGenerationResult image2Video(String imageUrl);
+    VideoJobResponse image2Video(VideoGeneratorRequest videoGeneratorRequest);
+
 }

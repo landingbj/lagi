@@ -390,7 +390,7 @@ VideoGenerationResult track(String videoUrl);
 
 ```java
 import ai.video.service.AllVideoService;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 import java.io.File;
 
 public void Test() {
@@ -465,7 +465,7 @@ VideoGenerationResult image2Video(String imageUrl);
 
 ```java
 import ai.video.service.AllVideoService;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 
 public void Test() {
     String imageUrl;
@@ -503,7 +503,7 @@ ideoGenerationResult enhance(String videoUrl);
 
 ```java
 import ai.video.service.AllVideoService;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 
 public void Test() {
     String videoUrl;

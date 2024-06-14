@@ -1,9 +1,9 @@
 package ai.video.adapter;
 
 import ai.common.pojo.ImageGenerationRequest;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 
 public interface Text2VideoAdapter {
 
-    VideoGenerationResult toVideo(ImageGenerationRequest request);
+    VideoJobResponse toVideo(ImageGenerationRequest request);
 }

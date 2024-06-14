@@ -4,7 +4,7 @@ import ai.common.ModelService;
 import ai.common.pojo.*;
 import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
-import ai.utils.ImageUtil;
+import ai.utils.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baidubce.qianfan.Qianfan;
@@ -77,6 +77,7 @@ public class BaiduImageAdapter extends ModelService implements IImage2TextAdapte
         List<ImageGenerationData> dataList = text2ImageResponse.getData().stream().map(d -> ImageGenerationData.builder().base64Image(d.getB64Image()).build()).collect(Collectors.toList());
         return ImageGenerationResult.builder().created(text2ImageResponse.getCreated()).dataType("base64").data(dataList).build();
     }
+
 
 
 }
