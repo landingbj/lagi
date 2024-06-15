@@ -390,7 +390,7 @@ Obtain the generated video result set.
 
 ```java
 import ai.video.service.AllVideoService;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 import java.io.File;
 
 public void Test() {
@@ -466,7 +466,7 @@ Obtain the generated video result set.
 
 ```java
 import ai.video.service.AllVideoService;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 
 public void Test() {
   String imageUrl;
@@ -504,7 +504,7 @@ Obtain the generated augmented video result set.
 
 ```java
 import ai.video.service.AllVideoService;
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 
 public void Test() {
     String videoUrl;

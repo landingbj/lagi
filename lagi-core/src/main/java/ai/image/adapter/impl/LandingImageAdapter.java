@@ -42,6 +42,6 @@ public class LandingImageAdapter implements IImageGenerationAdapter, ImageEnhanc
         Object[] params = { gson.toJson(request) };
         String[] result = call.callWS(AiServiceInfo.WSImgUrl, "enhanceImage", params);
         ai.common.pojo.Response response = gson.fromJson(result[0], ai.common.pojo.Response.class);
-        return ImageEnhanceResult.builder().enhancedUrl(response.getData()).build();
+        return ImageEnhanceResult.builder().type(imageUrl).data(response.getData()).build();
     }
 }

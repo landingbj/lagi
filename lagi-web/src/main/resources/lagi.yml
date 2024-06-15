@@ -41,6 +41,8 @@ models:
         driver: ai.llm.adapter.impl.QwenAdapter
       - model: asr
         driver: ai.audio.adapter.impl.AlibabaAudioAdapter
+      - model: vision
+        driver: ai.video.adapter.impl.AlibabaVisionAdapter
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
     access_key_id: your-access-key-id
@@ -53,16 +55,30 @@ models:
     drivers:
       - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
         driver: ai.llm.adapter.impl.ErnieAdapter
-      - model: Fuyu-8B,Stable-Diffusion-XL
+      - model: Fuyu-8B,Stable-Diffusion-XL,enhance
         driver: ai.image.adapter.impl.BaiduImageAdapter
       - model: translate
         driver: ai.translate.adapter.impl.BaiduTranslateAdapter
     # help document https://developer.baidu.com/article/detail.html?id=1089328
-    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
-    app_id: your-api-key
-    security_key: your-security-key
+    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
+    app_id: your-app-id
+    security_key: your-security-id
     api_key: your-api-key
-    secret_key: your-secret-key
+    secret_key: your-sercet-key
+
+  #  A range of ai applications developed by Baidu
+  - name: baidu
+    type: baidu
+    enable: true
+    drivers:
+      - model: enhance
+        driver: ai.image.adapter.impl.BaiduAiImageAdapter
+      - model: aiVideo
+        driver: ai.video.adapter.impl.BaiduVideoAdapter
+      #  url address https://console.bce.baidu.com/ai/?_=&fromai=1#/ai/imageprocess/app/list
+    app_id: your-app-id
+    api_key: your-api-key
+    secret_key: your-sercet-key
 
   #  chatGLM is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
@@ -92,11 +108,14 @@ models:
   - name: spark
     type: Spark
     enable: false
-    model: v1.1
-    driver: ai.llm.adapter.impl.SparkAdapter
+    drivers:
+      - model: v1.1
+        driver: ai.llm.adapter.impl.SparkAdapter
+      - model: tti
+        driver: ai.image.adapter.impl.SparkImageAdapter
     app_id: your-app-id
-    api_key: your-api-key  # https://console.xfyun.cn/
-    secret_key: your-secret-key  # https://console.xfyun.cn/
+    api_key: you-api-key  # https://console.xfyun.cn/
+    secret_key: you-secret-key   # https://console.xfyun.cn/
 
     #SenseChat(RiRiXin) is a large language model developed by Shangtang
   - name: SenseChat
@@ -146,9 +165,9 @@ vectors:
 functions:
 
   embedding:
-    - backend: landing
-      type: Landing
-      api_endpoint: http://ai.landingbj.com
+    - backend: qwen
+      type: Qwen
+      api_key: you-api-key
 
 
   chat:
@@ -156,7 +175,7 @@ functions:
       model: moonshot-v1-8k
       enable: true
       stream: true
-      priority: 100
+      priority: 150
 
     - backend: chatgpt
       model: gpt-3.5-turbo
@@ -172,7 +191,7 @@ functions:
 
     - backend: ernie
       model: ERNIE-Speed-128K
-      enable: true
+      enable: false
       stream: true
       priority: 120
 
@@ -195,8 +214,8 @@ functions:
       priority: 10
 
   text2image:
-    - backend: ernie
-      model: Stable-Diffusion-XL
+    - backend: spark
+      model: tti
       enable: true
       priority: 10
 
@@ -207,8 +226,8 @@ functions:
       priority: 10
 
   image2enhance:
-    - backend: landing
-      model: image
+    - backend: baidu
+      model: enhance
       enable: true
       priority: 10
 
@@ -219,8 +238,8 @@ functions:
       priority: 10
 
   image2video:
-    - backend: landing
-      model: video
+    - backend: qwen
+      model: vision
       enable: true
       priority: 10
 
@@ -231,15 +250,15 @@ functions:
       priority: 10
 
   video2enhance:
-    - backend: landing
-      model: video
+    - backend: qwen
+      model: vision
       enable: true
       priority: 10
 
   translate:
     - backend: ernie
       model: translate
-      enable: true
+      enable: false
       priority: 10
 
 # The following is the configuration of agents, name is the name of the agent,

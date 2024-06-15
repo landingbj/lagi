@@ -9,6 +9,9 @@ import ai.video.adapter.Image2VideoAdapter;
 import ai.video.adapter.Text2VideoAdapter;
 import ai.video.adapter.Video2EnhanceAdapter;
 import ai.video.adapter.Video2trackAdapter;
+import ai.video.pojo.VideoEnhanceRequest;
+import ai.video.pojo.VideoGeneratorRequest;
+import ai.video.pojo.VideoJobResponse;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -22,8 +25,8 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
     
 
     @Override
-    public VideoGenerationResult image2Video(String imageUrl) {
-        File file = new File(imageUrl);
+    public VideoJobResponse image2Video(VideoGeneratorRequest videoGeneratorRequest) {
+        File file = new File(videoGeneratorRequest.getInputFileList().get(0).getUrl());
         String url = FileUploadUtil.svdUpload(file);
         GenerateVideoRequest request = new GenerateVideoRequest();
         request.setImageUrl(url);
@@ -31,14 +34,14 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
         String[] result = call.callWS(AiServiceInfo.WSVdoUrl, "generateVideoByImage", params);
         Response response = gson.fromJson(result[0], Response.class);
         if (response.getStatus().equals("success")) {
-            return VideoGenerationResult.builder().url(response.getData()).build();
+            return VideoJobResponse.builder().data(response.getData()).build();
         }
         return null;
     }
 
     @Override
-    public VideoGenerationResult enhance(String videoUrl) {
-        File file = new File(videoUrl);
+    public VideoJobResponse enhance(VideoEnhanceRequest videoEnhanceRequest) {
+        File file = new File(videoEnhanceRequest.getVideoURL());
         String url = FileUploadUtil.mmeditingUpload(file);
         MmeditingInferenceRequest request = new MmeditingInferenceRequest();
         request.setVideoUrl(url);
@@ -47,13 +50,13 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
         String[] result = call.callWS(AiServiceInfo.WSVdoUrl, "mmeditingInference", params);
         Response response = gson.fromJson(result[0], Response.class);
         if(response != null) {
-            return VideoGenerationResult.builder().url(response.getData()).build();
+            return VideoJobResponse.builder().data(response.getData()).build();
         }
         return null;
     }
 
     @Override
-    public VideoGenerationResult track(String videoUrl) {
+    public VideoJobResponse track(String videoUrl) {
         File file = new File(videoUrl);
         String url = FileUploadUtil.mmtrackingUpload(file);
         MotInferenceRequest request = new MotInferenceRequest();
@@ -62,17 +65,17 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
         String[] result = call.callWS(AiServiceInfo.WSVdoUrl, "motInference", params);
         Response response = gson.fromJson(result[0], Response.class);
         if(response != null) {
-            return VideoGenerationResult.builder().url(response.getData()).build();
+            return VideoJobResponse.builder().data(response.getData()).build();
         }
         return null;
     }
 
     @Override
-    public VideoGenerationResult toVideo(ImageGenerationRequest request) {
+    public VideoJobResponse toVideo(ImageGenerationRequest request) {
         ImageGenerationResult generations = generations(request);
         if(generations != null) {
             String url = generations.getData().get(0).getUrl();
-            return VideoGenerationResult.builder().url(url).build();
+            return VideoJobResponse.builder().data(url).build();
         }
         return null;
     }
@@ -95,5 +98,4 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
         result.setData(datas);
         return result;
     }
-
 }

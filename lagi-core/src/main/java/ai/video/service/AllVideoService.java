@@ -9,26 +9,30 @@ import ai.video.adapter.Image2VideoAdapter;
 import ai.video.adapter.Text2VideoAdapter;
 import ai.video.adapter.Video2EnhanceAdapter;
 import ai.video.adapter.Video2trackAdapter;
+import ai.video.pojo.VideoEnhanceRequest;
+import ai.video.pojo.VideoGeneratorRequest;
+import ai.video.pojo.VideoJobResponse;
 
 public class AllVideoService {
 
-    public VideoGenerationResult image2Video(String imageUrl) {
+    public VideoJobResponse image2Video(VideoGeneratorRequest videoGeneratorRequest) {
         for(Image2VideoAdapter adapter: Image2VideoManager.getInstance().getAdapters()) {
-            return adapter.image2Video(imageUrl);
+            return adapter.image2Video(videoGeneratorRequest);
         }
         return null;
     }
 
 
-    public VideoGenerationResult enhance(String videoUrl) {
+
+    public VideoJobResponse enhance(VideoEnhanceRequest videoEnhanceRequest) {
         for(Video2EnhanceAdapter adapter: Video2EnhanceManger.getInstance().getAdapters()) {
-            return adapter.enhance(videoUrl);
+            return adapter.enhance(videoEnhanceRequest);
         }
         return null;
     }
 
 
-    public VideoGenerationResult track(String videoUrl) {
+    public VideoJobResponse track(String videoUrl) {
         for (Video2trackAdapter adapter: Video2TrackManager.getInstance().getAdapters()) {
             return adapter.track(videoUrl);
         }
@@ -36,7 +40,7 @@ public class AllVideoService {
     }
 
 
-    public VideoGenerationResult toVideo(ImageGenerationRequest request) {
+    public VideoJobResponse toVideo(ImageGenerationRequest request) {
         for (Text2VideoAdapter adapter: Text2VideoManager.getInstance().getAdapters()) {
             return adapter.toVideo(request);
         }
