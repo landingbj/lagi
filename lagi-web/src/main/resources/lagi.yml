@@ -35,7 +35,7 @@ models:
     type: GPT
     enable: false
     model: gpt-3.5-turbo,gpt-4-1106-preview
-    driver:  ai.llm.adapter.impl.GPTAdapter
+    driver: ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
   #  qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
@@ -100,7 +100,7 @@ models:
   - name: kimi
     type: Moonshot
     enable: true
-    model:  moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
 
@@ -147,14 +147,13 @@ stores:
     # Chroma is an AI-native open-source embedding database
     # The official website is https://www.trychroma.com/
     - name: chroma
-      driver : ai.vector.impl.ChromaVectorStore
+      driver: ai.vector.impl.ChromaVectorStore
       default_category: default
       similarity_top_k: 10
       similarity_cutoff: 0.5
       parent_depth: 1
       child_depth: 1
       url: http://localhost:8000
-
 
     # Pinecone is a vector database for building large-scale machine learning applications
     # The official website is https://www.pinecone.io/
@@ -169,6 +168,7 @@ stores:
       project_name: your-project-name
       index_name: your-index-name
       api_key: your-api-key
+
   oss:
     - name: landing
       driver: ai.oss.impl.LandingOSS
@@ -186,17 +186,16 @@ stores:
     - backend: chroma
       enable: true
       priority: 10
-      
+
   medusa:
     enable: true
     algorithm: hash
 
 functions:
-
   embedding:
-    - backend: landing
-      type: Landing
-
+    - backend: qwen
+      type: Qwen
+      api_key: you-api-key
 
   chat:
     - backend: kimi
