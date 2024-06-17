@@ -68,19 +68,8 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
     private ChatCompletionRequest getCompletionsRequest(PooledPrompt item, List<IndexSearchData> indexSearchDataList) {
         PromptInput promptInput = item.getPromptInput();
         String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
-        if (!indexSearchDataList.isEmpty()) {
-            prompt = prompt + indexSearchDataList.get(0).getText();
-        }
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
-        chatCompletionRequest.setTemperature(promptInput.getTemperature());
-        chatCompletionRequest.setStream(false);
-        chatCompletionRequest.setMax_tokens(promptInput.getMaxTokens());
-        List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage message = new ChatMessage();
-        message.setRole(LagiGlobal.LLM_ROLE_USER);
-        message.setContent(prompt);
-        messages.add(message);
-        chatCompletionRequest.setMessages(messages);
+        ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
+        completionsService.addVectorDBContext(chatCompletionRequest, indexSearchDataList);
         return chatCompletionRequest;
     }
 

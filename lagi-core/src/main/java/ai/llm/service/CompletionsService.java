@@ -8,11 +8,13 @@
 
 package ai.llm.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ai.common.ModelService;
+import ai.common.pojo.IndexSearchData;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
 import ai.llm.adapter.impl.LandingAdapter;
@@ -25,8 +27,10 @@ import ai.mr.mapper.llm.*;
 import ai.mr.reducer.llm.QaReducer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
 import ai.utils.SensitiveWordUtil;
+import ai.utils.qa.ChatCompletionUtil;
 import cn.hutool.core.bean.BeanUtil;
 import io.reactivex.Observable;
 import weixin.tools.TulingThread;
@@ -44,7 +48,6 @@ public class CompletionsService {
     }
 
 
-
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         // TODO 2024/6/4 转为manager 管理
         ChatCompletionResult answer = null;
@@ -60,7 +63,7 @@ public class CompletionsService {
                     Map<String, Object> params = new HashMap<>();
                     params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
                     Backend backend = new Backend();
-                    BeanUtil.copyProperties((ModelService )adapter, backend);
+                    BeanUtil.copyProperties((ModelService) adapter, backend);
                     params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
                     IMapper mapper = getMapper(backend);
                     mapper.setParameters(params);
@@ -68,8 +71,8 @@ public class CompletionsService {
                     contain.registerMapper(mapper);
                 });
             } else {
-                for (ILlmAdapter adapter: LlmManager.getInstance().getAdapters()) {
-                    if(adapter instanceof ModelService) {
+                for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
+                    if (adapter instanceof ModelService) {
                         ModelService modelService = (ModelService) adapter;
                         Map<String, Object> params = new HashMap<>();
                         params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
@@ -101,7 +104,7 @@ public class CompletionsService {
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         for (ILlmAdapter adapter : getAdapters()) {
-            if(adapter !=null) {
+            if (adapter != null) {
                 return adapter.streamCompletions(chatCompletionRequest);
             }
         }
@@ -121,17 +124,37 @@ public class CompletionsService {
     }
 
     private IMapper getMapper(Backend backendConfig) {
-        if(backendConfig.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
-            return  new LandingMapper();
+        if (backendConfig.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
+            return new LandingMapper();
         }
         return new UniversalMapper(getAdapter(backendConfig));
     }
 
     private IMapper getMapper(ILlmAdapter adapter) {
-        if(adapter instanceof LandingAdapter) {
-            return  new LandingMapper();
+        if (adapter instanceof LandingAdapter) {
+            return new LandingMapper();
         }
         return new UniversalMapper(adapter);
     }
-    
+
+    public void addVectorDBContext(ChatCompletionRequest request, List<IndexSearchData> indexSearchDataList) {
+        String lastMessage = ChatCompletionUtil.getLastMessage(request);
+        String contextText = indexSearchDataList.get(0).getText();
+        String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
+        ChatCompletionUtil.setLastMessage(request, prompt);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(String prompt) {
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setStream(false);
+        chatCompletionRequest.setMax_tokens(2048);
+        List<ChatMessage> messages = new ArrayList<>();
+        ChatMessage message = new ChatMessage();
+        message.setRole(LagiGlobal.LLM_ROLE_USER);
+        message.setContent(prompt);
+        messages.add(message);
+        chatCompletionRequest.setMessages(messages);
+        return chatCompletionRequest;
+    }
 }

@@ -1,7 +1,7 @@
 package ai.medusa.producer;
 
 import ai.common.pojo.IndexSearchData;
-import ai.medusa.PromptCacheConstant;
+import ai.medusa.PromptCacheConfig;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.mr.pipeline.ConnectedProducerConsumerPipeline;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerPipeline<PooledPrompt, PooledPrompt> {
-    private static final LRUCache<ChatCompletionRequest, List<IndexSearchData>> cache = new LRUCache<>(PromptCacheConstant.COMPLETION_CACHE_SIZE);
+    private static final LRUCache<ChatCompletionRequest, List<IndexSearchData>> cache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
     private final VectorStoreService vectorStoreService = new VectorStoreService();
 
     public DiversifyPromptProducer(int limit) {

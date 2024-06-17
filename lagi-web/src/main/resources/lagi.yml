@@ -186,14 +186,16 @@ stores:
     - backend: chroma
       enable: true
       priority: 10
-
+      
+  medusa:
+    enable: true
+    algorithm: hash
 
 functions:
 
   embedding:
-    - backend: qwen
-      type: Qwen
-      api_key: you-api-key
+    - backend: landing
+      type: Landing
 
 
   chat:

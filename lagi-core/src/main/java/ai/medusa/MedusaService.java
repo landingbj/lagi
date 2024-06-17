@@ -1,0 +1,82 @@
+package ai.medusa;
+
+import ai.llm.service.CompletionsService;
+import ai.medusa.impl.CompletionCache;
+import ai.medusa.pojo.PromptInput;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.pojo.ChatMessage;
+import ai.utils.qa.ChatCompletionUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class MedusaService {
+    private static final ICache cache;
+    private final CompletionsService completionsService = new CompletionsService();
+
+    static {
+        switch (PromptCacheConfig.LOCATE_ALGORITHM) {
+            case "lcs":
+            case "tree":
+            case "vector":
+            default:
+                cache = CompletionCache.getInstance();
+        }
+        cache.startProcessingPrompt();
+    }
+
+    public ChatCompletionResult get(PromptInput promptInput) {
+        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+            return null;
+        }
+        return cache.get(promptInput);
+    }
+
+    public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
+        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+            return;
+        }
+        cache.put(promptInput, chatCompletionResult);
+    }
+
+    public ChatCompletionResult locate(PromptInput promptInput) {
+        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+            return null;
+        }
+        return cache.locate(promptInput);
+    }
+
+    public void load(Map<String, String> qaPair) {
+        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : qaPair.entrySet()) {
+            String prompt = entry.getKey();
+            String context = entry.getValue();
+            prompt = ChatCompletionUtil.getPrompt(context, prompt);
+            ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
+            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+            put(getPromptInput(chatCompletionRequest), result);
+        }
+    }
+
+    public PromptInput getPromptInput(ChatCompletionRequest chatCompletionRequest) {
+        List<String> promptList = new ArrayList<>(PromptCacheConfig.MAX_CHAT_DEPTH);
+        List<ChatMessage> messages = chatCompletionRequest.getMessages();
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            ChatMessage message = messages.get(i);
+            promptList.add(message.getContent());
+            if (promptList.size() == PromptCacheConfig.MAX_CHAT_DEPTH) {
+                break;
+            }
+        }
+        return PromptInput.builder()
+                .maxTokens(chatCompletionRequest.getMax_tokens())
+                .promptList(promptList)
+                .temperature(chatCompletionRequest.getTemperature())
+                .category(chatCompletionRequest.getCategory())
+                .build();
+    }
+}

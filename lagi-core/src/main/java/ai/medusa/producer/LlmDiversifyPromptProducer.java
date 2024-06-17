@@ -1,7 +1,7 @@
 package ai.medusa.producer;
 
 import ai.llm.service.CompletionsService;
-import ai.medusa.PromptCacheConstant;
+import ai.medusa.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -65,7 +65,7 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
                     .build();
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
-                    .status(PromptCacheConstant.POOL_INITIAL)
+                    .status(PromptCacheConfig.POOL_INITIAL)
                     .indexSearchData(searchByContext(diversifiedPromptInput))
                     .build();
             result.add(pooledPrompt);
@@ -82,7 +82,7 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();
         message.setRole(LagiGlobal.LLM_ROLE_USER);
-        message.setContent(PromptCacheConstant.DIVERSIFY_PROMPT + promptInput.getPromptList().get(promptInput.getPromptList().size() - 1));
+        message.setContent(PromptCacheConfig.DIVERSIFY_PROMPT + promptInput.getPromptList().get(promptInput.getPromptList().size() - 1));
         messages.add(message);
         chatCompletionRequest.setMessages(messages);
         return chatCompletionRequest;

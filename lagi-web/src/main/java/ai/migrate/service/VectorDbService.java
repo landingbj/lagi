@@ -8,6 +8,8 @@ import ai.common.pojo.VectorStoreConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,5 +58,9 @@ public class VectorDbService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         vectorStoreService.addFileVectors(file, metadatas, category);
+    }
+
+    public List<String> getImageFiles(IndexSearchData indexData) {
+        return vectorStoreService.getImageFiles(indexData);
     }
 }
