@@ -10,10 +10,16 @@ models:
         driver: ai.llm.adapter.impl.LandingAdapter
       - model: image
         driver: ai.image.adapter.impl.LandingImageAdapter
+        oss:
+          name: landing
       - model: tts,asr
         driver: ai.audio.adapter.impl.LandingAudioAdapter
+        oss:
+          name: landing
       - model: video
         driver: ai.video.adapter.impl.LandingVideoAdapter
+        oss:
+          name: landing
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
@@ -164,8 +170,8 @@ stores:
       index_name: your-index-name
       api_key: your-api-key
   oss:
-    - name: landingbj
-      driver: ai.oss.impl.AlibabaOSS
+    - name: landing
+      driver: ai.oss.impl.LandingOSS
       bucket_name: lagi
       enable: true
 
