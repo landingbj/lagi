@@ -1,4 +1,4 @@
-package ai.managers;
+package ai.manager;
 
 import ai.llm.adapter.ILlmAdapter;
 

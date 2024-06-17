@@ -5,7 +5,7 @@ import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
-import ai.managers.VectorStoreManager;
+import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.StoppingWordUtil;

@@ -7,8 +7,8 @@ import ai.common.pojo.AsrResult;
 import ai.common.pojo.AudioRequestParam;
 import ai.common.pojo.TTSRequestParam;
 import ai.common.pojo.TTSResult;
-import ai.managers.ASRManager;
-import ai.managers.TTSManager;
+import ai.manager.ASRManager;
+import ai.manager.TTSManager;
 
 public class AudioService {
 

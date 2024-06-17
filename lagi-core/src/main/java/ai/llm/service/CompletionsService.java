@@ -16,7 +16,7 @@ import ai.common.ModelService;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
 import ai.llm.adapter.impl.LandingAdapter;
-import ai.managers.LlmManager;
+import ai.manager.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;

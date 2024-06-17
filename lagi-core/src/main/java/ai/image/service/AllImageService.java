@@ -4,9 +4,9 @@ import ai.common.pojo.*;
 import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
-import ai.managers.Image2TextManger;
-import ai.managers.ImageEnhanceManager;
-import ai.managers.ImageGenerationManager;
+import ai.manager.Image2TextManger;
+import ai.manager.ImageEnhanceManager;
+import ai.manager.ImageGenerationManager;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package ai.managers;
+package ai.manager;
 
 import ai.video.adapter.Video2trackAdapter;
 

@@ -1,6 +1,6 @@
 package ai.translate;
 
-import ai.managers.TranslateManager;
+import ai.manager.TranslateManager;
 import ai.translate.adapter.TranslateAdapter;
 
 public class TranslateService {

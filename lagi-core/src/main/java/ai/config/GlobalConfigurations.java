@@ -4,7 +4,7 @@ import ai.common.pojo.*;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.ModelFunctions;
 import ai.config.pojo.WorkerConfig;
-import ai.managers.*;
+import ai.manager.*;
 import ai.utils.LagiGlobal;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

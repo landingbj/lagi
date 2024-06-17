@@ -1,10 +1,10 @@
 package ai.video.service;
 
 import ai.common.pojo.*;
-import ai.managers.Image2VideoManager;
-import ai.managers.Text2VideoManager;
-import ai.managers.Video2EnhanceManger;
-import ai.managers.Video2TrackManager;
+import ai.manager.Image2VideoManager;
+import ai.manager.Text2VideoManager;
+import ai.manager.Video2EnhanceManger;
+import ai.manager.Video2TrackManager;
 import ai.video.adapter.Image2VideoAdapter;
 import ai.video.adapter.Text2VideoAdapter;
 import ai.video.adapter.Video2EnhanceAdapter;

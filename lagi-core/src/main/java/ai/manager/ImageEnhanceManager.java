@@ -1,4 +1,4 @@
-package ai.managers;
+package ai.manager;
 
 import ai.image.adapter.ImageEnhanceAdapter;
 
