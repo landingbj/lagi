@@ -34,7 +34,7 @@ models:
   - name: chatgpt
     type: GPT
     enable: false
-    model: gpt-3.5-turbo # gpt-4-1106-preview
+    model: gpt-3.5-turbo,gpt-4-1106-preview
     driver:  ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
