@@ -3,12 +3,14 @@ package ai.manager;
 import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.pojo.Driver;
+import ai.oss.UniversalOSS;
 import cn.hutool.core.bean.BeanUtil;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -26,7 +28,14 @@ public class AIManager<T> {
         }
         models.forEach(model->{
             if(model.getModel() != null && model.getDriver() != null) {
-                model.setDrivers(Lists.newArrayList(new Driver(model.getModel(), model.getDriver())));
+                model.setDrivers(Lists.newArrayList(new Driver(model.getModel(), model.getDriver(),model.getOss())));
+            }
+            if(model.getDriver() != null) {
+                model.getDrivers().forEach(driver -> {
+                    if(driver.getOss() == null && model.getOss() != null) {
+                        driver.setOss(model.getOss());
+                    }
+                });
             }
         });
         Map<String, Backend> modelMap = models.stream().collect(Collectors.toMap(Backend::getName, model -> model));
@@ -40,22 +49,68 @@ public class AIManager<T> {
                 Set<String> modelSet = Arrays.stream(driver.getModel().split(",")).map(String::trim).collect(Collectors.toSet());
                 if(modelSet.contains(func.getModel())) {
                     try {
-                        Class<?> clazz = Class.forName(driver.getDriver());
-                        Backend backend = new Backend();
-                        BeanUtil.copyProperties(model, backend, "drivers");
-                        backend.setModel(func.getModel());
-                        backend.setBackend(func.getBackend());
-                        backend.setStream(func.getStream());
-                        backend.setPriority(func.getPriority());
-                        backend.setModel(func.getModel());
-                        register(clazz, backend);
+                        T adapter = createAdapter(driver.getDriver());
+                        Backend backend = complex(model, func, driver);
+                        propertyInjection(adapter, backend);
+                        register(backend.getModel(), adapter);
                     } catch (Exception e) {
                         log.error(e.getMessage());
+                        throw new RuntimeException(e);
                     }
                 }
             }
         });
     };
+
+    private Backend complex(Backend model, Backend func, Driver driver) {
+        Backend backend = new Backend();
+        BeanUtil.copyProperties(model, backend, "drivers");
+        backend.setModel(func.getModel());
+        backend.setBackend(func.getBackend());
+        backend.setStream(func.getStream());
+        backend.setPriority(func.getPriority());
+        backend.setModel(func.getModel());
+        backend.setOss(driver.getOss());
+        return backend;
+    }
+
+    private T createAdapter(String driver) {
+        T adapter = null;
+        Class<?> clazz = null;
+        try {
+            clazz = Class.forName(driver);
+        } catch (Exception e) {
+            log.error( "class {} not fount {}", driver,  e.getMessage());
+        }
+        if(clazz == null) {
+            return null;
+        }
+        try {
+            adapter = (T) clazz.newInstance();
+        } catch (Exception e) {
+            log.error( "driver {} newinstance failed  {}", driver,  e.getMessage());
+        }
+        return adapter;
+    }
+
+    private void propertyInjection(T adapter, Backend backend) {
+        if(adapter instanceof ModelService) {
+            ModelService modelService = (ModelService) adapter;
+            BeanUtil.copyProperties(backend, modelService, "drivers");
+        }
+
+        if(backend.getOss() !=null && backend.getOss().getName() != null) {
+            try {
+                Field universalOSS = adapter.getClass().getDeclaredField("universalOSS");
+                if(universalOSS.getType() == UniversalOSS.class) {
+                    universalOSS.setAccessible(true);
+                    universalOSS.set(adapter, OSSManager.getInstance().getOss(backend.getOss().getName()));
+                }
+            } catch (Exception e) {
+                log.error("oss inject failed {}", e.getMessage());
+            }
+        }
+    }
 
     public void register(String key, T adapter) {
         T tempAdapter = aiMap.putIfAbsent(key, adapter);

@@ -16,8 +16,8 @@ public class ModelFunctions {
     private String streamBackend;
     @JsonProperty("chat")
     private List<Backend> chat;
-    @JsonProperty("RAG")
-    private List<Backend> RAG;
+//    @JsonProperty("RAG")
+//    private List<Backend> RAG;
     @JsonProperty("speech2text")
     private List<Backend> speech2text;
     @JsonProperty("text2speech")

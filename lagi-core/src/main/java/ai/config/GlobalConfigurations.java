@@ -3,6 +3,7 @@ package ai.config;
 import ai.common.pojo.*;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.ModelFunctions;
+import ai.config.pojo.StoreConfig;
 import ai.config.pojo.WorkerConfig;
 import ai.manager.*;
 import ai.utils.LagiGlobal;
@@ -25,15 +26,17 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     private String systemTitle;
     private List<Backend> models;
-    private List<VectorStoreConfig> vectors;
+    private StoreConfig stores;
     private ModelFunctions functions;
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
 
 
     private void init() {
+
+        OSSManager.getInstance().register(stores.getOss());
+        VectorStoreManager.getInstance().register(stores.getVectors(), stores.getRag(), functions.getEmbedding());
         LlmManager.getInstance().register(models, functions.getChat());
-        VectorStoreManager.getInstance().register(vectors, functions.getRAG(), functions.getEmbedding());
         ASRManager.getInstance().register(models, functions.getSpeech2text());
         TTSManager.getInstance().register(models, functions.getText2speech());
         Image2TextManger.getInstance().register(models, functions.getImage2text());
@@ -72,7 +75,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
         return Configuration.builder()
                 .systemTitle(systemTitle)
-                .vectorStores(vectors)
+                .vectorStores(stores.getVectors())
                 .LLM(llm)
                 .ASR(ASR.builder().backends(functions.getSpeech2text()).build())
                 .TTS(TTS.builder().backends(functions.getText2speech()).build())

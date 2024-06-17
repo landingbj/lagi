@@ -4,7 +4,7 @@ import ai.common.ModelService;
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.common.pojo.*;
-import ai.utils.FileUploadUtil;
+import ai.oss.UniversalOSS;
 import ai.video.adapter.Image2VideoAdapter;
 import ai.video.adapter.Text2VideoAdapter;
 import ai.video.adapter.Video2EnhanceAdapter;
@@ -22,12 +22,12 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
 
     private final Gson gson = new Gson();
     private final AiServiceCall call = new AiServiceCall();
-    
+    private UniversalOSS universalOSS;
 
     @Override
     public VideoJobResponse image2Video(VideoGeneratorRequest videoGeneratorRequest) {
         File file = new File(videoGeneratorRequest.getInputFileList().get(0).getUrl());
-        String url = FileUploadUtil.svdUpload(file);
+        String url = universalOSS.upload("svd/" + file.getName(), file);
         GenerateVideoRequest request = new GenerateVideoRequest();
         request.setImageUrl(url);
         Object[] params = {gson.toJson(request)};
@@ -42,7 +42,7 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
     @Override
     public VideoJobResponse enhance(VideoEnhanceRequest videoEnhanceRequest) {
         File file = new File(videoEnhanceRequest.getVideoURL());
-        String url = FileUploadUtil.mmeditingUpload(file);
+        String url = universalOSS.upload("mmediting/" + file.getName(), file);
         MmeditingInferenceRequest request = new MmeditingInferenceRequest();
         request.setVideoUrl(url);
 
@@ -58,7 +58,7 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
     @Override
     public VideoJobResponse track(String videoUrl) {
         File file = new File(videoUrl);
-        String url = FileUploadUtil.mmtrackingUpload(file);
+        String url = universalOSS.upload("mmtracking/" + file.getName(), file);
         MotInferenceRequest request = new MotInferenceRequest();
         request.setVideoUrl(url);
         Object[] params = { gson.toJson(request) };

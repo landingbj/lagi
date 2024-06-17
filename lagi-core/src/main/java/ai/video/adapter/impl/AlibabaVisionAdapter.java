@@ -2,6 +2,7 @@ package ai.video.adapter.impl;
 
 import ai.common.ModelService;
 import ai.common.exception.RRException;
+import ai.oss.UniversalOSS;
 import ai.utils.AlibabaOSSUtil;
 import ai.video.adapter.Video2EnhanceAdapter;
 import ai.video.pojo.*;
@@ -27,6 +28,7 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
 
     private final Logger log = LoggerFactory.getLogger(AlibabaVisionAdapter.class);
 
+    private UniversalOSS universalOSS;
 
     public Client createClient() {
         try {
@@ -55,7 +57,7 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
                 generateVideoRequestFileList.setFileName(UUID.randomUUID() + ".jpg");
             } else {
                 File file = new File(i.getUrl());
-                String s = AlibabaOSSUtil.uploadAndGetUrl(accessKeyId, accessKeySecret, "ai-service-oss", "genVideo/" + file.getName(), file);
+                String s = universalOSS.upload("genVideo/" + file.getName(), file);
                 generateVideoRequestFileList.setFileUrl(s);
                 generateVideoRequestFileList.setFileName(file.getName());
             }
@@ -179,7 +181,7 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
         BeanUtil.copyProperties(videoEnhanceRequest, enhanceVideoQualityRequest);
         if(!isNetworkPath(enhanceVideoQualityRequest.getVideoURL())) {
             File file = new File(enhanceVideoQualityRequest.getVideoURL());
-            String s = AlibabaOSSUtil.uploadAndGetUrl(accessKeyId, accessKeySecret, "ai-service-oss", "enhanceVideo/" + file.getName(), file);
+            String s = universalOSS.upload("enhanceVideo/" + file.getName(), file);
             enhanceVideoQualityRequest.setVideoURL(s);
         }
         return enhanceVideoQualityRequest;

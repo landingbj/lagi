@@ -1,4 +1,4 @@
-system_title: Lag[i]
+system_title: lag[i]
 
 models:
   # Landing is a MOE model provided by Beijing Landing Technologies
@@ -28,7 +28,7 @@ models:
   - name: chatgpt
     type: GPT
     enable: false
-    model: gpt-3.5-turbo,gpt-4-1106-preview
+    model: gpt-3.5-turbo # gpt-4-1106-preview
     driver:  ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
@@ -43,6 +43,8 @@ models:
         driver: ai.audio.adapter.impl.AlibabaAudioAdapter
       - model: vision
         driver: ai.video.adapter.impl.AlibabaVisionAdapter
+        oss:
+          name: alibaba
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
     access_key_id: your-access-key-id
@@ -134,32 +136,50 @@ models:
     driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
-vectors:
-  # Chroma is an AI-native open-source embedding database
-  # The official website is https://www.trychroma.com/
-  - name: chroma
-    driver : ai.vector.impl.ChromaVectorStore
-    default_category: default
-    similarity_top_k: 10
-    similarity_cutoff: 0.5
-    parent_depth: 1
-    child_depth: 1
-    url: http://localhost:8000
+stores:
+  vectors:
+    # Chroma is an AI-native open-source embedding database
+    # The official website is https://www.trychroma.com/
+    - name: chroma
+      driver : ai.vector.impl.ChromaVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:8000
 
 
-  # Pinecone is a vector database for building large-scale machine learning applications
-  # The official website is https://www.pinecone.io/
-  - name: pinecone
-    driver: ai.vector.impl.PineconeVectorStore
-    default_category: default
-    similarity_top_k: 10
-    similarity_cutoff: 0.5
-    parent_depth: 1
-    child_depth: 1
-    environment: your-environment
-    project_name: your-project-name
-    index_name: your-index-name
-    api_key: your-api-key
+    # Pinecone is a vector database for building large-scale machine learning applications
+    # The official website is https://www.pinecone.io/
+    - name: pinecone
+      driver: ai.vector.impl.PineconeVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      environment: your-environment
+      project_name: your-project-name
+      index_name: your-index-name
+      api_key: your-api-key
+  oss:
+    - name: landingbj
+      driver: ai.oss.impl.AlibabaOSS
+      bucket_name: lagi
+      enable: true
+
+    - name: alibaba
+      driver: ai.oss.impl.AlibabaOSS
+      access_key_id: your-access-key-id
+      access_key_secret: your-access-key-secret
+      bucket_name: ai-service-oss
+      enable: true
+
+  rag:
+    - backend: chroma
+      enable: true
+      priority: 10
 
 
 functions:
@@ -194,12 +214,6 @@ functions:
       enable: false
       stream: true
       priority: 120
-
-  RAG:
-    - backend: chroma
-      enable: true
-      priority: 10
-
 
   speech2text:
     - backend: qwen
