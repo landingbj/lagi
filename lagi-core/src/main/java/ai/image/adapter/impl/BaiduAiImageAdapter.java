@@ -3,6 +3,7 @@ package ai.image.adapter.impl;
 import ai.common.ModelService;
 import ai.common.pojo.ImageEnhanceResult;
 import ai.image.adapter.ImageEnhanceAdapter;
+import ai.image.pojo.ImageEnhanceRequest;
 import ai.utils.BaiduHttpUtil;
 import ai.utils.Base64Util;
 import ai.utils.ImageUtil;
@@ -38,12 +39,12 @@ public class BaiduAiImageAdapter extends ModelService implements ImageEnhanceAda
     }
 
     @Override
-    public ImageEnhanceResult enhance(String imageUrl) {
+    public ImageEnhanceResult enhance(ImageEnhanceRequest imageEnhanceRequest) {
         // 请求url
         String image = null;
         String url = "https://aip.baidubce.com/rest/2.0/image-process/v1/image_definition_enhance";
         try {
-            byte[] imgData = ImageUtil.getFileStream(imageUrl);
+            byte[] imgData = ImageUtil.getFileStream(imageEnhanceRequest.getImageUrl());
             String imgStr = Base64Util.encode(imgData);
             String imgParam = URLEncoder.encode(imgStr, "UTF-8");
             String param = "image=" + imgParam;

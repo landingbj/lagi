@@ -9,12 +9,13 @@ import lombok.*;
 @AllArgsConstructor
 @Data
 public class VideoEnhanceRequest {
-    public String videoURL;
-    public Boolean async;
-    public Integer outPutWidth;
-    public Integer outPutHeight;
-    public Integer frameRate;
-    public String HDRFormat;
-    public Integer maxIlluminance;
-    public Integer bitrate;
+    private String model;
+    private String videoURL;
+    private Boolean async;
+    private Integer outPutWidth;
+    private Integer outPutHeight;
+    private Integer frameRate;
+    private String HDRFormat;
+    private Integer maxIlluminance;
+    private Integer bitrate;
 }

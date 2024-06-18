@@ -12,10 +12,17 @@ import ai.video.adapter.Video2trackAdapter;
 import ai.video.pojo.VideoEnhanceRequest;
 import ai.video.pojo.VideoGeneratorRequest;
 import ai.video.pojo.VideoJobResponse;
+import ai.video.pojo.VideoTackRequest;
 
 public class AllVideoService {
 
     public VideoJobResponse image2Video(VideoGeneratorRequest videoGeneratorRequest) {
+        if(videoGeneratorRequest.getModel() != null) {
+            Image2VideoAdapter adapter = Image2VideoManager.getInstance().getAdapter(videoGeneratorRequest.getModel());
+            if(adapter != null) {
+                return adapter.image2Video(videoGeneratorRequest);
+            }
+        }
         for(Image2VideoAdapter adapter: Image2VideoManager.getInstance().getAdapters()) {
             return adapter.image2Video(videoGeneratorRequest);
         }
@@ -25,6 +32,12 @@ public class AllVideoService {
 
 
     public VideoJobResponse enhance(VideoEnhanceRequest videoEnhanceRequest) {
+        if(videoEnhanceRequest.getModel() != null) {
+            Video2EnhanceAdapter adapter = Video2EnhanceManger.getInstance().getAdapter(videoEnhanceRequest.getModel());
+            if(adapter != null) {
+                return adapter.enhance(videoEnhanceRequest);
+            }
+        }
         for(Video2EnhanceAdapter adapter: Video2EnhanceManger.getInstance().getAdapters()) {
             return adapter.enhance(videoEnhanceRequest);
         }
@@ -32,9 +45,15 @@ public class AllVideoService {
     }
 
 
-    public VideoJobResponse track(String videoUrl) {
+    public VideoJobResponse track(VideoTackRequest videoTackRequest) {
+        if(videoTackRequest.getModel() != null) {
+            Video2trackAdapter adapter = Video2TrackManager.getInstance().getAdapter(videoTackRequest.getModel());
+            if(adapter != null) {
+                return adapter.track(videoTackRequest.getVideoUrl());
+            }
+        }
         for (Video2trackAdapter adapter: Video2TrackManager.getInstance().getAdapters()) {
-            return adapter.track(videoUrl);
+            return adapter.track(videoTackRequest.getVideoUrl());
         }
         return null;
     }

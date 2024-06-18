@@ -17,7 +17,6 @@ import ai.common.ModelService;
 import ai.common.pojo.IndexSearchData;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
-import ai.llm.adapter.impl.LandingAdapter;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -49,7 +48,6 @@ public class CompletionsService {
 
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        // TODO 2024/6/4 转为manager 管理
         ChatCompletionResult answer = null;
         try (IRContainer contain = new FastDirectContainer()) {
             if (chatCompletionRequest.getModel() != null) {
@@ -103,9 +101,17 @@ public class CompletionsService {
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        for (ILlmAdapter adapter : getAdapters()) {
-            if (adapter != null) {
+
+        if(chatCompletionRequest.getModel() != null) {
+            ILlmAdapter adapter = LlmManager.getInstance().getAdapter();
+            if(adapter != null) {
                 return adapter.streamCompletions(chatCompletionRequest);
+            }
+        } else {
+            for (ILlmAdapter adapter : getAdapters()) {
+                if (adapter != null) {
+                    return adapter.streamCompletions(chatCompletionRequest);
+                }
             }
         }
         throw new RuntimeException("Stream backend is not enabled.");
@@ -119,9 +125,6 @@ public class CompletionsService {
         return LlmManager.getInstance().getAdapter(backendConfig.getModel());
     }
 
-    private ILlmAdapter getAdapter(String key) {
-        return LlmManager.getInstance().getAdapter(key);
-    }
 
     private IMapper getMapper(Backend backendConfig) {
         if (backendConfig.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
@@ -130,12 +133,6 @@ public class CompletionsService {
         return new UniversalMapper(getAdapter(backendConfig));
     }
 
-    private IMapper getMapper(ILlmAdapter adapter) {
-        if (adapter instanceof LandingAdapter) {
-            return new LandingMapper();
-        }
-        return new UniversalMapper(adapter);
-    }
 
     public void addVectorDBContext(ChatCompletionRequest request, List<IndexSearchData> indexSearchDataList) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
