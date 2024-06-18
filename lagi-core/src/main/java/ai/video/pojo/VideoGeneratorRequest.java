@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 public class VideoGeneratorRequest {
+    String model;
     OutputVideoProperties outputVideoProperties;
     List<InputFile> inputFileList;
     List<String> intPutText;

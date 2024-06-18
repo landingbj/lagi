@@ -1,13 +1,11 @@
 package ai.migrate.service;
 
 import ai.common.pojo.*;
+import ai.image.pojo.ImageEnhanceRequest;
 import ai.image.service.AllImageService;
 import ai.translate.TranslateService;
 import ai.utils.*;
-import ai.video.pojo.InputFile;
-import ai.video.pojo.VideoEnhanceRequest;
-import ai.video.pojo.VideoGeneratorRequest;
-import ai.video.pojo.VideoJobResponse;
+import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -85,7 +83,7 @@ public class ApiService {
             tempDir.mkdirs();
         }
         JsonObject finalResult = new JsonObject();
-        ImageEnhanceResult enhance = allImageService.enhance(imageUrl);
+        ImageEnhanceResult enhance = allImageService.enhance(ImageEnhanceRequest.builder().imageUrl(imageUrl).build());
         WhisperResponse whisperResponse1;
         if(Objects.equals(enhance.getType(), "url")) {
             whisperResponse1= DownloadUtils.downloadFile(enhance.getData(), "png",filePath);
@@ -160,7 +158,7 @@ public class ApiService {
     
     public String motInference(String lastVideoFile, HttpServletRequest req) throws IOException {
         File file = new File(lastVideoFile);
-        VideoJobResponse track = videoService.track(file.getAbsolutePath());
+        VideoJobResponse track = videoService.track(VideoTackRequest.builder().videoUrl(file.getAbsolutePath()).build());
         JsonObject result = new JsonObject();
         if (track != null) {
             result.addProperty("status", "failed");

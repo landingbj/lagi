@@ -10,6 +10,7 @@ import java.util.Map;
 @ToString
 @Data
 public class FileRequest {
+    String model;
     String imageUrl;
     Map<String, Object> extendParam;
 }
