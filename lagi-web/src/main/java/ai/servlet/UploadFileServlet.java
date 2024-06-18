@@ -15,6 +15,7 @@ import javax.servlet.http.HttpSession;
 
 import ai.common.pojo.*;
 import ai.medusa.MedusaService;
+import ai.medusa.PromptCacheConfig;
 import ai.medusa.pojo.InstructionData;
 import ai.migrate.service.UploadFileService;
 import ai.vector.VectorStoreService;
@@ -108,7 +109,6 @@ public class UploadFileServlet extends HttpServlet {
 
         new Thread(() -> {
             for (File file: files) {
-                System.out.println(file.getAbsoluteFile());
                 JsonReader jsonReader;
                 try {
                     jsonReader = new JsonReader(new FileReader(file));
@@ -134,7 +134,7 @@ public class UploadFileServlet extends HttpServlet {
                             .build());
                     vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
                 }
-                medusaService.load(qaMap);
+                medusaService.load(qaMap, category);
             }
         }).start();
 

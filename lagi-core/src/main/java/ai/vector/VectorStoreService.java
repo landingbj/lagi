@@ -257,7 +257,7 @@ public class VectorStoreService {
         return toIndexSearchData(this.fetch(parentId, category));
     }
 
-    private IndexSearchData getChildIndex(String parentId, String category) {
+    public IndexSearchData getChildIndex(String parentId, String category) {
         IndexSearchData result = null;
         if (parentId == null) {
             return null;

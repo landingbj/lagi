@@ -56,4 +56,8 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
     protected IndexSearchData getParentIndex(String parentId, String category) {
         return vectorStoreService.getParentIndex(parentId, category);
     }
+
+    protected IndexSearchData getChildIndex(String parentId, String category) {
+        return vectorStoreService.getChildIndex(parentId, category);
+    }
 }

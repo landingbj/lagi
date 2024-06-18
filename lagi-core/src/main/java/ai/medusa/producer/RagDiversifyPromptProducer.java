@@ -2,6 +2,7 @@ package ai.medusa.producer;
 
 import ai.common.pojo.IndexSearchData;
 import ai.medusa.PromptCacheConfig;
+import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 
@@ -23,8 +24,12 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
     }
 
     @Override
-    public Collection<PooledPrompt> produce(PooledPrompt item) {
-        return diversify(item);
+    public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        try {
+            return diversify(item);
+        } catch (Exception e) {
+            throw new FailedDiversifyPromptException(item, e);
+        }
     }
 
     @Override
@@ -40,19 +45,22 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
         Collection<PooledPrompt> result = new ArrayList<>();
 
         PromptInput promptInput = item.getPromptInput();
-        PromptInput diversifiedPromptInput = PromptInput.builder()
-                .maxTokens(promptInput.getMaxTokens())
-                .temperature(promptInput.getTemperature())
-                .category(promptInput.getCategory())
-                .promptList(promptInput.getPromptList())
-                .build();
+        String question = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
 
-        List<IndexSearchData> indexSearchDataList =  searchByContext(diversifiedPromptInput);
+        List<IndexSearchData> indexSearchDataList = search(question, promptInput.getCategory());
+
         if (indexSearchDataList.isEmpty()) {
             return result;
         }
-        
-        String chunk = indexSearchDataList.get(0).getText();
+
+        String parentId = indexSearchDataList.get(0).getId();
+        IndexSearchData childIndex = getChildIndex(parentId, promptInput.getCategory());
+
+        if (childIndex == null) {
+            return result;
+        }
+
+        String chunk = childIndex.getText();
         List<IndexSearchData> qaList = search(chunk, promptInput.getCategory());
 
         if (qaList.size() <= 1) {
@@ -72,7 +80,9 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
                     .promptList(promptList)
                     .build();
             result.add(PooledPrompt.builder()
-                    .promptInput(newPromptInput).status(PromptCacheConfig.POOL_INITIAL)
+                    .promptInput(newPromptInput)
+                    .status(PromptCacheConfig.POOL_INITIAL)
+                    .indexSearchData(searchByContext(newPromptInput))
                     .build());
         });
 

@@ -48,7 +48,7 @@ public class MedusaService {
         return cache.locate(promptInput);
     }
 
-    public void load(Map<String, String> qaPair) {
+    public void load(Map<String, String> qaPair, String category) {
         if (!PromptCacheConfig.MEDUSA_ENABLE) {
             return;
         }
@@ -57,8 +57,10 @@ public class MedusaService {
             String context = entry.getValue();
             prompt = ChatCompletionUtil.getPrompt(context, prompt);
             ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
+            chatCompletionRequest.setCategory(category);
+            PromptInput promptInput = getPromptInput(chatCompletionRequest);
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            put(getPromptInput(chatCompletionRequest), result);
+            put(promptInput, result);
         }
     }
 
