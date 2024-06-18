@@ -2,6 +2,7 @@ package ai.audio.adapter.impl;
 
 import ai.audio.adapter.IAudioAdapter;
 import ai.audio.service.AlibabaAsrService;
+import ai.audio.service.AlibabaTtsService;
 import ai.common.ModelService;
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
@@ -29,14 +30,13 @@ public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
 
     @Override
     public TTSResult tts(TTSRequestParam param) {
-        Text2VoiceEntity text2VoiceEntity = new Text2VoiceEntity();
-        text2VoiceEntity.setText(param.getText());
-        text2VoiceEntity.setModel("default");
-        text2VoiceEntity.setEmotion(param.getEmotion());
-        Object[] params = {gson.toJson(text2VoiceEntity)};
-        String[] result = call.callWS(AiServiceInfo.WSVocUrl, "text2Voice", params);
-        Response response = gson.fromJson(result[0], Response.class);
-        return toTTSResult(response);
+        AlibabaTtsService ttsService = new AlibabaTtsService(
+                getAppKey(),
+                getAccessKeyId(),
+                getAccessKeySecret()
+        );
+        ttsService.tts("你好");
+        return null;
     }
 
     private TTSResult toTTSResult(Response response) {
