@@ -13,6 +13,7 @@ import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerPipeline<PooledPrompt, PooledPrompt> {
@@ -46,5 +47,13 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
             cache.put(request, result);
         }
         return result;
+    }
+
+    protected List<IndexSearchData> search(String question, String category) {
+        return vectorStoreService.search(question, 30, 0.01, new HashMap<>(), category);
+    }
+
+    protected IndexSearchData getParentIndex(String parentId, String category) {
+        return vectorStoreService.getParentIndex(parentId, category);
     }
 }

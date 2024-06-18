@@ -1,11 +1,13 @@
 package ai.medusa.producer;
 
+import ai.common.pojo.IndexSearchData;
 import ai.medusa.PromptCacheConfig;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
     public RagDiversifyPromptProducer(int limit) {
@@ -44,12 +46,36 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
                 .category(promptInput.getCategory())
                 .promptList(promptInput.getPromptList())
                 .build();
-        PooledPrompt pooledPrompt = PooledPrompt.builder()
-                .promptInput(diversifiedPromptInput)
-                .status(PromptCacheConfig.POOL_INITIAL)
-                .indexSearchData(searchByContext(diversifiedPromptInput))
-                .build();
-        result.add(pooledPrompt);
+
+        List<IndexSearchData> indexSearchDataList =  searchByContext(diversifiedPromptInput);
+        if (indexSearchDataList.isEmpty()) {
+            return result;
+        }
+        
+        String chunk = indexSearchDataList.get(0).getText();
+        List<IndexSearchData> qaList = search(chunk, promptInput.getCategory());
+
+        if (qaList.size() <= 1) {
+            return result;
+        }
+        qaList.forEach(qa -> {
+            if (qa.getParentId() == null) {
+                return;
+            }
+            IndexSearchData parentIndex = getParentIndex(qa.getParentId(), promptInput.getCategory());
+            List<String> promptList = new ArrayList<>();
+            promptList.add(parentIndex.getText());
+            PromptInput newPromptInput = PromptInput.builder()
+                    .maxTokens(promptInput.getMaxTokens())
+                    .temperature(promptInput.getTemperature())
+                    .category(promptInput.getCategory())
+                    .promptList(promptList)
+                    .build();
+            result.add(PooledPrompt.builder()
+                    .promptInput(newPromptInput).status(PromptCacheConfig.POOL_INITIAL)
+                    .build());
+        });
+
         return result;
     }
 }
