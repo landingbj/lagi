@@ -4,19 +4,20 @@ import ai.audio.adapter.IAudioAdapter;
 import ai.audio.service.AlibabaAsrService;
 import ai.audio.service.AlibabaTtsService;
 import ai.common.ModelService;
-import ai.common.client.AiServiceCall;
-import ai.common.client.AiServiceInfo;
 import ai.common.pojo.*;
-import ai.learning.pojo.Response;
+import ai.oss.UniversalOSS;
+import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
 import com.google.gson.Gson;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
     private final Gson gson = new Gson();
-    private final AiServiceCall call = new AiServiceCall();
-
+    private UniversalOSS universalOSS;
 
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
@@ -35,17 +36,32 @@ public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
                 getAccessKeyId(),
                 getAccessKeySecret()
         );
-        ttsService.tts("你好");
-        return null;
-    }
-
-    private TTSResult toTTSResult(Response response) {
+        param.setSample_rate(16000);
+        param.setFormat("wav");
+        Request request = ttsService.getRequest(param);
         TTSResult result = new TTSResult();
-        if (response.getStatus().equals("success")) {
-            result.setStatus(LagiGlobal.TTS_STATUS_SUCCESS);
-            result.setResult(response.getData());
-        } else {
-            result.setStatus(LagiGlobal.TTS_STATUS_FAILURE);
+        try {
+            OkHttpClient client = new OkHttpClient();
+            okhttp3.Response response = client.newCall(request).execute();
+            String contentType = response.header("Content-Type");
+            if ("audio/mpeg".equals(contentType)) {
+                String tempDir = System.getProperty("java.io.tmpdir");
+                String tempFile = tempDir + FileUploadUtil.generateRandomFileName("wav");
+                File audio = new File(tempFile);
+                FileOutputStream fout = new FileOutputStream(audio);
+                fout.write(response.body().bytes());
+                fout.close();
+                String url = universalOSS.upload("tts/" + audio.getName(), audio);
+                audio.delete();
+                result.setStatus(LagiGlobal.TTS_STATUS_SUCCESS);
+                result.setResult(url);
+            } else {
+                String errorMessage = response.body().string();
+                result = gson.fromJson(errorMessage, TTSResult.class);
+            }
+            response.close();
+        } catch (Exception e) {
+           throw new RuntimeException(e);
         }
         return result;
     }
