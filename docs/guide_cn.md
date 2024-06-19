@@ -63,6 +63,8 @@
     确保您的 WAR 文件已经正确构建并位于当前目录中。
     如果您有额外的配置或依赖项，可能需要修改 Dockerfile 或者使用 Docker Compose 进行更复杂的配置。
 
+## 调用示列
+- 为了快速上手，我们提供了一些[示例代码](https://github.com/landingbj/lagi/blob/main/lagi-core/src/test/java/ai/example/Demo.java)，您可以根据需要进行修改和调试。
 
 ## 文本对话功能
 要使用文本对话功能首先需要创建一个 CompletionsService 的实例对象。 这个对象有两个方法 completions,streamCompletions。
@@ -227,12 +229,12 @@ import ai.common.pojo.TTSRequestParam;
 import ai.common.pojo.Text2VoiceEntity;
 
 public void Test() {
-    Text2VoiceEntity text2VoiceEntity;
+    //Your text
+    String text = "Hello";
+    TTSRequestParam request = new TTSRequestParam();
+    request.setText(text);
     AudioService audioService = new AudioService();
-    TTSRequestParam ttsRequestParam = new TTSRequestParam();
-    ttsRequestParam.setText(text2VoiceEntity.getText());
-    ttsRequestParam.setEmotion(text2VoiceEntity.getEmotion());
-    TSResult result = audioService.tts(ttsRequestParam);
+    TTSResult result = audioService.tts(request);
 }
 ```
 
@@ -395,9 +397,9 @@ import java.io.File;
 
 public void Test() {
     String lastVideoFile;
-    VideoService videoService = new VideoService();
-    File file = new File(lastVideoFile);
-    VideoGenerationResult track = videoService.track(file.getAbsolutePath());
+    AllVideoService videoService = new AllVideoService();
+    VideoTackRequest videoTackRequest = VideoTackRequest.builder().videoUrl(lastVideoFile).build();
+    VideoJobResponse track = videoService.track(videoTackRequest);
 }
 ```
 
@@ -429,12 +431,14 @@ ImageEnhanceResult enhance(String imageUrl);
 ```java
 import ai.image.service.AllImageService;
 import ai.common.pojo.ImageEnhanceResult;
+import ai.image.pojo.ImageEnhanceRequest;
 import java.io.File;
 
 public void Test() {
     String imageUrl;
     AllImageService allImageService = new AllImageService();
-    ImageEnhanceResult enhance = allImageService.enhance(imageUrl);
+    ImageEnhanceRequest imageEnhanceRequest = ImageEnhanceRequest.builder().imageUrl(imageUrl).build();
+    ImageEnhanceResult enhance = allImageService.enhance(imageEnhanceRequest);
 }
 
 ```
@@ -470,7 +474,10 @@ import ai.video.pojo.VideoJobResponse;
 public void Test() {
     String imageUrl;
     AllVideoService allVideoService = new  AllVideoService();
-    VideoGenerationResult videoGenerationResult = allVideoService.image2Video(imageUrl);
+    VideoGeneratorRequest videoGeneratorRequest = VideoGeneratorRequest.builder()
+            .inputFileList(Collections.singletonList(InputFile.builder().url(imageUrl).build()))
+            .build();
+    VideoJobResponse videoGenerationResult = allVideoService.image2Video(videoGeneratorRequest);
 }
 
 
@@ -508,6 +515,8 @@ import ai.video.pojo.VideoJobResponse;
 public void Test() {
     String videoUrl;
     AllVideoService allVideoService = new  AllVideoService();
-    VideoGenerationResult videoGenerationResult = allVideoService.enhance(videoUrl);
+    VideoEnhanceRequest videoEnhanceRequest = new VideoEnhanceRequest();
+    videoEnhanceRequest.setVideoURL(lastVideoFile);
+    VideoJobResponse videoGenerationResult = allVideoService.enhance(videoEnhanceRequest);
 }
 ```

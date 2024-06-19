@@ -63,6 +63,8 @@
     Make sure your WAR file is built correctly and located in the current directory.   
     If you have additional configuration or dependencies, you may need to modify the Dockerfile or use Docker Compose for more complex configuration.   
 
+## Calling the examples
+- To get started quickly, We provide some [Calling the examples](https://github.com/landingbj/lagi/blob/main/lagi-core/src/test/java/ai/example/Demo.java), you can modify and debug as needed.
 
 ## Text conversation feature
 To use chat function you need to create an instance object of CompletionsService. This object has two methods completions, streamCompletions.
@@ -227,12 +229,12 @@ import ai.common.pojo.TTSRequestParam;
 import ai.common.pojo.Text2VoiceEntity;
 
 public void Test() {
-  Text2VoiceEntity text2VoiceEntity;
+  //Your text
+  String text = "Hello";
+  TTSRequestParam request = new TTSRequestParam();
+  request.setText(text);
   AudioService audioService = new AudioService();
-  TTSRequestParam ttsRequestParam = new TTSRequestParam();
-  ttsRequestParam.setText(text2VoiceEntity.getText());
-  ttsRequestParam.setEmotion(text2VoiceEntity.getEmotion());
-  TSResult result = audioService.tts(ttsRequestParam);
+  TTSResult result = audioService.tts(request);
 }
 ```
 
@@ -395,9 +397,9 @@ import java.io.File;
 
 public void Test() {
   String lastVideoFile;
-  VideoService videoService = new VideoService();
-  File file = new File(lastVideoFile);
-  VideoGenerationResult track = videoService.track(file.getAbsolutePath());
+  AllVideoService videoService = new AllVideoService();
+  VideoTackRequest videoTackRequest = VideoTackRequest.builder().videoUrl(lastVideoFile).build();
+  VideoJobResponse track = videoService.track(videoTackRequest);
 }
 ```
 
@@ -429,13 +431,14 @@ Obtain the generated image result set.
 ```java
 import ai.image.service.AllImageService;
 import ai.common.pojo.ImageEnhanceResult;
+import ai.image.pojo.ImageEnhanceRequest;
 import java.io.File;
-
 
 public void Test() {
   String imageUrl;
   AllImageService allImageService = new AllImageService();
-  ImageEnhanceResult enhance = allImageService.enhance(imageUrl);
+  ImageEnhanceRequest imageEnhanceRequest = ImageEnhanceRequest.builder().imageUrl(imageUrl).build();
+  ImageEnhanceResult enhance = allImageService.enhance(imageEnhanceRequest);
 }
 
 ```
@@ -471,7 +474,10 @@ import ai.video.pojo.VideoJobResponse;
 public void Test() {
   String imageUrl;
   AllVideoService allVideoService = new  AllVideoService();
-  VideoGenerationResult videoGenerationResult = allVideoService.image2Video(imageUrl);
+  VideoGeneratorRequest videoGeneratorRequest = VideoGeneratorRequest.builder()
+          .inputFileList(Collections.singletonList(InputFile.builder().url(imageUrl).build()))
+          .build();
+  VideoJobResponse videoGenerationResult = allVideoService.image2Video(videoGeneratorRequest);
 }
 
 
@@ -507,8 +513,10 @@ import ai.video.service.AllVideoService;
 import ai.video.pojo.VideoJobResponse;
 
 public void Test() {
-    String videoUrl;
-    AllVideoService allVideoService = new  AllVideoService();
-    VideoGenerationResult videoGenerationResult = allVideoService.enhance(videoUrl);
+  String videoUrl;
+  AllVideoService allVideoService = new  AllVideoService();
+  VideoEnhanceRequest videoEnhanceRequest = new VideoEnhanceRequest();
+  videoEnhanceRequest.setVideoURL(lastVideoFile);
+  VideoJobResponse videoGenerationResult = allVideoService.enhance(videoEnhanceRequest);
 }
 ```
