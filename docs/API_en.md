@@ -257,6 +257,49 @@ Status Code **200**
 |----------|---------|----------|----------------------------|
 | » result | boolean | true     | Status of uploading private training file |
 
+## Upload QA Training Files
+
+POST /training/pairing
+
+Upload private training QA data in JSON format.
+
+> Body request parameters
+
+```yaml
+fileToUpload: file://D:/test.json
+```
+
+### Request Parameters
+
+| Name           | Position | Type           | Required | Description                              |
+| -------------- | -------- | -------------- | -------- | ---------------------------------------- |
+| category       | query    | string         | Yes      | Specified data category                  |
+| body           | body     | object         | No       | none                                     |
+| » fileToUpload | body     | string(binary) | Yes      | The private QA json file being uploaded |
+
+> Return example
+
+> Success
+
+```json
+{
+  "status": "success"
+}
+```
+
+### Return Result
+
+| Status Code | Meaning | Description |
+| ----------- | ------- | ----------- |
+| 200         | OK      | Success     |
+
+### Return Data Structure
+
+Status Code **200**
+
+| Name     | Type   | Required | Description                      |
+|----------|--------|----------|----------------------------------|
+| » result | string | true     | Status of uploading QA json file |
 
 ## Image Captioning
 

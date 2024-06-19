@@ -261,6 +261,49 @@ fileToUpload: file://D:/知识图谱.pdf
 |---|---|---|---|
 |» result|boolean|true|上传私训文件的状态|
 
+## 上传私训问答对数据
+
+POST /training/pairing
+
+上传私训问答对数据，要求为json格式
+
+> Body 请求参数
+
+```yaml
+fileToUpload: file://D:/测试文件.json
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|说明|
+|---|---|---|---|---|
+|category|query|string| 是 |指定的数据类别|
+|body|body|object| 否 |none|
+|» fileToUpload|body|string(binary)| 是 |所上传的问答对数据|
+
+> 返回示例
+
+> 成功
+
+```json
+{
+  "status": "success"
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|
+|---|---|---|
+|200|OK|成功|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|说明|
+|---|---|---|---|
+|» result|string|true|问答对数据的状态|
 
 
 ## 看图说话
