@@ -3,10 +3,8 @@ package ai.example;
 import ai.audio.service.AudioService;
 import ai.common.pojo.*;
 import ai.config.ContextLoader;
-import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.pojo.ImageEnhanceRequest;
 import ai.image.service.AllImageService;
-import ai.image.service.ImageGenerationService;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -16,7 +14,6 @@ import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Collections;
@@ -30,6 +27,7 @@ public class Demo {
     }
 
     /**
+     * completions Demo Method
      * Demonstration function for testing the chat completion feature.
      * This function initializes the environment, constructs a mock chat completion request, calls the completions method of the CompletionsService class,
      * and prints the content of the first completion result.
@@ -59,6 +57,7 @@ public class Demo {
     }
 
     /**
+     * streamCompletions Demo Method
      * Demonstration function for chat completion.
      * Initializes and sends a chat completion request, then processes and outputs the completion results through an observable subscription.
      */
@@ -126,15 +125,31 @@ public class Demo {
         System.out.println("outcome:" +result);
     }
 
-    public static void Text2Audio(){
+    /**
+     * tts Demo Method
+     * Converts text into audio.
+     * This method demonstrates the process of using a Text-to-Speech (TTS) service to convert simple text into corresponding audio.
+     * It initializes a TTS request parameter object, sets the text to be converted,
+     * then employs the audio service class to execute the TTS operation and receives the converted audio result.
+     * Lastly, it prints out the result of the operation.
+     */
+    public void Text2Audio(){
+        // Initialize the TTS request parameter object and set the text for conversion
         TTSRequestParam request = new TTSRequestParam();
         request.setText("你好");
+
+        // Instantiate the audio service
         AudioService audioService = new AudioService();
+
+        // Invoke the tts method of the audio service to convert text into audio
         TTSResult result = audioService.tts(request);
+
+        // Print the conversion result
         System.out.println("outcome" +result);
     }
 
     /**
+     * generations Demo Method
      * Generates a landscape map image.
      * This method creates an image generation request, specifies the prompt for the map generation,
      * calls the image service to perform the generation, and outputs the result.
@@ -156,6 +171,7 @@ public class Demo {
     }
 
     /**
+     * toText Demo Method
      * Converts an image into text description.
      * This method utilizes an image processing service to convert the image located at a specified path into a textual description.
      * Primarily used for translating visual content into descriptive text, such as identifying objects or scenes within the image.
@@ -174,15 +190,32 @@ public class Demo {
         System.out.println("outcome:" +text.getCaption());
     }
 
+    /**
+     * track Demo Method
+     * Tracks the status of a video processing task.
+     * This function initiates a request to the video service using the provided video URL,
+     * aimed at fetching the current status of the video processing job.
+     * It serves to monitor the progress or result of a video upload or processing task.
+     */
     public static void trackVideo() {
+        // YOUR Video URL
         String lastVideoFile = "https://abc12345abc.oss-cn-hangzhou.aliyuncs.com/a8345c6f036787646fe807f9bfff7870.mp4";
+
+        // Instantiate the video service to perform tracking operations
         AllVideoService videoService = new AllVideoService();
+
+        // Construct a request for video tracking with the specified video URL
         VideoTackRequest videoTackRequest = VideoTackRequest.builder().videoUrl(lastVideoFile).build();
+
+        // Invoke the tracking method on the video service and obtain the response detailing the video job's status
         VideoJobResponse track = videoService.track(videoTackRequest);
-        System.out.println("outcome:" +track.getData());
+
+        // Print out the result of the video processing status
+        System.out.println("outcome:" + track.getData());
     }
 
     /**
+     * Image enhance Demo Method
      * Enhances the quality of an image.
      * This method invokes an image enhancement service to improve the quality of the specified image URL.
      * It is primarily used to enhance image clarity and color representation, suitable for image processing scenarios.
@@ -201,6 +234,7 @@ public class Demo {
     }
 
     /**
+     * image2Video Demo Method
      * Converts an image into a video. This method demonstrates the process of
      * transforming a single image into a video by invoking the image2Video method
      * from the AllVideoService class. Primarily used as an example to showcase
@@ -225,6 +259,7 @@ public class Demo {
     }
 
     /**
+     * Video enhance Demo Method
      * A static method to enhance the quality of a video.
      * This method utilizes the enhance function from AllVideoService to process and improve the quality of a specified video file,
      * primarily serving as a demonstration of video enhancement capabilities.
@@ -245,8 +280,8 @@ public class Demo {
     }
 
     public static void main(String[] args) {
-        //completions example
-        // chat();
+         //completions example
+         chat();
 
         //streamCompletions example
         //streamChat();
@@ -255,16 +290,16 @@ public class Demo {
         //asrAudio();
 
         //tts example
-        //ttsAudio();
+        //Text2Audio();
 
         //generations example
         //generationsImage();
 
-        //Image2Text example
+        //toText example
         //Image2Text();
 
         //track example
-        trackVideo();
+        //trackVideo();
 
         //Image enhance example
         //enhanceImage();
@@ -272,7 +307,7 @@ public class Demo {
         //image2Video example
         //image2Video();
 
-        //enhanceVideo example
+        //Video enhance example
         //enhanceVideo();
 
     }
