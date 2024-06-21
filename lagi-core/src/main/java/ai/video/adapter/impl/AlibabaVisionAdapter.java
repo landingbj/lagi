@@ -1,9 +1,10 @@
 package ai.video.adapter.impl;
 
+import ai.annotation.Img2Video;
+import ai.annotation.VideoEnhance;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.oss.UniversalOSS;
-import ai.utils.AlibabaOSSUtil;
 import ai.video.adapter.Video2EnhanceAdapter;
 import ai.video.pojo.*;
 import ai.video.adapter.Image2VideoAdapter;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@VideoEnhance(modelNames = "vision")
+@Img2Video(modelNames = "vision")
 public class AlibabaVisionAdapter extends ModelService implements Image2VideoAdapter, Video2EnhanceAdapter {
 
     private final Logger log = LoggerFactory.getLogger(AlibabaVisionAdapter.class);

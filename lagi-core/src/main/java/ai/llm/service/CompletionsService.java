@@ -103,7 +103,7 @@ public class CompletionsService {
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
 
         if(chatCompletionRequest.getModel() != null) {
-            ILlmAdapter adapter = LlmManager.getInstance().getAdapter();
+            ILlmAdapter adapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
             if(adapter != null) {
                 return adapter.streamCompletions(chatCompletionRequest);
             }

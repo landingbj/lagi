@@ -1,5 +1,9 @@
 package ai.video.adapter.impl;
 
+import ai.annotation.Img2Video;
+import ai.annotation.Text2Video;
+import ai.annotation.VideoEnhance;
+import ai.annotation.VideoTrack;
 import ai.common.ModelService;
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
@@ -18,6 +22,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+@VideoTrack(modelNames = "video")
+@Text2Video(modelNames = "video")
+@VideoEnhance(modelNames = "video")
+@Img2Video(modelNames = "video")
 public class LandingVideoAdapter extends ModelService implements Image2VideoAdapter, Video2EnhanceAdapter, Video2trackAdapter, Text2VideoAdapter {
 
     private final Gson gson = new Gson();

@@ -1,18 +1,21 @@
 package ai.migrate.service;
 
 import ai.common.pojo.*;
+import ai.dto.ModelPreferenceDto;
 import ai.image.pojo.ImageEnhanceRequest;
 import ai.image.service.AllImageService;
 import ai.translate.TranslateService;
 import ai.utils.*;
 import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
+import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -28,8 +31,9 @@ public class ApiService {
         ServletContext context = req.getServletContext();
         String rootPath = context.getRealPath("");
         String filePath = rootPath + "static/img/txt2img/";
-
-        WhisperResponse whisperResponse1 = generateImage(content, filePath);
+        HttpSession session = req.getSession();
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
+        WhisperResponse whisperResponse1 = generateImage(preference.getImgGen(), content, filePath);
 
         Map<String, String> map = new HashMap<>();
         map.put("status", "success");
@@ -38,8 +42,9 @@ public class ApiService {
         return result;
     }
     
-    public WhisperResponse generateImage(String content, String filePath) throws IOException {
+    public WhisperResponse generateImage(String model, String content, String filePath) throws IOException {
         ImageGenerationRequest request = new ImageGenerationRequest();
+        request.setModel(model);
         String english = translateService.toEnglish(content);
         if(english != null) {
             request.setPrompt(english);
@@ -102,8 +107,9 @@ public class ApiService {
         ServletContext context = req.getServletContext();
         String rootPath = context.getRealPath("");
         String filePath = rootPath + "static/img/txt2img/";
-
-        WhisperResponse whisperResponse1 = generateImage(content.replaceAll("视频", "图片"), filePath);
+        HttpSession session = req.getSession();
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
+        WhisperResponse whisperResponse1 = generateImage(preference != null ? preference.getImgGen(): null, content.replaceAll("视频", "图片"), filePath);
         String imageFile = filePath + whisperResponse1.getMsg();
         return generateVideo(imageFile, req);
     }

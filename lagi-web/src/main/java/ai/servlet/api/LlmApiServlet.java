@@ -7,7 +7,9 @@ import java.util.*;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
@@ -23,6 +25,7 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
+import cn.hutool.json.JSONUtil;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +55,12 @@ public class LlmApiServlet extends BaseServlet {
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
+        HttpSession session = req.getSession();
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        if(preference != null && chatCompletionRequest != null) {
+            chatCompletionRequest.setModel(preference.getLlm());
+        }
         PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
         ChatCompletionResult chatCompletionResult = medusaService.locate(promptInput);
 

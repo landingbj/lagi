@@ -1,5 +1,6 @@
 package ai.image.adapter.impl;
 
+import ai.annotation.ImgEnhance;
 import ai.common.ModelService;
 import ai.common.pojo.ImageEnhanceResult;
 import ai.image.adapter.ImageEnhanceAdapter;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URLEncoder;
 
+@ImgEnhance(modelNames = "enhance")
 public class BaiduAiImageAdapter extends ModelService implements ImageEnhanceAdapter {
 
     private final Logger log = LoggerFactory.getLogger(BaiduAiImageAdapter.class);

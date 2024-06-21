@@ -1,5 +1,7 @@
 package ai.audio.adapter.impl;
 
+import ai.annotation.ASR;
+import ai.annotation.TTS;
 import ai.audio.adapter.IAudioAdapter;
 import ai.audio.service.AlibabaAsrService;
 import ai.audio.service.AlibabaTtsService;
@@ -15,6 +17,8 @@ import okhttp3.Request;
 import java.io.File;
 import java.io.FileOutputStream;
 
+@ASR(company = "alibaba", modelNames = "asr")
+@TTS(company = "alibaba", modelNames = "tts")
 public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
     private final Gson gson = new Gson();
     private UniversalOSS universalOSS;

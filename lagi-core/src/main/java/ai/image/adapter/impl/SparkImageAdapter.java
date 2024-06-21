@@ -1,5 +1,6 @@
 package ai.image.adapter.impl;
 
+import ai.annotation.ImgGen;
 import ai.common.ModelService;
 import ai.common.pojo.ImageGenerationData;
 import ai.common.pojo.ImageGenerationRequest;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+@ImgGen(modelNames = "tti")
 public class SparkImageAdapter extends ModelService implements IImageGenerationAdapter {
 
     private final String apiUrl = "https://spark-api.cn-huabei-1.xf-yun.com/v2.1/tti";

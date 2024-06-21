@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.MappingIterable;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@LLM(modelName = { "glm-3-turbo","glm-4", "glm-4v"})
 public class ZhipuAdapter extends ModelService implements ILlmAdapter {
 
 

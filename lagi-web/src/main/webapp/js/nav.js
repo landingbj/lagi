@@ -1,23 +1,42 @@
 let SOCIAL_NAV_KEY = 'sjjr';
 
+let MODEL_TYPE_LLM = "llm";
+let MODEL_TYPE_ASR = "asr";
+let MODEL_TYPE_TTS = "tts";
+let MODEL_TYPE_IMG2TEXT = "img2Text";
+let MODEL_TYPE_IMGENHANCE = "imgEnhance";
+let MODEL_TYPE_IMGGEN = "imgGen";
+let MODEL_TYPE_VIDEOTRACK = "videoTrack";
+let MODEL_TYPE_VIDEOENHANCE = "videoEnhance";
+let MODEL_TYPE_TEXT2VIDEO = "text2Video";
+
+let MODEL_TYPES = [MODEL_TYPE_LLM, MODEL_TYPE_ASR, MODEL_TYPE_TTS, MODEL_TYPE_IMG2TEXT,
+     MODEL_TYPE_IMGENHANCE, MODEL_TYPE_IMGGEN ,MODEL_TYPE_VIDEOTRACK , 
+     MODEL_TYPE_VIDEOENHANCE, MODEL_TYPE_TEXT2VIDEO];
+
 let promptNavs = [
     {id:1, key:'znwd' , title: '智能问答',exampleImgSrc:'../images/znwd.png',
+        models: ["llm"],
         exampleVedioSrc:'../video/znwd.mp4',
         prompt:'该功能可以针对用户需求帮助用户快速获取信息、解决问题，提高工作效率和便捷性。可用于对话沟通、智能营销、智能客服、情感沟通等需要沟通对话的场景',
         operation:'在输入框内输入您的需求（如“请告诉我康熙皇帝在位几年？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'},
     {id:2, key:'wbsc', title: '文本生成',exampleImgSrc:'../images/wbsc.png',
+        models: ["llm"],
         exampleVedioSrc:'../video/wbsc.mp4',
         prompt:'该功能可以根据用户的需求，生成精准匹配的创作文本。',
         operation:'在输入框内输入您的需求（如“写一份关于唐朝的故事”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'},
     {id:3, key:'yysb', title: '语音识别',exampleImgSrc:'../images/yysb.png',
+        models: ["asr"],
         exampleVedioSrc:'../video/yysb.mp4',
         prompt:'该功能可使得大模型与用户进行语音交互、用语音识别代替手写或打字转输入。',
         operation:'长按输入框最左侧的话筒按钮，同时开始说话，按钮松手后会自动识别文字到输入框。'},
     {id:4, key:'qrqs', title: '千人千声',exampleImgSrc:'../images/qrqs.png',
+        models: ["tts"],
         exampleVedioSrc:'../video/qrqs.mp4',
         prompt:'该功能的语音回答可采用不同情绪音色，可以为个人用户提供更加便捷、高效的交互方式和更加生动形象的语音体验，为企业提供更优质的服务质量和更高效的工作流程。',
         operation:'在Lagi对您的输入内容作出回应的最右侧，点击“默认”按钮，即可看到多种可供选择的情绪音色。选中其中一个音色后，点击旁边的竖着的三个点，即可选择播放及播放倍速。'},
     {id:5, key:'ktsh', title: '看图说话',exampleImgSrc:'../images/ktsh.png',
+        models: ["img2Text"],
         exampleVedioSrc:'../video/ktsh.mp4',
         status:1,
         prompt:'该功能可自动提取上传图片的信息，并生成对图片的描述，帮助用户理解图片内容。',
@@ -25,6 +44,7 @@ let promptNavs = [
          已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
          此时请在输入框内输入“看图说话”，Lagi将会对您的请求作出响应。`},
     {id:6,key:'hzzq', title: '画质增强',exampleImgSrc:'../images/txzq.png',
+        models: ["imgEnhance"],
         exampleVedioSrc:'../video/txzq.mp4',
         status:1,
         prompt:'该功能可以提升图像清晰度、色彩表现、对比度，并减少噪声和杂点，从而增强图像的视觉效果和可读性',
@@ -32,17 +52,20 @@ let promptNavs = [
         已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
         此时请在输入框内输入“画质增强”，Lagi将会对您的请求作出响应。`},
     {id:7, key:'tpsc', title: '图片生成',exampleImgSrc:'../images/tpsc.png',
+        models: ["imgGen"],
         exampleVedioSrc:'../video/tpsc.mp4',
         status:1,
         prompt:'该功能可根据用户的需求，生成精准匹配的图片，为用户提供配图',
         operation:'在输入框内输入您的需求（如“生成一张风景图”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'},
 
     {id:8,key:'spzz', title: '视频追踪',exampleImgSrc:'../images/spzz.png',
+        models: ["videoTrack"],
         exampleVedioSrc:'../video/spzz.mp4',
         status:1,
         prompt:'该功能可对上传视频的内容进行搜索、编辑和创作视频。跟踪人物进行轨迹绘制，框选等操作。',
         operation:'点击输入框最右侧的文件夹图标，选择视频并点击“打开”，即可上传。Lagi将会自动您的请求做出响应。'},
     {id:9,key:'spzq', title: '视频增强',exampleImgSrc:'../images/spzq.png',
+        models: ["videoEnhance"],
         exampleVedioSrc:'../video/spzq.mp4',
         status:1,
         prompt:'该功能可以显著提升视频的质量和观感体验，让观众享受更加清晰、生动、流畅的画面效果。这些技术在影视制作、视频修复、在线视频流等领域具有广泛的应用前景。',
@@ -50,6 +73,7 @@ let promptNavs = [
             已经收到您上传的视频。如果您想视频追踪，请输入“视频追踪”。如果您想视频增强，请输入“视频增强”。
             此时请在输入框内输入“视频增强”，Lagi将会对您的请求作出响应。`},
     {id:10, key:'spsc', title: '视频生成',exampleImgSrc:'../images/spsc.png',
+        models: ["text2Video"],
         exampleVedioSrc:'../video/spsc.mp4',
         status:1,
         prompt:'该功能可对根据上传的图像，自动生成与之相关的视频。这有助于提高视频的创新性和生产效率，为影视制作、游戏开发、广告创意等领域提供更多的可能性。',
@@ -122,7 +146,7 @@ function buildPromptDialogContent(nav) {
 
 
 function showPromptNav() {
-    loadNavStatus();
+    // loadNavStatus();
     let html = '';
     $('#conversationsNav').empty();
     if(!promptNavs) {
@@ -185,16 +209,74 @@ function maintenance() {
 
 let currentPromptDialog;
 
+function loadModelSelect(nav) {
+    if(nav.models !== undefined && Array.isArray(nav.models)) {
+        $('#model-selects').empty();
+        $('#model-prefences').show();
+        for (let i = 0; i < nav.models.length; i++) {
+            let selectHtml = '';
+            let modelType = nav.models[i];
+            let modelInfos = getModeList(modelType);
+            selectHtml = `
+            <select class = "model-select" name="${modelType}">
+                ${genModelOptions(modelInfos)}
+            </select>
+            `;
+            $('#model-selects').append(selectHtml);
+        }
+    }
+}
+
+function genModelOptions(modelInfos) {
+    let res = ``;
+    if(modelInfos !== undefined && Array.isArray(modelInfos)) {
+        for (let j = 0; j < modelInfos.length; j++) {
+            const modelInfo = modelInfos[j];
+            res += `
+            <option value="${modelInfo.model}">${modelInfo.model}</option>
+            `;
+        }
+    }
+    return res;
+}
+
+function getModeList(type) {
+    let res;
+    let params = {
+        'type': type
+    };
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: "preference/getModels",
+        async: false,
+        data:params,
+        success: function(reponse) {
+            if(reponse.code !== 0) {
+                return ;
+            }
+            res = reponse.data;   
+        },
+        error: function(){
+        }
+    });
+    return res;
+}
+
 function getPromptDialog(id) {
+
     let nav = null;
     for (let index = 0; index < promptNavs.length; index++) {
         if(id == promptNavs[index].id) {
             nav = promptNavs[index];
+            break;
         }
     }
     if(nav == null) {
         alert("找不到对应的信息");
     }
+
+    loadModelSelect(nav);
     // 隐藏 首页
     hideHelloContent();
     let answer = buildPromptDialogContent(nav);
@@ -208,6 +290,102 @@ function getPromptDialog(id) {
     currentPromptDialog = nav;
     typing(0, answer, answerJq, addRobotDialog, vedioHtml);
 }
+
+
+function savePerference() {
+    if(!window.finger) {
+        console.log("未识别到身份");
+        return ;
+    }
+    let params= {
+        'finger': window.finger
+    }
+    for (let i = 0; i < MODEL_TYPES.length; i++) {
+        const modelType = MODEL_TYPES[i];
+        console.log($(`.model-select[name=${modelType}]`));
+        if($(`.model-select[name=${modelType}]`).length > 0) {
+            params[modelType] = $(`.model-select[name=${modelType}]`).val();
+        }
+    }
+    console.log("savePerference", params);
+
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "preference/savePreference",
+        async: false,
+        data: JSON.stringify(params),
+        success: function (res) {
+            if(res.code !== 0) {
+                return ;
+            }
+            if(res.data <= 0) {
+                alert("保存失败");
+            }
+            enablePreference(window.finger);
+        },
+        error: function () {
+            alert("返回失败");
+
+        }
+
+    });
+}
+
+function enablePreference(finger) {
+    let params = {
+        'userId' : finger
+    }
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: "preference/enablePreference",
+        async: true,
+        data: params,
+        success: function (res) {
+            if(res.code !== 0) {
+                return ;
+            }
+            if(res.data <= 0) {
+                alert("使用失败");
+            }
+        },
+        error: function () {
+            alert("返回失败");
+
+        }
+    });
+}
+
+function clearPreference() {
+    if(!window.finger) {
+        return ;
+    }
+    let params = {
+        'userId': window.finger
+    }
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: "preference/clearPreference",
+        async: false,
+        data: params,
+        success: function (res) {
+            if(res.code !== 0) {
+                return ;
+            }
+            if(res.data <= 0) {
+                alert("清除失败");
+            }
+        },
+        error: function () {
+            alert("返回失败");
+
+        }
+
+    });
+}
+
 
 let timer = 0;
 
@@ -240,6 +418,7 @@ function backToHello() {
     $('#item-content').empty();
     showHelloContent();
     currentPromptDialog = undefined;
+    $('#model-prefences').hide();
 }
 
 function getAppListHtml() {

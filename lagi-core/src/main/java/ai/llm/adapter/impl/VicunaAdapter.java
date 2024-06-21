@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.utils.ServerSentEventUtil;
 import com.google.gson.Gson;
 
 import ai.llm.adapter.ILlmAdapter;
-import ai.common.pojo.Backend;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.qa.HttpUtil;
@@ -19,6 +19,7 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@LLM(modelName = {"vicuna-13b","vicuna-7b","vicuna-7b-16k","vicuna-13B-16k","vicuna-33B"})
 public class VicunaAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VicunaAdapter.class);
     private final Gson gson = new Gson();

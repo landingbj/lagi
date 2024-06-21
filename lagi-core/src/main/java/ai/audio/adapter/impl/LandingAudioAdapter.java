@@ -2,6 +2,8 @@ package ai.audio.adapter.impl;
 
 import java.io.File;
 
+import ai.annotation.ASR;
+import ai.annotation.TTS;
 import ai.audio.adapter.IAudioAdapter;
 import ai.common.ModelService;
 import ai.common.pojo.*;
@@ -13,6 +15,8 @@ import ai.common.client.AiServiceInfo;
 import ai.learning.pojo.Response;
 import ai.utils.LagiGlobal;
 
+@ASR(company = "landingbj", modelNames = "landing-asr")
+@TTS(company = "landingbj", modelNames = "landing-tts")
 public class LandingAudioAdapter extends ModelService implements IAudioAdapter {
     private Gson gson = new Gson();
     private AiServiceCall call = new AiServiceCall();

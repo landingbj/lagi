@@ -1,7 +1,7 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
 import ai.openai.pojo.*;
@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+@LLM(modelName = {"v1.1","v2.1","v3.1","v3.5"})
 public class SparkAdapter extends ModelService implements ILlmAdapter {
 
 
