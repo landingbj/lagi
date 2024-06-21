@@ -520,3 +520,112 @@ public void Test() {
     VideoJobResponse videoGenerationResult = allVideoService.enhance(videoEnhanceRequest);
 }
 ```
+
+## 快速集成进您的项目
+### 方式一: 直接导入jar包
+
+您可以直接通过import JAR包的方式使用lag[i],将一个传统的业务转换为大模型的业务。
+
+1. **创建JAR包**：
+    - 可借助Maven等构建工具将lagi-core打包成JAR包。
+
+2. **导入JAR包**：
+    - 将生成的JAR包和libs目录下的所有JAR包复制到你的项目的lib目录中。
+
+3. **导入并配置lagi.yml**：
+    - 将lagi-web中的配置文件lagi.yml复制到你的项目的resources目录下，并配置模型地址和API密钥。
+
+4. **构建和运行项目**：
+    - 在你的项目中，构建和运行项目。
+
+通过这种方式，你可以将lag[i]工程以JAR包直接集成到你的项目中。
+
+### 方式二: 在Eclipse和IntelliJ中
+**Eclipse中集成项目**
+1. ***导入项目***：
+    - 打开Eclipse。
+    - 选择 File > Import...。
+    - 在 General > Existing Projects into Workspace 中选择lag[i]项目文件夹。
+    - 勾选你想要导入的项目，然后点击 Finish。
+
+2. ***构建路径和依赖***：
+    - 在 Project Explorer 中找到你的项目。
+    - 右键点击项目，选择 Properties。
+    - 在 Java Build Path > Libraries 中，点击 Add External JARs... 并选择lag[i]的libs目录下的所有JAR包。
+
+3. ***同步项目***：
+    - 在 Project Explorer 中右键点击项目，选择 Build Project。
+
+**IDEA中集成项目**
+1. ***导入项目***：
+    - 打开IntelliJ IDEA。
+    - 选择 File > Open。
+    - 选择lag[i]项目文件夹。
+    - 点击 OK。
+
+2. ***添加依赖***：
+    - 在 Project 窗口中找到你的项目。
+    - 右键点击项目，选择 Add Dependency...。
+    - 选择 Module Dependency 或 Project Dependency，然后选择lag[i]项目的libs中的目录下的所有JAR包。
+
+3. ***同步项目***：
+    - 在 Project 窗口中右键点击项目，选择 Build Project。
+
+**常见问题**
+
+- **Eclipse或IDEA无法识别JAR包**：确保JAR包没有损坏，并且它的路径在Eclipse或IntelliJ的构建路径中是正确的。
+- **依赖冲突**：如果你遇到了依赖冲突，可能需要手动调整项目的构建路径或者使用IDE的依赖解析功能来解决冲突。
+- **注意**：这些步骤提供了一个大致的框架，具体的集成步骤可能会根据项目的复杂性和IDE的版本有所不同。
+### 方式三:微服务docker
+微服务Docker集成是一种流行的方法，它允许你将你的应用打包成一个可部署的容器。你可以在Docker中引入一个lag[i]，并将它集成到自己的项目中。以下是一些基本步骤：  
+**1.准备lag[i]工程：**
+- 确保 lag[i] 工程的构建正确无误。
+- 使用Maven等构建工具将 lag[i] 打包成 WAR 文件。
+
+**2.创建一个Dockerfile文件，并添加以下内容：**
+```text
+      # 使用官方 Tomcat 镜像作为基础镜像
+          FROM tomcat:8.5.46-jdk8-openjdk
+          
+          VOLUME /usr/local/tomcat/temp
+          VOLUME /usr/local/tomcat/lib
+          ADD ./target/lagi-1.0.0.war /usr/local/tomcat/webapps/
+          
+          # 暴露 8080 端口
+          EXPOSE 8080
+          
+          # 启动命令
+          CMD ["catalina.sh", "run"]
+```
+请确保将 lagi-1.0.0.war 替换为实际的 WAR 包名称。
+
+**3.在项目根目录下运行以下命令来构建Docker镜像：**
+```text
+     docker build -t lagi-image .
+```
+**4.使用以下命令来运行容器：**
+```text
+     docker run -d -p 8080:8080 lagi-image
+```
+请确保将your-image-name替换为你在步骤2中使用的镜像名称。
+
+**5.集成到自己项目中：**
+- 在你的项目中，创建一个Dockerfile，指定如何构建包含 lag[i] 镜像的容器。
+```text
+    FROM lagi-image
+    # 添加你的项目目录到容器
+    ADD . /app
+    # 暴露端口
+    EXPOSE 8080
+    # 启动命令
+    CMD ["catalina.sh", "run"]
+```
+- 构建Docker镜像。
+```text
+     docker build -t your-project-image .
+```
+
+- 运行Docker容器。
+```text
+     docker run -d -p 8080:8080 your-project-image
+```
