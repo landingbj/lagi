@@ -15,13 +15,13 @@ import javax.servlet.http.HttpSession;
 
 import ai.common.pojo.*;
 import ai.medusa.MedusaService;
-import ai.medusa.PromptCacheConfig;
 import ai.medusa.pojo.InstructionData;
+import ai.medusa.pojo.InstructionPairRequest;
 import ai.migrate.service.UploadFileService;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -76,72 +76,39 @@ public class UploadFileServlet extends HttpServlet {
     }
 
     private void pairing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String category = req.getParameter("category");
-        String level = Optional.ofNullable(req.getParameter("level")).orElse("user");
-
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-        upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
-        if (!new File(uploadDir).isDirectory()) {
-            new File(uploadDir).mkdirs();
-        }
-        List<File> files = new ArrayList<>();
-        try {
-            List<?> fileItems = upload.parseRequest(req);
-            for (Object fileItem : fileItems) {
-                FileItem fi = (FileItem) fileItem;
-                if (!fi.isFormField()) {
-                    String fileName = fi.getName();
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-                    String newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
-                    newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                    String lastFilePath = uploadDir + File.separator + newName;
-                    File file = new File(lastFilePath);
-                    fi.write(file);
-                    files.add(file);
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        ObjectMapper mapper = new ObjectMapper();
+        InstructionPairRequest instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequest.class);
 
         new Thread(() -> {
-            for (File file: files) {
-                JsonReader jsonReader;
-                try {
-                    jsonReader = new JsonReader(new FileReader(file));
-                } catch (FileNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-                List<InstructionData> instructionDataList = gson.fromJson(
-                        jsonReader, new TypeToken<List<InstructionData>>() {}.getType());
-                Map<String, String> qaMap = new HashMap<>();
-                for (InstructionData data: instructionDataList) {
-                    qaMap.put(data.getInstruction(), data.getOutput());
-                    Map<String, String> metadata = new HashMap<>();
-                    metadata.put("category", category);
-                    metadata.put("level", level);
-                    List<UpsertRecord> upsertRecords = new ArrayList<>();
-                    upsertRecords.add(UpsertRecord.newBuilder()
-                            .withMetadata(metadata)
-                            .withDocument(data.getInstruction())
-                            .build());
-                    upsertRecords.add(UpsertRecord.newBuilder()
-                            .withMetadata(new HashMap<>(metadata))
-                            .withDocument(data.getOutput())
-                            .build());
-                    vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
-                }
-                medusaService.load(qaMap, category);
+            List<InstructionData> instructionDataList = instructionPairRequest.getData();
+            String category = instructionPairRequest.getCategory();
+            String level = Optional.ofNullable(instructionPairRequest.getLevel()).orElse("user");
+            Map<String, String> qaMap = new HashMap<>();
+            for (InstructionData data : instructionDataList) {
+                qaMap.put(data.getInstruction(), data.getOutput());
+                Map<String, String> metadata = new HashMap<>();
+                metadata.put("category", category);
+                metadata.put("level", level);
+                List<UpsertRecord> upsertRecords = new ArrayList<>();
+                upsertRecords.add(UpsertRecord.newBuilder()
+                        .withMetadata(metadata)
+                        .withDocument(data.getInstruction())
+                        .build());
+                upsertRecords.add(UpsertRecord.newBuilder()
+                        .withMetadata(new HashMap<>(metadata))
+                        .withDocument(data.getOutput())
+                        .build());
+                vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
             }
+            medusaService.load(qaMap, category);
         }).start();
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", "success");
         PrintWriter out = resp.getWriter();
-        out.print(gson.toJson(map));
+        out.print(gson.toJson(new HashMap<String, Object>() {
+            {
+                put("status", "success");
+            }
+        }));
         out.flush();
         out.close();
     }
