@@ -261,25 +261,49 @@ fileToUpload: file://D:/知识图谱.pdf
 |---|---|---|---|
 |» result|boolean|true|上传私训文件的状态|
 
-## 上传私训问答对数据
+## 私训问答对数据
 
 POST /training/pairing
 
-上传私训问答对数据，要求为json格式
+私训问答对数据，要求为json格式
 
 > Body 请求参数
 
-```yaml
-fileToUpload: file://D:/测试文件.json
+data字段支持对象或对象列表，参考如下请求示例。
+
+```json
+{
+    "category": "default",
+    "data": {
+        "instruction": "补办医师执业证书的整个流程包括哪些步骤？",
+        "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+    }
+}
+```
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": "补办医师执业证书的整个流程包括哪些步骤？",
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+        },
+        {
+            "instruction": "医师执业证书补办流程有哪些环节？",
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+        }
+    ]
+}
 ```
 
 ### 请求参数
 
 |名称|位置|类型|必选|说明|
 |---|---|---|---|---|
-|category|query|string| 是 |指定的数据类别|
 |body|body|object| 否 |none|
-|» fileToUpload|body|string(binary)| 是 |所上传的问答对数据|
+|» category|body|string| 是 |指定的数据类别|
+|» data|body|[object] or object| 是 | 问答对数据     |
 
 > 返回示例
 

@@ -104,11 +104,9 @@ public class UploadFileServlet extends HttpServlet {
         }).start();
 
         PrintWriter out = resp.getWriter();
-        out.print(gson.toJson(new HashMap<String, Object>() {
-            {
-                put("status", "success");
-            }
-        }));
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        out.print(gson.toJson(map));
         out.flush();
         out.close();
     }

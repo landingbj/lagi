@@ -257,25 +257,49 @@ Status Code **200**
 |----------|---------|----------|----------------------------|
 | » result | boolean | true     | Status of uploading private training file |
 
-## Upload QA Training Files
+## Training Private Q&A Pair Data
 
 POST /training/pairing
 
-Upload private training QA data in JSON format.
+Training private Q&A pair data, required in JSON format
 
 > Body request parameters
 
-```yaml
-fileToUpload: file://D:/test.json
+The data field supports either an object or a list of objects, as shown in the request examples below.
+
+```json
+{
+    "category": "default",
+    "data": {
+        "instruction": "What are the steps involved in reissuing a medical practitioner's license?",
+        "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+    }
+}
+```
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": "What are the steps involved in reissuing a medical practitioner's license?",
+            "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+        },
+        {
+            "instruction": "What are the stages in the process of reissuing a medical practitioner's license?",
+            "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+        }
+    ]
+}
 ```
 
 ### Request Parameters
 
-| Name           | Position | Type           | Required | Description                              |
-| -------------- | -------- | -------------- | -------- | ---------------------------------------- |
-| category       | query    | string         | Yes      | Specified data category                  |
-| body           | body     | object         | No       | none                                     |
-| » fileToUpload | body     | string(binary) | Yes      | The private QA json file being uploaded |
+| Name       | Position | Type               | Required | Description             |
+| ---------- | -------- | ------------------ | -------- | ----------------------- |
+| body       | body     | object             | No       | none                    |
+| » category | body     | string             | Yes      | Specified data category |
+| » data     | body     | [object] or object | Yes      | Q&A pair data           |
 
 > Return example
 
@@ -297,9 +321,9 @@ fileToUpload: file://D:/test.json
 
 Status Code **200**
 
-| Name     | Type   | Required | Description                      |
-|----------|--------|----------|----------------------------------|
-| » result | string | true     | Status of uploading QA json file |
+| Name     | Type   | Required | Description       |
+| -------- | ------ | -------- | ----------------- |
+| » result | string | true     | Status of QA data |
 
 ## Image Captioning
 
