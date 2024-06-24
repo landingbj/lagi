@@ -265,7 +265,7 @@ Training private Q&A pair data, required in JSON format
 
 > Body request parameters
 
-The data field supports either an object or a list of objects, as shown in the request examples below.
+The data and instruction field supports either an object or a list of objects, as shown in the request examples below.
 
 ```json
 {
@@ -292,6 +292,23 @@ The data field supports either an object or a list of objects, as shown in the r
     ]
 }
 ```
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": [
+                "What are the steps involved in reissuing a medical practitioner's license?",
+                "What are the stages in the process of reissuing a medical practitioner's license?"
+            ],
+            "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+        }
+    ]
+}
+```
+
+
 
 ### Request Parameters
 
