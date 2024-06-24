@@ -56,28 +56,13 @@ If you wish to integrate Lag[i] into your project.You can refer to our [Integrat
 
 ### Security
 
-You can change the return result of the conversation with some configuration.
+To better integrate Lag[i] into your business,You can do this by adding the keywords you want to filter in the `sensitive_word.json` file,In the `priority_word.json` file, you specify which keywords to answer first.And set the stop keyword in the `stopping_word.json file`,Thus, the returned results of the dialogue are changed, the dialogue is guided in a specific direction, and the dialogue is automatically stopped when needed.
 
-When you need to filter the sensitive words returned by the dialogue, you can add the words you want to filter in the sensitive_word.json file. Such as:
+Example: Set the keywords to filter `openai`:
 
 ```json
 [
   "openai"
-]
-```
-
-When you need to give a preferred answer to an expected word, you can add the corresponding word in the priority_word.json file, and the application will prioritize the word in the file and build the corresponding prompt word to influence the model's response. Such as:
-
-```json
-[
-  "hello"
-]
-```
-
-You can let the app know where you want the conversation to stop by adding a stop word to stopping_word.json, so that when the user starts the conversation again, the app builds a prompt word based on the new conversation. Such as:
-```json
-[
-  "stop"
 ]
 ```
 
