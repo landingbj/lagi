@@ -10,9 +10,7 @@ models:
         driver: ai.llm.adapter.impl.LandingAdapter
       - model: image
         driver: ai.image.adapter.impl.LandingImageAdapter
-        oss:
-          name: landing
-      - model: tts,asr
+      - model: landing-tts,landing-asr
         driver: ai.audio.adapter.impl.LandingAudioAdapter
         oss:
           name: landing
@@ -63,27 +61,22 @@ models:
     drivers:
       - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
         driver: ai.llm.adapter.impl.ErnieAdapter
-      - model: Fuyu-8B,Stable-Diffusion-XL,enhance
+      - model: Fuyu-8B,Stable-Diffusion-XL
         driver: ai.image.adapter.impl.BaiduImageAdapter
       - model: translate
         driver: ai.translate.adapter.impl.BaiduTranslateAdapter
-    # help document https://developer.baidu.com/article/detail.html?id=1089328
-    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
-    app_id: your-app-id
-    security_key: your-security-id
-    api_key: your-api-key
-    secret_key: your-sercet-key
-
-  #  A range of ai applications developed by Baidu
-  - name: baidu
-    type: baidu
-    enable: true
-    drivers:
+        app_id: your-api-key
+        security_key: your-security-key
       - model: enhance
         driver: ai.image.adapter.impl.BaiduAiImageAdapter
+        api_key: your-api-key
+        secret_key: 9your-sercet-key
       - model: aiVideo
         driver: ai.video.adapter.impl.BaiduVideoAdapter
-      #  url address https://console.bce.baidu.com/ai/?_=&fromai=1#/ai/imageprocess/app/list
+        api_key: your-api-key
+        secret_key: your-sercet-key
+    # help document https://developer.baidu.com/article/detail.html?id=1089328
+    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
     app_id: your-app-id
     api_key: your-api-key
     secret_key: your-sercet-key
@@ -239,6 +232,10 @@ functions:
       model: tti
       enable: true
       priority: 10
+    - backend: ernie
+      model: Stable-Diffusion-XL
+      enable: true
+      priority: 5
 
   image2text:
     - backend: ernie
@@ -247,7 +244,7 @@ functions:
       priority: 10
 
   image2enhance:
-    - backend: baidu
+    - backend: ernie
       model: enhance
       enable: true
       priority: 10
@@ -279,7 +276,7 @@ functions:
   translate:
     - backend: ernie
       model: translate
-      enable: false
+      enable: true
       priority: 10
 
 # The following is the configuration of agents, name is the name of the agent,

@@ -5,11 +5,11 @@ import ai.common.pojo.Backend;
 import ai.common.pojo.Driver;
 import ai.oss.UniversalOSS;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +28,8 @@ public class AIManager<T> {
         }
         models.forEach(model->{
             if(model.getModel() != null && model.getDriver() != null) {
-                model.setDrivers(Lists.newArrayList(new Driver(model.getModel(), model.getDriver(),model.getOss())));
+                Driver driver = Driver.builder().model(model.getModel()).driver(model.getDriver()).oss(model.getOss()).build();
+                model.setDrivers(Lists.newArrayList(driver));
             }
             if(model.getDriver() != null) {
                 model.getDrivers().forEach(driver -> {
@@ -71,6 +72,8 @@ public class AIManager<T> {
         backend.setPriority(func.getPriority());
         backend.setModel(func.getModel());
         backend.setOss(driver.getOss());
+        CopyOptions copyOption = CopyOptions.create(null, true);
+        BeanUtil.copyProperties(driver, backend, copyOption);
         return backend;
     }
 
@@ -119,27 +122,6 @@ public class AIManager<T> {
         }
     }
 
-    private void register(Class<?> clazz,  Backend backend) {
-        Constructor<?> constructor = null;
-        T adapter = null;
-        try {
-            adapter = (T) clazz.newInstance();
-        } catch (Exception e) {
-            try {
-                constructor = clazz.getConstructor(Backend.class);
-                adapter = (T)constructor.newInstance(backend);
-            } catch (Exception error) {
-                log.error(error.getMessage());
-            }
-        }
-        if(adapter != null) {
-            if(adapter instanceof ModelService) {
-                ModelService modelService = (ModelService) adapter;
-                BeanUtil.copyProperties(backend, modelService, "drivers");
-            }
-            register(backend.getModel(), adapter);
-        }
-    }
 
     public T getAdapter(String key) {
         return aiMap.get(key);
