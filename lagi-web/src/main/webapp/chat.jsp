@@ -169,6 +169,16 @@
             <!-- 上部导航条 -->
             <!-- *************************************************主要结构********************************* -->
             <main class="relative h-full w-full transition-width overflow-auto flex-1">
+              <div>
+                <div id="model-prefences" class="w-full h-16 pl-10">
+                  <div id="model-selects" class="inline-block model-selects  float-left">
+                  </div>
+                  <div class="model-btns w-20 flex-1 inline-block">
+                    <button id = "modelClearBtn" class="inline-block" onclick="clearPreference()">重置所有</button>
+                    <button id = "modelSaveBtn" class="inline-block" onclick="savePerference()">保存</button>
+                  </div>
+                </div>
+              </div>
               <div role="presentation" class="flex h-full">
                 <!-- 隐藏文本遮罩 -->
                 <div  class="w-full h-full absolute top-14 z-10 bg-white " id="textareaMask" style="display: none;">
@@ -372,6 +382,7 @@
     <!-- mobile debug 插件 -->
     <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
     <script src="libs/jquery-3.1.1.min.js"></script>
+    <script src="js/fingerprint2.min.js"></script>
     <script src="libs/sse.js?ver=${initParam.version}"></script>
     <script src="js/common.js?ver=${initParam.version}"></script>
     <script src="js/hello.js?ver=${initParam.version}"></script>

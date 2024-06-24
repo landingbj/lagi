@@ -25,6 +25,7 @@ function initHelloPage() {
     initModelSlide();
     initIntroduces();
     initAgentTool();
+    $('#model-prefences').hide();
 }
 
 

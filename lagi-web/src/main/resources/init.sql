@@ -18,3 +18,22 @@ create table if not exists lagi_upload_file
     filepath varchar(250) not null,
     category varchar(50)  not null
 );
+
+
+create table if not exists lagi_user_preference
+(
+    id       Integer
+    primary key autoincrement,
+    finger  varchar(64) not null,
+    user_id  varchar(64) ,
+    llm varchar(64)  ,
+    tts varchar(64) ,
+    asr varchar(64)  ,
+    img2Text varchar(64)  ,
+    imgGen varchar(64) ,
+    imgEnhance varchar(64)  ,
+    img2Video varchar(64)  ,
+    text2Video varchar(64) ,
+    videoEnhance varchar(64)  ,
+    videoTrack varchar(64)
+);

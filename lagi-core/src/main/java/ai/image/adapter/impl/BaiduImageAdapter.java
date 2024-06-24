@@ -1,5 +1,7 @@
 package ai.image.adapter.impl;
 
+import ai.annotation.Img2Text;
+import ai.annotation.ImgGen;
 import ai.common.ModelService;
 import ai.common.pojo.*;
 import ai.image.adapter.IImage2TextAdapter;
@@ -21,6 +23,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Img2Text(modelNames = "Fuyu-8B")
+@ImgGen(modelNames = "Stable-Diffusion-XL")
 public class BaiduImageAdapter extends ModelService implements IImage2TextAdapter, IImageGenerationAdapter {
 
     private final Logger logger = LoggerFactory.getLogger(BaiduImageAdapter.class);

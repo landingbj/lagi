@@ -31,8 +31,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
 
-
-    private void init() {
+    @Override
+    public void init() {
 
         OSSManager.getInstance().register(stores.getOss());
         VectorStoreManager.getInstance().register(stores.getVectors(), stores.getRag(), functions.getEmbedding());
@@ -54,7 +54,6 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     @Override
     public Configuration transformToConfiguration() {
-        init();
         List<Backend> chatBackends = functions.getChat().stream().map(backendMatch -> {
             Optional<Backend> any = models.stream().filter(backend -> backend.getEnable() && backendMatch.getEnable() && backendMatch.getBackend().equals(backend.getName())).findAny();
             Backend backend = any.orElse(null);

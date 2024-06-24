@@ -18,7 +18,7 @@ public class ContextLoader {
         mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         try {
             configuration = mapper.readValue(inputStream, GlobalConfigurations.class);
-            configuration.transformToConfiguration();
+            configuration.init();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

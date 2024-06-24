@@ -216,4 +216,15 @@
 		<servlet-name>RpaServlet</servlet-name>
 		<url-pattern>/v1/rpa/*</url-pattern>
 	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>preference</servlet-name>
+		<servlet-class>ai.servlet.PreferenceServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>preference</servlet-name>
+		<url-pattern>/preference/*</url-pattern>
+	</servlet-mapping>
+
 </web-app>

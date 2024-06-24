@@ -3,6 +3,9 @@ package ai.image.adapter.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import ai.annotation.Img2Text;
+import ai.annotation.ImgEnhance;
+import ai.annotation.ImgGen;
 import ai.common.pojo.*;
 import ai.image.adapter.ImageEnhanceAdapter;
 import ai.image.pojo.ImageEnhanceRequest;
@@ -13,6 +16,9 @@ import ai.common.client.AiServiceInfo;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.learning.pojo.Response;
 
+@ImgEnhance(modelNames = "image")
+@Img2Text(modelNames = "image")
+@ImgGen(modelNames = "image")
 public class LandingImageAdapter implements IImageGenerationAdapter, ImageEnhanceAdapter {
     private Gson gson = new Gson();
     private AiServiceCall call = new AiServiceCall();

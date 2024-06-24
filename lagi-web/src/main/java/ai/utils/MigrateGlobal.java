@@ -2,12 +2,8 @@ package ai.utils;
 
 
 import ai.common.pojo.Configuration;
-import ai.config.GlobalConfigurations;
+import ai.config.ContextLoader;
 import ai.qa.LLMConfig;
-
-import java.io.IOException;
-import java.io.InputStream;
-
 
 public class MigrateGlobal {
     public static final String VICUNA_INDEX_URL;
@@ -24,12 +20,9 @@ public class MigrateGlobal {
     public static Configuration config;
 
     static {
-        try (InputStream inputStream = LagiGlobal.class.getResourceAsStream("/lagi.yml");) {
-            LagiGlobal.loadConfig(inputStream, GlobalConfigurations.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        config = LagiGlobal.getConfig();
+
+        ContextLoader.loadContext();
+        config = ContextLoader.configuration.transformToConfiguration();
 
         VICUNA_INDEX_URL = "http://ec2-52-82-51-248.cn-northwest-1.compute.amazonaws.com.cn:8200";
         ADD_DOC_INDEX_URL = VICUNA_INDEX_URL + "/index/add_doc";

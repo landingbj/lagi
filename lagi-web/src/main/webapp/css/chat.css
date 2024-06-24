@@ -189,3 +189,31 @@ pre .key {
 	text-align: center;
 	font-size: 0.8em;
 }
+
+
+#model-prefences {
+	font-size: 1em;
+}
+
+.model-selects{
+	width: 80%;
+	padding-left: 50px;
+	padding-top: 5px;
+}
+
+.model-selects select {
+	/* height: 2em; */
+}
+
+.model-btns {
+	padding-top: 15px;
+	line-height: 1em;
+}
+
+.model-btns button{
+	background-color: #348cbe;
+	width: 5em;
+	height: 1.5em;
+	border-radius: 5px;
+	color: white;
+} 

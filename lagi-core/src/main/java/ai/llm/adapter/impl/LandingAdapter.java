@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@LLM(modelName = "qa")
 public class LandingAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(LandingAdapter.class);
     private final Gson gson = new Gson();

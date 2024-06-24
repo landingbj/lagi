@@ -520,3 +520,112 @@ public void Test() {
   VideoJobResponse videoGenerationResult = allVideoService.enhance(videoEnhanceRequest);
 }
 ```
+
+## Quick Integrate into Your Existing Project
+### Option 1: Import the jar directly
+
+You can use lag[i] directly by importing JAR packages to turn a traditional business into a large model business.
+
+1. **Creating JAR**：
+  - Lagui-core can be packaged as a JAR using a build tool such as Maven.
+
+2. **Importing JAR packages**：
+  - Copy the generated JAR and all the jars from the libs directory into your project's lib directory.
+
+3. **Import and configure lagui.yml**：
+  - Copy the configuration file lagi.yml from lagi-web to your project's resources directory and configure the model address and API key.
+
+4. **Build and run the project**：
+  - In your project, build and run the project.
+
+In this way, you can integrate lag[i] directly into your project as a JAR.
+
+### Option 2: In Eclipse and IntelliJ
+**Integration project in Eclipse**
+1. ***Importing the project***：
+  - Open Eclipse.
+  - Select File > Import... .
+  - Select lag[i] from General > Existing Projects into Workspace.
+  - Select the project you want to import, then click Finish.
+
+2. ***Build paths and dependencies***：
+  - Build paths and dependencies.
+  - Right-click the project and select Properties.
+  - In Java Build Path > Libraries, click Add External JARs... And select all jars in the libs directory of lag[i].
+
+3. ***Synchronizing projects***：
+  - Right-click the Project in the Project Explorer and select Build Project.
+
+**Integration of projects in IDEA**
+1. ***Importing the project***：
+  - Open IntelliJ IDEA.
+  - Select File > Open.
+  - Select the lag[i] project folder.
+  - Click OK.
+
+2. ***Adding dependencies***：
+  - Locate your Project in the Project window.
+  - Right-click on the project and select Add Dependency... .
+  - Select Module Dependency or Project Dependency, and then select all jars in the directories in the libs of the lag[i] project.
+
+3. ***Synchronizing projects***：
+  - Right-click the Project in the Project window and select Build Project.
+
+**Common The problem**
+
+- **Eclipse or IDEA cannot recognize the JAR package**：Make sure the JAR package is not corrupted and that its path is correct in the Eclipse or IntelliJ build path.
+- **Dependency conflict**：If you run into a dependency conflict, you may need to adjust your project's build path manually or use your IDE's dependency resolution feature to resolve the conflict.
+- **Note**：These steps provide a general framework, and the specific integration steps may vary depending on the complexity of the project and the version of the IDE.
+### Option 3: Microservices docker
+Microservices Docker integration is a popular approach that allows you to package your application into a deployable container. You can introduce a lag[i] in Docker and integrate it into your own project. Here are some basic steps:   
+**1. Prepare lag[i] project:**
+- Make sure lag[i] is built correctly.
+- Use a build tool like Maven to package lag[i] into a WAR file.
+
+**2. Create a Dockerfile and add the following content:**
+```text
+      # Use the official Tomcat image as the base image
+          FROM tomcat:8.5.46-jdk8-openjdk
+          
+          VOLUME /usr/local/tomcat/temp
+          VOLUME /usr/local/tomcat/lib
+          ADD ./target/lagi-1.0.0.war /usr/local/tomcat/webapps/
+          
+          # Expose port 8080
+          EXPOSE 8080
+          
+          # Start command
+          CMD ["catalina.sh", "run"]
+```
+Be sure to replace lagu-1.0.0.war with the actual WAR package name.
+
+**3. Build the Docker image by running the following command from the project root:**
+```text
+     docker build -t lagi-image .
+```
+**4. Run the container with:**
+```text
+     docker run -d -p 8080:8080 lagi-image
+```
+Make sure to replace your-image-name with the image name you used in step 2.
+
+**5. Integrate into your own projects:**
+- In your project, create a Dockerfile that specifies how to build the container that contains the lag[i] image.
+```text
+    FROM lagi-image
+    # Add your project directory to the container
+    ADD . /app
+    # Expose port
+    EXPOSE 8080
+    # Start command
+    CMD ["catalina.sh", "run"]
+```
+- Build the Docker image.
+```text
+     docker build -t your-project-image .
+```
+
+- Run the Docker container.
+```text
+     docker run -d -p 8080:8080 your-project-image
+```
