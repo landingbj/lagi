@@ -53,3 +53,31 @@ The Lag[i] project also provides multiple RESTful API interfaces, facilitating u
 To help you better understand and use Lag[i], we have provided you with an exhaustive [Guide documentation](docs/guide_en.md). You can refer to the documentation to understand the structure and content of the project so that you can quickly invoke the relevant functionality and develop large model applications efficiently.  
 
 If you wish to integrate Lag[i] into your project.You can refer to our [Integration documentation](https://github.com/landingbj/lagi/blob/main/docs/guide_en.md#quick-integrate-into-your-existing-project)，To help you quickly integrate Lag[i] into your project.
+
+### Security
+
+You can change the return result of the conversation with some configuration.
+
+When you need to filter the sensitive words returned by the dialogue, you can add the words you want to filter in the sensitive_word.json file. Such as:
+
+```json
+[
+  "openai"
+]
+```
+
+When you need to give a preferred answer to an expected word, you can add the corresponding word in the priority_word.json file, and the application will prioritize the word in the file and build the corresponding prompt word to influence the model's response. Such as:
+
+```json
+[
+  "hello"
+]
+```
+
+You can let the app know where you want the conversation to stop by adding a stop word to stopping_word.json, so that when the user starts the conversation again, the app builds a prompt word based on the new conversation. Such as:
+```json
+[
+  "stop"
+]
+```
+
