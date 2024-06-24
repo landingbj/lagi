@@ -85,20 +85,22 @@ public class UploadFileServlet extends HttpServlet {
             String level = Optional.ofNullable(instructionPairRequest.getLevel()).orElse("user");
             Map<String, String> qaMap = new HashMap<>();
             for (InstructionData data : instructionDataList) {
-                qaMap.put(data.getInstruction(), data.getOutput());
-                Map<String, String> metadata = new HashMap<>();
-                metadata.put("category", category);
-                metadata.put("level", level);
-                List<UpsertRecord> upsertRecords = new ArrayList<>();
-                upsertRecords.add(UpsertRecord.newBuilder()
-                        .withMetadata(metadata)
-                        .withDocument(data.getInstruction())
-                        .build());
-                upsertRecords.add(UpsertRecord.newBuilder()
-                        .withMetadata(new HashMap<>(metadata))
-                        .withDocument(data.getOutput())
-                        .build());
-                vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
+                for (String instruction : data.getInstruction()) {
+                    qaMap.put(instruction, data.getOutput());
+                    Map<String, String> metadata = new HashMap<>();
+                    metadata.put("category", category);
+                    metadata.put("level", level);
+                    List<UpsertRecord> upsertRecords = new ArrayList<>();
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(metadata)
+                            .withDocument(instruction)
+                            .build());
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(new HashMap<>(metadata))
+                            .withDocument(data.getOutput())
+                            .build());
+                    vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
+                }
             }
             medusaService.load(qaMap, category);
         }).start();
