@@ -19,7 +19,7 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@LLM(modelName = {"vicuna-13b","vicuna-7b","vicuna-7b-16k","vicuna-13B-16k","vicuna-33B"})
+@LLM(modelNames = {"vicuna-13b","vicuna-7b","vicuna-7b-16k","vicuna-13B-16k","vicuna-33B"})
 public class VicunaAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VicunaAdapter.class);
     private final Gson gson = new Gson();

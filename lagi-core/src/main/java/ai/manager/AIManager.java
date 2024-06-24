@@ -66,14 +66,14 @@ public class AIManager<T> {
     private Backend complex(Backend model, Backend func, Driver driver) {
         Backend backend = new Backend();
         BeanUtil.copyProperties(model, backend, "drivers");
+        CopyOptions copyOption = CopyOptions.create(null, true);
+        BeanUtil.copyProperties(driver, backend, copyOption);
         backend.setModel(func.getModel());
         backend.setBackend(func.getBackend());
         backend.setStream(func.getStream());
         backend.setPriority(func.getPriority());
         backend.setModel(func.getModel());
         backend.setOss(driver.getOss());
-        CopyOptions copyOption = CopyOptions.create(null, true);
-        BeanUtil.copyProperties(driver, backend, copyOption);
         return backend;
     }
 

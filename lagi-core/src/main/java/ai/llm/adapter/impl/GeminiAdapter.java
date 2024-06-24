@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-@LLM(modelName = {"gemini-1.5-flash-latest","gemini-1.5-flash-latest","gemini-1.0-pro","gemini-1.5-pro-latest"})
+@LLM(modelNames = {"gemini-1.5-flash-latest","gemini-1.5-flash-latest","gemini-1.0-pro","gemini-1.5-pro-latest"})
 public class GeminiAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GeminiAdapter.class);
     private final Gson gson = new Gson();

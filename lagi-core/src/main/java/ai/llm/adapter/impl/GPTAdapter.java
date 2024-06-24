@@ -19,7 +19,7 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@LLM(modelName = {"gpt-3.5-turbo","gpt-4-1106-preview"})
+@LLM(modelNames = {"gpt-3.5-turbo","gpt-4-1106-preview"})
 public class GPTAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAdapter.class);
     private final Gson gson = new Gson();

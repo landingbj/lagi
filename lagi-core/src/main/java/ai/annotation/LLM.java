@@ -7,5 +7,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LLM {
     String company() default "";
-    String[] modelName() default {};
+    String[] modelNames() default {};
 }

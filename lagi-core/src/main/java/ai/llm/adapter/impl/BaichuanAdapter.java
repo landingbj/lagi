@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@LLM(modelName= {"Baichuan2-Turbo","Baichuan2-Turbo-192k","Baichuan2-53B"})
+@LLM(modelNames = {"Baichuan2-Turbo","Baichuan2-Turbo-192k","Baichuan2-53B"})
 public class BaichuanAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BaichuanAdapter.class);
     private final Gson gson = new Gson();

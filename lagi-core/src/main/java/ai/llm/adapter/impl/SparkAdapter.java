@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-@LLM(modelName = {"v1.1","v2.1","v3.1","v3.5"})
+@LLM(modelNames = {"v1.1","v2.1","v3.1","v3.5"})
 public class SparkAdapter extends ModelService implements ILlmAdapter {
 
 

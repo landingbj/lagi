@@ -11,4 +11,5 @@ public class ModelInfo {
     private String model;
     private Boolean enabled;
     private String company;
+    private String description;
 }

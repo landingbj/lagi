@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@LLM(modelName = { "glm-3-turbo","glm-4", "glm-4v"})
+@LLM(modelNames = { "glm-3-turbo","glm-4", "glm-4v"})
 public class ZhipuAdapter extends ModelService implements ILlmAdapter {
 
 

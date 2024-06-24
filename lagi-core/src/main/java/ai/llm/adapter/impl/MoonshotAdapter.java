@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@LLM(modelName = {"moonshot-v1-8k","moonshot-v1-32k","moonshot-v1-128k"})
+@LLM(modelNames = {"moonshot-v1-8k","moonshot-v1-32k","moonshot-v1-128k"})
 public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();

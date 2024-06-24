@@ -232,11 +232,19 @@ function genModelOptions(modelInfos) {
     if(modelInfos !== undefined && Array.isArray(modelInfos)) {
         for (let j = 0; j < modelInfos.length; j++) {
             const modelInfo = modelInfos[j];
-            res += `
-            <option value="${modelInfo.model}">${modelInfo.model}</option>
-            `;
+            console.log(modelInfo);
+            if(modelInfo.enabled) {
+                res += `
+                <option value="${modelInfo.model}" >${modelInfo.model}</option>
+                `;
+            } else {
+                res += `
+                <option value="${modelInfo.model}"  disabled>${modelInfo.model}</option>
+                `;
+            }
+            
         }
-    }
+    }   
     return res;
 }
 
@@ -323,6 +331,7 @@ function savePerference() {
                 alert("保存失败");
             }
             enablePreference(window.finger);
+            alert("保持成功!!！");
         },
         error: function () {
             alert("返回失败");
@@ -377,6 +386,7 @@ function clearPreference() {
             if(res.data <= 0) {
                 alert("清除失败");
             }
+            alert("重置成功!!!");
         },
         error: function () {
             alert("返回失败");

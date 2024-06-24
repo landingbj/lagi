@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-@LLM(modelName = {"SenseChat-Turbo","SenseChat-FunctionCall","SenseChat-5","SenseChat-128K","SenseChat-32K"})
+@LLM(modelNames = {"SenseChat-Turbo","SenseChat-FunctionCall","SenseChat-5","SenseChat-128K","SenseChat-32K"})
 public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(SenseChatAdapter.class);
