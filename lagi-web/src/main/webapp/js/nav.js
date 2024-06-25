@@ -224,6 +224,9 @@ function loadModelSelect(nav) {
             `;
             $('#model-selects').append(selectHtml);
         }
+    } else {
+        $('#model-selects').empty();
+        $('#model-prefences').hide();
     }
 }
 
@@ -232,10 +235,9 @@ function genModelOptions(modelInfos) {
     if(modelInfos !== undefined && Array.isArray(modelInfos)) {
         for (let j = 0; j < modelInfos.length; j++) {
             const modelInfo = modelInfos[j];
-            console.log(modelInfo);
             if(modelInfo.enabled) {
                 res += `
-                <option value="${modelInfo.model}" >${modelInfo.model}</option>
+                <option value="${modelInfo.model}"  ${modelInfo.activate ? 'selected' : ''}>${modelInfo.model}</option>
                 `;
             } else {
                 res += `
@@ -251,7 +253,8 @@ function genModelOptions(modelInfos) {
 function getModeList(type) {
     let res;
     let params = {
-        'type': type
+        'type': type,
+        'userId': window.finger
     };
     $.ajax({
         type: "GET",
@@ -271,12 +274,16 @@ function getModeList(type) {
     return res;
 }
 
+let currentNav = null;
+
+
 function getPromptDialog(id) {
 
     let nav = null;
     for (let index = 0; index < promptNavs.length; index++) {
         if(id == promptNavs[index].id) {
             nav = promptNavs[index];
+            currentNav = nav;
             break;
         }
     }
@@ -310,12 +317,10 @@ function savePerference() {
     }
     for (let i = 0; i < MODEL_TYPES.length; i++) {
         const modelType = MODEL_TYPES[i];
-        console.log($(`.model-select[name=${modelType}]`));
         if($(`.model-select[name=${modelType}]`).length > 0) {
             params[modelType] = $(`.model-select[name=${modelType}]`).val();
         }
     }
-    console.log("savePerference", params);
 
     $.ajax({
         type: "POST",
@@ -330,7 +335,6 @@ function savePerference() {
             if(res.data <= 0) {
                 alert("保存失败");
             }
-            enablePreference(window.finger);
             alert("保持成功!!！");
         },
         error: function () {
@@ -341,30 +345,6 @@ function savePerference() {
     });
 }
 
-function enablePreference(finger) {
-    let params = {
-        'userId' : finger
-    }
-    $.ajax({
-        type: "GET",
-        contentType: "application/json;charset=utf-8",
-        url: "preference/enablePreference",
-        async: true,
-        data: params,
-        success: function (res) {
-            if(res.code !== 0) {
-                return ;
-            }
-            if(res.data <= 0) {
-                alert("使用失败");
-            }
-        },
-        error: function () {
-            alert("返回失败");
-
-        }
-    });
-}
 
 function clearPreference() {
     if(!window.finger) {
@@ -387,6 +367,7 @@ function clearPreference() {
                 alert("清除失败");
             }
             alert("重置成功!!!");
+            loadModelSelect(currentNav);
         },
         error: function () {
             alert("返回失败");

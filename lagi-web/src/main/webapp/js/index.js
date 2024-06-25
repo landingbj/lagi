@@ -28,7 +28,6 @@ window.onload = function () {
         const murmur = Fingerprint2.x64hash128(values.join(''), 31)
         console.log(murmur) //生成的标识码
         window.finger = murmur;
-        enablePreference(window.finger);
     })
 }
 

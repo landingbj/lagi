@@ -1,6 +1,7 @@
 package ai.servlet;
 
 import ai.annotation.*;
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.pojo.Driver;
 import ai.config.ContextLoader;
@@ -14,6 +15,7 @@ import ai.servlet.annotation.Get;
 import ai.servlet.annotation.Param;
 import ai.servlet.annotation.Post;
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import lombok.Builder;
@@ -106,29 +108,94 @@ public class PreferenceServlet extends RestfulServlet {
          boolean res = false;
          if(apiKey != null) {
              if(secretKey != null) {
-                 return (!apiKey.startsWith("you")) && (!secretKey.startsWith("you"));
+                 res =  (!apiKey.startsWith("you")) && (!secretKey.startsWith("you"));
+             } else {
+                 res =  !apiKey.startsWith("you");
              }
-            return !apiKey.startsWith("you");
          }
         if(accessKeyId != null && accessKeySecret != null) {
-            return (!accessKeyId.startsWith("you")) && !(accessKeySecret.startsWith("you"));
+            res =  (!accessKeyId.startsWith("you")) && !(accessKeySecret.startsWith("you"));
         }
         if(appId != null && securityKey != null) {
-            return !(securityKey.startsWith("you"));
+            res =  !(securityKey.startsWith("you"));
         }
         return res;
     }
 
+    private void setActivate(List<ModelInfo> orDefault, String activeModel) {
+        orDefault.stream().filter(o->o.getModel().equals(activeModel)).findAny().ifPresent(o->{
+            o.setActivate(true);
+        });
+    }
+
+    private String getModelName(String userModel, String defaultModel) {
+        return userModel == null ? defaultModel : userModel;
+    }
+
+    private <T> String getModelService(AIManager<T> aiManager) {
+        if(!aiManager.getAdapters().isEmpty()) {
+            ModelService modelService = (ModelService) aiManager.getAdapters().get(0);
+            return modelService.getModel();
+        }
+        return null;
+    }
 
     @Get("getModels")
-    public List<ModelInfo> getModels(@Param("type") String type) {
-        return modelInfoMap.getOrDefault(type, Collections.emptyList());
+    public List<ModelInfo> getModels(@Param("type") String type, @Param("userId") String userId, HttpServletRequest request) {
+        ModelPreferenceDto preferenceRequest = loadUserPreference(userId, request);
+        List<ModelInfo> orDefault = modelInfoMap.getOrDefault(type, Collections.emptyList()).stream()
+                .map(ObjectUtil::cloneByStream)
+                .collect(Collectors.toList());
+
+        if("llm".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getLlm(), getModelService(LlmManager.getInstance())));
+        }
+        if("asr".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getAsr(), getModelService(ASRManager.getInstance())));
+        }
+        if("tts".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getTts(), getModelService(TTSManager.getInstance())));
+        }
+        if("img2Text".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getImg2Text(), getModelService(Image2TextManger.getInstance())));
+        }
+        if("imgGen".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getImgGen(), getModelService(ImageGenerationManager.getInstance())));
+        }
+        if("imgEnhance".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getImgEnhance(), getModelService(ImageEnhanceManager.getInstance())));
+        }
+        if("img2Video".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getImg2Video(), getModelService(Image2VideoManager.getInstance())));
+        }
+        if("text2Video".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getText2Video(), getModelService(Text2VideoManager.getInstance())));
+        }
+        if("videoEnhance".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getVideoEnhance(), getModelService(Video2EnhanceManger.getInstance())));
+        }
+        if("videoTrack".equals(type)) {
+            setActivate(orDefault, getModelName(preferenceRequest.getVideoTrack(), getModelService(Video2TrackManager.getInstance())));
+        }
+        return orDefault;
+    }
+
+    private ModelPreferenceDto loadUserPreference(String fingerId, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Object preference = session.getAttribute("preference");
+        ModelPreferenceDto userModelPreference = null;
+        if(preference == null) {
+            userModelPreference = userModelPreferenceDao.getUserModelPreference(fingerId);
+            session.setAttribute("preference", JSONUtil.toJsonStr(userModelPreference));
+        } else {
+            userModelPreference = JSONUtil.toBean((String) preference, ModelPreferenceDto.class);
+        }
+        return userModelPreference;
     }
 
 
-
     @Post("savePreference")
-    public Integer savePreference(@Body ModelPreferenceDto preferenceRequest) {
+    public Integer savePreference(@Body ModelPreferenceDto preferenceRequest, HttpServletRequest request) {
         if(preferenceRequest.getLlm() != null) {
             registerModel("llm", preferenceRequest.getLlm(), LlmManager.getInstance());
         }
@@ -159,7 +226,10 @@ public class PreferenceServlet extends RestfulServlet {
         if(preferenceRequest.getVideoTrack() != null) {
             registerModel("videoTrack", preferenceRequest.getVideoTrack(), Video2TrackManager.getInstance());
         }
-        return userModelPreferenceDao.saveOrUpdate(preferenceRequest);
+        Integer res = userModelPreferenceDao.saveOrUpdate(preferenceRequest);
+        request.getSession().removeAttribute("preference");
+        loadUserPreference(preferenceRequest.getFinger(), request);
+        return res;
     }
 
     private <T> void registerModel(String type,  String model, AIManager<T> aiManager) {
@@ -178,12 +248,6 @@ public class PreferenceServlet extends RestfulServlet {
         return userModelPreferenceDao.getUserModelPreference(userId);
     }
 
-    @Get("enablePreference")
-    public Integer enablePreference(@Param("userId") String userId, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        session.setAttribute("preference", JSONUtil.toJsonStr(userModelPreferenceDao.getUserModelPreference(userId)));
-        return 1;
-    }
 
     @Get("clearPreference")
     public Integer clearPreference(@Param("userId") String userId, HttpServletRequest request) {

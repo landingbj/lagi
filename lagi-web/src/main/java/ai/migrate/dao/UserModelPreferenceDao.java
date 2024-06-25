@@ -49,14 +49,9 @@ public class UserModelPreferenceDao {
     public int saveOrUpdate(ModelPreferenceDto modelPreferenceDto) {
 
         String sqlCheck = "SELECT * FROM lagi_user_preference WHERE finger = ?";
-        String sqlInsert = "INSERT INTO lagi_user_preference (finger, user_id, llm, tts, asr, img2Text, imgGen, imgEnhance, img2Video, text2Video,\n" +
-                "                                  videoEnhance, videoTrack)\n" +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
         Conn conn = null;
         PreparedStatement pstmtCheck = null;
-        PreparedStatement pstmtUpdate = null;
-        PreparedStatement pstmtInsert = null;
         ResultSet rs = null;
         int res = 0;
         try {
@@ -66,26 +61,12 @@ public class UserModelPreferenceDao {
             conn.setAutoCommit(false);
             // 检查记录是否存在
             pstmtCheck = conn.prepareStatement(sqlCheck);
-            System.out.println(modelPreferenceDto.getFinger());
             pstmtCheck.setString(1, modelPreferenceDto.getFinger());
             rs = pstmtCheck.executeQuery();
             if (rs.next()) { // 如果记录存在，则更新
                 res = updatePreference(conn, modelPreferenceDto);
             } else { // 如果记录不存在，则插入
-                System.out.println(modelPreferenceDto);
-                pstmtInsert = conn.prepareStatement(sqlInsert);
-                pstmtInsert.setString(1, modelPreferenceDto.getFinger());
-                pstmtInsert.setString(2, modelPreferenceDto.getLlm());
-                pstmtInsert.setString(3, modelPreferenceDto.getTts());
-                pstmtInsert.setString(4, modelPreferenceDto.getAsr());
-                pstmtInsert.setString(5, modelPreferenceDto.getImg2Text());
-                pstmtInsert.setString(6, modelPreferenceDto.getImgGen());
-                pstmtInsert.setString(7, modelPreferenceDto.getImgEnhance());
-                pstmtInsert.setString(8, modelPreferenceDto.getImg2Video());
-                pstmtInsert.setString(9, modelPreferenceDto.getText2Video());
-                pstmtInsert.setString(10, modelPreferenceDto.getVideoEnhance());
-                pstmtInsert.setString(11, modelPreferenceDto.getVideoTrack());
-                res =  pstmtInsert.executeUpdate();
+                res = insertPreference(conn, modelPreferenceDto);
                 System.out.println(res);
             }
             // 提交事务
@@ -107,8 +88,6 @@ public class UserModelPreferenceDao {
             try {
                 if (rs != null) rs.close();
                 if (pstmtCheck != null) pstmtCheck.close();
-                if (pstmtUpdate != null) pstmtUpdate.close();
-                if (pstmtInsert != null) pstmtInsert.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
                 log.error(e.getMessage());
@@ -120,9 +99,69 @@ public class UserModelPreferenceDao {
 
     private int updatePreference(Conn conn, ModelPreferenceDto modelPreferenceDto) throws SQLException {
         StringBuilder updateBuilder = new StringBuilder();
+        List<List<String>> fs = getFields(modelPreferenceDto);
+        List<String> fields = fs.get(0);
+        List<String> params = fs.get(1);
+        updateBuilder.append("UPDATE lagi_user_preference SET ");
+        for (int i = 0; i < fields.size(); i++) {
+            String field = fields.get(i);
+            updateBuilder.append(field).append("=").append("? ");
+            if(i != fields.size() -1) {
+                updateBuilder.append(", ");
+            }
+        }
+        updateBuilder.append(" where finger = ?;");
+        PreparedStatement preparedStatement = conn.prepareStatement(updateBuilder.toString());
+        for (int i = 1; i <= params.size(); i++) {
+            preparedStatement.setString(i , params.get(i-1));
+        }
+        preparedStatement.setString(params.size() + 1, modelPreferenceDto.getFinger());
+        int res = preparedStatement.executeUpdate();
+        preparedStatement.close();
+        return res;
+    }
+
+    private int insertPreference(Conn conn, ModelPreferenceDto modelPreferenceDto) throws SQLException {
+//        INSERT INTO lagi_user_preference (finger, user_id, llm, tts, asr, img2Text, imgGen, imgEnhance, img2Video, text2Video,
+//                videoEnhance, videoTrack)
+//        VALUES ('aaaa', 'aaaa', null, null, null, null, null, null, null, null, null, null);
+        StringBuilder updateBuilder = new StringBuilder();
+        List<List<String>> fs = getFields(modelPreferenceDto);
+        fs.get(0).add("finger");
+        fs.get(1).add(modelPreferenceDto.getFinger());
+        List<String> fields = fs.get(0);
+        List<String> params = fs.get(1);
+        updateBuilder.append("INSERT INTO lagi_user_preference (");
+        for (int i = 0; i < fields.size(); i++) {
+            String field = fields.get(i);
+            updateBuilder.append(field);
+            if(i != fields.size() -1) {
+                updateBuilder.append(", ");
+            }
+        }
+        updateBuilder.append(") VALUES (");
+        for (int i = 0; i < params.size(); i++) {
+            updateBuilder.append("?");
+            if(i != fields.size() -1) {
+                updateBuilder.append(", ");
+            }
+        }
+        updateBuilder.append(");");
+        System.out.println(updateBuilder.toString());
+        PreparedStatement preparedStatement = conn.prepareStatement(updateBuilder.toString());
+        for (int i = 1; i <= params.size(); i++) {
+            preparedStatement.setString(i , params.get(i-1));
+        }
+        int res = preparedStatement.executeUpdate();
+        preparedStatement.close();
+        return res;
+    }
+
+
+    private List<List<String>> getFields( ModelPreferenceDto modelPreferenceDto) {
+        List<List<String>> res = new ArrayList<>(2);
         List<String> fields = new ArrayList<>();
         List<String> params = new ArrayList<>();
-        updateBuilder.append("UPDATE lagi_user_preference SET ");
         if(modelPreferenceDto.getLlm() != null) {
             fields.add("llm");
             params.add(modelPreferenceDto.getLlm());
@@ -163,21 +202,8 @@ public class UserModelPreferenceDao {
             fields.add("videoTrack");
             params.add(modelPreferenceDto.getVideoTrack());
         }
-        for (int i = 0; i < fields.size(); i++) {
-            String field = fields.get(i);
-            updateBuilder.append(field).append("=").append("? ");
-            if(i != fields.size() -1) {
-                updateBuilder.append(", ");
-            }
-        }
-        updateBuilder.append(" where finger = ?;");
-        PreparedStatement preparedStatement = conn.prepareStatement(updateBuilder.toString());
-        for (int i = 1; i <= params.size(); i++) {
-            preparedStatement.setString(i , params.get(0));
-        }
-        preparedStatement.setString(params.size() + 1, modelPreferenceDto.getFinger());
-        int res = preparedStatement.executeUpdate();
-        preparedStatement.close();
+        res.add(fields);
+        res.add(params);
         return res;
     }
 
