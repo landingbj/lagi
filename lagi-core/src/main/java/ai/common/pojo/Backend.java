@@ -1,6 +1,5 @@
 package ai.common.pojo;
 
-import ai.config.pojo.OSSConfig;
 import lombok.*;
 
 import java.util.List;
@@ -28,5 +27,5 @@ public class Backend {
     private String accessKeySecret;
     private String securityKey;
     private Boolean stream;
-    private OSSConfig oss;
+    private String oss;
 }
