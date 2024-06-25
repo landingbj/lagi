@@ -1,4 +1,4 @@
-package ai.medusa;
+package ai.medusa.utils;
 
 import ai.dao.asynchron.DefaultStateTransitionManager;
 

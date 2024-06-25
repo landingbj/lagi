@@ -1,19 +1,20 @@
 package ai.medusa;
 
+import ai.common.utils.FastIndexList;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.qa.ChatCompletionUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class MedusaService {
-    private static final ICache cache;
+    private static final ICache<PromptInput, ChatCompletionResult> cache;
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
@@ -21,6 +22,7 @@ public class MedusaService {
             case "lcs":
             case "tree":
             case "vector":
+            case "hash":
             default:
                 cache = CompletionCache.getInstance();
         }
@@ -38,6 +40,7 @@ public class MedusaService {
         if (!PromptCacheConfig.MEDUSA_ENABLE) {
             return;
         }
+
         cache.put(promptInput, chatCompletionResult);
     }
 
@@ -45,7 +48,7 @@ public class MedusaService {
         if (!PromptCacheConfig.MEDUSA_ENABLE) {
             return null;
         }
-        return cache.locate(promptInput);
+        return get(promptInput);
     }
 
     public void load(Map<String, String> qaPair, String category) {
@@ -65,14 +68,11 @@ public class MedusaService {
     }
 
     public PromptInput getPromptInput(ChatCompletionRequest chatCompletionRequest) {
-        List<String> promptList = new ArrayList<>(PromptCacheConfig.MAX_CHAT_DEPTH);
+        List<String> promptList = new FastIndexList<>();
         List<ChatMessage> messages = chatCompletionRequest.getMessages();
-        for (int i = messages.size() - 1; i >= 0; i--) {
+        for (int i = 0; i < messages.size(); i = i + 2) {
             ChatMessage message = messages.get(i);
             promptList.add(message.getContent());
-            if (promptList.size() == PromptCacheConfig.MAX_CHAT_DEPTH) {
-                break;
-            }
         }
         return PromptInput.builder()
                 .maxTokens(chatCompletionRequest.getMax_tokens())

@@ -36,7 +36,8 @@ import weixin.tools.TulingThread;
 
 public class CompletionsService {
     private static TulingThread tulingProcessor = null;
-
+    private static final double DEFAULT_TEMPERATURE = 0.8;
+    private static final int DEFAULT_MAX_TOKENS = 2048;
 
     static {
         if (tulingProcessor == null) {
@@ -102,9 +103,9 @@ public class CompletionsService {
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
 
-        if(chatCompletionRequest.getModel() != null) {
+        if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter adapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
-            if(adapter != null) {
+            if (adapter != null) {
                 return adapter.streamCompletions(chatCompletionRequest);
             }
         } else {
@@ -136,16 +137,23 @@ public class CompletionsService {
 
     public void addVectorDBContext(ChatCompletionRequest request, List<IndexSearchData> indexSearchDataList) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
+        if (indexSearchDataList.isEmpty()) {
+            return;
+        }
         String contextText = indexSearchDataList.get(0).getText();
         String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
     }
 
     public ChatCompletionRequest getCompletionsRequest(String prompt) {
+        return getCompletionsRequest(prompt, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(String prompt, double temperature, int maxTokens) {
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
-        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setTemperature(temperature);
         chatCompletionRequest.setStream(false);
-        chatCompletionRequest.setMax_tokens(2048);
+        chatCompletionRequest.setMax_tokens(maxTokens);
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();
         message.setRole(LagiGlobal.LLM_ROLE_USER);

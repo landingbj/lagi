@@ -3,8 +3,11 @@ package ai.medusa.consumer;
 import ai.common.pojo.IndexSearchData;
 import ai.llm.service.CompletionsService;
 import ai.medusa.exception.FailedDiversifyPromptException;
+import ai.medusa.impl.CompletionCache;
+import ai.medusa.impl.QaCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.mr.pipeline.Consumer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -16,15 +19,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CompletePromptConsumer implements Consumer<PooledPrompt> {
-    private final LRUCache<PromptInput, ChatCompletionResult> cache;
+    private final CompletionCache cache;
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
 
-    public CompletePromptConsumer(LRUCache<PromptInput, ChatCompletionResult> cache) {
-        this.cache = cache;
+    public CompletePromptConsumer(CompletionCache completionCache) {
+        this.cache = completionCache;
     }
 
     @Override

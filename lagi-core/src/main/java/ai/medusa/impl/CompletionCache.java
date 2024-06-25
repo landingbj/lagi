@@ -1,8 +1,7 @@
 package ai.medusa.impl;
 
 import ai.medusa.ICache;
-import ai.medusa.PromptCacheConfig;
-import ai.medusa.PromptPool;
+import ai.medusa.utils.*;
 import ai.medusa.consumer.CompletePromptConsumer;
 import ai.medusa.exception.CompletePromptErrorHandler;
 import ai.medusa.exception.DiversifyPromptErrorHandler;
@@ -14,12 +13,13 @@ import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LRUCache;
 
-import java.util.Map;
+import java.util.List;
 
 
-public class CompletionCache implements ICache {
+public class CompletionCache implements ICache<PromptInput, ChatCompletionResult> {
     private static final CompletionCache instance = new CompletionCache();
-    private static final LRUCache<PromptInput, ChatCompletionResult> cache;
+    private static final LRUCache<PromptInput, List<ChatCompletionResult>> promptCache;
+    private static final QaCache qaCache = new QaCache();
 
     private static final PromptPool promptPool = new PromptPool(PromptCacheConfig.POOL_CACHE_SIZE);
     private static ProducerConsumerPipeline<PooledPrompt> promptProcessor;
@@ -28,8 +28,11 @@ public class CompletionCache implements ICache {
     private static final DiversifyPromptProducer treeDiversifyPromptProducer = new TreeDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer ragDiversifyPromptProducer = new RagDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
 
+    private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
+    private static final double LCS_RATIO_PROMPT_INPUT = PromptCacheConfig.LCS_RATIO_PROMPT_INPUT;
+
     static {
-        cache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
+        promptCache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
     }
 
     private CompletionCache() {
@@ -41,19 +44,64 @@ public class CompletionCache implements ICache {
 
     @Override
     public ChatCompletionResult get(PromptInput promptInput) {
-        return cache.get(promptInput);
+        return pickCompletionResult(promptInput);
     }
 
     @Override
     public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        cache.put(promptInput, chatCompletionResult);
-        this.getPromptPool().put(PooledPrompt.builder()
-                .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+        new PromptCacheTrigger(this).triggerWriteCache(promptInput, chatCompletionResult);
+//        new PromptCacheTrigger(this).writeCache(promptInput, chatCompletionResult);
     }
+
+    public ChatCompletionResult pickCompletionResult(PromptInput promptInput) {
+        if (promptInput == null) {
+            return null;
+        }
+        String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
+        List<PromptInput> promptInputList = qaCache.get(newestPrompt);
+        if (promptInputList == null) {
+            newestPrompt = qaCache.getPromptInVectorDb(newestPrompt);
+            if (newestPrompt != null) {
+                promptInputList = qaCache.get(newestPrompt);
+            }
+        }
+        PromptInput pickedPromptInput = null;
+        double maxRatio = 0;
+        if (promptInputList != null) {
+            for (PromptInput promptInputInCache : promptInputList) {
+                List<String> promptListInCache = promptInputInCache.getPromptList();
+                int index = promptListInCache.indexOf(newestPrompt);
+                List<String> promptList1 = promptListInCache.subList(0, index + 1);
+
+                List<String> promptList = promptInput.getPromptList();
+                int startIndex = Math.max(promptList.size() - index - 1, 0);
+                List<String> promptList2 = promptList.subList(startIndex, promptList.size());
+                double ratio = LCS.getLcsRatio(promptList1, promptList2, SUBSTRING_THRESHOLD);
+
+                if (ratio > maxRatio) {
+                    maxRatio = ratio;
+                    pickedPromptInput = promptInputInCache;
+                }
+            }
+        }
+        if (maxRatio < LCS_RATIO_PROMPT_INPUT) {
+            pickedPromptInput = null;
+        }
+        ChatCompletionResult result = null;
+        if (pickedPromptInput != null) {
+            List<ChatCompletionResult> resultListInCache = promptCache.get(pickedPromptInput);
+            int index = pickedPromptInput.getPromptList().indexOf(newestPrompt);
+            if (index > -1) {
+                result = resultListInCache.get(index);
+            }
+        }
+        return result;
+    }
+
 
     @Override
     public int size() {
-        return cache.size();
+        return promptCache.size();
     }
 
     @Override
@@ -64,6 +112,14 @@ public class CompletionCache implements ICache {
     @Override
     public PromptPool getPromptPool() {
         return promptPool;
+    }
+
+    public LRUCache<PromptInput, List<ChatCompletionResult>> getPromptCache() {
+        return promptCache;
+    }
+
+    public QaCache getQaCache() {
+        return qaCache;
     }
 
     @Override
@@ -93,7 +149,7 @@ public class CompletionCache implements ICache {
             promptProcessor.connectProducer(treeDiversifyPromptProducer);
             promptProcessor.connectProducer(ragDiversifyPromptProducer);
             promptProcessor.registerProducerErrorHandler(new DiversifyPromptErrorHandler(promptPool));
-            promptProcessor.connectConsumer(new CompletePromptConsumer(cache));
+            promptProcessor.connectConsumer(new CompletePromptConsumer(CompletionCache.getInstance()));
             promptProcessor.registerConsumerErrorHandler(new CompletePromptErrorHandler(promptPool));
             promptProcessor.start();
         }

@@ -1,18 +1,16 @@
 package ai.medusa;
 
-import ai.medusa.pojo.PromptInput;
-import ai.openai.pojo.ChatCompletionResult;
 
-import java.util.Map;
+import ai.medusa.utils.PromptPool;
 
-public interface ICache {
-    ChatCompletionResult get(PromptInput promptInput);
+public interface ICache<K, V> {
+    V get(K key);
 
-    void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult);
+    void put(K key, V value);
 
     int size();
 
-    ChatCompletionResult locate(PromptInput promptInput);
+    V locate(K key);
 
     PromptPool getPromptPool();
 

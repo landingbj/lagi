@@ -1,7 +1,7 @@
 package ai.medusa.producer;
 
 import ai.llm.service.CompletionsService;
-import ai.medusa.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;

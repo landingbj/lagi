@@ -1,4 +1,4 @@
-package ai.medusa;
+package ai.medusa.utils;
 
 import ai.dao.Pool;
 import ai.medusa.pojo.PooledPrompt;

@@ -64,6 +64,10 @@ public class VectorStoreService {
         upsertFileVectors(fileList, category);
     }
 
+    public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category) {
+        this.upsertCustomVectors(upsertRecords, category, false);
+    }
+
     public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category, boolean isContextLinked) {
         for (UpsertRecord upsertRecord : upsertRecords) {
             String embeddingId = UUID.randomUUID().toString().replace("-", "");
@@ -162,6 +166,10 @@ public class VectorStoreService {
 
     public void deleteWhere(List<Map<String, String>> whereList, String category) {
         this.vectorStore.deleteWhere(whereList, category);
+    }
+
+    public void deleteCollection(String category) {
+        this.vectorStore.deleteCollection(category);
     }
 
     public List<IndexSearchData> search(ChatCompletionRequest request) {

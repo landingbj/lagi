@@ -14,6 +14,7 @@ import io.pinecone.PineconeConnection;
 import io.pinecone.PineconeConnectionConfig;
 import io.pinecone.exceptions.PineconeException;
 import io.pinecone.proto.*;
+import tech.amikos.chromadb.handler.ApiException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -215,6 +216,17 @@ public class PineconeVectorStore implements VectorStore {
         return result;
     }
 
-    public void update() {
+    public void deleteCollection(String category) {
+        PineconeConnectionConfig connectionConfig = new PineconeConnectionConfig()
+                .withIndexName(this.config.getIndexName());
+        try (PineconeConnection connection = pineconeClient.connect(connectionConfig)) {
+            DeleteRequest deleteRequest = DeleteRequest.newBuilder()
+                    .setNamespace(category)
+                    .setDeleteAll(true)
+                    .build();
+            connection.getBlockingStub().delete(deleteRequest);
+        } catch (PineconeException e) {
+            e.printStackTrace();
+        }
     }
 }

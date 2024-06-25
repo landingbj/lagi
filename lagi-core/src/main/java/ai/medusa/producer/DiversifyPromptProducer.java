@@ -1,7 +1,7 @@
 package ai.medusa.producer;
 
 import ai.common.pojo.IndexSearchData;
-import ai.medusa.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.mr.pipeline.ConnectedProducerConsumerPipeline;
