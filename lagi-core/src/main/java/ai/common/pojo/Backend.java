@@ -17,7 +17,10 @@ public class Backend {
     private Boolean enable;
     private Integer priority;
     private String model;
+    private String deployment;
+    private String apiVersion;
     private String driver;
+    private String endpoint;
     private String apiAddress;
     private String appId;
     private String apiKey;

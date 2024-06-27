@@ -11,11 +11,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class ServerSentEventUtil {
     public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func) {
+        return streamCompletions(json, apiUrl, apiKey, new HashMap<>(), func);
+    }
+    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Map<String,String> addHeader , Function<String, ChatCompletionResult> func) {
         OkHttpClient client = new OkHttpClient.Builder()
 //                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
                 .connectTimeout(10, TimeUnit.SECONDS)
@@ -26,7 +31,9 @@ public class ServerSentEventUtil {
         if (apiKey != null) {
             requestBuilder.header("Authorization", "Bearer " + apiKey);
         }
-
+        for (Map.Entry<String, String> entry : addHeader.entrySet()) {
+            requestBuilder.header(entry.getKey(), entry.getValue());
+        }
         Request request = requestBuilder.url(apiUrl)
                 .header("Accept", "text/event-stream")
                 .post(RequestBody.create(json, MediaType.parse("application/json")))

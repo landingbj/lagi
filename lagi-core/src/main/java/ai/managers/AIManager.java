@@ -48,6 +48,8 @@ public class AIManager<T> {
                         backend.setStream(func.getStream());
                         backend.setPriority(func.getPriority());
                         backend.setModel(func.getModel());
+                        backend.setDeployment(func.getDeployment());
+                        backend.setApiVersion(func.getApiVersion());
                         register(clazz, backend);
                     } catch (Exception e) {
                         log.error(e.getMessage());
