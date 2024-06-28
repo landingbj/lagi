@@ -131,6 +131,7 @@ models:
     driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
+  #Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
   - name: Doubao
     type: Doubao
     enable: true
