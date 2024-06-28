@@ -132,12 +132,21 @@ models:
     api_key: your-api-key
 
   #Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
-  - name: Doubao
+  - name: doubao
     type: Doubao
     enable: true
-    model: your_endpoint_id # https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
-    driver: ai.llm.adapter.impl.DoubaoAdapter
-    api_key: your-api-key # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+    drivers:
+      # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+      - model: your_endpoint_id
+        driver: ai.llm.adapter.impl.DoubaoAdapter
+        # https://console.volcengine.com/speech/app
+      - model: openspeech
+        driver: ai.audio.adapter.impl.VolcEngineAudioAdapter
+        oss: landing
+    api_key: your-api-key
+    app_id : your-app-id
+    access_token: your-access-token
+
 
 stores:
   vectors:
@@ -195,7 +204,7 @@ functions:
       api_key: you-api-key
 
   chat:
-    - backend: Doubao
+    - backend: doubao
       model: your_endpoint_id
       enable: true
       stream: true
@@ -234,6 +243,10 @@ functions:
   text2speech:
     - backend: landing
       model: tts
+      enable: true
+      priority: 10
+    - backend: doubao
+      model: openspeech
       enable: true
       priority: 10
 
@@ -288,6 +301,13 @@ functions:
       model: translate
       enable: true
       priority: 10
+
+  speech2clone:
+    - backend: doubao
+      model: openspeech
+      enable: true
+      priority: 10
+      others: your-speakerIds
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.

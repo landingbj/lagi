@@ -25,7 +25,7 @@ public class BaiduAiImageAdapter extends ModelService implements ImageEnhanceAda
 
     static final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder().build();
 
-    private String getAccessToken() throws IOException {
+    private String getAk() throws IOException {
         MediaType mediaType = MediaType.parse("application/json");
         RequestBody body = RequestBody.create(mediaType, "");
         Request request = new Request.Builder()
@@ -51,7 +51,7 @@ public class BaiduAiImageAdapter extends ModelService implements ImageEnhanceAda
             String imgParam = URLEncoder.encode(imgStr, "UTF-8");
             String param = "image=" + imgParam;
             // 注意这里仅为了简化编码每一次请求都去获取access_token，线上环境access_token有过期时间， 客户端可自行缓存，过期后重新获取。
-            String accessToken = getAccessToken();
+            String accessToken = getAk();
             String result = BaiduHttpUtil.post(url, accessToken, param);
             image = JSONUtil.parse(result).getByPath("image", String.class);
         } catch (Exception e) {
