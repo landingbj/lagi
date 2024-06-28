@@ -16,5 +16,6 @@ public class TTSRequestParam {
     private Integer pitch_rate;
 
     private String emotion;
+    private String source;
 
 }

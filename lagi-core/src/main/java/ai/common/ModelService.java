@@ -16,5 +16,7 @@ public class ModelService {
     protected String type;
     protected String apiAddress;
     protected String securityKey;
+    protected String accessToken;
+    private String others;
 
 }

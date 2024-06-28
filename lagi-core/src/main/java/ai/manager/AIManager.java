@@ -74,6 +74,7 @@ public class AIManager<T> {
         backend.setPriority(func.getPriority());
         backend.setModel(func.getModel());
         backend.setOss(driver.getOss());
+        backend.setOthers(func.getOthers());
         return backend;
     }
 

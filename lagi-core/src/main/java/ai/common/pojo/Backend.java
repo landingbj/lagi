@@ -28,4 +28,6 @@ public class Backend {
     private String securityKey;
     private Boolean stream;
     private String oss;
+    private String accessToken;
+    private String others;
 }
