@@ -195,5 +195,11 @@
             <version>5.1.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.volcengine</groupId>
+            <artifactId>volcengine-java-sdk-ark-runtime</artifactId>
+            <version>LATEST</version>
+        </dependency>
+
     </dependencies>
 </project>

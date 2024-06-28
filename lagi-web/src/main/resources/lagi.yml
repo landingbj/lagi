@@ -131,6 +131,13 @@ models:
     driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
+  - name: Doubao
+    type: Doubao
+    enable: true
+    model: your_endpoint_id # https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
+    driver: ai.llm.adapter.impl.DoubaoAdapter
+    api_key: your-api-key # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+
 stores:
   vectors:
     # Chroma is an AI-native open-source embedding database
@@ -187,6 +194,12 @@ functions:
       api_key: you-api-key
 
   chat:
+    - backend: Doubao
+      model: your_endpoint_id
+      enable: true
+      stream: true
+      priority: 160
+
     - backend: kimi
       model: moonshot-v1-8k
       enable: true
