@@ -1,5 +1,10 @@
 package ai.utils;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
 public class Base64Util {
     private static final char last2byte = (char) Integer.parseInt("00000011", 2);
     private static final char last4byte = (char) Integer.parseInt("00001111", 2);
@@ -11,6 +16,21 @@ public class Base64Util {
 
     public Base64Util() {
     }
+
+    public static String fileToBase64( String filepath){
+        InputStream in = null;
+        byte[] data = null;
+        try{
+            in = Files.newInputStream(Paths.get(filepath));
+            data = new byte[in.available()];
+            in.read(data);
+            in.close();
+        }catch (IOException e){
+            return null;
+        }
+        return Base64.getEncoder().encodeToString(data);
+    }
+
 
     public static String encode(byte[] from) {
         StringBuilder to = new StringBuilder((int) ((double) from.length * 1.34D) + 3);
@@ -59,4 +79,16 @@ public class Base64Util {
 
         return to.toString();
     }
+
+    public static File toFile(String dstFilePath, String base64Str)  {
+        File file  = new File(dstFilePath);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file)){
+            byte[] decode = Base64.getDecoder().decode(base64Str);
+            fileOutputStream.write(decode);
+        } catch (IOException e) {
+            file = null;
+        }
+        return file;
+    }
+
 }

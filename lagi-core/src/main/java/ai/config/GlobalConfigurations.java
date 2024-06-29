@@ -6,15 +6,12 @@ import ai.config.pojo.ModelFunctions;
 import ai.config.pojo.StoreConfig;
 import ai.config.pojo.WorkerConfig;
 import ai.manager.*;
-import ai.utils.LagiGlobal;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,6 +44,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Video2EnhanceManger.getInstance().register(models, functions.getVideo2Enhance());
         Video2TrackManager.getInstance().register(models, functions.getVideo2Track());
         TranslateManager.getInstance().register(models, functions.getTranslate());
+        SoundCloneManager.getInstance().register(models, functions.getSpeech2clone());
     }
 
 
@@ -89,13 +87,5 @@ public class GlobalConfigurations extends AbstractConfiguration {
                 .build();
     }
 
-    public static void main(String[] args) throws IOException {
-        File file = new File("C:\\lz\\work\\lagi\\lagi-web\\src\\main\\resources\\lagi.yml");
-        InputStream inputStream = Files.newInputStream(file.toPath());
-        GlobalConfigurations globalConfigurations = (GlobalConfigurations) LagiGlobal.loadConfig(inputStream, GlobalConfigurations.class);
-        System.out.println(globalConfigurations);
-        Configuration config = LagiGlobal.getConfig();
-        System.out.println(config);
 
-    }
 }

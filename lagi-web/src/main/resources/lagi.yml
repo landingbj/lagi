@@ -12,12 +12,9 @@ models:
         driver: ai.image.adapter.impl.LandingImageAdapter
       - model: landing-tts,landing-asr
         driver: ai.audio.adapter.impl.LandingAudioAdapter
-        oss:
-          name: landing
       - model: video
         driver: ai.video.adapter.impl.LandingVideoAdapter
-        oss:
-          name: landing
+        oss: landing
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
@@ -47,8 +44,7 @@ models:
         driver: ai.audio.adapter.impl.AlibabaAudioAdapter
       - model: vision
         driver: ai.video.adapter.impl.AlibabaVisionAdapter
-        oss:
-          name: alibaba
+        oss: alibaba
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
     access_key_id: your-access-key-id
@@ -135,6 +131,23 @@ models:
     driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
+  #Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
+  - name: doubao
+    type: Doubao
+    enable: true
+    drivers:
+      # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+      - model: your_endpoint_id
+        driver: ai.llm.adapter.impl.DoubaoAdapter
+        # https://console.volcengine.com/speech/app
+      - model: openspeech
+        driver: ai.audio.adapter.impl.VolcEngineAudioAdapter
+        oss: landing
+    api_key: your-api-key
+    app_id : your-app-id
+    access_token: your-access-token
+
+
 stores:
   vectors:
     # Chroma is an AI-native open-source embedding database
@@ -191,6 +204,12 @@ functions:
       api_key: you-api-key
 
   chat:
+    - backend: doubao
+      model: your_endpoint_id
+      enable: true
+      stream: true
+      priority: 160
+
     - backend: kimi
       model: moonshot-v1-8k
       enable: true
@@ -215,6 +234,12 @@ functions:
       stream: true
       priority: 120
 
+  translate:
+    - backend: ernie
+      model: translate
+      enable: true
+      priority: 10
+
   speech2text:
     - backend: qwen
       model: asr
@@ -226,6 +251,13 @@ functions:
       model: tts
       enable: true
       priority: 10
+
+  speech2clone:
+    - backend: doubao
+      model: openspeech
+      enable: true
+      priority: 10
+      others: your-speak-id
 
   text2image:
     - backend: spark
@@ -273,11 +305,6 @@ functions:
       enable: true
       priority: 10
 
-  translate:
-    - backend: ernie
-      model: translate
-      enable: true
-      priority: 10
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.

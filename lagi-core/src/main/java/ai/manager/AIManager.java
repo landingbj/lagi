@@ -74,6 +74,7 @@ public class AIManager<T> {
         backend.setPriority(func.getPriority());
         backend.setModel(func.getModel());
         backend.setOss(driver.getOss());
+        backend.setOthers(func.getOthers());
         return backend;
     }
 
@@ -102,12 +103,12 @@ public class AIManager<T> {
             BeanUtil.copyProperties(backend, modelService, "drivers");
         }
 
-        if(backend.getOss() !=null && backend.getOss().getName() != null) {
+        if(backend.getOss() !=null) {
             try {
                 Field universalOSS = adapter.getClass().getDeclaredField("universalOSS");
                 if(universalOSS.getType() == UniversalOSS.class) {
                     universalOSS.setAccessible(true);
-                    universalOSS.set(adapter, OSSManager.getInstance().getOss(backend.getOss().getName()));
+                    universalOSS.set(adapter, OSSManager.getInstance().getOss(backend.getOss()));
                 }
             } catch (Exception e) {
                 log.error("oss inject failed {}", e.getMessage());

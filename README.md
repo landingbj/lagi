@@ -66,3 +66,6 @@ Example: Set the keywords to filter `openai`:
 ]
 ```
 
+### Extension
+
+If you are not satisfied with the large model that Lag[i] has adapted, you can also refer to our [Extension documentation](docs/extend_en.md) to extend Lag[i] to fit your like large model.

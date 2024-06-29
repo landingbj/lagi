@@ -1,7 +1,13 @@
 package ai.common.pojo;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class TTSRequestParam {
     private String model;
@@ -16,5 +22,6 @@ public class TTSRequestParam {
     private Integer pitch_rate;
 
     private String emotion;
+    private String source;
 
 }
