@@ -234,6 +234,12 @@ functions:
       stream: true
       priority: 120
 
+  translate:
+    - backend: ernie
+      model: translate
+      enable: true
+      priority: 10
+
   speech2text:
     - backend: qwen
       model: asr
@@ -245,10 +251,13 @@ functions:
       model: tts
       enable: true
       priority: 10
+
+  speech2clone:
     - backend: doubao
       model: openspeech
       enable: true
       priority: 10
+      others: your-speak-id
 
   text2image:
     - backend: spark
@@ -296,18 +305,6 @@ functions:
       enable: true
       priority: 10
 
-  translate:
-    - backend: ernie
-      model: translate
-      enable: true
-      priority: 10
-
-  speech2clone:
-    - backend: doubao
-      model: openspeech
-      enable: true
-      priority: 10
-      others: your-speakerIds
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.
