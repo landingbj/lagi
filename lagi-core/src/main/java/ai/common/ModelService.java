@@ -18,5 +18,6 @@ public class ModelService {
     protected String securityKey;
     protected String accessToken;
     private String others;
+    protected String alias;
 
 }

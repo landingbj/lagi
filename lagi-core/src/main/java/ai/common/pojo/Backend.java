@@ -30,4 +30,5 @@ public class Backend {
     private String oss;
     private String accessToken;
     private String others;
+    private String alias;
 }
