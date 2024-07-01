@@ -4,129 +4,210 @@ System homepage display name, this setting specifies the name that will be displ
 system_title: Lagi
 ```
 
-Large Language Model (LLM) Configuration
+Model configuration
 
 ```yaml
-# This section defines the configuration for the Large Language Model (LLM).
-LLM:
-  # This specifies the backend services to be used for the LLM.
-  backends:
-    - name: gpt-test # The name of the backend service.
-      type: GPT # The type of backend service, here it is GPT.
-      enable: false # This flag determines whether the backend service is enabled. "true" means it is enabled.
-      priority: 1 # Sets the priority of the backend service.
-      model: gpt-3.5-turbo-1106 # Model version
-      api_key: your-api-key # API key
-   
-   - name: vicuna-test1
-      type: Vicuna
-      enable: true
-      priority: 100
-      model: /mnt/data/vicuna-13b-v1.5-16k
-      # For privately deployed large models, it is necessary to specify the API address of the model service.
-      api_address: http://localhost:8090/v1/chat/completions
+# This section defines the model configuration used by the middleware.
+models:
+  # Model configuration in the case of single driver model.
+  - name: chatgpt  # The name of the backend service.
+    type: GPT  # Type of backend service, in this case GPT.
+    enable: false # This flag determines whether the backend service is enabled or not. true: indicates that the function is enabled.
+    model: gpt-3.5-turbo,gpt-4-turbo # list of models supported by the driver
+    driver: ai.llm.adapter.impl.GPTAdapter # model driver
+    api_key: your-api-key # API key
+  # 模型支持多驱动的配置
+  - name: landing
+    type: Landing
+    enable: false
+    drivers: # Multi-driver configuration.
+      - model: turing,qa,tree,proxy
+        driver: ai.llm.adapter.impl.LandingAdapter
+      - model: image
+        driver: ai.image.adapter.impl.LandingImageAdapter
+        oss: landing # Name of the storage object service
+      - model: landing-tts,landing-asr
+        driver: ai.audio.adapter.impl.LandingAudioAdapter
+      - model: video
+        driver: ai.video.adapter.impl.LandingVideoAdapter
+        api_key: your-api-key # specifies api key for the driver
+    # the public api key of drivers
+    api_key:  your-api-key
+
 ```
 
-Speech Recognition (ASR) Configuration
+Storage function configuration
 
 ```yaml
-# This section defines the configuration for Speech Recognition (ASR).
-ASR:
-  # Lists the backend services to be used for ASR. Each backend service has a name, type, enable flag, and priority.
-  backends:
-    - name: asr-test1
-      type: Landing
+# This section defines the storage device configuration used by the middleware.
+stores:
+  # This part is the configuration of the vector database
+  vectors: # 向量数据库配置列表
+    - name: chroma # Vector database name
+      driver: ai.vector.impl.ChromaVectorStore # Vector database driver
+      default_category: default # Parameters used in vector database queries
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:8000 # the url address of the Vector database
+  # This section describes how to configure the object storage service
+  oss:
+    - name: landing # Name of the storage object service
+      driver: ai.oss.impl.LandingOSS  # The driver class that stores the object service
+      bucket_name: lagi # The bucket name used to store the object
+      enable: true # Whether to enable the storage object service
+
+    - name: alibaba
+      driver: ai.oss.impl.AlibabaOSS
+      access_key_id: your-access-key-id #  the access key id  used by the third-party storage object service
+      access_key_secret: your-access-key-secret # the access key secret  used by the third-party storage object service
+      bucket_name: ai-service-oss
       enable: true
-      priority: 10
+  # This section is the configuration of the retrieval enhancement build service
+  rag:
+      - backend: chroma # The name of the vector database used by the service
+        enable: true # Enable or not
+        priority: 10 # priority for this function
+  # This section is the configuration of Medusa's Accelerated Inference Service
+  medusa:
+    enable: true # Enable or not
+    algorithm: hash # Algorithm used
 ```
 
-Text-to-Speech (TTS) Configuration
+Middleware function configuration
 
 ```yaml
-# This section defines the configuration for Text-to-Speech (TTS).
-TTS:
-  # Similar to ASR, it lists the backend services with their respective configurations.
-  backends:
-    - name: tts-test1
-      type: Landing
+# Functional configuration used by large models
+functions:
+  # embedding service configuration
+  embedding:
+    - backend: qwen
+      type: Qwen
+      api_key: your-api-key
+  
+  # The configuration list of chat dialog and text generation functions
+  chat:
+    - backend: chatgpt # The name of the model configuration used by the backend
+      model: gpt-4-turbo # Model name
+      enable: true # Enable or not
+      stream: true # Whether to use stream
+      priority: 200 #  priority for this function
+
+    - backend: chatglm
+      model: glm-3-turbo
+      enable: false
+      stream: false
+      priority: 10
+  
+  # Translation configuration list
+  translate:
+    - backend: ernie
+      model: translate
+      enable: false
+      priority: 10
+  
+  # Voice to text configuration list
+  speech2text:
+    - backend: qwen
+      model: asr
       enable: true
       priority: 10
+  
+  # Text-to-voice configuration list
+  text2speech:
+    - backend: landing
+      model: tts
+      enable: true
+      priority: 10
+  
+  # Sound clone configuration list
+  speech2clone:
+    - backend: doubao
+      model: openspeech
+      enable: true
+      priority: 10
+      others: your-speak-id
+
+  # Text image configuration list
+  text2image:
+    - backend: spark
+      model: tti
+      enable: true
+      priority: 10
+    - backend: ernie
+      model: Stable-Diffusion-XL
+      enable: true
+      priority: 5
+  # Configuration list of the image text generation
+  image2text:
+    - backend: ernie
+      model: Fuyu-8B
+      enable: true
+      priority: 10
+  # Image enhancement configuration list
+  image2enhance:
+    - backend: ernie
+      model: enhance
+      enable: true
+      priority: 10
+  # Text generated video configuration list
+  text2video:
+    - backend: landing
+      model: video
+      enable: true
+      priority: 10
+  # image generated video configuration list
+  image2video:
+    - backend: qwen
+      model: vision
+      enable: true
+      priority: 10
+  # 视频追踪功能配置列表
+  video2track:
+    - backend: landing
+      model: video
+      enable: true
+      priority: 10
+  # 视屏增强功能配置列表
+  video2enhance:
+    - backend: qwen
+      model: vision
+      enable: true
+      priority: 10
+
 ```
 
-Image Generation Configuration
+Agent configuration
 
 ```yaml
-# This section defines the configuration for the image generation service.
-image_generation:
-  # Lists the backend services to be used for image generation. Each backend service has a name, type, enable flag, and priority.
-  backends:
-    - name: image-generation-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
 
-Image Captioning Configuration
+# This section represents the agent configuration supported by the model
+agents:
+  - name: qq # Name of the agent
+    api_key: your-api-key # api key used by the agent
+    driver: ai.agent.social.QQAgent # Agent driver
 
-```yaml
-# This section defines the configuration for services that generate descriptive text (titles or explanations) for images.
-image_captioning:
-  # Similar to other sections, it lists the backend services with their respective configurations.
-  backends:
-    - name: image-captioning-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
+  - name: wechat
+    api_key: your-api-key
+    driver: ai.agent.social.WechatAgent
 
-Image Enhancement Configuration
+  - name: ding
+    api_key: your-api-key
+    driver: ai.agent.social.DingAgent
 
-```yaml
-# This section defines the configuration for services used to improve or enhance image quality.
-image_enhance:
-  # Lists the backend services for image enhancement.
-  backends:
-    - name: image-enhance-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
+# This section represents the workers configuration supported by the model
+workers:
+  - name: qq-robot # worker name
+    agent: qq # Name of the agent
+    worker: ai.worker.social.RobotWorker # Worker driver
 
-Video Generation Configuration
+  - name: wechat-robot
+    agent: wechat
+    worker: ai.worker.social.RobotWorker
 
-```yaml
-# This section defines the configuration for services used for video generation.
-video_generation:
-  # Lists the backend services for video generation.
-  backends:
-    - name: video-generation-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
+  - name: ding-robot
+    agent: ding
+    worker: ai.worker.social.RobotWorker
 
-Video Tracking Configuration
-
-```yaml
-# This section defines the configuration for services used to track objects or features in videos.
-video_track:
-  # Lists the backend services for video tracking.
-  backends:
-    - name: video-track-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
-
-Video Enhancement Configuration
-
-```yaml
-# This section defines the configuration for services used to improve or enhance video quality.
-video_enhance:
-  # Lists the backend services for video enhancement.
-  backends:
-    - name: video-enhance-test1
-      type: Landing
-      enable: true
-      priority: 10
 ```
