@@ -1,10 +1,111 @@
+# API Documentation
+
+## Start Lag[i]
+
+### 1.Install the startup vector database
+
+Retrieving the enhanced `rag` feature requires a vector database, you can choose your preferred database according to your preferences.
+
+***Take chromadb：***
+
+You can pull the installation and start chromadb by running the following command directly from docker.
+
+```bash
+docker run -d \
+    --name chromadb \
+    -p 8000:8000 \
+    -v /mydata/docker/local/chroma/data:/study/ai/chroma \
+    -e IS_PERSISTENT=TRUE \
+    -e ANONYMIZED_TELEMETRY=TRUE \
+    chromadb/chroma:latest
+```
+You can access via a browser: http://localhost:8000/docs verify if started successfully.
+
+### 2.Configure yml files
+
+Modify [`src/main/resources/lagi.yml`](lagi-web/src/main/resources/lagi.yml) configuration file, select the model you like, will be one of the major language model your - API - key information such as the replacement for your own key, And set the 'enable' field of the enabled model to 'true' as needed. See the [configuration documentation](docs/config_zh.md) for details.
+
+***Take kimi：***
+
+Fill in the model information and enable the model, changing enable to true.
+
+```yaml
+  - name: kimi
+    type: Moonshot
+    enable: true
+    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+    driver: ai.llm.adapter.impl.MoonshotAdapter
+    api_key: your-api-key 
+```
+
+Depending on your needs, set the mode stream and the priority of the model output, the higher the priority.
+
+```yaml
+  chat:
+    - backend: doubao
+      model: doubao-pro-4k
+      enable: true
+      stream: true
+      priority: 160
+
+    - backend: kimi
+      model: moonshot-v1-8k
+      enable: true
+      stream: true
+      priority: 150
+```
+
+Select the configured vector database and fill in the corresponding configuration information.
+
+***Take local chromadb:***
+
+Replace the url with the chromadb url http://localhost:8000.
+
+```yaml
+  vectors:
+    - name: chroma
+      driver: ai.vector.impl.ChromaVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:8000
+```
+
+### 3.import dependencies
+
+To call the lag[i] API, you need to import the dependencies, which you can import via maven or directly by importing the jar.
+
+***Take maven：***
+
+Use maven to download the dependency execution command.
+
+```shell
+mvn clean install
+```
+
+### 4.Starting the web service
+
+You can choose to use the maven command-line tool for wrapping, or run it through a popular integrated development environment (IDE) such as IntelliJ IDEA. Make sure your JDK version meets at least 8.
+
+***Take maven packaging：***
+
+Use the maven command to wrap the project, which will generate a war file in the 'target' directory.
+
+```shell
+mvn package
+```
+
+Deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the Lag[i] page by visiting the corresponding port in your browser.
+
 ## Completions Interface
 
 POST /chat/completions
 
 Enter a prompt to get an answer from the large model.
 
-> Body request parameters
+### Body request parameters
 
 ```json
 {
@@ -34,7 +135,7 @@ Enter a prompt to get an answer from the large model.
 | »» role       | body     | string   | No       | user or assistant, user indicates user submission, assistant indicates model output |
 | »» content    | body     | string   | No       | If the role is user, then context is the content entered by the user. If the role is assistant, then context is the output content of the large model. |
 
-> Return example
+### Return example
 
 > Success
 
@@ -87,14 +188,13 @@ Status Code **200**
 | »» completion_tokens | integer  | true     | Number of generated tokens                                   |
 | »» total_tokens      | integer  | true     | Total number of tokens used in the request                   |
 
-
 ## Speech Recognition
 
 POST /audio/speech2text
 
 The speech recognition interface returns the text after recognition.
 
-> Body request parameters
+### Body request parameters
 
 The request body passes binary audio data, so the `Content-Type` in the HTTPS request header must be set to `application/octet-stream`.
 
@@ -105,7 +205,7 @@ The request body passes binary audio data, so the `Content-Type` in the HTTPS re
 | Content-Type | header   | string         | No       | none        |
 | body         | body     | string(binary) | No       | none        |
 
-> Return example
+### Return example
 
 > Success
 
@@ -130,7 +230,6 @@ Status Code **200**
 | -------- | ------- | -------- | -------------------------- |
 | » result | string  | true     | Speech recognition result. |
 | » status | integer | true     | Service status code.       |
-
 
 ## Text-to-Speech
 
@@ -158,18 +257,17 @@ Enter text to return a spoken audio file.
 | ----------- | ------- | ----------- |
 | 200         | OK      | Success     |
 
-
 ## Image Generation
 
 POST /image/text2image
 
 Enter a command to generate images and return images.
 
-> Body request parameters
+### Body request parameters
 
 ```json
 {
-  "prompt": "a pig"
+  "prompt": "a.pig"
 }
 ```
 
@@ -180,7 +278,7 @@ Enter a command to generate images and return images.
 | body     | body     | object | No       | none                       |
 | » prompt | body     | string | Yes      | Command to generate images |
 
-> Return example
+### Return example
 
 > Success
 
@@ -211,18 +309,16 @@ Status Code **200**
 | » data    | [object] | true     | Generated image data                               |
 | »» url    | string   | false    | Generated image address                            |
 
-
 ## Upload Private Training Files
 
 POST /training/upload
 
 Upload private training files, supporting txt, word, pdf formats.
 
-> Body request parameters
+### Body request parameters
 
 ```yaml
 fileToUpload: file://D:/KnowledgeGraph.pdf
-
 ```
 
 ### Request Parameters
@@ -233,7 +329,7 @@ fileToUpload: file://D:/KnowledgeGraph.pdf
 | body           | body     | object         | No       | none                                     |
 | » fileToUpload | body     | string(binary) | Yes      | The private training file being uploaded |
 
-> Return example
+### Return example
 
 > Success
 
@@ -263,7 +359,7 @@ POST /training/pairing
 
 Training private Q&A pair data, required in JSON format
 
-> Body request parameters
+### Body request parameters
 
 The data and instruction field supports either an object or a list of objects, as shown in the request examples below.
 
@@ -308,8 +404,6 @@ The data and instruction field supports either an object or a list of objects, a
 }
 ```
 
-
-
 ### Request Parameters
 
 | Name       | Position | Type               | Required | Description             |
@@ -318,7 +412,7 @@ The data and instruction field supports either an object or a list of objects, a
 | » category | body     | string             | Yes      | Specified data category |
 | » data     | body     | [object] or object | Yes      | Q&A pair data           |
 
-> Return example
+### Return example
 
 > Success
 
@@ -348,11 +442,10 @@ POST /image/image2text
 
 Upload an image and return a description of the image.
 
-> Body request parameters
+### Body request parameters
 
 ```yaml
 file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
-
 ```
 
 ### Request Parameters
@@ -362,7 +455,7 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 | body   | body     | object         | No       | none                          |
 | » file | body     | string(binary) | Yes      | The image file being uploaded |
 
-> Return example
+### Return example
 
 > Success
 
@@ -392,18 +485,16 @@ Status Code **200**
 | » caption        | string | true     | Recognized description of the image  |
 | » samUrl         | string | true     | Uploaded image's segmentation result |
 
-
 ## Video Tracking
 
 POST /video/video2tracking
 
 Upload a video for video tracking.
 
-> Body request parameters
+### Body request parameters
 
 ```yaml
 file: file://D:\Test\Datasets\Video\demo.mp4
-
 ```
 
 ### Request Parameters
@@ -413,7 +504,7 @@ file: file://D:\Test\Datasets\Video\demo.mp4
 | body   | body     | object         | No       | none                          |
 | » file | body     | string(binary) | Yes      | The video file being uploaded |
 
-> Return example
+### Return example
 
 > Success
 
@@ -439,18 +530,16 @@ Status Code **200**
 | » status | string | true     | Status of the result         |
 | » data   | string | true     | Address of the tracked video |
 
-
 ## Image Enhancement
 
 POST /image/image2enhance
 
 Upload an image to enhance a blurry image.
 
-> Body request parameters
+### Body request parameters
 
 ```yaml
 file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
-
 ```
 
 ### Request Parameters
@@ -460,16 +549,14 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 | body   | body     | object         | No       | none                          |
 | » file | body     | string(binary) | Yes      | The image file being uploaded |
 
-> Return example
+### Return example
 
 > Success
 
 ```json
 {
   "status": "success",
-  "enhanceImageUrl": "http://116.255.226.214:9000/realesrgan/tfukxzrq240301172914.png?response-content-type=image%2F%2A&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9OMV1OGIpDH29iDq1HWC%2F20240301%2Fus-east-1%2Fs3%2Faws4_request
-
-&X-Amz-Date=20240301T092921Z&X-Amz-Expires=7200&X-Amz-SignedHeaders=host&X-Amz-Signature=931b1c9d1b850095d58763db042bd982108dc0c2415985df37d6efa824f33fff"
+  "enhanceImageUrl": "http://116.255.226.214:9000/realesrgan/tfukxzrq240301172914.png?response-content-type=image%2F%2A&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9OMV1OGIpDH29iDq1HWC%2F20240301%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240301T092921Z&X-Amz-Expires=7200&X-Amz-SignedHeaders=host&X-Amz-Signature=931b1c9d1b850095d58763db042bd982108dc0c2415985df37d6efa824f33fff"
 }
 ```
 
@@ -488,14 +575,13 @@ Status Code **200**
 | » enhanceImageUrl | string | true     | Address of the enhanced image |
 | » status          | string | true     | Status of the result          |
 
-
 ## Picture to video
 
 POST /image/image2video
 
 Upload an image and generate a short video based on that image.
 
-> Body request parameters
+### Body request parameters
 
 ```yaml
 file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
@@ -508,7 +594,7 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 | body   | body     | object         | No       | none                          |
 | » file | body     | string(binary) | Yes      | The image file being uploaded |
 
-> Return example
+### Return example
 
 > Success
 
@@ -534,18 +620,16 @@ Status Code **200**
 | » svdVideoUrl | string | true     | Address of the generated video |
 | » status      | string | true     | Status of the result           |
 
-
 ## Video Enhancement
 
 POST /video/video2enhance
 
 Upload a video for video frame interpolation.
 
-> Body request parameters
+### Body request parameters
 
 ```yaml
 file: file://D:\Test\Datasets\Video\demo.mp4
-
 ```
 
 ### Request Parameters
@@ -555,7 +639,7 @@ file: file://D:\Test\Datasets\Video\demo.mp4
 | body   | body     | object         | No       | none                          |
 | » file | body     | string(binary) | Yes      | The video file being uploaded |
 
-> Return example
+### Return example
 
 > Success
 
