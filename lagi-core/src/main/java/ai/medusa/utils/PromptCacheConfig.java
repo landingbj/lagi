@@ -1,7 +1,7 @@
 package ai.medusa.utils;
 
 import ai.common.pojo.Medusa;
-import ai.utils.LagiGlobal;
+import cn.hutool.core.util.StrUtil;
 
 public class PromptCacheConfig {
     public static final int POOL_INITIAL = 1;
@@ -29,7 +29,9 @@ public class PromptCacheConfig {
     public static final double LCS_RATIO_PROMPT_INPUT = 0.5;
 
     public static void init(Medusa config) {
-        MEDUSA_ENABLE = config.isEnable();
-        LOCATE_ALGORITHM = config.getAlgorithm();
+        if(config != null) {
+            MEDUSA_ENABLE = config.getEnable() != null ? config.getEnable() : MEDUSA_ENABLE;
+            LOCATE_ALGORITHM = StrUtil.isBlank(config.getAlgorithm()) ? LOCATE_ALGORITHM : config.getAlgorithm();
+        }
     }
 }

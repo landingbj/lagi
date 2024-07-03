@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class Medusa {
-    private boolean enable;
+    private Boolean enable;
     private String algorithm;
 }

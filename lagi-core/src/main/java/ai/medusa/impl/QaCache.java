@@ -25,7 +25,11 @@ public class QaCache {
 
     static {
         cache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
-        vectorStoreService.deleteCollection(MEDUSA_CATEGORY);
+        try {
+            vectorStoreService.deleteCollection(MEDUSA_CATEGORY);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
     }
 
     public List<PromptInput> get(String key) {

@@ -37,7 +37,7 @@ public class LlmApiServlet extends BaseServlet {
     private final CompletionsService completionsService = new CompletionsService();
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
-    private static final MedusaService medusaService = new MedusaService();
+    private final MedusaService medusaService = new MedusaService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
