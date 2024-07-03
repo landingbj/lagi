@@ -26,7 +26,9 @@ public class MedusaService {
             default:
                 cache = CompletionCache.getInstance();
         }
-        cache.startProcessingPrompt();
+        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+            cache.startProcessingPrompt();
+        }
     }
 
     public ChatCompletionResult get(PromptInput promptInput) {
