@@ -14,6 +14,7 @@ import ai.vector.impl.BaseVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -180,12 +181,16 @@ public class VectorStoreService {
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
-        IntentResult intentResult = intentService.detectIntent(messages);
+        IntentResult intentResult = intentService.detectIntent(request);
         String question = null;
         if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
             if(intentResult.getContinuedIndex() != null) {
-                String[] split = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]");
+                String content = messages.get(intentResult.getContinuedIndex()).getContent();
+                String[] split = content.split("[， ,.。！!?？]");
                 String source =  Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
+                if(StrUtil.isBlank(source)) {
+                    source =content;
+                }
                 question = source  + ChatCompletionUtil.getLastMessage(request);
             }
             else {

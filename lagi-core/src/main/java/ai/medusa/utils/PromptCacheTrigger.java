@@ -7,6 +7,7 @@ import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.pojo.ChatMessage;
 import ai.utils.LRUCache;
 import ai.utils.qa.ChatCompletionUtil;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class PromptCacheTrigger {
     private final CompletionsService completionsService = new CompletionsService();
@@ -116,6 +118,62 @@ public class PromptCacheTrigger {
                 .promptList(questionList.subList(startIndex, questionList.size()))
                 .build();
     }
+
+
+    public int analyzeChatBoundariesForIntent(ChatCompletionRequest chatCompletionRequest) {
+        List<String> questionList = chatCompletionRequest.getMessages().stream()
+                .filter(c -> "user".equals(c.getRole()))
+                .map(ChatMessage::getContent)
+                .collect(Collectors.toList());
+        int startIndex = 0;
+        if (questionList.size() < 2) {
+            return startIndex;
+        }
+
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setCategory(chatCompletionRequest.getCategory());
+        request.setTemperature(chatCompletionRequest.getTemperature());
+        request.setMax_tokens(chatCompletionRequest.getMax_tokens());
+        request.setModel(chatCompletionRequest.getModel());
+        request.setStream(false);
+        request.setMessages(chatCompletionRequest.getMessages());
+
+        List<String> answerList = chatCompletionRequest.getMessages().stream()
+                .filter(c -> "assistant".equals(c.getRole()))
+                .map(ChatMessage::getContent)
+                .collect(Collectors.toList());
+        ChatCompletionResult result = completionsService.completions(request);
+        String answer = ChatCompletionUtil.getFirstAnswer(result);
+        answerList.add(answer);
+
+        String q0 = questionList.get(0);
+        String a0 = answerList.get(0);
+        Set<String> s00 = LCS.findLongestCommonSubstrings(q0, a0, SUBSTRING_THRESHOLD);
+
+        Set<String> lastDiagSet = LCS.findLongestCommonSubstrings(questionList.get(1), a0, SUBSTRING_THRESHOLD);
+
+        for (int i = 1; i < questionList.size(); i++) {
+            String qi = questionList.get(i);
+            String ai = answerList.get(i);
+            Set<String> si = LCS.findLongestCommonSubstrings(q0, ai, SUBSTRING_THRESHOLD);
+            si.retainAll(s00);
+
+            double ratio1 = LCS.getLcsRatio(qi, si);
+            String lastA = answerList.get(i - 1);
+            Set<String> diagSet = LCS.findLongestCommonSubstrings(qi, lastA, SUBSTRING_THRESHOLD);
+            diagSet.retainAll(lastDiagSet);
+            double ratio2 = LCS.getLcsRatio(qi, diagSet);
+            lastDiagSet = diagSet;
+            if (ratio1 < LCS_RATIO_QUESTION && ratio2 < LCS_RATIO_QUESTION) {
+                startIndex = i;
+                q0 = questionList.get(startIndex);
+                a0 = answerList.get(startIndex);
+                s00 = LCS.findLongestCommonSubstrings(q0, a0, SUBSTRING_THRESHOLD);
+            }
+        }
+        return startIndex;
+    }
+
 
     private String getRawAnswer(String question) {
         if (rawAnswerCache.containsKey(question)) {

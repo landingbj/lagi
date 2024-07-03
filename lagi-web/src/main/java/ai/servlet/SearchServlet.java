@@ -273,8 +273,12 @@ public class SearchServlet extends RestfulServlet {
         ObjectMapper objectMapper = new ObjectMapper();
         String content = messages.get(messages.size() - 1).getContent().trim();
 //        String intent = intentService.detectIntent(content);
-
-        IntentResult intentResult = sampleIntentService.detectIntent(messages);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setMax_tokens(0);
+        request.setModel("");
+        request.setTemperature(0);
+        request.setMessages(messages);
+        IntentResult intentResult = sampleIntentService.detectIntent(request);
         String intent = intentResult.getType();
         PrintWriter out = resp.getWriter();
 
@@ -582,7 +586,12 @@ public class SearchServlet extends RestfulServlet {
     @Post("intentDetect")
     public String intentDetect(@Body QuestionAnswerRequest qaRequest) {
         List<ChatMessage> messages = qaRequest.getMessages();
-        IntentResult intentResult = sampleIntentService.detectIntent(messages);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setMessages(messages);
+        request.setMax_tokens(0);
+        request.setModel("");
+        request.setTemperature(0);
+        IntentResult intentResult = sampleIntentService.detectIntent(request);
         return intentResult.getType();
     }
 }

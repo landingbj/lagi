@@ -1,12 +1,10 @@
 package ai.intent;
 
 import ai.intent.pojo.IntentResult;
-import ai.openai.pojo.ChatMessage;
-
-import java.util.List;
+import ai.openai.pojo.ChatCompletionRequest;
 
 public interface IntentService {
 
-    IntentResult detectIntent(List<ChatMessage> messages);
+    IntentResult detectIntent(ChatCompletionRequest chatCompletionRequest);
 
 }
