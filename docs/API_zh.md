@@ -124,16 +124,16 @@ POST /chat/completions
 
 ### 请求参数
 
-| 名称          | 位置 | 类型     | 必选 | 说明                                                         |
-| ------------- | ---- | -------- | ---- | ------------------------------------------------------------ |
-| body          | body | object   | 否   | none                                                         |
-| » model       | body | string   | 否   | 模型类型                                                     |
-| » temperature | body | number   | 是   | 使用什么样的采样温度                                         |
-| » max_tokens  | body | integer  | 是   | 可以生成的最大token数。                                      |
-| » category    | body | string   | 否   | 数据类别                                                     |
-| » messages    | body | [object] | 是   | 提交的消息列表                                               |
+| 名称          | 位置 | 类型     | 必选 | 说明                                           |
+| ------------- | ---- | -------- | ---- |----------------------------------------------|
+| body          | body | object   | 否   | none                                         |
+| » model       | body | string   | 否   | 模型类型                                         |
+| » temperature | body | number   | 是   | 使用什么样的采样温度                                   |
+| » max_tokens  | body | integer  | 是   | 可以生成的最大token数。                               |
+| » category    | body | string   | 否   | 数据类别                                         |
+| » messages    | body | [object] | 是   | 提交的消息列表                                      |
 | »» role       | body | string   | 否   | user或者assistant, user表示用户提交，assistant表示大模型输出 |
-| »» content    | body | string   | 否   | 如果role是user，则context是用户输入的内容吗， 如果role是assistant，则context是大模型的输出内容 |
+| »» content    | body | string   | 否   | 请求内容                                         |
 
 ### 返回示例
 
@@ -172,21 +172,22 @@ POST /chat/completions
 
 状态码 **200**
 
-| 名称                 | 类型     | 必选  | 说明                                                         |
-| -------------------- | -------- | ----- | ------------------------------------------------------------ |
-| » id                 | string   | true  | 唯一标识符                                                   |
-| » object             | string   | true  | 对象类型                                                     |
-| » created            | integer  | true  | 聊天完成创建时的Unix时间戳（秒）                             | 
-| » choices            | [object] | true  | 选择的列表                                                   |
-| »» index             | integer  | false | 对象的索引                                                   |
-| »» message           | object   | false | 返回的消息                                                   |
-| »»» role             | string   | true  | user或者assistant, user表示用户提交，assistant表示大模型输出 |
-| »»» content          | string   | true  | 如果role是user，则context是用户输入的内容吗， 如果role是assistant，则context是大模型的输出内容 |
-| »» finish_reason     | string   | false | 模型停止生成的原因                                           |
-| » usage              | object   | true  | 完成请求的使用统计                                           |
-| »» prompt_tokens     | integer  | true  | 提示中的令牌数量。                                           |
-| »» completion_tokens | integer  | true  | 生成的令牌数量                                               |
-| »» total_tokens      | integer  | true  | 请求中使用的总令牌数量                                       |
+| 名称                   | 类型     | 必选    | 说明                                          |
+|----------------------| -------- |-------|---------------------------------------------|
+| » id                 | string   | true  | 唯一标识符                                       |
+| » object             | string   | true  | 对象类型                                        |
+| » created            | integer  | true  | 聊天完成创建时的Unix时间戳（秒）                          | 
+| » choices            | [object] | true  | 选择的列表                                       |
+| »» index             | integer  | false | 对象的索引                                       |
+| »» message           | object   | false | 返回的消息                                       |
+| »»» role             | string   | true  | user或assistant, user表示用户提交，assistant表示大模型输出 |
+| »»» content          | string   | true  | 大模型的输出内容                                    |
+| »»» context          | string   | false | 向量数据库查出来的上下文信息                              |
+| »» finish_reason     | string   | false | 模型停止生成的原因                                          |
+| » usage              | object   | true  | 完成请求的使用统计                                          |
+| »» prompt_tokens     | integer  | true  | 提示中的令牌数量。                                          |
+| »» completion_tokens | integer  | true  | 生成的令牌数量                                              |
+| »» total_tokens      | integer  | true  | 请求中使用的总令牌数量                                      |
 
 ## 语音识别
 

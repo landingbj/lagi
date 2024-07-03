@@ -172,21 +172,22 @@ Enter a prompt to get an answer from the large model.
 
 Status Code **200**
 
-| Name                 | Type     | Required | Description                                                  |
-| -------------------- | -------- | -------- | ------------------------------------------------------------ |
-| » id                 | string   | true     | Unique identifier                                            |
-| » object             | string   | true     | Object type                                                  |
-| » created            | integer  | true     | Unix timestamp (seconds) when the chat was created           |
-| » choices            | [object] | true     | List of choices                                              |
-| »» index             | integer  | false    | Index of the object                                          |
-| »» message           | object   | false    | Returned message                                             |
+| Name                 | Type     | Required | Description                                                                         |
+|----------------------| -------- |----------|-------------------------------------------------------------------------------------|
+| » id                 | string   | true     | Unique identifier                                                                   |
+| » object             | string   | true     | Object type                                                                         |
+| » created            | integer  | true     | Unix timestamp (seconds) when the chat was created                                  |
+| » choices            | [object] | true     | List of choices                                                                     |
+| »» index             | integer  | false    | Index of the object                                                                 |
+| »» message           | object   | false    | Returned message                                                                    |
 | »»» role             | string   | true     | user or assistant, user indicates user submission, assistant indicates model output |
-| »»» content          | string   | true     | If the role is user, then context is the content entered by the user. If the role is assistant, then context is the output content of the large model. |
-| »» finish_reason     | string   | false    | Reason for model stop generating                             |
-| » usage              | object   | true     | Usage statistics for the request                             |
-| »» prompt_tokens     | integer  | true     | Number of tokens in the prompt.                              |
-| »» completion_tokens | integer  | true     | Number of generated tokens                                   |
-| »» total_tokens      | integer  | true     | Total number of tokens used in the request                   |
+| »»» content          | string   | true     | The output of the large model.                                                      |
+| »»» context          | string   | false     | Context information from the vector database                                        |
+| »» finish_reason     | string   | false    | Reason for model stop generating                                                    |
+| » usage              | object   | true     | Usage statistics for the request                                                    |
+| »» prompt_tokens     | integer  | true     | Number of tokens in the prompt.                                                     |
+| »» completion_tokens | integer  | true     | Number of generated tokens                                                          |
+| »» total_tokens      | integer  | true     | Total number of tokens used in the request                                          |
 
 ## Speech Recognition
 
