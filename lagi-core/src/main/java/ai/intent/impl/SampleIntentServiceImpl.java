@@ -52,18 +52,18 @@ public class SampleIntentServiceImpl implements IntentService {
         }
         int lastIndex = 0;
 //        intentResult.setStatus(IntentStatusEnum.getStatusByContents(chatCompletionRequest.getMessages().stream().map(ChatMessage::getContent).collect(Collectors.toList()), punctuations).getName());
-
         CompletionCache completionCache = CompletionCache.getInstance();
         PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger(completionCache);
         List<String> questionList = chatCompletionRequest.getMessages().stream()
                 .filter(m->"user".equals(m.getRole()))
                 .map(ChatMessage::getContent).collect(Collectors.toList());
         lastIndex = promptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
-        if(lastIndex == (questionList.size()-1)) {
+
+        if(lastIndex == chatCompletionRequest.getMessages().size() -1) {
             intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
         } else {
             intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
-            intentResult.setContinuedIndex(lastIndex * 2);
+            intentResult.setContinuedIndex(lastIndex);
         }
         List<Integer> stoppingIndex = StoppingWordUtil.getStoppingIndex(chatCompletionRequest.getMessages());
         if(!stoppingIndex.isEmpty() && intentResult.getContinuedIndex() != null) {
@@ -80,11 +80,4 @@ public class SampleIntentServiceImpl implements IntentService {
 
 
 
-    public static void main(String[] args) {
-//        SampleIntentServiceImpl sampleIntentService = new SampleIntentServiceImpl();
-//        List<String> strings = sampleIntentService.splitByPunctuation("你好。画一张狗狗图");
-//        System.out.println(strings);
-//        IntentResult intentResult = sampleIntentService.detectIntent(strings);
-//        System.out.println(intentResult);
-    }
 }
