@@ -4,6 +4,7 @@ import ai.common.pojo.IndexSearchData;
 import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.servlet.BaseServlet;
+import ai.servlet.dto.VectorDeleteRequest;
 import ai.servlet.dto.VectorQueryRequest;
 import ai.servlet.dto.VectorUpsertRequest;
 import ai.vector.VectorStoreService;
@@ -35,6 +36,12 @@ public class VectorApiServlet extends BaseServlet {
             this.upsert(req, resp);
         } else if (method.equals("search")) {
             this.search(req, resp);
+        } else if (method.equals("deleteById")) {
+            this.deleteById(req, resp);
+        } else if (method.equals("deleteByMetadata")) {
+            this.deleteByMetadata(req, resp);
+        } else if (method.equals("deleteCollection")) {
+            this.deleteCollection(req, resp);
         }
     }
 
@@ -43,9 +50,9 @@ public class VectorApiServlet extends BaseServlet {
         ChatCompletionRequest request = reqBodyToObj(req, ChatCompletionRequest.class);
         List<IndexSearchData> indexSearchData = vectorDbService.searchByContext(request);
         Map<String, Object> result = new HashMap<>();
-        if(indexSearchData == null || indexSearchData.isEmpty()) {
+        if (indexSearchData == null || indexSearchData.isEmpty()) {
             result.put("status", "failed");
-        }else {
+        } else {
             result.put("status", "success");
             result.put("data", indexSearchData);
         }
@@ -82,6 +89,38 @@ public class VectorApiServlet extends BaseServlet {
         String category = vectorUpsertRequest.getCategory();
         boolean isContextLinked = vectorUpsertRequest.getContextLinked();
         vectorStoreService.upsertCustomVectors(upsertRecords, category, isContextLinked);
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
+        responsePrint(resp, toJson(result));
+    }
+
+    private void deleteById(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorDeleteRequest vectorDeleteRequest = reqBodyToObj(req, VectorDeleteRequest.class);
+        String category = vectorDeleteRequest.getCategory();
+        List<String> ids = vectorDeleteRequest.getIds();
+        vectorStoreService.delete(ids, category);
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
+        responsePrint(resp, toJson(result));
+    }
+
+    private void deleteByMetadata(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorDeleteRequest vectorDeleteRequest = reqBodyToObj(req, VectorDeleteRequest.class);
+        String category = vectorDeleteRequest.getCategory();
+        List<Map<String, String>> whereList = vectorDeleteRequest.getWhereList();
+        vectorStoreService.deleteWhere(whereList, category);
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
+        responsePrint(resp, toJson(result));
+    }
+
+    private void deleteCollection(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorDeleteRequest vectorDeleteRequest = reqBodyToObj(req, VectorDeleteRequest.class);
+        String category = vectorDeleteRequest.getCategory();
+        vectorStoreService.deleteCollection(category);
         Map<String, Object> result = new HashMap<>();
         result.put("status", "success");
         responsePrint(resp, toJson(result));
