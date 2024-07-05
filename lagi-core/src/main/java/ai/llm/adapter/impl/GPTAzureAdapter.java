@@ -2,7 +2,6 @@ package ai.llm.adapter.impl;
 
 import ai.annotation.LLM;
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.utils.ServerSentEventUtil;
@@ -26,15 +25,10 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
     private static final String ENTERPOINT = "https://api.openai.com/v1/chat/completions";
     private static final int HTTP_TIMEOUT = 15 * 1000;
 
-    private final Backend backendConfig;
-
-    public GPTAzureAdapter(Backend backendConfig) {
-        this.backendConfig = backendConfig;
-    }
 
     @Override
     public String getApiAddress() {
-        return backendConfig.getEndpoint() + "openai/deployments/" + backendConfig.getDeployment() + "/chat/completions?api-version=" + backendConfig.getApiVersion();
+        return getEndpoint() + "openai/deployments/" + getDeployment() + "/chat/completions?api-version=" + getApiVersion();
     }
 
     @Override
@@ -42,7 +36,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + backendConfig.getApiKey());
+        headers.put("Authorization", "Bearer " + getApiKey());
         String jsonResult = null;
         chatCompletionRequest.setCategory(null);
         try {
@@ -66,7 +60,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
         chatCompletionRequest.setCategory(null);
         String apiUrl = getApiAddress();
         String json = gson.toJson(chatCompletionRequest);
-        String apiKey = backendConfig.getApiKey();
+        String apiKey = getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
             if (e.equals("[DONE]")) {
                 return null;
@@ -89,7 +83,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
 
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
-            request.setModel(backendConfig.getModel());
+            request.setModel(getModel());
         }
     }
 }
