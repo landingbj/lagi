@@ -54,9 +54,7 @@ public class SampleIntentServiceImpl implements IntentService {
 //        intentResult.setStatus(IntentStatusEnum.getStatusByContents(chatCompletionRequest.getMessages().stream().map(ChatMessage::getContent).collect(Collectors.toList()), punctuations).getName());
         CompletionCache completionCache = CompletionCache.getInstance();
         PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger(completionCache);
-        List<String> questionList = chatCompletionRequest.getMessages().stream()
-                .filter(m->"user".equals(m.getRole()))
-                .map(ChatMessage::getContent).collect(Collectors.toList());
+
         lastIndex = promptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
 
         if(lastIndex == chatCompletionRequest.getMessages().size() -1) {

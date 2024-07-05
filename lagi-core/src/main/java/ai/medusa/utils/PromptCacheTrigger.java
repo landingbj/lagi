@@ -135,7 +135,8 @@ public class PromptCacheTrigger {
             return startIndex;
         }
         String curQ = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
-        String lastQ = chatCompletionRequest.getMessages().get(startIndex).getContent();
+        int lastIndex = getLastRelateQuestionIndex(startIndex, startIndex - 2, contents);
+        String lastQ = chatCompletionRequest.getMessages().get(lastIndex).getContent();
         try {
             VectorStoreService vectorStoreService = new VectorStoreService();
             List<IndexSearchData> prompts = vectorStoreService.search(curQ, chatCompletionRequest.getCategory());
@@ -143,8 +144,8 @@ public class PromptCacheTrigger {
             if(!prompts.isEmpty() && !complexPrompts.isEmpty()) {
                 Float distance = prompts.get(0).getDistance();
                 Float distance1 = complexPrompts.get(0).getDistance();
-                if(distance < distance1) {
-                    return chatCompletionRequest.getMessages().size() - 1;
+                if(distance1  < distance) {
+                    return lastIndex;
                 }
             }
         } catch (Exception e) {
@@ -172,8 +173,6 @@ public class PromptCacheTrigger {
         double ratio1 = LCS.getLcsRatio(curQuestion, qq);
         double ratio2 = LCS.getLcsRatio(curQuestion, qa);
 //        if(lcsA.length > 0 || lcsQ.length > 0) {
-        System.out.println(ratio1);
-        System.out.println(ratio2);
         if(ratio1 > 0.25d || ratio2 > 0.35d) {
             return getLastRelateQuestionIndex(lastQuestionIndex, lastQuestionIndex - 2, contentList);
         }
