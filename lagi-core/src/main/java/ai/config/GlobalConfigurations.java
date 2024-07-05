@@ -3,17 +3,16 @@ package ai.config;
 import ai.common.pojo.*;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.ModelFunctions;
+import ai.config.pojo.StoreConfig;
 import ai.config.pojo.WorkerConfig;
-import ai.managers.*;
-import ai.utils.LagiGlobal;
+import ai.manager.*;
+import ai.medusa.utils.PromptCacheConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,15 +24,17 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     private String systemTitle;
     private List<Backend> models;
-    private List<VectorStoreConfig> vectors;
+    private StoreConfig stores;
     private ModelFunctions functions;
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
 
+    @Override
+    public void init() {
 
-    private void init() {
+        OSSManager.getInstance().register(stores.getOss());
+        VectorStoreManager.getInstance().register(stores.getVectors(), stores.getRag(), functions.getEmbedding());
         LlmManager.getInstance().register(models, functions.getChat());
-        VectorStoreManager.getInstance().register(vectors, functions.getRAG(), functions.getEmbedding());
         ASRManager.getInstance().register(models, functions.getSpeech2text());
         TTSManager.getInstance().register(models, functions.getText2speech());
         Image2TextManger.getInstance().register(models, functions.getImage2text());
@@ -43,6 +44,9 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Image2VideoManager.getInstance().register(models, functions.getImage2video());
         Video2EnhanceManger.getInstance().register(models, functions.getVideo2Enhance());
         Video2TrackManager.getInstance().register(models, functions.getVideo2Track());
+        TranslateManager.getInstance().register(models, functions.getTranslate());
+        SoundCloneManager.getInstance().register(models, functions.getSpeech2clone());
+        PromptCacheConfig.init(stores.getMedusa());
     }
 
 
@@ -50,7 +54,6 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     @Override
     public Configuration transformToConfiguration() {
-        init();
         List<Backend> chatBackends = functions.getChat().stream().map(backendMatch -> {
             Optional<Backend> any = models.stream().filter(backend -> backend.getEnable() && backendMatch.getEnable() && backendMatch.getBackend().equals(backend.getName())).findAny();
             Backend backend = any.orElse(null);
@@ -71,7 +74,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
         return Configuration.builder()
                 .systemTitle(systemTitle)
-                .vectorStores(vectors)
+                .vectorStores(stores.getVectors())
                 .LLM(llm)
                 .ASR(ASR.builder().backends(functions.getSpeech2text()).build())
                 .TTS(TTS.builder().backends(functions.getText2speech()).build())
@@ -86,13 +89,5 @@ public class GlobalConfigurations extends AbstractConfiguration {
                 .build();
     }
 
-    public static void main(String[] args) throws IOException {
-        File file = new File("C:\\lz\\work\\lagi\\lagi-web\\src\\main\\resources\\lagi.yml");
-        InputStream inputStream = Files.newInputStream(file.toPath());
-        GlobalConfigurations globalConfigurations = (GlobalConfigurations) LagiGlobal.loadConfig(inputStream, GlobalConfigurations.class);
-        System.out.println(globalConfigurations);
-        Configuration config = LagiGlobal.getConfig();
-        System.out.println(config);
 
-    }
 }

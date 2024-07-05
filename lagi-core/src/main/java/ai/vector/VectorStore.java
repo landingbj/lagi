@@ -27,4 +27,6 @@ public interface VectorStore {
     void deleteWhere(List<Map<String, String>> where);
 
     void deleteWhere(List<Map<String, String>> whereList, String category);
+
+    void deleteCollection(String category);
 }

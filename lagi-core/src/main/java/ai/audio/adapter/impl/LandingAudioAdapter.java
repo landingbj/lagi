@@ -2,24 +2,31 @@ package ai.audio.adapter.impl;
 
 import java.io.File;
 
+import ai.annotation.ASR;
+import ai.annotation.TTS;
 import ai.audio.adapter.IAudioAdapter;
 import ai.common.ModelService;
 import ai.common.pojo.*;
+import ai.oss.UniversalOSS;
 import com.google.gson.Gson;
 
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.learning.pojo.Response;
-import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
 
+@ASR(company = "landingbj", modelNames = "landing-asr")
+@TTS(company = "landingbj", modelNames = "landing-tts")
 public class LandingAudioAdapter extends ModelService implements IAudioAdapter {
     private Gson gson = new Gson();
     private AiServiceCall call = new AiServiceCall();
 
+    private UniversalOSS universalOSS;
+
+
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
-        String url = FileUploadUtil.asrUpload(audio);
+        String url = universalOSS.upload("asr/" + audio.getName(), audio);
         AsrRequest asrRequest = new AsrRequest();
         asrRequest.setLang("Chinese");
         asrRequest.setAudioUrl(url);

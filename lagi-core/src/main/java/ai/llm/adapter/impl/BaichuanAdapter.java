@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@LLM(modelNames = {"Baichuan2-Turbo","Baichuan2-Turbo-192k","Baichuan2-53B"})
 public class BaichuanAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BaichuanAdapter.class);
     private final Gson gson = new Gson();

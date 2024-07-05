@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.MappingIterable;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@LLM(modelNames = { "glm-3-turbo","glm-4", "glm-4v"})
 public class ZhipuAdapter extends ModelService implements ILlmAdapter {
 
 
@@ -48,7 +50,7 @@ public class ZhipuAdapter extends ModelService implements ILlmAdapter {
         String model = Optional.ofNullable(request.getModel()).orElse(getModel());
 
         String invokeMethod = Constants.invokeMethod;
-        if (request.getStream()) {
+        if (stream) {
             invokeMethod = Constants.invokeMethodSse;
         }
 
@@ -70,8 +72,8 @@ public class ZhipuAdapter extends ModelService implements ILlmAdapter {
         for (int i = 0; i < modelData.getChoices().size(); i++) {
             ChatCompletionChoice choice = new ChatCompletionChoice();
             ChatMessage chatMessage = new ChatMessage();
-            if (choice.getDelta() == null) {
-                com.zhipu.oapi.service.v4.model.Delta delta = modelData.getChoices().get(i).getDelta();
+            com.zhipu.oapi.service.v4.model.Delta delta = modelData.getChoices().get(i).getDelta();
+            if (delta != null) {
                 chatMessage.setContent(delta.getContent());
                 chatMessage.setRole(delta.getRole());
             } else {

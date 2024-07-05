@@ -176,4 +176,12 @@ public class ChromaVectorStore extends BaseVectorStore {
             throw new RuntimeException(e);
         }
     }
+
+    public void deleteCollection(String category) {
+        try {
+            client.deleteCollection(category);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

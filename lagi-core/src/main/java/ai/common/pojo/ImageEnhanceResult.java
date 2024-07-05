@@ -6,5 +6,6 @@ import lombok.Data;
 @Builder
 @Data
 public class ImageEnhanceResult {
-    private String enhancedUrl;
+    private String type;
+    private String data;
 }

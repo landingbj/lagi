@@ -1,7 +1,7 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.GeminiRequest;
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
+@LLM(modelNames = {"gemini-1.5-flash-latest","gemini-1.5-flash-latest","gemini-1.0-pro","gemini-1.5-pro-latest"})
 public class GeminiAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GeminiAdapter.class);
     private final Gson gson = new Gson();

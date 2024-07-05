@@ -1,77 +1,70 @@
 package ai.image.adapter.impl;
 
+import ai.annotation.Img2Text;
+import ai.annotation.ImgGen;
 import ai.common.ModelService;
-import ai.common.exception.RRException;
-import ai.common.pojo.FileRequest;
-import ai.common.pojo.ImageToTextResponse;
+import ai.common.pojo.*;
 import ai.image.adapter.IImage2TextAdapter;
+import ai.image.adapter.IImageGenerationAdapter;
+import ai.utils.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSON;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import okhttp3.*;
+import com.baidubce.qianfan.Qianfan;
+import com.baidubce.qianfan.core.auth.Auth;
+import com.baidubce.qianfan.model.image.Image2TextRequest;
+import com.baidubce.qianfan.model.image.Image2TextResponse;
+import com.baidubce.qianfan.model.image.Text2ImageRequest;
+import com.baidubce.qianfan.model.image.Text2ImageResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class BaiduImageAdapter extends ModelService implements IImage2TextAdapter {
+@Img2Text(modelNames = "Fuyu-8B")
+@ImgGen(modelNames = "Stable-Diffusion-XL")
+public class BaiduImageAdapter extends ModelService implements IImage2TextAdapter, IImageGenerationAdapter {
 
     private final Logger logger = LoggerFactory.getLogger(BaiduImageAdapter.class);
-    private final String ACCESS_TOKEN_API = "https://aip.baidubce.com/oauth/2.0/token";
-    private final String IMAGE_TO_TEXT_API = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/image2text/fuyu_8b";
-    private final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder().build();
 
-
-    @NoArgsConstructor
-    @Data
-    static
-    class Image2TextRequest  {
-        private String prompt;
-        private String image;
-        private Boolean stream;
-        private Double temperature;
-        private Integer top_k;
-        private Double top_p;
-        private Double penalty_score;
-        private List<String> stop;
-        private String user_id;
+    private Qianfan buildQianfan() {
+        return new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
     }
 
+
+    private Image2TextRequest convertImage2TextRequest(FileRequest param) {
+        Image2TextRequest image2TextRequest = new Image2TextRequest();
+        BeanUtil.copyProperties(param.getExtendParam(), image2TextRequest, "user_id");
+        String fileContentAsBase64 = null;
+        try {
+            fileContentAsBase64 = ImageUtil.getFileContentAsBase64(param.getImageUrl());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (StrUtil.isBlank(fileContentAsBase64)) {
+            return null;
+        }
+        image2TextRequest.setImage(fileContentAsBase64);
+        if(StrUtil.isBlank(image2TextRequest.getPrompt())) {
+            image2TextRequest.setPrompt("detail");
+        }
+        return image2TextRequest;
+    }
+
+    private Text2ImageRequest convertText2ImageResponse(ImageGenerationRequest request) {
+        Text2ImageRequest text2ImageRequest = new Text2ImageRequest();
+        BeanUtil.copyProperties(request, text2ImageRequest);
+        return text2ImageRequest;
+    }
 
     @Override
     public ImageToTextResponse toText(FileRequest param) {
         try {
-            Image2TextRequest image2TextRequest = new Image2TextRequest();
-            BeanUtil.copyProperties(param.getExtendParam(), image2TextRequest, "user_id");
-            image2TextRequest.setImage(getFileContentAsBase64(param.getImageUrl()));
-            if(StrUtil.isBlank(image2TextRequest.prompt)) {
-                image2TextRequest.setPrompt("detail");
-            }
-            MediaType mediaType = MediaType.parse("application/json");
-            RequestBody body = RequestBody.create(mediaType, JSONUtil.toJsonStr(image2TextRequest));
-            Request request = new Request.Builder()
-                    .url(IMAGE_TO_TEXT_API + "?access_token=" + getAccessToken())
-                    .method("POST", body)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            ResponseBody responseBody = HTTP_CLIENT.newCall(request).execute().body();
-            if(responseBody != null) {
-                JSON json = JSONUtil.parse(responseBody.string());
-                if(json.getByPath("error_code", Integer.class) != null) {
-                    throw new RRException(json.getByPath("error_msg", String.class));
-                }
-                String result = json.getByPath("result", String.class);
-                System.out.println(json);
-                return ImageToTextResponse.success(result);
-            }
+            Image2TextRequest image2TextRequest = convertImage2TextRequest(param);
+            Image2TextResponse image2TextResponse = buildQianfan().image2Text(image2TextRequest);
+            return ImageToTextResponse.success(image2TextResponse.getResult());
         } catch (Exception e) {
             logger.error("error", e);
         }
@@ -79,31 +72,16 @@ public class BaiduImageAdapter extends ModelService implements IImage2TextAdapte
     }
 
 
-    private String getFileContentAsBase64(String path) throws IOException {
-        byte[] b = Files.readAllBytes(Paths.get(path));
-        return Base64.getEncoder().encodeToString(b);
+
+    @Override
+    public ImageGenerationResult generations(ImageGenerationRequest request) {
+        Qianfan qianfan = buildQianfan();
+        Text2ImageRequest text2ImageRequest = convertText2ImageResponse(request);
+        Text2ImageResponse text2ImageResponse = qianfan.text2Image(text2ImageRequest);
+        List<ImageGenerationData> dataList = text2ImageResponse.getData().stream().map(d -> ImageGenerationData.builder().base64Image(d.getB64Image()).build()).collect(Collectors.toList());
+        return ImageGenerationResult.builder().created(text2ImageResponse.getCreated()).dataType("base64").data(dataList).build();
     }
 
 
-
-    private String getAccessToken() throws IOException {
-        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
-        RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials&client_id=" + apiKey
-                + "&client_secret=" + secretKey);
-        Request request = new Request.Builder()
-                .url(ACCESS_TOKEN_API)
-                .method("POST", body)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .build();
-        Response response = HTTP_CLIENT.newCall(request).execute();
-        return new JSONObject(response.body().string()).getStr("access_token");
-    }
-
-    public static void main(String[] args) {
-        BaiduImageAdapter baiduImageAdapter = new BaiduImageAdapter();
-        FileRequest build = FileRequest.builder().imageUrl("C:\\Users\\Administrator\\Desktop\\dog1.jpg").build();
-        ImageToTextResponse text = baiduImageAdapter.toText(build);
-        System.out.println(text);
-    }
 
 }

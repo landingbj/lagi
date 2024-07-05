@@ -4,7 +4,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -43,7 +42,7 @@ import com.google.gson.reflect.TypeToken;
 
 import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
-import ai.audio.service.AudioService;
+import ai.migrate.service.AudioService;
 import ai.llm.service.CompletionsService;
 import ai.learn.questionAnswer.KShingleFilter;
 import ai.migrate.service.ApiService;
@@ -110,7 +109,6 @@ public class SearchServlet extends RestfulServlet {
     }
 
 
-
     @Post("uploadVoice")
     public void uploadVoice(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String allowedOrigin = "https://localhost";
@@ -148,7 +146,7 @@ public class SearchServlet extends RestfulServlet {
             while ((bytesRead = input.read(buffer)) != -1) {
                 output.write(buffer, 0, bytesRead);
             }
-            result = getVoiceResult(resPath);
+            result = audioService.getVoiceResult(resPath);
         } catch (IOException e) {
             result = gson.toJson(new WhisperResponse(1, "识别失败"));
             e.printStackTrace();
@@ -161,21 +159,9 @@ public class SearchServlet extends RestfulServlet {
         out.close();
     }
 
-
-    // 保留接口
-    private String getVoiceResult(String resPath) throws IOException {
-        AudioRequestParam audioRequestParam = new AudioRequestParam();
-        AsrResult result = audioService.asr(resPath, audioRequestParam);
-
-        if (result.getStatus() == LagiGlobal.ASR_STATUS_SUCCESS) {
-            return gson.toJson(new WhisperResponse(0, result.getResult()));
-        }
-        return gson.toJson(new WhisperResponse(1, "识别失败"));
-    }
-
     @Post("uploadFile")
     public void uploadFile(HttpServletRequest request,
-                            HttpServletResponse response) throws ServletException, IOException {
+                           HttpServletResponse response) throws ServletException, IOException {
         String allowedOrigin = "https://localhost";
         response.setCharacterEncoding("UTF-8");
         Part filePart = request.getPart("file"); // 与前端发送的FormData中的字段名对应
@@ -273,8 +259,12 @@ public class SearchServlet extends RestfulServlet {
         ObjectMapper objectMapper = new ObjectMapper();
         String content = messages.get(messages.size() - 1).getContent().trim();
 //        String intent = intentService.detectIntent(content);
-
-        IntentResult intentResult = sampleIntentService.detectIntent(messages);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setMax_tokens(0);
+        request.setModel("");
+        request.setTemperature(0);
+        request.setMessages(messages);
+        IntentResult intentResult = sampleIntentService.detectIntent(request);
         String intent = intentResult.getType();
         PrintWriter out = resp.getWriter();
 
@@ -582,7 +572,12 @@ public class SearchServlet extends RestfulServlet {
     @Post("intentDetect")
     public String intentDetect(@Body QuestionAnswerRequest qaRequest) {
         List<ChatMessage> messages = qaRequest.getMessages();
-        IntentResult intentResult = sampleIntentService.detectIntent(messages);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setMessages(messages);
+        request.setMax_tokens(0);
+        request.setModel("");
+        request.setTemperature(0);
+        IntentResult intentResult = sampleIntentService.detectIntent(request);
         return intentResult.getType();
     }
 }

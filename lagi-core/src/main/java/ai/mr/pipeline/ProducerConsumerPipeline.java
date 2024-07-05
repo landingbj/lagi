@@ -9,6 +9,10 @@ public interface ProducerConsumerPipeline<T extends Serializable> {
 	public void connect(Producer<? extends T> producer);
 	
 	public void connect(Consumer<? super T> consumer);
+
+	public void connectProducer(Producer<? extends T> producer);
+
+	public void connectConsumer(Consumer<? super T> consumer);
 	
 	public void registerProducerErrorHandler(ProducerConsumerErrorHandler e);
 	

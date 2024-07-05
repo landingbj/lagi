@@ -1,4 +1,9 @@
 window.category = "";
+
+window.finger = null;
+
+
+
 window.onload = function () {
     window.category = getCookie("category");
     var categoryTmp = window.category;
@@ -7,10 +12,25 @@ window.onload = function () {
     } else {
         getCategory(categoryTmp);
     }
+    
     initHelloPage();
     loadTheme();
     showPromptNav();
+    Fingerprint2.get(function(components) {
+        const values = components.map(function(component,index) {
+            if (index === 0) { //把微信浏览器里UA的wifi或4G等网络替换成空,不然切换网络会ID不一样
+                return component.value.replace(/\bNetType\/\w+\b/, '')
+            }
+            return component.value
+        })
+        // 生成最终id murmur
+        console.log(values)  //使用的浏览器信息
+        const murmur = Fingerprint2.x64hash128(values.join(''), 31)
+        console.log(murmur) //生成的标识码
+        window.finger = murmur;
+    })
 }
+
 
 function setCookie(cname, cvalue, exdays) {
     var d = new Date();

@@ -1,4 +1,4 @@
-system_title: Lag[i]
+system_title: lag[i]
 
 models:
   # Landing is a MOE model provided by Beijing Landing Technologies
@@ -10,10 +10,11 @@ models:
         driver: ai.llm.adapter.impl.LandingAdapter
       - model: image
         driver: ai.image.adapter.impl.LandingImageAdapter
-      - model: tts,asr
+      - model: landing-tts,landing-asr
         driver: ai.audio.adapter.impl.LandingAudioAdapter
       - model: video
         driver: ai.video.adapter.impl.LandingVideoAdapter
+        oss: landing
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
@@ -29,7 +30,7 @@ models:
     type: GPT
     enable: false
     model: gpt-3.5-turbo,gpt-4-1106-preview
-    driver:  ai.llm.adapter.impl.GPTAdapter
+    driver: ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
   # ChatGPT is a state-of-the-art language model developed by OpenAI
@@ -50,6 +51,9 @@ models:
         driver: ai.llm.adapter.impl.QwenAdapter
       - model: asr
         driver: ai.audio.adapter.impl.AlibabaAudioAdapter
+      - model: vision
+        driver: ai.video.adapter.impl.AlibabaVisionAdapter
+        oss: alibaba
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
     access_key_id: your-access-key-id
@@ -60,15 +64,27 @@ models:
     type: Ernie
     enable: true
     drivers:
-      - model: ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
+      - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
         driver: ai.llm.adapter.impl.ErnieAdapter
-      - model: Fuyu-8B
+      - model: Fuyu-8B,Stable-Diffusion-XL
         driver: ai.image.adapter.impl.BaiduImageAdapter
+      - model: translate
+        driver: ai.translate.adapter.impl.BaiduTranslateAdapter
+        app_id: your-api-key
+        security_key: your-security-key
+      - model: enhance
+        driver: ai.image.adapter.impl.BaiduAiImageAdapter
+        api_key: your-api-key
+        secret_key: 9your-sercet-key
+      - model: aiVideo
+        driver: ai.video.adapter.impl.BaiduVideoAdapter
+        api_key: your-api-key
+        secret_key: your-sercet-key
     # help document https://developer.baidu.com/article/detail.html?id=1089328
-    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application/create?_=1712653394604
-    app_id: your-api-id
+    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
+    app_id: your-app-id
     api_key: your-api-key
-    secret_key: your-secret-key
+    secret_key: your-sercet-key
 
   #  chatGLM is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
   - name: chatglm
@@ -82,7 +98,7 @@ models:
   - name: kimi
     type: Moonshot
     enable: true
-    model:  moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
     api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
 
@@ -98,11 +114,14 @@ models:
   - name: spark
     type: Spark
     enable: false
-    model: v1.1
-    driver: ai.llm.adapter.impl.SparkAdapter
+    drivers:
+      - model: v1.1
+        driver: ai.llm.adapter.impl.SparkAdapter
+      - model: tti
+        driver: ai.image.adapter.impl.SparkImageAdapter
     app_id: your-app-id
-    api_key: your-api-key  # https://console.xfyun.cn/
-    secret_key: your-secret-key  # https://console.xfyun.cn/
+    api_key: you-api-key  # https://console.xfyun.cn/
+    secret_key: you-secret-key   # https://console.xfyun.cn/
 
     #SenseChat(RiRiXin) is a large language model developed by Shangtang
   - name: SenseChat
@@ -121,48 +140,91 @@ models:
     driver: ai.llm.adapter.impl.GeminiAdapter
     api_key: your-api-key
 
-vectors:
-  # Chroma is an AI-native open-source embedding database
-  # The official website is https://www.trychroma.com/
-  - name: chroma
-    driver : ai.vector.impl.ChromaVectorStore
-    default_category: default
-    similarity_top_k: 10
-    similarity_cutoff: 0.5
-    parent_depth: 1
-    child_depth: 1
-    url: http://localhost:8000
-
-
-  # Pinecone is a vector database for building large-scale machine learning applications
-  # The official website is https://www.pinecone.io/
-  - name: pinecone
-    driver: ai.vector.impl.PineconeVectorStore
-    default_category: default
-    similarity_top_k: 10
-    similarity_cutoff: 0.5
-    parent_depth: 1
-    child_depth: 1
-    environment: your-environment
-    project_name: your-project-name
-    index_name: your-index-name
+  #Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
+  - name: doubao
+    type: Doubao
+    enable: true
+    drivers:
+      # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+      - model: doubao-pro-4k,doubao-pro-32k
+        driver: ai.llm.adapter.impl.DoubaoAdapter
+        # https://console.volcengine.com/speech/app
+      - model: openspeech
+        driver: ai.audio.adapter.impl.VolcEngineAudioAdapter
+        oss: landing
     api_key: your-api-key
+    app_id : your-app-id
+    access_token: your-access-token
+    alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
+    # address https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
 
+stores:
+  vectors:
+    # Chroma is an AI-native open-source embedding database
+    # The official website is https://www.trychroma.com/
+    - name: chroma
+      driver: ai.vector.impl.ChromaVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:8000
+
+    # Pinecone is a vector database for building large-scale machine learning applications
+    # The official website is https://www.pinecone.io/
+    - name: pinecone
+      driver: ai.vector.impl.PineconeVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      environment: your-environment
+      project_name: your-project-name
+      index_name: your-index-name
+      api_key: your-api-key
+
+  oss:
+    - name: landing
+      driver: ai.oss.impl.LandingOSS
+      bucket_name: lagi
+      enable: true
+
+    - name: alibaba
+      driver: ai.oss.impl.AlibabaOSS
+      access_key_id: your-access-key-id
+      access_key_secret: your-access-key-secret
+      bucket_name: ai-service-oss
+      enable: true
+
+  rag:
+    - backend: chroma
+      enable: true
+      priority: 10
+
+  medusa:
+    enable: true
+    algorithm: hash
 
 functions:
-
   embedding:
-    - backend: landing
-      type: Landing
-      api_endpoint: http://ai.landingbj.com
-
+    - backend: qwen
+      type: Qwen
+      api_key: you-api-key
 
   chat:
+    - backend: doubao
+      model: doubao-pro-4k
+      enable: true
+      stream: true
+      priority: 160
+
     - backend: kimi
       model: moonshot-v1-8k
       enable: true
       stream: true
-      priority: 100
+      priority: 150
 
     - backend: chatgpt-azure
       model: gpt-4o-20240513
@@ -179,16 +241,16 @@ functions:
       priority: 10
 
     - backend: ernie
-      model: ERNIE-Bot-turbo
+      model: ERNIE-Speed-128K
       enable: false
-      stream: false
-      priority: 60
+      stream: true
+      priority: 120
 
-  RAG:
-    - backend: chroma
+  translate:
+    - backend: ernie
+      model: translate
       enable: true
       priority: 10
-
 
   speech2text:
     - backend: qwen
@@ -202,11 +264,22 @@ functions:
       enable: true
       priority: 10
 
-  text2image:
-    - backend: landing
-      model: image
+  speech2clone:
+    - backend: doubao
+      model: openspeech
       enable: true
       priority: 10
+      others: your-speak-id
+
+  text2image:
+    - backend: spark
+      model: tti
+      enable: true
+      priority: 10
+    - backend: ernie
+      model: Stable-Diffusion-XL
+      enable: true
+      priority: 5
 
   image2text:
     - backend: ernie
@@ -215,8 +288,8 @@ functions:
       priority: 10
 
   image2enhance:
-    - backend: landing
-      model: image
+    - backend: ernie
+      model: enhance
       enable: true
       priority: 10
 
@@ -227,8 +300,8 @@ functions:
       priority: 10
 
   image2video:
-    - backend: landing
-      model: video
+    - backend: qwen
+      model: vision
       enable: true
       priority: 10
 
@@ -239,10 +312,11 @@ functions:
       priority: 10
 
   video2enhance:
-    - backend: landing
-      model: video
+    - backend: qwen
+      model: vision
       enable: true
       priority: 10
+
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.

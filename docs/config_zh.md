@@ -4,131 +4,212 @@
 system_title: Lagi
 ```
 
-大语言模型（LLM）配置
+模型配置
 
 ```yaml
-# 这部分定义了大语言模型（LLM）的配置。
-LLM:
-  # 这指定了将用于LLM的后端服务。
-  backends:
-    - name: gpt-test # 后端服务的名称。
-      type: GPT # 后端服务的类型，这里是GPT。
-      enable: false # 这个标志决定了后端服务是否启用。“true”表示已启用。
-      priority: 1 # 设置了后端服务的优先级。
-      model: gpt-3.5-turbo-1106 # 模型版本
-      api_key: your-api-key # API密钥
-   
-   - name: vicuna-test1
-      type: Vicuna
-      enable: true
-      priority: 100
-      model: /mnt/data/vicuna-13b-v1.5-16k
-      # 私有化部署的大模型，需要指定模型服务的API地址。
-      api_address: http://localhost:8090/v1/chat/completions
+# 这部分定义了中间件使用的模型配置。
+models:
+  # 单驱动模型情况下模型的配置。
+  - name: chatgpt  # 后端服务的名称。
+    type: GPT  # 后端服务的类型，这里是GPT。
+    enable: false # 这个标志决定了后端服务是否启用。“true”表示已启用。
+    model: gpt-3.5-turbo,gpt-4-turbo # 驱动支持的模型列表
+    driver: ai.llm.adapter.impl.GPTAdapter # 模型驱动
+    api_key: your-api-key # API密钥
+  # 模型支持多驱动的配置
+  - name: landing
+    type: Landing
+    enable: false
+    drivers: # 多驱动配置.
+      - model: turing,qa,tree,proxy
+        driver: ai.llm.adapter.impl.LandingAdapter
+      - model: image
+        driver: ai.image.adapter.impl.LandingImageAdapter
+        oss: landing # 用到的存储对象服务的名称
+      - model: landing-tts,landing-asr
+        driver: ai.audio.adapter.impl.LandingAudioAdapter
+      - model: video
+        driver: ai.video.adapter.impl.LandingVideoAdapter
+        api_key: your-api-key # 驱动指定api_key
+    # 驱动公用的api_key
+    api_key:  your-api-key
+
 ```
 
-语音识别（ASR）配置
+存储功能配置
 
 ```yaml
-# 这部分定义了语音识别（ASR）的配置。
-ASR:
-  # 列出了将用于ASR的后端服务。每个后端服务都有一个名称、类型、启用标志和优先级。
-  backends:
-    - name: asr-test1
-      type: Landing
+# 这部分定义了中间件用到的存储设备配置。
+stores:
+  # 这部分是向量数据库的配置
+  vectors: # 向量数据库配置列表
+    - name: chroma # 向量数据库名称
+      driver: ai.vector.impl.ChromaVectorStore # 向量数据库驱动
+      default_category: default # 向量数据库存储的分类
+      similarity_top_k: 10 # 向量数据库查询时使用的参数
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:8000 # 向量数据库的存储配置
+  # 这部分是对象存储服务的配置
+  oss:
+    - name: landing # 存储对象服务的名称
+      driver: ai.oss.impl.LandingOSS  # 存储对象服务的驱动类
+      bucket_name: lagi # 存储对象的 bucket_name
+      enable: true # 是否开启该存储对象服务
+
+    - name: alibaba
+      driver: ai.oss.impl.AlibabaOSS
+      access_key_id: your-access-key-id # 第三方存储对象的服务用到的 access key id
+      access_key_secret: your-access-key-secret # 第三方存储对象的服务用到的 access key secret 
+      bucket_name: ai-service-oss
       enable: true
-      priority: 10
+  # 这部分是检索增强生成服务的配置
+  rag:
+      - backend: chroma # 服务用到的向量数据库的名称
+        enable: true # 是否开启
+        priority: 10 # 优先级
+  # 这部分是美杜莎的加速推理服务的配置
+  medusa:
+    enable: true # 是否开启
+    algorithm: hash # 使用的算法
 ```
 
-文本转语音（TTS）配置
+中间件功能配置
 
 ```yaml
-# 这部分定义了文本转语音（TTS）的配置。
-TTS:
-  # 与ASR类似，它列出了具有各自配置的后端服务。
-  backends:
-    - name: tts-test1
-      type: Landing
+# 大模型使用的功能配置
+functions:
+  # embedding 服务配置
+  embedding:
+    - backend: qwen
+      type: Qwen
+      api_key: your-api-key
+  
+  # 聊天对话、文本生成功能的配置列表
+  chat:
+    - backend: chatgpt # 后端使用的模型配置的名称
+      model: gpt-4-turbo # 模型名
+      enable: true # 是否开启
+      stream: true # 是否使用流
+      priority: 200 # 优先级
+
+    - backend: chatglm
+      model: glm-3-turbo
+      enable: false
+      stream: false
+      priority: 10
+  
+  # 翻译功能的配置列表
+  translate:
+    - backend: ernie # 后端使用的模型配置的名称
+      model: translate # 模型名
+      enable: false # 是否开启
+      priority: 10 # 优先级
+  
+  # 语音转文字功能配置列表
+  speech2text:
+    - backend: qwen
+      model: asr
       enable: true
       priority: 10
+  
+  # 文字转语音功能配置列表
+  text2speech:
+    - backend: landing
+      model: tts
+      enable: true
+      priority: 10
+  
+  # 声音克隆功能配置列表
+  speech2clone:
+    - backend: doubao
+      model: openspeech
+      enable: true
+      priority: 10
+      others: your-speak-id
+
+  # 文字生成图片功能配置列表
+  text2image:
+    - backend: spark
+      model: tti
+      enable: true
+      priority: 10
+    - backend: ernie
+      model: Stable-Diffusion-XL
+      enable: true
+      priority: 5
+  # 图片生成文字功能配置列表
+  image2text:
+    - backend: ernie
+      model: Fuyu-8B
+      enable: true
+      priority: 10
+  # 图片增强功能配置列表
+  image2enhance:
+    - backend: ernie
+      model: enhance
+      enable: true
+      priority: 10
+  # 文本生成视频功能配置列表
+  text2video:
+    - backend: landing
+      model: video
+      enable: true
+      priority: 10
+  # 图片生成视频功能配置列表
+  image2video:
+    - backend: qwen
+      model: vision
+      enable: true
+      priority: 10
+  # 视频追踪功能配置列表
+  video2track:
+    - backend: landing
+      model: video
+      enable: true
+      priority: 10
+  # 视屏增强功能配置列表
+  video2enhance:
+    - backend: qwen
+      model: vision
+      enable: true
+      priority: 10
+
 ```
 
-图像生成配置
+智能体配置
 
 ```yaml
-# 这部分定义了图像生成服务的配置。
-image_generation:
-  # 列出了将用于图像生成的后端服务。每个后端服务都有一个名称、类型、启用标志和优先级。
-  backends:
-    - name: image-generation-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
 
-图像描述配置 
+# 这部分表示模型支持的智能体配置
+agents:
+  - name: qq # 智能体的名称
+    api_key: your-api-key # 智能体用到的 api key
+    driver: ai.agent.social.QQAgent # 智能体驱动
 
-```yaml
-# 这部分定义了为图像生成描述文本（标题或说明）的服务的配置。
-image_captioning:
-  # 与其他部分类似，它列出了具有各自配置的后端服务。
-  backends:
-    - name: image-captioning-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
+  - name: wechat
+    api_key: your-api-key
+    driver: ai.agent.social.WechatAgent
 
-图像增强配置
+  - name: ding
+    api_key: your-api-key
+    driver: ai.agent.social.DingAgent
 
-```yaml
-# 这部分定义了用于提高或改善图像质量的服务的配置。
-image_enhance:
-  # 列出了用于图像增强的后端服务。
-  backends:
-    - name: image-enhance-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
+# 这部分表示智能体实际作业的配置
+workers:
+  - name: qq-robot # 作业名称
+    agent: qq # 工作的智能体名称
+    worker: ai.worker.social.RobotWorker # 作业驱动
 
-视频生成配置 
+  - name: wechat-robot
+    agent: wechat
+    worker: ai.worker.social.RobotWorker
 
-```yaml
-# 这部分定义了用于生成视频的服务的配置。
-video_generation:
-  # 列出了用于视频生成的后端服务。
-  backends:
-    - name: video-generation-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
+  - name: ding-robot
+    agent: ding
+    worker: ai.worker.social.RobotWorker
 
-视频跟踪配置
-
-```yaml
-# 这部分定义了用于在视频中跟踪对象或特征的服务的配置。
-video_track:
-  # 列出了用于视频跟踪的后端服务。
-  backends:
-    - name: video-track-test1
-      type: Landing
-      enable: true
-      priority: 10
-```
-
-视频增强配置
-
-```yaml
-# 这部分定义了用于提高或改善视频质量的服务的配置。
-video_enhance:
-  # 列出了用于视频增强的后端服务。
-  backends:
-    - name: video-enhance-test1
-      type: Landing
-      enable: true
-      priority: 10
 ```
 
 

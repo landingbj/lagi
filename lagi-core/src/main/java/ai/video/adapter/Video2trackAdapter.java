@@ -1,7 +1,7 @@
 package ai.video.adapter;
 
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoJobResponse;
 
 public interface Video2trackAdapter {
-    VideoGenerationResult track(String videoUrl);
+    VideoJobResponse track(String videoUrl);
 }

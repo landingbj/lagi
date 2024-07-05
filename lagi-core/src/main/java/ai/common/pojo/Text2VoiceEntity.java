@@ -1,47 +1,31 @@
 package ai.common.pojo;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 public class Text2VoiceEntity {
 	private String model;
 	private String emotion;
 	private String text;
 	private String category;
+    private String source;
 
-	public String getModel() {
-		return model;
-	}
+    private String appkey;
+    private String token;
+    private String format;
+    private Integer sample_rate;
+    private String voice;
+    private Integer volume;
+    private Integer speech_rate;
+    private Integer pitch_rate;
 
-	public void setModel(String model) {
-		this.model = model;
-	}
 
-	public String getEmotion() {
-		return emotion;
-	}
-
-	public void setEmotion(String emotion) {
-		this.emotion = emotion;
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
-
-	public String getCategory() {
-		return category;
-	}
-
-	public void setCategory(String category) {
-		this.category = category;
-	}
-
-	@Override
-	public String toString() {
-		return "Text2VoiceEntity [model=" + model + ", emotion=" + emotion + ", text=" + text + ", category=" + category + "]";
-	}
 
     @Override
     public int hashCode() {

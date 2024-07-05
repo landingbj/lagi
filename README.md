@@ -48,5 +48,24 @@ If you prefer to use an IDE for development, you can directly open the Lag[i] pr
 
 The Lag[i] project also provides multiple RESTful API interfaces, facilitating users to integrate AI services into their own applications. We have prepared detailed [API documentation](docs/API_en.md) for developers, which you can refer to understand how to use these APIs to enrich your application features.
 
-### Large Language model function Invocation Guide
-To help you better understand and use Lag[i], we have provided you with an exhaustive [Large Language model function Invocation Guide](docs/guide_en.md). You can refer to the documentation to understand the structure and content of the project so that you can quickly invoke the relevant functionality and develop large model applications efficiently.
+### Integration
+
+To help you better understand and use Lag[i], we have provided you with an exhaustive [Guide documentation](docs/guide_en.md). You can refer to the documentation to understand the structure and content of the project so that you can quickly invoke the relevant functionality and develop large model applications efficiently.  
+
+If you wish to integrate Lag[i] into your project.You can refer to our [Integration documentation](https://github.com/landingbj/lagi/blob/main/docs/guide_en.md#quick-integrate-into-your-existing-project)，To help you quickly integrate Lag[i] into your project.
+
+### Security
+
+To better integrate Lag[i] into your business,You can do this by adding the keywords you want to filter in the `sensitive_word.json` file,In the `priority_word.json` file, you specify which keywords to answer first.And set the stop keyword in the `stopping_word.json file`,Thus, the returned results of the dialogue are changed, the dialogue is guided in a specific direction, and the dialogue is automatically stopped when needed.
+
+Example: Set the keywords to filter `openai`:
+
+```json
+[
+  "openai"
+]
+```
+
+### Extension
+
+If you are not satisfied with the large model that Lag[i] has adapted, you can also refer to our [Extension documentation](docs/extend_en.md) to extend Lag[i] to fit your like large model.

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.utils.ServerSentEventUtil;
@@ -18,6 +19,7 @@ import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@LLM(modelNames = {"gpt-3.5-turbo","gpt-4-1106-preview"})
 public class GPTAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAdapter.class);
     private final Gson gson = new Gson();

@@ -65,4 +65,9 @@ public class BaseVectorStore implements VectorStore {
     public void deleteWhere(List<Map<String, String>> whereList, String category) {
 
     }
+
+    @Override
+    public void deleteCollection(String category) {
+
+    }
 }

@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@LLM(modelNames = {"moonshot-v1-8k","moonshot-v1-32k","moonshot-v1-128k"})
 public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();

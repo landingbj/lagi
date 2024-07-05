@@ -1,8 +1,9 @@
 package ai.video.adapter;
 
-import ai.common.pojo.VideoGenerationResult;
+import ai.video.pojo.VideoEnhanceRequest;
+import ai.video.pojo.VideoJobResponse;
 
 public interface Video2EnhanceAdapter {
 
-    VideoGenerationResult enhance(String videoUrl);
+    VideoJobResponse enhance(VideoEnhanceRequest videoEnhanceRequest);
 }

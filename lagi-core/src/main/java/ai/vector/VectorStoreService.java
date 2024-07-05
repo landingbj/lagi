@@ -5,15 +5,19 @@ import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
-import ai.managers.VectorStoreManager;
+import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.File;
@@ -59,6 +63,10 @@ public class VectorStoreService {
             fileList.add(fileInfo);
         }
         upsertFileVectors(fileList, category);
+    }
+
+    public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category) {
+        this.upsertCustomVectors(upsertRecords, category, false);
     }
 
     public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category, boolean isContextLinked) {
@@ -161,6 +169,10 @@ public class VectorStoreService {
         this.vectorStore.deleteWhere(whereList, category);
     }
 
+    public void deleteCollection(String category) {
+        this.vectorStore.deleteCollection(category);
+    }
+
     public List<IndexSearchData> search(ChatCompletionRequest request) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
         List<IndexSearchData> indexSearchDataList = search(lastMessage, request.getCategory());
@@ -169,12 +181,17 @@ public class VectorStoreService {
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
-        IntentResult intentResult = intentService.detectIntent(messages);
+        IntentResult intentResult = intentService.detectIntent(request);
         String question = null;
         if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
             if(intentResult.getContinuedIndex() != null) {
-                String source = messages.get(intentResult.getContinuedIndex()).getContent().split("[， ,.。！!?？]")[0];
-                question = source + "," + ChatCompletionUtil.getLastMessage(request);
+                String content = messages.get(intentResult.getContinuedIndex()).getContent();
+                String[] split = content.split("[， ,.。！!?？]");
+                String source =  Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
+                if(StrUtil.isBlank(source)) {
+                    source =content;
+                }
+                question = source  + ChatCompletionUtil.getLastMessage(request);
             }
             else {
                 List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
@@ -204,7 +221,7 @@ public class VectorStoreService {
         return result;
     }
 
-    private List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
+    public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
                                          Map<String, String> where, String category) {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
@@ -246,14 +263,14 @@ public class VectorStoreService {
         return indexSearchData;
     }
 
-    private IndexSearchData getParentIndex(String parentId, String category) {
+    public IndexSearchData getParentIndex(String parentId, String category) {
         if (parentId == null) {
             return null;
         }
         return toIndexSearchData(this.fetch(parentId, category));
     }
 
-    private IndexSearchData getChildIndex(String parentId, String category) {
+    public IndexSearchData getChildIndex(String parentId, String category) {
         IndexSearchData result = null;
         if (parentId == null) {
             return null;
@@ -298,5 +315,20 @@ public class VectorStoreService {
         }
         data.setText(text);
         return data;
+    }
+
+    public List<String> getImageFiles(IndexSearchData indexData) {
+        List<String> imageList = null;
+
+        if (indexData.getImage() != null && !indexData.getImage().isEmpty()) {
+            imageList = new ArrayList<>();
+            List<JsonObject> imageObjectList = gson.fromJson(indexData.getImage(), new TypeToken<List<JsonObject>>() {
+            }.getType());
+            for (JsonObject image : imageObjectList) {
+                String url = image.get("path").getAsString();
+                imageList.add(url);
+            }
+        }
+        return imageList;
     }
 }

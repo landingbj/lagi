@@ -4,9 +4,10 @@ import ai.common.pojo.*;
 import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
-import ai.managers.Image2TextManger;
-import ai.managers.ImageEnhanceManager;
-import ai.managers.ImageGenerationManager;
+import ai.image.pojo.ImageEnhanceRequest;
+import ai.manager.Image2TextManger;
+import ai.manager.ImageEnhanceManager;
+import ai.manager.ImageGenerationManager;
 
 import java.util.List;
 
@@ -14,6 +15,12 @@ public class AllImageService implements IImage2TextAdapter, ImageEnhanceAdapter,
 
     @Override
     public ImageToTextResponse toText(FileRequest param) {
+        if(param.getModel() != null) {
+            IImage2TextAdapter adapter = Image2TextManger.getInstance().getAdapter(param.getModel());
+            if(adapter != null) {
+                return adapter.toText(param);
+            }
+        }
         List<IImage2TextAdapter> adapters = Image2TextManger.getInstance().getAdapters();
         for (IImage2TextAdapter adapter : adapters) {
             if(adapter != null) {
@@ -24,11 +31,17 @@ public class AllImageService implements IImage2TextAdapter, ImageEnhanceAdapter,
     }
 
     @Override
-    public ImageEnhanceResult enhance(String imageUrl) {
+    public ImageEnhanceResult enhance(ImageEnhanceRequest imageEnhanceRequest) {
+        if(imageEnhanceRequest.getModel() != null) {
+            ImageEnhanceAdapter adapter = ImageEnhanceManager.getInstance().getAdapter(imageEnhanceRequest.getModel());
+            if(adapter != null) {
+                return adapter.enhance(imageEnhanceRequest);
+            }
+        }
         List<ImageEnhanceAdapter> adapters = ImageEnhanceManager.getInstance().getAdapters();
         for (ImageEnhanceAdapter adapter : adapters) {
             if(adapter != null) {
-                return adapter.enhance(imageUrl);
+                return adapter.enhance(imageEnhanceRequest);
             }
         }
         return null;
@@ -36,6 +49,12 @@ public class AllImageService implements IImage2TextAdapter, ImageEnhanceAdapter,
 
     @Override
     public ImageGenerationResult generations(ImageGenerationRequest request) {
+        if(request.getModel() != null) {
+            IImageGenerationAdapter adapter = ImageGenerationManager.getInstance().getAdapter(request.getModel());
+            if(adapter != null) {
+                return adapter.generations(request);
+            }
+        }
         List<IImageGenerationAdapter> adapters = ImageGenerationManager.getInstance().getAdapters();
         for (IImageGenerationAdapter adapter : adapters) {
             if(adapter != null) {

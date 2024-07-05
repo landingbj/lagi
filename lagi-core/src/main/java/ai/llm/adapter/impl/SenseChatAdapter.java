@@ -1,7 +1,7 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
 import ai.llm.adapter.ILlmAdapter;
 import ai.openai.pojo.*;
 import ai.utils.qa.HttpUtil;
@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+@LLM(modelNames = {"SenseChat-Turbo","SenseChat-FunctionCall","SenseChat-5","SenseChat-128K","SenseChat-32K"})
 public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(SenseChatAdapter.class);

@@ -14,7 +14,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.common.pojo.*;
+import ai.medusa.MedusaService;
+import ai.medusa.pojo.InstructionData;
+import ai.medusa.pojo.InstructionPairRequest;
 import ai.migrate.service.UploadFileService;
+import ai.vector.VectorStoreService;
+import ai.vector.pojo.UpsertRecord;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -35,6 +41,8 @@ public class UploadFileServlet extends HttpServlet {
     private static final Configuration config = MigrateGlobal.config;
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final UploadFileService uploadFileService = new UploadFileService();
+    private final VectorStoreService vectorStoreService = new VectorStoreService();
+    private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
 
     @Override
@@ -57,12 +65,52 @@ public class UploadFileServlet extends HttpServlet {
             this.deleteFile(req, resp);
         } else if (method.equals("getUploadFileList")) {
             this.getUploadFileList(req, resp);
+        } else if (method.equals("pairing")) {
+            this.pairing(req, resp);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         this.doGet(req, resp);
+    }
+
+    private void pairing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        InstructionPairRequest instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequest.class);
+
+        new Thread(() -> {
+            List<InstructionData> instructionDataList = instructionPairRequest.getData();
+            String category = instructionPairRequest.getCategory();
+            String level = Optional.ofNullable(instructionPairRequest.getLevel()).orElse("user");
+            Map<String, String> qaMap = new HashMap<>();
+            for (InstructionData data : instructionDataList) {
+                for (String instruction : data.getInstruction()) {
+                    qaMap.put(instruction, data.getOutput());
+                    Map<String, String> metadata = new HashMap<>();
+                    metadata.put("category", category);
+                    metadata.put("level", level);
+                    List<UpsertRecord> upsertRecords = new ArrayList<>();
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(metadata)
+                            .withDocument(instruction)
+                            .build());
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(new HashMap<>(metadata))
+                            .withDocument(data.getOutput())
+                            .build());
+                    vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
+                }
+            }
+            medusaService.load(qaMap, category);
+        }).start();
+
+        PrintWriter out = resp.getWriter();
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
     }
 
     private void deleteFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {

@@ -5,13 +5,18 @@ import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.enums.IntentTypeEnum;
 import ai.intent.pojo.IntentResult;
+import ai.medusa.impl.CompletionCache;
+import ai.medusa.utils.PromptCacheTrigger;
+import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.StoppingWordUtil;
+import ai.utils.qa.ChatCompletionUtil;
 import cn.hutool.core.util.StrUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 public class SampleIntentServiceImpl implements IntentService {
 
@@ -24,30 +29,44 @@ public class SampleIntentServiceImpl implements IntentService {
         return Arrays.stream(split).filter(StrUtil::isNotBlank).collect(Collectors.toList());
     }
 
-
-    @Override
-    public IntentResult detectIntent(List<ChatMessage> chatMessages) {
-        List<String> messages = chatMessages.stream().map(ChatMessage::getContent).collect(Collectors.toList());
-        if(messages.isEmpty()) {
-            return null;
-        }
-        String newMessage = messages.get(messages.size() - 1);
-        List<String> segments = splitByPunctuation(newMessage);
+    private IntentTypeEnum detectType(ChatCompletionRequest chatCompletionRequest) {
+        String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+        List<String> segments = splitByPunctuation(lastMessage);
         IntentTypeEnum[] enums = IntentTypeEnum.values();
-        IntentResult intentResult = new IntentResult();
         for(IntentTypeEnum e : enums) {
-            if(e.matches(newMessage ,segments)) {
-                intentResult.setType(e.getName());
+            if(e.matches(lastMessage ,segments)) {
+                return e;
             }
         }
-        if(intentResult.getType() == null) {
-            intentResult.setType(IntentTypeEnum.TEXT.getName());
+        return IntentTypeEnum.TEXT;
+    }
+
+    @Override
+    public IntentResult detectIntent(ChatCompletionRequest chatCompletionRequest) {
+        IntentTypeEnum intentTypeEnum = detectType(chatCompletionRequest);
+        IntentResult intentResult = new IntentResult();
+        intentResult.setType(intentTypeEnum.getName());
+        if(intentTypeEnum != IntentTypeEnum.TEXT
+                || chatCompletionRequest.getMax_tokens() <= 0) {
+            return intentResult;
         }
-        intentResult.setStatus(IntentStatusEnum.getStatusByContents(messages, punctuations).getName());
-        List<Integer> stoppingIndex = StoppingWordUtil.getStoppingIndex(chatMessages);
-        if(!stoppingIndex.isEmpty()) {
-            int lastIndex = stoppingIndex.get(stoppingIndex.size() - 1);
-            if(lastIndex != chatMessages.size() -1) {
+        int lastIndex = 0;
+//        intentResult.setStatus(IntentStatusEnum.getStatusByContents(chatCompletionRequest.getMessages().stream().map(ChatMessage::getContent).collect(Collectors.toList()), punctuations).getName());
+        CompletionCache completionCache = CompletionCache.getInstance();
+        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger(completionCache);
+
+        lastIndex = promptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
+
+        if(lastIndex == chatCompletionRequest.getMessages().size() -1) {
+            intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
+        } else {
+            intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
+            intentResult.setContinuedIndex(lastIndex);
+        }
+        List<Integer> stoppingIndex = StoppingWordUtil.getStoppingIndex(chatCompletionRequest.getMessages());
+        if(!stoppingIndex.isEmpty() && intentResult.getContinuedIndex() != null) {
+            lastIndex = stoppingIndex.get(stoppingIndex.size() - 1);
+            if (lastIndex != chatCompletionRequest.getMessages().size() - 1) {
                 intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
                 intentResult.setContinuedIndex(lastIndex);
             } else {
@@ -57,11 +76,6 @@ public class SampleIntentServiceImpl implements IntentService {
         return intentResult;
     }
 
-    public static void main(String[] args) {
-//        SampleIntentServiceImpl sampleIntentService = new SampleIntentServiceImpl();
-//        List<String> strings = sampleIntentService.splitByPunctuation("你好。画一张狗狗图");
-//        System.out.println(strings);
-//        IntentResult intentResult = sampleIntentService.detectIntent(strings);
-//        System.out.println(intentResult);
-    }
+
+
 }
