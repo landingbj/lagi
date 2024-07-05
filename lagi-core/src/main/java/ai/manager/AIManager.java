@@ -75,6 +75,8 @@ public class AIManager<T> {
         backend.setModel(func.getModel());
         backend.setOss(driver.getOss());
         backend.setOthers(func.getOthers());
+        backend.setDeployment(func.getDeployment());
+        backend.setApiVersion(func.getApiVersion());
         return backend;
     }
 

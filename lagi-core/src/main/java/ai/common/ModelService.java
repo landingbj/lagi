@@ -15,6 +15,9 @@ public class ModelService {
     protected String model;
     protected String type;
     protected String apiAddress;
+    protected String endpoint;
+    protected String deployment;
+    protected String apiVersion;
     protected String securityKey;
     protected String accessToken;
     private String others;
