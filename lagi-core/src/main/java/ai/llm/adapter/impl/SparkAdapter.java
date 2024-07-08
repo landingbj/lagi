@@ -31,10 +31,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-@LLM(modelNames = {"v1.1","v2.1","v3.1","v3.5"})
+@LLM(modelNames = {"v1.1", "v2.1", "v3.1", "v3.5"})
 public class SparkAdapter extends ModelService implements ILlmAdapter {
-
-
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         SparkRequest sparkRequest = convertRequest(chatCompletionRequest);
@@ -131,7 +129,9 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
         chatMessage.setContent(response.getPayload().getChoices().getText().get(0).getContent());
         chatMessage.setRole("assistant");
         choice.setMessage(chatMessage);
-        choice.setFinish_reason("stop");
+        if (response.getPayload().getChoices().getStatus() == 2) {
+            choice.setFinish_reason("stop");
+        }
         List<ChatCompletionChoice> choices = new ArrayList<>();
         choices.add(choice);
         result.setChoices(choices);
@@ -160,9 +160,7 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
         }
 
         public void onMessage(String content, SparkResponseUsage usage, Integer status, SparkRequest sparkRequest, SparkResponse sparkResponse, WebSocket webSocket) {
-            if (0 == status || 1 == status) {
-                this.observableList.add(func.apply(sparkResponse));
-            }
+            this.observableList.add(func.apply(sparkResponse));
             if (2 == status) {
                 this.observableList.onComplete();
             }
