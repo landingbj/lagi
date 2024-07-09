@@ -78,10 +78,12 @@ public class LlmApiServlet extends BaseServlet {
         }
 
         List<IndexSearchData> indexSearchDataList;
+        String context = null;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                completionsService.addVectorDBContext(chatCompletionRequest, indexSearchDataList);
+                context = completionsService.getRagContext(indexSearchDataList);
+                completionsService.addVectorDBContext(chatCompletionRequest, context);
             }
         } else {
             indexSearchDataList = null;
@@ -126,7 +128,7 @@ public class LlmApiServlet extends BaseServlet {
                 List<String> imageList = vectorDbService.getImageFiles(indexData);
                 for (int i = 0; i < result.getChoices().size(); i++) {
                     ChatMessage message = result.getChoices().get(i).getMessage();
-                    message.setContext(indexData.getText());
+                    message.setContext(context);
                     message.setFilename(indexData.getFilename());
                     message.setFilepath(indexData.getFilepath());
                     message.setImageList(imageList);

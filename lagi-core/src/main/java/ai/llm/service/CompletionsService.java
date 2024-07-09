@@ -135,14 +135,59 @@ public class CompletionsService {
     }
 
 
-    public void addVectorDBContext(ChatCompletionRequest request, List<IndexSearchData> indexSearchDataList) {
+    public void addVectorDBContext(ChatCompletionRequest request, String context) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
-        if (indexSearchDataList.isEmpty()) {
-            return;
-        }
-        String contextText = indexSearchDataList.get(0).getText();
-        String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
+        String prompt = "以下是背景信息。\\n---------------------\\n%s\\n---------------------\\n根据上下文信息而非先前知识，回答这个问题:%s\\n";
+        prompt = String.format(prompt, context, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
+    }
+
+    public String getRagContext(List<IndexSearchData> indexSearchDataList) {
+        if (indexSearchDataList.isEmpty()) {
+            return null;
+        }
+        String context = indexSearchDataList.get(0).getText();
+        double firstDistance = indexSearchDataList.get(0).getDistance();
+        double lastDistance = firstDistance;
+        List<Double> diffList = new ArrayList<>();
+        for (int i = 1;i < indexSearchDataList.size();i ++) {
+            if (i == 1) {
+                IndexSearchData data = indexSearchDataList.get(i);
+                double diff = data.getDistance() - firstDistance;
+                double threshold = diff / firstDistance;
+                if (threshold < 0.25) {
+                    context += "\n" + data.getText();
+                    lastDistance = data.getDistance();
+                    diffList.add(diff);
+                } else {
+                    break;
+                }
+            } else if (i == 2) {
+                IndexSearchData data = indexSearchDataList.get(i);
+                double diff = data.getDistance() - lastDistance;
+                double threshold = diff / diffList.get(0);
+                if (diff < diffList.get(0) * 0.618) {
+                    context += "\n" + data.getText();
+                    lastDistance = data.getDistance();
+                    diffList.add(diff);
+                } else {
+                    break;
+                }
+            } else {
+                IndexSearchData data = indexSearchDataList.get(i);
+                double diff = data.getDistance() - lastDistance;
+                double average = diffList.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                System.out.println(i + " diff = " + diff + " average = " + average);
+                if (diff < average) {
+                    context += "\n" + data.getText();
+                    lastDistance = data.getDistance();
+                    diffList.add(diff);
+                } else {
+                    break;
+                }
+            }
+        }
+        return context;
     }
 
     public ChatCompletionRequest getCompletionsRequest(String prompt) {

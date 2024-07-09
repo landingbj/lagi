@@ -14,32 +14,32 @@ import java.util.List;
 import java.util.Map;
 
 public class MedusaService {
-    private static final ICache<PromptInput, ChatCompletionResult> cache;
+    private static ICache<PromptInput, ChatCompletionResult> cache;
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        switch (PromptCacheConfig.LOCATE_ALGORITHM) {
-            case "lcs":
-            case "tree":
-            case "vector":
-            case "hash":
-            default:
-                cache = CompletionCache.getInstance();
-        }
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (PromptCacheConfig.MEDUSA_ENABLE) {
+            switch (PromptCacheConfig.LOCATE_ALGORITHM) {
+                case "lcs":
+                case "tree":
+                case "vector":
+                case "hash":
+                default:
+                    cache = CompletionCache.getInstance();
+            }
             cache.startProcessingPrompt();
         }
     }
 
     public ChatCompletionResult get(PromptInput promptInput) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return null;
         }
         return cache.get(promptInput);
     }
 
     public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return;
         }
 
@@ -47,14 +47,14 @@ public class MedusaService {
     }
 
     public ChatCompletionResult locate(PromptInput promptInput) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return null;
         }
         return get(promptInput);
     }
 
     public void load(Map<String, String> qaPair, String category) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return;
         }
         for (Map.Entry<String, String> entry : qaPair.entrySet()) {
