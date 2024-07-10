@@ -1,4 +1,4 @@
-# Use Tutorial
+# Tutorial
 
 Lag[i] is a powerful enterprise-class composite multimodal big model middleware that helps you easily integrate big model technology into your business. This tutorial will guide you through the download, installation, configuration and operation of Lag[i] from scratch, so that you can quickly grasp the use of Lag[i].
 

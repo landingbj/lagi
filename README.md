@@ -44,9 +44,9 @@ Finally, deploy the generated war package to the Tomcat server. After starting T
 
 If you prefer to use an IDE for development, you can directly open the Lag[i] project with mainstream IDEs like IntelliJ IDEA. After publishing the project as a web project to the Tomcat server, you can view the interface of Lag[i] by accessing the respective port through a browser.
 
-### Use Tutorial
+### Tutorial
 
-To help you quickly understand and utilize Lag[i], we have meticulously prepared an exhaustive [Use tutorial](docs/tutor_en.md). This guide will lead you from scratch through the process of downloading, installing, configuring, and running Lag[i], enabling you to master its usage methods swiftly.
+To help you quickly understand and utilize Lag[i], we have meticulously prepared an exhaustive [Tutorial presentations](docs/tutor_en.md). This guide will lead you from scratch through the process of downloading, installing, configuring, and running Lag[i], enabling you to master its usage methods swiftly.
 
 ### API
 
