@@ -71,6 +71,11 @@ Replace the url with the chromadb url http://localhost:8000.
       parent_depth: 1
       child_depth: 1
       url: http://localhost:8000
+
+  rag:
+    - backend: chroma
+      enable: true
+      priority: 10
 ```
 
 ### 3.import dependencies
