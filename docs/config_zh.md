@@ -21,18 +21,17 @@ models:
     type: Landing
     enable: false
     drivers: # 多驱动配置.
-      - model: turing,qa,tree,proxy
-        driver: ai.llm.adapter.impl.LandingAdapter
-      - model: image
-        driver: ai.image.adapter.impl.LandingImageAdapter
+      - model: turing,qa,tree,proxy # 驱动支持功能列表
+        driver: ai.llm.adapter.impl.LandingAdapter # 驱动地址
+      - model: image # 驱动支持功能列表
+        driver: ai.image.adapter.impl.LandingImageAdapter # 驱动地址
         oss: landing # 用到的存储对象服务的名称
       - model: landing-tts,landing-asr
-        driver: ai.audio.adapter.impl.LandingAudioAdapter
+        driver: ai.audio.adapter.impl.LandingAudioAdapter 
       - model: video
-        driver: ai.video.adapter.impl.LandingVideoAdapter
+        driver: ai.video.adapter.impl.LandingVideoAdapter 
         api_key: your-api-key # 驱动指定api_key
-    # 驱动公用的api_key
-    api_key:  your-api-key
+    api_key:  your-api-key # 驱动公用的api_key
 
 ```
 
@@ -109,21 +108,21 @@ functions:
   
   # 语音转文字功能配置列表
   speech2text:
-    - backend: qwen
+    - backend: qwen  # 后端使用的模型配置的名称
       model: asr
       enable: true
       priority: 10
   
   # 文字转语音功能配置列表
   text2speech:
-    - backend: landing
+    - backend: landing # 后端使用的模型配置的名称
       model: tts
       enable: true
       priority: 10
   
   # 声音克隆功能配置列表
   speech2clone:
-    - backend: doubao
+    - backend: doubao # 后端使用的模型配置的名称
       model: openspeech
       enable: true
       priority: 10
@@ -131,7 +130,7 @@ functions:
 
   # 文字生成图片功能配置列表
   text2image:
-    - backend: spark
+    - backend: spark # 后端使用的模型配置的名称
       model: tti
       enable: true
       priority: 10
@@ -141,37 +140,37 @@ functions:
       priority: 5
   # 图片生成文字功能配置列表
   image2text:
-    - backend: ernie
+    - backend: ernie # 后端使用的模型配置的名称
       model: Fuyu-8B
       enable: true
       priority: 10
   # 图片增强功能配置列表
   image2enhance:
-    - backend: ernie
+    - backend: ernie # 后端使用的模型配置的名称
       model: enhance
       enable: true
       priority: 10
   # 文本生成视频功能配置列表
   text2video:
-    - backend: landing
+    - backend: landing # 后端使用的模型配置的名称
       model: video
       enable: true
       priority: 10
   # 图片生成视频功能配置列表
   image2video:
-    - backend: qwen
+    - backend: qwen # 后端使用的模型配置的名称
       model: vision
       enable: true
       priority: 10
   # 视频追踪功能配置列表
   video2track:
-    - backend: landing
+    - backend: landing # 后端使用的模型配置的名称
       model: video
       enable: true
       priority: 10
   # 视屏增强功能配置列表
   video2enhance:
-    - backend: qwen
+    - backend: qwen # 后端使用的模型配置的名称
       model: vision
       enable: true
       priority: 10

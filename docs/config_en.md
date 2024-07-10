@@ -16,23 +16,22 @@ models:
     model: gpt-3.5-turbo,gpt-4-turbo # list of models supported by the driver
     driver: ai.llm.adapter.impl.GPTAdapter # model driver
     api_key: your-api-key # API key
-  # 模型支持多驱动的配置
+  # The model supports multi-driver configuration
   - name: landing
     type: Landing
     enable: false
     drivers: # Multi-driver configuration.
-      - model: turing,qa,tree,proxy
-        driver: ai.llm.adapter.impl.LandingAdapter
-      - model: image
-        driver: ai.image.adapter.impl.LandingImageAdapter
+      - model: turing,qa,tree,proxy # List of driver support functions
+        driver: ai.llm.adapter.impl.LandingAdapter # driver address
+      - model: image # List of driver supported features
+        driver: ai.image.adapter.impl.LandingImageAdapter # driver address
         oss: landing # Name of the storage object service
       - model: landing-tts,landing-asr
         driver: ai.audio.adapter.impl.LandingAudioAdapter
       - model: video
         driver: ai.video.adapter.impl.LandingVideoAdapter
         api_key: your-api-key # specifies api key for the driver
-    # the public api key of drivers
-    api_key:  your-api-key
+    api_key:  your-api-key  # the public api key of drivers
 
 ```
 
@@ -42,7 +41,7 @@ Storage function configuration
 # This section defines the storage device configuration used by the middleware.
 stores:
   # This part is the configuration of the vector database
-  vectors: # 向量数据库配置列表
+  vectors: # Vector database configuration list
     - name: chroma # Vector database name
       driver: ai.vector.impl.ChromaVectorStore # Vector database driver
       default_category: default # Parameters used in vector database queries
@@ -94,7 +93,7 @@ functions:
       stream: true # Whether to use stream
       priority: 200 #  priority for this function
 
-    - backend: chatglm
+    - backend: chatglm # The name of the model configuration used by the backend
       model: glm-3-turbo
       enable: false
       stream: false
@@ -102,28 +101,28 @@ functions:
   
   # Translation configuration list
   translate:
-    - backend: ernie
+    - backend: ernie # The name of the model configuration used by the backend
       model: translate
       enable: false
       priority: 10
   
   # Voice to text configuration list
   speech2text:
-    - backend: qwen
+    - backend: qwen # The name of the model configuration used by the backend
       model: asr
       enable: true
       priority: 10
   
   # Text-to-voice configuration list
   text2speech:
-    - backend: landing
+    - backend: landing # The name of the model configuration used by the backend
       model: tts
       enable: true
       priority: 10
   
   # Sound clone configuration list
   speech2clone:
-    - backend: doubao
+    - backend: doubao # The name of the model configuration used by the backend
       model: openspeech
       enable: true
       priority: 10
@@ -131,7 +130,7 @@ functions:
 
   # Text image configuration list
   text2image:
-    - backend: spark
+    - backend: spark # The name of the model configuration used by the backend
       model: tti
       enable: true
       priority: 10
@@ -141,37 +140,37 @@ functions:
       priority: 5
   # Configuration list of the image text generation
   image2text:
-    - backend: ernie
+    - backend: ernie # The name of the model configuration used by the backend
       model: Fuyu-8B
       enable: true
       priority: 10
   # Image enhancement configuration list
   image2enhance:
-    - backend: ernie
+    - backend: ernie # The name of the model configuration used by the backend
       model: enhance
       enable: true
       priority: 10
   # Text generated video configuration list
   text2video:
-    - backend: landing
+    - backend: landing # The name of the model configuration used by the backend
       model: video
       enable: true
       priority: 10
   # image generated video configuration list
   image2video:
-    - backend: qwen
+    - backend: qwen # The name of the model configuration used by the backend
       model: vision
       enable: true
       priority: 10
   # 视频追踪功能配置列表
   video2track:
-    - backend: landing
+    - backend: landing # The name of the model configuration used by the backend
       model: video
       enable: true
       priority: 10
   # 视屏增强功能配置列表
   video2enhance:
-    - backend: qwen
+    - backend: qwen # The name of the model configuration used by the backend
       model: vision
       enable: true
       priority: 10
