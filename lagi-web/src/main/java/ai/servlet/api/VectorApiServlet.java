@@ -11,6 +11,7 @@ import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.UpsertRecord;
+import ai.vector.pojo.VectorCollection;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -42,6 +43,17 @@ public class VectorApiServlet extends BaseServlet {
             this.deleteByMetadata(req, resp);
         } else if (method.equals("deleteCollection")) {
             this.deleteCollection(req, resp);
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String url = req.getRequestURI();
+        String method = url.substring(url.lastIndexOf("/") + 1);
+        if (method.equals("listCollections")) {
+            this.listCollections(req, resp);
         }
     }
 
@@ -123,6 +135,19 @@ public class VectorApiServlet extends BaseServlet {
         vectorStoreService.deleteCollection(category);
         Map<String, Object> result = new HashMap<>();
         result.put("status", "success");
+        responsePrint(resp, toJson(result));
+    }
+
+    private void listCollections(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        List<VectorCollection> collections = vectorStoreService.listCollections();
+        Map<String, Object> result = new HashMap<>();
+        if (collections.isEmpty()) {
+            result.put("status", "failed");
+        } else {
+            result.put("status", "success");
+            result.put("data", collections);
+        }
         responsePrint(resp, toJson(result));
     }
 }

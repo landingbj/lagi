@@ -90,6 +90,7 @@ public class UploadFileServlet extends HttpServlet {
                     Map<String, String> metadata = new HashMap<>();
                     metadata.put("category", category);
                     metadata.put("level", level);
+                    metadata.put("filename", "");
                     List<UpsertRecord> upsertRecords = new ArrayList<>();
                     upsertRecords.add(UpsertRecord.newBuilder()
                             .withMetadata(metadata)

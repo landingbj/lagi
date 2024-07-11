@@ -55,7 +55,11 @@ public class SampleIntentServiceImpl implements IntentService {
         CompletionCache completionCache = CompletionCache.getInstance();
         PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger(completionCache);
 
+        long timeMillis2 = System.currentTimeMillis();
+
         lastIndex = promptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
+
+
 
         if(lastIndex == chatCompletionRequest.getMessages().size() -1) {
             intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());

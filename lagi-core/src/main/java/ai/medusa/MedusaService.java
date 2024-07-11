@@ -18,7 +18,7 @@ public class MedusaService {
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        if (PromptCacheConfig.MEDUSA_ENABLE) {
+        if (PromptCacheConfig.MEDUSA_ENABLE && false) {
             switch (PromptCacheConfig.LOCATE_ALGORITHM) {
                 case "lcs":
                 case "tree":
@@ -27,7 +27,7 @@ public class MedusaService {
                 default:
                     cache = CompletionCache.getInstance();
             }
-            cache.startProcessingPrompt();
+//            cache.startProcessingPrompt();
         }
     }
 
@@ -46,6 +46,13 @@ public class MedusaService {
         cache.put(promptInput, chatCompletionResult);
     }
 
+    public void triggerCachePut(PromptInput promptInput) {
+        if (cache == null) {
+            return;
+        }
+        cache.put(promptInput, null);
+    }
+
     public ChatCompletionResult locate(PromptInput promptInput) {
         if (cache == null) {
             return null;
@@ -59,13 +66,10 @@ public class MedusaService {
         }
         for (Map.Entry<String, String> entry : qaPair.entrySet()) {
             String prompt = entry.getKey();
-            String context = entry.getValue();
-            prompt = ChatCompletionUtil.getPrompt(context, prompt);
             ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
             chatCompletionRequest.setCategory(category);
             PromptInput promptInput = getPromptInput(chatCompletionRequest);
-            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            put(promptInput, result);
+            triggerCachePut(promptInput);
         }
     }
 

@@ -61,8 +61,14 @@ public class LlmApiServlet extends BaseServlet {
         if(preference != null && chatCompletionRequest != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
+
+        long timeMillis1 = System.currentTimeMillis();
+
         PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
         ChatCompletionResult chatCompletionResult = medusaService.locate(promptInput);
+
+        long timeMillis2 = System.currentTimeMillis();
+        System.out.println("Total execution time medusaService locate: " + (timeMillis2 - timeMillis1));
 
         if (chatCompletionResult != null) {
             if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
@@ -75,8 +81,11 @@ public class LlmApiServlet extends BaseServlet {
                 responsePrint(resp, toJson(chatCompletionResult));
             }
             return;
+        } else {
+            medusaService.triggerCachePut(promptInput);
         }
 
+        timeMillis2 = System.currentTimeMillis();
         List<IndexSearchData> indexSearchDataList;
         String context = null;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
@@ -88,6 +97,9 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
+        long timeMillis3 = System.currentTimeMillis();
+        System.out.println("Total execution time vectorDbService searchByContext: " + (timeMillis3 - timeMillis2));
+
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
             Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
@@ -115,7 +127,6 @@ public class LlmApiServlet extends BaseServlet {
                     () -> {
                         extracted(lastResult, indexSearchDataList, out);
                         lastResult[0].setChoices(lastResult[1].getChoices());
-                        medusaService.put(promptInput, lastResult[0]);
                     }
             );
             out.flush();
@@ -134,7 +145,6 @@ public class LlmApiServlet extends BaseServlet {
                     message.setImageList(imageList);
                 }
             }
-            medusaService.put(promptInput, result);
             responsePrint(resp, toJson(result));
         }
     }

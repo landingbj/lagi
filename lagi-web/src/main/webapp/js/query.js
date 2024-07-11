@@ -419,10 +419,13 @@ function streamOutput(paras, question, robootAnswerJq) {
                     break;
                 }
                 var json = JSON.parse(chunk);
-                if (json.choices === undefined || json.choices.length === 0) {
+                if (json.choices === undefined) {
                     queryLock = false;
                     robootAnswerJq.html("调用失败！");
                     break
+                }
+                if (json.choices.length === 0) {
+                    continue;
                 }
                 var chatMessage = json.choices[0].message;
                 var a = '<a style="color: #666;text-decoration: none;" ' +

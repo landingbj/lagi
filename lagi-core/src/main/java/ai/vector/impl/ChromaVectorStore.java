@@ -5,6 +5,7 @@ import ai.common.pojo.VectorStoreConfig;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import ai.vector.pojo.VectorCollection;
 import com.google.gson.internal.LinkedTreeMap;
 import tech.amikos.chromadb.Client;
 import tech.amikos.chromadb.Collection;
@@ -144,7 +145,20 @@ public class ChromaVectorStore extends BaseVectorStore {
         return getIndexRecords(result, gr);
     }
 
-    public void update() {
+    public List<IndexRecord> fetch(Map<String, String> where) {
+        return fetch(where, this.config.getDefaultCategory());
+    }
+
+    public List<IndexRecord> fetch(Map<String, String> where, String category) {
+        List<IndexRecord> result = new ArrayList<>();
+        Collection.GetResult gr;
+        Collection collection = getCollection(category);
+        try {
+            gr = collection.get(null, where, null);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+        return getIndexRecords(result, gr);
     }
 
     public void delete(List<String> ids) {
@@ -177,11 +191,32 @@ public class ChromaVectorStore extends BaseVectorStore {
         }
     }
 
+    @Override
     public void deleteCollection(String category) {
         try {
-            client.deleteCollection(category);
+            if (listCollections().contains(category)) {
+                client.deleteCollection(category);
+            }
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<VectorCollection> listCollections() {
+        List<VectorCollection> result = new ArrayList<>();
+        try {
+            List<Collection> collections = client.listCollections();
+            for (Collection collection : collections) {
+                VectorCollection vectorCollection = VectorCollection.builder()
+                        .category(collection.getName())
+                        .vectorCount(collection.count())
+                        .build();
+                result.add(vectorCollection);
+            }
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 }

@@ -3,6 +3,7 @@ package ai.vector;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import ai.vector.pojo.VectorCollection;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,10 @@ public interface VectorStore {
 
     List<IndexRecord> fetch(List<String> ids, String category);
 
+    List<IndexRecord> fetch(Map<String, String> where);
+
+    List<IndexRecord> fetch(Map<String, String> where, String category);
+
     void delete(List<String> ids);
 
     void delete(List<String> ids, String category);
@@ -29,4 +34,6 @@ public interface VectorStore {
     void deleteWhere(List<Map<String, String>> whereList, String category);
 
     void deleteCollection(String category);
+
+    List<VectorCollection> listCollections();
 }

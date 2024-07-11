@@ -14,11 +14,14 @@ import ai.vector.impl.BaseVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import ai.vector.pojo.VectorCollection;
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ObjectUtils;
+import tech.amikos.chromadb.Collection;
+import tech.amikos.chromadb.handler.ApiException;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,6 +156,10 @@ public class VectorStoreService {
         return result;
     }
 
+    public List<IndexRecord> fetch(Map<String, String> where) {
+        return this.vectorStore.fetch(where);
+    }
+
     public void delete(List<String> ids) {
         this.vectorStore.delete(ids);
     }
@@ -180,8 +187,13 @@ public class VectorStoreService {
     }
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
+        long timeMillis2 = System.currentTimeMillis();
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
+
+        long timeMillis3 = System.currentTimeMillis();
+        System.out.println("Total execution time detectIntent 1: " + (timeMillis3 - timeMillis2));
+
         String question = null;
         if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
             if(intentResult.getContinuedIndex() != null) {
@@ -203,10 +215,13 @@ public class VectorStoreService {
         if(question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
+        timeMillis3 = System.currentTimeMillis();
+        System.out.println("Total execution time detectIntent 2: " + (timeMillis3 - timeMillis2));
         return search(question, request.getCategory());
     }
 
     public List<IndexSearchData> search(String question, String category) {
+        long timeMillis1 = System.currentTimeMillis();
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
         int parentDepth = vectorStore.getConfig().getParentDepth();
@@ -215,9 +230,15 @@ public class VectorStoreService {
         List<IndexSearchData> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+
+        long timeMillis2 = System.currentTimeMillis();
+        System.out.println("Total execution time search: " + (timeMillis2 - timeMillis1));
         for (IndexSearchData indexSearchData : indexSearchDataList) {
             result.add(extendText(parentDepth, childDepth, indexSearchData, category));
         }
+
+        long timeMillis3 = System.currentTimeMillis();
+        System.out.println("Total execution time extendText: " + (timeMillis3 - timeMillis2));
         return result;
     }
 
@@ -250,7 +271,8 @@ public class VectorStoreService {
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
         if (!"system".equals(indexSearchData.getLevel())) {
             indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
-            if (indexRecord.getMetadata().get("filename") != null) {
+            String filename = (String) indexRecord.getMetadata().get("filename");
+            if (filename != null && !filename.isEmpty()) {
                 indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
             }
             if (indexRecord.getMetadata().get("filepath") != null) {
@@ -330,5 +352,9 @@ public class VectorStoreService {
             }
         }
         return imageList;
+    }
+
+    public List<VectorCollection> listCollections() {
+        return this.vectorStore.listCollections();
     }
 }

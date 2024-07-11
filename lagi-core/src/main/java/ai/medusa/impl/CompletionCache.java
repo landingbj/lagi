@@ -49,8 +49,13 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
 
     @Override
     public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        new PromptCacheTrigger(this).triggerWriteCache(promptInput, chatCompletionResult);
+        new PromptCacheTrigger(this).triggerWriteCache(promptInput);
 //        new PromptCacheTrigger(this).writeCache(promptInput, chatCompletionResult);
+    }
+
+    @Override
+    public void put(PromptInput promptInput) {
+        put(promptInput, null);
     }
 
     public ChatCompletionResult pickCompletionResult(PromptInput promptInput) {

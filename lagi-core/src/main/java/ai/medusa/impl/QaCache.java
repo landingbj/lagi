@@ -28,7 +28,7 @@ public class QaCache {
         try {
             vectorStoreService.deleteCollection(MEDUSA_CATEGORY);
         } catch (Exception e) {
-            logger.error("QaCache :" + e.getMessage());
+            logger.error("QaCache :{}", e.getMessage());
         }
     }
 

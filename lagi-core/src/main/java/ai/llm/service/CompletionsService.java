@@ -165,7 +165,6 @@ public class CompletionsService {
             } else if (i == 2) {
                 IndexSearchData data = indexSearchDataList.get(i);
                 double diff = data.getDistance() - lastDistance;
-                double threshold = diff / diffList.get(0);
                 if (diff < diffList.get(0) * 0.618) {
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
@@ -177,7 +176,6 @@ public class CompletionsService {
                 IndexSearchData data = indexSearchDataList.get(i);
                 double diff = data.getDistance() - lastDistance;
                 double average = diffList.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-                System.out.println(i + " diff = " + diff + " average = " + average);
                 if (diff < average) {
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
@@ -190,21 +188,40 @@ public class CompletionsService {
         return context;
     }
 
-    public ChatCompletionRequest getCompletionsRequest(String prompt) {
-        return getCompletionsRequest(prompt, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS);
+    public ChatMessage getChatMessage(String question, String role) {
+        ChatMessage message = new ChatMessage();
+        message.setRole(role);
+        message.setContent(question);
+        return message;
     }
 
-    public ChatCompletionRequest getCompletionsRequest(String prompt, double temperature, int maxTokens) {
+    public ChatCompletionRequest getCompletionsRequest(String prompt) {
+        List<ChatMessage> messages = new ArrayList<>();
+        messages.add(getChatMessage(prompt, LagiGlobal.LLM_ROLE_USER));
+        return getCompletionsRequest(messages);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(String prompt, String category) {
+        List<ChatMessage> messages = new ArrayList<>();
+        messages.add(getChatMessage(prompt, LagiGlobal.LLM_ROLE_USER));
+        return getCompletionsRequest(messages, category);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages) {
+        return getCompletionsRequest(messages, null);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages, String category) {
+        return getCompletionsRequest(messages, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS, category);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages, double temperature, int maxTokens, String category) {
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(temperature);
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setMax_tokens(maxTokens);
-        List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage message = new ChatMessage();
-        message.setRole(LagiGlobal.LLM_ROLE_USER);
-        message.setContent(prompt);
-        messages.add(message);
         chatCompletionRequest.setMessages(messages);
+        chatCompletionRequest.setCategory(category);
         return chatCompletionRequest;
     }
 }

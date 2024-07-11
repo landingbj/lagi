@@ -1,7 +1,11 @@
 package ai.medusa.utils;
 
 import ai.common.pojo.Medusa;
+import ai.common.pojo.VectorStoreConfig;
+import ai.vector.VectorStoreService;
 import cn.hutool.core.util.StrUtil;
+
+import java.util.List;
 
 public class PromptCacheConfig {
     public static final int POOL_INITIAL = 1;
@@ -19,7 +23,7 @@ public class PromptCacheConfig {
 
     public static String LOCATE_ALGORITHM = "hash";
     public static boolean MEDUSA_ENABLE = true;
-    public static final String MEDUSA_CATEGORY = "medusa";
+    public static String MEDUSA_CATEGORY = "medusa";
     public static final int QA_SIMILARITY_TOP_K = 30;
     public static final double QA_SIMILARITY_CUTOFF = 0.1;
 
@@ -28,10 +32,12 @@ public class PromptCacheConfig {
     public static final double LCS_RATIO_QUESTION = 0.25;
     public static final double LCS_RATIO_PROMPT_INPUT = 0.25;
 
-    public static void init(Medusa config) {
-        if(config != null) {
+    public static void init(List<VectorStoreConfig> vectorStoreList, Medusa config) {
+        if(vectorStoreList != null && !vectorStoreList.isEmpty() && config != null) {
             MEDUSA_ENABLE = config.getEnable() != null ? config.getEnable() : MEDUSA_ENABLE;
             LOCATE_ALGORITHM = StrUtil.isBlank(config.getAlgorithm()) ? LOCATE_ALGORITHM : config.getAlgorithm();
+            String defaultCategory = vectorStoreList.get(0).getDefaultCategory();
+            MEDUSA_CATEGORY = MEDUSA_CATEGORY + "-" + defaultCategory;
         }
     }
 }

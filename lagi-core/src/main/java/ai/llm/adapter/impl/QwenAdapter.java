@@ -15,6 +15,7 @@ import com.alibaba.dashscope.aigc.generation.GenerationResult;
 import com.alibaba.dashscope.common.Message;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
+import com.google.gson.Gson;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 
@@ -68,12 +69,17 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         boolean stream = Optional.ofNullable(request.getStream()).orElse(false);
         String model = Optional.ofNullable(request.getModel()).orElse(getModel());
 
+        int maxTokens = request.getMax_tokens();
+        if (request.getMax_tokens() >= 2000) {
+            maxTokens = 2000;
+        }
+
         return GenerationParam.builder()
                 .apiKey(getApiKey())
                 .model(model)
                 .messages(messages)
                 .resultFormat(GenerationParam.ResultFormat.MESSAGE)
-                .maxTokens(request.getMax_tokens())
+                .maxTokens(maxTokens)
                 .temperature((float) request.getTemperature())
                 .enableSearch(stream)
                 .incrementalOutput(stream)
@@ -87,7 +93,7 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         ChatCompletionChoice choice = new ChatCompletionChoice();
         choice.setIndex(0);
         ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setContent(response.getOutput().getText());
+        chatMessage.setContent(response.getOutput().getChoices().get(0).getMessage().getContent());
         chatMessage.setRole("assistant");
         choice.setMessage(chatMessage);
         choice.setFinish_reason(response.getOutput().getFinishReason());
