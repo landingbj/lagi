@@ -23,7 +23,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAzureAdapter.class);
     private final Gson gson = new Gson();
     private static final String ENTERPOINT = "https://api.openai.com/v1/chat/completions";
-    private static final int HTTP_TIMEOUT = 15 * 1000;
+    private static final int HTTP_TIMEOUT = 30 * 1000;
 
 
     @Override
@@ -36,11 +36,11 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + getApiKey());
+        headers.put("api-key", getApiKey());
         String jsonResult = null;
         chatCompletionRequest.setCategory(null);
         try {
-            jsonResult = HttpUtil.httpPost(ENTERPOINT, headers, chatCompletionRequest, HTTP_TIMEOUT);
+            jsonResult = HttpUtil.httpPost(getApiAddress(), headers, chatCompletionRequest, HTTP_TIMEOUT);
         } catch (IOException e) {
             logger.error("", e);
         }
