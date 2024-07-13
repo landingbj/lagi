@@ -71,6 +71,11 @@ docker run -d \
       parent_depth: 1
       child_depth: 1
       url: http://localhost:8000
+
+  rag:
+    - backend: chroma
+      enable: true
+      priority: 10
 ```
 
 ### 3.引入依赖
