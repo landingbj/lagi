@@ -2,6 +2,7 @@ package ai.medusa.utils;
 
 import ai.common.pojo.IndexSearchData;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.CompletionUtil;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.impl.QaCache;
 import ai.medusa.pojo.PooledPrompt;
@@ -9,7 +10,6 @@ import ai.medusa.pojo.PromptInput;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.openai.pojo.CompletionResult;
 import ai.utils.LRUCache;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
@@ -55,25 +55,10 @@ public class PromptCacheTrigger {
 
         PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
         List<ChatCompletionResult> completionResultList = promptCache.get(lastPromptInput);
-
-        System.out.println("lastPromptInput: " + lastPromptInput);
-        if (completionResultList != null) {
-            System.out.println(" completionResultList.size() " + completionResultList.size());
-        } else {
-            System.out.println(" completionResultList.size() " + completionResultList);
-
-        }
-
-
         ChatCompletionResult chatCompletionResult = completionsWithContext(promptInputWithBoundaries);
-
-        System.out.println("chatCompletionResult: " + chatCompletionResult);
-
         if (chatCompletionResult == null) {
             return;
         }
-
-        System.out.println("promptInputWithBoundaries: " + promptInputWithBoundaries);
 
         // If the prompt list has only one prompt, add the prompt input to the cache.
         // If the prompt list has more than one prompt and the last prompt is not in the prompt cache, add the prompt to the cache.
@@ -83,6 +68,7 @@ public class PromptCacheTrigger {
             qaCache.put(newestPrompt, promptInputList);
             List<ChatCompletionResult> completionResults = new ArrayList<>();
             completionResults.add(chatCompletionResult);
+            System.out.println(qaCache.get(newestPrompt));
             promptCache.put(promptInputWithBoundaries, completionResults);
             completionCache.getPromptPool().put(PooledPrompt.builder()
                     .promptInput(promptInputWithBoundaries).status(PromptCacheConfig.POOL_INITIAL).build());
@@ -99,21 +85,12 @@ public class PromptCacheTrigger {
         List<PromptInput> promptInputList = qaCache.get(lastPrompt);
         int index = promptInputList.indexOf(lastPromptInput);
         PromptInput promptInputInCache = promptInputList.get(index);
-        System.out.println("promptInputInCache: " + promptInputInCache);
-        System.out.println("promptCache.get(promptInputInCache) 1: " + promptCache.get(promptInputInCache));
-
         List<ChatCompletionResult> completionResults = promptCache.get(promptInputInCache);
-        System.out.println("completionResults: " + completionResults);
-
         completionResults.add(chatCompletionResult);
         promptCache.remove(promptInputInCache);
         promptInputInCache.getPromptList().add(newestPrompt);
         qaCache.put(newestPrompt, promptInputList);
         promptCache.put(promptInputInCache, completionResults);
-        System.out.println("promptInputInCache: " + promptInputInCache);
-        System.out.println("newestPrompt: " + newestPrompt);
-        System.out.println("lastPrompt: " + lastPrompt);
-        System.out.println("promptCache.get(promptInputInCache) 2: " + promptCache.get(promptInputInCache));
     }
 
     public PromptInput analyzeChatBoundaries(PromptInput promptInput) {
@@ -174,13 +151,8 @@ public class PromptCacheTrigger {
         try {
             VectorStoreService vectorStoreService = new VectorStoreService();
 
-            long timeMillis2 = System.currentTimeMillis();
-
             List<IndexSearchData> prompts = vectorStoreService.search(curQ, chatCompletionRequest.getCategory());
             List<IndexSearchData> complexPrompts = vectorStoreService.search(lastQ + "," + curQ, chatCompletionRequest.getCategory());
-
-            long timeMillis3 = System.currentTimeMillis();
-            System.out.println("Total execution time analyzeChatBoundariesForIntent: " + (timeMillis3 - timeMillis2));
 
             if (!prompts.isEmpty() && !complexPrompts.isEmpty()) {
                 Float distance = prompts.get(0).getDistance();
@@ -235,12 +207,15 @@ public class PromptCacheTrigger {
     private ChatCompletionResult completionsWithContext(PromptInput promptInput) {
         String lastPrompt = PromptInputUtil.getNewestPrompt(promptInput);
         String text = String.join(";", promptInput.getPromptList());
-        String context = completionsService.getRagContext(vectorStoreService.search(text, promptInput.getCategory()));
+        List<IndexSearchData> indexSearchDataList = vectorStoreService.search(text, promptInput.getCategory());
+        String context = completionsService.getRagContext(indexSearchDataList);
         ChatCompletionRequest request = completionsService.getCompletionsRequest(lastPrompt, promptInput.getCategory());
         if (context != null) {
             completionsService.addVectorDBContext(request, context);
         }
-        return completionsService.completions(request);
+        ChatCompletionResult result = completionsService.completions(request);
+        CompletionUtil.populateContext(result, indexSearchDataList, context);
+        return result;
     }
 
     private String completions(List<ChatMessage> messages) {

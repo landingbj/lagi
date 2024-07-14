@@ -5,6 +5,7 @@ import java.util.List;
 
 import ai.common.pojo.Backend;
 import ai.config.AbstractConfiguration;
+import ai.config.ContextLoader;
 import ai.config.GlobalConfigurations;
 import ai.config.pojo.AgentConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,37 +21,26 @@ public class LagiGlobal {
 
     public static String AGENT_API_KEY = "your-api-key";
 
+    private static String DEFAULT_CATEGORY;
+
+    static {
+        loadConfig();
+    }
+
     public static Configuration getConfig() {
         return config;
     }
 
-    public static void loadConfig(String configPath) {
-        File configFile = new File(configPath);
-        loadConfig(configFile);
-    }
-
-    public static void loadConfig(File configFile) {
-        InputStream inputStream;
-        try {
-            inputStream = new FileInputStream(configFile);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+    public static Configuration loadConfig() {
+        if (config != null) {
+            return config;
         }
-        loadConfig(inputStream, GlobalConfigurations.class);
-    }
-
-    public static AbstractConfiguration loadConfig(InputStream inputStream, Class<? extends AbstractConfiguration> cls) {
-        ObjectMapper mapper = new YAMLMapper();
-        mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-        try {
-            AbstractConfiguration aConfig = mapper.readValue(inputStream, cls);
-            config = aConfig.transformToConfiguration();
-            setLandingApikey(config);
-            setAgentApiKey(config);
-            return aConfig;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ContextLoader.loadContext();
+        config = ContextLoader.configuration.transformToConfiguration();
+        setLandingApikey(config);
+        setAgentApiKey(config);
+        setDefaultCategory(config);
+        return config;
     }
 
     public static String getLandingApikey() {
@@ -67,6 +57,14 @@ public class LagiGlobal {
                 }
             }
         }
+    }
+
+    public static String getDefaultCategory() {
+        return DEFAULT_CATEGORY;
+    }
+
+    private static void setDefaultCategory(Configuration config) {
+        DEFAULT_CATEGORY = config.getVectorStores().get(0).getDefaultCategory();
     }
 
     public static String getAgentApiKey() {

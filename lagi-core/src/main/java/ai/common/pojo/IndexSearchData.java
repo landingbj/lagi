@@ -1,13 +1,12 @@
 package ai.common.pojo;
 
 import lombok.Data;
-import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
-
-@ToString
 @Data
+@EqualsAndHashCode
 public class IndexSearchData {
     private String id;
     private String text;
@@ -20,5 +19,4 @@ public class IndexSearchData {
     private List<String> imageList;
     private String level;
     private String parentId;
-
 }

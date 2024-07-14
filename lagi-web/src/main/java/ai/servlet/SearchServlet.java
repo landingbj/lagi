@@ -347,10 +347,8 @@ public class SearchServlet extends RestfulServlet {
             String partResult;
             try {
                 while (!(partResult = queue.take()).equals("[CLOSED]")) {
-                    System.out.println("partResult: " + partResult);
                     out.print("data: " + partResult + "\n\n");
                     out.flush();
-//                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

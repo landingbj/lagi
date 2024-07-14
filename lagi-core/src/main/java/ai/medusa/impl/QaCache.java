@@ -36,17 +36,6 @@ public class QaCache {
         return cache.get(key);
     }
 
-    public List<PromptInput> locate(String key) {
-        List<PromptInput> promptInputList = get(key);
-        if (promptInputList == null) {
-            String valueInVectorDb = getPromptInVectorDb(key);
-            if (valueInVectorDb != null) {
-                promptInputList = get(valueInVectorDb);
-            }
-        }
-        return promptInputList;
-    }
-
     public void put(String key, List<PromptInput> value) {
         Map<String, String> metadata = new HashMap<>();
         metadata.put("category", MEDUSA_CATEGORY);

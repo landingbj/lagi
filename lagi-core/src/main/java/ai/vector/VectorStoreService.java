@@ -20,8 +20,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ObjectUtils;
-import tech.amikos.chromadb.Collection;
-import tech.amikos.chromadb.handler.ApiException;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +31,7 @@ public class VectorStoreService {
     private final BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
 
-    private IntentService intentService = new SampleIntentServiceImpl();
+    private final IntentService intentService = new SampleIntentServiceImpl();
 
 
     public VectorStoreService() {
@@ -195,24 +193,23 @@ public class VectorStoreService {
         System.out.println("Total execution time detectIntent 1: " + (timeMillis3 - timeMillis2));
 
         String question = null;
-        if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
-            if(intentResult.getContinuedIndex() != null) {
+        if (intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
+            if (intentResult.getContinuedIndex() != null) {
                 String content = messages.get(intentResult.getContinuedIndex()).getContent();
                 String[] split = content.split("[， ,.。！!?？]");
-                String source =  Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
-                if(StrUtil.isBlank(source)) {
-                    source =content;
+                String source = Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
+                if (StrUtil.isBlank(source)) {
+                    source = content;
                 }
-                question = source  + ChatCompletionUtil.getLastMessage(request);
-            }
-            else {
+                question = source + ChatCompletionUtil.getLastMessage(request);
+            } else {
                 List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
-                if(userMessages.size() > 1) {
+                if (userMessages.size() > 1) {
                     question = userMessages.get(userMessages.size() - 2).getContent().trim();
                 }
             }
         }
-        if(question == null) {
+        if (question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
         timeMillis3 = System.currentTimeMillis();
@@ -220,30 +217,34 @@ public class VectorStoreService {
         return search(question, request.getCategory());
     }
 
+    private static final VectorCache vectorCache = VectorCache.getInstance();
+
     public List<IndexSearchData> search(String question, String category) {
-        long timeMillis1 = System.currentTimeMillis();
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
-        int parentDepth = vectorStore.getConfig().getParentDepth();
-        int childDepth = vectorStore.getConfig().getChildDepth();
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
 
         long timeMillis2 = System.currentTimeMillis();
-        System.out.println("Total execution time search: " + (timeMillis2 - timeMillis1));
         for (IndexSearchData indexSearchData : indexSearchDataList) {
-            result.add(extendText(parentDepth, childDepth, indexSearchData, category));
+            IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
+            if (extendedIndexSearchData == null) {
+                extendedIndexSearchData = extendText(indexSearchData, category);
+                vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
+            }
+            extendedIndexSearchData.setDistance(indexSearchData.getDistance());
+            result.add(extendedIndexSearchData);
         }
-
         long timeMillis3 = System.currentTimeMillis();
+        System.out.println(result);
         System.out.println("Total execution time extendText: " + (timeMillis3 - timeMillis2));
         return result;
     }
 
     public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
-                                         Map<String, String> where, String category) {
+                                        Map<String, String> where, String category) {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
@@ -260,7 +261,7 @@ public class VectorStoreService {
         return result;
     }
 
-    private IndexSearchData toIndexSearchData(IndexRecord indexRecord) {
+    public IndexSearchData toIndexSearchData(IndexRecord indexRecord) {
         if (indexRecord == null) {
             return null;
         }
@@ -283,6 +284,10 @@ public class VectorStoreService {
         indexSearchData.setDistance(indexRecord.getDistance());
         indexSearchData.setParentId((String) indexRecord.getMetadata().get("parent_id"));
         return indexSearchData;
+    }
+
+    public IndexSearchData getParentIndex(String parentId) {
+        return getParentIndex(parentId, vectorStore.getConfig().getDefaultCategory());
     }
 
     public IndexSearchData getParentIndex(String parentId, String category) {
@@ -308,8 +313,28 @@ public class VectorStoreService {
         return result;
     }
 
-    private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
+    public IndexSearchData extendText(IndexSearchData data) {
+        return extendText(data, vectorStore.getConfig().getDefaultCategory());
+    }
+
+    public IndexSearchData extendText(IndexSearchData data, String category) {
+        int parentDepth = vectorStore.getConfig().getParentDepth();
+        int childDepth = vectorStore.getConfig().getChildDepth();
+        return extendText(parentDepth, childDepth, data, category);
+    }
+
+    public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
         String text = data.getText();
+
+        if (data.getFilename() != null && data.getFilename().isEmpty()) {
+            if (data.getParentId() == null) {
+                text = text + "\n";
+            } else {
+                text = "\n" + text;
+            }
+            System.out.println("extendText:" + text);
+        }
+
         String parentId = data.getParentId();
         int parentCount = 0;
         for (int i = 0; i < parentDepth; i++) {

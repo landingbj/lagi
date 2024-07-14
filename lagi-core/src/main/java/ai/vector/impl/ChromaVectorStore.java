@@ -194,8 +194,11 @@ public class ChromaVectorStore extends BaseVectorStore {
     @Override
     public void deleteCollection(String category) {
         try {
-            if (listCollections().contains(category)) {
-                client.deleteCollection(category);
+            for (VectorCollection vectorCollection : listCollections()) {
+                if (vectorCollection.getCategory().equals(category)) {
+                    client.deleteCollection(category);
+                    break;
+                }
             }
         } catch (ApiException e) {
             throw new RuntimeException(e);

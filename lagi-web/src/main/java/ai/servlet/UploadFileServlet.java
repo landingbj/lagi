@@ -86,7 +86,9 @@ public class UploadFileServlet extends HttpServlet {
             Map<String, String> qaMap = new HashMap<>();
             for (InstructionData data : instructionDataList) {
                 for (String instruction : data.getInstruction()) {
-                    qaMap.put(instruction, data.getOutput());
+                    instruction = instruction.trim();
+                    String output = data.getOutput().trim();
+                    qaMap.put(instruction, output);
                     Map<String, String> metadata = new HashMap<>();
                     metadata.put("category", category);
                     metadata.put("level", level);
@@ -98,7 +100,7 @@ public class UploadFileServlet extends HttpServlet {
                             .build());
                     upsertRecords.add(UpsertRecord.newBuilder()
                             .withMetadata(new HashMap<>(metadata))
-                            .withDocument(data.getOutput())
+                            .withDocument(output)
                             .build());
                     vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
                 }

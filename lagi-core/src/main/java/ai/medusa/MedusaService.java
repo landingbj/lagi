@@ -8,6 +8,8 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.qa.LLMConfig;
+import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 
 import java.util.List;
@@ -18,7 +20,7 @@ public class MedusaService {
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        if (PromptCacheConfig.MEDUSA_ENABLE && false) {
+        if (PromptCacheConfig.MEDUSA_ENABLE && true) {
             switch (PromptCacheConfig.LOCATE_ALGORITHM) {
                 case "lcs":
                 case "tree":
@@ -76,15 +78,20 @@ public class MedusaService {
     public PromptInput getPromptInput(ChatCompletionRequest chatCompletionRequest) {
         List<String> promptList = new FastIndexList<>();
         List<ChatMessage> messages = chatCompletionRequest.getMessages();
-        for (int i = 0; i < messages.size(); i = i + 2) {
-            ChatMessage message = messages.get(i);
-            promptList.add(message.getContent());
+        String systemPrompt = null;
+        for (ChatMessage message : messages) {
+            if (message.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
+                promptList.add(message.getContent());
+            } else if (message.getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
+                systemPrompt = message.getContent();
+            }
         }
         return PromptInput.builder()
                 .maxTokens(chatCompletionRequest.getMax_tokens())
                 .promptList(promptList)
                 .temperature(chatCompletionRequest.getTemperature())
                 .category(chatCompletionRequest.getCategory())
+                .systemPrompt(systemPrompt)
                 .build();
     }
 }

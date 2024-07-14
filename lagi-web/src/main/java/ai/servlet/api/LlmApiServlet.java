@@ -13,11 +13,13 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PromptInput;
 import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
+import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -25,6 +27,7 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
+import ai.vector.VectorCacheLoader;
 import cn.hutool.json.JSONUtil;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -38,6 +41,10 @@ public class LlmApiServlet extends BaseServlet {
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
+
+    static {
+        VectorCacheLoader.load();
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -62,13 +69,8 @@ public class LlmApiServlet extends BaseServlet {
             chatCompletionRequest.setModel(preference.getLlm());
         }
 
-        long timeMillis1 = System.currentTimeMillis();
-
         PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
         ChatCompletionResult chatCompletionResult = medusaService.locate(promptInput);
-
-        long timeMillis2 = System.currentTimeMillis();
-        System.out.println("Total execution time medusaService locate: " + (timeMillis2 - timeMillis1));
 
         if (chatCompletionResult != null) {
             if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
@@ -80,12 +82,12 @@ public class LlmApiServlet extends BaseServlet {
             } else {
                 responsePrint(resp, toJson(chatCompletionResult));
             }
+            logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
             return;
         } else {
             medusaService.triggerCachePut(promptInput);
         }
 
-        timeMillis2 = System.currentTimeMillis();
         List<IndexSearchData> indexSearchDataList;
         String context = null;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
@@ -97,8 +99,6 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
-        long timeMillis3 = System.currentTimeMillis();
-        System.out.println("Total execution time vectorDbService searchByContext: " + (timeMillis3 - timeMillis2));
 
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
@@ -133,18 +133,7 @@ public class LlmApiServlet extends BaseServlet {
             out.close();
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            if (result != null && !result.getChoices().isEmpty()
-                    && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                IndexSearchData indexData = indexSearchDataList.get(0);
-                List<String> imageList = vectorDbService.getImageFiles(indexData);
-                for (int i = 0; i < result.getChoices().size(); i++) {
-                    ChatMessage message = result.getChoices().get(i).getMessage();
-                    message.setContext(context);
-                    message.setFilename(indexData.getFilename());
-                    message.setFilepath(indexData.getFilepath());
-                    message.setImageList(imageList);
-                }
-            }
+            CompletionUtil.populateContext(result, indexSearchDataList, context);
             responsePrint(resp, toJson(result));
         }
     }
