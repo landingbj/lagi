@@ -8,7 +8,6 @@ import ai.intent.pojo.IntentResult;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatMessage;
 import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import cn.hutool.core.util.StrUtil;
@@ -51,16 +50,9 @@ public class SampleIntentServiceImpl implements IntentService {
             return intentResult;
         }
         int lastIndex = 0;
-//        intentResult.setStatus(IntentStatusEnum.getStatusByContents(chatCompletionRequest.getMessages().stream().map(ChatMessage::getContent).collect(Collectors.toList()), punctuations).getName());
         CompletionCache completionCache = CompletionCache.getInstance();
         PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger(completionCache);
-
-        long timeMillis2 = System.currentTimeMillis();
-
         lastIndex = promptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
-
-
-
         if(lastIndex == chatCompletionRequest.getMessages().size() -1) {
             intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
         } else {

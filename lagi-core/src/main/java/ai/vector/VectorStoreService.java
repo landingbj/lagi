@@ -8,6 +8,7 @@ import ai.intent.pojo.IntentResult;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.LagiGlobal;
 import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
@@ -185,21 +186,20 @@ public class VectorStoreService {
     }
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
-        long timeMillis2 = System.currentTimeMillis();
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
-
-        long timeMillis3 = System.currentTimeMillis();
-        System.out.println("Total execution time detectIntent 1: " + (timeMillis3 - timeMillis2));
-
         String question = null;
         if (intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
             if (intentResult.getContinuedIndex() != null) {
-                String content = messages.get(intentResult.getContinuedIndex()).getContent();
+                ChatMessage chatMessage = messages.get(intentResult.getContinuedIndex());
+                String content = chatMessage.getContent();
                 String[] split = content.split("[， ,.。！!?？]");
                 String source = Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
                 if (StrUtil.isBlank(source)) {
                     source = content;
+                }
+                if (chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
+                    source = "";
                 }
                 question = source + ChatCompletionUtil.getLastMessage(request);
             } else {
@@ -212,8 +212,6 @@ public class VectorStoreService {
         if (question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
-        timeMillis3 = System.currentTimeMillis();
-        System.out.println("Total execution time detectIntent 2: " + (timeMillis3 - timeMillis2));
         return search(question, request.getCategory());
     }
 
@@ -227,7 +225,6 @@ public class VectorStoreService {
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
 
-        long timeMillis2 = System.currentTimeMillis();
         for (IndexSearchData indexSearchData : indexSearchDataList) {
             IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
             if (extendedIndexSearchData == null) {
@@ -237,9 +234,6 @@ public class VectorStoreService {
             extendedIndexSearchData.setDistance(indexSearchData.getDistance());
             result.add(extendedIndexSearchData);
         }
-        long timeMillis3 = System.currentTimeMillis();
-        System.out.println(result);
-        System.out.println("Total execution time extendText: " + (timeMillis3 - timeMillis2));
         return result;
     }
 

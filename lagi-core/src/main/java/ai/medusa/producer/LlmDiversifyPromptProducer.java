@@ -58,9 +58,7 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
             promptList.add(promptInput.getPromptList().get(promptInput.getPromptList().size() - 1));
             promptList.add(message.getContent());
             PromptInput diversifiedPromptInput = PromptInput.builder()
-                    .maxTokens(promptInput.getMaxTokens())
-                    .temperature(promptInput.getTemperature())
-                    .category(promptInput.getCategory())
+                    .parameter(promptInput.getParameter())
                     .promptList(promptList)
                     .build();
             PooledPrompt pooledPrompt = PooledPrompt.builder()
@@ -76,9 +74,9 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
     private ChatCompletionRequest getDiversifyRequest(PooledPrompt item) {
         PromptInput promptInput = item.getPromptInput();
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
-        chatCompletionRequest.setTemperature(promptInput.getTemperature());
+        chatCompletionRequest.setTemperature(promptInput.getParameter().getTemperature());
         chatCompletionRequest.setStream(false);
-        chatCompletionRequest.setMax_tokens(promptInput.getMaxTokens());
+        chatCompletionRequest.setMax_tokens(promptInput.getParameter().getMaxTokens());
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();
         message.setRole(LagiGlobal.LLM_ROLE_USER);

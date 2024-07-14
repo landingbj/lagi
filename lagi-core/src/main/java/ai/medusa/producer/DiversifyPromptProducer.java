@@ -26,8 +26,8 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
 
     protected List<IndexSearchData> searchByContext(PromptInput promptInput) {
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setTemperature(promptInput.getTemperature());
-        request.setMax_tokens(promptInput.getMaxTokens());
+        request.setTemperature(promptInput.getParameter().getTemperature());
+        request.setMax_tokens(promptInput.getParameter().getMaxTokens());
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();
         message.setRole(LagiGlobal.LLM_ROLE_SYSTEM);

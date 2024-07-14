@@ -2,7 +2,6 @@ package ai.vector;
 
 import ai.common.pojo.IndexSearchData;
 import ai.medusa.MedusaService;
-import ai.medusa.utils.PromptCacheConfig;
 import ai.utils.LagiGlobal;
 import ai.vector.pojo.IndexRecord;
 import org.slf4j.Logger;
@@ -52,7 +51,7 @@ public class VectorCacheLoader {
             if (indexSearchData.getParentId() != null) {
                 IndexSearchData questionIndexData = vectorStoreService.getParentIndex(indexSearchData.getParentId());
                 qaMap.put(questionIndexData.getText(), indexSearchData.getText());
-                if (qaMap.size() == 1) {
+                if (qaMap.size() == 2) {
                     break;
                 }
             }

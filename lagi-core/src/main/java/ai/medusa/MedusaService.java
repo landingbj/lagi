@@ -4,6 +4,7 @@ import ai.common.utils.FastIndexList;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.pojo.PromptParameter;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -20,7 +21,7 @@ public class MedusaService {
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        if (PromptCacheConfig.MEDUSA_ENABLE && true) {
+        if (PromptCacheConfig.MEDUSA_ENABLE) {
             switch (PromptCacheConfig.LOCATE_ALGORITHM) {
                 case "lcs":
                 case "tree":
@@ -86,12 +87,15 @@ public class MedusaService {
                 systemPrompt = message.getContent();
             }
         }
-        return PromptInput.builder()
+        PromptParameter parameter = PromptParameter.builder()
                 .maxTokens(chatCompletionRequest.getMax_tokens())
-                .promptList(promptList)
                 .temperature(chatCompletionRequest.getTemperature())
                 .category(chatCompletionRequest.getCategory())
                 .systemPrompt(systemPrompt)
+                .build();
+        return PromptInput.builder()
+                .promptList(promptList)
+                .parameter(parameter)
                 .build();
     }
 }

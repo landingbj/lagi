@@ -201,8 +201,11 @@ public class CompletionsService {
         return getCompletionsRequest(messages);
     }
 
-    public ChatCompletionRequest getCompletionsRequest(String prompt, String category) {
+    public ChatCompletionRequest getCompletionsRequest(String systemPrompt, String prompt, String category) {
         List<ChatMessage> messages = new ArrayList<>();
+        if (systemPrompt != null) {
+            messages.add(getChatMessage(systemPrompt, LagiGlobal.LLM_ROLE_SYSTEM));
+        }
         messages.add(getChatMessage(prompt, LagiGlobal.LLM_ROLE_USER));
         return getCompletionsRequest(messages, category);
     }

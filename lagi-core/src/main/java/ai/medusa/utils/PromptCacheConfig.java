@@ -27,7 +27,7 @@ public class PromptCacheConfig {
     public static final int QA_SIMILARITY_TOP_K = 30;
     public static final double QA_SIMILARITY_CUTOFF = 0.1;
 
-    public static final int WRITE_CACHE_THREADS = 10;
+    public static final int WRITE_CACHE_THREADS = 5;
     public static final int SUBSTRING_THRESHOLD = 2;
     public static final double LCS_RATIO_QUESTION = 0.25;
     public static final double LCS_RATIO_PROMPT_INPUT = 0.25;

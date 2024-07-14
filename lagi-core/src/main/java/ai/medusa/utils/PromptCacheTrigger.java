@@ -31,6 +31,8 @@ public class PromptCacheTrigger {
     private final CompletionCache completionCache;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(PromptCacheConfig.WRITE_CACHE_THREADS);
     private final VectorStoreService vectorStoreService = new VectorStoreService();
+    private final LRUCache<PromptInput, List<ChatCompletionResult>> promptCache;
+    private final QaCache qaCache;
 
     private static final LRUCache<List<ChatMessage>, String> rawAnswerCache;
 
@@ -40,6 +42,8 @@ public class PromptCacheTrigger {
 
     public PromptCacheTrigger(CompletionCache completionCache) {
         this.completionCache = completionCache;
+        this.promptCache = completionCache.getPromptCache();
+        this.qaCache = completionCache.getQaCache();
     }
 
     public void triggerWriteCache(PromptInput promptInput) {
@@ -47,9 +51,6 @@ public class PromptCacheTrigger {
     }
 
     public void writeCache(PromptInput promptInput) {
-        LRUCache<PromptInput, List<ChatCompletionResult>> promptCache = completionCache.getPromptCache();
-        QaCache qaCache = completionCache.getQaCache();
-
         String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
         PromptInput promptInputWithBoundaries = analyzeChatBoundaries(promptInput);
 
@@ -60,18 +61,13 @@ public class PromptCacheTrigger {
             return;
         }
 
+        completionCache.getPromptPool().put(PooledPrompt.builder()
+                .promptInput(promptInputWithBoundaries).status(PromptCacheConfig.POOL_INITIAL).build());
+
         // If the prompt list has only one prompt, add the prompt input to the cache.
         // If the prompt list has more than one prompt and the last prompt is not in the prompt cache, add the prompt to the cache.
         if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResultList == null) {
-            List<PromptInput> promptInputList = new ArrayList<>();
-            promptInputList.add(promptInputWithBoundaries);
-            qaCache.put(newestPrompt, promptInputList);
-            List<ChatCompletionResult> completionResults = new ArrayList<>();
-            completionResults.add(chatCompletionResult);
-            System.out.println(qaCache.get(newestPrompt));
-            promptCache.put(promptInputWithBoundaries, completionResults);
-            completionCache.getPromptPool().put(PooledPrompt.builder()
-                    .promptInput(promptInputWithBoundaries).status(PromptCacheConfig.POOL_INITIAL).build());
+            putCache(newestPrompt, promptInputWithBoundaries, chatCompletionResult);
             return;
         }
 
@@ -81,6 +77,10 @@ public class PromptCacheTrigger {
         }
 
         // If the prompt list has more than one prompt and the last prompt is in the prompt cache, append the prompt to the cache.
+        putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt);
+    }
+
+    private synchronized void putCache(PromptInput promptInputWithBoundaries, PromptInput lastPromptInput, ChatCompletionResult chatCompletionResult, String newestPrompt) {
         String lastPrompt = PromptInputUtil.getLastPrompt(promptInputWithBoundaries);
         List<PromptInput> promptInputList = qaCache.get(lastPrompt);
         int index = promptInputList.indexOf(lastPromptInput);
@@ -91,6 +91,25 @@ public class PromptCacheTrigger {
         promptInputInCache.getPromptList().add(newestPrompt);
         qaCache.put(newestPrompt, promptInputList);
         promptCache.put(promptInputInCache, completionResults);
+    }
+
+    private synchronized void putCache(String newestPrompt, PromptInput promptInputWithBoundaries, ChatCompletionResult chatCompletionResult) {
+        List<PromptInput> promptInputList = qaCache.get(newestPrompt);
+        List<ChatCompletionResult> completionResults = promptCache.get(promptInputWithBoundaries);
+
+        if (promptInputList == null || promptInputList.isEmpty()) {
+            promptInputList = new ArrayList<>();
+        }
+
+        if (completionResults == null || completionResults.isEmpty()) {
+            completionResults = new ArrayList<>();
+        }
+
+        promptInputList.add(promptInputWithBoundaries);
+        completionResults.add(chatCompletionResult);
+
+        qaCache.put(newestPrompt, promptInputList);
+        promptCache.put(promptInputWithBoundaries, completionResults);
     }
 
     public PromptInput analyzeChatBoundaries(PromptInput promptInput) {
@@ -127,9 +146,7 @@ public class PromptCacheTrigger {
             }
         }
         return PromptInput.builder()
-                .category(promptInput.getCategory())
-                .temperature(promptInput.getTemperature())
-                .maxTokens(promptInput.getMaxTokens())
+                .parameter(promptInput.getParameter())
                 .promptList(questionList.subList(startIndex, questionList.size()))
                 .build();
     }
@@ -207,9 +224,10 @@ public class PromptCacheTrigger {
     private ChatCompletionResult completionsWithContext(PromptInput promptInput) {
         String lastPrompt = PromptInputUtil.getNewestPrompt(promptInput);
         String text = String.join(";", promptInput.getPromptList());
-        List<IndexSearchData> indexSearchDataList = vectorStoreService.search(text, promptInput.getCategory());
+        List<IndexSearchData> indexSearchDataList = vectorStoreService.search(text, promptInput.getParameter().getCategory());
         String context = completionsService.getRagContext(indexSearchDataList);
-        ChatCompletionRequest request = completionsService.getCompletionsRequest(lastPrompt, promptInput.getCategory());
+        ChatCompletionRequest request = completionsService.getCompletionsRequest(
+                promptInput.getParameter().getSystemPrompt(), lastPrompt, promptInput.getParameter().getCategory());
         if (context != null) {
             completionsService.addVectorDBContext(request, context);
         }
