@@ -112,8 +112,14 @@ public class LlmApiServlet extends BaseServlet {
                     e -> {
                         logger.error("", e);
                         out.print("error: " + e.getMessage() + "\n\n");
+                        out.flush();
                     },
                     () -> {
+                        if(lastResult[0] == null) {
+                            out.print("error: " + "发生了一些错误可能是socket 超时" + "\n\n");
+                            out.flush();
+                            return;
+                        }
                         extracted(lastResult, indexSearchDataList, out);
                         lastResult[0].setChoices(lastResult[1].getChoices());
                         medusaService.put(promptInput, lastResult[0]);

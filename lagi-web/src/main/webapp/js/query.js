@@ -408,6 +408,11 @@ function streamOutput(paras, question, robootAnswerJq) {
         let flag = true;
         while (flag) {
             const {value, done} = await reader.read();
+            let res =  new TextDecoder().decode(value);
+            if(res.startsWith("error:")) {
+                robootAnswerJq.html(res.replaceAll('error:', ''));
+                return;
+            }
             let chunkStr = new TextDecoder().decode(value).replaceAll('data: ', '').trim();
             const chunkArray = chunkStr.split("\n\n");
             for (let i = 0; i < chunkArray.length; i++) {
@@ -455,7 +460,9 @@ function streamOutput(paras, question, robootAnswerJq) {
         enableQueryBtn();
         querying = false;
         queryLock = false;
-        robootAnswerJq.html("调用失败！");
+        if(!robootAnswerJq.text) {
+            robootAnswerJq.html("调用失败！");
+        }
     });
 }
 
