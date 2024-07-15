@@ -50,7 +50,7 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
     }
 
     protected List<IndexSearchData> search(String question, String category) {
-        return vectorStoreService.search(question, 30, 0.01, new HashMap<>(), category);
+        return vectorStoreService.search(question, 30, 0.2, new HashMap<>(), category);
     }
 
     protected IndexSearchData getParentIndex(String parentId, String category) {

@@ -51,4 +51,8 @@ public abstract class SocialWorker extends Worker {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void process() {
+    }
 }

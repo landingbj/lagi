@@ -264,15 +264,13 @@ public class VectorStoreService {
         indexSearchData.setText(indexRecord.getDocument());
         indexSearchData.setCategory((String) indexRecord.getMetadata().get("category"));
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
-        if (!"system".equals(indexSearchData.getLevel())) {
-            indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
-            String filename = (String) indexRecord.getMetadata().get("filename");
-            if (filename != null && !filename.isEmpty()) {
-                indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
-            }
-            if (indexRecord.getMetadata().get("filepath") != null) {
-                indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
-            }
+        indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
+        String filename = (String) indexRecord.getMetadata().get("filename");
+        if (filename != null && !filename.isEmpty()) {
+            indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
+        }
+        if (indexRecord.getMetadata().get("filepath") != null) {
+            indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
         }
         indexSearchData.setImage((String) indexRecord.getMetadata().get("image"));
         indexSearchData.setDistance(indexRecord.getDistance());
