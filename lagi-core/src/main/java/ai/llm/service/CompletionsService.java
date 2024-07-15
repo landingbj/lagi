@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import ai.common.ModelService;
 import ai.common.pojo.IndexSearchData;
+import ai.common.utils.ThreadPoolManager;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
 import ai.llm.utils.CacheManager;
@@ -118,10 +120,7 @@ public class CompletionsService {
                     }
                     try {
                         Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(chatCompletionRequest);
-//                        chatCompletionResultObservable.subscribe(v->{},e->{
-//                            CacheManager.put(modelService.getModel(), Boolean.FALSE);
-//                            System.out.println("模型报错  已未您切换");
-//                        });
+                        changeModel(chatCompletionResultObservable, modelService);
                         return chatCompletionResultObservable;
                     }catch (Exception e) {
                         System.out.println(e.getMessage());
@@ -130,6 +129,22 @@ public class CompletionsService {
             }
         }
         throw new RuntimeException("Stream backend is not enabled.");
+    }
+
+    private static void changeModel(Observable<ChatCompletionResult> chatCompletionResultObservable, ModelService modelService) {
+        ExecutorService executor = ThreadPoolManager.getExecutor("llm-model-service");
+        if(executor == null) {
+            try {
+                ThreadPoolManager.registerExecutor("llm-model-service");
+                executor = ThreadPoolManager.getExecutor("llm-model-service");
+                executor.execute(()->{
+                    chatCompletionResultObservable.subscribe(v->{}, e->{
+                        CacheManager.put(modelService.getModel(), Boolean.FALSE);
+                        System.out.println("模型报错  已未您切换");});
+                });
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private List<ILlmAdapter> getAdapters() {
