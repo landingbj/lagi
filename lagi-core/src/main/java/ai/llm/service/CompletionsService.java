@@ -118,10 +118,10 @@ public class CompletionsService {
                     }
                     try {
                         Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(chatCompletionRequest);
-                        chatCompletionResultObservable.subscribe(v->{},e->{
-                            CacheManager.put(modelService.getModel(), Boolean.FALSE);
-                            System.out.println("模型报错  已未您切换");
-                        });
+//                        chatCompletionResultObservable.subscribe(v->{},e->{
+//                            CacheManager.put(modelService.getModel(), Boolean.FALSE);
+//                            System.out.println("模型报错  已未您切换");
+//                        });
                         return chatCompletionResultObservable;
                     }catch (Exception e) {
                         System.out.println(e.getMessage());

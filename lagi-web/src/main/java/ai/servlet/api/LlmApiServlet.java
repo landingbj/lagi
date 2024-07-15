@@ -88,8 +88,10 @@ public class LlmApiServlet extends BaseServlet {
             return;
         } else {
             medusaService.triggerCachePut(promptInput);
-            medusaService.getPromptPool().put(PooledPrompt.builder()
-                    .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+            if (medusaService.getPromptPool() != null) {
+                medusaService.getPromptPool().put(PooledPrompt.builder()
+                        .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+            }
         }
 
         List<IndexSearchData> indexSearchDataList;

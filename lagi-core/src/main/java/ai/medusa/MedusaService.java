@@ -77,6 +77,9 @@ public class MedusaService {
     }
 
     public PromptPool getPromptPool() {
+        if (cache == null) {
+            return null;
+        }
         return cache.getPromptPool();
     }
 
