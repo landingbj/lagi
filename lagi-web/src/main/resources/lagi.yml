@@ -347,3 +347,7 @@ workers:
   - name: ding-robot
     agent: ding
     worker: ai.worker.social.RobotWorker
+
+  # Example for Airport Enhancement
+  - name: asr4flights
+    worker: ai.worker.social.Asr4FlightsWorker

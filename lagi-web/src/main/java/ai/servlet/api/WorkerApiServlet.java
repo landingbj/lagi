@@ -24,12 +24,12 @@ public class WorkerApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
-        if (method.equals("uploadVoice")) {
-            this.uploadVoice(req, resp);
+        if (method.equals("uploadVoice") || method.equals("asr4flights")) {
+            this.asr4flights(req, resp);
         }
     }
 
-    public void uploadVoice(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void asr4flights(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Part filePart = request.getPart("audioFile");
         String fileName = getFileName(filePart);
         String os = System.getProperty("os.name").toLowerCase();
