@@ -108,49 +108,51 @@ public class LlmApiServlet extends BaseServlet {
 
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-            Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
-            final ChatCompletionResult[] lastResult = {null, null};
-            observable.subscribe(
-                    data -> {
-                        lastResult[0] = data;
-                        String msg = gson.toJson(data);
-                        out.print("data: " + msg + "\n\n");
-                        out.flush();
-
-                        if (lastResult[1] == null) {
-                            lastResult[1] = data;
-                        } else {
-                            for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
-                                ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
-                                ChatCompletionChoice chunkChoice = data.getChoices().get(i);
-                                String chunkContent = chunkChoice.getMessage().getContent();
-                                String content = choice.getMessage().getContent();
-                                choice.getMessage().setContent(content + chunkContent);
-                            }
-                        }
-                    },
-                    e -> {
-                        logger.error("", e);
-                        out.print("error: " + e.getMessage() + "\n\n");
-                        out.flush();
-                    },
-                    () -> {
-                        if(lastResult[0] == null) {
-                            out.print("error: " + "发生了一些错误可能是socket 超时" + "\n\n");
-                            out.flush();
-                            return;
-                        }
-                        extracted(lastResult, indexSearchDataList, out);
-                        lastResult[0].setChoices(lastResult[1].getChoices());
-                    }
-            );
-            out.flush();
-            out.close();
+            streamOutPrint(chatCompletionRequest, indexSearchDataList, out, 20);
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
             CompletionUtil.populateContext(result, indexSearchDataList, context);
             responsePrint(resp, toJson(result));
         }
+    }
+
+    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
+        Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
+        final ChatCompletionResult[] lastResult = {null, null};
+        int finalLimit = limit - 1;
+        observable.subscribe(
+                data -> {
+                    lastResult[0] = data;
+                    String msg = gson.toJson(data);
+                    out.print("data: " + msg + "\n\n");
+                    out.flush();
+                    if (lastResult[1] == null) {
+                        lastResult[1] = data;
+                    } else {
+                        for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
+                            ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
+                            ChatCompletionChoice chunkChoice = data.getChoices().get(i);
+                            String chunkContent = chunkChoice.getMessage().getContent();
+                            String content = choice.getMessage().getContent();
+                            choice.getMessage().setContent(content + chunkContent);
+                        }
+                    }
+                },
+                e -> {
+                    logger.error("", e);
+                    streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
+                },
+                () -> {
+                    if(lastResult[0] == null) {
+                        streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
+                        return;
+                    }
+                    extracted(lastResult, indexSearchDataList, out);
+                    lastResult[0].setChoices(lastResult[1].getChoices());
+                    out.flush();
+                    out.close();
+                }
+        );
     }
 
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, PrintWriter out) {
