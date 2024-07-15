@@ -226,4 +226,17 @@
         <servlet-name>preference</servlet-name>
         <url-pattern>/preference/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>WorkerApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.WorkerApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>WorkerApiServlet</servlet-name>
+        <url-pattern>/search/uploadVoice</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>WorkerApiServlet</servlet-name>
+        <url-pattern>/v1/worker/*</url-pattern>
+    </servlet-mapping>
 </web-app>

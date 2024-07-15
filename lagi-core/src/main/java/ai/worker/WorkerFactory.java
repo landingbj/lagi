@@ -3,6 +3,7 @@ package ai.worker;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.WorkerConfig;
 import ai.utils.LagiGlobal;
+import ai.worker.audio.Asr4FlightsWorker;
 import ai.worker.social.RobotWorker;
 
 import java.util.List;
@@ -33,11 +34,11 @@ public class WorkerFactory {
             throw new RuntimeException("Worker not found");
         }
         AgentConfig agentConfig = agentMap.get(workerConfig.getAgent());
-        if (agentConfig == null) {
-            throw new RuntimeException("Agent not found");
-        }
+
         if (workerConfig.getWorker().equals(WorkerGlobal.ROBOT_WORKER_CLASS)) {
             return new RobotWorker(agentConfig);
+        } else if (workerConfig.getWorker().equals(WorkerGlobal.ASR_FLIGHT_WORKER_CLASS)) {
+            return new Asr4FlightsWorker();
         } else {
             throw new RuntimeException("Worker not found");
         }

@@ -7,5 +7,4 @@ public abstract class Worker {
 
     public abstract void stop();
 
-    public abstract void process();
 }
