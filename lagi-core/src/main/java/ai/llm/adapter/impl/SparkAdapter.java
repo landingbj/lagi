@@ -4,6 +4,7 @@ import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.CacheManager;
 import ai.openai.pojo.*;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
@@ -21,6 +22,7 @@ import io.github.briqt.spark4j.model.response.SparkResponseFunctionCall;
 import io.github.briqt.spark4j.model.response.SparkResponseUsage;
 import io.reactivex.Observable;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import okhttp3.WebSocket;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -61,7 +63,7 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
         sparkClient.appid = getAppId();
         sparkClient.apiSecret = getSecretKey();
         sparkClient.apiKey = getApiKey();
-        sparkClient.chatStream(sparkRequest, new SparkCustomListener(observableList, func));
+        sparkClient.chatStream(sparkRequest, new SparkCustomListener(observableList, func, this));
         Iterable<ChatCompletionResult> iterable = observableList.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }
@@ -149,14 +151,16 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
     private static class SparkCustomListener extends SparkBaseListener {
         private static final Logger logger = LoggerFactory.getLogger(SparkCustomListener.class);
         public ObjectMapper objectMapper = new ObjectMapper();
+        private SparkAdapter sparkAdapter;
 
         private final ObservableList<ChatCompletionResult> observableList;
         private final Function<SparkResponse, ChatCompletionResult> func;
 
-        public SparkCustomListener(ObservableList<ChatCompletionResult> observableList, Function<SparkResponse, ChatCompletionResult> func) {
+        public SparkCustomListener(ObservableList<ChatCompletionResult> observableList, Function<SparkResponse, ChatCompletionResult> func, SparkAdapter sparkAdapter) {
             this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             this.observableList = observableList;
             this.func = func;
+            this.sparkAdapter = sparkAdapter;
         }
 
         public void onMessage(String content, SparkResponseUsage usage, Integer status, SparkRequest sparkRequest, SparkResponse sparkResponse, WebSocket webSocket) {
@@ -168,6 +172,14 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
 
         public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, Response response) {
             logger.error("讯飞星火api发生异常：", t);
+//            this.observableList.add(null);
+//            sparkAdapter.setPriority(0);
+            ModelService modelService = (ModelService) sparkAdapter;
+            CacheManager.put(modelService.getModel(), Boolean.FALSE);
+            webSocket.close(1000, "");
+            this.observableList.onComplete();
+            ResponseBody body = response.body();
+            System.out.println(body.toString());
         }
 
         public void onFunctionCall(SparkResponseFunctionCall functionCall, SparkResponseUsage usage, Integer status, SparkRequest sparkRequest, SparkResponse sparkResponse, WebSocket webSocket) {

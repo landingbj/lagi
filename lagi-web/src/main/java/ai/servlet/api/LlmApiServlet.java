@@ -109,7 +109,10 @@ public class LlmApiServlet extends BaseServlet {
                             }
                         }
                     },
-                    e -> logger.error("", e),
+                    e -> {
+                        logger.error("", e);
+                        out.print("error: " + e.getMessage() + "\n\n");
+                    },
                     () -> {
                         extracted(lastResult, indexSearchDataList, out);
                         lastResult[0].setChoices(lastResult[1].getChoices());
