@@ -18,11 +18,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@LLM(modelNames = {"gpt-3.5-turbo", "gpt-4-1106-preview", "gpt-4o-20240513"})
+@LLM(modelNames = {"gpt-3.5-turbo","gpt-4-1106-preview","gpt-4o-20240513"})
 public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAzureAdapter.class);
     private final Gson gson = new Gson();
+    private static final String ENTERPOINT = "https://api.openai.com/v1/chat/completions";
     private static final int HTTP_TIMEOUT = 30 * 1000;
+
 
     @Override
     public String getApiAddress() {
@@ -70,11 +72,11 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
             });
             return result;
         };
-        Map<String, String> addHeader = new HashMap() {{
+        Map<String,String> addHeader = new HashMap() {{
             put("api-key", apiKey);
         }};
         ObservableList<ChatCompletionResult> result =
-                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, addHeader, convertFunc);
+                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey,addHeader, convertFunc, this);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }

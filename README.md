@@ -4,10 +4,6 @@
 
 Lag[i] is a solution designed by Beijing Landing Technologies Co.,Ltd. specifically for the significant gap between the powerful forces of the large model open-source community and enterprise application deployment. It is an enterprise-level composite multimodal large model middleware aimed at bridging this gap, by providing a secure and professional platform, enabling enterprises to customize and deploy large models in a low-cost, efficient manner.
 
-### Online Demo
-
-To allow users to intuitively experience the powerful functionality and convenience of Lag[i], we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).
-
 ### Quick Start
 
 For developers, we provide a simple way to compile and run the Lag[i] application. You can choose to use the Maven command-line tool to package, or run it through mainstream Integrated Development Environments (IDEs) like IntelliJ IDEA. Please ensure your JDK version meets at least the requirements of version 8.
@@ -46,7 +42,7 @@ If you prefer to use an IDE for development, you can directly open the Lag[i] pr
 
 ### Tutorial
 
-To help you quickly understand and utilize Lag[i], we have meticulously prepared an exhaustive [Tutorial presentations](docs/tutor_en.md). This guide will lead you from scratch through the process of downloading, installing, configuring, and running Lag[i], enabling you to master its usage methods swiftly.
+To help you efficiently become familiar with and utilize Lag[i], we have prepared a comprehensive set of  [Tutorial presentations](docs/tutor_en.md). Through this tutorial, whether you are a beginner or an experienced developer, you can quickly get started. The tutorial also covers the setup of the Lag[i] basic environmental vector database, guiding you step by step from the download, installation, and configuration of Lag[i], to actual operation, allowing you to easily start learning and quickly master the operational skills of Lag[i].
 
 ### API
 
@@ -54,9 +50,13 @@ The Lag[i] project also provides multiple RESTful API interfaces, facilitating u
 
 ### Integration
 
-To help you better understand and use Lag[i], we have provided you with an exhaustive [Guide documentation](docs/guide_en.md). You can refer to the documentation to understand the structure and content of the project so that you can quickly invoke the relevant functionality and develop large model applications efficiently.  
+In order to help you better understand and use Lag[i], we provide you with detailed [Guide documentation](docs/guide_en.md). You can refer to this document to understand the structure and content of the project, so that you can quickly invoke relevant features and develop large model applications efficiently. It helps you understand and use a variety of AI features provided in the project. With this guide, you can easily integrate AI features such as text conversation, speech recognition, text-to-speech, and image generation into your applications, achieving a more intelligent and user-friendly interaction experience.
 
-If you wish to integrate Lag[i] into your project.You can refer to our [Integration documentation](https://github.com/landingbj/lagi/blob/main/docs/guide_en.md#quick-integrate-into-your-existing-project)，To help you quickly integrate Lag[i] into your project.
+If you wish to integrate Lag[i] into your project, you can refer to our [Integration documentation](https://github.com/landingbj/lagi/blob/main/docs/guide_en.md#quick-integrate-into-your-existing-project). This document will guide you through the process of seamlessly integrating Lag[i] into your project. In addition, we provide frequently asked questions and best practices to help you avoid common pitfalls during integration, ensuring a smooth progress of your project. It covers comprehensive guidance from setting up the environment to implementing features. Whether you are a beginner or an experienced developer, you will be able to quickly integrate Lag[i] into your project.
+
+### Extension
+
+If you are not satisfied with the adapted large model for Lag[i], you can also refer to our [Extension documentation](docs/extend_en.md) to extend Lag[i], adapting it to your preferred large model. This document not only covers the methods for adapting and extending functional models and vector databases but also provides expansion examples to help you quickly grasp the methods for extending Lag[i], meeting your specific requirements.
 
 ### Security
 
@@ -70,6 +70,6 @@ Example: Set the keywords to filter `openai`:
 ]
 ```
 
-### Extension
+### Online Demo
 
-If you are not satisfied with the large model that Lag[i] has adapted, you can also refer to our [Extension documentation](docs/extend_en.md) to extend Lag[i] to fit your like large model.
+To allow users to intuitively experience the powerful functionality and convenience of Lag[i], we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).

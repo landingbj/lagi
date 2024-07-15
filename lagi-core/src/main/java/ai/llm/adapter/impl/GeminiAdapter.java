@@ -60,7 +60,7 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
             GeminiResponse result = gson.fromJson(e, GeminiResponse.class);
             return convertResponse(result);
         };
-        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, url, null, convertFunc);
+        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, url, null, convertFunc, this);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }

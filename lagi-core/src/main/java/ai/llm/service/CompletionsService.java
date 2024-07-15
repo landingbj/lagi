@@ -17,6 +17,7 @@ import ai.common.ModelService;
 import ai.common.pojo.IndexSearchData;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
+import ai.llm.utils.CacheManager;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -111,7 +112,20 @@ public class CompletionsService {
         } else {
             for (ILlmAdapter adapter : getAdapters()) {
                 if (adapter != null) {
-                    return adapter.streamCompletions(chatCompletionRequest);
+                    ModelService modelService = (ModelService) adapter;
+                    if(!CacheManager.get(modelService.getModel())) {
+                        continue;
+                    }
+                    try {
+                        Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(chatCompletionRequest);
+                        chatCompletionResultObservable.subscribe(v->{},e->{
+                            CacheManager.put(modelService.getModel(), Boolean.FALSE);
+                            System.out.println("模型报错  已未您切换");
+                        });
+                        return chatCompletionResultObservable;
+                    }catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
             }
         }

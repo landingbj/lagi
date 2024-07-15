@@ -63,7 +63,7 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
             });
             return result;
         };
-        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, COMPLETIONS_URL, apiKey, convertFunc);
+        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, COMPLETIONS_URL, apiKey, convertFunc, this);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }
