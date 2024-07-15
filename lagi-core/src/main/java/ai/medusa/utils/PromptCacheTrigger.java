@@ -46,23 +46,27 @@ public class PromptCacheTrigger {
         this.qaCache = completionCache.getQaCache();
     }
 
-    public void triggerWriteCache(PromptInput promptInput) {
-        executorService.execute(() -> writeCache(promptInput));
+    public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
+        executorService.execute(() -> writeCache(promptInput, chatCompletionResult));
     }
 
-    public void writeCache(PromptInput promptInput) {
+    public void writeCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
         String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
+
+        if (chatCompletionResult != null) {
+            putCache(newestPrompt, promptInput, chatCompletionResult);
+            return;
+        }
+
         PromptInput promptInputWithBoundaries = analyzeChatBoundaries(promptInput);
 
         PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
         List<ChatCompletionResult> completionResultList = promptCache.get(lastPromptInput);
-        ChatCompletionResult chatCompletionResult = completionsWithContext(promptInputWithBoundaries);
+
+        chatCompletionResult = completionsWithContext(promptInputWithBoundaries);
         if (chatCompletionResult == null) {
             return;
         }
-
-        completionCache.getPromptPool().put(PooledPrompt.builder()
-                .promptInput(promptInputWithBoundaries).status(PromptCacheConfig.POOL_INITIAL).build());
 
         // If the prompt list has only one prompt, add the prompt input to the cache.
         // If the prompt list has more than one prompt and the last prompt is not in the prompt cache, add the prompt to the cache.

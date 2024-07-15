@@ -6,6 +6,7 @@ import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.PromptParameter;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptPool;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -30,7 +31,7 @@ public class MedusaService {
                 default:
                     cache = CompletionCache.getInstance();
             }
-//            cache.startProcessingPrompt();
+            cache.startProcessingPrompt();
         }
     }
 
@@ -45,7 +46,6 @@ public class MedusaService {
         if (cache == null) {
             return;
         }
-
         cache.put(promptInput, chatCompletionResult);
     }
 
@@ -74,6 +74,10 @@ public class MedusaService {
             PromptInput promptInput = getPromptInput(chatCompletionRequest);
             triggerCachePut(promptInput);
         }
+    }
+
+    public PromptPool getPromptPool() {
+        return cache.getPromptPool();
     }
 
     public PromptInput getPromptInput(ChatCompletionRequest chatCompletionRequest) {

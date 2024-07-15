@@ -20,10 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ai.llm.utils.CompletionUtil;
 import ai.mr.IReducer;
 import ai.mr.reduce.BaseReducer;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
+import ai.utils.qa.ChatCompletionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,15 +56,11 @@ public class QaReducer extends BaseReducer implements IReducer {
             _DEBUG_1 = true;
         }
     }
-    private static Logger logger = LoggerFactory.getLogger(QaReducer.class);
+    private static final Logger logger = LoggerFactory.getLogger(QaReducer.class);
     List<ChatCompletionResult> result = new ArrayList<>();
-    ;
 
     @Override
     public void myReducing(List<?> list) {
-        if (_DEBUG_3) {
-            System.out.println("[DEBUG-3]" + "Coming into Reducing...");
-        }
         Map<ChatCompletionResult, Integer> resultMap = new HashMap<>();
 
         for (Object mapperResult : list) {
@@ -93,8 +91,7 @@ public class QaReducer extends BaseReducer implements IReducer {
         }
 
         result.add(textResult);
-        logger.info("QaReducer Final Answer: " + textResult);
-        logger.info("Finishing Reducing...");
+        logger.info("QaReducer Finished Reducing...");
     }
 
     @Override

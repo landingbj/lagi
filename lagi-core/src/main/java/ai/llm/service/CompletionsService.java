@@ -37,7 +37,7 @@ import weixin.tools.TulingThread;
 public class CompletionsService {
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
-    private static final int DEFAULT_MAX_TOKENS = 2048;
+    private static final int DEFAULT_MAX_TOKENS = 1024;
 
     static {
         if (tulingProcessor == null) {

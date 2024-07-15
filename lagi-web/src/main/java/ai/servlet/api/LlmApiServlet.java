@@ -15,10 +15,12 @@ import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
+import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
@@ -86,6 +88,8 @@ public class LlmApiServlet extends BaseServlet {
             return;
         } else {
             medusaService.triggerCachePut(promptInput);
+            medusaService.getPromptPool().put(PooledPrompt.builder()
+                    .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
         }
 
         List<IndexSearchData> indexSearchDataList;

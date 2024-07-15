@@ -2,6 +2,7 @@ package ai.vector;
 
 import ai.common.pojo.IndexSearchData;
 import ai.medusa.MedusaService;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.utils.LagiGlobal;
 import ai.vector.pojo.IndexRecord;
 import org.slf4j.Logger;
@@ -21,8 +22,10 @@ public class VectorCacheLoader {
         new Thread(() -> {
             try {
                 logger.info("VectorCacheLoader started");
-//                loadVectorLinkCache();
-                loadMedusaCache();
+                loadVectorLinkCache();
+                if (PromptCacheConfig.MEDUSA_ENABLE) {
+                    loadMedusaCache();
+                }
                 logger.info("VectorCacheLoader initialized");
             } catch (Exception e) {
                 logger.error("VectorCacheLoader init error", e);
