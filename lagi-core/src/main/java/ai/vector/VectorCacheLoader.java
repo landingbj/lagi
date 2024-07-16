@@ -22,7 +22,7 @@ public class VectorCacheLoader {
         new Thread(() -> {
             try {
                 logger.info("VectorCacheLoader started");
-                loadVectorLinkCache();
+//                loadVectorLinkCache();
                 if (PromptCacheConfig.MEDUSA_ENABLE) {
                     loadMedusaCache();
                 }
@@ -54,9 +54,6 @@ public class VectorCacheLoader {
             if (indexSearchData.getParentId() != null) {
                 IndexSearchData questionIndexData = vectorStoreService.getParentIndex(indexSearchData.getParentId());
                 qaMap.put(questionIndexData.getText(), indexSearchData.getText());
-                if (qaMap.size() == 2) {
-                    break;
-                }
             }
         }
         medusaService.load(qaMap, LagiGlobal.getDefaultCategory());
