@@ -67,13 +67,13 @@ function newConversation(conv, questionEnable=true, answerEnable=true) {
                         <svg  class="playSvg icon"  style="width: 24px;height: 24px;"  t="1695352126205"  viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5751" width="200" height="200"><path d="M128 138.666667c0-47.232 33.322667-66.666667 74.176-43.562667l663.146667 374.954667c40.96 23.168 40.853333 60.8 0 83.882666L202.176 928.896C161.216 952.064 128 932.565333 128 885.333333v-746.666666z" fill="#3D3D3D" p-id="5752"></path></svg>
                     </button>
                     <select class="emotionSelect audio-select" style="color:black" id="emotionSelectId">
-                        <option value="default">默认</option>
-                        <option  value="cheerful">快乐</option>
+                        <option value="neutral">默认</option>
+                        <option  value="happy">快乐</option>
                         <option value="angry">生气</option>
                         <option value="sad">伤心</option>
-                        <option value="serious">严肃</option>
-                        <option value="friendly">友善</option>
-                        <option value="fearful">害怕</option>
+                        <option value="fear">害怕</option>
+                        <option value="hate">憎恨</option>
+                        <option value="surprise">惊讶</option>
                     </select>
             </div>
             </div>

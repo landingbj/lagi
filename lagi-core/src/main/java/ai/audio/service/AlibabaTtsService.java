@@ -23,6 +23,11 @@ public class AlibabaTtsService extends AlibabaAudioService {
             }
         }
         String text = param.getText();
+        if (param.getEmotion() != null) {
+            text = String.format("<speak  voice=\"zhitian_emo\">" +
+                    "<emotion category=\"%s\" intensity=\"1.0\">%s</emotion>" +
+                    "</speak>", param.getEmotion(), text);
+        }
         String format = param.getFormat();
         int sampleRate = param.getSample_rate();
         String voice = param.getVoice();
