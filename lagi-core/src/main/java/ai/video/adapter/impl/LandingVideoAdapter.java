@@ -73,7 +73,7 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
         String[] result = call.callWS(AiServiceInfo.WSVdoUrl, "motInference", params);
         Response response = gson.fromJson(result[0], Response.class);
         if(response != null) {
-            return VideoJobResponse.builder().data(response.getData()).build();
+            return VideoJobResponse.builder().status(response.getStatus()).data(response.getData()).build();
         }
         return null;
     }
