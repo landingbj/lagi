@@ -117,6 +117,9 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
+        if(limit <= 0 ) {
+            return;
+        }
         Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
         final ChatCompletionResult[] lastResult = {null, null};
         int finalLimit = limit - 1;
