@@ -50,7 +50,11 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
     @Override
     public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
         new PromptCacheTrigger(this).triggerWriteCache(promptInput, chatCompletionResult);
-//        new PromptCacheTrigger(this).writeCache(promptInput, chatCompletionResult);
+    }
+
+    @Override
+    public void put(PromptInput promptInput) {
+        put(promptInput, null);
     }
 
     public ChatCompletionResult pickCompletionResult(PromptInput promptInput) {
@@ -69,6 +73,9 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
         double maxRatio = 0;
         if (promptInputList != null) {
             for (PromptInput promptInputInCache : promptInputList) {
+                if (!promptInput.getParameter().equals(promptInputInCache.getParameter())) {
+                    continue;
+                }
                 List<String> promptListInCache = promptInputInCache.getPromptList();
                 int index = promptListInCache.indexOf(newestPrompt);
                 List<String> promptList1 = promptListInCache.subList(0, index + 1);
@@ -88,6 +95,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
             pickedPromptInput = null;
         }
         ChatCompletionResult result = null;
+
         if (pickedPromptInput != null) {
             List<ChatCompletionResult> resultListInCache = promptCache.get(pickedPromptInput);
             int index = pickedPromptInput.getPromptList().indexOf(newestPrompt);
@@ -97,7 +105,6 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
         }
         return result;
     }
-
 
     @Override
     public int size() {

@@ -28,23 +28,12 @@ public class QaCache {
         try {
             vectorStoreService.deleteCollection(MEDUSA_CATEGORY);
         } catch (Exception e) {
-            logger.error("QaCache :" + e.getMessage());
+            logger.error("QaCache :{}", e.getMessage());
         }
     }
 
     public List<PromptInput> get(String key) {
         return cache.get(key);
-    }
-
-    public List<PromptInput> locate(String key) {
-        List<PromptInput> promptInputList = get(key);
-        if (promptInputList == null) {
-            String valueInVectorDb = getPromptInVectorDb(key);
-            if (valueInVectorDb != null) {
-                promptInputList = get(valueInVectorDb);
-            }
-        }
-        return promptInputList;
     }
 
     public void put(String key, List<PromptInput> value) {

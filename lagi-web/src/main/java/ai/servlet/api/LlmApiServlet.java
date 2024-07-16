@@ -13,11 +13,15 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
+import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
+import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -25,6 +29,7 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
+import ai.vector.VectorCacheLoader;
 import cn.hutool.json.JSONUtil;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -38,6 +43,10 @@ public class LlmApiServlet extends BaseServlet {
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
+
+    static {
+        VectorCacheLoader.load();
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -61,6 +70,7 @@ public class LlmApiServlet extends BaseServlet {
         if(preference != null && chatCompletionRequest != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
+
         PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
         ChatCompletionResult chatCompletionResult = medusaService.locate(promptInput);
 
@@ -74,67 +84,75 @@ public class LlmApiServlet extends BaseServlet {
             } else {
                 responsePrint(resp, toJson(chatCompletionResult));
             }
+            logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
             return;
+        } else {
+            medusaService.triggerCachePut(promptInput);
+            if (medusaService.getPromptPool() != null) {
+                medusaService.getPromptPool().put(PooledPrompt.builder()
+                        .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+            }
         }
 
         List<IndexSearchData> indexSearchDataList;
+        String context = null;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                completionsService.addVectorDBContext(chatCompletionRequest, indexSearchDataList);
+                context = completionsService.getRagContext(indexSearchDataList);
+                completionsService.addVectorDBContext(chatCompletionRequest, context);
             }
         } else {
             indexSearchDataList = null;
         }
+
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-            Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
-            final ChatCompletionResult[] lastResult = {null, null};
-            observable.subscribe(
-                    data -> {
-                        lastResult[0] = data;
-                        String msg = gson.toJson(data);
-                        out.print("data: " + msg + "\n\n");
-                        out.flush();
-
-                        if (lastResult[1] == null) {
-                            lastResult[1] = data;
-                        } else {
-                            for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
-                                ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
-                                ChatCompletionChoice chunkChoice = data.getChoices().get(i);
-                                String chunkContent = chunkChoice.getMessage().getContent();
-                                String content = choice.getMessage().getContent();
-                                choice.getMessage().setContent(content + chunkContent);
-                            }
-                        }
-                    },
-                    e -> logger.error("", e),
-                    () -> {
-                        extracted(lastResult, indexSearchDataList, out);
-                        lastResult[0].setChoices(lastResult[1].getChoices());
-                        medusaService.put(promptInput, lastResult[0]);
-                    }
-            );
-            out.flush();
-            out.close();
+            streamOutPrint(chatCompletionRequest, indexSearchDataList, out, 20);
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            if (result != null && !result.getChoices().isEmpty()
-                    && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                IndexSearchData indexData = indexSearchDataList.get(0);
-                List<String> imageList = vectorDbService.getImageFiles(indexData);
-                for (int i = 0; i < result.getChoices().size(); i++) {
-                    ChatMessage message = result.getChoices().get(i).getMessage();
-                    message.setContext(indexData.getText());
-                    message.setFilename(indexData.getFilename());
-                    message.setFilepath(indexData.getFilepath());
-                    message.setImageList(imageList);
-                }
-            }
-            medusaService.put(promptInput, result);
+            CompletionUtil.populateContext(result, indexSearchDataList, context);
             responsePrint(resp, toJson(result));
         }
+    }
+
+    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
+        Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
+        final ChatCompletionResult[] lastResult = {null, null};
+        int finalLimit = limit - 1;
+        observable.subscribe(
+                data -> {
+                    lastResult[0] = data;
+                    String msg = gson.toJson(data);
+                    out.print("data: " + msg + "\n\n");
+                    out.flush();
+                    if (lastResult[1] == null) {
+                        lastResult[1] = data;
+                    } else {
+                        for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
+                            ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
+                            ChatCompletionChoice chunkChoice = data.getChoices().get(i);
+                            String chunkContent = chunkChoice.getMessage().getContent();
+                            String content = choice.getMessage().getContent();
+                            choice.getMessage().setContent(content + chunkContent);
+                        }
+                    }
+                },
+                e -> {
+                    logger.error("", e);
+                    streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
+                },
+                () -> {
+                    if(lastResult[0] == null) {
+                        streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
+                        return;
+                    }
+                    extracted(lastResult, indexSearchDataList, out);
+                    lastResult[0].setChoices(lastResult[1].getChoices());
+                    out.flush();
+                    out.close();
+                }
+        );
     }
 
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, PrintWriter out) {

@@ -26,8 +26,8 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
 
     protected List<IndexSearchData> searchByContext(PromptInput promptInput) {
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setTemperature(promptInput.getTemperature());
-        request.setMax_tokens(promptInput.getMaxTokens());
+        request.setTemperature(promptInput.getParameter().getTemperature());
+        request.setMax_tokens(promptInput.getParameter().getMaxTokens());
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();
         message.setRole(LagiGlobal.LLM_ROLE_SYSTEM);
@@ -50,7 +50,7 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
     }
 
     protected List<IndexSearchData> search(String question, String category) {
-        return vectorStoreService.search(question, 30, 0.01, new HashMap<>(), category);
+        return vectorStoreService.search(question, 30, 0.2, new HashMap<>(), category);
     }
 
     protected IndexSearchData getParentIndex(String parentId, String category) {

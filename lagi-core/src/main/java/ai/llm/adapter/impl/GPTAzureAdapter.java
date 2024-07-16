@@ -76,7 +76,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
             put("api-key", apiKey);
         }};
         ObservableList<ChatCompletionResult> result =
-                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey,addHeader, convertFunc);
+                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey,addHeader, convertFunc, this);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }

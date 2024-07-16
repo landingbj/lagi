@@ -8,12 +8,14 @@ import ai.intent.pojo.IntentResult;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.LagiGlobal;
 import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
+import ai.vector.pojo.VectorCollection;
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -30,7 +32,7 @@ public class VectorStoreService {
     private final BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
 
-    private IntentService intentService = new SampleIntentServiceImpl();
+    private final IntentService intentService = new SampleIntentServiceImpl();
 
 
     public VectorStoreService() {
@@ -153,6 +155,10 @@ public class VectorStoreService {
         return result;
     }
 
+    public List<IndexRecord> fetch(Map<String, String> where) {
+        return this.vectorStore.fetch(where);
+    }
+
     public void delete(List<String> ids) {
         this.vectorStore.delete(ids);
     }
@@ -183,46 +189,56 @@ public class VectorStoreService {
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
         String question = null;
-        if(intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
-            if(intentResult.getContinuedIndex() != null) {
-                String content = messages.get(intentResult.getContinuedIndex()).getContent();
+        if (intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
+            if (intentResult.getContinuedIndex() != null) {
+                ChatMessage chatMessage = messages.get(intentResult.getContinuedIndex());
+                String content = chatMessage.getContent();
                 String[] split = content.split("[， ,.。！!?？]");
-                String source =  Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
-                if(StrUtil.isBlank(source)) {
-                    source =content;
+                String source = Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
+                if (StrUtil.isBlank(source)) {
+                    source = content;
                 }
-                question = source  + ChatCompletionUtil.getLastMessage(request);
-            }
-            else {
+                if (chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
+                    source = "";
+                }
+                question = source + ChatCompletionUtil.getLastMessage(request);
+            } else {
                 List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
-                if(userMessages.size() > 1) {
+                if (userMessages.size() > 1) {
                     question = userMessages.get(userMessages.size() - 2).getContent().trim();
                 }
             }
         }
-        if(question == null) {
+        if (question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
         return search(question, request.getCategory());
     }
 
+    private static final VectorCache vectorCache = VectorCache.getInstance();
+
     public List<IndexSearchData> search(String question, String category) {
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
-        int parentDepth = vectorStore.getConfig().getParentDepth();
-        int childDepth = vectorStore.getConfig().getChildDepth();
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+
         for (IndexSearchData indexSearchData : indexSearchDataList) {
-            result.add(extendText(parentDepth, childDepth, indexSearchData, category));
+            IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
+            if (extendedIndexSearchData == null) {
+                extendedIndexSearchData = extendText(indexSearchData, category);
+                vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
+            }
+            extendedIndexSearchData.setDistance(indexSearchData.getDistance());
+            result.add(extendedIndexSearchData);
         }
         return result;
     }
 
     public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
-                                         Map<String, String> where, String category) {
+                                        Map<String, String> where, String category) {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
@@ -239,7 +255,7 @@ public class VectorStoreService {
         return result;
     }
 
-    private IndexSearchData toIndexSearchData(IndexRecord indexRecord) {
+    public IndexSearchData toIndexSearchData(IndexRecord indexRecord) {
         if (indexRecord == null) {
             return null;
         }
@@ -248,19 +264,22 @@ public class VectorStoreService {
         indexSearchData.setText(indexRecord.getDocument());
         indexSearchData.setCategory((String) indexRecord.getMetadata().get("category"));
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
-        if (!"system".equals(indexSearchData.getLevel())) {
-            indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
-            if (indexRecord.getMetadata().get("filename") != null) {
-                indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
-            }
-            if (indexRecord.getMetadata().get("filepath") != null) {
-                indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
-            }
+        indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
+        String filename = (String) indexRecord.getMetadata().get("filename");
+        if (filename != null && !filename.isEmpty()) {
+            indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
+        }
+        if (indexRecord.getMetadata().get("filepath") != null) {
+            indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
         }
         indexSearchData.setImage((String) indexRecord.getMetadata().get("image"));
         indexSearchData.setDistance(indexRecord.getDistance());
         indexSearchData.setParentId((String) indexRecord.getMetadata().get("parent_id"));
         return indexSearchData;
+    }
+
+    public IndexSearchData getParentIndex(String parentId) {
+        return getParentIndex(parentId, vectorStore.getConfig().getDefaultCategory());
     }
 
     public IndexSearchData getParentIndex(String parentId, String category) {
@@ -286,8 +305,28 @@ public class VectorStoreService {
         return result;
     }
 
-    private IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
+    public IndexSearchData extendText(IndexSearchData data) {
+        return extendText(data, vectorStore.getConfig().getDefaultCategory());
+    }
+
+    public IndexSearchData extendText(IndexSearchData data, String category) {
+        int parentDepth = vectorStore.getConfig().getParentDepth();
+        int childDepth = vectorStore.getConfig().getChildDepth();
+        return extendText(parentDepth, childDepth, data, category);
+    }
+
+    public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
         String text = data.getText();
+
+        if (data.getFilename() != null && data.getFilename().isEmpty()) {
+            if (data.getParentId() == null) {
+                text = text + "\n";
+            } else {
+                text = "\n" + text;
+            }
+            System.out.println("extendText:" + text);
+        }
+
         String parentId = data.getParentId();
         int parentCount = 0;
         for (int i = 0; i < parentDepth; i++) {
@@ -330,5 +369,9 @@ public class VectorStoreService {
             }
         }
         return imageList;
+    }
+
+    public List<VectorCollection> listCollections() {
+        return this.vectorStore.listCollections();
     }
 }

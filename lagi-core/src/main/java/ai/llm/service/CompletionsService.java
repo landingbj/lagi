@@ -12,11 +12,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import ai.common.ModelService;
 import ai.common.pojo.IndexSearchData;
+import ai.common.utils.ThreadPoolManager;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
+import ai.llm.utils.CacheManager;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -37,7 +40,7 @@ import weixin.tools.TulingThread;
 public class CompletionsService {
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
-    private static final int DEFAULT_MAX_TOKENS = 2048;
+    private static final int DEFAULT_MAX_TOKENS = 1024;
 
     static {
         if (tulingProcessor == null) {
@@ -111,11 +114,37 @@ public class CompletionsService {
         } else {
             for (ILlmAdapter adapter : getAdapters()) {
                 if (adapter != null) {
-                    return adapter.streamCompletions(chatCompletionRequest);
+                    ModelService modelService = (ModelService) adapter;
+                    if(!CacheManager.get(modelService.getModel())) {
+                        continue;
+                    }
+                    try {
+                        Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(chatCompletionRequest);
+                        changeModel(chatCompletionResultObservable, modelService);
+                        return chatCompletionResultObservable;
+                    }catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
             }
         }
         throw new RuntimeException("Stream backend is not enabled.");
+    }
+
+    private static void changeModel(Observable<ChatCompletionResult> chatCompletionResultObservable, ModelService modelService) {
+        ExecutorService executor = ThreadPoolManager.getExecutor("llm-model-service");
+        if(executor == null) {
+            try {
+                ThreadPoolManager.registerExecutor("llm-model-service");
+                executor = ThreadPoolManager.getExecutor("llm-model-service");
+                executor.execute(()->{
+                    chatCompletionResultObservable.subscribe(v->{}, e->{
+                        CacheManager.put(modelService.getModel(), Boolean.FALSE);
+                        System.out.println("模型报错  已未您切换");});
+                });
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private List<ILlmAdapter> getAdapters() {
@@ -135,31 +164,96 @@ public class CompletionsService {
     }
 
 
-    public void addVectorDBContext(ChatCompletionRequest request, List<IndexSearchData> indexSearchDataList) {
+    public void addVectorDBContext(ChatCompletionRequest request, String context) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
-        if (indexSearchDataList.isEmpty()) {
-            return;
-        }
-        String contextText = indexSearchDataList.get(0).getText();
-        String prompt = ChatCompletionUtil.getPrompt(contextText, lastMessage);
+        String prompt = "以下是背景信息。\\n---------------------\\n%s\\n---------------------\\n根据上下文信息而非先前知识，回答这个问题:%s\\n";
+        prompt = String.format(prompt, context, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
     }
 
-    public ChatCompletionRequest getCompletionsRequest(String prompt) {
-        return getCompletionsRequest(prompt, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS);
+    public String getRagContext(List<IndexSearchData> indexSearchDataList) {
+        if (indexSearchDataList.isEmpty()) {
+            return null;
+        }
+        String context = indexSearchDataList.get(0).getText();
+        double firstDistance = indexSearchDataList.get(0).getDistance();
+        double lastDistance = firstDistance;
+        List<Double> diffList = new ArrayList<>();
+        for (int i = 1;i < indexSearchDataList.size();i ++) {
+            if (i == 1) {
+                IndexSearchData data = indexSearchDataList.get(i);
+                double diff = data.getDistance() - firstDistance;
+                double threshold = diff / firstDistance;
+                if (threshold < 0.25) {
+                    context += "\n" + data.getText();
+                    lastDistance = data.getDistance();
+                    diffList.add(diff);
+                } else {
+                    break;
+                }
+            } else if (i == 2) {
+                IndexSearchData data = indexSearchDataList.get(i);
+                double diff = data.getDistance() - lastDistance;
+                if (diff < diffList.get(0) * 0.618) {
+                    context += "\n" + data.getText();
+                    lastDistance = data.getDistance();
+                    diffList.add(diff);
+                } else {
+                    break;
+                }
+            } else {
+                IndexSearchData data = indexSearchDataList.get(i);
+                double diff = data.getDistance() - lastDistance;
+                double average = diffList.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                if (diff < average) {
+                    context += "\n" + data.getText();
+                    lastDistance = data.getDistance();
+                    diffList.add(diff);
+                } else {
+                    break;
+                }
+            }
+        }
+        return context;
     }
 
-    public ChatCompletionRequest getCompletionsRequest(String prompt, double temperature, int maxTokens) {
+    public ChatMessage getChatMessage(String question, String role) {
+        ChatMessage message = new ChatMessage();
+        message.setRole(role);
+        message.setContent(question);
+        return message;
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(String prompt) {
+        List<ChatMessage> messages = new ArrayList<>();
+        messages.add(getChatMessage(prompt, LagiGlobal.LLM_ROLE_USER));
+        return getCompletionsRequest(messages);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(String systemPrompt, String prompt, String category) {
+        List<ChatMessage> messages = new ArrayList<>();
+        if (systemPrompt != null) {
+            messages.add(getChatMessage(systemPrompt, LagiGlobal.LLM_ROLE_SYSTEM));
+        }
+        messages.add(getChatMessage(prompt, LagiGlobal.LLM_ROLE_USER));
+        return getCompletionsRequest(messages, category);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages) {
+        return getCompletionsRequest(messages, null);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages, String category) {
+        return getCompletionsRequest(messages, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS, category);
+    }
+
+    public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages, double temperature, int maxTokens, String category) {
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(temperature);
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setMax_tokens(maxTokens);
-        List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage message = new ChatMessage();
-        message.setRole(LagiGlobal.LLM_ROLE_USER);
-        message.setContent(prompt);
-        messages.add(message);
         chatCompletionRequest.setMessages(messages);
+        chatCompletionRequest.setCategory(category);
         return chatCompletionRequest;
     }
 }

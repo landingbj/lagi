@@ -27,8 +27,4 @@ public class EmbeddingFactory {
 
         throw new IllegalArgumentException("Invalid type: " + type);
     }
-
-    public static Embeddings getEmbedding() {
-        return getEmbedding(LagiGlobal.getConfig().getLLM().getEmbedding());
-    }
 }

@@ -8,6 +8,8 @@ public interface ICache<K, V> {
 
     void put(K key, V value);
 
+    void put(K key);
+
     int size();
 
     V locate(K key);

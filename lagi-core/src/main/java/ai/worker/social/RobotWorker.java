@@ -1,6 +1,5 @@
 package ai.worker.social;
 
-import ai.agent.Agent;
 import ai.agent.AgentFactory;
 import ai.agent.AgentGlobal;
 import ai.agent.pojo.SocialAgentParam;
@@ -38,12 +37,9 @@ public class RobotWorker extends SocialWorker {
         this.running = true;
         agent.connect();
         agent.start();
-        System.out.println(111);
 
         while (running) {
-            System.out.println(22);
             SocialReceiveData receiveData = (SocialReceiveData) agent.receive();
-            System.out.println(receiveData);
             if (receiveData.getStatus().equals(AgentGlobal.SUCCESS)) {
                 String text = getCompletionResult(receiveData.getData());
                 SocialSendData sendData = new SocialSendData();

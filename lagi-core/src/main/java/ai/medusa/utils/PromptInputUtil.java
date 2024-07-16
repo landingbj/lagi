@@ -1,6 +1,7 @@
 package ai.medusa.utils;
 
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.pojo.PromptParameter;
 
 import java.util.List;
 
@@ -23,9 +24,7 @@ public class PromptInputUtil {
             return null;
         }
         return PromptInput.builder()
-                .category(promptInput.getCategory())
-                .temperature(promptInput.getTemperature())
-                .maxTokens(promptInput.getMaxTokens())
+                .parameter(promptInput.getParameter())
                 .promptList(promptList.subList(0, promptList.size() - 1))
                 .build();
     }

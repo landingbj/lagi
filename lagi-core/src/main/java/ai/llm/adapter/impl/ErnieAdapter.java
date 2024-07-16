@@ -37,11 +37,16 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         String secretKey = this.getSecretKey();
         String apiKey = this.getApiKey();
-        Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
-        ChatRequest request = convertRequest(chatCompletionRequest);
-        Iterator<ChatResponse> iterator = qianfan.chatCompletionStream(request);
-        Iterable<ChatCompletionResult> iterable = new MappingIterable<>(() -> iterator, this::convertResponse);
-        return Observable.fromIterable(iterable);
+        try {
+            Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
+            ChatRequest request = convertRequest(chatCompletionRequest);
+            Iterator<ChatResponse> iterator = qianfan.chatCompletionStream(request);
+            Iterable<ChatCompletionResult> iterable = new MappingIterable<>(() -> iterator, this::convertResponse);
+            return Observable.fromIterable(iterable);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private ChatRequest convertRequest(ChatCompletionRequest request) {

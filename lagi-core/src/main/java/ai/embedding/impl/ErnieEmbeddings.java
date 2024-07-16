@@ -32,7 +32,6 @@ public class ErnieEmbeddings implements Embeddings {
             for (BigDecimal value : data.getEmbedding()) {
                 embeddingList.add(value.floatValue());
             }
-            System.out.println(embeddingList);
             result.add(embeddingList);
         });
         return result;

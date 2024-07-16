@@ -47,21 +47,21 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
         PromptInput promptInput = item.getPromptInput();
         String question = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
 
-        List<IndexSearchData> indexSearchDataList = search(question, promptInput.getCategory());
+        List<IndexSearchData> indexSearchDataList = search(question, promptInput.getParameter().getCategory());
 
         if (indexSearchDataList.isEmpty()) {
             return result;
         }
 
         String parentId = indexSearchDataList.get(0).getId();
-        IndexSearchData childIndex = getChildIndex(parentId, promptInput.getCategory());
+        IndexSearchData childIndex = getChildIndex(parentId, promptInput.getParameter().getCategory());
 
         if (childIndex == null) {
             return result;
         }
 
         String chunk = childIndex.getText();
-        List<IndexSearchData> qaList = search(chunk, promptInput.getCategory());
+        List<IndexSearchData> qaList = search(chunk, promptInput.getParameter().getCategory());
 
         if (qaList.size() <= 1) {
             return result;
@@ -70,13 +70,11 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
             if (qa.getParentId() == null) {
                 return;
             }
-            IndexSearchData parentIndex = getParentIndex(qa.getParentId(), promptInput.getCategory());
+            IndexSearchData parentIndex = getParentIndex(qa.getParentId(), promptInput.getParameter().getCategory());
             List<String> promptList = new ArrayList<>();
             promptList.add(parentIndex.getText());
             PromptInput newPromptInput = PromptInput.builder()
-                    .maxTokens(promptInput.getMaxTokens())
-                    .temperature(promptInput.getTemperature())
-                    .category(promptInput.getCategory())
+                    .parameter(promptInput.getParameter())
                     .promptList(promptList)
                     .build();
             result.add(PooledPrompt.builder()

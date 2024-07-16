@@ -5,7 +5,6 @@ import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.LagiGlobal;
 import ai.worker.Worker;
 import ai.worker.WorkerGlobal;
 

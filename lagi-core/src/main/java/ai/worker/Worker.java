@@ -6,4 +6,5 @@ public abstract class Worker {
     public abstract void start();
 
     public abstract void stop();
+
 }

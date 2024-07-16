@@ -265,8 +265,8 @@ if(_DEBUG_1){
 				for(Producer<? extends T> p : new ArrayList<>(ThreadedProducerConsumerPipeline.this.producers)) {
 					try {
 						Collection<? extends T> obj = p.produce();
-					
-						if(obj == null) {
+
+						if(obj == null || obj.isEmpty()) {
 							unit.sleep(waitTime);
 							continue;
 						}

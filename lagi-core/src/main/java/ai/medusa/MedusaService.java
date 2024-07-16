@@ -4,83 +4,105 @@ import ai.common.utils.FastIndexList;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.pojo.PromptParameter;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptPool;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.qa.LLMConfig;
+import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 
 import java.util.List;
 import java.util.Map;
 
 public class MedusaService {
-    private static final ICache<PromptInput, ChatCompletionResult> cache;
+    private static ICache<PromptInput, ChatCompletionResult> cache;
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        switch (PromptCacheConfig.LOCATE_ALGORITHM) {
-            case "lcs":
-            case "tree":
-            case "vector":
-            case "hash":
-            default:
-                cache = CompletionCache.getInstance();
-        }
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (PromptCacheConfig.MEDUSA_ENABLE) {
+            switch (PromptCacheConfig.LOCATE_ALGORITHM) {
+                case "lcs":
+                case "tree":
+                case "vector":
+                case "hash":
+                default:
+                    cache = CompletionCache.getInstance();
+            }
             cache.startProcessingPrompt();
         }
     }
 
     public ChatCompletionResult get(PromptInput promptInput) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return null;
         }
         return cache.get(promptInput);
     }
 
     public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return;
         }
-
         cache.put(promptInput, chatCompletionResult);
     }
 
+    public void triggerCachePut(PromptInput promptInput) {
+        if (cache == null) {
+            return;
+        }
+        cache.put(promptInput, null);
+    }
+
     public ChatCompletionResult locate(PromptInput promptInput) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return null;
         }
         return get(promptInput);
     }
 
     public void load(Map<String, String> qaPair, String category) {
-        if (!PromptCacheConfig.MEDUSA_ENABLE) {
+        if (cache == null) {
             return;
         }
         for (Map.Entry<String, String> entry : qaPair.entrySet()) {
             String prompt = entry.getKey();
-            String context = entry.getValue();
-            prompt = ChatCompletionUtil.getPrompt(context, prompt);
             ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
             chatCompletionRequest.setCategory(category);
             PromptInput promptInput = getPromptInput(chatCompletionRequest);
-            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            put(promptInput, result);
+            triggerCachePut(promptInput);
         }
+    }
+
+    public PromptPool getPromptPool() {
+        if (cache == null) {
+            return null;
+        }
+        return cache.getPromptPool();
     }
 
     public PromptInput getPromptInput(ChatCompletionRequest chatCompletionRequest) {
         List<String> promptList = new FastIndexList<>();
         List<ChatMessage> messages = chatCompletionRequest.getMessages();
-        for (int i = 0; i < messages.size(); i = i + 2) {
-            ChatMessage message = messages.get(i);
-            promptList.add(message.getContent());
+        String systemPrompt = null;
+        for (ChatMessage message : messages) {
+            if (message.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
+                promptList.add(message.getContent());
+            } else if (message.getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
+                systemPrompt = message.getContent();
+            }
         }
-        return PromptInput.builder()
+        PromptParameter parameter = PromptParameter.builder()
                 .maxTokens(chatCompletionRequest.getMax_tokens())
-                .promptList(promptList)
                 .temperature(chatCompletionRequest.getTemperature())
                 .category(chatCompletionRequest.getCategory())
+                .systemPrompt(systemPrompt)
+                .build();
+        return PromptInput.builder()
+                .promptList(promptList)
+                .parameter(parameter)
                 .build();
     }
 }

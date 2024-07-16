@@ -1,5 +1,6 @@
 package ai.llm.utils;
 
+import ai.common.ModelService;
 import ai.common.utils.ObservableList;
 import ai.openai.pojo.ChatCompletionResult;
 import okhttp3.*;
@@ -8,19 +9,24 @@ import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class ServerSentEventUtil {
-    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func) {
-        return streamCompletions(json, apiUrl, apiKey, new HashMap<>(), func);
+
+
+    private static final Logger log = LoggerFactory.getLogger(ServerSentEventUtil.class);
+
+    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func, ModelService modelService) {
+        return streamCompletions(json, apiUrl, apiKey, new HashMap<>(), func, modelService);
     }
-    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Map<String,String> addHeader , Function<String, ChatCompletionResult> func) {
+    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Map<String,String> addHeader , Function<String, ChatCompletionResult> func, ModelService modelService) {
         OkHttpClient client = new OkHttpClient.Builder()
 //                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
                 .connectTimeout(10, TimeUnit.SECONDS)
@@ -58,9 +64,17 @@ public class ServerSentEventUtil {
             @Override
             public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
                 if (t != null) {
+                    if(t instanceof SocketTimeoutException) {
+                        log.error("sockt time out");
+                        CacheManager.put(modelService.getModel(), Boolean.FALSE);
+                        log.error("sockt time out model will be disconnected");
+////                        modelService.setPriority(0);
+                        closeConnection(eventSource);
+//                        result.add("");
+//                        result.onComplete();
+                    }
                     t.printStackTrace();
                 }
-                closeConnection(eventSource);
             }
 
             @Override

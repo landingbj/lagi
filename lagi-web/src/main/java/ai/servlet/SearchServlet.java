@@ -108,57 +108,6 @@ public class SearchServlet extends RestfulServlet {
 
     }
 
-
-    @Post("uploadVoice")
-    public void uploadVoice(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String allowedOrigin = "https://localhost";
-        response.setHeader("Access-Control-Allow-Origin", allowedOrigin);
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        Part filePart = request.getPart("audioFile");
-
-        String fileName = getFileName(filePart);
-
-        String os = System.getProperty("os.name").toLowerCase();
-
-        String tempFolder;
-        if (os.contains("win")) {
-            tempFolder = "C:\\temp\\";
-        } else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
-            tempFolder = "/tmp/";
-        } else {
-            tempFolder = "/var/tmp/";
-        }
-
-        File tempDir = new File(tempFolder);
-        if (!tempDir.exists()) {
-            tempDir.mkdirs(); // 创建临时文件夹及其父文件夹（如果不存在）
-        }
-
-        String savePath = tempFolder;
-        String resPath = savePath + fileName;
-        String result = null;
-        try (InputStream input = filePart.getInputStream();
-             OutputStream output = new FileOutputStream(savePath + fileName)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = input.read(buffer)) != -1) {
-                output.write(buffer, 0, bytesRead);
-            }
-            result = audioService.getVoiceResult(resPath);
-        } catch (IOException e) {
-            result = gson.toJson(new WhisperResponse(1, "识别失败"));
-            e.printStackTrace();
-        }
-
-        response.setHeader("Content-Type", "application/json;charset=utf-8");
-        PrintWriter out = response.getWriter();
-        out.print(result);
-        out.flush();
-        out.close();
-    }
-
     @Post("uploadFile")
     public void uploadFile(HttpServletRequest request,
                            HttpServletResponse response) throws ServletException, IOException {
@@ -347,10 +296,8 @@ public class SearchServlet extends RestfulServlet {
             String partResult;
             try {
                 while (!(partResult = queue.take()).equals("[CLOSED]")) {
-                    System.out.println("partResult: " + partResult);
                     out.print("data: " + partResult + "\n\n");
                     out.flush();
-//                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

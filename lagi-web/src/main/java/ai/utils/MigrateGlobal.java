@@ -20,9 +20,7 @@ public class MigrateGlobal {
     public static Configuration config;
 
     static {
-
-        ContextLoader.loadContext();
-        config = ContextLoader.configuration.transformToConfiguration();
+        config = LagiGlobal.loadConfig();
 
         VICUNA_INDEX_URL = "http://ec2-52-82-51-248.cn-northwest-1.compute.amazonaws.com.cn:8200";
         ADD_DOC_INDEX_URL = VICUNA_INDEX_URL + "/index/add_doc";

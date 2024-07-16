@@ -12,7 +12,5 @@ import java.util.List;
 @EqualsAndHashCode
 public class PromptInput implements Serializable {
     private List<String> promptList;
-    private Double temperature;
-    private Integer maxTokens;
-    private String category;
+    private PromptParameter parameter;
 }
