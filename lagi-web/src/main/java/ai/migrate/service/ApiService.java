@@ -165,8 +165,9 @@ public class ApiService {
     public String motInference(String lastVideoFile, HttpServletRequest req) throws IOException {
         File file = new File(lastVideoFile);
         VideoJobResponse track = videoService.track(VideoTackRequest.builder().videoUrl(file.getAbsolutePath()).build());
+
         JsonObject result = new JsonObject();
-        if (track != null) {
+        if (track == null) {
             result.addProperty("status", "failed");
             return gson.toJson(result);
         }
