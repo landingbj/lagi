@@ -413,7 +413,7 @@ Return the data structure:
 | status      | string   | true | Service status code      |
 | 》document   | string   | true | The hit problem                   |
 | 》id         | string   | true | The data id                  |
-| 》distance   | flat     | true | Upload the status of the private training file              |
+| 》distance   | flat     | true | Vector distance              |
 | 》metadata   | [object] | true | Uploading object information                 |
 | 》》category  | string   | true | The specified data class               |
 | 》》level     | string   | true | Upload the status of the private training file              |

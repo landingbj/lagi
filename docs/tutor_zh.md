@@ -413,7 +413,7 @@ Lag[i] 提供了动态切换模型的功能，您可以在配置文件中设置�
 | status       | string   | true | 服务状态码。                  |
 | 》document    | string   | true | 命中问题                    |
 | 》id          | string   | true | 该数据id                   |
-| 》distance    | flat     | true | 上传私训文件的状态               |
+| 》distance    | flat     | true | 向量距离                    |
 | 》metadata    | [object] | true | 上传对象信息                  |
 | 》》category   | string   | true | 指定的数据类别                 |
 | 》》level      | string   | true | 上传私训文件的状态               |
