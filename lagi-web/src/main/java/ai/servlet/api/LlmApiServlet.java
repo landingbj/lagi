@@ -167,7 +167,10 @@ public class LlmApiServlet extends BaseServlet {
                 ChatMessage message = lastResult[0].getChoices().get(i).getMessage();
                 message.setContent("");
                 message.setContext(indexData.getText());
-                message.setFilename(indexData.getFilename());
+                if (!(indexData.getFilename() != null && indexData.getFilename().size() == 1
+                        && indexData.getFilename().get(0).isEmpty())) {
+                    message.setFilename(indexData.getFilename());
+                }
                 message.setFilepath(indexData.getFilepath());
                 message.setImageList(imageList);
             }

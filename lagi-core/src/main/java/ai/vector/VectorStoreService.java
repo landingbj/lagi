@@ -266,8 +266,8 @@ public class VectorStoreService {
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
         indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
         String filename = (String) indexRecord.getMetadata().get("filename");
-        if (filename != null && !filename.isEmpty()) {
-            indexSearchData.setFilename(Collections.singletonList((String) indexRecord.getMetadata().get("filename")));
+        if (filename != null) {
+            indexSearchData.setFilename(Collections.singletonList(filename));
         }
         if (indexRecord.getMetadata().get("filepath") != null) {
             indexSearchData.setFilepath(Collections.singletonList((String) indexRecord.getMetadata().get("filepath")));
@@ -316,15 +316,15 @@ public class VectorStoreService {
     }
 
     public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
-        String text = data.getText();
+        String text = data.getText().trim();
 
-        if (data.getFilename() != null && data.getFilename().isEmpty()) {
+        if (data.getFilename() != null && data.getFilename().size() == 1
+                && data.getFilename().get(0).isEmpty()) {
             if (data.getParentId() == null) {
                 text = text + "\n";
             } else {
                 text = "\n" + text;
             }
-            System.out.println("extendText:" + text);
         }
 
         String parentId = data.getParentId();
