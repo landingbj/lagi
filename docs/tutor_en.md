@@ -416,7 +416,7 @@ Return the data structure:
 | 》distance   | flat     | true | Vector distance              |
 | 》metadata   | [object] | true | Uploading object information                 |
 | 》》category  | string   | true | The specified data class               |
-| 》》level     | string   | true | Upload the status of the private training file              |
+| 》》level     | string   | true | Upload a username              |
 | 》》parent_id | string   | false | The id of the question to which this answer corresponds (usually only appears in an answer) |
 
 
