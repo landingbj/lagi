@@ -241,6 +241,221 @@ Online switching:
 
 If you are not satisfied with the large model or vector database that Lag[i] has adapted，You can refer to [Extension documentation](extend_cn.md)，Extend Lag[i] to fit your favorite large model or vector database.
 
+## 9. Training the model
+
+You can integrate internal data information into Lag[i] by uploading question-answer pairs, thereby customizing the training of a dedicated large model. During the model training process, the `distance` represents the similarity between your question and the uploaded question-answer pairs; the smaller the value, the higher the similarity. If the most matching question-answer pair identified by the model does not align with the actual intent of your question, you can further optimize the model’s performance by adding or deleting question-answer pairs. By continuously adjusting and optimizing your question-answer data, you can gradually enhance the model’s understanding of your questions, thus improving the accuracy of the system.
+
+### 1.Upload data
+
+You can use the `POST /training/pairing` endpoint to upload your own Q&A pairs.
+
+| Name         | Position | Type     | Required | Description  |
+|--------------|-------|--------------------|---------|---------|
+| categ ory    | body  | string             | true    | The specified data class |
+| data         | body  | [object] or object | true    | Question and answer pairs of data, supporting objects or lists of objects  |
+| 》instruction | body  | string             | true    | The problem     |
+| 》output      | body  | string             | true    | The answer     |
+
+Example request is as follows(one to one):
+
+```json
+{
+    "category": "default",
+    "data": {
+        "instruction": "What are the steps in the whole process of reapplying for a doctor's practice certificate?",
+        "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+    }
+}
+```
+
+Example batch request is as follows(one to one):
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": "What are the steps in the whole process of reapplying for a doctor's practice certificate?",
+            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+        },
+        {
+            "instruction": "The process of reapplying for medical practice certificate includes five steps:  declaration/receipt, acceptance, decision, certification and issuance.",
+            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+        }
+    ]
+}
+```
+
+Example request is as follows(many to one):
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": [
+                "What are the steps in the whole process of reapplying for a doctor's practice certificate?",
+                "What are the links in the process of reapplying for doctor's practice certificate?"
+            ],
+            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+        }
+    ]
+}
+```
+
+Return list:
+
+```json
+{
+    "status": "success"
+}
+```
+
+Return the data structure:
+
+| Name | Type | required | Description |
+|---------|----------|-------|-------------|
+| result  | boolean  | true  | Upload the status of the private training file   |
+
+
+### 2.verification
+
+If there is a discrepancy between the model’s response and your answer, you can use the `POST /v1/vector/query` interface to view your answer.
+
+example request is as follows:
+
+```json
+{
+    "text": "Where can I leave my luggage?", 
+    "n": 6,
+    "where": {},
+    "category": "default"
+}
+```
+
+| Name | location | type               | required | Description |
+|----------|------|--------------------|----------|---------|
+| text     | body | string             | true     | The problem      |
+| n        | body | integer            | true     | Number of responses   |
+| where    | body | [object] or object | true     | Condition      |
+| category | body | string             | true     | The specified data class |
+
+Return list:
+
+```json
+{
+  "data": [
+    {
+      "document": "Where can I leave my luggage?\n",
+      "id": "a5a74ace0f7d4339b52feb8900c6dc77",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.041246016
+    },
+    {
+      "document": "Where can I leave my luggage?\n",
+      "id": "16061c3e59344544987806ed457285a2",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.22894014
+    },
+    {
+      "document": "What are the requirements for luggage storage\n",
+      "id": "80a5d0abcf804e16b0227c95e48c671e",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.31431544
+    },
+    {
+      "document": "How long can I keep my luggage\n",
+      "id": "1aceb011d1c947e6acfdf8c7d389c852",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.3469293
+    },
+    {
+      "document": "How much do you charge for luggage storage\n",
+      "id": "ace15a4357a24b5aa2af148847f3e757",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.36549693
+    },
+    {
+      "document": "Hello, the luggage storage will be charged according to the size of your luggage. According to the size, there are 10, 15, 20 yuan per piece. Storage for 24 hours a day, less than 24 hours according to 24 hours, specific charges subject to the site. Inflammable, explosive, corrosive, radioactive and other dangerous goods shall not be stored. Valuables such as computers with a single value of more than 2000 yuan, perishable and perishable live objects, power banks, lithium batteries, urns, etc. will not be stored.",
+      "id": "f6c500e9f8814e6089fe90b640777165",
+      "metadata": {
+        "category": "default",
+        "level": "user",
+        "parent_id": "ace15a4357a24b5aa2af148847f3e757"
+      },
+      "distance": 0.36806005
+    }
+  ],
+  "status": "success"
+}
+```
+
+Return the data structure:
+
+| Name        | Type     | required | Description |
+|-------------|----------|------|------------------------|
+| data        | [object] | true | A list of selections       |
+| status      | string   | true | Service status code      |
+| 》document   | string   | true | The hit problem                   |
+| 》id         | string   | true | The data id                  |
+| 》distance   | flat     | true | Upload the status of the private training file              |
+| 》metadata   | [object] | true | Uploading object information                 |
+| 》》category  | string   | true | The specified data class               |
+| 》》level     | string   | true | Upload the status of the private training file              |
+| 》》parent_id | string   | false | The id of the question to which this answer corresponds (usually only appears in an answer) |
+
+
+### 3.Questions and Answers Removed
+
+If certain Q&A pairs are irrelevant to your overall question set or of lower quality, you can remove them from the dataset using the `POST /v1/vector/deleteByld` interface to avoid any negative impact on model training.
+
+Example request is as follows:
+
+```json
+{
+    "category":"default",
+    "ids":[
+        "a4ac6c2511e94a54b454f1daaa270ee5"
+    ]
+}
+```
+
+Request data structure:
+
+| Name | location | type | required | Description |
+|----------|------|----------------|----------|---------|
+| category | body | string         | true     | The specified data class |
+| ids      | body | List< string > | true     | Data id set  |
+
+Return list:
+
+```json
+{
+    "status": "success"
+}
+```
+
+Return the data structure:
+
+| Name | Type | required | Description |
+|---------|----------|----------|---|
+| status  | string   | true     | Service status code|
+
 ## Summary
 
 With this tutorial, you have successfully integrated Lag[i] into your project and can start using the various AI features Lag[i] provides. Lag[i] 's power and flexible scalability can help you easily apply big model technology to your business, improving user experience and efficiency.
