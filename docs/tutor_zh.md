@@ -241,6 +241,221 @@ Lag[i] 提供了动态切换模型的功能，您可以在配置文件中设置�
 
 如果您对 Lag[i] 已适配的大模型或向量数据库不满意，您可以参考[扩展文档](extend_cn.md)，对 Lag[i] 进行扩展，适配您喜欢的大模型或向量数据库。
 
+## 9. 私训问答对
+
+您可以通过上传问答对的形式，将内部数据信息集成至Lag[i]，从而定制训练一个专属的大模型。模型训练过程中`distance`代表您的问题与上传的问答对之间的距离，该值越小，说明您的问题与上传的问答对越相似度越高。如果模型识别的最匹配问答对与您问题的实际意图不符，您可以采取问答对的新增，删除来进一步优化模型的性能。通过不断地调整和优化您的问答对数据，您可以逐步提高模型对您问题的理解能力，从而提高系统的准确性。
+
+### 1.上传问答对
+
+您可以使用`POST /training/pairing`接口，上传特定的问答对。
+
+| 名称           | 位置    | 类型                 | 必选 | 说明      |
+|--------------|-------|--------------------|----|---------|
+| categ ory    | body  | string             | 是  | 指定的数据类别 |
+| data         | body  | [object] or object | 是  | 问答对数据，支持对象或对象列表  |
+| 》instruction | body  | string             | 是  | 问题      |
+| 》output      | body  | string             | 是  | 答案      |
+
+如上传单个问答对，请求示例如下（一对一）：
+
+```json
+{
+    "category": "default",
+    "data": {
+        "instruction": "补办医师执业证书的整个流程包括哪些步骤？",
+        "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+    }
+}
+```
+
+如上传多个问答对，请求示例如下（一对一）：
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": "补办医师执业证书的整个流程包括哪些步骤？",
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+        },
+        {
+            "instruction": "医师执业证书补办流程有哪些环节？",
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+        }
+    ]
+}
+```
+
+如上传单个问答对，请求示例如下（多对一）：
+
+```json
+{
+    "category": "default",
+    "data": [
+        {
+            "instruction": [
+                "补办医师执业证书的整个流程包括哪些步骤？",
+                "医师执业证书补办流程有哪些环节？"
+            ],
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+        }
+    ]
+}
+```
+
+返回示列：
+
+```json
+{
+    "status": "success"
+}
+```
+
+返回数据结构:
+
+| 名称     | 类型     | 必选    |说明|
+|---------|----------|-------|---|
+| result  | boolean  | true  |上传私训文件的状态|
+
+
+### 2.问答校验
+
+如模型响应的答案和您的答案之间存在差异，您可以使用`POST /v1/vector/query`接口，查看您的答案。
+
+请求示例如下：
+
+```json
+{
+    "text": "哪能寄存行李？", 
+    "n": 6,
+    "where": {},
+    "category": "default"
+}
+```
+
+| 名称      | 位置  | 类型                 | 必选 | 说明      |
+|----------|------|--------------------|----|---------|
+| text     | body | string             | true  | 问题      |
+| n        | body | integer            | true  | 回答的条数   |
+| where    | body | [object] or object | true  | 条件      |
+| category | body | string             | true  | 指定的数据类别 |
+
+返回示列：
+
+```json
+{
+  "data": [
+    {
+      "document": "哪能寄存行李？\n",
+      "id": "a5a74ace0f7d4339b52feb8900c6dc77",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.041246016
+    },
+    {
+      "document": "行李寄存在哪？\n",
+      "id": "16061c3e59344544987806ed457285a2",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.22894014
+    },
+    {
+      "document": "行李寄存有什么要求\n",
+      "id": "80a5d0abcf804e16b0227c95e48c671e",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.31431544
+    },
+    {
+      "document": "行李寄存可以寄存多久\n",
+      "id": "1aceb011d1c947e6acfdf8c7d389c852",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.3469293
+    },
+    {
+      "document": "行李寄存如何收费\n",
+      "id": "ace15a4357a24b5aa2af148847f3e757",
+      "metadata": {
+        "category": "default",
+        "level": "user"
+      },
+      "distance": 0.36549693
+    },
+    {
+      "document": "您好，行李寄存会按照您行李尺寸规格收费，根据尺寸有10、15、20元每件不等。寄存以24小时为一天，不足24小时的按24小时计，具体收费以现场为准。易燃、易爆、腐蚀、放射性等危险品不得寄存。贵重物品如电脑，单品价值超过2000元、易腐易烂活体、充电宝、锂电池、骨灰盒等不予以寄存。",
+      "id": "f6c500e9f8814e6089fe90b640777165",
+      "metadata": {
+        "category": "default",
+        "level": "user",
+        "parent_id": "ace15a4357a24b5aa2af148847f3e757"
+      },
+      "distance": 0.36806005
+    }
+  ],
+  "status": "success"
+}
+```
+
+返回数据结构:
+
+| 名称           | 类型       | 必选   | 说明                      |
+|--------------|----------|------|-------------------------|
+| data         | [object] | true | 选择的列表                   |
+| status       | string   | true | 服务状态码。                  |
+| 》document    | string   | true | 命中问题                    |
+| 》id          | string   | true | 该数据id                   |
+| 》distance    | flat     | true | 上传私训文件的状态               |
+| 》metadata    | [object] | true | 上传对象信息                  |
+| 》》category   | string   | true | 指定的数据类别                 |
+| 》》level      | string   | true | 上传私训文件的状态               |
+| 》》parent_id  | string   | false | 该条答案对应问题的id(一般只会在答案中出现) |
+
+
+### 3.问答删除
+
+如果某些问答对与您的整体问题集不相关或质量较低，您可以通过 `POST /v1/vector/deleteByld`接口将其从数据集中移除，以避免对模型训练产生负面影响。
+
+请求示例如下：
+
+```json
+{
+    "category":"default",
+    "ids":[
+        "a4ac6c2511e94a54b454f1daaa270ee5"
+    ]
+}
+```
+
+请求数据结构:
+
+| 名称       | 位置  | 类型             | 必选    | 说明      |
+|----------|------|----------------|-------|---------|
+| category | body | string         | true  | 指定的数据类别 |
+| ids      | body | List< string > | true  | 数据id集合  |
+
+返回示列：
+
+```json
+{
+    "status": "success"
+}
+```
+
+返回数据结构
+
+| 名称     | 类型     | 必选    |说明|
+|---------|----------|-------|---|
+| status  | string   | true | 服务状态码|
+
 ## 总结
 
 通过本教程，您已经成功地将 Lag[i] 集成到您的项目中，并可以开始使用 Lag[i] 提供的各种 AI 功能。Lag[i] 的强大功能和灵活的扩展性可以帮助您轻松地将大模型技术应用到您的业务中，提升用户体验和效率。
