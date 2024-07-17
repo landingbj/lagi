@@ -416,7 +416,7 @@ Return the data structure:
 | 》distance   | flat     | true | Vector distance              |
 | 》metadata   | [object] | true | Uploading object information                 |
 | 》》category  | string   | true | The specified data class               |
-| 》》level     | string   | true | Upload a username              |
+| 》》level     | string   | true | Upload role              |
 | 》》parent_id | string   | false | The id of the question to which this answer corresponds (usually only appears in an answer) |
 
 
@@ -455,6 +455,35 @@ Return the data structure:
 | Name | Type | required | Description |
 |---------|----------|----------|---|
 | status  | string   | true     | Service status code|
+
+### 4.Private training Q&A optimization
+
+You can improve the model's understanding of your questions and thus enhance system accuracy through methods such as improving data quality, optimizing question-answer matching, adjusting hyperparameters, continuous monitoring, and updates.
+
+2. **Improving Data Quality**
+
+   Data cleaning: Ensure the quality of the training dataset by removing invalid, erroneous, or duplicate data to enhance data accuracy.
+
+   Data preprocessing: Standardize text, perform stemming or lemmatization to enhance the diversity and representativeness of questions, ensuring coverage of various scenarios and contexts to improve the model's generalization ability.
+
+2. **Question answer pair matching**
+
+   Increasing relevance: Ensure the correlation between questions and answers, avoiding irrelevant or low-quality question-answer pairs. This can involve adding or removing related question data based on similarity distance.
+
+   Balancing data distribution: Balance the distribution of different categories of questions and answers to avoid over-concentration in any one category. This may involve adding or removing related question data accordingly.
+
+4. **Tuning hyperparameters**
+
+   Hyperparameter tuning: Improve the performance and stability of the model by tuning the hyperparameters of the model.
+
+   For example:   
+   The hyperparameter temperature, when close to 0, causes the model's output distribution to become more concentrated, favoring the highest-probability outputs, thereby making generated text or decisions more certain and predictable. As temperature approaches infinity, the model's output distribution becomes more uniform, resulting in greater diversity and randomness.
+
+   Iterative training: The performance of the model is gradually optimized through multiple iterations of training.
+
+4. **Tuning hyperparameters**
+
+   Continuous monitoring and updates: Regularly monitor the model's performance in practical applications, and promptly update the model or training data to address data obsolescence issues.
 
 ## Summary
 

@@ -129,16 +129,16 @@ POST /chat/completions
 
 ### 请求参数
 
-| 名称          | 位置 | 类型     | 必选 | 说明                                           |
-| ------------- | ---- | -------- | ---- |----------------------------------------------|
-| body          | body | object   | 否   | none                                         |
-| » model       | body | string   | 否   | 模型类型                                         |
-| » temperature | body | number   | 是   | 使用什么样的采样温度                                   |
-| » max_tokens  | body | integer  | 是   | 可以生成的最大token数。                               |
-| » category    | body | string   | 否   | 数据类别                                         |
-| » messages    | body | [object] | 是   | 提交的消息列表                                      |
-| »» role       | body | string   | 否   | user或者assistant, user表示用户提交，assistant表示大模型输出 |
-| »» content    | body | string   | 否   | 请求内容                                         |
+| 名称          | 位置 | 类型     | 必选 | 说明                                                                          |
+| ------------- | ---- | -------- | ---- |-----------------------------------------------------------------------------|
+| body          | body | object   | 否   | none                                                                        |
+| » model       | body | string   | 否   | 模型类型                                                                        |
+| » temperature | body | number   | 是   | 用来控制语言模型生成文本的创造性和多样性的参数，范围再0-1之间，调低温度会让模型生成更加确定和高概率的文本，而调高温度则会增加文本的随机性和多样性。 |
+| » max_tokens  | body | integer  | 是   | 可以生成的最大token数。                                                              |
+| » category    | body | string   | 否   | 数据类别                                                                        |
+| » messages    | body | [object] | 是   | 提交的消息列表                                                                     |
+| »» role       | body | string   | 否   | user或者assistant, user表示用户提交，assistant表示大模型输出                                |
+| »» content    | body | string   | 否   | 请求内容                                                                        |
 
 ### 返回示例
 
