@@ -95,9 +95,7 @@ public class CompletionsService {
             List<ChatCompletionResult> resultMatrix = (List<ChatCompletionResult>) contain.Init().running();
             if (resultMatrix.get(0) != null) {
                 answer = resultMatrix.get(0);
-                if (SensitiveWordUtil.containSensitiveWord(answer)) {
-                    return null;
-                }
+                answer = SensitiveWordUtil.filter(answer);
             }
         }
 

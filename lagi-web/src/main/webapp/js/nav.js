@@ -172,7 +172,7 @@ function genNavItems(navs) {
     for (let index = 0; index < navs.length; index++) {
         const nav = navs[index];
         let group = nav.group == undefined ? 1 : nav.group;
-        let style = group == g ? '' :  'style="margin-top:3em"';
+        let style = group == g ? '' :  'style="margin-top:1em"';
         if (g != group) {
             g = group;
         }

@@ -390,23 +390,18 @@ public class SearchServlet extends RestfulServlet {
 //                System.out.println("Received event: " + data);
                 if (!data.equals("[DONE]")) {
                     ChatCompletionResult chatCompletionResult = gson.fromJson(data, ChatCompletionResult.class);
+                    SensitiveWordUtil.filter(chatCompletionResult);
                     chatCompletionResult.getChoices().get(0).getDelta().getContent();
                     String chunk = chatCompletionResult.getChoices().get(0).getDelta().getContent();
                     if (chunk != null) {
                         tempChunk += chunk;
                         allContent += chunk;
                     }
-                    if (SensitiveWordUtil.containSensitiveWord(allContent)) {
-                        responseWithContext.setText("......");
+                    if (tempChunk.getBytes(StandardCharsets.UTF_8).length >= 2) {
+                        responseWithContext.setText(tempChunk);
                         queue.add(gson.toJson(responseWithContext));
-                        queue.add("[DONE]");
-                    } else {
-                        if (tempChunk.getBytes(StandardCharsets.UTF_8).length >= 2) {
-                            responseWithContext.setText(tempChunk);
-                            queue.add(gson.toJson(responseWithContext));
-                            tempChunk = "";
-                            responseWithContext.setText(tempChunk);
-                        }
+                        tempChunk = "";
+                        responseWithContext.setText(tempChunk);
                     }
                 } else {
                     if (!tempChunk.isEmpty()) {

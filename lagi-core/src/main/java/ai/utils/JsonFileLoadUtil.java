@@ -1,5 +1,6 @@
 package ai.utils;
 
+import cn.hutool.json.JSONUtil;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
@@ -34,4 +35,22 @@ public class JsonFileLoadUtil {
         }
         return result;
     }
+
+
+    public static<T> T readWordLRulesList(String resPath, Class<T> tClass) {
+        String content = "{}";
+        try (InputStream in = JsonFileLoadUtil.class.getResourceAsStream(resPath);) {
+            if (in == null) {
+                return null;
+            }
+            content = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
+                    .lines()
+                    .collect(Collectors.joining("\n"));
+            return JSONUtil.toBean(content, tClass);
+        } catch (Exception ignored) {
+
+        }
+        return null;
+    }
+
 }

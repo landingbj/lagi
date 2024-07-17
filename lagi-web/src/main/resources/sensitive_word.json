@@ -1,3 +1,6 @@
-[
-  "openai"
-]
+{
+  "mask": "...",
+  "rules": [
+    {"rule":"OPENAI","level": 2}
+  ]
+}

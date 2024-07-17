@@ -29,6 +29,7 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
+import ai.utils.SensitiveWordUtil;
 import ai.vector.VectorCacheLoader;
 import cn.hutool.json.JSONUtil;
 import io.reactivex.Observable;
@@ -126,7 +127,8 @@ public class LlmApiServlet extends BaseServlet {
         observable.subscribe(
                 data -> {
                     lastResult[0] = data;
-                    String msg = gson.toJson(data);
+                    ChatCompletionResult filter = SensitiveWordUtil.filter(data);
+                    String msg = gson.toJson(filter);
                     out.print("data: " + msg + "\n\n");
                     out.flush();
                     if (lastResult[1] == null) {

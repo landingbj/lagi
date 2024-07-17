@@ -1,34 +1,96 @@
 package ai.utils;
 
+import ai.common.pojo.WordRule;
+import ai.common.pojo.WordRules;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionResult;
+import cn.hutool.core.util.StrUtil;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SensitiveWordUtil {
-    private static final AhoCorasick ahoCorasick = new AhoCorasick();
+
+    private static Map<String, WordRule> ruleMap = new HashMap<>();
 
     static {
-        List<String> sensitiveWordList = JsonFileLoadUtil.readWordListJson("/sensitive_word.json");
-        ahoCorasick.addWords(sensitiveWordList);
-    }
 
-    public static boolean containSensitiveWord(ChatCompletionResult chatCompletionResult) {
-        List<ChatCompletionChoice> choices = chatCompletionResult.getChoices();
-        for (ChatCompletionChoice choice : choices) {
-            String message = choice.getMessage().getContent().toLowerCase();
-            if (ahoCorasick.containsAny(message)) {
-                return true;
+        WordRules wordRules = JsonFileLoadUtil.readWordLRulesList("/sensitive_word.json", WordRules.class);
+        if(wordRules != null) {
+            if(wordRules.getRules() != null) {
+                ruleMap = wordRules.getRules().stream()
+                        .filter(r-> StrUtil.isNotBlank(r.getRule()))
+                        .peek(r-> {
+                            r.setRule(r.getRule().toLowerCase());
+                            if(r.getMask() == null) {
+                                r.setMask(wordRules.getMask());
+                            }
+                            if(r.getLevel() == null) {
+                                r.setLevel(wordRules.getLevel());
+                            }
+                        })
+                        .collect(Collectors.toMap(WordRule::getRule, r->r));
             }
         }
-        return false;
+        System.out.println(ruleMap);
     }
 
-    public static boolean containSensitiveWord(String message) {
-        if (ahoCorasick.containsAny( message.toLowerCase())) {
-            return true;
+
+    public static ChatCompletionResult filter(ChatCompletionResult chatCompletionResult) {
+        Set<String> rules = ruleMap.keySet();
+        for(ChatCompletionChoice choice: chatCompletionResult.getChoices()) {
+            for (String rule : rules) {
+                Pattern p = Pattern.compile(rule);
+                String message = choice.getMessage().getContent().toLowerCase();
+                Matcher matcher = p.matcher(choice.getMessage().getContent().toLowerCase());
+                if(matcher.find()) {
+                    WordRule wordRule = ruleMap.get(rule);
+                    if(wordRule != null) {
+                        if(wordRule.getLevel() == 1) {
+                            choice.getMessage().setContent("");
+                        }else if(wordRule.getLevel() == 2) {
+                            String s = message.replaceAll(rule, wordRule.getMask());
+                            choice.getMessage().setContent(s);
+                        } else if(wordRule.getLevel() == 3) {
+                            String s = message.replaceAll(rule, "");
+                            choice.getMessage().setContent(s);
+                        }
+                    }
+                }
+            }
         }
-        return false;
+        return chatCompletionResult;
+    }
+
+    public static String filter(String message) {
+        Set<String> rules = ruleMap.keySet();
+        String lowerCase = message.toLowerCase();
+        for (String rule : rules) {
+            Pattern p = Pattern.compile(rule);
+            Matcher matcher = p.matcher(lowerCase);
+            if(matcher.find()) {
+                WordRule wordRule = ruleMap.get(rule);
+                if(wordRule != null) {
+                    if(wordRule.getLevel() == 1) {
+                        return "";
+                    }else if(wordRule.getLevel() == 2) {
+                       return lowerCase.replaceAll(rule, wordRule.getMask());
+                    } else if(wordRule.getLevel() == 3) {
+                        return lowerCase.replaceAll(rule, "");
+                    }
+                }
+            }
+        }
+        return message;
+    }
+
+
+    public static void main(String[] args) {
+
     }
 
 }
