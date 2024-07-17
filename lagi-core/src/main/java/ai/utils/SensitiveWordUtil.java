@@ -36,7 +36,6 @@ public class SensitiveWordUtil {
                         .collect(Collectors.toMap(WordRule::getRule, r->r));
             }
         }
-        System.out.println(ruleMap);
     }
 
 
