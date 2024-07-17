@@ -41,9 +41,15 @@ public class SensitiveWordUtil {
 
     public static ChatCompletionResult filter(ChatCompletionResult chatCompletionResult) {
         Set<String> rules = ruleMap.keySet();
+        if(chatCompletionResult == null || chatCompletionResult.getChoices() ==null || chatCompletionResult.getChoices().isEmpty()) {
+            return chatCompletionResult;
+        }
         for(ChatCompletionChoice choice: chatCompletionResult.getChoices()) {
             for (String rule : rules) {
                 Pattern p = Pattern.compile(rule);
+                if(choice.getMessage() ==null || choice.getMessage().getContent() == null) {
+                    continue;
+                }
                 String message = choice.getMessage().getContent().toLowerCase();
                 Matcher matcher = p.matcher(choice.getMessage().getContent().toLowerCase());
                 if(matcher.find()) {
