@@ -18,6 +18,7 @@ import ai.medusa.MedusaService;
 import ai.medusa.pojo.InstructionData;
 import ai.medusa.pojo.InstructionPairRequest;
 import ai.migrate.service.UploadFileService;
+import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,6 +103,7 @@ public class UploadFileServlet extends HttpServlet {
                             .withMetadata(new HashMap<>(metadata))
                             .withDocument(output)
                             .build());
+                    VectorCacheLoader.put2L2(instruction, output);
                     vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
                 }
             }

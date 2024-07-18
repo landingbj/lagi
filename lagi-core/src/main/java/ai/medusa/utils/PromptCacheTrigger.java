@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class PromptCacheTrigger {
-    private final Logger log = LoggerFactory.getLogger(PromptCacheTrigger.class);
+    private static final Logger log = LoggerFactory.getLogger(PromptCacheTrigger.class);
     private final CompletionsService completionsService = new CompletionsService();
     private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
     private static final double LCS_RATIO_QUESTION = PromptCacheConfig.LCS_RATIO_QUESTION;
@@ -156,7 +156,7 @@ public class PromptCacheTrigger {
     }
 
 
-    public int analyzeChatBoundariesForIntent(ChatCompletionRequest chatCompletionRequest) {
+    public static int analyzeChatBoundariesForIntent(ChatCompletionRequest chatCompletionRequest) {
         int startIndex = 0;
 
         if (chatCompletionRequest.getMessages().size() < 3) {

@@ -30,8 +30,11 @@ import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
+import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +101,18 @@ public class LlmApiServlet extends BaseServlet {
         List<IndexSearchData> indexSearchDataList;
         String context = null;
         if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
+            String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+            String answer = VectorCacheLoader.get2L2(lastMessage);
+            if(StrUtil.isNotBlank(answer)) {
+                ChatCompletionResult temp = new ChatCompletionResult();
+                ChatCompletionChoice choice = new ChatCompletionChoice();
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setContent(answer);
+                choice.setMessage(chatMessage);
+                temp.setChoices(Lists.newArrayList(choice));
+                responsePrint(resp, toJson(temp));
+                return;
+            }
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
