@@ -101,4 +101,13 @@ public class VectorCacheLoader {
         return null;
     }
 
+
+    public static List<IndexSearchData> getFromL2Near(String question, int nearNum) {
+        List<IndexSearchData> search = vectorStoreService.search(question, "chaoyang");
+        if(search.size() > nearNum) {
+            return search.subList(0, nearNum);
+        }
+        return search;
+    }
+
 }
