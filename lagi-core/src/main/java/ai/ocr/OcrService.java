@@ -11,12 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OcrService {
-
-    private static final String ocrCacheDir = "D:/apps/cache/ocr-cache";
+    private static final String ocrCacheDir = OcrConfig.getOcrCacheDir();
 
     static {
         File cacheDir = new File(ocrCacheDir);
-        if (!cacheDir.exists()) {
+        if (!cacheDir.exists() && OcrConfig.isOcrCacheEnable()) {
             cacheDir.mkdirs();
         }
     }
@@ -26,12 +25,12 @@ public class OcrService {
             return adapter.recognize(image);
         }
         return null;
-//        return "ocr.recognize(image)";
     }
 
     public List<String> recognize(File file) throws IOException {
         List<BufferedImage> pageImages = PdfUtils.toImages(file);
         List<String> result = new ArrayList<>();
+
         String md5 = FileUtils.md5sum(file);
         String cacheDir = ocrCacheDir + "/" + md5;
         File cacheDirFile = new File(cacheDir);
@@ -44,21 +43,16 @@ public class OcrService {
             String pageCacheFile = cacheDir + "/" + (i + 1) + ".txt";
             String resultText;
 
-//            File outputfile = new File(cacheDir + "/" + (i + 1) + ".png");
-//            ImageIO.write(image, "png", outputfile);
-
-            if (new File(pageCacheFile).exists()) {
+            if (new File(pageCacheFile).exists() && OcrConfig.isOcrCacheEnable()) {
                 resultText = FileUtils.readTextFromFile(pageCacheFile);
-                System.out.println("read from cache: " + pageCacheFile);
-//                resultText = ocr.toFormatedText(resultText);
-//                FileUtils.writeTextToFile(pageCacheFile, resultText);
             } else {
                 resultText = recognize(image);
-                FileUtils.writeTextToFile(pageCacheFile, resultText);
+                if (resultText != null && OcrConfig.isOcrCacheEnable()) {
+                    FileUtils.writeTextToFile(pageCacheFile, resultText);
+                }
             }
             result.add(resultText);
         }
-//        System.out.println(result);
         return result;
     }
 }
