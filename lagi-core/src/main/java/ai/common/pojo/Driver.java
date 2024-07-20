@@ -13,7 +13,6 @@ public class Driver {
     private String model;
     private String driver;
     private String oss;
-
     private String appId;
     private String apiKey;
     private String secretKey;
@@ -21,4 +20,5 @@ public class Driver {
     private String accessKeyId;
     private String accessKeySecret;
     private String securityKey;
+    private String endpoint;
 }
