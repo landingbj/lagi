@@ -13,13 +13,6 @@ import java.util.List;
 public class OcrService {
     private static final String ocrCacheDir = OcrConfig.getOcrCacheDir();
 
-    static {
-        File cacheDir = new File(ocrCacheDir);
-        if (!cacheDir.exists() && OcrConfig.isOcrCacheEnable()) {
-            cacheDir.mkdirs();
-        }
-    }
-
     public String recognize(BufferedImage image) {
         for (IOcr adapter : OcrManager.getInstance().getAdapters()) {
             return adapter.recognize(image);
@@ -34,7 +27,7 @@ public class OcrService {
         String md5 = FileUtils.md5sum(file);
         String cacheDir = ocrCacheDir + "/" + md5;
         File cacheDirFile = new File(cacheDir);
-        if (!cacheDirFile.exists()) {
+        if (!cacheDirFile.exists() && OcrConfig.isOcrCacheEnable()) {
             cacheDirFile.mkdirs();
         }
 
