@@ -22,9 +22,6 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
                 .setAccessKeyId(getAccessKeyId())
                 .setAccessKeySecret(getAccessKeySecret())
                 .setEndpoint(getEndpoint());
-        System.out.println("AlibabaOcrAdapter: " + getAccessKeyId());
-        System.out.println("AlibabaOcrAdapter: " + getAccessKeySecret());
-        System.out.println("AlibabaOcrAdapter: " + getEndpoint());
         return new com.aliyun.ocr_api20210707.Client(config);
     }
 
@@ -33,21 +30,21 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
         RecognizeAdvancedResponse response;
         try {
             com.aliyun.ocr_api20210707.Client client = createClient();
-//            ByteArrayOutputStream os = new ByteArrayOutputStream();
-//            ImageIO.write(image, "png", os);
-//            InputStream bodyStream = new ByteArrayInputStream(os.toByteArray());
-//            RecognizeAdvancedRequest recognizeAdvancedRequest = new RecognizeAdvancedRequest()
-//                    .setBody(bodyStream)
-//                    .setNeedRotate(true)
-//                    .setOutputTable(true)
-//                    .setNoStamp(true)
-//                    .setParagraph(true);
-//            RuntimeOptions runtime = new RuntimeOptions();
-//            response = client.recognizeAdvancedWithOptions(recognizeAdvancedRequest, runtime);
-//            if (response != null && response.getStatusCode() == 200) {
-//                result = response.getBody().getData();
-//                result = toFormatedText(result);
-//            }
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", os);
+            InputStream bodyStream = new ByteArrayInputStream(os.toByteArray());
+            RecognizeAdvancedRequest recognizeAdvancedRequest = new RecognizeAdvancedRequest()
+                    .setBody(bodyStream)
+                    .setNeedRotate(true)
+                    .setOutputTable(true)
+                    .setNoStamp(true)
+                    .setParagraph(true);
+            RuntimeOptions runtime = new RuntimeOptions();
+            response = client.recognizeAdvancedWithOptions(recognizeAdvancedRequest, runtime);
+            if (response != null && response.getStatusCode() == 200) {
+                result = response.getBody().getData();
+                result = toFormatedText(result);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
