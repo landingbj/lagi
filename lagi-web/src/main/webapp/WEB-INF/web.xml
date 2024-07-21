@@ -239,4 +239,13 @@
         <servlet-name>WorkerApiServlet</servlet-name>
         <url-pattern>/v1/worker/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AuditApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.AuditApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuditApiServlet</servlet-name>
+        <url-pattern>/v1/audit/*</url-pattern>
+    </servlet-mapping>
 </web-app>

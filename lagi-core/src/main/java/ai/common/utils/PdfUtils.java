@@ -2,6 +2,7 @@ package ai.common.utils;
 
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
@@ -29,5 +30,21 @@ public class PdfUtils {
             }
         }
         return images;
+    }
+
+    public static int getNumberOfPages(File file) {
+        try (PDDocument document = PDDocument.load(file)) {
+            return document.getNumberOfPages();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static int getNumberOfPages(List<File> fileList) {
+        int total = 0;
+        for (File file : fileList) {
+            total += getNumberOfPages(file);
+        }
+        return total;
     }
 }

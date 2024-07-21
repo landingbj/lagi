@@ -1,4 +1,5 @@
 let SOCIAL_NAV_KEY = 'sjjr';
+let AUDIT_NAV_KEY = 'bgsj';
 
 let MODEL_TYPE_LLM = "llm";
 let MODEL_TYPE_ASR = "asr";
@@ -93,14 +94,19 @@ let promptNavs = [
 			已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入"帮我生成指令集”。
 			此时请在输入框内输入“帮我生成指令集”，Lagi将会对您的请求作出响应。`},
 
-    {id:13, key:'twhp', title: '图文混排',exampleImgSrc:'../images/twhp.png',
+    {id:13, key:AUDIT_NAV_KEY,title: '报告审计',exampleImgSrc:'',
+        exampleVedioSrc:'../video/bgsj.mp4',
+        prompt:'该功能是指，当用户提供多篇文档，大模型能够自动分析文档内容，理解其结构和语义，生成审计报告。',
+        operation:`点击输入框最右侧的文件夹图标，选择文件并点击“打开”，即可上传。上传后系统会自动对文档进行分析，生成审计报告。`},
+
+    {id:14, key:'twhp', title: '图文混排',exampleImgSrc:'../images/twhp.png',
         exampleVedioSrc:'../video/twhp.mp4',
         prompt:'该功能可根据用户提出的问题或需求，以图文并茂的方式为用户提供更加直观、形象和生动的信息和服务，在提高信息传达效果的同时，还能增加用户的阅读体验的，提高人们的工作效率和生活品质。',
         operation:'在输入框内输入您的需求（如“知识图谱的概念”），并点击右侧Logo发送需求，Lagi将会对您作出响应。',
         group : 2
     },
 
-    {id:14, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'',
+    {id:15, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'',
         exampleVedioSrc:'../video/sjjr.mp4',
         prompt:'该功能通过接入社交软件，通过RPA和大模型技术自动化社交软件的相关操作。',
         operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
