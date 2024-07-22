@@ -1,7 +1,15 @@
-## 自由扩展
-如果您想扩展Lagi[i]适配其他大模型，您可以参考以下步骤：
-## 1. 适配yml
+# 自由扩展
+
+您可以根据您的需求参考此文档，对lag[i]进行自由扩展，从而契合您的业务需求。
+
+## 模型扩展
+
+如果您想扩展Lagi[i]适配其它大模型，您可以参考以下步骤：
+
+### 1. 适配yml
+
 **1.在models下中新增配置**
+
 ```yaml
 models:
     - name: your-model-name
@@ -65,7 +73,7 @@ functions:
 
 ```
 
-**2.适配方法**
+### 2.适配方法
 
 >1.扩展chat:   
 
@@ -496,4 +504,225 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
         return null;
     }
 }
+```
+
+## 数据库扩展
+
+If you want to adapt the Lagi[i] extension to other vector databases, you can follow these steps:
+
+### 1. 适配yml
+
+**1.在stores下中新增配置**
+
+```yaml
+stores:
+  vectors:
+    - name: vector_name
+      driver: ai.vector.impl.Yonr_VectorStore 
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: yonr_url
+
+  rag:
+    - backend: vector_name
+      enable: true
+      priority: 10
+
+```
+
+示列：
+
+```yaml
+stores:
+  vectors:
+    - name: chroma
+      driver: ai.vector.impl.ChromaVectorStore
+      default_category: chaoyang
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://127.0.0.1:8000
+
+  rag:
+    - backend: chroma
+      enable: true
+      priority: 10
+
+```
+
+### 2.适配方法
+
+在lagi-core模块下的ai>vector>impl目录下新建YonrVectorStore.java继承BaseVectorStore类并重写VectorStore的所有方法即可。
+
+> 分别重写以下方法
+
+```java
+
+void upsert(List<UpsertRecord> upsertRecords);
+
+void upsert(List<UpsertRecord> upsertRecords, String category);
+
+List<IndexRecord> query(QueryCondition queryCondition);
+
+List<IndexRecord> query(QueryCondition queryCondition, String category);
+
+List<IndexRecord> fetch(List<String> ids);
+
+List<IndexRecord> fetch(List<String> ids, String category);
+
+void delete(List<String> ids);
+
+void delete(List<String> ids, String category);
+
+void deleteWhere(List<Map<String, String>> where);
+
+void deleteWhere(List<Map<String, String>> whereList, String category);
+
+void deleteCollection(String category);
+
+```
+
+示列：
+
+1.重写插入或更新数据方法: upsert();
+
+```java
+ public void upsert(List<UpsertRecord> upsertRecords) {
+        upsert(upsertRecords, this.config.getDefaultCategory());
+    }
+
+    public void upsert(List<UpsertRecord> upsertRecords, String category) {
+        List<String> documents = new ArrayList<>();
+        List<Map<String, String>> metadatas = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
+        for (UpsertRecord upsertRecord : upsertRecords) {
+            documents.add(upsertRecord.getDocument());
+            metadatas.add(upsertRecord.getMetadata());
+            ids.add(upsertRecord.getId());
+        }
+        List<List<Float>> embeddings = this.embeddingFunction.createEmbedding(documents);
+        Collection collection = getCollection(category);
+        try {
+            collection.upsert(embeddings, metadatas, documents, ids);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+```
+
+2.重写查询方法：query();
+
+```java
+public List<IndexRecord> query(QueryCondition queryCondition) {
+        return query(queryCondition, this.config.getDefaultCategory());
+    }
+
+    public List<IndexRecord> query(QueryCondition queryCondition, String category) {
+        List<IndexRecord> result = new ArrayList<>();
+        Collection collection = getCollection(category);
+        Collection.GetResult gr;
+        if (queryCondition.getText() == null) {
+            try {
+                gr = collection.get(null, queryCondition.getWhere(), null);
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
+            return getIndexRecords(result, gr);
+        }
+        List<String> queryTexts = Collections.singletonList(queryCondition.getText());
+        Integer n = queryCondition.getN();
+        Map<String, String> where = queryCondition.getWhere();
+        Collection.QueryResponse qr = null;
+        try {
+            qr = collection.query(queryTexts, n, where, null, null);
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+        for (int i = 0; i < qr.getDocuments().size(); i++) {
+            for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
+                IndexRecord indexRecord = IndexRecord.newBuilder()
+                        .withDocument(qr.getDocuments().get(i).get(j))
+                        .withId(qr.getIds().get(i).get(j))
+                        .withMetadata(qr.getMetadatas().get(i).get(j))
+                        .withDistance(qr.getDistances().get(i).get(j))
+                        .build();
+                result.add(indexRecord);
+            }
+        }
+        return result;
+    }
+
+```
+
+3.重写获取方法：fetch();
+
+```java
+    public List<IndexRecord> fetch(List<String> ids) {
+        return fetch(ids, this.config.getDefaultCategory());
+    }
+
+    public List<IndexRecord> fetch(List<String> ids, String category) {
+        List<IndexRecord> result = new ArrayList<>();
+        Collection.GetResult gr;
+        Collection collection = getCollection(category);
+        try {
+            gr = collection.get(ids, null, null);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+        return getIndexRecords(result, gr);
+    }
+``` 
+
+4.重写删除方法：delete();
+
+```java
+    public void delete(List<String> ids) {
+        this.delete(ids, this.config.getDefaultCategory());
+    }
+
+    public void delete(List<String> ids, String category) {
+        Collection collection = getCollection(category);
+        try {
+            collection.deleteWithIds(ids);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+```
+
+5.重写条件删除数据方法：deleteWhere();
+
+```java
+    public void deleteWhere(List<Map<String, String>> whereList) {
+        deleteWhere(whereList, this.config.getDefaultCategory());
+    }
+    
+    public void deleteWhere(List<Map<String, String>> whereList, String category) {
+        Collection collection = getCollection(category);
+        try {
+            for (Map<String, String> where : whereList) {
+                collection.deleteWhere(where);
+            }
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+```
+
+
+6.重写删除集合方法：deleteCollection();
+
+```java
+    public void deleteCollection(String category) {
+        try {
+            client.deleteCollection(category);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
 ```

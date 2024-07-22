@@ -251,7 +251,7 @@ You can use the `POST /training/pairing` endpoint to upload your own Q&A pairs.
 
 | Name         | Position | Type     | Required | Description  |
 |--------------|-------|--------------------|---------|---------|
-| categ ory    | body  | string             | true    | The specified data class |
+| category    | body  | string             | true    | The specified data class |
 | data         | body  | [object] or object | true    | Question and answer pairs of data, supporting objects or lists of objects  |
 | 》instruction | body  | string             | true    | The problem     |
 | 》output      | body  | string             | true    | The answer     |

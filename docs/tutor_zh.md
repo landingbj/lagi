@@ -249,12 +249,12 @@ Lag[i] 提供了动态切换模型的功能，您可以在配置文件中设置�
 
 您可以使用`POST /training/pairing`接口，上传特定的问答对。
 
-| 名称           | 位置    | 类型                 | 必选 | 说明      |
-|--------------|-------|--------------------|----|---------|
-| categ ory    | body  | string             | 是  | 指定的数据类别 |
-| data         | body  | [object] or object | 是  | 问答对数据，支持对象或对象列表  |
+| 名称          | 位置    | 类型                 | 必选 | 说明      |
+|-------------|-------|--------------------|----|---------|
+| category    | body  | string             | 是  | 指定的数据类别 |
+| data        | body  | [object] or object | 是  | 问答对数据，支持对象或对象列表  |
 | 》instruction | body  | string             | 是  | 问题      |
-| 》output      | body  | string             | 是  | 答案      |
+| 》output     | body  | string             | 是  | 答案      |
 
 如上传单个问答对，请求示例如下（一对一）：
 

@@ -58,12 +58,13 @@ If you wish to integrate Lag[i] into your project, you can refer to our [Integra
 
 If you are not satisfied with the adapted large model for Lag[i], you can also refer to our [Extension documentation](docs/extend_en.md) to extend Lag[i], adapting it to your preferred large model. This document not only covers the methods for adapting and extending functional models and vector databases but also provides expansion examples to help you quickly grasp the methods for extending Lag[i], meeting your specific requirements.
 
+If you find the vector databases currently integrated with Lag[i] to be less than satisfactory for your needs, you can also refer to our [Extension documentation](https://github.com/landingbj/lagi/blob/main/docs/extend_en.md#Database-Extension) to expand Lag[i] and adapt it to your preferred vector database. This will meet your diverse business requirements, enhance the overall performance and reliability of your system, and provide a more enriching and efficient data management experience.
+
 ### Security
 
 To better integrate Lag[i] into your business,You can do this by adding the keywords you want to filter in the `sensitive_word.json` file,In the `priority_word.json` file, you specify which keywords to answer first.And set the stop keyword in the `stopping_word.json file`,Thus, the returned results of the dialogue are changed, the dialogue is guided in a specific direction, and the dialogue is automatically stopped when needed.
 
 Example: Set the sensitive word filter, level has three values, 1: delete the entire sentence when the sensitive word is matched 2: replace with mask 3: erase (default). mask: mask string (default :...) . rules: represents a list of sensitive rules, where rule for each list element represents the regular expression matching the sensitive word, mask and level are used globally if not specified:   
-
 
 ```json
 {
@@ -74,7 +75,6 @@ Example: Set the sensitive word filter, level has three values, 1: delete the en
     {"rule":"hello", "level": 2, "mask": "***"}
   ]
 }
-
 ```
 Example：Set priority keywords and stop keywords:
 ```json
@@ -82,7 +82,6 @@ Example：Set priority keywords and stop keywords:
   "openai"
 ]
 ```
-
 
 ### Online Demo
 
