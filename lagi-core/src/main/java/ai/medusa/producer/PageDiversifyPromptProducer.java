@@ -16,7 +16,7 @@ import java.util.List;
 
 public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
 
-    private final int nearNum = 2;
+    private final int nearNum = 8;
 
     VectorStoreService vectorStoreService = new VectorStoreService();
 
