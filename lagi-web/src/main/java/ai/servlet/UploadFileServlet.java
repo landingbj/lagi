@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 
 import javax.servlet.ServletException;
@@ -79,7 +80,7 @@ public class UploadFileServlet extends HttpServlet {
     private void pairing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         InstructionPairRequest instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequest.class);
-
+        long timestamp = Instant.now().toEpochMilli();
         new Thread(() -> {
             List<InstructionData> instructionDataList = instructionPairRequest.getData();
             String category = instructionPairRequest.getCategory();
@@ -94,6 +95,7 @@ public class UploadFileServlet extends HttpServlet {
                     metadata.put("category", category);
                     metadata.put("level", level);
                     metadata.put("filename", "");
+                    metadata.put("seq", Long.toString(timestamp));
                     List<UpsertRecord> upsertRecords = new ArrayList<>();
                     upsertRecords.add(UpsertRecord.newBuilder()
                             .withMetadata(metadata)
@@ -103,7 +105,8 @@ public class UploadFileServlet extends HttpServlet {
                             .withMetadata(new HashMap<>(metadata))
                             .withDocument(output)
                             .build());
-                    VectorCacheLoader.put2L2(instruction, output);
+                    String s = instruction.replaceAll("\n","");
+                    VectorCacheLoader.put2L2(s, timestamp, output);
                     vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
                 }
             }

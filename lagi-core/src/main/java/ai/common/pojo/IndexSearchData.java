@@ -11,6 +11,7 @@ public class IndexSearchData {
     private String id;
     private String text;
     private String category;
+    private Long seq;
     private String fileId;
     private List<String> filename;
     private List<String> filepath;

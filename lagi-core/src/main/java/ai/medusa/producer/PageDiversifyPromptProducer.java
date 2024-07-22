@@ -5,10 +5,10 @@ import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.utils.LagiGlobal;
 import ai.vector.VectorCacheLoader;
+import ai.vector.VectorStoreService;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +16,9 @@ import java.util.List;
 
 public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
 
-    private final int nearNum = 16;
+    private final int nearNum = 2;
+
+    VectorStoreService vectorStoreService = new VectorStoreService();
 
     public PageDiversifyPromptProducer(int limit) {
         super(limit);
@@ -55,13 +57,11 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
         if(StrUtil.isBlank(answer)) {
             return result;
         }
-        List<IndexSearchData> indexSearchDataList = VectorCacheLoader.getFromL2Near(prompt, nearNum);
-        for (int i = 0 ; i < indexSearchDataList.size(); i++) {
-            IndexSearchData indexSearchData = indexSearchDataList.get(i);
-            String text = indexSearchData.getText().split("[?？]")[0];
-            System.out.println(text);
+        List<String> questions = VectorCacheLoader.getFromL2Near(prompt, nearNum);
+        for (int i = 0 ; i < questions.size(); i++) {
+            List<IndexSearchData> indexSearchData = vectorStoreService.search(questions.get(i), LagiGlobal.getDefaultCategory());
+            String text = questions.get(i);
             List<String> promptList = new ArrayList<>();
-//            promptList.add(promptInput.getPromptList().get(promptInput.getPromptList().size() - 1));
             promptList.add(text);
             PromptInput diversifiedPromptInput = PromptInput.builder()
                     .parameter(promptInput.getParameter())
@@ -70,11 +70,9 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
-//                    .indexSearchData(searchByContext(diversifiedPromptInput))
-                    .indexSearchData(Lists.newArrayList(indexSearchData))
+                    .indexSearchData(indexSearchData)
                     .build();
             result.add(pooledPrompt);
-            System.out.println(i + ": " + JSONUtil.toJsonStr(pooledPrompt));
         }
         return result;
     }

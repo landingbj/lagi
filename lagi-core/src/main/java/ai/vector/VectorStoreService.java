@@ -266,6 +266,8 @@ public class VectorStoreService {
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
         indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
         String filename = (String) indexRecord.getMetadata().get("filename");
+        Long seq =  indexRecord.getMetadata().get("seq") == null ? 0L : Long.parseLong((String) indexRecord.getMetadata().get("seq"));
+        indexSearchData.setSeq(seq);
         if (filename != null) {
             indexSearchData.setFilename(Collections.singletonList(filename));
         }

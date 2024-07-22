@@ -1,47 +1,130 @@
 package ai.vector;
 
 import ai.common.pojo.IndexSearchData;
-import ai.medusa.MedusaService;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.vector.pojo.IndexRecord;
-import com.google.common.cache.*;
-import org.jetbrains.annotations.NotNull;
+import cn.hutool.core.util.RandomUtil;
+import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
 
 public class VectorCacheLoader {
+
     private static final Logger logger = LoggerFactory.getLogger(VectorCacheLoader.class);
     private static final VectorCache vectorCache = VectorCache.getInstance();
-    private static final VectorStoreService vectorStoreService = new VectorStoreService();
-    private static final MedusaService medusaService = new MedusaService();
-    private static LoadingCache<String, String> cacheL2;
+    private static VectorStoreService vectorStoreService =  new VectorStoreService();
+    private static DataStore cacheL2 = new DataStore();
 
-    static {
-        try {
-            cacheL2 = loadCache(new CacheLoader<String, String>() {
-                @Override
-                public String load(@NotNull String key) throws Exception {
-                    return "";
-                }
-            });
-        } catch (Exception ignored) {
+
+    @lombok.Data
+    @ToString
+    public static class Data implements Comparable<Data> {
+        private String q;
+        private String a;
+        private Long seq;
+
+        public Data(String q, String a, Long seq) {
+            this.q = q;
+            this.a = a;
+            this.seq = seq;
+        }
+
+
+        @Override
+        public int compareTo(Data other) {
+            return Long.compare(this.seq, other.seq);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Data data = (Data) o;
+            return Objects.equals(q, data.q);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(q);
         }
     }
 
-    private static LoadingCache<String, String> loadCache(CacheLoader<String, String> cacheLoader) throws Exception {
-        return  CacheBuilder.newBuilder()
-                .removalListener(new RemovalListener<String, String>() {
-                    @Override
-                    public void onRemoval(RemovalNotification<String, String> rn) {
-                    }
-                })
-                .recordStats()
-                .build(cacheLoader);
+    public static class DataStore {
+        private TreeMap<String, Data> seqToData = new TreeMap<>(((o1, o2) -> {
+            Long l1 = Long.valueOf(o1.split(":")[0]);
+            Long l2 = Long.valueOf(o2.split(":")[0]);
+            if(!l1.equals(l2)) {
+                return Long.compare(l1, l2);
+            }
+            return o1.compareTo(o2);
+        }));
+        private Map<String, Long> qToSeq = new HashMap<>();
+
+        private String getKey(Long seq, String q) {
+            return seq + ":" + q;
+        }
+
+        public void add(Data data) {
+            qToSeq.put(data.getQ(), data.getSeq());
+            seqToData.put(getKey(data.getSeq(), data.getQ()) , data);
+        }
+
+        public String get(String q) {
+            Long seq = qToSeq.get(q);
+            if (seq != null) {
+                Data data = seqToData.get(getKey(seq, q));
+                return data != null ? data.getA() : null;
+            }
+            return null;
+        }
+
+        public Data getDate(String q) {
+            Long seq = qToSeq.get(q);
+            if(seq == null) {
+                return null;
+            }
+            return seqToData.get(getKey(seq, q));
+        }
+
+
+        public List<String> getNeighbors(String q, int count) {
+            List<String> res = new ArrayList<>();
+            Data data = getDate(q);
+            Long seq = data.getSeq();
+            String source = getKey(data.getSeq(), data.getQ());
+            for (int i = 0; i < count; i++) {
+                source = seqToData.lowerKey(source);
+                if(source == null) {
+                    break;
+                }
+                Data cData = seqToData.get(source);
+                if(cData == null) {
+                    break;
+                }
+                if(!Objects.equals(cData.getSeq(), seq)) {
+                    break;
+                }
+                res.add(cData.getQ());
+            }
+            source = getKey(data.getSeq(), data.getQ());
+            for (int i = 0; i < count; i++) {
+                source = seqToData.higherKey(source);
+                if(source == null) {
+                    break;
+                }
+                Data cData = seqToData.get(source);
+                if(cData == null) {
+                    break;
+                }
+                if(!Objects.equals(cData.getSeq(), seq)) {
+                    break;
+                }
+                res.add(cData.getQ());
+            }
+            return res;
+        }
     }
 
     public static void load() {
@@ -79,35 +162,26 @@ public class VectorCacheLoader {
             if (indexSearchData.getParentId() != null) {
                 IndexSearchData questionIndexData = vectorStoreService.getParentIndex(indexSearchData.getParentId());
                 String text = questionIndexData.getText().replaceAll("\n", "");
-                put2L2(text, indexSearchData.getText());
+                Long seq = questionIndexData.getSeq() == null ? 0 : questionIndexData.getSeq();
+                put2L2(text, seq, indexSearchData.getText());
             }
         }
-
     }
 
-    public static void put2L2(String key, String value) {
+    public static void put2L2(String key, Long seq, String value) {
         try {
-            cacheL2.put(key, value);
+            cacheL2.add(new Data(key, value, seq));
         } catch (Exception ignored) {
         }
     }
 
     public static String get2L2(String key) {
-        try {
-            return cacheL2.get(key);
-        } catch (ExecutionException ignored) {
-
-        }
-        return null;
+        return cacheL2.get(key);
     }
 
 
-    public static List<IndexSearchData> getFromL2Near(String question, int nearNum) {
-        List<IndexSearchData> search = vectorStoreService.search(question, "chaoyang");
-        if(search.size() > nearNum) {
-            return search.subList(0, nearNum);
-        }
-        return search;
+    public static List<String> getFromL2Near(String question, int nearNum) {
+        return cacheL2.getNeighbors(question, nearNum);
     }
 
 }
