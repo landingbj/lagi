@@ -61,9 +61,6 @@ public class DoubaoAdapter  extends ModelService implements ILlmAdapter {
                 .messages(messages)
                 .build();
 
-        System.out.println("model:"+model);
-        System.out.println("model1:"+getModelEndpoint(model));
-
         Flowable<ChatCompletionChunk> flowable = service.streamChatCompletion(streamChatCompletionRequest);
         Observable<ChatCompletionResult> iterable = Observable.create(observableEmitter -> {
                 try {

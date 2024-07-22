@@ -29,6 +29,8 @@ public class VectorStoreConfig {
     private Integer parentDepth;
     @JsonProperty("child_depth")
     private Integer childDepth;
+    @JsonProperty("token")
+    private String token;
 
     VectorStoreConfig() {
         similarityTopK = 1;
