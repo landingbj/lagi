@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class QwenEmbeddings implements Embeddings {
-    private String apiKey;
+    private final String apiKey;
     private static final Cache<List<String>, List<List<Float>>> cache = EmbeddingConstant.getEmbeddingCache();
 
     public QwenEmbeddings(EmbeddingConfig config) {
@@ -21,6 +21,17 @@ public class QwenEmbeddings implements Embeddings {
 
     @Override
     public List<List<Float>> createEmbedding(List<String> docs) {
+        int batchSize = 25;
+        List<List<Float>> result = new ArrayList<>();
+        for (int i = 0; i < docs.size(); i += batchSize) {
+            List<String> batchDocs = docs.subList(i, Math.min(i + batchSize, docs.size()));
+            List<List<Float>> batchResult = createEmbeddingBatch(batchDocs);
+            result.addAll(batchResult);
+        }
+        return result;
+    }
+
+    public List<List<Float>> createEmbeddingBatch(List<String> docs) {
         List<List<Float>> result = cache.getIfPresent(docs);
         if (result != null) {
             return result;

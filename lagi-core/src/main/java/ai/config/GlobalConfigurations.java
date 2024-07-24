@@ -7,6 +7,7 @@ import ai.config.pojo.StoreConfig;
 import ai.config.pojo.WorkerConfig;
 import ai.manager.*;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.ocr.OcrConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -46,7 +47,9 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Video2TrackManager.getInstance().register(models, functions.getVideo2Track());
         TranslateManager.getInstance().register(models, functions.getTranslate());
         SoundCloneManager.getInstance().register(models, functions.getSpeech2clone());
+        OcrManager.getInstance().register(models, functions.getOcr());
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
+        OcrConfig.init(functions.getOcr());
     }
 
 

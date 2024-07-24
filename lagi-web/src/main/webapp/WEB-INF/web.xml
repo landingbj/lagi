@@ -197,6 +197,10 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>image_api</servlet-name>
+        <url-pattern>/v1/image/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>image_api</servlet-name>
         <url-pattern>/image/text2image</url-pattern>
     </servlet-mapping>
 

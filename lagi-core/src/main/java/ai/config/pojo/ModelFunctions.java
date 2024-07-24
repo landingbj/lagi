@@ -40,5 +40,6 @@ public class ModelFunctions {
     private List<Backend> translate;
     @JsonProperty("speech2clone")
     private List<Backend> speech2clone;
-
+    @JsonProperty("ocr")
+    private List<Backend> ocr;
 }
