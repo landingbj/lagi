@@ -62,9 +62,13 @@ Lag[i]项目还提供了多个RESTful API接口，方便用户将AI服务集成�
 
 ### 安全过滤
 
-为了更好的将Lag[i]融入到您的业务中来，您可以通过在 `sensitive_word.json` 文件中添加您需要过滤的关键词，在 `priority_word.json` 文件中指定优先回答的关键词，以及在 `stopping_word.json` 文件中设置停止关键词，来改变对话的返回结果，引导对话朝着特定的方向发展，并在需要时自动停止对话。
+为了更好的将Lag[i]融入到您的业务中来，您可以通过在 [sensitive_word.json](lagi-web/src/main/resources/sensitive_word.json) 文件中添加您需要过滤的关键词，在 [priority_word.json](lagi-web/src/main/resources/priority_word.json) 文件中指定优先回答的关键词，以及在 [stopping_word.json](lagi-web/src/main/resources/stopping_word.json) 文件中设置停止关键词，来改变对话的返回结果，引导对话朝着特定的方向发展，并在需要时自动停止对话。
 
-示例：设置敏感词过滤， level有3个值，1:当匹配到敏感词时删除整句 2:替换为遮罩 3：擦除(默认值)。 mask：遮罩字符串(默认值:...)。 rules：代表的敏感规则列表， 其中每个列表元素的rule代表敏感词匹配的正则表达式,mask和level如不指明会使用全局的 :   
+示例：
+
+设置敏感词过滤, level有3个值，1:当匹配到敏感词时删除整句 2:替换为遮罩 3：擦除(默认值)。 mask：遮罩字符串(默认值:...)。 rules：代表的敏感规则列表， 其中每个列表元素的rule代表敏感词匹配的正则表达式,mask和level如不指明会使用全局的 :   
+
+如匹配到`OPENAI`字样时，擦除`OPENAI`字样，如匹配到`hello`字样时，用`***`替换.如匹配到`people`字样时，用`...`替换。
 
 ```json
 {
@@ -72,11 +76,14 @@ Lag[i]项目还提供了多个RESTful API接口，方便用户将AI服务集成�
   "level": 3,
   "rules": [
     {"rule":"OPENAI"},
-    {"rule":"hello", "level": 2, "mask": "***"}
+    {"rule":"hello", "level": 2, "mask": "***"},
+    {"rule":"people", "level": 2}
   ]
 }
 ```
+
 示例：设置优先级关键词、停止关键词
+
 ```json
 [
   "openai"

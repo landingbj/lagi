@@ -76,34 +76,35 @@ Lag[i] supports several vector databases, such as ChromaDB. If you want to enhan
     chroma run --path db_data
 ```
 
-### Option 2: Docker
+**Note：**
 
-***Make sure you have a Docker environment installed***
+Error when importing chromadb because sqlite3 version is too low
 
-- Run the following command to pull the installation and start chromadb.
+>RuntimeError: Your system has an unsupported version of sqlite3. Chroma requires sqlite3 >= 3.35.0.
+
+Follow these steps
+
+- 1.Install pysqlite3-binary
 
 ```bash
-    # Start the Chroma database container
-    #
-    # This command is used to start a database service container called Chroma in Docker. It uses a set of parameters to configure the container environment and external services.
-    # Parameters explained:
-    # -d: runs container in background and returns container ID
-    # --name: This specifies a name for the container for easier management and identification.
-    # -p: Container internal ports mapped to host ports, here container port 8000 is mapped to host port 8000.
-    # -v: Binding the container's internal directory to the host directory for persistent data storage. Here will host/mydata docker/local/chroma/data directory is bound to the container/study/ai/chroma directory.
-    # -e: Sets environment variables that are used to configure application behavior inside the container. Two environment variables are set:
-    #     IS_PERSISTENT=TRUE Indicates that database data will be stored persistently.
-    #     ANONYMIZED_TELEMETRY=TRUE Indicates that allows the collection of anonymous telemetry data.
-    # chromadb/chroma:latest: Specify that the image to use is the latest version of chromadb/chroma.
-    
-    docker run -d \
-    --name chromadb \
-    -p 8000:8000 \
-    -v /mydata/docker/local/chroma/data:/study/ai/chroma \
-    -e IS_PERSISTENT=TRUE \
-    -e ANONYMIZED_TELEMETRY=TRUE \
-    chromadb/chroma:latest
+pip install pysqlite3-binary
 ```
+
+- 2.When importing the chromadb package, overwrite the sqlite3 library to find your chromadb source edit `__init__.py` file
+
+```bash
+vim xxx/chromadb/__init__.py
+```
+- 3.Add three lines of code at the beginning
+
+```text
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+```
+
+- 4.Starting the database service
+  ![img_4.png](images/img_4.png)
 
 The installation is complete, you can access via a browser: http://localhost:8000/docs see if started successfully.
 

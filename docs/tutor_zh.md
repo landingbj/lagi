@@ -76,34 +76,35 @@ Lag[i] 支持多种向量数据库，例如 ChromaDB。如果您想使用检索�
     chroma run --path db_data
 ```
 
-### 方式二：Docker
+**注意：**
 
-***确保有安装有Docker运行环境***
+在导包chromadb时报错，原因是sqlite3版本太低
 
-- 运行以下命令,拉取安装并启动chromadb。
+>RuntimeError: Your system has an unsupported version of sqlite3. Chroma requires sqlite3 >= 3.35.0.
+
+请按以下步骤操作
+
+- 1.安装pysqlite3-binary
 
 ```bash
-    # 启动Chroma数据库容器
-    #
-    # 该命令用于在Docker中启动一个名为Chroma的数据库服务容器。它通过一系列参数配置容器的运行环境和对外服务。
-    # 参数解释：
-    # -d: 后台运行容器并返回容器ID。
-    # --name: 为容器指定一个名称，便于后续管理和识别。
-    # -p: 容器内部端口与主机端口的映射，这里将容器的8000端口映射到主机的8000端口。
-    # -v: 容器内部目录与主机目录的绑定，实现数据的持久化存储。这里将主机的/mydata/docker/local/chroma/data目录绑定到容器的/study/ai/chroma目录。
-    # -e: 设置环境变量，用于配置容器内部的应用程序行为。这里设置了两个环境变量：
-    #     IS_PERSISTENT=TRUE 表示数据库数据将被持久化存储。
-    #     ANONYMIZED_TELEMETRY=TRUE 表示允许匿名遥测数据的收集。
-    # chromadb/chroma:latest: 指定使用的镜像为chromadb/chroma的最新版本。
-    
-    docker run -d \
-    --name chromadb \
-    -p 8000:8000 \
-    -v /mydata/docker/local/chroma/data:/study/ai/chroma \
-    -e IS_PERSISTENT=TRUE \
-    -e ANONYMIZED_TELEMETRY=TRUE \
-    chromadb/chroma:latest
+pip install pysqlite3-binary
 ```
+
+- 2.导chromadb包时，覆盖原sqlite3 库 找到你的chromadb源码编辑`__init__.py`文件
+
+```bash
+vim xxx/chromadb/__init__.py
+```
+- 3.在开头添加3行代码
+
+```text
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+```
+
+- 4.启动数据库服务
+![img_4.png](images/img_4.png)
 
 安装完成，您可以通过浏览器访问：http://localhost:8000/docs 查看是否启动成功。
 

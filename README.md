@@ -62,9 +62,13 @@ If you find the vector databases currently integrated with Lag[i] to be less tha
 
 ### Security
 
-To better integrate Lag[i] into your business,You can do this by adding the keywords you want to filter in the `sensitive_word.json` file,In the `priority_word.json` file, you specify which keywords to answer first.And set the stop keyword in the `stopping_word.json file`,Thus, the returned results of the dialogue are changed, the dialogue is guided in a specific direction, and the dialogue is automatically stopped when needed.
+To better integrate Lag[i] into your business,You can do this by adding the keywords you want to filter in the  [`sensitive_word.json`](lagi-web/src/main/resources/sensitive_word.json) file,In the [priority_word.json](lagi-web/src/main/resources/priority_word.json) file, you specify which keywords to answer first.And set the stop keyword in the [stopping_word.json](lagi-web/src/main/resources/stopping_word.json) file,Thus, the returned results of the dialogue are changed, the dialogue is guided in a specific direction, and the dialogue is automatically stopped when needed.
 
-Example: Set the sensitive word filter, level has three values, 1: delete the entire sentence when the sensitive word is matched 2: replace with mask 3: erase (default). mask: mask string (default :...) . rules: represents a list of sensitive rules, where rule for each list element represents the regular expression matching the sensitive word, mask and level are used globally if not specified:   
+Example: 
+
+Set the sensitive word filter, level has three values, 1: delete the entire sentence when the sensitive word is matched 2: replace with mask 3: erase (default). mask: mask string (default :...) . rules: represents a list of sensitive rules, where rule for each list element represents the regular expression matching the sensitive word, mask and level are used globally if not specified:   
+
+If `OPENAI` is successfully matched, the `OPENAI` is erased. If `hello` is successfully matched, the `hello` is replaced with `***`. If `people` is successfully matched, use `...` Substitution.
 
 ```json
 {
@@ -72,11 +76,14 @@ Example: Set the sensitive word filter, level has three values, 1: delete the en
   "level": 3,
   "rules": [
     {"rule":"OPENAI"},
-    {"rule":"hello", "level": 2, "mask": "***"}
+    {"rule":"hello", "level": 2, "mask": "***"},
+    {"rule":"people", "level": 2}
   ]
 }
 ```
+
 Example：Set priority keywords and stop keywords:
+
 ```json
 [
   "openai"
