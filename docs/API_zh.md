@@ -4,7 +4,7 @@
 
 ### 1.配置yml文件
 
-修改[`src/main/resources/lagi.yml`](../lagi-web/src/main/resources/lagi.yml)配置文件，选择您喜欢的模型，将其中的大语言模型your-api-key等信息替换为您自己的密钥，并根据需要将启用的模型的`enable`字段设置为`true`。详细的配置方法可参见[配置文档](https://github.com/landingbj/lagi/blob/main/docs/config_zh.md)。
+修改[`src/main/resources/lagi.yml`](../lagi-web/src/main/resources/lagi.yml)配置文件，选择您喜欢的模型，将其中的大语言模型your-api-key等信息替换为您自己的密钥，并根据需要将启用的模型的`enable`字段设置为`true`。详细的配置方法可参见[配置文档](config_zh.md)。
 
 ***以配置kimi为列：***
 

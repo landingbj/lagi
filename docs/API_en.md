@@ -4,7 +4,7 @@
 
 ### 1.Configure yml files
 
-Modify [`src/main/resources/lagi.yml`](../lagi-web/src/main/resources/lagi.yml) configuration file, select the model you like, will be one of the major language model your - API - key information such as the replacement for your own key, And set the 'enable' field of the enabled model to 'true' as needed. See the [configuration documentation](docs/config_zh.md) for details.
+Modify [`src/main/resources/lagi.yml`](../lagi-web/src/main/resources/lagi.yml) configuration file, select the model you like, will be one of the major language model your - API - key information such as the replacement for your own key, And set the 'enable' field of the enabled model to 'true' as needed. See the [configuration documentation](config_en.md) for details.
 
 ***Take kimi：***
 
