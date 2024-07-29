@@ -17,6 +17,8 @@ public class LagiGlobal {
 
     private static String DEFAULT_CATEGORY;
 
+    public static boolean RAG_ENABLE = false;
+
     static {
         loadConfig();
     }
@@ -58,7 +60,9 @@ public class LagiGlobal {
     }
 
     private static void setDefaultCategory(Configuration config) {
-        DEFAULT_CATEGORY = config.getVectorStores().get(0).getDefaultCategory();
+        if (config.getVectorStores() != null && !config.getVectorStores().isEmpty()){
+            DEFAULT_CATEGORY = config.getVectorStores().get(0).getDefaultCategory();
+        }
     }
 
     public static String getAgentApiKey() {

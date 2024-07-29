@@ -28,6 +28,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
+import ai.utils.LagiGlobal;
 import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
@@ -100,7 +101,7 @@ public class LlmApiServlet extends BaseServlet {
 
         List<IndexSearchData> indexSearchDataList;
         String context = null;
-        if (chatCompletionRequest.getCategory() != null && vectorDbService.vectorStoreEnabled()) {
+        if (chatCompletionRequest.getCategory() != null && LagiGlobal.RAG_ENABLE) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {

@@ -29,14 +29,16 @@ import java.util.stream.Collectors;
 
 public class VectorStoreService {
     private final Gson gson = new Gson();
-    private final BaseVectorStore vectorStore;
+    private BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
 
     private final IntentService intentService = new SampleIntentServiceImpl();
 
 
     public VectorStoreService() {
-        this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
+        if (LagiGlobal.RAG_ENABLE) {
+            this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
+        }
     }
 
     public VectorStoreConfig getVectorStoreConfig() {

@@ -6,6 +6,7 @@ import ai.common.pojo.EmbeddingConfig;
 import ai.common.pojo.VectorStoreConfig;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
+import ai.utils.LagiGlobal;
 import ai.vector.VectorStore;
 import ai.vector.impl.BaseVectorStore;
 import org.slf4j.Logger;
@@ -31,7 +32,9 @@ public class VectorStoreManager {
     private VectorStoreManager(){}
 
     public void register(List<VectorStoreConfig> vectorStoreConfigs, List<Backend> backends, List<EmbeddingConfig> embeddings) {
-
+        if (vectorStoreConfigs == null || vectorStoreConfigs.isEmpty() || backends == null || backends.isEmpty()) {
+            return;
+        }
         Map<String, VectorStoreConfig> vectorMap = vectorStoreConfigs.stream().collect(Collectors.toMap(VectorStoreConfig::getName, vectorStoreConfig -> vectorStoreConfig));
         backends.stream().filter(Backend::getEnable)
         .map(rc->vectorMap.get(rc.getBackend()))
@@ -44,6 +47,7 @@ public class VectorStoreManager {
                 Constructor<?> constructor = clazz.getConstructor(VectorStoreConfig.class, Embeddings.class);
                 BaseVectorStore vs = (BaseVectorStore) constructor.newInstance(vectorStoreConfig, EmbeddingFactory.getEmbedding(embeddings.get(0)));
                 register(name, vs);
+                LagiGlobal.RAG_ENABLE = true;
             } catch (Exception e) {
                 log.error("registerVectorStore ("+vectorStoreConfig.getName()+")error");
             }}

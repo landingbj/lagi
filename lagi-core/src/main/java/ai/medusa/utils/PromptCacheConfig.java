@@ -22,7 +22,7 @@ public class PromptCacheConfig {
     public static final String DIVERSIFY_PROMPT = "以下是用户当前的问题，请预测该用户接下来可能会问什么其它问题？只返回问题内容本身：\n";
 
     public static String LOCATE_ALGORITHM = "hash";
-    public static boolean MEDUSA_ENABLE = true;
+    public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
     public static final int QA_SIMILARITY_TOP_K = 30;
     public static final double QA_SIMILARITY_CUTOFF = 0.1;

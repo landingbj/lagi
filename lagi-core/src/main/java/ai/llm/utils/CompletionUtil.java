@@ -27,7 +27,7 @@ public class CompletionUtil {
 
     public static void populateContext(ChatCompletionResult result, List<IndexSearchData> indexSearchDataList, String context) {
         if (result != null && !result.getChoices().isEmpty()
-                && !indexSearchDataList.isEmpty()) {
+                && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);
             List<String> imageList = vectorStoreService.getImageFiles(indexData);
             for (int i = 0; i < result.getChoices().size(); i++) {
