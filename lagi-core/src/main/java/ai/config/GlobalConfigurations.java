@@ -47,9 +47,9 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Video2TrackManager.getInstance().register(models, functions.getVideo2Track());
         TranslateManager.getInstance().register(models, functions.getTranslate());
         SoundCloneManager.getInstance().register(models, functions.getSpeech2clone());
-        OcrManager.getInstance().register(models, functions.getOcr());
+        OcrManager.getInstance().register(models, functions.getImage2ocr());
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
-        OcrConfig.init(functions.getOcr());
+        OcrConfig.init(functions.getImage2ocr());
     }
 
 

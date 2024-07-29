@@ -203,6 +203,10 @@
         <servlet-name>image_api</servlet-name>
         <url-pattern>/image/text2image</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>image_api</servlet-name>
+        <url-pattern>/image/image2ocr</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>vector</servlet-name>

@@ -39,8 +39,8 @@ public class ImageApiServlet extends BaseServlet {
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("generations") || method.equals("text2image")) {
             this.generations(req, resp);
-        } else if (method.equals("ocr")) {
-            this.ocr(req, resp);
+        } else if (method.equals("image2ocr")) {
+            this.image2ocr(req, resp);
         }
     }
 
@@ -56,7 +56,7 @@ public class ImageApiServlet extends BaseServlet {
     }
 
 
-    private void ocr(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void image2ocr(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         String tempPath = this.getServletContext().getRealPath(AiGlobal.DIR_TEMP);
         File tmpFile = new File(tempPath);
