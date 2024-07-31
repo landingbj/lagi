@@ -24,7 +24,7 @@ public class PromptCacheConfig {
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
     public static final int QA_SIMILARITY_TOP_K = 10;
-    public static final double QA_SIMILARITY_CUTOFF = 0.2;
+    public static final double QA_SIMILARITY_CUTOFF = 0.1;
 
     public static final int WRITE_CACHE_THREADS = 5;
     public static final int SUBSTRING_THRESHOLD = 2;

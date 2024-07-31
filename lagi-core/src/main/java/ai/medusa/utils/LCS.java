@@ -45,7 +45,8 @@ public class LCS {
         for (String lcs : lcsSet) {
             lcsLength += lcs.length();
         }
-        return (double) lcsLength / (str1.length());
+        int maxLength = Math.max(str1.length(), str2.length());
+        return (double) lcsLength / maxLength;
     }
 
     public static double getLcsRatio(String str, Set<String> strSet) {
