@@ -1,11 +1,19 @@
 package ai.medusa.utils;
 
 import ai.medusa.pojo.PromptInput;
-import ai.medusa.pojo.PromptParameter;
 
 import java.util.List;
 
 public class PromptInputUtil {
+
+    public static String getFirstPrompt(PromptInput promptInput) {
+        List<String> promptList = promptInput.getPromptList();
+        if(promptList == null || promptList.isEmpty()) {
+            return null;
+        }
+        return promptList.get(0);
+    }
+
     public static String getNewestPrompt(PromptInput promptInput) {
         List<String> promptList = promptInput.getPromptList();
         return promptList.get(promptList.size() - 1);

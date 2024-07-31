@@ -2,7 +2,6 @@ package ai.medusa.utils;
 
 import ai.common.pojo.Medusa;
 import ai.common.pojo.VectorStoreConfig;
-import ai.vector.VectorStoreService;
 import cn.hutool.core.util.StrUtil;
 
 import java.util.List;
@@ -24,13 +23,16 @@ public class PromptCacheConfig {
     public static String LOCATE_ALGORITHM = "hash";
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
-    public static final int QA_SIMILARITY_TOP_K = 30;
-    public static final double QA_SIMILARITY_CUTOFF = 0.1;
+    public static final int QA_SIMILARITY_TOP_K = 10;
+    public static final double QA_SIMILARITY_CUTOFF = 0.2;
 
     public static final int WRITE_CACHE_THREADS = 5;
     public static final int SUBSTRING_THRESHOLD = 2;
-    public static final double LCS_RATIO_QUESTION = 0.25;
-    public static final double LCS_RATIO_PROMPT_INPUT = 0.8;
+    public static final int START_CORE_THRESHOLD = 3;
+    public static final int ANSWER_CORE_THRESHOLD = 2;
+    public static final double LCS_RATIO_QUESTION = 0.5;
+    public static final int TRUNCATE_LENGTH = 20;
+    public static final double LCS_RATIO_PROMPT_INPUT = 0.65;
 
     public static void init(List<VectorStoreConfig> vectorStoreList, Medusa config) {
         if(vectorStoreList != null && !vectorStoreList.isEmpty() && config != null) {

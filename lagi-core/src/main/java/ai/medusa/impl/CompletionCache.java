@@ -100,7 +100,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
         if (pickedPromptInput != null) {
             List<ChatCompletionResult> resultListInCache = promptCache.get(pickedPromptInput);
             int index = pickedPromptInput.getPromptList().indexOf(newestPrompt);
-            if (index > -1) {
+            if (index > -1 && index < resultListInCache.size()) {
                 result = resultListInCache.get(index);
             }
         }

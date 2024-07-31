@@ -234,6 +234,9 @@ public class VectorStoreService {
                 vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
             }
             extendedIndexSearchData.setDistance(indexSearchData.getDistance());
+            if(extendedIndexSearchData.getDistance() > 0.4D) {
+                continue;
+            }
             result.add(extendedIndexSearchData);
         }
         return result;
