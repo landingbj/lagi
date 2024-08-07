@@ -23,6 +23,14 @@ public class ZhipuAdapter extends ModelService implements ILlmAdapter {
 
 
     @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         ClientV4 client = new ClientV4.Builder(getApiKey()).build();
         ModelApiResponse invokeModelApiResp = client.invokeModelApi(convertRequest(chatCompletionRequest));

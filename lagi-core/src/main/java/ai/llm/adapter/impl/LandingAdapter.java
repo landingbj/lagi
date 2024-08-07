@@ -26,6 +26,13 @@ public class LandingAdapter extends ModelService implements ILlmAdapter {
     private static final int HTTP_TIMEOUT = 15 * 1000;
     private static final String API_ADDRESS = "http://ai.landingbj.com/v1/chat/completions";
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
 
     private String getApiAddressOrDefault() {
         return StrUtil.isBlank(getApiAddress()) ? API_ADDRESS : getApiAddress();

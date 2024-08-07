@@ -34,6 +34,17 @@ import java.util.stream.Collectors;
 @ImgGen(modelNames = "tti")
 public class SparkImageAdapter extends ModelService implements IImageGenerationAdapter {
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     private final String apiUrl = "https://spark-api.cn-huabei-1.xf-yun.com/v2.1/tti";
 
     private  final Logger log = LoggerFactory.getLogger(SparkImageAdapter.class);

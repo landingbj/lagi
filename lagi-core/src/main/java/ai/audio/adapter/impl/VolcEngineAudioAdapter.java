@@ -51,6 +51,15 @@ public class VolcEngineAudioAdapter extends ModelService implements IAudioAdapte
 //    private UniversalOSS universalOSS = new LandingOSS();
     private UniversalOSS universalOSS;
 
+    @Override
+    public boolean verify() {
+        if(getAccessToken() == null || getAccessToken().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+
     private VolcTtsRequest convert(TTSRequestParam param) {
         String clusterId = ttsClusterId;
         if("clone".equals(param.getSource())) {

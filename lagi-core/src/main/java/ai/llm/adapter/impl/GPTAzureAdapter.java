@@ -27,6 +27,14 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
 
 
     @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public String getApiAddress() {
         return getEndpoint() + "openai/deployments/" + getDeployment() + "/chat/completions?api-version=" + getApiVersion();
     }

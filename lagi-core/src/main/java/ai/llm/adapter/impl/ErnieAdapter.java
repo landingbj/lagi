@@ -22,6 +22,16 @@ import java.util.stream.Collectors;
 @LLM(modelNames = {"ERNIE-Speed-128K","ERNIE-Bot-turbo","ERNIE-4.0-8K","ERNIE-3.5-8K-0205","ERNIE-3.5-4K-0205", "ERNIE-3.5-8K-1222"})
 public class ErnieAdapter extends ModelService implements ILlmAdapter {
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
@@ -54,7 +64,6 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
         List<Message> messages = request.getMessages().stream().map(m->{
             Message message = new Message();
             message.setContent(m.getContent());
-            System.out.println(m.getContent());
             message.setRole(m.getRole());
             return message;
         }).collect(Collectors.toList());

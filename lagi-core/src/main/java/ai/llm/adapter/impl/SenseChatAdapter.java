@@ -22,6 +22,17 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     private static final int HTTP_TIMEOUT = 15 * 1000;
 
     @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();

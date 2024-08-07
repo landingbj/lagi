@@ -21,6 +21,17 @@ import java.util.List;
 public class BaiduOcrAdapter extends ModelService implements IOcr {
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder().build();
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     public String recognize(BufferedImage image) {
         String result;
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");

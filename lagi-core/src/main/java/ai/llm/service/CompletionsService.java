@@ -8,10 +8,7 @@
 
 package ai.llm.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 import ai.common.ModelService;
@@ -55,42 +52,37 @@ public class CompletionsService {
         ChatCompletionResult answer = null;
         try (IRContainer contain = new FastDirectContainer()) {
             if (chatCompletionRequest.getModel() != null) {
-                LlmManager.getInstance().getAdapters().stream().filter(adapter -> {
-                    if (adapter instanceof ModelService) {
-                        ModelService modelService = (ModelService) adapter;
-                        return modelService.getModel().equals(chatCompletionRequest.getModel());
-                    }
-                    return false;
-                }).findAny().ifPresent(adapter -> {
+                ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
+                if(appointAdapter != null) {
                     Map<String, Object> params = new HashMap<>();
                     params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
                     Backend backend = new Backend();
-                    BeanUtil.copyProperties((ModelService) adapter, backend);
+                    backend.setModel(chatCompletionRequest.getModel());
+                    BeanUtil.copyProperties((ModelService) appointAdapter, backend);
                     params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                    IMapper mapper = getMapper(backend);
+                    IMapper mapper = getMapper(backend, appointAdapter);
                     mapper.setParameters(params);
                     mapper.setPriority(backend.getPriority());
                     contain.registerMapper(mapper);
-                });
-            } else {
-                for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
-                    if (adapter instanceof ModelService) {
-                        ModelService modelService = (ModelService) adapter;
-                        Map<String, Object> params = new HashMap<>();
-                        params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
-                        Backend backend = new Backend();
-                        BeanUtil.copyProperties(modelService, backend);
-                        params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                        IMapper mapper = getMapper(backend);
-                        mapper.setParameters(params);
-                        mapper.setPriority(backend.getPriority());
-                        contain.registerMapper(mapper);
+                } else {
+                    for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
+                        if (adapter instanceof ModelService) {
+                            ModelService modelService = (ModelService) adapter;
+                            Map<String, Object> params = new HashMap<>();
+                            params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
+                            Backend backend = new Backend();
+                            BeanUtil.copyProperties(modelService, backend);
+                            params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
+                            IMapper mapper = getMapper(backend, adapter);
+                            mapper.setParameters(params);
+                            mapper.setPriority(backend.getPriority());
+                            contain.registerMapper(mapper);
+                        }
                     }
                 }
             }
             IReducer qaReducer = new QaReducer();
             contain.registerReducer(qaReducer);
-
             @SuppressWarnings("unchecked")
             List<ChatCompletionResult> resultMatrix = (List<ChatCompletionResult>) contain.Init().running();
             if (resultMatrix.get(0) != null) {
@@ -110,7 +102,7 @@ public class CompletionsService {
                 return adapter.streamCompletions(chatCompletionRequest);
             }
         } else {
-            for (ILlmAdapter adapter : getAdapters()) {
+            for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
                 if (adapter != null) {
                     ModelService modelService = (ModelService) adapter;
                     if(!CacheManager.get(modelService.getModel())) {
@@ -145,22 +137,14 @@ public class CompletionsService {
         }
     }
 
-    private List<ILlmAdapter> getAdapters() {
-        return LlmManager.getInstance().getAdapters();
-    }
-
-    private ILlmAdapter getAdapter(Backend backendConfig) {
-        return LlmManager.getInstance().getAdapter(backendConfig.getModel());
-    }
 
 
-    private IMapper getMapper(Backend backendConfig) {
+    private IMapper getMapper(Backend backendConfig, ILlmAdapter adapter) {
         if (backendConfig.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
             return new LandingMapper();
         }
-        return new UniversalMapper(getAdapter(backendConfig));
+        return new UniversalMapper(adapter);
     }
-
 
     public void addVectorDBContext(ChatCompletionRequest request, String context) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);

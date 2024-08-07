@@ -3,9 +3,10 @@ package ai.common;
 
 import lombok.Data;
 @Data
-public class ModelService {
+public class ModelService implements ModelVerify{
 
     protected String appId;
+    protected String backend;
     protected String apiKey;
     protected String secretKey;
     protected String appKey;
@@ -22,5 +23,10 @@ public class ModelService {
     protected String accessToken;
     private String others;
     protected String alias;
+    protected Boolean enable;
 
+    @Override
+    public boolean verify() {
+        return true;
+    }
 }

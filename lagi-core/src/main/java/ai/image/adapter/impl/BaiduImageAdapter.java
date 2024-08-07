@@ -27,6 +27,18 @@ import java.util.stream.Collectors;
 @ImgGen(modelNames = "Stable-Diffusion-XL")
 public class BaiduImageAdapter extends ModelService implements IImage2TextAdapter, IImageGenerationAdapter {
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+
     private final Logger logger = LoggerFactory.getLogger(BaiduImageAdapter.class);
 
     private Qianfan buildQianfan() {

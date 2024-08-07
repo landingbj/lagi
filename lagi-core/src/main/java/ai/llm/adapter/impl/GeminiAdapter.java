@@ -28,6 +28,14 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
     private static final String STEAM_COMPLETIONS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent";
 
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {

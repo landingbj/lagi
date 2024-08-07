@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class Driver {
+    private String backend;
     private String model;
     private String driver;
     private String oss;
@@ -19,6 +20,7 @@ public class Driver {
     private String appKey;
     private String accessKeyId;
     private String accessKeySecret;
+    private String accessToken;
     private String securityKey;
     private String endpoint;
 }

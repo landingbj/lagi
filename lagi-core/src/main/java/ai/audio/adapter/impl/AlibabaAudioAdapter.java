@@ -24,6 +24,20 @@ public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
     private UniversalOSS universalOSS;
 
     @Override
+    public boolean verify() {
+        if(getAppKey() == null || getAppKey().startsWith("you")) {
+            return false;
+        }
+        if(getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
+            return false;
+        }
+        if(getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
         AlibabaAsrService asrService = new AlibabaAsrService(
                 getAppKey(),

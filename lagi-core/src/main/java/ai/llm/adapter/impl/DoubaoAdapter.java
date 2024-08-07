@@ -23,6 +23,14 @@ import java.util.stream.Collectors;
 public class DoubaoAdapter  extends ModelService implements ILlmAdapter {
 
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     private String getModelEndpoint(String model) {
         Map<String, String> collect = Arrays.stream(alias.split(",")).collect(Collectors.toMap(a -> a.split("=")[0], a -> a.split("=")[1]));
         return collect.get(model);

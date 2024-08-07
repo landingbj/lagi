@@ -26,6 +26,14 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final String COMPLETIONS_URL = "https://api.moonshot.cn/v1/chat/completions";
 
     @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         Map<String, String> headers = new HashMap<>();

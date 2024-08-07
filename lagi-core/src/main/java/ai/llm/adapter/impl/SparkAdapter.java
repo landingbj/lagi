@@ -35,6 +35,21 @@ import java.util.function.Function;
 
 @LLM(modelNames = {"v1.1", "v2.1", "v3.1", "v3.5"})
 public class SparkAdapter extends ModelService implements ILlmAdapter {
+
+    @Override
+    public boolean verify() {
+        if(getAppId() == null || getAppId().startsWith("you")) {
+            return false;
+        }
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         SparkRequest sparkRequest = convertRequest(chatCompletionRequest);

@@ -72,7 +72,9 @@ public class LlmApiServlet extends BaseServlet {
         HttpSession session = req.getSession();
         ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-        if(preference != null && chatCompletionRequest != null) {
+        if(chatCompletionRequest.getModel() == null
+                && preference != null
+                && preference.getLlm() != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
 

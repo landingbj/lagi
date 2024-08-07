@@ -17,6 +17,18 @@ import java.util.*;
 
 @OCR(company = "alibaba", modelNames = "ocr")
 public class AlibabaOcrAdapter extends ModelService implements IOcr {
+
+    @Override
+    public boolean verify() {
+        if(getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
+            return false;
+        }
+        if(getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     public com.aliyun.ocr_api20210707.Client createClient() throws Exception {
         Config config = new Config()
                 .setAccessKeyId(getAccessKeyId())

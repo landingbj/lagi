@@ -139,7 +139,13 @@ public class AIManager<T> {
     }
 
     private static <T> List<T> getSortedAdapter(Map<String, T> map, Comparator<? super T> comparator) {
-        return map.values().stream().sorted(comparator).collect(Collectors.toList());
+        return map.values().stream().distinct().filter(a->{
+            ModelService m = (ModelService) a;
+            if(!Boolean.TRUE.equals(m.getEnable())) {
+                return false;
+            }
+            return m.getPriority() != null &&  m.getPriority() > 0;
+        }).sorted(comparator).collect(Collectors.toList());
     }
 
     private static <T> List<T> getDefaultSortedAdapter(Map<String, T> map) {

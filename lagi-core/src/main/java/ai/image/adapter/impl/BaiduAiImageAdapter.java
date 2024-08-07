@@ -21,6 +21,17 @@ import java.net.URLEncoder;
 @ImgEnhance(modelNames = "enhance")
 public class BaiduAiImageAdapter extends ModelService implements ImageEnhanceAdapter {
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     private final Logger log = LoggerFactory.getLogger(BaiduAiImageAdapter.class);
 
     static final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder().build();

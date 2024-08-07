@@ -22,6 +22,17 @@ public class BaiduTranslateAdapter extends ModelService implements TranslateAdap
 
     private final Logger log = LoggerFactory.getLogger(BaiduTranslateAdapter.class);
 
+    @Override
+    public boolean verify() {
+        if(getAppId() == null || getAppId().startsWith("you")) {
+            return false;
+        }
+        if(getSecurityKey() == null || getSecurityKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
 
     private Map<String, Object> buildParams(String query, String from, String to) {
         Map<String, Object> params = new HashMap<>();

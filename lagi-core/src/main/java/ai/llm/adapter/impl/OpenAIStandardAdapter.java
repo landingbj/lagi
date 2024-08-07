@@ -18,20 +18,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@LLM(modelNames = {"Baichuan2-Turbo","Baichuan2-Turbo-192k","Baichuan2-53B"})
-public class BaichuanAdapter extends ModelService implements ILlmAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BaichuanAdapter.class);
+@LLM(modelNames = {"*"})
+public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(OpenAIStandardAdapter.class);
     private final Gson gson = new Gson();
     private static final int HTTP_TIMEOUT = 5 * 1000;
-    private static final String COMPLETIONS_URL = "https://api.baichuan-ai.com/v1/chat/completions";
 
-    @Override
-    public boolean verify() {
-        if(getApiKey() == null || getApiKey().startsWith("you")) {
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
@@ -41,7 +33,7 @@ public class BaichuanAdapter extends ModelService implements ILlmAdapter {
         headers.put("Authorization", "Bearer " + getApiKey());
         String jsonResult = null;
         try {
-            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
+            jsonResult = HttpUtil.httpPost(getApiAddress(), headers, chatCompletionRequest, HTTP_TIMEOUT);
         } catch (IOException e) {
             logger.error("", e);
         }
@@ -58,6 +50,7 @@ public class BaichuanAdapter extends ModelService implements ILlmAdapter {
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
+        String apiUrl = getApiAddress();
         String json = gson.toJson(chatCompletionRequest);
         String apiKey = getApiKey();
         Function<String, ChatCompletionResult> convertFunc = e -> {
@@ -71,7 +64,7 @@ public class BaichuanAdapter extends ModelService implements ILlmAdapter {
             });
             return result;
         };
-        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, COMPLETIONS_URL, apiKey, convertFunc, this);
+        ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey, convertFunc,this);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
         return Observable.fromIterable(iterable);
     }

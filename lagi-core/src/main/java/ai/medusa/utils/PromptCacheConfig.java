@@ -32,7 +32,7 @@ public class PromptCacheConfig {
     public static final int ANSWER_CORE_THRESHOLD = 2;
     public static final double LCS_RATIO_QUESTION = 0.5;
     public static final int TRUNCATE_LENGTH = 20;
-    public static final double LCS_RATIO_PROMPT_INPUT = 0.65;
+    public static final double LCS_RATIO_PROMPT_INPUT = 0.8;
 
     public static void init(List<VectorStoreConfig> vectorStoreList, Medusa config) {
         if(vectorStoreList != null && !vectorStoreList.isEmpty() && config != null) {

@@ -29,6 +29,17 @@ import java.util.stream.Collectors;
 @Img2Video(modelNames = "vision")
 public class AlibabaVisionAdapter extends ModelService implements Image2VideoAdapter, Video2EnhanceAdapter {
 
+    @Override
+    public boolean verify() {
+        if(getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
+            return false;
+        }
+        if(getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
     private final Logger log = LoggerFactory.getLogger(AlibabaVisionAdapter.class);
 
     private UniversalOSS universalOSS;

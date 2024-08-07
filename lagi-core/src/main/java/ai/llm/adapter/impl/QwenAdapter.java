@@ -27,6 +27,14 @@ import java.util.Optional;
 public class QwenAdapter extends ModelService implements ILlmAdapter {
 
 
+    @Override
+    public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
+        return true;
+    }
+
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
