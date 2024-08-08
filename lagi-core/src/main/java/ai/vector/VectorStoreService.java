@@ -42,6 +42,9 @@ public class VectorStoreService {
     }
 
     public VectorStoreConfig getVectorStoreConfig() {
+        if(vectorStore == null) {
+            return null;
+        }
         return vectorStore.getConfig();
     }
 

@@ -2,6 +2,7 @@ package ai.vector;
 
 import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.utils.LagiGlobal;
 import ai.vector.pojo.IndexRecord;
 import cn.hutool.core.util.RandomUtil;
 import lombok.ToString;
@@ -132,7 +133,7 @@ public class VectorCacheLoader {
             try {
                 logger.info("VectorCacheLoader started");
 //                loadVectorLinkCache();
-                if (PromptCacheConfig.MEDUSA_ENABLE) {
+                if (PromptCacheConfig.MEDUSA_ENABLE && LagiGlobal.RAG_ENABLE) {
                     loadMedusaCache();
                 }
                 logger.info("VectorCacheLoader initialized");

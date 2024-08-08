@@ -36,19 +36,6 @@ public class GlobalConfigurations extends AbstractConfiguration {
         OSSManager.getInstance().register(stores.getOss());
         VectorStoreManager.getInstance().register(stores.getVectors(), stores.getRag(), functions.getEmbedding());
         MultimodalAIManager.register(models, functions);
-//        LlmManager.getInstance().register(models, functions.getChat());
-//        ASRManager.getInstance().register(models, functions.getSpeech2text());
-//        TTSManager.getInstance().register(models, functions.getText2speech());
-//        Image2TextManger.getInstance().register(models, functions.getImage2text());
-//        ImageGenerationManager.getInstance().register(models, functions.getText2image());
-//        ImageEnhanceManager.getInstance().register(models, functions.getImage2Enhance());
-//        Text2VideoManager.getInstance().register(models, functions.getText2video());
-//        Image2VideoManager.getInstance().register(models, functions.getImage2video());
-//        Video2EnhanceManger.getInstance().register(models, functions.getVideo2Enhance());
-//        Video2TrackManager.getInstance().register(models, functions.getVideo2Track());
-//        SoundCloneManager.getInstance().register(models, functions.getSpeech2clone());
-//        OcrManager.getInstance().register(models, functions.getImage2ocr());
-        TranslateManager.getInstance().register(models, functions.getTranslate());
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
         OcrConfig.init(functions.getImage2ocr());
     }

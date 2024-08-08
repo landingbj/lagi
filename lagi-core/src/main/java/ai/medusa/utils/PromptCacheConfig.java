@@ -3,6 +3,7 @@ package ai.medusa.utils;
 import ai.common.pojo.Medusa;
 import ai.common.pojo.VectorStoreConfig;
 import cn.hutool.core.util.StrUtil;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -34,12 +35,28 @@ public class PromptCacheConfig {
     public static final int TRUNCATE_LENGTH = 20;
     public static final double LCS_RATIO_PROMPT_INPUT = 0.8;
 
+
+
+    @Getter
+    private static Boolean enableLlmDiver = true;
+    @Getter
+    private static Boolean enableTreeDiver = true;
+    @Getter
+    private static Boolean enableRagDiver = true;
+    @Getter
+    private static Boolean enablePageDiver = true;
+
+
     public static void init(List<VectorStoreConfig> vectorStoreList, Medusa config) {
         if(vectorStoreList != null && !vectorStoreList.isEmpty() && config != null) {
             MEDUSA_ENABLE = config.getEnable() != null ? config.getEnable() : MEDUSA_ENABLE;
             LOCATE_ALGORITHM = StrUtil.isBlank(config.getAlgorithm()) ? LOCATE_ALGORITHM : config.getAlgorithm();
             String defaultCategory = vectorStoreList.get(0).getDefaultCategory();
             MEDUSA_CATEGORY = MEDUSA_CATEGORY + "-" + defaultCategory;
+            enableLlmDiver = config.getEnableLlmDiver() != null ? config.getEnableLlmDiver() : enableLlmDiver;
+            enableTreeDiver = config.getEnableTreeDiver() != null ? config.getEnableTreeDiver() : enableTreeDiver;
+            enableRagDiver = config.getEnableRagDiver() != null ? config.getEnableRagDiver() : enableRagDiver;
+            enablePageDiver = config.getEnablePageDiver() != null ? config.getEnablePageDiver() : enablePageDiver;
         }
     }
 }

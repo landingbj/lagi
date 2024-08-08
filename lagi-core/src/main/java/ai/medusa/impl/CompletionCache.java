@@ -140,10 +140,18 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     Integer.MAX_VALUE
             );
             promptLoader.connectProducer(new PickPromptProducer(promptPool));
-            promptLoader.connectConsumer(llmDiversifyPromptProducer);
-            promptLoader.connectConsumer(treeDiversifyPromptProducer);
-            promptLoader.connectConsumer(ragDiversifyPromptProducer);
-            promptLoader.connectConsumer(pageDiversifyPromptProducer);
+            if(PromptCacheConfig.getEnableLlmDiver()) {
+                promptLoader.connectConsumer(llmDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableTreeDiver()) {
+                promptLoader.connectConsumer(treeDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableRagDiver()) {
+                promptLoader.connectConsumer(ragDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableLlmDiver()) {
+                promptLoader.connectConsumer(pageDiversifyPromptProducer);
+            }
             promptLoader.start();
         }
 
@@ -154,10 +162,19 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.TOTAL_THREAD_COUNT,
                     Integer.MAX_VALUE
             );
-            promptProcessor.connectProducer(llmDiversifyPromptProducer);
-            promptProcessor.connectProducer(treeDiversifyPromptProducer);
-            promptProcessor.connectProducer(ragDiversifyPromptProducer);
-            promptProcessor.connectProducer(pageDiversifyPromptProducer);
+
+            if(PromptCacheConfig.getEnableLlmDiver()) {
+                promptLoader.connectProducer(llmDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableTreeDiver()) {
+                promptLoader.connectProducer(treeDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableRagDiver()) {
+                promptLoader.connectProducer(ragDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableLlmDiver()) {
+                promptLoader.connectProducer(pageDiversifyPromptProducer);
+            }
             promptProcessor.registerProducerErrorHandler(new DiversifyPromptErrorHandler(promptPool));
             promptProcessor.connectConsumer(new CompletePromptConsumer(CompletionCache.getInstance()));
             promptProcessor.registerConsumerErrorHandler(new CompletePromptErrorHandler(promptPool));

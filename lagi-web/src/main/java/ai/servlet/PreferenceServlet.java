@@ -17,7 +17,6 @@ import ai.servlet.annotation.Post;
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
-import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
 
@@ -33,44 +32,18 @@ public class PreferenceServlet extends RestfulServlet {
 
     private final Map<String, List<ModelInfo>> modelInfoMap = new HashMap<>();
 
-    private GlobalConfigurations configuration = (GlobalConfigurations) ContextLoader.configuration;
-
-    @Data
-    @Builder
-    static class ModelDriver  {
-        private String model;
-        private Class<?> driver;
-        private Boolean enable;
-        private String description;
-        private String company;
-    }
 
     public PreferenceServlet(){
-        List<Backend> models = configuration.getModels();
-        List<ModelDriver> drivers = models.stream()
-                .flatMap(m-> m.getDrivers().stream().map(d->{
-                    boolean enable = checkApiKey(m, d);
-                    String description = enable ? "" : "缺少必要的apikey ...";
-                    Class<?> clazz = null;
-                    try {
-                        clazz = Class.forName(d.getDriver());
-                    } catch (ClassNotFoundException ignored) {
-                    }
-                    ModelDriver build = ModelDriver.builder().enable(enable).description(description).company(m.getName()).driver(clazz).build();
-                    return clazz == null ? null : build;
-                }))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        List<ModelInfo> aLLMs = genModelInfo(drivers, LLM.class);
-        List<ModelInfo> aTTSs = genModelInfo(drivers, TTS.class);
-        List<ModelInfo> aASRs = genModelInfo(drivers, ASR.class);
-        List<ModelInfo> aImg2Texts = genModelInfo(drivers, Img2Text.class);
-        List<ModelInfo> aImgGens = genModelInfo(drivers, ImgGen.class);
-        List<ModelInfo> aImgEnhances = genModelInfo(drivers, ImgEnhance.class);
-        List<ModelInfo> aImg2Videos = genModelInfo(drivers,Img2Video.class);
-        List<ModelInfo> aText2Videos = genModelInfo(drivers,Text2Video.class);
-        List<ModelInfo> aVideoEnhances = genModelInfo(drivers,VideoEnhance.class);
-        List<ModelInfo> aVideoTracks = genModelInfo(drivers,VideoTrack.class);
+        List<ModelInfo> aLLMs = LlmManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, LLM.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aTTSs = TTSManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, TTS.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aASRs = ASRManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, ASR.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aImg2Texts = Image2TextManger.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, Img2Text.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aImgGens = ImageGenerationManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, ImgGen.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aImgEnhances = ImageEnhanceManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, ImgEnhance.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aImg2Videos = Image2VideoManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, Img2Video.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aText2Videos = Text2VideoManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, Text2Video.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aVideoEnhances= Video2EnhanceManger.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, VideoEnhance.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aVideoTracks= Video2TrackManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, VideoTrack.class).stream()).collect(Collectors.toList());
         modelInfoMap.put("llm", aLLMs);
         modelInfoMap.put("tts", aTTSs);
         modelInfoMap.put("asr", aASRs);
@@ -84,43 +57,18 @@ public class PreferenceServlet extends RestfulServlet {
 
     }
 
-    private <A extends Annotation> List<ModelInfo> genModelInfo(List<ModelDriver> drivers, Class<A> annotationClass) {
-        return drivers.stream()
-                .filter(md-> md.getDriver().getAnnotation(annotationClass) != null)
-                .flatMap(md-> {
-                    String [] modelNames = AnnotationUtil.getAnnotationValue(md.driver, annotationClass, "modelNames");
-                    return Arrays.stream(modelNames)
-                            .map(m->
-                                    ModelInfo.builder().model(m).enabled(md.getEnable()).company(md.getCompany()).description(md.getDescription()).build()
-                            );
-                })
+    private <A extends Annotation> List<ModelInfo> convert2ModelInfo(ModelService modelService, Class<A> annotationClass) {
+        A annotation = modelService.getClass().getAnnotation(annotationClass);
+        if(annotation == null){
+            return Collections.emptyList();
+        }
+        String [] modelNames = AnnotationUtil.getAnnotationValue(modelService.getClass(), annotationClass, "modelNames");
+        return Arrays.stream(modelNames)
+                .map(m-> ModelInfo.builder().model(m).enabled(modelService.getEnable()).company("").description("").build())
                 .collect(Collectors.toList());
     }
 
-    private boolean checkApiKey(Backend model, Driver driver) {
-         String appId = model.getAppId() == null ? driver.getAppId() : model.getAppId();
-         String apiKey = model.getApiKey() == null ? driver.getApiKey() : model.getApiKey();
-         String secretKey = model.getSecretKey() == null ? driver.getSecretKey() : model.getSecretKey();
-//         String appKey = model.getAppKey() == null ? driver.getAppKey() : model.getAppKey();
-         String accessKeyId = model.getAccessKeyId() == null ? driver.getAccessKeyId() : model.getAccessKeyId();
-         String accessKeySecret = model.getAccessKeySecret() == null ? driver.getAccessKeySecret() : model.getAccessKeySecret();
-         String securityKey = model.getSecurityKey() == null ? driver.getSecurityKey() : model.getSecurityKey();
-         boolean res = false;
-         if(apiKey != null) {
-             if(secretKey != null) {
-                 res =  (!apiKey.startsWith("you")) && (!secretKey.startsWith("you"));
-             } else {
-                 res =  !apiKey.startsWith("you");
-             }
-         }
-        if(accessKeyId != null && accessKeySecret != null) {
-            res =  (!accessKeyId.startsWith("you")) && !(accessKeySecret.startsWith("you"));
-        }
-        if(appId != null && securityKey != null) {
-            res =  !(securityKey.startsWith("you"));
-        }
-        return res;
-    }
+
 
     private void setActivate(List<ModelInfo> orDefault, String activeModel) {
         orDefault.stream().filter(o->o.getModel().equals(activeModel)).findAny().ifPresent(o->{
@@ -196,51 +144,11 @@ public class PreferenceServlet extends RestfulServlet {
 
     @Post("savePreference")
     public Integer savePreference(@Body ModelPreferenceDto preferenceRequest, HttpServletRequest request) {
-        if(preferenceRequest.getLlm() != null) {
-            registerModel("llm", preferenceRequest.getLlm(), LlmManager.getInstance());
-        }
-        if(preferenceRequest.getAsr() != null){
-            registerModel("asr", preferenceRequest.getAsr(), ASRManager.getInstance());
-        }
-        if(preferenceRequest.getTts() != null){
-            registerModel("tts", preferenceRequest.getTts(), TTSManager.getInstance());
-        }
-        if(preferenceRequest.getImg2Text() != null){
-            registerModel("img2Text", preferenceRequest.getImg2Text(), Image2TextManger.getInstance());
-        }
-        if(preferenceRequest.getImgGen() != null) {
-            registerModel("imgGen", preferenceRequest.getImgGen(), ImageGenerationManager.getInstance());
-        }
-        if(preferenceRequest.getImgEnhance() != null) {
-            registerModel("imgEnhance", preferenceRequest.getImgEnhance(), ImageEnhanceManager.getInstance());
-        }
-        if(preferenceRequest.getImg2Video() != null) {
-            registerModel("img2Video", preferenceRequest.getImg2Video(), Image2VideoManager.getInstance());
-        }
-        if(preferenceRequest.getText2Video() != null) {
-            registerModel("text2Video", preferenceRequest.getText2Video(), Text2VideoManager.getInstance());
-        }
-        if(preferenceRequest.getVideoEnhance() != null) {
-            registerModel("videoEnhance", preferenceRequest.getVideoEnhance(), Video2EnhanceManger.getInstance());
-        }
-        if(preferenceRequest.getVideoTrack() != null) {
-            registerModel("videoTrack", preferenceRequest.getVideoTrack(), Video2TrackManager.getInstance());
-        }
+
         Integer res = userModelPreferenceDao.saveOrUpdate(preferenceRequest);
         request.getSession().removeAttribute("preference");
         loadUserPreference(preferenceRequest.getFinger(), request);
         return res;
-    }
-
-    private <T> void registerModel(String type,  String model, AIManager<T> aiManager) {
-        modelInfoMap.get(type).stream().filter(mi->mi.getModel().equals(model) && mi.getEnabled()).findAny().ifPresent(mi->{
-            aiManager.register(configuration.getModels(),Lists.newArrayList(Backend.builder()
-                    .backend(mi.getCompany())
-                    .model(mi.getModel())
-                    .enable(true)
-                    .priority(1)
-                    .build()));
-        });
     }
 
     @Get("getPreference")

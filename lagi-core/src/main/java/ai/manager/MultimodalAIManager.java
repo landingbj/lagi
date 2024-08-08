@@ -11,6 +11,8 @@ import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
 import ai.llm.adapter.ILlmAdapter;
 import ai.ocr.IOcr;
+import ai.oss.UniversalOSS;
+import ai.translate.adapter.TranslateAdapter;
 import ai.video.adapter.Image2VideoAdapter;
 import ai.video.adapter.Text2VideoAdapter;
 import ai.video.adapter.Video2EnhanceAdapter;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -73,6 +76,9 @@ public class MultimodalAIManager {
             if(modelService instanceof Text2VideoAdapter) {
                 register(modelNameList, Text2VideoManager.getInstance(), (Text2VideoAdapter) modelService, modelFunctions.getText2video());
             }
+            if(modelService instanceof TranslateAdapter) {
+                register(modelNameList, TranslateManager.getInstance(), (TranslateAdapter) modelService, modelFunctions.getTranslate());
+            }
         });
     }
 
@@ -100,7 +106,7 @@ public class MultimodalAIManager {
             });
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("MultimodalAIManager register model error", e);
         }
     }
 
@@ -138,6 +144,17 @@ public class MultimodalAIManager {
                     }
                     CopyOptions copyOption = CopyOptions.create(null, true);
                     BeanUtil.copyProperties(driver, modelService, copyOption);
+                    if(driver.getOss() !=null) {
+                        try {
+                            Field universalOSS = modelService.getClass().getDeclaredField("universalOSS");
+                            if(universalOSS.getType() == UniversalOSS.class) {
+                                universalOSS.setAccessible(true);
+                                universalOSS.set(modelService, OSSManager.getInstance().getOss(driver.getOss()));
+                            }
+                        } catch (Exception e) {
+                            log.error("oss inject failed {}", e.getMessage());
+                        }
+                    }
                     return modelService;
                 })
                 // filter by null and verified result
