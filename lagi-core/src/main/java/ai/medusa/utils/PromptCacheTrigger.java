@@ -252,6 +252,14 @@ public class PromptCacheTrigger {
         return result;
     }
 
+    private void delay(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
     private String completions(List<ChatMessage> messages) {
         String answer = rawAnswerCache.get(messages);
         if (answer == null) {
@@ -259,6 +267,7 @@ public class PromptCacheTrigger {
             ChatCompletionResult result = completionsService.completions(request);
             answer = ChatCompletionUtil.getFirstAnswer(result);
             rawAnswerCache.put(messages, answer);
+            delay(PromptCacheConfig.getPreDelay());
         }
         return answer;
     }

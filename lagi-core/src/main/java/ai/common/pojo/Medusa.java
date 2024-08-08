@@ -11,4 +11,5 @@ public class Medusa {
     private Boolean enableRagDiver;
     private Boolean enablePageDiver;
     private Long consumeDelay;
+    private Long preDelay;
 }
