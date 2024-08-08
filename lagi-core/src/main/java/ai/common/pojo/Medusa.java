@@ -10,4 +10,5 @@ public class Medusa {
     private Boolean enableTreeDiver;
     private Boolean enableRagDiver;
     private Boolean enablePageDiver;
+    private Long consumeDelay;
 }

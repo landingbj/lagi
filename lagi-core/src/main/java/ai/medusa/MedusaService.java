@@ -10,9 +10,7 @@ import ai.medusa.utils.PromptPool;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.qa.LLMConfig;
 import ai.utils.LagiGlobal;
-import ai.utils.qa.ChatCompletionUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +20,7 @@ public class MedusaService {
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        if (PromptCacheConfig.MEDUSA_ENABLE) {
+        if (PromptCacheConfig.MEDUSA_ENABLE && LagiGlobal.RAG_ENABLE) {
             switch (PromptCacheConfig.LOCATE_ALGORITHM) {
                 case "lcs":
                 case "tree":

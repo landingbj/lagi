@@ -12,11 +12,13 @@ import ai.mr.pipeline.ProducerConsumerPipeline;
 import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LRUCache;
+import lombok.Getter;
 
 import java.util.List;
 
 
 public class CompletionCache implements ICache<PromptInput, ChatCompletionResult> {
+    @Getter
     private static final CompletionCache instance = new CompletionCache();
     private static final LRUCache<PromptInput, List<ChatCompletionResult>> promptCache;
     private static final QaCache qaCache = new QaCache();
@@ -37,10 +39,6 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
     }
 
     private CompletionCache() {
-    }
-
-    public static CompletionCache getInstance() {
-        return instance;
     }
 
     @Override

@@ -6,6 +6,7 @@ import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.mr.pipeline.Consumer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -13,10 +14,12 @@ import ai.openai.pojo.ChatMessage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class CompletePromptConsumer implements Consumer<PooledPrompt> {
     private final CompletionCache cache;
     private final CompletionsService completionsService = new CompletionsService();
@@ -46,9 +49,18 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
     public void cleanup() {
     }
 
+    private void delay(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
     public ChatCompletionResult completions(PooledPrompt item) {
         List<IndexSearchData> indexSearchDataList = item.getIndexSearchData();
         ChatCompletionRequest completionRequest = getCompletionsRequest(item, indexSearchDataList);
+        delay(PromptCacheConfig.getConsumeDelay());
         ChatCompletionResult chatCompletionResult = completionsService.completions(completionRequest);
         if (!indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);

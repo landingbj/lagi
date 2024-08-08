@@ -45,6 +45,8 @@ public class PromptCacheConfig {
     private static Boolean enableRagDiver = true;
     @Getter
     private static Boolean enablePageDiver = true;
+    @Getter
+    private static Long consumeDelay = 0L;
 
 
     public static void init(List<VectorStoreConfig> vectorStoreList, Medusa config) {
@@ -57,6 +59,7 @@ public class PromptCacheConfig {
             enableTreeDiver = config.getEnableTreeDiver() != null ? config.getEnableTreeDiver() : enableTreeDiver;
             enableRagDiver = config.getEnableRagDiver() != null ? config.getEnableRagDiver() : enableRagDiver;
             enablePageDiver = config.getEnablePageDiver() != null ? config.getEnablePageDiver() : enablePageDiver;
+            consumeDelay = config.getConsumeDelay() != null ? config.getConsumeDelay() : consumeDelay;
         }
     }
 }

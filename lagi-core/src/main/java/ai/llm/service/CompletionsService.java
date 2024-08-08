@@ -51,6 +51,7 @@ public class CompletionsService {
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         ChatCompletionResult answer = null;
         try (IRContainer contain = new FastDirectContainer()) {
+            boolean doCompleted = false;
             if (chatCompletionRequest.getModel() != null) {
                 ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
                 if(appointAdapter != null) {
@@ -64,20 +65,22 @@ public class CompletionsService {
                     mapper.setParameters(params);
                     mapper.setPriority(backend.getPriority());
                     contain.registerMapper(mapper);
-                } else {
-                    for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
-                        if (adapter instanceof ModelService) {
-                            ModelService modelService = (ModelService) adapter;
-                            Map<String, Object> params = new HashMap<>();
-                            params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
-                            Backend backend = new Backend();
-                            BeanUtil.copyProperties(modelService, backend);
-                            params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                            IMapper mapper = getMapper(backend, adapter);
-                            mapper.setParameters(params);
-                            mapper.setPriority(backend.getPriority());
-                            contain.registerMapper(mapper);
-                        }
+                    doCompleted = true;
+                }
+            }
+            if(!doCompleted) {
+                for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
+                    if (adapter instanceof ModelService) {
+                        ModelService modelService = (ModelService) adapter;
+                        Map<String, Object> params = new HashMap<>();
+                        params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
+                        Backend backend = new Backend();
+                        BeanUtil.copyProperties(modelService, backend);
+                        params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
+                        IMapper mapper = getMapper(backend, adapter);
+                        mapper.setParameters(params);
+                        mapper.setPriority(backend.getPriority());
+                        contain.registerMapper(mapper);
                     }
                 }
             }
