@@ -1,6 +1,6 @@
 # API Documentation
 
-## Start Lag[i]
+## Start Lag[i] (Landing AGI)
 
 ### 1.Configure yml files
 
@@ -38,7 +38,7 @@ Depending on your needs, set the mode stream and the priority of the model outpu
 
 ### 2.import dependencies
 
-To call the lag[i] API, you need to import the dependencies, which you can import via maven or directly by importing the jar.
+To call the lag[i] (Landing AGI) API, you need to import the dependencies, which you can import via maven or directly by importing the jar.
 
 ***Take maven：***
 
@@ -60,7 +60,7 @@ Use the maven command to wrap the project, which will generate a war file in the
 mvn package
 ```
 
-Deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the Lag[i] page by visiting the corresponding port in your browser.
+Deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the Lag[i] (Landing AGI) page by visiting the corresponding port in your browser.
 
 ## Completions Interface
 

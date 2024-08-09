@@ -1,10 +1,10 @@
 ## Extension
 
-You are free to extend lag[i] extension to your needs by referring to this document.
+You are free to extend Lag[i] (Landing AGI) extension to your needs by referring to this document.
 
 ## Model extension
 
-If you want to extend Lagi[i] to fit other large models, you can follow these steps:
+If you want to extend Lag[i] (Landing AGI) to fit other large models, you can follow these steps:
 
 ## 1. Adaptation yml
 
@@ -508,7 +508,7 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 
 ## Database Extension
 
-If you want to adapt the Lagi[i] extension to other vector databases, you can follow these steps:
+If you want to adapt the Lag[i] (Landing AGI) extension to other vector databases, you can follow these steps:
 
 ### 1.Adaptation yml
 

@@ -1,6 +1,6 @@
 # Tutorial
 
-Lag[i] is a powerful enterprise-class composite multimodal big model middleware that helps you easily integrate big model technology into your business. This tutorial will guide you through the download, installation, configuration and operation of Lag[i] from scratch, so that you can quickly grasp the use of Lag[i].
+Lag[i] (Landing AGI) is a powerful enterprise-class composite multimodal big model middleware that helps you easily integrate big model technology into your business. This tutorial will guide you through the download, installation, configuration and operation of Lag[i] from scratch, so that you can quickly grasp the use of Lag[i].
 
 ## Environment preparation
 
@@ -10,13 +10,13 @@ Before you start, make sure you have the following environments ready:
 *   **Maven**
 *   **Docker (Optional, used to run vector database)**
 
-## 1. Download Lag[i]
+## 1. Download Lag[i] (Landing AGI)
 
-For developers, we provide an easy way to compile and run Lag[i] applications. You can choose to use the maven command-line tool for wrapping, or run it through a popular integrated development environment (IDE) such as IntelliJ IDEA.
+For developers, we provide an easy way to compile and run Lag[i] (Landing AGI) applications. You can choose to use the maven command-line tool for wrapping, or run it through a popular integrated development environment (IDE) such as IntelliJ IDEA.
 
 ### Method 1: Use maven command
 
-1. **Cloning project**：First, you need to clone the repository for the Lag[i] project:
+1. **Cloning project**：First, you need to clone the repository for the Lag[i] (Landing AGI) project:
 
 ```shell
 git clone https://github.com/landingbj/lagi.git
@@ -37,18 +37,18 @@ mvn clean install
 
 1. **Choose an IDE**： You can choose to use a mainstream IDE like IntelliJ IDEA or Eclipse.
 
-2. **Open GitHub repository**：Connect Lag[i] 's GitHub repository in IDE and use the clone function of IDE to clone Lag[i] project locally.
+2. **Open GitHub repository**：Connect Lag[i] (Landing AGI) 's GitHub repository in IDE and use the clone function of IDE to clone Lag[i] (Landing AGI) project locally.
 
 |        | GitHub repository                             | 
 |--------|---------------------------------------| 
 | SSH    | git@github.com:landingbj/lagi.git     |
 | HTTPS  | https://github.com/landingbj/lagi.git | 
 
-3. **Compile project**： Using the compile feature of your IDE, compile Lag[i] project.
+3. **Compile project**： Using the compile feature of your IDE, compile Lag[i] (Landing AGI) project.
 
 ## 2. Installing Vector database
 
-Lag[i] supports several vector databases, such as ChromaDB. If you want to enhance RAG functionality with retrieval, you need to install the vector database.  
+Lag[i] (Landing AGI) supports several vector databases, such as ChromaDB. If you want to enhance RAG functionality with retrieval, you need to install the vector database.  
 
 **Take ChromaDB for example**:
 
@@ -170,7 +170,7 @@ Select the configured vector database and fill in the corresponding configuratio
 
 ## 4. Import dependencies
 
-To call the lag[i] API, you need to import the dependencies, which you can import via maven or directly by import the jar.
+To call the lag[i] (Landing AGI) API, you need to import the dependencies, which you can import via maven or directly by import the jar.
 
 ***Take the maven import as an example：***
 
@@ -197,7 +197,7 @@ You can choose to use the maven command-line tool for wrapping, or run it throug
      Tomcat:
      > Copy the WAR file into Tomcat's webapps directory.
 
-Deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the Lag[i] page by visiting the corresponding port in your browser.
+Deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the Lag[i] (Landing AGI) page by visiting the corresponding port in your browser.
 
 For example: local port 8080：http://localhost:8080/
 
@@ -206,14 +206,14 @@ Local access:
 
 ## 6. Testing lags [i]
 
-Using the browser to visit Lag[i] page, you can use the provided sample code or API interface to test, such as text dialogue, speech recognition, text-to-speech, image generation and other functions.
+Using the browser to visit Lag[i] (Landing AGI) page, you can use the provided sample code or API interface to test, such as text dialogue, speech recognition, text-to-speech, image generation and other functions.
 
 Text Dialogue:
 ![img_2.png](images/img_2.png)
 
 ## 7. Model switching
 
-Lag[i] provides the ability to switch models dynamically. You can set up multiple models in the configuration file and select different models to switch according to your needs.
+Lag[i] (Landing AGI) provides the ability to switch models dynamically. You can set up multiple models in the configuration file and select different models to switch according to your needs.
 
 1.Modify the configuration switching model.
 
@@ -240,11 +240,11 @@ Online switching:
 
 ## 8. Extension
 
-If you are not satisfied with the large model or vector database that Lag[i] has adapted，You can refer to [Extension documentation](extend_cn.md)，Extend Lag[i] to fit your favorite large model or vector database.
+If you are not satisfied with the large model or vector database that Lag[i] (Landing AGI) has adapted，You can refer to [Extension documentation](extend_cn.md)，Extend Lag[i] (Landing AGI) to fit your favorite large model or vector database.
 
 ## 9. Training the model
 
-You can integrate internal data information into Lag[i] by uploading question-answer pairs, thereby customizing the training of a dedicated large model. During the model training process, the `distance` represents the similarity between your question and the uploaded question-answer pairs; the smaller the value, the higher the similarity. If the most matching question-answer pair identified by the model does not align with the actual intent of your question, you can further optimize the model’s performance by adding or deleting question-answer pairs. By continuously adjusting and optimizing your question-answer data, you can gradually enhance the model’s understanding of your questions, thus improving the accuracy of the system.
+You can integrate internal data information into Lag[i] (Landing AGI) by uploading question-answer pairs, thereby customizing the training of a dedicated large model. During the model training process, the `distance` represents the similarity between your question and the uploaded question-answer pairs; the smaller the value, the higher the similarity. If the most matching question-answer pair identified by the model does not align with the actual intent of your question, you can further optimize the model’s performance by adding or deleting question-answer pairs. By continuously adjusting and optimizing your question-answer data, you can gradually enhance the model’s understanding of your questions, thus improving the accuracy of the system.
 
 ### 1.Upload data
 
@@ -488,4 +488,4 @@ You can improve the model's understanding of your questions and thus enhance sys
 
 ## Summary
 
-With this tutorial, you have successfully integrated Lag[i] into your project and can start using the various AI features Lag[i] provides. Lag[i] 's power and flexible scalability can help you easily apply big model technology to your business, improving user experience and efficiency.
+With this tutorial, you have successfully integrated Lag[i] (Landing AGI) into your project and can start using the various AI features Lag[i] (Landing AGI) provides. Lag[i] (Landing AGI) 's power and flexible scalability can help you easily apply big model technology to your business, improving user experience and efficiency.

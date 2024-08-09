@@ -1,6 +1,6 @@
 # API 接口文档
 
-## 启动 Lag[i]
+## 启动 Lag[i] (联基)
 
 ### 1.配置yml文件
 
@@ -38,7 +38,7 @@
 
 ### 2.引入依赖
 
-调用lag[i]相关API接口需引入依赖，您可以通过maven引入或直接导入jar的方式。
+调用lag[i] (联基) 相关API接口需引入依赖，您可以通过maven引入或直接导入jar的方式。
 
 ***以maven引入为例：***
 
@@ -60,7 +60,7 @@ mvn clean install
 mvn package
 ```
 
-将生成的war包部署到Tomcat服务器中。启动Tomcat后，通过浏览器访问对应的端口，即可查看Lag[i]的具体页面。
+将生成的war包部署到Tomcat服务器中。启动Tomcat后，通过浏览器访问对应的端口，即可查看Lag[i] (联基) 的具体页面。
 
 ## 问答接口
 

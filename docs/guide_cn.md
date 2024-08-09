@@ -1,7 +1,7 @@
 # 模型代码调用指南
 
 ## 概述
-- **介绍**：这份Lag[i]的功能调用指南旨在为您提供清晰、详细的指导，帮助您理解并使用项目中提供的各种 AI 功能。通过这份指南，您可以轻松地将文本对话、语音识别、文字转语音、图片生成等 AI 功能集成到您的应用程序中，实现更智能、更人性化的交互体验。
+- **介绍**：这份Lag[i] (联基) 的功能调用指南旨在为您提供清晰、详细的指导，帮助您理解并使用项目中提供的各种 AI 功能。通过这份指南，您可以轻松地将文本对话、语音识别、文字转语音、图片生成等 AI 功能集成到您的应用程序中，实现更智能、更人性化的交互体验。
 - **背景**：随着人工智能技术的飞速发展，越来越多的应用场景需要与 AI 模型进行交互，例如智能客服、语音助手、图像处理等。为了满足这些需求，本项目提供了多种 AI 功能，旨在帮助您轻松地将 AI 技术应用于您的业务场景，提升用户体验和效率。
 
 ## 开始之前
@@ -524,7 +524,7 @@ public void Test() {
 ## 快速集成进您的项目
 ### 方式一: 直接导入jar包
 
-您可以直接通过import JAR包的方式使用lag[i],将一个传统的业务转换为大模型的业务。
+您可以直接通过import JAR包的方式使用lag[i] (联基),将一个传统的业务转换为大模型的业务。
 
 1. **创建JAR包**：
     - 可借助Maven等构建工具将lagi-core打包成JAR包。
@@ -538,20 +538,20 @@ public void Test() {
 4. **构建和运行项目**：
     - 在你的项目中，构建和运行项目。
 
-通过这种方式，你可以将lag[i]工程以JAR包直接集成到你的项目中。
+通过这种方式，你可以将lag[i] (联基) 工程以JAR包直接集成到你的项目中。
 
 ### 方式二: 在Eclipse和IntelliJ中
 **Eclipse中集成项目**
 1. ***导入项目***：
     - 打开Eclipse。
     - 选择 File > Import...。
-    - 在 General > Existing Projects into Workspace 中选择lag[i]项目文件夹。
+    - 在 General > Existing Projects into Workspace 中选择lag[i] (联基) 项目文件夹。
     - 勾选你想要导入的项目，然后点击 Finish。
 
 2. ***构建路径和依赖***：
     - 在 Project Explorer 中找到你的项目。
     - 右键点击项目，选择 Properties。
-    - 在 Java Build Path > Libraries 中，点击 Add External JARs... 并选择lag[i]的libs目录下的所有JAR包。
+    - 在 Java Build Path > Libraries 中，点击 Add External JARs... 并选择lag[i] (联基) 的libs目录下的所有JAR包。
 
 3. ***同步项目***：
     - 在 Project Explorer 中右键点击项目，选择 Build Project。
@@ -560,13 +560,13 @@ public void Test() {
 1. ***导入项目***：
     - 打开IntelliJ IDEA。
     - 选择 File > Open。
-    - 选择lag[i]项目文件夹。
+    - 选择lag[i] (联基) 项目文件夹。
     - 点击 OK。
 
 2. ***添加依赖***：
     - 在 Project 窗口中找到你的项目。
     - 右键点击项目，选择 Add Dependency...。
-    - 选择 Module Dependency 或 Project Dependency，然后选择lag[i]项目的libs中的目录下的所有JAR包。
+    - 选择 Module Dependency 或 Project Dependency，然后选择lag[i] (联基) 项目的libs中的目录下的所有JAR包。
 
 3. ***同步项目***：
     - 在 Project 窗口中右键点击项目，选择 Build Project。
@@ -577,10 +577,10 @@ public void Test() {
 - **依赖冲突**：如果你遇到了依赖冲突，可能需要手动调整项目的构建路径或者使用IDE的依赖解析功能来解决冲突。
 - **注意**：这些步骤提供了一个大致的框架，具体的集成步骤可能会根据项目的复杂性和IDE的版本有所不同。
 ### 方式三:微服务docker
-微服务Docker集成是一种流行的方法，它允许你将你的应用打包成一个可部署的容器。你可以在Docker中引入一个lag[i]，并将它集成到自己的项目中。以下是一些基本步骤：  
-**1.准备lag[i]工程：**
-- 确保 lag[i] 工程的构建正确无误。
-- 使用Maven等构建工具将 lag[i] 打包成 WAR 文件。
+微服务Docker集成是一种流行的方法，它允许你将你的应用打包成一个可部署的容器。你可以在Docker中引入一个lag[i] (联基)，并将它集成到自己的项目中。以下是一些基本步骤：  
+**1.准备lag[i] (联基) 工程：**
+- 确保 lag[i] (联基) 工程的构建正确无误。
+- 使用Maven等构建工具将 lag[i] (联基) 打包成 WAR 文件。
 
 **2.创建一个Dockerfile文件，并添加以下内容：**
 ```text
@@ -610,7 +610,7 @@ public void Test() {
 请确保将your-image-name替换为你在步骤2中使用的镜像名称。
 
 **5.集成到自己项目中：**
-- 在你的项目中，创建一个Dockerfile，指定如何构建包含 lag[i] 镜像的容器。
+- 在你的项目中，创建一个Dockerfile，指定如何构建包含 lag[i] (联基) 镜像的容器。
 ```text
     FROM lagi-image
     # 添加你的项目目录到容器

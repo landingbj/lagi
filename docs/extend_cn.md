@@ -1,10 +1,10 @@
 # 自由扩展
 
-您可以根据您的需求参考此文档，对lag[i]进行自由扩展，从而契合您的业务需求。
+您可以根据您的需求参考此文档，对Lag[i] (联基) 进行自由扩展，从而契合您的业务需求。
 
 ## 模型扩展
 
-如果您想扩展Lagi[i]适配其它大模型，您可以参考以下步骤：
+如果您想扩展Lag[i] (联基) 适配其它大模型，您可以参考以下步骤：
 
 ### 1. 适配yml
 
@@ -508,7 +508,7 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 
 ## 数据库扩展
 
-If you want to adapt the Lagi[i] extension to other vector databases, you can follow these steps:
+如果您想将 Lag[i]（联基）扩展适配到其他向量数据库，可以按照以下步骤操作：
 
 ### 1. 适配yml
 

@@ -1,7 +1,7 @@
 # Model code invocation guide
 
 ## Overview
-- **Introduction**： This Lag[i] feature invocation guide is designed to give you clear, detailed guidance on understanding and using the various AI features provided in your project. With this guide, you can easily integrate AI features such as text conversation, speech recognition, text-to-speech, and image generation into your app for a smarter, more human-friendly interaction experience.
+- **Introduction**： This Lag[i] (Landing AGI) feature invocation guide is designed to give you clear, detailed guidance on understanding and using the various AI features provided in your project. With this guide, you can easily integrate AI features such as text conversation, speech recognition, text-to-speech, and image generation into your app for a smarter, more human-friendly interaction experience.
 - **Background**： With the rapid development of artificial intelligence technology, more and more application scenarios require interaction with AI models, such as intelligent customer service, voice assistants, image processing, etc. To meet these needs, this project provides a variety of AI features designed to help you easily apply AI technologies to your business scenarios, improving user experience and efficiency.
 
 ## Before we begin
@@ -524,7 +524,7 @@ public void Test() {
 ## Quick Integrate into Your Existing Project
 ### Option 1: Import the jar directly
 
-You can use lag[i] directly by importing JAR packages to turn a traditional business into a large model business.
+You can use lag[i] (Landing AGI) directly by importing JAR packages to turn a traditional business into a large model business.
 
 1. **Creating JAR**：
   - Lagui-core can be packaged as a JAR using a build tool such as Maven.
@@ -538,20 +538,20 @@ You can use lag[i] directly by importing JAR packages to turn a traditional busi
 4. **Build and run the project**：
   - In your project, build and run the project.
 
-In this way, you can integrate lag[i] directly into your project as a JAR.
+In this way, you can integrate lag[i] (Landing AGI) directly into your project as a JAR.
 
 ### Option 2: In Eclipse and IntelliJ
 **Integration project in Eclipse**
 1. ***Importing the project***：
   - Open Eclipse.
   - Select File > Import... .
-  - Select lag[i] from General > Existing Projects into Workspace.
+  - Select lag[i] (Landing AGI) from General > Existing Projects into Workspace.
   - Select the project you want to import, then click Finish.
 
 2. ***Build paths and dependencies***：
   - Build paths and dependencies.
   - Right-click the project and select Properties.
-  - In Java Build Path > Libraries, click Add External JARs... And select all jars in the libs directory of lag[i].
+  - In Java Build Path > Libraries, click Add External JARs... And select all jars in the libs directory of lag[i] (Landing AGI).
 
 3. ***Synchronizing projects***：
   - Right-click the Project in the Project Explorer and select Build Project.
@@ -560,13 +560,13 @@ In this way, you can integrate lag[i] directly into your project as a JAR.
 1. ***Importing the project***：
   - Open IntelliJ IDEA.
   - Select File > Open.
-  - Select the lag[i] project folder.
+  - Select the lag[i] (Landing AGI) project folder.
   - Click OK.
 
 2. ***Adding dependencies***：
   - Locate your Project in the Project window.
   - Right-click on the project and select Add Dependency... .
-  - Select Module Dependency or Project Dependency, and then select all jars in the directories in the libs of the lag[i] project.
+  - Select Module Dependency or Project Dependency, and then select all jars in the directories in the libs of the lag[i] (Landing AGI) project.
 
 3. ***Synchronizing projects***：
   - Right-click the Project in the Project window and select Build Project.
@@ -577,10 +577,10 @@ In this way, you can integrate lag[i] directly into your project as a JAR.
 - **Dependency conflict**：If you run into a dependency conflict, you may need to adjust your project's build path manually or use your IDE's dependency resolution feature to resolve the conflict.
 - **Note**：These steps provide a general framework, and the specific integration steps may vary depending on the complexity of the project and the version of the IDE.
 ### Option 3: Microservices docker
-Microservices Docker integration is a popular approach that allows you to package your application into a deployable container. You can introduce a lag[i] in Docker and integrate it into your own project. Here are some basic steps:   
-**1. Prepare lag[i] project:**
-- Make sure lag[i] is built correctly.
-- Use a build tool like Maven to package lag[i] into a WAR file.
+Microservices Docker integration is a popular approach that allows you to package your application into a deployable container. You can introduce a lag[i] (Landing AGI) in Docker and integrate it into your own project. Here are some basic steps:   
+**1. Prepare lag[i] (Landing AGI) project:**
+- Make sure lag[i] (Landing AGI) is built correctly.
+- Use a build tool like Maven to package lag[i] (Landing AGI) into a WAR file.
 
 **2. Create a Dockerfile and add the following content:**
 ```text
@@ -610,7 +610,7 @@ Be sure to replace lagu-1.0.0.war with the actual WAR package name.
 Make sure to replace your-image-name with the image name you used in step 2.
 
 **5. Integrate into your own projects:**
-- In your project, create a Dockerfile that specifies how to build the container that contains the lag[i] image.
+- In your project, create a Dockerfile that specifies how to build the container that contains the lag[i] (Landing AGI) image.
 ```text
     FROM lagi-image
     # Add your project directory to the container
