@@ -32,8 +32,10 @@ import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import cn.hutool.core.bean.BeanUtil;
 import io.reactivex.Observable;
+import lombok.extern.slf4j.Slf4j;
 import weixin.tools.TulingThread;
 
+@Slf4j
 public class CompletionsService {
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
@@ -47,6 +49,20 @@ public class CompletionsService {
         }
     }
 
+    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
+        ILlmAdapter ragAdapter = getRagAdapter(chatCompletionRequest, indexSearchDataList);
+        if(ragAdapter != null) {
+            return ragAdapter.completions(chatCompletionRequest);
+        }
+        return null;
+    }
+
+    public ChatCompletionResult completions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
+        if(adapter != null) {
+            return adapter.completions(chatCompletionRequest);
+        }
+        return null;
+    }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         ChatCompletionResult answer = null;
@@ -98,47 +114,55 @@ public class CompletionsService {
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-
         if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter adapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
+            if(adapter != null) {
+                return  adapter.streamCompletions(chatCompletionRequest);
+            }
+        }
+        // no effect backend
+        for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
             if (adapter != null) {
                 return adapter.streamCompletions(chatCompletionRequest);
-            }
-        } else {
-            for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
-                if (adapter != null) {
-                    ModelService modelService = (ModelService) adapter;
-                    if(!CacheManager.get(modelService.getModel())) {
-                        continue;
-                    }
-                    try {
-                        Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(chatCompletionRequest);
-                        changeModel(chatCompletionResultObservable, modelService);
-                        return chatCompletionResultObservable;
-                    }catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
             }
         }
         throw new RuntimeException("Stream backend is not enabled.");
     }
 
-    private static void changeModel(Observable<ChatCompletionResult> chatCompletionResultObservable, ModelService modelService) {
-        ExecutorService executor = ThreadPoolManager.getExecutor("llm-model-service");
-        if(executor == null) {
-            try {
-                ThreadPoolManager.registerExecutor("llm-model-service");
-                executor = ThreadPoolManager.getExecutor("llm-model-service");
-                executor.execute(()->{
-                    chatCompletionResultObservable.subscribe(v->{}, e->{
-                        CacheManager.put(modelService.getModel(), Boolean.FALSE);
-                        System.out.println("模型报错  已未您切换");});
-                });
-            } catch (Exception ignored) {
+
+    public ILlmAdapter getRagAdapter(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
+        if(chatCompletionRequest.getModel() != null) {
+            ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
+            if(appointAdapter != null) {
+                ModelService modelService = (ModelService) appointAdapter;
+                Boolean isEffectAdapter = CacheManager.get(modelService.getModel());
+                if(isEffectAdapter) {
+                    return appointAdapter;
+                }
             }
         }
+        String indexData = indexSearchDataList == null || indexSearchDataList.isEmpty() ? null : indexSearchDataList.get(0).getText();
+        List<ILlmAdapter> ragAdapters = LlmRouterDispatcher.getRagAdapter(indexData);
+        if(!(ragAdapters == null || ragAdapters.isEmpty())) {
+            Optional<ILlmAdapter> first = ragAdapters
+                    .stream()
+                    .filter(adapter -> {
+                        ModelService modelService = (ModelService) adapter;
+                        return CacheManager.get(modelService.getModel());
+                    })
+                    .findFirst();
+            return first.orElse(null);
+        }
+        return null;
     }
+
+    public Observable<ChatCompletionResult> streamCompletions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
+        if(adapter != null) {
+            return adapter.streamCompletions(chatCompletionRequest);
+        }
+        throw new RuntimeException("Stream backend is not enabled.");
+    }
+
 
 
 

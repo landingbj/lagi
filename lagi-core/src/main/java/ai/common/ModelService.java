@@ -24,6 +24,7 @@ public class ModelService implements ModelVerify{
     private String others;
     protected String alias;
     protected Boolean enable;
+    protected String router;
 
     @Override
     public boolean verify() {

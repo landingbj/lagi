@@ -131,6 +131,7 @@ public class MultimodalAIManager {
                             CopyOptions copyOption = CopyOptions.create(null, true);
                             BeanUtil.copyProperties(d, driver, copyOption);
                             BeanUtil.copyProperties(model, driver, copyOption);
+                            driver.setEnable(false);
                             return driver;
                         }).collect(Collectors.toList());
                     }

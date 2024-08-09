@@ -1,6 +1,7 @@
 package ai.llm.utils;
 
 import ai.common.ModelService;
+import ai.common.exception.RRException;
 import ai.common.utils.ObservableList;
 import ai.openai.pojo.ChatCompletionResult;
 import okhttp3.*;
@@ -63,18 +64,12 @@ public class ServerSentEventUtil {
 
             @Override
             public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-                if (t != null) {
-                    if(t instanceof SocketTimeoutException) {
-                        log.error("sockt time out");
-                        CacheManager.put(modelService.getModel(), Boolean.FALSE);
-                        log.error("sockt time out model will be disconnected");
-////                        modelService.setPriority(0);
-                        closeConnection(eventSource);
-//                        result.add("");
-//                        result.onComplete();
-                    }
-                    t.printStackTrace();
+                log.error("model request failed response : {}", response);
+                CacheManager.put(modelService.getModel(), Boolean.FALSE);
+                if(t != null) {
+                    log.error("model request failed error {}", t.getMessage());
                 }
+                closeConnection(eventSource);
             }
 
             @Override

@@ -9,11 +9,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import ai.common.ModelService;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.CacheManager;
 import ai.llm.utils.CompletionUtil;
+import ai.manager.LlmManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -33,6 +37,7 @@ import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -127,11 +132,30 @@ public class LlmApiServlet extends BaseServlet {
 
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-            streamOutPrint(chatCompletionRequest, indexSearchDataList, out, 20);
+            streamOutPrint(chatCompletionRequest, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
         } else {
-            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            CompletionUtil.populateContext(result, indexSearchDataList, context);
-            responsePrint(resp, toJson(result));
+            for (int i = 0; i < LlmManager.getInstance().getAdapters().size(); i++) {
+                ChatCompletionResult result = null;
+                ChatCompletionRequest request = new ChatCompletionRequest();
+                BeanUtil.copyProperties(chatCompletionRequest, request);
+                ILlmAdapter ragAdapter = completionsService.getRagAdapter(request, indexSearchDataList);
+                if(ragAdapter == null) {
+                    continue;
+                }
+                try {
+                    result = completionsService.completions(ragAdapter, request);
+                } catch (Exception ignored) {
+                    ModelService modelService = (ModelService) ragAdapter;
+                    CacheManager.put(modelService.getModel(), false);
+                    continue;
+                }
+                if(result == null) {
+                    continue;
+                }
+                responsePrint(resp, toJson(result));
+                CompletionUtil.populateContext(result, indexSearchDataList, context);
+                break;
+            }
         }
     }
 
@@ -139,7 +163,10 @@ public class LlmApiServlet extends BaseServlet {
         if(limit <= 0 ) {
             return;
         }
-        Observable<ChatCompletionResult> observable = completionsService.streamCompletions(chatCompletionRequest);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        BeanUtil.copyProperties(chatCompletionRequest, request);
+        ILlmAdapter ragAdapter = completionsService.getRagAdapter(request, indexSearchDataList);
+        Observable<ChatCompletionResult> observable = completionsService.streamCompletions(ragAdapter, request);
         final ChatCompletionResult[] lastResult = {null, null};
         int finalLimit = limit - 1;
         observable.subscribe(
@@ -163,6 +190,8 @@ public class LlmApiServlet extends BaseServlet {
                 },
                 e -> {
                     logger.error("", e);
+                    ModelService modelService = (ModelService) ragAdapter;
+                    CacheManager.put(modelService.getModel(), false);
                     streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
                 },
                 () -> {
