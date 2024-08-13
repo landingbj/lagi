@@ -9,11 +9,9 @@
 package ai.llm.service;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 
 import ai.common.ModelService;
 import ai.common.pojo.IndexSearchData;
-import ai.common.utils.ThreadPoolManager;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
 import ai.llm.utils.CacheManager;

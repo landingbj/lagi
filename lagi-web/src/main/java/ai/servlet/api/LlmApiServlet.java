@@ -106,6 +106,7 @@ public class LlmApiServlet extends BaseServlet {
             }
         }
 
+        boolean hasTruncate = false;
         List<IndexSearchData> indexSearchDataList;
         String context = null;
         if (chatCompletionRequest.getCategory() != null && LagiGlobal.RAG_ENABLE) {
@@ -124,12 +125,20 @@ public class LlmApiServlet extends BaseServlet {
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
+                context = CompletionUtil.truncate(context);
                 completionsService.addVectorDBContext(chatCompletionRequest, context);
+                ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
+                chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
+                hasTruncate = true;
             }
         } else {
             indexSearchDataList = null;
         }
 
+        if(!hasTruncate) {
+            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
+            chatCompletionRequest.setMessages(chatMessages);
+        }
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
             streamOutPrint(chatCompletionRequest, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());

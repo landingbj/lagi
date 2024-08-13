@@ -15,6 +15,10 @@ public class CompletionUtil {
     private static final Gson gson = new Gson();
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
 
+
+    private static final int MAX_INPUT = 4096;
+//    private static final int MAX_INPUT = 1024;
+
     public static ChatCompletionResult getDummyCompletion() {
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
         String currentDatetime = dateFormat.format(new Date());
@@ -42,6 +46,46 @@ public class CompletionUtil {
             }
         }
     }
+
+    public static String truncate(String context) {
+        return truncate(context, MAX_INPUT);
+    }
+
+    public static String truncate(String context, int maxLength) {
+        if(context == null) {
+            return "";
+        }
+        if(context.length() <= maxLength) {
+            return context;
+        }
+        return context.substring(0, maxLength);
+    }
+
+    public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages) {
+        return truncateChatMessages(chatMessages, MAX_INPUT);
+    }
+
+    public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages, int maxLength) {
+        if(chatMessages != null && !chatMessages.isEmpty()) {
+            ChatMessage lastQuestion = chatMessages.get(chatMessages.size() - 1);
+            lastQuestion.setContent(truncate(lastQuestion.getContent(), maxLength));
+            int length = lastQuestion.getContent().length();
+            int lastIndex = chatMessages.size() - 1;
+            for(int i = chatMessages.size() - 2; i >= 0; i--) {
+                ChatMessage chatMessage = chatMessages.get(i);
+                length += chatMessage.getContent().length();
+                if(length > maxLength) {
+                    break;
+                }
+                if(chatMessage.getRole().equals("user")) {
+                    lastIndex = i;
+                }
+            }
+            chatMessages = chatMessages.subList(lastIndex, chatMessages.size());
+        }
+        return chatMessages;
+    }
+
 
     public static void main(String[] args) {
         ChatCompletionResult result = getDummyCompletion();

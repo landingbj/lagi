@@ -176,7 +176,7 @@ public class PromptCacheTrigger {
             return startIndex;
         }
         List<String> contents = chatCompletionRequest.getMessages().stream().map(ChatMessage::getContent).collect(Collectors.toList());
-        startIndex = getLastRelateQuestionIndex(contents.size() - 1, contents.size() - 3, contents);
+        startIndex = getLastRelateQuestionIndex(contents.size() - 1, contents.size() - 3, contents, 30);
         if (startIndex == contents.size() - 1) {
             return startIndex;
         }
@@ -187,7 +187,18 @@ public class PromptCacheTrigger {
 
             List<IndexSearchData> prompts = vectorStoreService.search(curQ, chatCompletionRequest.getCategory());
             List<IndexSearchData> complexPrompts = vectorStoreService.search(lastQ + "," + curQ, chatCompletionRequest.getCategory());
-
+//            if(!prompts.isEmpty()) {
+//                int length0 = prompts.get(0).getText().length();
+//                if(length0 > 1024*3) {
+//                    return startIndex;
+//                }
+//            }
+//            if(!complexPrompts.isEmpty()) {
+//                int length1 = complexPrompts.get(0).getText().length();
+//                if(length1 > 1024*3) {
+//                    return contents.size() - 1;
+//                }
+//            }
             if (!prompts.isEmpty() && !complexPrompts.isEmpty()) {
                 Float distance = prompts.get(0).getDistance();
                 Float distance1 = complexPrompts.get(0).getDistance();
@@ -202,10 +213,11 @@ public class PromptCacheTrigger {
     }
 
 
-    public static int getLastRelateQuestionIndex(int curQuestionIndex, int lastQuestionIndex, List<String> contentList) {
-        if (lastQuestionIndex < 0) {
+    public static int getLastRelateQuestionIndex(int curQuestionIndex, int lastQuestionIndex, List<String> contentList, int deep) {
+        if (lastQuestionIndex < 0 || deep <= 0) {
             return curQuestionIndex;
         }
+        deep --;
         String curQuestion = contentList.get(curQuestionIndex);
         int answerIndex = lastQuestionIndex + 1;
         String question = contentList.get(lastQuestionIndex);
@@ -215,9 +227,9 @@ public class PromptCacheTrigger {
         double ratio1 = LCS.getLcsRatio(curQuestion, qq);
         double ratio2 = LCS.getLcsRatio(curQuestion, qa);
         if (ratio1 > 0.25d || ratio2 > 0.35d) {
-            return getLastRelateQuestionIndex(lastQuestionIndex, lastQuestionIndex - 2, contentList);
+            return getLastRelateQuestionIndex(lastQuestionIndex, lastQuestionIndex - 2, contentList, deep);
         }
-        return getLastRelateQuestionIndex(curQuestionIndex, lastQuestionIndex - 2, contentList);
+        return getLastRelateQuestionIndex(curQuestionIndex, lastQuestionIndex - 2, contentList, deep);
     }
 
     private List<String> getRawAnswer(List<String> questionList) {
@@ -274,8 +286,8 @@ public class PromptCacheTrigger {
 
 
     public static void main(String[] args) {
-        ContextLoader.loadContext();
-        PromptInput promptInput = new PromptCacheTrigger(CompletionCache.getInstance()).analyzeChatBoundaries(null);
-        System.out.println(promptInput);
+//        ContextLoader.loadContext();
+//        PromptInput promptInput = new PromptCacheTrigger(CompletionCache.getInstance()).analyzeChatBoundaries(null);
+//        System.out.println(promptInput);
     }
 }
