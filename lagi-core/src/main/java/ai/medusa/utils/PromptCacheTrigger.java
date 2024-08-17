@@ -1,7 +1,7 @@
 package ai.medusa.utils;
 
 import ai.common.pojo.IndexSearchData;
-import ai.config.ContextLoader;
+import ai.common.pojo.QaPair;
 import ai.llm.service.CompletionsService;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.impl.CompletionCache;
@@ -10,10 +10,10 @@ import ai.medusa.pojo.PromptInput;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.LRUCache;
-import ai.utils.LagiGlobal;
+import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorStoreService;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,68 +169,107 @@ public class PromptCacheTrigger {
     }
 
 
-    public static int analyzeChatBoundariesForIntent(ChatCompletionRequest chatCompletionRequest) {
-        int startIndex = 0;
 
-        if (chatCompletionRequest.getMessages().size() < 3) {
-            return startIndex;
+    public static List<Integer> analyzeChatBoundariesForIntent(ChatCompletionRequest chatCompletionRequest) {
+        List<ChatMessage> chatMessages = chatCompletionRequest.getMessages();
+        int finalIndex = chatMessages.size() - 1;
+        LinkedList<Integer> res = new LinkedList<>();
+        if(chatMessages.size() < 2) {
+            res.add(finalIndex);
+            return res;
         }
-        List<String> contents = chatCompletionRequest.getMessages().stream().map(ChatMessage::getContent).collect(Collectors.toList());
-        startIndex = getLastRelateQuestionIndex(contents.size() - 1, contents.size() - 3, contents, 30);
-        if (startIndex == contents.size() - 1) {
-            return startIndex;
+        List<QaPair> qaPairs = convert2QaPair(chatMessages, 30);
+        List<List<QaPair>> splitQaPairs = splitQaPairBySemantics(qaPairs);
+        if(!splitQaPairs.isEmpty() && !splitQaPairs.get(splitQaPairs.size() -1).isEmpty()) {
+            int lastQIndex = splitQaPairs.get(splitQaPairs.size() -1).get(0).getQIndex();
+            res.add(lastQIndex);
         }
-        String curQ = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
-        String lastQ = chatCompletionRequest.getMessages().get(startIndex).getContent();
-        try {
-            VectorStoreService vectorStoreService = new VectorStoreService();
+        res.add(finalIndex);
+        return res;
+    }
 
-            List<IndexSearchData> prompts = vectorStoreService.search(curQ, chatCompletionRequest.getCategory());
-            List<IndexSearchData> complexPrompts = vectorStoreService.search(lastQ + "," + curQ, chatCompletionRequest.getCategory());
-//            if(!prompts.isEmpty()) {
-//                int length0 = prompts.get(0).getText().length();
-//                if(length0 > 1024*3) {
-//                    return startIndex;
-//                }
-//            }
-//            if(!complexPrompts.isEmpty()) {
-//                int length1 = complexPrompts.get(0).getText().length();
-//                if(length1 > 1024*3) {
-//                    return contents.size() - 1;
-//                }
-//            }
-            if (!prompts.isEmpty() && !complexPrompts.isEmpty()) {
-                Float distance = prompts.get(0).getDistance();
-                Float distance1 = complexPrompts.get(0).getDistance();
-                if (distance < distance1) {
-                    return contents.size() - 1;
+    private static @NotNull List<QaPair> convert2QaPair(List<ChatMessage> chatMessages, int deep) {
+        List<QaPair> qaPairs = new ArrayList<>();
+        for (int i = chatMessages.size() - 2, count = 0; i > 0 && count < deep; i -= 2, count++) {
+            int aIndex = i;
+            int qIndex = i - 1;
+            ChatMessage a = chatMessages.get(aIndex);
+            ChatMessage q = chatMessages.get(qIndex);
+            String aa = a.getContent().trim();
+            aa = StrFilterUtil.filterPunctuations(aa);
+            int min = Math.min(aa.length(), 50);
+            aa = aa.substring(0, min);
+            String qq = q.getContent().trim();
+            qq = StrFilterUtil.filterPunctuations(qq);
+            QaPair qa = QaPair.builder().a(aa).aIndex(aIndex).q(qq).qIndex(qIndex).build();
+            qaPairs.add(qa);
+        }
+        Collections.reverse(qaPairs);
+        return qaPairs;
+    }
+
+    private static @NotNull List<List<QaPair>> splitQaPairBySemantics(List<QaPair> qaPairs) {
+        Set<String> qaCore = new HashSet<>();
+        List<List<QaPair>> dialogPairs = new ArrayList<>();
+        List<QaPair> curDialog = new ArrayList<>();
+        dialogPairs.add(curDialog);
+        for (int i = 0; i < qaPairs.size(); i++) {
+            QaPair qaPair = qaPairs.get(i);
+            if(StoppingWordUtil.containsStoppingWorlds(qaPair.getQ())) {
+                if(curDialog.isEmpty()) {
+                    curDialog.add(qaPair);
+                } else {
+                    curDialog = new ArrayList<>();
+                    curDialog.add(qaPair);
+                    dialogPairs.add(curDialog);
+                }
+                qaCore = LCS.findLongestCommonSubstrings(qaPair.getQ(), qaPair.getA(), PromptCacheConfig.START_CORE_THRESHOLD);
+                continue;
+            }
+            if(ContinueWordUtil.containsStoppingWorlds(qaPair.getQ())) {
+                curDialog.add(qaPair);
+                continue;
+            }
+            if(curDialog.isEmpty()) {
+                curDialog.add(qaPair);
+                continue;
+            }
+            String lastQ = curDialog.get(0).getQ();
+            String curA = qaPair.getA();
+            Set<String> QAnCore = LCS.findLongestCommonSubstrings(lastQ, curA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
+            Set<String> retainAll = setRetainAll(qaCore, QAnCore);
+            double ratio = LCS.getLcsRatio(curA, retainAll);
+            double threshold = (double) PromptCacheConfig.ANSWER_CORE_THRESHOLD /  qaPair.getA().length();
+            if(ratio < threshold) {
+                curDialog = new ArrayList<>();
+                qaCore = LCS.findLongestCommonSubstrings(qaPair.getQ(), qaPair.getA(), PromptCacheConfig.START_CORE_THRESHOLD);
+                curDialog.add(qaPair);
+                dialogPairs.add(curDialog);
+            } else {
+                curDialog.add(qaPair);
+            }
+        }
+        return dialogPairs;
+    }
+
+    private static @NotNull Set<String> setRetainAll(Set<String> tempCore, Set<String> core) {
+        Set<String> temp = new HashSet<>();
+        tempCore = tempCore.stream().map(RetainWordUtil::replace).collect(Collectors.toSet());
+        core = core.stream().map(RetainWordUtil::replace).collect(Collectors.toSet());
+        for(String tempCoreStr: tempCore) {
+            for (String coreStr: core) {
+                String longStr = tempCoreStr.length() > coreStr.length() ? tempCoreStr : coreStr;
+                String shortStr = tempCoreStr.length() > coreStr.length() ? coreStr : tempCoreStr;
+                if(longStr.contains(shortStr)) {
+                    if(!RetainWordUtil.contains(coreStr)) {
+                        temp.add(coreStr);
+                    }
                 }
             }
-        } catch (Exception e) {
-            log.error("vector query error {}", e.getMessage());
         }
-        return startIndex;
+        return temp;
     }
 
-
-    public static int getLastRelateQuestionIndex(int curQuestionIndex, int lastQuestionIndex, List<String> contentList, int deep) {
-        if (lastQuestionIndex < 0 || deep <= 0) {
-            return curQuestionIndex;
-        }
-        deep --;
-        String curQuestion = contentList.get(curQuestionIndex);
-        int answerIndex = lastQuestionIndex + 1;
-        String question = contentList.get(lastQuestionIndex);
-        String answer = contentList.get(answerIndex);
-        Set<String> qq = LCS.findLongestCommonSubstrings(curQuestion, question, 2);
-        Set<String> qa = LCS.findLongestCommonSubstrings(curQuestion, answer, 2);
-        double ratio1 = LCS.getLcsRatio(curQuestion, qq);
-        double ratio2 = LCS.getLcsRatio(curQuestion, qa);
-        if (ratio1 > 0.25d || ratio2 > 0.35d) {
-            return getLastRelateQuestionIndex(lastQuestionIndex, lastQuestionIndex - 2, contentList, deep);
-        }
-        return getLastRelateQuestionIndex(curQuestionIndex, lastQuestionIndex - 2, contentList, deep);
-    }
 
     private List<String> getRawAnswer(List<String> questionList) {
         List<ChatMessage> messages = new ArrayList<>();

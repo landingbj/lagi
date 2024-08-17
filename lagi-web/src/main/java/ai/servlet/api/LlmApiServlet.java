@@ -170,6 +170,7 @@ public class LlmApiServlet extends BaseServlet {
 
     private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
         if(limit <= 0 ) {
+            out.close();
             return;
         }
         ChatCompletionRequest request = new ChatCompletionRequest();

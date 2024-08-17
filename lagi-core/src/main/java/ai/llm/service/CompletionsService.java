@@ -173,7 +173,7 @@ public class CompletionsService {
 
     public void addVectorDBContext(ChatCompletionRequest request, String context) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
-        String prompt = "以下是背景信息。\\n---------------------\\n%s\\n---------------------\\n根据上下文信息而非先前知识，回答这个问题:%s\\n";
+        String prompt = "以下是背景信息。(%s)n根据上下文信息而非先前知识，回答这个问题:%s";
         prompt = String.format(prompt, context, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
     }

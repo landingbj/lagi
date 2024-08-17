@@ -1,6 +1,12 @@
 {
   "mask": "...",
+  "level": 3,
   "rules": [
-    {"rule":"OPENAI","level": 2}
+    {"rule":"\\n"},
+    {"rule":"soho", "level": 2, "mask": "SOHO"},
+    {"rule":"app", "level": 2, "mask": "APP"},
+    {"rule":"signature", "level": 2, "mask": "签名"},
+    {"rule":"[ -。、][a-zA-z]+"},
+    {"rule":"[a-zA-z]+ "}
   ]
 }
