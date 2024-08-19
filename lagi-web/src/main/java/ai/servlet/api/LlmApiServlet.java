@@ -161,8 +161,8 @@ public class LlmApiServlet extends BaseServlet {
                 if(result == null) {
                     continue;
                 }
-                responsePrint(resp, toJson(result));
                 CompletionUtil.populateContext(result, indexSearchDataList, context);
+                responsePrint(resp, toJson(result));
                 break;
             }
         }
