@@ -12,4 +12,6 @@ public class Medusa {
     private Boolean enablePageDiver;
     private Long consumeDelay;
     private Long preDelay;
+    private Double lcsRatioPromptInput;
+    private Double similarityCutoff;
 }
