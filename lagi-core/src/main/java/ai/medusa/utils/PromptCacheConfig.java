@@ -25,7 +25,7 @@ public class PromptCacheConfig {
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
     public static final int QA_SIMILARITY_TOP_K = 10;
-    public static final double QA_SIMILARITY_CUTOFF = 0.1;
+    public static double QA_SIMILARITY_CUTOFF = 0.1;
 
     public static final int WRITE_CACHE_THREADS = 5;
     public static final int SUBSTRING_THRESHOLD = 2;
@@ -33,7 +33,7 @@ public class PromptCacheConfig {
     public static final int ANSWER_CORE_THRESHOLD = 2;
     public static final double LCS_RATIO_QUESTION = 0.5;
     public static final int TRUNCATE_LENGTH = 20;
-    public static final double LCS_RATIO_PROMPT_INPUT = 0.8;
+    public static double LCS_RATIO_PROMPT_INPUT = 0.8;
 
 
 
@@ -63,6 +63,8 @@ public class PromptCacheConfig {
             enablePageDiver = config.getEnablePageDiver() != null ? config.getEnablePageDiver() : enablePageDiver;
             consumeDelay = config.getConsumeDelay() != null ? config.getConsumeDelay() : consumeDelay;
             preDelay = config.getPreDelay() != null ? config.getPreDelay() : preDelay;
+            QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
+            LCS_RATIO_PROMPT_INPUT = config.getLcsRatioPromptInput() != null ? config.getLcsRatioPromptInput() : LCS_RATIO_PROMPT_INPUT;
         }
     }
 }
