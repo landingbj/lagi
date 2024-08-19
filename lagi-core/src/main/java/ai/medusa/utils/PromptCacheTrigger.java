@@ -13,7 +13,6 @@ import ai.openai.pojo.ChatMessage;
 import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorStoreService;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,7 +187,7 @@ public class PromptCacheTrigger {
         return res;
     }
 
-    private static @NotNull List<QaPair> convert2QaPair(List<ChatMessage> chatMessages, int deep) {
+    private static List<QaPair> convert2QaPair(List<ChatMessage> chatMessages, int deep) {
         List<QaPair> qaPairs = new ArrayList<>();
         for (int i = chatMessages.size() - 2, count = 0; i > 0 && count < deep; i -= 2, count++) {
             int aIndex = i;
@@ -208,7 +207,7 @@ public class PromptCacheTrigger {
         return qaPairs;
     }
 
-    private static @NotNull List<List<QaPair>> splitQaPairBySemantics(List<QaPair> qaPairs) {
+    private static List<List<QaPair>> splitQaPairBySemantics(List<QaPair> qaPairs) {
         Set<String> qaCore = new HashSet<>();
         List<List<QaPair>> dialogPairs = new ArrayList<>();
         List<QaPair> curDialog = new ArrayList<>();
@@ -252,7 +251,7 @@ public class PromptCacheTrigger {
         return dialogPairs;
     }
 
-    private static @NotNull Set<String> setRetainAll(Set<String> tempCore, Set<String> core) {
+    private static  Set<String> setRetainAll(Set<String> tempCore, Set<String> core) {
         Set<String> temp = new HashSet<>();
         tempCore = tempCore.stream().map(RetainWordUtil::replace).collect(Collectors.toSet());
         core = core.stream().map(RetainWordUtil::replace).collect(Collectors.toSet());
