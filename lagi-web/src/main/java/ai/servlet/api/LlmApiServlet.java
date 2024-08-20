@@ -143,28 +143,9 @@ public class LlmApiServlet extends BaseServlet {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
             streamOutPrint(chatCompletionRequest, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
         } else {
-            for (int i = 0; i < LlmManager.getInstance().getAdapters().size(); i++) {
-                ChatCompletionResult result = null;
-                ChatCompletionRequest request = new ChatCompletionRequest();
-                BeanUtil.copyProperties(chatCompletionRequest, request);
-                ILlmAdapter ragAdapter = completionsService.getRagAdapter(request, indexSearchDataList);
-                if(ragAdapter == null) {
-                    continue;
-                }
-                try {
-                    result = completionsService.completions(ragAdapter, request);
-                } catch (Exception ignored) {
-                    ModelService modelService = (ModelService) ragAdapter;
-                    CacheManager.put(modelService.getModel(), false);
-                    continue;
-                }
-                if(result == null) {
-                    continue;
-                }
-                CompletionUtil.populateContext(result, indexSearchDataList, context);
-                responsePrint(resp, toJson(result));
-                break;
-            }
+            ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+            CompletionUtil.populateContext(result, indexSearchDataList, context);
+            responsePrint(resp, toJson(result));
         }
     }
 

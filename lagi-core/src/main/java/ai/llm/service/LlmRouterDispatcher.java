@@ -114,7 +114,7 @@ public class LlmRouterDispatcher {
                         } else if (priority2 == null) {
                             return -1;
                         } else {
-                            return priority2.compareTo(priority1); // 使用compareTo方法比较优先级
+                            return priority2.compareTo(priority1);
                         }
                     }
 

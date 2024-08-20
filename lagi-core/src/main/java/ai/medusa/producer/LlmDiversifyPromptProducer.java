@@ -51,11 +51,10 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
         Collection<PooledPrompt> result = new ArrayList<>();
         ChatCompletionResult chatCompletionResult = completionsService.completions(getDiversifyRequest(item));
         PromptInput promptInput = item.getPromptInput();
-
         for (int i = 0; i < chatCompletionResult.getChoices().size(); i++) {
             ChatMessage message = chatCompletionResult.getChoices().get(i).getMessage();
             List<String> promptList = new ArrayList<>();
-            promptList.add(promptInput.getPromptList().get(promptInput.getPromptList().size() - 1));
+//            promptList.add(promptInput.getPromptList().get(promptInput.getPromptList().size() - 1));
             promptList.add(message.getContent());
             PromptInput diversifiedPromptInput = PromptInput.builder()
                     .parameter(promptInput.getParameter())

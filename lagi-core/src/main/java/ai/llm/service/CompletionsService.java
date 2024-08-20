@@ -38,6 +38,7 @@ public class CompletionsService {
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
     private static final int DEFAULT_MAX_TOKENS = 1024;
+    private String policy = "failvover";
 
     static {
         if (tulingProcessor == null) {
@@ -48,21 +49,6 @@ public class CompletionsService {
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
-        ILlmAdapter ragAdapter = getRagAdapter(chatCompletionRequest, indexSearchDataList);
-        if(ragAdapter != null) {
-            return ragAdapter.completions(chatCompletionRequest);
-        }
-        return null;
-    }
-
-    public ChatCompletionResult completions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
-        if(adapter != null) {
-            return adapter.completions(chatCompletionRequest);
-        }
-        return null;
-    }
-
-    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         ChatCompletionResult answer = null;
         try (IRContainer contain = new FastDirectContainer()) {
             boolean doCompleted = false;
@@ -83,7 +69,13 @@ public class CompletionsService {
                 }
             }
             if(!doCompleted) {
-                for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
+                List<ILlmAdapter> ragAdapters = null;
+                if(indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                    ragAdapters = LlmRouterDispatcher.getRagAdapter(indexSearchDataList.get(0).getText());
+                } else {
+                    ragAdapters = LlmManager.getInstance().getAdapters();
+                }
+                for (ILlmAdapter adapter : ragAdapters) {
                     if (adapter instanceof ModelService) {
                         ModelService modelService = (ModelService) adapter;
                         Map<String, Object> params = new HashMap<>();
@@ -95,6 +87,9 @@ public class CompletionsService {
                         mapper.setParameters(params);
                         mapper.setPriority(backend.getPriority());
                         contain.registerMapper(mapper);
+                        if("failover".equals(policy)) {
+                            break;
+                        }
                     }
                 }
             }
@@ -107,8 +102,18 @@ public class CompletionsService {
                 answer = SensitiveWordUtil.filter(answer);
             }
         }
-
         return answer;
+    }
+
+    public ChatCompletionResult completions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
+        if(adapter != null) {
+            return adapter.completions(chatCompletionRequest);
+        }
+        return null;
+    }
+
+    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
+        return completions(chatCompletionRequest, null);
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
@@ -173,7 +178,7 @@ public class CompletionsService {
 
     public void addVectorDBContext(ChatCompletionRequest request, String context) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
-        String prompt = "以下是背景信息。(%s)n根据上下文信息而非先前知识，回答这个问题:%s";
+        String prompt = "以下是背景信息。(%s)根据上下文信息而非先前知识，回答这个问题:%s";
         prompt = String.format(prompt, context, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
     }

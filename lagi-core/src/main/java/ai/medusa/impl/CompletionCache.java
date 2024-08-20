@@ -162,16 +162,16 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
             );
 
             if(PromptCacheConfig.getEnableLlmDiver()) {
-                promptLoader.connectProducer(llmDiversifyPromptProducer);
+                promptProcessor.connectProducer(llmDiversifyPromptProducer);
             }
             if(PromptCacheConfig.getEnableTreeDiver()) {
-                promptLoader.connectProducer(treeDiversifyPromptProducer);
+                promptProcessor.connectProducer(treeDiversifyPromptProducer);
             }
             if(PromptCacheConfig.getEnableRagDiver()) {
-                promptLoader.connectProducer(ragDiversifyPromptProducer);
+                promptProcessor.connectProducer(ragDiversifyPromptProducer);
             }
             if(PromptCacheConfig.getEnableLlmDiver()) {
-                promptLoader.connectProducer(pageDiversifyPromptProducer);
+                promptProcessor.connectProducer(pageDiversifyPromptProducer);
             }
             promptProcessor.registerProducerErrorHandler(new DiversifyPromptErrorHandler(promptPool));
             promptProcessor.connectConsumer(new CompletePromptConsumer(CompletionCache.getInstance()));
