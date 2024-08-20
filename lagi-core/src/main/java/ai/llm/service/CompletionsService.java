@@ -12,6 +12,7 @@ import java.util.*;
 
 import ai.common.ModelService;
 import ai.common.pojo.IndexSearchData;
+import ai.config.ContextLoader;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
 import ai.llm.utils.CacheManager;
@@ -38,7 +39,6 @@ public class CompletionsService {
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
     private static final int DEFAULT_MAX_TOKENS = 1024;
-    private String policy = "failvover";
 
     static {
         if (tulingProcessor == null) {
@@ -48,9 +48,35 @@ public class CompletionsService {
         }
     }
 
+    private String getPolicy() {
+        if(ContextLoader.configuration != null
+                && ContextLoader.configuration.getFunctions() != null
+                && ContextLoader.configuration.getFunctions().getChatPolicy() != null) {
+            String chatPolicy = ContextLoader.configuration.getFunctions().getChatPolicy();
+            if("failover".equals(chatPolicy) || "parallel".equals(chatPolicy)) {
+                return chatPolicy;
+            }
+        }
+        return "failover";
+    }
+
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
         ChatCompletionResult answer = null;
-        try (IRContainer contain = new FastDirectContainer()) {
+        try (IRContainer contain = new FastDirectContainer() {
+            @Override
+            public void onMapperFail(String mapperName) {
+                super.onMapperFail(mapperName);
+                IMapper iMapper = mappersGroup.get(mapperName);
+                if(iMapper instanceof  UniversalMapper) {
+                    UniversalMapper universalMapper = (UniversalMapper) iMapper;
+                    ILlmAdapter adapter = universalMapper.getAdapter();
+                    if(adapter instanceof ModelService) {
+                        ModelService modelService = (ModelService) adapter;
+                        CacheManager.put(modelService.getModel(), false);
+                    }
+                }
+            }
+        }) {
             boolean doCompleted = false;
             if (chatCompletionRequest.getModel() != null) {
                 ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
@@ -87,7 +113,7 @@ public class CompletionsService {
                         mapper.setParameters(params);
                         mapper.setPriority(backend.getPriority());
                         contain.registerMapper(mapper);
-                        if("failover".equals(policy)) {
+                        if("failover".equals(getPolicy())) {
                             break;
                         }
                     }

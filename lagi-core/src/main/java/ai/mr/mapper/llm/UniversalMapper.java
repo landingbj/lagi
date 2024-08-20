@@ -9,12 +9,14 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class UniversalMapper extends BaseMapper implements IMapper {
 
+    @Getter
     private final ILlmAdapter adapter;
 
     public UniversalMapper(ILlmAdapter adapter) {
