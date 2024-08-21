@@ -81,16 +81,7 @@ public class CompletionsService {
             if (chatCompletionRequest.getModel() != null) {
                 ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
                 if(appointAdapter != null) {
-                    Map<String, Object> params = new HashMap<>();
-                    params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
-                    Backend backend = new Backend();
-                    backend.setModel(chatCompletionRequest.getModel());
-                    BeanUtil.copyProperties((ModelService) appointAdapter, backend);
-                    params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                    IMapper mapper = getMapper(backend, appointAdapter);
-                    mapper.setParameters(params);
-                    mapper.setPriority(backend.getPriority());
-                    contain.registerMapper(mapper);
+                    registerMapper(chatCompletionRequest, appointAdapter, contain);
                     doCompleted = true;
                 }
             }
@@ -101,22 +92,22 @@ public class CompletionsService {
                 } else {
                     ragAdapters = LlmManager.getInstance().getAdapters();
                 }
+                boolean register = false;
                 for (ILlmAdapter adapter : ragAdapters) {
                     if (adapter instanceof ModelService) {
                         ModelService modelService = (ModelService) adapter;
-                        Map<String, Object> params = new HashMap<>();
-                        params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
-                        Backend backend = new Backend();
-                        BeanUtil.copyProperties(modelService, backend);
-                        params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
-                        IMapper mapper = getMapper(backend, adapter);
-                        mapper.setParameters(params);
-                        mapper.setPriority(backend.getPriority());
-                        contain.registerMapper(mapper);
+                        if(CacheManager.get(modelService.getModel())) {
+                            continue;
+                        }
+                        registerMapper(chatCompletionRequest, adapter, contain);
+                        register = true;
                         if("failover".equals(getPolicy())) {
                             break;
                         }
                     }
+                }
+                if(!register && !ragAdapters.isEmpty()) {
+                    Optional.ofNullable(ragAdapters.get(0)).ifPresent(adapter -> {registerMapper(chatCompletionRequest, adapter, contain);});
                 }
             }
             IReducer qaReducer = new QaReducer();
@@ -129,6 +120,19 @@ public class CompletionsService {
             }
         }
         return answer;
+    }
+
+    private void registerMapper(ChatCompletionRequest chatCompletionRequest, ILlmAdapter adapter, IRContainer contain) {
+        Map<String, Object> params = new HashMap<>();
+        params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
+        Backend backend = new Backend();
+        backend.setModel(chatCompletionRequest.getModel());
+        BeanUtil.copyProperties(adapter, backend);
+        params.put(LagiGlobal.CHAT_COMPLETION_CONFIG, backend);
+        IMapper mapper = getMapper(backend, adapter);
+        mapper.setParameters(params);
+        mapper.setPriority(backend.getPriority());
+        contain.registerMapper(mapper);
     }
 
     public ChatCompletionResult completions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
