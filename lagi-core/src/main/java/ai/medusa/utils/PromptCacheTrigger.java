@@ -73,6 +73,11 @@ public class PromptCacheTrigger {
             return;
         }
 
+        String lastPrompt = qaCache.getPromptInVectorDb(promptInputWithBoundaries.getPromptList().get(0));
+        List<PromptInput> promptInputs = qaCache.get(lastPrompt);
+        lastPromptInput = promptInputs.get(0);
+        completionResultList = promptCache.get(lastPromptInput);
+
         // If the completionResultList size does not match the promptInput size, return.
         if (completionResultList == null) {
             return;
@@ -91,7 +96,13 @@ public class PromptCacheTrigger {
         completionResults.add(chatCompletionResult);
         promptCache.remove(promptInputInCache);
         promptInputInCache.getPromptList().add(newestPrompt);
-        qaCache.put(newestPrompt, promptInputList);
+        List<PromptInput> promptInputs = qaCache.get(newestPrompt);
+        if(promptInputs == null) {
+            promptInputs = new ArrayList<>();
+        }
+        promptInputs.add(promptInputInCache);
+//        qaCache.put(newestPrompt, promptInputList);
+        qaCache.put(newestPrompt, promptInputs);
         promptCache.put(promptInputInCache, completionResults);
     }
 
@@ -119,48 +130,51 @@ public class PromptCacheTrigger {
         if (questionList.size() < 2) {
             return promptInput;
         }
-        String pattern = "[ \n\\.,;!\\?，。；！？#\\*：:-]";
+//        String pattern = "[ \n\\.,;!\\?，。；！？#\\*：:-]";
         List<String> answerList = getRawAnswer(questionList);
-        questionList = questionList.stream().map(q->q.replaceAll(pattern, "")).collect(Collectors.toList());
-        answerList = answerList.stream().map(q->{
-            String s = q.replaceAll(pattern, "");
-            return s.substring(0, PromptCacheConfig.TRUNCATE_LENGTH);
-        }).collect(Collectors.toList());
-        int startIndex = 0;
-        String startQ = questionList.get(startIndex);
-        String startA = answerList.get(startIndex);
-        Set<String> startCoreSet = LCS.findLongestCommonSubstrings(startQ, startA, PromptCacheConfig.START_CORE_THRESHOLD);
-        Set<String> continuousSet = null;
-        for (int i = 1; i < questionList.size(); i++) {
-            String curQ = questionList.get(i);
-            String curA = answerList.get(i);
-            String lastA = answerList.get(i-1);
-            Set<String> sameCoreSet = LCS.findLongestCommonSubstrings(startQ, curA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
-            if(continuousSet == null) {
-                continuousSet = LCS.findLongestCommonSubstrings(curA, lastA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
-                Set<String> finalStartCoreSet = startCoreSet;
-                continuousSet = continuousSet.stream().filter(s->{
-                    long count = finalStartCoreSet.stream().filter(c -> c.contains(s)).count();
-                    return count > 0;
-                }).collect(Collectors.toSet());
-            } else {
-                Set<String> aaSet = LCS.findLongestCommonSubstrings(curA, lastA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
-                continuousSet = continuousSet.stream().filter(s->{
-                    long count = aaSet.stream().filter(c -> c.contains(s)).count();
-                    return count > 0;
-                }).collect(Collectors.toSet());
-            }
-            double sameRadio = LCS.getLcsRatio(startQ, sameCoreSet);
-            double conRadio = LCS.getLcsRatio(curA, continuousSet);
-            double radio = (double) PromptCacheConfig.ANSWER_CORE_THRESHOLD / curA.length();
-            if( sameRadio < LCS_RATIO_QUESTION && conRadio < radio) {
-                startIndex = i;
-                startQ = questionList.get(startIndex);
-                startA = answerList.get(startIndex);
-                startCoreSet = LCS.findLongestCommonSubstrings(startQ, startA, PromptCacheConfig.START_CORE_THRESHOLD);
-                continuousSet = null;
-            }
-        }
+//        questionList = questionList.stream().map(q->q.replaceAll(pattern, "")).collect(Collectors.toList());
+//        answerList = answerList.stream().map(q->{
+//            String s = q.replaceAll(pattern, "");
+//            return s.substring(0, PromptCacheConfig.TRUNCATE_LENGTH);
+//        }).collect(Collectors.toList());
+//        int startIndex = 0;
+//        String startQ = questionList.get(startIndex);
+//        String startA = answerList.get(startIndex);
+//        Set<String> startCoreSet = LCS.findLongestCommonSubstrings(startQ, startA, PromptCacheConfig.START_CORE_THRESHOLD);
+//        Set<String> continuousSet = null;
+//        for (int i = 1; i < questionList.size(); i++) {
+//            String curQ = questionList.get(i);
+//            String curA = answerList.get(i);
+//            String lastA = answerList.get(i-1);
+//            Set<String> sameCoreSet = LCS.findLongestCommonSubstrings(startQ, curA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
+//            if(continuousSet == null) {
+//                continuousSet = LCS.findLongestCommonSubstrings(curA, lastA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
+//                Set<String> finalStartCoreSet = startCoreSet;
+//                continuousSet = continuousSet.stream().filter(s->{
+//                    long count = finalStartCoreSet.stream().filter(c -> c.contains(s)).count();
+//                    return count > 0;
+//                }).collect(Collectors.toSet());
+//            } else {
+//                Set<String> aaSet = LCS.findLongestCommonSubstrings(curA, lastA, PromptCacheConfig.ANSWER_CORE_THRESHOLD);
+//                continuousSet = continuousSet.stream().filter(s->{
+//                    long count = aaSet.stream().filter(c -> c.contains(s)).count();
+//                    return count > 0;
+//                }).collect(Collectors.toSet());
+//            }
+//            double sameRadio = LCS.getLcsRatio(startQ, sameCoreSet);
+//            double conRadio = LCS.getLcsRatio(curA, continuousSet);
+//            double radio = (double) PromptCacheConfig.ANSWER_CORE_THRESHOLD / curA.length();
+//            if( sameRadio < LCS_RATIO_QUESTION && conRadio < radio) {
+//                startIndex = i;
+//                startQ = questionList.get(startIndex);
+//                startA = answerList.get(startIndex);
+//                startCoreSet = LCS.findLongestCommonSubstrings(startQ, startA, PromptCacheConfig.START_CORE_THRESHOLD);
+//                continuousSet = null;
+//            }
+//        }
+        List<QaPair> qaPairs = convert2QaPair(questionList, answerList);
+        List<List<QaPair>> splitQaPairs = splitQaPairBySemantics(qaPairs);
+        int startIndex = splitQaPairs.get(splitQaPairs.size() -1).get(0).getQIndex();
         return PromptInput.builder()
                 .parameter(promptInput.getParameter())
                 .promptList(promptInput.getPromptList().subList(startIndex, promptInput.getPromptList().size()))
@@ -185,6 +199,21 @@ public class PromptCacheTrigger {
         }
         res.add(finalIndex);
         return res;
+    }
+
+    private static List<QaPair> convert2QaPair(List<String> questionList, List<String> answerList) {
+        List<QaPair> qaPairs = new ArrayList<>();
+        for (int i = 0; i < questionList.size(); i++) {
+            String aa = answerList.get(i).trim();
+            aa = StrFilterUtil.filterPunctuations(aa);
+            int min = Math.min(aa.length(), 50);
+            aa = aa.substring(0, min);
+            String qq = questionList.get(i).trim();
+            qq = StrFilterUtil.filterPunctuations(qq);
+            QaPair qa = QaPair.builder().a(aa).aIndex(i).q(qq).qIndex(i).build();
+            qaPairs.add(qa);
+        }
+        return qaPairs;
     }
 
     private static List<QaPair> convert2QaPair(List<ChatMessage> chatMessages, int deep) {

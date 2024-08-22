@@ -12,7 +12,6 @@ import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
-import ai.vector.VectorCacheLoader;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

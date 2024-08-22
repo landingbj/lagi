@@ -12,6 +12,7 @@ import ai.mr.pipeline.ProducerConsumerPipeline;
 import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LRUCache;
+import com.google.common.collect.Lists;
 import lombok.Getter;
 
 import java.util.List;
@@ -77,11 +78,16 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                 }
                 List<String> promptListInCache = promptInputInCache.getPromptList();
                 int index = promptListInCache.indexOf(newestPrompt);
-                List<String> promptList1 = promptListInCache.subList(0, index + 1);
-
-                List<String> promptList = promptInput.getPromptList();
-                int startIndex = Math.max(promptList.size() - index - 1, 0);
-                List<String> promptList2 = promptList.subList(startIndex, promptList.size());
+                List<String> curPromptList = promptInput.getPromptList();
+                List<String> promptList1;
+                List<String> promptList2;
+                if(index == 0) {
+                    promptList1 = Lists.newArrayList(promptListInCache.get(0));
+                    promptList2 = Lists.newArrayList(curPromptList.get(curPromptList.size() -1));
+                } else {
+                    promptList1 = Lists.newArrayList(promptListInCache.get(0), promptListInCache.get(index));
+                    promptList2 = Lists.newArrayList(curPromptList.get(0), curPromptList.get(curPromptList.size() -1));
+                }
                 double ratio = LCS.getLcsRatio(promptList1, promptList2, SUBSTRING_THRESHOLD);
 
                 if (ratio > maxRatio) {

@@ -25,6 +25,7 @@ import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
@@ -83,7 +84,8 @@ public class LlmApiServlet extends BaseServlet {
             chatCompletionRequest.setModel(preference.getLlm());
         }
 
-        PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
+        ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
+        PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
         ChatCompletionResult chatCompletionResult = medusaService.locate(promptInput);
 
         if (chatCompletionResult != null) {
@@ -147,6 +149,23 @@ public class LlmApiServlet extends BaseServlet {
             CompletionUtil.populateContext(result, indexSearchDataList, context);
             responsePrint(resp, toJson(result));
         }
+    }
+
+    private static ChatCompletionRequest getCompletionRequest(ChatCompletionRequest chatCompletionRequest) {
+        List<Integer> integers = PromptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
+        ChatCompletionRequest medusaRequest = null;
+        if(!integers.isEmpty()) {
+            Integer i = integers.get(0);
+            List<ChatMessage> chatMessages = chatCompletionRequest.getMessages().subList(i, chatCompletionRequest.getMessages().size());
+            medusaRequest = new ChatCompletionRequest();
+            medusaRequest.setTemperature(chatCompletionRequest.getTemperature());
+            medusaRequest.setMax_tokens(chatCompletionRequest.getMax_tokens());
+            medusaRequest.setCategory(chatCompletionRequest.getCategory());
+            medusaRequest.setMessages(chatMessages);
+        } else {
+            medusaRequest = chatCompletionRequest;
+        }
+        return medusaRequest;
     }
 
     private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
