@@ -433,9 +433,27 @@ function streamOutput(paras, question, robootAnswerJq) {
                     continue;
                 }
                 var chatMessage = json.choices[0].message;
-                var a = '<a style="color: #666;text-decoration: none;" ' +
-                    'href="uploadFile/downloadFile?filePath=' + chatMessage.filepath + '&fileName=' +
-                    chatMessage.filename + '">' + chatMessage.filename + '</a>';
+
+                if (chatMessage.filename === undefined){
+
+                }else{
+                    //var a = '<ul style="list-style:none;padding-left:5px;">';
+                    var a = '';
+                    let isFirst = true; // 标记是否是第一个文件名
+
+                    for (let i = 0; i < chatMessage.filename.length; i++) {
+                        let marginLeft = isFirst ? '0' : '50px';
+                        a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a>`;
+                        isFirst = false;
+                        //console.log("这里的路径是："+chatMessage.filepath[i]);
+                        //a+=`<a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a><br>`;
+                    }
+                    //a +='</ul>'
+                }
+
+                // var a = '<a style="color: #666;text-decoration: none;" ' +
+                //     'href="uploadFile/downloadFile?filePath=' + chatMessage.filepath + '&fileName=' +
+                //     chatMessage.filename + '">' + chatMessage.filename + '</a>';
 
                 if (chatMessage.content === undefined) {
                     continue;
@@ -446,7 +464,7 @@ function streamOutput(paras, question, robootAnswerJq) {
                 result = `
                         ${fullText} <br>
                         ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
-                        ${chatMessage.filename !== undefined ? `附件:${a}` : ""}<br>
+                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
                         `
                 robootAnswerJq.html(result);
             }
