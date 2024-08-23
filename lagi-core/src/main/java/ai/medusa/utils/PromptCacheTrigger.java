@@ -73,11 +73,6 @@ public class PromptCacheTrigger {
             return;
         }
 
-        String lastPrompt = qaCache.getPromptInVectorDb(promptInputWithBoundaries.getPromptList().get(0));
-        List<PromptInput> promptInputs = qaCache.get(lastPrompt);
-        lastPromptInput = promptInputs.get(0);
-        completionResultList = promptCache.get(lastPromptInput);
-
         // If the completionResultList size does not match the promptInput size, return.
         if (completionResultList == null) {
             return;
@@ -174,7 +169,10 @@ public class PromptCacheTrigger {
 //        }
         List<QaPair> qaPairs = convert2QaPair(questionList, answerList);
         List<List<QaPair>> splitQaPairs = splitQaPairBySemantics(qaPairs);
-        int startIndex = splitQaPairs.get(splitQaPairs.size() -1).get(0).getQIndex();
+        int startIndex = 0;
+        if(!splitQaPairs.isEmpty() && !splitQaPairs.get(splitQaPairs.size() -1).isEmpty()) {
+            startIndex = splitQaPairs.get(splitQaPairs.size() -1).get(0).getQIndex();
+        }
         return PromptInput.builder()
                 .parameter(promptInput.getParameter())
                 .promptList(promptInput.getPromptList().subList(startIndex, promptInput.getPromptList().size()))
