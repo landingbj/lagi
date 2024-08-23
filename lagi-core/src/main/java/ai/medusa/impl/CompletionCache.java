@@ -11,6 +11,7 @@ import ai.medusa.producer.*;
 import ai.mr.pipeline.ProducerConsumerPipeline;
 import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.utils.ContinueWordUtil;
 import ai.utils.LRUCache;
 import com.google.common.collect.Lists;
 import lombok.Getter;
@@ -82,6 +83,10 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                 List<String> promptList1;
                 List<String> promptList2;
                 if(index == 0) {
+                    if(curPromptList.size() > 1
+                            && ContinueWordUtil.containsStoppingWorlds(curPromptList.get(curPromptList.size() -1)) ) {
+                        continue;
+                    }
                     promptList1 = Lists.newArrayList(promptListInCache.get(0));
                     promptList2 = Lists.newArrayList(curPromptList.get(curPromptList.size() -1));
                 } else {
