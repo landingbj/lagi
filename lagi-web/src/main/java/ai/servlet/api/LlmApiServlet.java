@@ -3,6 +3,7 @@ package ai.servlet.api;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -10,11 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.common.ModelService;
+import ai.config.ContextLoader;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.pojo.GetRagContext;
 import ai.llm.utils.CacheManager;
 import ai.llm.utils.CompletionUtil;
 import ai.manager.LlmManager;
@@ -54,6 +57,7 @@ public class LlmApiServlet extends BaseServlet {
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
+    private final boolean BASEDONCONTEXT = ContextLoader.configuration.getStores().getRag().get(0).getDependingOnTheContext();
 
     static {
         VectorCacheLoader.load();
@@ -83,10 +87,22 @@ public class LlmApiServlet extends BaseServlet {
                 && preference.getLlm() != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
-
+        ChatCompletionResult chatCompletionResult = null;
         ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
         PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
-        ChatCompletionResult chatCompletionResult = medusaService.locate(promptInput);
+
+        if (BASEDONCONTEXT && LagiGlobal.RAG_ENABLE && vectorDbService.searchByContext(chatCompletionRequest).size()<=0) {
+            ChatCompletionResult  temp = new ChatCompletionResult();
+            ChatCompletionChoice choice = new ChatCompletionChoice();
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setContent("您好！ 您的问题内容较为简略，请提供更详细的信息或具体化您的问题，以便我们能更准确地为您提供帮助。");
+            choice.setMessage(chatMessage);
+            temp.setChoices(Lists.newArrayList(choice));
+            responsePrint(resp, toJson(temp));
+
+        }else {
+            chatCompletionResult = medusaService.locate(promptInput);
+        }
 
         if (chatCompletionResult != null) {
             if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
@@ -110,7 +126,7 @@ public class LlmApiServlet extends BaseServlet {
 
         boolean hasTruncate = false;
         List<IndexSearchData> indexSearchDataList;
-        String context = null;
+        GetRagContext context = null;
         if (chatCompletionRequest.getCategory() != null && LagiGlobal.RAG_ENABLE) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
@@ -127,8 +143,9 @@ public class LlmApiServlet extends BaseServlet {
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
-                context = CompletionUtil.truncate(context);
-                completionsService.addVectorDBContext(chatCompletionRequest, context);
+                String contextStr = CompletionUtil.truncate(context.getContext());
+                context.setContext(contextStr);
+                completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
                 ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
                 chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
                 hasTruncate = true;
@@ -143,10 +160,10 @@ public class LlmApiServlet extends BaseServlet {
         }
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-            streamOutPrint(chatCompletionRequest, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
+            streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
-            CompletionUtil.populateContext(result, indexSearchDataList, context);
+            CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
             responsePrint(resp, toJson(result));
         }
     }
@@ -168,7 +185,7 @@ public class LlmApiServlet extends BaseServlet {
         return medusaRequest;
     }
 
-    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
+    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
         if(limit <= 0 ) {
             out.close();
             return;
@@ -202,35 +219,39 @@ public class LlmApiServlet extends BaseServlet {
                     logger.error("", e);
                     ModelService modelService = (ModelService) ragAdapter;
                     CacheManager.put(modelService.getModel(), false);
-                    streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
+                    streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
                 },
                 () -> {
                     if(lastResult[0] == null) {
-                        streamOutPrint(chatCompletionRequest, indexSearchDataList, out, finalLimit);
+                        streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
                         return;
                     }
-                    extracted(lastResult, indexSearchDataList, out);
+                    extracted(lastResult,indexSearchDataList,context, out);
                     lastResult[0].setChoices(lastResult[1].getChoices());
+
                     out.flush();
                     out.close();
                 }
         );
     }
 
-    private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, PrintWriter out) {
+    private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()
                 && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);
             List<String> imageList = vectorDbService.getImageFiles(indexData);
+            List<String> filePaths = ragContext.getFilePaths().stream().distinct().collect(Collectors.toList());
+            List<String> filenames = ragContext.getFilenames().stream().distinct().collect(Collectors.toList());
             for (int i = 0; i < lastResult[0].getChoices().size(); i++) {
-                ChatMessage message = lastResult[0].getChoices().get(i).getMessage();
+                ChatMessage message = lastResult[0].getChoices().get(0).getMessage();
                 message.setContent("");
                 message.setContext(indexData.getText());
-                if (!(indexData.getFilename() != null && indexData.getFilename().size() == 1
-                        && indexData.getFilename().get(0).isEmpty())) {
-                    message.setFilename(indexData.getFilename());
+                IndexSearchData indexData1 = indexSearchDataList.get(i);
+                    if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
+                            && indexData1.getFilename().get(0).isEmpty())) {
+                    message.setFilename(filenames);
+                    message.setFilepath(filePaths);
                 }
-                message.setFilepath(indexData.getFilepath());
                 message.setImageList(imageList);
             }
             out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");

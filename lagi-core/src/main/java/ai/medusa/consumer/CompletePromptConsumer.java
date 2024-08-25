@@ -80,7 +80,7 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
         PromptInput promptInput = item.getPromptInput();
         String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
         ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
-        String context = completionsService.getRagContext(indexSearchDataList);
+        String context = completionsService.getRagContext(indexSearchDataList).getContext();
         completionsService.addVectorDBContext(chatCompletionRequest, context);
         return chatCompletionRequest;
     }

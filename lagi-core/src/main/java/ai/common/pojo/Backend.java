@@ -37,4 +37,5 @@ public class Backend {
     private Boolean cacheEnable;
     private String cacheDir;
     private String router;
+    private Boolean dependingOnTheContext;
 }
