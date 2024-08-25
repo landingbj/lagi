@@ -32,7 +32,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     @Override
     public void init() {
-
+        BigdataManager.getInstance().register(stores.getBigdata());
         OSSManager.getInstance().register(stores.getOss());
         VectorStoreManager.getInstance().register(stores.getVectors(), stores.getRag(), functions.getEmbedding());
         MultimodalAIManager.register(models, functions);

@@ -12,5 +12,6 @@ public class StoreConfig {
     private List<VectorStoreConfig> vectors;
     private List<OSSConfig> oss;
     private List<Backend> rag;
+    private List<BigdataConfig> bigdata;
     private Medusa medusa;
 }
