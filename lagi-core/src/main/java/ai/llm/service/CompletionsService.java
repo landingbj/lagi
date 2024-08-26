@@ -200,9 +200,6 @@ public class CompletionsService {
 
 
     private IMapper getMapper(Backend backendConfig, ILlmAdapter adapter) {
-        if (backendConfig.getType().equalsIgnoreCase(LagiGlobal.LLM_TYPE_LANDING)) {
-            return new LandingMapper();
-        }
         return new UniversalMapper(adapter);
     }
 

@@ -21,6 +21,6 @@ public class AiGlobal {
     public static final String CALL_METHOD_NOT_FOUND = "调用方式错误";
     public static final String DUPLICATE_TOKEN_TIME = "t";
     public static final String DUPLICATE_TOKEN_RANDOM = "r";
-    public final static int FILE_PARTITION_CHUNK_SIZE = 8192;
     public static String DIR_TEMP = "/WEB-INF/temp";
+    public static final String SAAS_URL = "https://saas.landingbj.com";
 }

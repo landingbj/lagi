@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import ai.common.pojo.FileChunkResponse;
+import ai.utils.AiGlobal;
 import ai.utils.HttpUtil;
 
 import ai.utils.LagiGlobal;
@@ -20,8 +21,7 @@ import com.ibm.icu.text.CharsetMatch;
 import org.apache.commons.io.IOUtils;
 
 public class FileService {
-    private static final String FILE_PROCESS_URL = "https://saas.landingbj.com";
-    private static final String EXTRACT_CONTENT_URL = FILE_PROCESS_URL + "/saas/extractContentWithImage";
+    private static final String EXTRACT_CONTENT_URL = AiGlobal.SAAS_URL + "/saas/extractContentWithImage";
 
     private final Gson gson = new Gson();
 
@@ -36,7 +36,6 @@ public class FileService {
         }
         headers.put("Authorization", "Bearer " + LagiGlobal.getLandingApikey());
         String returnStr = HttpUtil.multipartUpload(EXTRACT_CONTENT_URL, fileParmName, fileList, formParmMap, headers);
-        System.out.println(returnStr);
         return gson.fromJson(returnStr, FileChunkResponse.class);
     }
 

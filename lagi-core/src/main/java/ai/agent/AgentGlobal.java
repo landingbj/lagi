@@ -1,5 +1,7 @@
 package ai.agent;
 
+import ai.utils.AiGlobal;
+
 public class AgentGlobal {
     public static final String WECHAT_AGENT_CLASS = "ai.agent.social.WechatAgent";
     public static final String QQ_AGENT_CLASS = "ai.agent.social.QQAgent";
@@ -42,6 +44,5 @@ public class AgentGlobal {
     public static final String ENABLE_FLAG = "1";
     public static final String DISABLE_FLAG = "0";
 
-    public static final String SAAS_URL = "https://saas.landingbj.com";
-//    public static final String SAAS_URL = "http://localhost:8090";
+    public static final String SAAS_URL = AiGlobal.SAAS_URL;
 }

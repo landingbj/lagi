@@ -4,9 +4,9 @@ models:
   # Landing is a MOE model provided by Beijing Landing Technologies
   - name: landing
     type: Landing
-    enable: false
+    enable: true
     drivers:
-      - model: turing,qa,tree,proxy
+      - model: turing,qa,tree,proxy,cascade
         driver: ai.llm.adapter.impl.LandingAdapter
       - model: image
         driver: ai.image.adapter.impl.LandingImageAdapter
@@ -212,7 +212,7 @@ stores:
 
   rag:
     - backend: chroma
-      enable: true
+      enable: false
       priority: 10
 
   medusa:
@@ -226,16 +226,22 @@ functions:
       api_key: you-api-key
 
   chat:
+    - backend: landing
+      model: cascade
+      enable: true
+      stream: true
+      priority: 350
+
     - backend: kimi
       model: moonshot-v1-8k
-      enable: true
+      enable: false
       stream: true
       priority: 150
 
     - backend: chatgpt
       model: gpt-3.5-turbo
       enable: false
-      stream: false
+      stream: true
       priority: 120
 
     - backend: ernie
