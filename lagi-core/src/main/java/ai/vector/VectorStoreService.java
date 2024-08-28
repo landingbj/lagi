@@ -49,7 +49,8 @@ public class VectorStoreService {
     }
 
     private final IntentService intentService = new SampleIntentServiceImpl();
-
+    private final BigdataService bigdataService = new BigdataService();
+    private static final VectorCache vectorCache = VectorCache.getInstance();
 
     public VectorStoreService() {
         if (LagiGlobal.RAG_ENABLE) {
@@ -58,7 +59,7 @@ public class VectorStoreService {
     }
 
     public VectorStoreConfig getVectorStoreConfig() {
-        if(vectorStore == null) {
+        if (vectorStore == null) {
             return null;
         }
         return vectorStore.getConfig();
@@ -133,10 +134,17 @@ public class VectorStoreService {
     }
 
     public void upsert(List<UpsertRecord> upsertRecords) {
-        this.vectorStore.upsert(upsertRecords);
+        this.upsert(upsertRecords, vectorStore.getConfig().getDefaultCategory());
     }
 
     public void upsert(List<UpsertRecord> upsertRecords, String category) {
+        for (UpsertRecord upsertRecord : upsertRecords) {
+            TextIndexData data = new TextIndexData();
+            data.setId(upsertRecord.getId());
+            data.setText(upsertRecord.getDocument());
+            data.setCategory(category);
+            bigdataService.upsert(data);
+        }
         this.vectorStore.upsert(upsertRecords, category);
     }
 
@@ -209,7 +217,7 @@ public class VectorStoreService {
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
-        if(intentResult.getIndexSearchDataList() != null) {
+        if (intentResult.getIndexSearchDataList() != null) {
             return intentResult.getIndexSearchDataList();
         }
         String question = null;
@@ -239,7 +247,6 @@ public class VectorStoreService {
         return search(question, request.getCategory());
     }
 
-    private static final VectorCache vectorCache = VectorCache.getInstance();
 
     public List<IndexSearchData> search(String question, String category) {
 
@@ -250,6 +257,11 @@ public class VectorStoreService {
         List<Future<IndexSearchData>> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+        Set<String> esIds = bigdataService.getIds(question, category);
+        Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
+        if (esIds != null) {
+            indexIds.retainAll(esIds);
+        }
         for (IndexSearchData indexSearchData : indexSearchDataList) {
             String finalCategory = category;
             Future<IndexSearchData> submit = executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory));
@@ -263,6 +275,9 @@ public class VectorStoreService {
             }
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
+        if (!indexIds.isEmpty()) {
+            result.removeIf(indexSearchData -> !indexIds.contains(indexSearchData.getId()));
+        }
         return res;
     }
 
@@ -305,7 +320,7 @@ public class VectorStoreService {
         indexSearchData.setLevel((String) indexRecord.getMetadata().get("level"));
         indexSearchData.setFileId((String) indexRecord.getMetadata().get("file_id"));
         String filename = (String) indexRecord.getMetadata().get("filename");
-        Long seq =  indexRecord.getMetadata().get("seq") == null ? 0L : Long.parseLong((String) indexRecord.getMetadata().get("seq"));
+        Long seq = indexRecord.getMetadata().get("seq") == null ? 0L : Long.parseLong((String) indexRecord.getMetadata().get("seq"));
         indexSearchData.setSeq(seq);
         if (filename != null) {
             indexSearchData.setFilename(Collections.singletonList(filename));

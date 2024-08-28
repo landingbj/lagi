@@ -210,10 +210,18 @@ stores:
       bucket_name: ai-service-oss
       enable: true
 
+  bigdata:
+    - name: elasticsearch
+      driver: ai.bigdata.impl.ElasticsearchAdapter
+      host: localhost
+      port: 9200
+      enable: true
+
   rag:
     - backend: chroma
       enable: false
       priority: 10
+      depending_on_the_context: true
 
   medusa:
     enable: false

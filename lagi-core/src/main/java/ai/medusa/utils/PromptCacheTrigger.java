@@ -321,7 +321,7 @@ public class PromptCacheTrigger {
         }
 //        String text = String.join(";", promptInput.getPromptList());
         List<IndexSearchData> indexSearchDataList = vectorStoreService.search(text, promptInput.getParameter().getCategory());
-        String context = completionsService.getRagContext(indexSearchDataList);
+        String context = completionsService.getRagContext(indexSearchDataList).getContext();
         ChatCompletionRequest request = completionsService.getCompletionsRequest(
                 promptInput.getParameter().getSystemPrompt(), lastPrompt, promptInput.getParameter().getCategory());
         if (context != null) {

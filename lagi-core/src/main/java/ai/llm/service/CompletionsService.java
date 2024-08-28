@@ -15,6 +15,7 @@ import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
+import ai.llm.pojo.GetRagContext;
 import ai.llm.utils.CacheManager;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
@@ -205,16 +206,22 @@ public class CompletionsService {
 
     public void addVectorDBContext(ChatCompletionRequest request, String context) {
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
-        String prompt = "以下是背景信息。(%s)根据上下文信息而非先前知识，回答这个问题:%s";
+        String prompt = "以下是背景信息。(%s)根据上下文信息而非先前知识，回答这个问题，回答只基于上下文信息且尽可能的全面和详细:%s";
         prompt = String.format(prompt, context, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
     }
 
-    public String getRagContext(List<IndexSearchData> indexSearchDataList) {
+    public GetRagContext getRagContext(List<IndexSearchData> indexSearchDataList) {
         if (indexSearchDataList.isEmpty()) {
             return null;
         }
+        List<String> filePaths = new ArrayList<>();
+        List<String> filenames = new ArrayList<>();
         String context = indexSearchDataList.get(0).getText();
+        if(indexSearchDataList.get(0).getFilepath() != null && indexSearchDataList.get(0).getFilename() != null) {
+            filePaths.addAll(indexSearchDataList.get(0).getFilepath());
+            filenames.addAll(indexSearchDataList.get(0).getFilename());
+        }
         double firstDistance = indexSearchDataList.get(0).getDistance();
         double lastDistance = firstDistance;
         List<Double> diffList = new ArrayList<>();
@@ -224,6 +231,10 @@ public class CompletionsService {
                 double diff = data.getDistance() - firstDistance;
                 double threshold = diff / firstDistance;
                 if (threshold < 0.25) {
+                    if(data.getFilepath() != null && data.getFilename() != null) {
+                        filePaths.addAll(data.getFilepath());
+                        filenames.addAll(data.getFilename());
+                    }
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
@@ -234,6 +245,10 @@ public class CompletionsService {
                 IndexSearchData data = indexSearchDataList.get(i);
                 double diff = data.getDistance() - lastDistance;
                 if (diff < diffList.get(0) * 0.618) {
+                    if(data.getFilepath() != null && data.getFilename() != null) {
+                        filePaths.addAll(data.getFilepath());
+                        filenames.addAll(data.getFilename());
+                    }
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
@@ -248,12 +263,20 @@ public class CompletionsService {
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
+                    if(data.getFilepath() != null && data.getFilename() != null) {
+                        filePaths.addAll(data.getFilepath());
+                        filenames.addAll(data.getFilename());
+                    }
                 } else {
                     break;
                 }
             }
         }
-        return context;
+        return GetRagContext.builder()
+                .filenames(filenames)
+                .filePaths(filePaths)
+                .context(context)
+                .build();
     }
 
     public ChatMessage getChatMessage(String question, String role) {
