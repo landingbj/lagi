@@ -184,7 +184,7 @@ public class CompletionsService {
                         return CacheManager.get(modelService.getModel());
                     })
                     .findFirst();
-            return first.orElse(null);
+            return first.orElse(ragAdapters.get(0));
         }
         return null;
     }

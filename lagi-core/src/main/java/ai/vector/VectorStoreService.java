@@ -1,6 +1,7 @@
 package ai.vector;
 
 import ai.common.pojo.*;
+import ai.common.utils.ThreadPoolManager;
 import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
@@ -21,16 +22,31 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class VectorStoreService {
+    private static final Logger log = LoggerFactory.getLogger(VectorStoreService.class);
     private final Gson gson = new Gson();
     private BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
+    private static final ExecutorService executor;
+
+    static {
+        ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(100),
+                (r, executor)->{
+                    log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
+                }
+        ));
+        executor = ThreadPoolManager.getExecutor("vector-service");
+    }
 
     private final IntentService intentService = new SampleIntentServiceImpl();
 
@@ -226,23 +242,38 @@ public class VectorStoreService {
     private static final VectorCache vectorCache = VectorCache.getInstance();
 
     public List<IndexSearchData> search(String question, String category) {
+
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
         Map<String, String> where = new HashMap<>();
-        List<IndexSearchData> result = new ArrayList<>();
+        List<IndexSearchData> res;
+        List<Future<IndexSearchData>> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
-
         for (IndexSearchData indexSearchData : indexSearchDataList) {
-            IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
-            if (extendedIndexSearchData == null) {
-                extendedIndexSearchData = extendText(indexSearchData, category);
-                vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
-            }
-            extendedIndexSearchData.setDistance(indexSearchData.getDistance());
-            result.add(extendedIndexSearchData);
+            String finalCategory = category;
+            Future<IndexSearchData> submit = executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory));
+            result.add(submit);
         }
-        return result;
+        res = result.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            }catch (Exception e) {
+                log.error("indexData get error");
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        return res;
+    }
+
+    private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {
+        IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
+        if (extendedIndexSearchData == null) {
+            extendedIndexSearchData = extendText(indexSearchData, category);
+            vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
+        }
+        extendedIndexSearchData.setDistance(indexSearchData.getDistance());
+        return extendedIndexSearchData;
     }
 
     public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
@@ -308,6 +339,7 @@ public class VectorStoreService {
         where.put("parent_id", parentId);
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setWhere(where);
+        queryCondition.setN(1);
         List<IndexRecord> indexRecords = this.query(queryCondition, category);
         if (indexRecords != null && !indexRecords.isEmpty()) {
             result = toIndexSearchData(indexRecords.get(0));

@@ -2,6 +2,7 @@ package ai.medusa.utils;
 
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.QaPair;
+import ai.common.utils.ThreadPoolManager;
 import ai.llm.service.CompletionsService;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.impl.CompletionCache;
@@ -18,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class PromptCacheTrigger {
@@ -27,7 +27,7 @@ public class PromptCacheTrigger {
     private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
     private static final double LCS_RATIO_QUESTION = PromptCacheConfig.LCS_RATIO_QUESTION;
     private final CompletionCache completionCache;
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(PromptCacheConfig.WRITE_CACHE_THREADS);
+    private static final ExecutorService executorService;
     private final VectorStoreService vectorStoreService = new VectorStoreService();
     private final LRUCache<PromptInput, List<ChatCompletionResult>> promptCache;
     private final QaCache qaCache;
@@ -36,6 +36,8 @@ public class PromptCacheTrigger {
 
     static {
         rawAnswerCache = new LRUCache<>(PromptCacheConfig.RAW_ANSWER_CACHE_SIZE);
+        ThreadPoolManager.registerExecutor("medusa");
+        executorService = ThreadPoolManager.getExecutor("medusa");
     }
 
     public PromptCacheTrigger(CompletionCache completionCache) {
@@ -58,14 +60,14 @@ public class PromptCacheTrigger {
 
         PromptInput promptInputWithBoundaries = analyzeChatBoundaries(promptInput);
 
-        PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
-        List<ChatCompletionResult> completionResultList = promptCache.get(lastPromptInput);
 
         chatCompletionResult = completionsWithContext(promptInputWithBoundaries);
         if (chatCompletionResult == null) {
             return;
         }
 
+        PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
+        List<ChatCompletionResult> completionResultList = promptCache.get(lastPromptInput);
         // If the prompt list has only one prompt, add the prompt input to the cache.
         // If the prompt list has more than one prompt and the last prompt is not in the prompt cache, add the prompt to the cache.
         if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResultList == null) {
@@ -83,10 +85,11 @@ public class PromptCacheTrigger {
     }
 
     private synchronized void putCache(PromptInput promptInputWithBoundaries, PromptInput lastPromptInput, ChatCompletionResult chatCompletionResult, String newestPrompt) {
-        String lastPrompt = PromptInputUtil.getLastPrompt(promptInputWithBoundaries);
-        List<PromptInput> promptInputList = qaCache.get(lastPrompt);
-        int index = promptInputList.indexOf(lastPromptInput);
-        PromptInput promptInputInCache = promptInputList.get(index);
+        String firstPrompt = PromptInputUtil.getFirstPrompt(promptInputWithBoundaries);
+        List<PromptInput> promptInputList = qaCache.get(firstPrompt);
+//        int index = promptInputList.indexOf(lastPromptInput);
+//        PromptInput promptInputInCache = promptInputList.get(index);
+        PromptInput promptInputInCache = promptInputList.get(0);
         List<ChatCompletionResult> completionResults = promptCache.get(promptInputInCache);
         completionResults.add(chatCompletionResult);
         promptCache.remove(promptInputInCache);
