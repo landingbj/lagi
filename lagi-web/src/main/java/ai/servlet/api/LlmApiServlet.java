@@ -90,8 +90,11 @@ public class LlmApiServlet extends BaseServlet {
         ChatCompletionResult chatCompletionResult = null;
         ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
         PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
-
-        if (BASEDONCONTEXT && LagiGlobal.RAG_ENABLE && vectorDbService.searchByContext(chatCompletionRequest).size()<=0) {
+        List<IndexSearchData> indexSearchDataList = new ArrayList<>();
+        if (LagiGlobal.RAG_ENABLE){
+            indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+        }
+        if (BASEDONCONTEXT && indexSearchDataList.size()<=0) {
             ChatCompletionResult  temp = new ChatCompletionResult();
             ChatCompletionChoice choice = new ChatCompletionChoice();
             ChatMessage chatMessage = new ChatMessage();
@@ -125,7 +128,6 @@ public class LlmApiServlet extends BaseServlet {
         }
 
         boolean hasTruncate = false;
-        List<IndexSearchData> indexSearchDataList;
         GetRagContext context = null;
         if (chatCompletionRequest.getCategory() != null && LagiGlobal.RAG_ENABLE) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
@@ -140,7 +142,7 @@ public class LlmApiServlet extends BaseServlet {
                 responsePrint(resp, toJson(temp));
                 return;
             }
-            indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
                 String contextStr = CompletionUtil.truncate(context.getContext());
