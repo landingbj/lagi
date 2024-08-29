@@ -1,5 +1,7 @@
 package ai.vector;
 
+import ai.bigdata.BigdataService;
+import ai.bigdata.pojo.TextIndexData;
 import ai.common.pojo.*;
 import ai.common.utils.ThreadPoolManager;
 import ai.intent.IntentService;
@@ -253,21 +255,21 @@ public class VectorStoreService {
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
         Map<String, String> where = new HashMap<>();
-        List<IndexSearchData> res;
-        List<Future<IndexSearchData>> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
         Set<String> esIds = bigdataService.getIds(question, category);
-        Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
-        if (esIds != null) {
+        if (esIds != null && !esIds.isEmpty()) {
+            Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
             indexIds.retainAll(esIds);
+            indexSearchDataList = indexSearchDataList.stream()
+                    .filter(indexSearchData->indexIds.contains(indexSearchData.getId()))
+                    .collect(Collectors.toList());
         }
-        for (IndexSearchData indexSearchData : indexSearchDataList) {
-            String finalCategory = category;
-            Future<IndexSearchData> submit = executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory));
-            result.add(submit);
-        }
-        res = result.stream().map(indexSearchDataFuture -> {
+        String finalCategory = category;
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
+                .collect(Collectors.toList());
+        return  futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
             }catch (Exception e) {
@@ -275,10 +277,6 @@ public class VectorStoreService {
             }
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
-        if (!indexIds.isEmpty()) {
-            result.removeIf(indexSearchData -> !indexIds.contains(indexSearchData.getId()));
-        }
-        return res;
     }
 
     private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {

@@ -4,6 +4,7 @@ import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.pojo.EmbeddingConfig;
 import ai.common.pojo.VectorStoreConfig;
+import ai.config.pojo.RAGFunction;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.utils.LagiGlobal;
@@ -31,27 +32,27 @@ public class VectorStoreManager {
 
     private VectorStoreManager(){}
 
-    public void register(List<VectorStoreConfig> vectorStoreConfigs, List<Backend> backends, List<EmbeddingConfig> embeddings) {
-        if (vectorStoreConfigs == null || vectorStoreConfigs.isEmpty() || backends == null || backends.isEmpty()) {
+    public void register(List<VectorStoreConfig> vectorStoreConfigs, RAGFunction ragFunction, List<EmbeddingConfig> embeddings) {
+        if (vectorStoreConfigs == null || vectorStoreConfigs.isEmpty() || ragFunction == null) {
             return;
         }
         Map<String, VectorStoreConfig> vectorMap = vectorStoreConfigs.stream().collect(Collectors.toMap(VectorStoreConfig::getName, vectorStoreConfig -> vectorStoreConfig));
-        backends.stream().filter(Backend::getEnable)
-        .map(rc->vectorMap.get(rc.getBackend()))
-        .filter(Objects::nonNull)
-        .forEach(vectorStoreConfig -> {
-            try {
-                String name = vectorStoreConfig.getName();
-                String driver = vectorStoreConfig.getDriver();
-                Class<?> clazz = Class.forName(driver);
-                Constructor<?> constructor = clazz.getConstructor(VectorStoreConfig.class, Embeddings.class);
-                BaseVectorStore vs = (BaseVectorStore) constructor.newInstance(vectorStoreConfig, EmbeddingFactory.getEmbedding(embeddings.get(0)));
-                register(name, vs);
-                LagiGlobal.RAG_ENABLE = true;
-            } catch (Exception e) {
-                log.error("registerVectorStore ("+vectorStoreConfig.getName()+")error");
-            }}
-        );
+        if(Boolean.TRUE.equals(ragFunction.getEnable())) {
+            VectorStoreConfig vectorStoreConfig = vectorMap.get(ragFunction.getVector());
+            Optional.ofNullable(vectorStoreConfig).ifPresent(v -> {
+                try {
+                    String name = v.getName();
+                    String driver = v.getDriver();
+                    Class<?> clazz = Class.forName(driver);
+                    Constructor<?> constructor = clazz.getConstructor(VectorStoreConfig.class, Embeddings.class);
+                    BaseVectorStore vs = (BaseVectorStore) constructor.newInstance(v, EmbeddingFactory.getEmbedding(embeddings.get(0)));
+                    register(name, vs);
+                    LagiGlobal.RAG_ENABLE = true;
+                } catch (Exception e) {
+                    log.error("registerVectorStore ({})error", v.getName());
+                }}
+            );
+        }
     }
 
     public void register(String key, VectorStore adapter) {

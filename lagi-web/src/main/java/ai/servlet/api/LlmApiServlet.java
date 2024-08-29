@@ -11,13 +11,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.common.ModelService;
+import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
+import ai.config.pojo.RAGFunction;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.GetRagContext;
+import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CacheManager;
 import ai.llm.utils.CompletionUtil;
 import ai.manager.LlmManager;
@@ -36,7 +39,6 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
-import ai.utils.LagiGlobal;
 import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
@@ -57,7 +59,8 @@ public class LlmApiServlet extends BaseServlet {
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
-    private final boolean BASEDONCONTEXT = ContextLoader.configuration.getStores().getRag().get(0).getDependingOnTheContext();
+    private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
+    private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
 
     static {
         VectorCacheLoader.load();
@@ -80,67 +83,53 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
-        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-        if(chatCompletionRequest.getModel() == null
-                && preference != null
-                && preference.getLlm() != null) {
-            chatCompletionRequest.setModel(preference.getLlm());
-        }
+        ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
         ChatCompletionResult chatCompletionResult = null;
-        ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
-        PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
 
-        if (BASEDONCONTEXT && LagiGlobal.RAG_ENABLE && vectorDbService.searchByContext(chatCompletionRequest).size()<=0) {
-            ChatCompletionResult  temp = new ChatCompletionResult();
-            ChatCompletionChoice choice = new ChatCompletionChoice();
-            ChatMessage chatMessage = new ChatMessage();
-            chatMessage.setContent("您好！ 您的问题内容较为简略，请提供更详细的信息或具体化您的问题，以便我们能更准确地为您提供帮助。");
-            choice.setMessage(chatMessage);
-            temp.setChoices(Lists.newArrayList(choice));
-            responsePrint(resp, toJson(temp));
+        List<IndexSearchData> indexSearchDataList = null;
+        String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
-        }else {
+        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+            ModelService modelService = (ModelService) LlmRouterDispatcher
+                    .getRagAdapter(null).stream().findFirst().orElse(null);
+            if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                if(indexSearchDataList.isEmpty()) {
+                    String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
+                    outPrintJson(resp, chatCompletionRequest, s);
+                    return ;
+                }
+            }
+        }
+
+        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable())) {
+            ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
+            PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             chatCompletionResult = medusaService.locate(promptInput);
-        }
-
-        if (chatCompletionResult != null) {
-            if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
-                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-                out.print("data: " + toJson(chatCompletionResult) + "\n\n");
-                out.print("data: " + "[DONE]" + "\n\n");
-                out.flush();
-                out.close();
+            if (chatCompletionResult != null) {
+                outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
+                logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+                return;
             } else {
-                responsePrint(resp, toJson(chatCompletionResult));
-            }
-            logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
-            return;
-        } else {
-            medusaService.triggerCachePut(promptInput);
-            if (medusaService.getPromptPool() != null) {
-                medusaService.getPromptPool().put(PooledPrompt.builder()
-                        .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                medusaService.triggerCachePut(promptInput);
+                if (medusaService.getPromptPool() != null) {
+                    medusaService.getPromptPool().put(PooledPrompt.builder()
+                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                }
             }
         }
-
         boolean hasTruncate = false;
-        List<IndexSearchData> indexSearchDataList;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && LagiGlobal.RAG_ENABLE) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
-                ChatCompletionResult temp = new ChatCompletionResult();
-                ChatCompletionChoice choice = new ChatCompletionChoice();
-                ChatMessage chatMessage = new ChatMessage();
-                chatMessage.setContent(answer);
-                choice.setMessage(chatMessage);
-                temp.setChoices(Lists.newArrayList(choice));
-                responsePrint(resp, toJson(temp));
+                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
                 return;
             }
-            indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+            if(indexSearchDataList == null) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+            }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
                 String contextStr = CompletionUtil.truncate(context.getContext());
@@ -153,7 +142,6 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
-
         if(!hasTruncate) {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
@@ -166,6 +154,63 @@ public class LlmApiServlet extends BaseServlet {
             CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
             responsePrint(resp, toJson(result));
         }
+    }
+
+    private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {
+        if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+            streamOutPrint(resp, chatCompletionResult);
+        } else {
+            outPrint(resp, chatCompletionResult);
+        }
+    }
+
+    private void outPrintJson(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, String s) throws IOException {
+        if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+            streamOutPrint(resp, s);
+        } else {
+            outPrint(resp, s);
+        }
+    }
+
+
+    private void outPrint(HttpServletResponse resp,  ChatCompletionResult chatCompletionResult) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        responsePrint(resp, toJson(chatCompletionResult));
+    }
+
+    private void outPrint(HttpServletResponse resp,  String json) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        responsePrint(resp, json);
+    }
+
+    private void streamOutPrint(HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print("data: " + toJson(chatCompletionResult) + "\n\n");
+        out.print("data: " + "[DONE]" + "\n\n");
+        out.flush();
+        out.close();
+    }
+
+    private void streamOutPrint(HttpServletResponse resp, String json) throws IOException {
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print("data: " + json + "\n\n");
+        out.print("data: " + "[DONE]" + "\n\n");
+        out.flush();
+        out.close();
+    }
+
+
+    private ChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
+        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        if(chatCompletionRequest.getModel() == null
+                && preference != null
+                && preference.getLlm() != null) {
+            chatCompletionRequest.setModel(preference.getLlm());
+        }
+        return chatCompletionRequest;
     }
 
     private static ChatCompletionRequest getCompletionRequest(ChatCompletionRequest chatCompletionRequest) {

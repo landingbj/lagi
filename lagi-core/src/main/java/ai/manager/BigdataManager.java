@@ -54,6 +54,9 @@ public class BigdataManager {
     }
 
     public IBigdata getBigdata() {
+        if(bigdataMap.isEmpty()) {
+            return null;
+        }
         return bigdataMap.values().iterator().next();
     }
 }
