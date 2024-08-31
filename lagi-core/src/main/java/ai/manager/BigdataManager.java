@@ -29,6 +29,9 @@ public class BigdataManager {
     }
 
     public void register(List<BigdataConfig> bigdataConfigs) {
+        if (bigdataConfigs == null || bigdataConfigs.isEmpty()) {
+            return;
+        }
         bigdataConfigs.forEach(bigdataConfig -> {
             if(Boolean.FALSE.equals(bigdataConfig.getEnable())) {
                 return;

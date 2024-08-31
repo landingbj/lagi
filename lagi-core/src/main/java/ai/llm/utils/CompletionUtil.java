@@ -3,6 +3,7 @@ package ai.llm.utils;
 import ai.common.pojo.IndexSearchData;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.LagiGlobal;
 import ai.vector.VectorStoreService;
 import com.google.gson.Gson;
 
@@ -67,21 +68,32 @@ public class CompletionUtil {
 
     public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages, int maxLength) {
         if(chatMessages != null && !chatMessages.isEmpty()) {
+            ChatMessage systemChatMessage = null;
+            if (chatMessages.get(0).getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
+                systemChatMessage = chatMessages.get(0);
+            }
             ChatMessage lastQuestion = chatMessages.get(chatMessages.size() - 1);
-            lastQuestion.setContent(truncate(lastQuestion.getContent(), maxLength));
+            int userMaxLength = maxLength;
+            if (systemChatMessage != null) {
+                userMaxLength = maxLength - systemChatMessage.getContent().length();
+            }
+            lastQuestion.setContent(truncate(lastQuestion.getContent(), userMaxLength));
             int length = lastQuestion.getContent().length();
             int lastIndex = chatMessages.size() - 1;
             for(int i = chatMessages.size() - 2; i >= 0; i--) {
                 ChatMessage chatMessage = chatMessages.get(i);
                 length += chatMessage.getContent().length();
-                if(length > maxLength) {
+                if(length > userMaxLength) {
                     break;
                 }
-                if(chatMessage.getRole().equals("user")) {
+                if(chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
                     lastIndex = i;
                 }
             }
             chatMessages = chatMessages.subList(lastIndex, chatMessages.size());
+            if (systemChatMessage != null) {
+                chatMessages.add(0, systemChatMessage);
+            }
         }
         return chatMessages;
     }

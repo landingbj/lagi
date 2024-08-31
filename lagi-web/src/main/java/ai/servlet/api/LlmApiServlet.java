@@ -151,7 +151,9 @@ public class LlmApiServlet extends BaseServlet {
             streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
-            CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+            if (context != null) {
+                CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+            }
             responsePrint(resp, toJson(result));
         }
     }
