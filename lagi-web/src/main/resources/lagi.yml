@@ -27,15 +27,15 @@ models:
 
   # ChatGPT is a state-of-the-art language model developed by OpenAI
   - name: chatgpt
-    type: GPT
+    type: OpenAI
     enable: false
     model: gpt-3.5-turbo,gpt-4-1106-preview
     driver: ai.llm.adapter.impl.GPTAdapter
     api_key: your-api-key # https://platform.openai.com/
 
-  # ChatGPT is a state-of-the-art language model developed by OpenAI
+  # ChatGPT-Azure is a version of the ChatGPT model integrated into Microsoft Azure's suite of AI services.
   #  - name: chatgpt-azure
-  #    type: GPT
+  #    type: Microsoft
   #    model: gpt-3.5-turbo,gpt-4-1106-preview,gpt-4o-20240513
   #    enable: true
   #    driver: ai.llm.adapter.impl.GPTAzureAdapter
@@ -44,7 +44,7 @@ models:
 
   #  qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
   - name: qwen
-    type: Qwen
+    type: Alibaba
     enable: false
     drivers:
       - model: qwen-turbo,qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
@@ -61,7 +61,7 @@ models:
 
   #  ERNIE Bot (WenxinYiyan) is an advanced large-scale language model developed by Baidu
   - name: ernie
-    type: Ernie
+    type: Baidu
     enable: true
     drivers:
       - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
@@ -112,7 +112,7 @@ models:
 
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
-    type: Spark
+    type: iFLYTEK
     enable: false
     drivers:
       - model: v1.1,v2.1,v3.1,v3.5
@@ -123,9 +123,9 @@ models:
     api_key: you-api-key  # https://console.xfyun.cn/
     secret_key: you-secret-key   # https://console.xfyun.cn/
 
-    #SenseChat(RiRiXin) is a large language model developed by Shangtang
+  # SenseChat(RiRiXin) is a large language model developed by SenseTime
   #  - name: SenseChat
-  #    type: SenseChat
+  #    type: SenseTime
   #    enable: false
   #    model: SenseChat-Turbo,SenseChat-FunctionCall,SenseChat-5,SenseChat-128K,SenseChat-32K #SenseChat
   #    driver: ai.llm.adapter.impl.SenseChatAdapter
@@ -134,29 +134,29 @@ models:
 
   # Gemini is a family of multimodal large language models developed by Google DeepMind.
   #  - name: gemini
-  #    type: Gemini
+  #    type: Google
   #    enable: true
   #    model: gemini-1.5-flash-latest,gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.5-pro-latest
   #    driver: ai.llm.adapter.impl.GeminiAdapter
   #    api_key: your-api-key
 
-  #Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
-#  - name: doubao
-#    type: Doubao
-#    enable: true
-#    drivers:
-#      # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
-#      - model: doubao-pro-4k,doubao-pro-32k
-#        driver: ai.llm.adapter.impl.DoubaoAdapter
-#        # https://console.volcengine.com/speech/app
-#      - model: openspeech
-#        driver: ai.audio.adapter.impl.VolcEngineAudioAdapter
-#        oss: landing
-#    api_key: your-api-key
-#    app_id : your-app-id
-#    access_token: your-access-token
-#    alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
-#    # address https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
+  # Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
+  #  - name: doubao
+  #    type: ByteDance
+  #    enable: true
+  #    drivers:
+  #      # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+  #      - model: doubao-pro-4k,doubao-pro-32k
+  #        driver: ai.llm.adapter.impl.DoubaoAdapter
+  #        # https://console.volcengine.com/speech/app
+  #      - model: openspeech
+  #        driver: ai.audio.adapter.impl.VolcEngineAudioAdapter
+  #        oss: landing
+  #    api_key: your-api-key
+  #    app_id : your-app-id
+  #    access_token: your-access-token
+  #    alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
+  #    # address https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
 
 stores:
   vector:

@@ -40,7 +40,7 @@ Example :
 models:
   backends:
     - name: ernie
-      type: Ernie
+      type: Baidu
       enable: true
       drivers:
         - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
@@ -527,9 +527,12 @@ stores:
       url: yonr_url
 
   rag:
-    - backend: vector_name
-      enable: true
-      priority: 10
+    vector: vector_name
+    fulltext: elasticsearch
+    graph: landing
+    enable: true
+    priority: 10
+    default: "Please give prompt more precisely"
 
 ```
 
@@ -548,9 +551,12 @@ stores:
       url: http://127.0.0.1:8000
 
   rag:
-    - backend: chroma
-      enable: true
-      priority: 10
+    vector: chroma
+    fulltext: elasticsearch
+    graph: landing
+    enable: true
+    priority: 10
+    default: "Please give prompt more precisely"
 
 ```
 

@@ -163,9 +163,12 @@ Select the configured vector database and fill in the corresponding configuratio
           url: http://localhost:8000
     
       rag:
-        - backend: chroma
-          enable: true
-          priority: 10
+        vector: chroma
+        fulltext: elasticsearch
+        graph: landing
+        enable: true
+        priority: 10
+        default: "Please give prompt more precisely"
     ```
 
 ## 4. Import dependencies
