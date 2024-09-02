@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +39,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
+import ai.utils.HttpUtil;
 import ai.utils.LagiGlobal;
 import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
@@ -46,6 +50,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
+import org.apache.commons.collections.bag.SynchronizedSortedBag;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +79,56 @@ public class LlmApiServlet extends BaseServlet {
             this.completions(req, resp);
         } else if (method.equals("embeddings")) {
             this.embeddings(req, resp);
+        } else if (method.equals("conversationtApi")) {
+            this.conversationtApi(req, resp);
         }
+    }
+
+    public static String removePeopleDescription(String text) {
+        // 正则表达式匹配数字后面紧跟着“人”或“个人”
+        Pattern pattern = Pattern.compile("(\\d+)\\s*(?:人|个人)|(人数)", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(text);
+        // 替换匹配到的部分为空字符串
+        return matcher.replaceAll("，会议类型是例会，");
+    }
+
+    private void conversationtApi(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String, String> entity = gson.fromJson(requestToJson(req), Map.class);
+        String apiurl = "http://test.digimeta.com.cn:8080/nlt/intent/api/conversation";
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        if (entity.get("msg")!=null) {
+            String cleanedText = removePeopleDescription(entity.get("msg"));
+            entity.put("msg", cleanedText);
+
+//            String[] places = {"东四", "西单", "酒仙桥", "洋桥", "大郊亭", "房山", "顺义", "昌平", "大兴", "平谷", "密云", "延庆", "通州", "海淀北", "德胜门", "兆泰"};
+//            for (String place : places) {
+//                if (entity.get("msg").contains(place)) {
+//                    if (entity.get("entity")!=null){
+//                        Map<String, Object> obj = gson.fromJson(entity.get("entity"), Map.class);
+//                        obj.put("location", place);
+//                        entity.put("entity", gson.toJson(obj));
+//                    }
+//                  return;
+//                }
+//            }
+
+        }
+
+        String jsonResult = null;
+        try {
+            jsonResult = HttpUtil.httpPost(apiurl,headers, entity,2*1000);
+        }catch (Exception e) {
+            System.out.println(e);
+        }
+//        Map<String, String> map = null;
+//
+////        if (jsonResult != null){
+//         //   map = gson.fromJson(requestToJson(req), Map.class);
+//        //}
+
+        responsePrint(resp, jsonResult);
     }
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -102,7 +157,7 @@ public class LlmApiServlet extends BaseServlet {
             choice.setMessage(chatMessage);
             temp.setChoices(Lists.newArrayList(choice));
             responsePrint(resp, toJson(temp));
-
+            return;
         }else {
             chatCompletionResult = medusaService.locate(promptInput);
         }

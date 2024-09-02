@@ -158,6 +158,10 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>llm</servlet-name>
+        <url-pattern>/chat/conversationtApi</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>llm</servlet-name>
         <url-pattern>/v1/embeddings</url-pattern>
     </servlet-mapping>
 

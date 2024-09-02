@@ -1,4 +1,5 @@
 let SOCIAL_NAV_KEY = 'sjjr';
+let MEETING_BOOKINGS = 'hyyd';
 
 let MODEL_TYPE_LLM = "llm";
 let MODEL_TYPE_ASR = "asr";
@@ -106,6 +107,12 @@ let promptNavs = [
         operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
         group : 2
     },
+    {id:15, key:MEETING_BOOKINGS, title: '会议预订',exampleImgSrc:'',
+        exampleVedioSrc:'',
+        prompt:'该功能通过通过语音识别，实现语音会议预订等功能。',
+        operation:'在输入框内输入您的需求（会议预订），然后按照提示完成相关操作。',
+        group : 2
+    }
     // {id:15, title: '数据服务',exampleImgSrc:'../images/sjfw.png',
     //        exampleVedioSrc:'../video/sjfw.mp4',
     //        prompt:'该功能可根据用户提出的问题或需求，以图文并茂的方式为用户提供更加直观、形象和生动的信息和服务，在提高信息传达效果的同时，还能增加用户的阅读体验的，提高人们的工作效率和生活品质。',
@@ -402,6 +409,10 @@ function typing (i, str, jq, callback, ...args) {
             resetSocialPromptStep();
             getAppListHtml();
         }
+        if (currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_BOOKINGS) {
+            resetSocialPromptStep();
+            getMeetingBookings();
+        }
     }
 }
 
@@ -418,7 +429,7 @@ function getAppListHtml() {
         type: "GET",
         contentType: "application/json;charset=utf-8",
         url: "/v1/rpa/getAppList",
-        success: function(res) {
+        success: function (res) {
             res.data.forEach((app) => {
                 let appName = app.appName;
                 let appIcon = app.appIcon;
@@ -428,8 +439,33 @@ function getAppListHtml() {
             let prompt = '<div>请问您想接入哪款社交软件</div>';
             addRobotDialog(prompt + html + '</br>');
         },
-        error: function(){
+        error: function () {
             html = '返回失败';
         }
     });
 }
+    function getMeetingBookings() {
+        let html = '';
+        let prompt = '<div>您可以对我说：“帮我预订明天下午3点的东四会议室，会议时长为一个小时,会议有5个人。”'+ '</br>'+
+            '这样我就可以帮您预订会议了！！！</div>';
+        addRobotDialog(prompt  + '</br>');
+        // $.ajax({
+        //     type: "GET",
+        //     contentType: "application/json;charset=utf-8",
+        //     url: "/v1/rpa/getAppList",
+        //     success: function(res) {
+        //         res.data.forEach((app) => {
+        //             let appName = app.appName;
+        //             let appIcon = app.appIcon;
+        //             html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
+        //             SOCIAL_APP_MAP.set(app.appId.toString(), app.appName);
+        //         });
+        //         let prompt = '<div>请问您想接入哪款社交软件</div>';
+        //         addRobotDialog(prompt + html + '</br>');
+        //     },
+        //     error: function(){
+        //         html = '返回失败';
+        //     }
+        // });
+
+    }

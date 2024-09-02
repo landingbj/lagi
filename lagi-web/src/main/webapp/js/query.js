@@ -32,6 +32,8 @@ function textQuery() {
     sleep(200).then(() => {
         if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
             socialAgentsConversation(question);
+        } else if(currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_BOOKINGS){
+            bookMeetingConversation(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
             getTextResult(question.trim(), robotAnswerJq, conversation);
@@ -56,6 +58,15 @@ const SOCIAL_APP_MAP = new Map();
 
 const TIMER_DATA = {};
 
+
+let MeetingBookingsEntity = {
+    skillCode: "1",
+    userIde:"a56fef1b48ab4afaa134ddda7ea774e"
+};
+
+function setMeetingBookingsStepDone(step) {
+    MEETING_BOOKINGS_STEPS.set(step, 1);
+}
 function setSocialPromptStepDone(step) {
     SOCIAL_PROMPT_STEPS.set(step, 1);
 }
@@ -83,6 +94,130 @@ function socialAgentsConversation(question) {
     addUserDialog(questionHtml);
     let nextStep = getNextSocialPromptStep();
     nextPrompt(nextStep, question);
+}
+
+function bookMeetingConversation(question){
+    let questionHtml = '<div>' + question + '</div>';
+    addUserDialog(questionHtml);
+    let nextStep =MeetingBookingsEntity;
+    bookMeetingPrompt(nextStep, question);
+}
+
+function setMeetingBookingsEntity(outdate){
+    MeetingBookingsEntity = outdate.date.h5;
+}
+
+function getTotalPeopleCount(text) {
+    // 正则表达式匹配数字后面紧跟着“人”或“个人”
+    let peopleRegex = /(\d+)(?:人|个人)/g;
+    let matches = text.match(peopleRegex) || [];
+
+    // 并累加求和
+    let totalPeopleCount = matches.reduce((sum, match) => {
+        const number = parseInt(match.match(/\d+/)[0], 10);
+        return sum + number;
+    }, 0);
+
+    return totalPeopleCount;
+}
+
+function bookMeetingPrompt(action, prompt) {
+    console.log(action+"fffff"+ prompt+"fffff")
+    if (getTotalPeopleCount(prompt)>0){
+        action.estimatedNumber = getTotalPeopleCount(prompt)
+    }
+
+let outdate = {}
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/chat/conversationtApi",
+        data: JSON.stringify({
+
+            "msg": prompt,
+            "devId": "43b5cb1622db6fd0",
+            "skillCode": "1",
+            "entity": action
+        }), // 发送构造的数据对象
+        success: function (res) {
+            if (res.type === "failed") {
+                console.log(action+" "+ prompt+"接口超时了")
+                return; // 如果失败，就结束函数执行
+            } else {
+                if (res.data && res.data.h5) {
+                    const { h5 } = res.data; // 数据解构
+                    MeetingBookingsEntity = h5;
+                    outdate = MeetingBookingsEntity;
+                    outdate.meetingDate = outdate.date
+                    if (outdate === undefined || outdate === { skillCode: "1"} || outdate === {}) {
+                        let prompt1 = '<div>您可以对我说：“帮我预订明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预订会议了！！！</div>';
+                        addRobotDialog( prompt1);
+                        unlockInput();
+                    } else if (outdate.estimatedNumber === undefined || outdate.estimatedNumber <= 0) {
+                        addRobotDialog( '请问您的会议参会人数是多少呢？（您可以告诉我：会议有1人，会议有2人，会议有3人...）</br>');
+                        unlockInput();
+
+                    } else if (outdate.location === undefined) {
+                        addRobotDialog( '请问您的会议地点是哪里呢？（您可以告诉我：‘东四’、‘西单’、‘酒仙桥’、‘洋桥’、‘大郊亭’...）</br>');
+                        unlockInput();
+
+                    } else if (outdate.date === undefined) {
+                        addRobotDialog( '请问您的会议是什么时候呢？（您可以告诉我：明天，后天，下周三...）</br>');
+                        unlockInput();
+
+                    } else if (outdate.start_time === undefined) {
+                        addRobotDialog( '请问您的会议是几点呢？（您可以告诉我：明天上午10点...）</br>');
+                        unlockInput();
+
+                    } else if (outdate.duration === undefined) {
+                        addRobotDialog( '请问您会议打算开多久呢？（会议时长不超过2小时，您可以告诉我：半个小时，一个小时，两个小时...）</br>');
+                        unlockInput();
+
+                    }  else if (outdate.duration > 120) {
+                        addRobotDialog( '抱歉，您预订的会议时间过长，会议时长不超过2小时（您可以告诉我：修改时长为半个小时，一个小时，两个小时...）</br>');
+                        unlockInput();
+
+                    } else {
+                        if (prompt==='确认预订'){
+                            let html = '<div>' + '好的，已帮您预订了：' + '</div></br>';
+                            html += '<div>预订人id：' + JSON.stringify(outdate.userIde) + '</div></br>';
+                            html += '<div>会议地点：' + JSON.stringify(outdate.location) + '</div></br>';
+                            html += '<div>会议开始日期：' + JSON.stringify(outdate.date) + '</div></br>';
+                            html += '<div>会议开始时间：' + JSON.stringify(outdate.start_time) + '</div></br>';
+                            html += '<div>会议人数：' + JSON.stringify(outdate.estimatedNumber) + '</div></br>';
+                            html += '<div>会议时长：' + JSON.stringify(outdate.duration) + '</div></br>';
+                            addRobotDialog(html);
+                            unlockInput();
+                            MeetingBookingsEntity = { skillCode: "1",userIde:"a56fef1b48ab4afaa134ddda7ea774e" };
+                            outdate = {};
+                        }else {
+                            let html = '<div>' + '您的会议信息如下：' + '</div></br>';
+                            html += '<div>会议地点：' + JSON.stringify(outdate.location) + '</div></br>';
+                            html += '<div>会议开始日期：' + JSON.stringify(outdate.date) + '</div></br>';
+                            html += '<div>会议开始时间：' + JSON.stringify(outdate.start_time) + '</div></br>';
+                            html += '<div>会议时长：' + JSON.stringify(outdate.duration) + '</div></br>';
+                            html += '<div>会议人数：' + JSON.stringify(outdate.estimatedNumber) + '</div></br>';
+                            html += '<div>预订人：' + JSON.stringify(outdate.userIde) + '</div></br>';
+                            html += '<div>' + '您确认预订吗？（您可以告诉我：‘确认预订’ 或 ‘修改预订...’）' + '</div></br>';
+                            addRobotDialog(html);
+                            unlockInput();
+
+                        }
+                    }
+                }else {
+                    let prompt1 = '<div>您可以对我说：“帮我预订明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预订会议了！！！</div>';
+                    addRobotDialog( prompt1);
+                    unlockInput();
+
+                }
+
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error("Error occurred: ", textStatus, errorThrown);
+            returnFailedResponse();
+        }
+    });
 }
 
 function nextPrompt(action, prompt) {
