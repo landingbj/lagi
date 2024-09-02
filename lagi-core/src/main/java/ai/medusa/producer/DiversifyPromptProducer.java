@@ -11,14 +11,20 @@ import ai.utils.LRUCache;
 import ai.utils.LagiGlobal;
 import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
+@Slf4j
 public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerPipeline<PooledPrompt, PooledPrompt> {
     private static final LRUCache<ChatCompletionRequest, List<IndexSearchData>> cache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
     private final VectorStoreService vectorStoreService = new VectorStoreService();
+
+    protected static final Semaphore semaphore = new Semaphore(1);
 
     public DiversifyPromptProducer(int limit) {
         super(limit);
@@ -38,13 +44,24 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
     }
 
     protected List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
-        List<IndexSearchData> result;
+        List<IndexSearchData> result = Collections.emptyList();
         if (cache.containsKey(request)) {
             result = cache.get(request);
         } else {
-            List<IndexSearchData> search = vectorStoreService.searchByContext(request);
-            result = PriorityWordUtil.sortByPriorityWord(search);
-            cache.put(request, result);
+            try {
+                semaphore.acquire();
+                try {
+                    List<IndexSearchData> search = vectorStoreService.searchByContext(request);
+                    result = PriorityWordUtil.sortByPriorityWord(search);
+                    cache.put(request, result);
+                }catch (Exception e) {
+                    log.error(" diversify Failed to search for question: {}",  request);
+                } finally {
+                    semaphore.release();
+                }
+            } catch (InterruptedException e) {
+                log.error("diversify Failed to acquire semaphore", e);
+            }
         }
         return result;
     }

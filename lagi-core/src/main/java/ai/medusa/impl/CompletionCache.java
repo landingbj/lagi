@@ -146,7 +146,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.PRODUCER_THREADS,
                     PromptCacheConfig.CONSUMER_THREADS,
                     PromptCacheConfig.TOTAL_THREAD_COUNT,
-                    Integer.MAX_VALUE
+                    PromptCacheConfig.THREAD_RUN_LIMIT
             );
             promptLoader.connectProducer(new PickPromptProducer(promptPool));
             if(PromptCacheConfig.getEnableLlmDiver()) {
@@ -169,7 +169,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.PRODUCER_THREADS,
                     PromptCacheConfig.CONSUMER_THREADS,
                     PromptCacheConfig.TOTAL_THREAD_COUNT,
-                    Integer.MAX_VALUE
+                    PromptCacheConfig.THREAD_RUN_LIMIT
             );
 
             if(PromptCacheConfig.getEnableLlmDiver()) {

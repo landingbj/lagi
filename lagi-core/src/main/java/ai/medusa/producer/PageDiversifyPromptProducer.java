@@ -9,6 +9,8 @@ import ai.utils.LagiGlobal;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import cn.hutool.core.util.StrUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,6 +18,7 @@ import java.util.List;
 
 public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
 
+    private static final Logger log = LoggerFactory.getLogger(PageDiversifyPromptProducer.class);
     private final int nearNum = 8;
 
     VectorStoreService vectorStoreService = new VectorStoreService();
@@ -59,7 +62,22 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         List<String> questions = VectorCacheLoader.getFromL2Near(prompt, nearNum);
         for (int i = 0 ; i < questions.size(); i++) {
-            List<IndexSearchData> indexSearchData = vectorStoreService.search(questions.get(i), LagiGlobal.getDefaultCategory());
+            List<IndexSearchData> indexSearchData = null;
+            try {
+                semaphore.acquire();
+                try {
+                    indexSearchData = vectorStoreService.search(questions.get(i), LagiGlobal.getDefaultCategory());
+                }catch (Exception e) {
+                    log.error("page diversify Failed to search for question: {}", questions.get(i), e);
+                } finally {
+                    semaphore.release();
+                }
+            } catch (InterruptedException e) {
+                log.error("page diversify Failed to acquire semaphore", e);
+            }
+            if(indexSearchData == null) {
+                continue;
+            }
             String text = questions.get(i);
             List<String> promptList = new ArrayList<>();
             promptList.add(text);
