@@ -2,12 +2,9 @@ package ai.servlet;
 
 import ai.annotation.*;
 import ai.common.ModelService;
-import ai.common.pojo.Backend;
-import ai.common.pojo.Driver;
-import ai.config.ContextLoader;
-import ai.config.GlobalConfigurations;
 import ai.dto.ModelInfo;
 import ai.dto.ModelPreferenceDto;
+import ai.llm.utils.CacheManager;
 import ai.manager.*;
 import ai.migrate.dao.UserModelPreferenceDao;
 import ai.servlet.annotation.Body;
@@ -17,8 +14,6 @@ import ai.servlet.annotation.Post;
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
-import lombok.Builder;
-import lombok.Data;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -77,13 +72,19 @@ public class PreferenceServlet extends RestfulServlet {
     }
 
     private String getModelName(String userModel, String defaultModel) {
-        return userModel == null ? defaultModel : userModel;
+        return userModel == null  || (!CacheManager.get(userModel))? defaultModel : userModel;
     }
 
     private <T> String getModelService(AIManager<T> aiManager) {
         if(!aiManager.getAdapters().isEmpty()) {
-            ModelService modelService = (ModelService) aiManager.getAdapters().get(0);
-            return modelService.getModel();
+            ModelService modelService =  aiManager.getAdapters().stream()
+                    .map(a-> (ModelService) a)
+                    .filter(a-> CacheManager.get(a.getModel()))
+                    .findAny()
+                    .orElse(null);
+            if (modelService != null) {
+                return modelService.getModel();
+            }
         }
         return null;
     }
@@ -92,7 +93,11 @@ public class PreferenceServlet extends RestfulServlet {
     public List<ModelInfo> getModels(@Param("type") String type, @Param("userId") String userId, HttpServletRequest request) {
         ModelPreferenceDto preferenceRequest = loadUserPreference(userId, request);
         List<ModelInfo> orDefault = modelInfoMap.getOrDefault(type, Collections.emptyList()).stream()
-                .map(ObjectUtil::cloneByStream)
+                .map(a->{
+                    a = ObjectUtil.cloneByStream(a);
+                    a.setEnabled(a.getEnabled() && CacheManager.get(a.getModel()));
+                    return a;
+                })
                 .collect(Collectors.toList());
 
         if("llm".equals(type)) {

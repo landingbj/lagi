@@ -106,10 +106,9 @@ var voice_url = '';
 function txtTovoice(txt, emotion) {
     console.log(emotion, txt)
     // 获取最后一个进行播放。
-    const markdownElements = document.querySelectorAll(".markdown");
-    var len = markdownElements.length;
+    var len = $(".myAudio1").length;
 // 检查是否至少存在一个匹配的元素
-    if (markdownElements.length != 0) {
+    if (len > 0) {
         // 要发送的 JSON 数据
         const postData = {
             "model": "default",
@@ -135,9 +134,8 @@ function txtTovoice(txt, emotion) {
                     console.log(json.data);
 
                     voice_url = json.data;
-
                     const audioElement = document.getElementsByClassName('myAudio1')[len - 1];
-                    $(".myAudio1")[len - 1].src = json.data
+                    $(".myAudio1")[len-  1].src = json.data
                     const playButton = document.getElementsByClassName('playIcon1')[len - 1];
                     const audioSource = document.getElementById("audioSource");
                     // 添加点击事件处理程序来控制音频的播放和暂停

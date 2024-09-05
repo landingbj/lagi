@@ -16,7 +16,7 @@ import javax.servlet.http.Part;
 import ai.common.pojo.*;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Post;
 import ai.utils.*;

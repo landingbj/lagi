@@ -2,7 +2,7 @@ package ai.servlet.api;
 
 import ai.bigdata.BigdataService;
 import ai.common.pojo.IndexSearchData;
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.VectorDeleteRequest;

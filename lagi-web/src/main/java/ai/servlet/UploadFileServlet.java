@@ -30,7 +30,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang3.StringUtils;
 
 import ai.vector.FileService;
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.utils.MigrateGlobal;
 
 import com.google.gson.Gson;

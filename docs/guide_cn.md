@@ -298,7 +298,7 @@ void addFileVectors(File file, Map<String, Object> metadatas, String category) t
 > 调用示例：
 
 ```java
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.common.pojo.FileRequest;
 import ai.vector.VectorStoreService;
 

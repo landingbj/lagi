@@ -298,7 +298,7 @@ No return value.
 >Example invocation:
 
 ```java
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.common.pojo.FileRequest;
 import ai.vector.VectorStoreService;
 

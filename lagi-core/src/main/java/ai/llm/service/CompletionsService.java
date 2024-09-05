@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import weixin.tools.TulingThread;
 
 @Slf4j
-public class CompletionsService {
+public class CompletionsService implements ChatCompletion{
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
     private static final int DEFAULT_MAX_TOKENS = 1024;
@@ -86,6 +86,7 @@ public class CompletionsService {
                     doCompleted = true;
                 }
             }
+            chatCompletionRequest.setModel(null);
             if(!doCompleted) {
                 List<ILlmAdapter> ragAdapters = null;
                 if(indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
@@ -154,6 +155,7 @@ public class CompletionsService {
                 return  adapter.streamCompletions(chatCompletionRequest);
             }
         }
+        chatCompletionRequest.setModel(null);
         // no effect backend
         for (ILlmAdapter adapter : LlmManager.getInstance().getAdapters()) {
             if (adapter != null) {
@@ -175,6 +177,7 @@ public class CompletionsService {
                 }
             }
         }
+        chatCompletionRequest.setModel(null);
         String indexData = indexSearchDataList == null || indexSearchDataList.isEmpty() ? null : indexSearchDataList.get(0).getText();
         List<ILlmAdapter> ragAdapters = LlmRouterDispatcher.getRagAdapter(indexData);
         if(!(ragAdapters == null || ragAdapters.isEmpty())) {
