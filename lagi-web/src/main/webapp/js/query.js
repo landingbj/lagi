@@ -451,10 +451,6 @@ function streamOutput(paras, question, robootAnswerJq) {
                     //a +='</ul>'
                 }
 
-                // var a = '<a style="color: #666;text-decoration: none;" ' +
-                //     'href="uploadFile/downloadFile?filePath=' + chatMessage.filepath + '&fileName=' +
-                //     chatMessage.filename + '">' + chatMessage.filename + '</a>';
-
                 if (chatMessage.content === undefined) {
                     continue;
                 }
@@ -465,7 +461,7 @@ function streamOutput(paras, question, robootAnswerJq) {
                         ${fullText} <br>
                         ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
-                        `
+                        ${chatMessage.context ?  `<div style="float: right;"><a style="cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
                 robootAnswerJq.html(result);
             }
         }
@@ -485,6 +481,27 @@ function streamOutput(paras, question, robootAnswerJq) {
             robootAnswerJq.html("调用失败！");
         }
     });
+}
+
+function retry(index) {
+    console.log(CONVERSATION_CONTEXT)
+    let preArr = CONVERSATION_CONTEXT.slice(0, index);
+    var paras = {
+        "rag": false,
+        "category": window.category,
+        "messages": preArr,
+        "temperature": 0.8,
+        "max_tokens": 1024,
+        "stream": true
+    };
+    let question = preArr[preArr.length-1]['content']
+    addUserDialog(question);
+    let robootAnswerJq =  addRobotDialog('');
+    if (paras["stream"]) {
+        streamOutput(paras, question, robootAnswerJq);
+    } else {
+        generalOutput(paras, question, robootAnswerJq);
+    }
 }
 
 

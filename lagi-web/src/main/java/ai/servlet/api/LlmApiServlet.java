@@ -14,6 +14,7 @@ import ai.common.ModelService;
 import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
+import ai.dto.EnhanceChatCompletionRequest;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
@@ -83,13 +84,14 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
-        ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+        EnhanceChatCompletionRequest chatCompletionRequest = getChatCompletionFromRequest(req, session);
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
-        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+
+        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
@@ -102,7 +104,7 @@ public class LlmApiServlet extends BaseServlet {
             }
         }
 
-        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable())) {
+        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
             PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             chatCompletionResult = medusaService.locate(promptInput);
@@ -120,7 +122,7 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
@@ -204,13 +206,16 @@ public class LlmApiServlet extends BaseServlet {
     }
 
 
-    private ChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
+    private EnhanceChatCompletionRequest getChatCompletionFromRequest(HttpServletRequest req, HttpSession session) throws IOException {
         ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
         if(chatCompletionRequest.getModel() == null
                 && preference != null
                 && preference.getLlm() != null) {
             chatCompletionRequest.setModel(preference.getLlm());
+        }
+        if(chatCompletionRequest.getRag() == null) {
+            chatCompletionRequest.setRag(true);
         }
         return chatCompletionRequest;
     }
