@@ -247,4 +247,15 @@
         <servlet-name>WorkerApiServlet</servlet-name>
         <url-pattern>/v1/worker/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ocr</servlet-name>
+        <servlet-class>ai.servlet.api.OCRApiServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ocr</servlet-name>
+        <url-pattern>/ocr/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>

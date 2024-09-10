@@ -372,14 +372,10 @@ public class VectorStoreService {
 
     public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
         String text = data.getText().trim();
-
+        String splitChar = "";
         if (data.getFilename() != null && data.getFilename().size() == 1
                 && data.getFilename().get(0).isEmpty()) {
-            if (data.getParentId() == null) {
-                text = text + "\n";
-            } else {
-                text = "\n" + text;
-            }
+            splitChar = "\n";
         }
 
         String parentId = data.getParentId();
@@ -387,7 +383,7 @@ public class VectorStoreService {
         for (int i = 0; i < parentDepth; i++) {
             IndexSearchData parentData = getParentIndex(parentId, category);
             if (parentData != null) {
-                text = parentData.getText() + text;
+                text = parentData.getText() + splitChar + text;
                 parentId = parentData.getParentId();
                 parentCount++;
             } else {
@@ -401,7 +397,7 @@ public class VectorStoreService {
         for (int i = 0; i < childDepth; i++) {
             IndexSearchData childData = getChildIndex(parentId, category);
             if (childData != null) {
-                text = text + childData.getText();
+                text = text + splitChar + childData.getText();
                 parentId = childData.getId();
             } else {
                 break;
