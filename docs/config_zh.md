@@ -63,6 +63,14 @@ stores:
       access_key_secret: your-access-key-secret # 第三方存储对象的服务用到的 access key secret 
       bucket_name: ai-service-oss
       enable: true
+
+  # 这部分是elasticsearch的配置
+  bigdata:
+    - name: elasticsearch # 全文检索名称
+      driver: ai.bigdata.impl.ElasticsearchAdapter
+      host: localhost # 全文检索的elasticsearch地址
+      port: 9200 # 全文检索的elasticsearch的端口号
+      enable: false # 是否开启
   # 这部分是检索增强生成服务的配置
   rag:
       vector: chroma # 服务用到的向量数据库的名称
