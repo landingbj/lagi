@@ -22,7 +22,7 @@ import java.util.function.Function;
 public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();
-    private static final int HTTP_TIMEOUT = 5 * 1000;
+    private static final int HTTP_TIMEOUT = 300 * 1000;
     private static final String COMPLETIONS_URL = "https://api.moonshot.cn/v1/chat/completions";
 
     @Override

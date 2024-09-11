@@ -14,6 +14,7 @@ import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.learning.pojo.Response;
 import ai.utils.LagiGlobal;
+import org.checkerframework.checker.units.qual.A;
 
 @ASR(company = "landingbj", modelNames = "landing-asr")
 @TTS(company = "landingbj", modelNames = "landing-tts")
@@ -49,12 +50,13 @@ public class LandingAudioAdapter extends ModelService implements IAudioAdapter {
     }
 
     private AsrResult toAsrResult(Response response) {
-        AsrResult result = new AsrResult();
+        AsrResult result;
         if (response.getStatus().equals("success")) {
+            result = AsrResult.builder().status(LagiGlobal.ASR_STATUS_SUCCESS).result(response.getData()).build();
             result.setStatus(LagiGlobal.ASR_STATUS_SUCCESS);
             result.setResult(response.getData());
         } else {
-            result.setStatus(LagiGlobal.ASR_STATUS_FAILURE);
+            result = AsrResult.builder().status(LagiGlobal.ASR_STATUS_FAILURE).build();
         }
         return result;
     }

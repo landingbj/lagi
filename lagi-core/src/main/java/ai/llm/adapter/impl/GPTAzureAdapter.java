@@ -23,7 +23,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GPTAzureAdapter.class);
     private final Gson gson = new Gson();
     private static final String ENTERPOINT = "https://api.openai.com/v1/chat/completions";
-    private static final int HTTP_TIMEOUT = 30 * 1000;
+    private static final int HTTP_TIMEOUT = 300 * 1000;
 
 
     @Override

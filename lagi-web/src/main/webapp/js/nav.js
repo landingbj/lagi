@@ -1,4 +1,6 @@
 let SOCIAL_NAV_KEY = 'sjjr';
+let MEETING_NAV_KEY = 'hysd';
+let PAPER_NAV_KEY = 'wxkl';
 
 let MODEL_TYPE_LLM = "llm";
 let MODEL_TYPE_ASR = "asr";
@@ -100,17 +102,29 @@ let promptNavs = [
         group : 2
     },
 
-    {id:14, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'',
-        exampleVedioSrc:'../video/sjjr.mp4',
-        prompt:'该功能通过接入社交软件，通过RPA和大模型技术自动化社交软件的相关操作。',
-        operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
-        group : 2
-    },
+    // {id:14, key:SOCIAL_NAV_KEY, title: '社交接入',exampleImgSrc:'',
+    //     exampleVedioSrc:'../video/sjjr.mp4',
+    //     prompt:'该功能通过接入社交软件，通过RPA和大模型技术自动化社交软件的相关操作。',
+    //     operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
+    //     group : 2
+    // },
     // {id:15, title: '数据服务',exampleImgSrc:'../images/sjfw.png',
     //        exampleVedioSrc:'../video/sjfw.mp4',
     //        prompt:'该功能可根据用户提出的问题或需求，以图文并茂的方式为用户提供更加直观、形象和生动的信息和服务，在提高信息传达效果的同时，还能增加用户的阅读体验的，提高人们的工作效率和生活品质。',
     //       operation:'在输入框内输入您的需求（如“知识图谱的概念”），并点击右侧Logo发送需求，Lagi将会对您作出响应。',
     //       group : 2 },
+    {id:15, key:MEETING_NAV_KEY, title: '会议速递',exampleImgSrc:'',
+        prompt:'该功能根据上传的视频获取会议语音并整理出会议摘要。',
+        // exampleVedioSrc:'../video/twhp.mp4',
+        operation:'在输入框内按照提示完成相关操作。',
+        group : 2
+    },
+    {id:16, key:PAPER_NAV_KEY, title: '文献快览',exampleImgSrc:'',
+        prompt:'该功能通过上传的多个文献，按照用户的要求完成一篇文章。',
+        // exampleVedioSrc:'../video/twhp.mp4',
+        operation:'在输入框内按照提示完成相关操作。',
+        group : 2
+    }
 ]
 
 function loadNavStatus() {
@@ -139,7 +153,7 @@ function loadNavStatus() {
 function buildPromptDialogContent(nav) {
     p = nav.prompt;
     o = nav.operation;
-    html = `&nbsp;&nbsp;&nbsp;&nbsp;功能介绍：${p}<br/>&nbsp;&nbsp;&nbsp;&nbsp;操作方式: ${o}`
+    html = `&nbsp;&nbsp;&nbsp;&nbsp;功能介绍：${p}<br/>&nbsp;&nbsp;&nbsp;&nbsp;操作方式：${o}`
     // return `${pre} ${ exampleImgSrc ? `<img src='${exampleImgSrc}' alt='example' style="width: 100%;"></img>`: '' }`;
     return html;
 }
@@ -296,14 +310,18 @@ function getPromptDialog(id) {
     hideHelloContent();
     let answer = buildPromptDialogContent(nav);
     let answerJq =  newRobotStartDialog('');
-    let vedioHtml = `
-    <video controls width="100%" style = "border:10px solid #238efc; border-radius:15px">
-        <source src="${nav.exampleVedioSrc}" type="video/mp4" />
-    </video>
-    `;
+
+    let videoHtml;
+    if (nav.exampleVedioSrc !== undefined && nav.exampleVedioSrc !== '') {
+        videoHtml = `
+        <video controls width="100%" style = "border:10px solid #238efc; border-radius:15px">
+            <source src="${nav.exampleVedioSrc}" type="video/mp4" />
+        </video>
+        `;
+    }
     clearTimeout(timer);
     currentPromptDialog = nav;
-    typing(0, answer, answerJq, addRobotDialog, vedioHtml);
+    typing(0, answer, answerJq, addRobotDialog, videoHtml);
 }
 
 
@@ -380,23 +398,23 @@ function clearPreference() {
 
 let timer = 0;
 
-function typing (i, str, jq, callback, ...args) {
+function typing (i, str, jq, callback, robotAnswer) {
     str += '';
     if (i <= str.length) {
         let temp = str.substring(i, i+6);
-        if(temp == '&nbsp;') {
+        if(temp === '&nbsp;') {
             i += 6;
         } else {
             jq.html(str.slice(0, i++) + '<p style="display: inline-block"></p>');
         }
         timer = setTimeout(()=>{
-            typing(i, str, jq, callback, args)
+            typing(i, str, jq, callback, robotAnswer)
         } , 3)
     }
     else {
         jq.html(str);//结束打字,移除 _ 光标
         clearTimeout(timer);
-        callback(args);
+        callback(robotAnswer);
 
         if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
             resetSocialPromptStep();

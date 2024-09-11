@@ -226,6 +226,14 @@ fileUploadButton.addEventListener("click", function () {
     fileInput.type = "file";
     fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
     fileInput.style.display = "none";
+    fileInput.multiple = true;
+
+    if (currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_NAV_KEY) {
+        fileInput.accept = ".mp4";
+    }
+    if (currentPromptDialog !== undefined && currentPromptDialog.key === PAPER_NAV_KEY) {
+        fileInput.accept = ".pdf, .doc, .docx, .txt";
+    }
 
     // 将文件输入元素添加到页面
     document.body.appendChild(fileInput);
@@ -236,6 +244,14 @@ fileUploadButton.addEventListener("click", function () {
     // 监听文件选择事件
     fileInput.addEventListener("change", function () {
         disableQueryBtn();
+
+        if (currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_NAV_KEY) {
+            uploadVideoFiles(fileInput.files);
+            return;
+        } else if (currentPromptDialog !== undefined && currentPromptDialog.key === PAPER_NAV_KEY) {
+            uploadPaperFiles(fileInput.files);
+            return;
+        }
 
         const selectedFile = fileInput.files[0];
         if (selectedFile) {
@@ -497,7 +513,7 @@ function textToVoice(emotionSelect) {
 }
 
 $(document).on("change", ".emotionSelect", function () {
-    textToVoice(this);
+    // textToVoice(this);
 })
 
 function remoteSolve(blob) {
@@ -646,12 +662,151 @@ var Recoder = {
 }
 
 
-
 const agentButton = document.getElementById("agentButton");
 agentButton.addEventListener("click", function (e) {
     $('#agent-container').toggle();
-    $(document).one("click", function(){
+    $(document).one("click", function () {
         $("#agent-container").hide();
     });
     e.stopPropagation();
 });
+
+function uploadVideoFiles(files) {
+    var formData = new FormData();
+
+    for (var i = 0; i < files.length; i++) {
+        console.log(files[i]);
+        formData.append('files[]', files[i]);
+    }
+
+    addRobotDialog("文件正在上传...");
+
+    $.ajax({
+        url: '/v1/medicine/uploadVideoFiles?category=' + window.category,
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (response) {
+            console.log('uploadFiles', response);
+            if (response.status === 'success') {
+                setLastRobotAnswer("文件已经上传成功");
+                addRobotDialog("正在对视频进行语音识别...");
+                videoToText(response.data);
+            }
+        },
+        error: function (jqXHR, textStatus, errorMessage) {
+            console.log('uploadFiles', errorMessage);
+        }
+    });
+
+    function videoToText(uploadFileList) {
+        $.ajax({
+            url: "/v1/medicine/videoToText",
+            type: "POST",
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(uploadFileList),
+            success: function (res) {
+                if (res.status === 'success') {
+                    setLastRobotAnswer("视频语音识别已完成");
+                    for (var i = 0; i < res.data.length; i++) {
+                        addRobotDialog('视频“' + res.data[i].realName + '”的语音识别结果：');
+                        addRobotDialog(res.data[i].text);
+                    }
+                    addRobotDialog('以下视频内容的摘要：');
+                    generateVideoSummary(uploadFileList);
+                } else {
+                    setLastRobotAnswer("视频语音识别失败");
+                }
+            },
+            error: function (res) {
+                setLastRobotAnswer("视频语音识别失败");
+            }
+        });
+    }
+
+    function generateVideoSummary(uploadFileList) {
+        let question = "";
+        let conversation = {user: {question: question}, robot: {answer: ''}}
+        let robotAnswerJq = newConversation(conversation, false, true);
+        streamOutput(uploadFileList, question, robotAnswerJq);
+    }
+
+    function streamOutput(paras, question, robootAnswerJq) {
+        async function generateStream(paras) {
+            const response = await fetch('/v1/medicine/generateVideoSummary', {
+                method: "POST",
+                cache: "no-cache",
+                keepalive: true,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "text/event-stream",
+                },
+                body: JSON.stringify(paras),
+            });
+
+            const reader = response.body.getReader();
+            let fullText = '';
+            let flag = true;
+            while (flag) {
+                const {value, done} = await reader.read();
+                let res = new TextDecoder().decode(value);
+                if (res.startsWith("error:")) {
+                    robootAnswerJq.html(res.replaceAll('error:', ''));
+                    return;
+                }
+                let chunkStr = new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+                const chunkArray = chunkStr.split("\n\n");
+                for (let i = 0; i < chunkArray.length; i++) {
+                    let chunk = chunkArray[i];
+                    if (chunk === "[DONE]") {
+                        CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+                        CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                        flag = false;
+                        result = `
+                        ${fullText}
+                        `
+                        robootAnswerJq.html(result);
+                        break;
+                    }
+                    var json = JSON.parse(chunk);
+                    if (json.choices === undefined) {
+                        queryLock = false;
+                        robootAnswerJq.html("调用失败！");
+                        break
+                    }
+                    if (json.choices.length === 0) {
+                        continue;
+                    }
+                    var chatMessage = json.choices[0].message;
+                    if (chatMessage.content === undefined) {
+                        continue;
+                    }
+                    var t = chatMessage.content;
+                    t = t.replaceAll("\n", "<br>");
+                    fullText += t;
+                    result = `
+                        ${fullText}
+                        `
+                    robootAnswerJq.html(result + '<p style="display: inline-block"></p>');
+                }
+            }
+        }
+
+        generateStream(paras).then(r => {
+            enableQueryBtn();
+            querying = false;
+        }).catch((err) => {
+            console.error(err);
+            enableQueryBtn();
+            querying = false;
+            queryLock = false;
+            if (!robootAnswerJq.text) {
+                robootAnswerJq.html("调用失败！");
+            }
+        });
+    }
+
+}
+

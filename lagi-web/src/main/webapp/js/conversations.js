@@ -104,7 +104,18 @@ function addUserDialog(userQuestion) {
     newConversation(conversation, true, false);
 }
 
+function setLastRobotAnswer(robotAnswer) {
+    $('#item-content .markdown').last().text(robotAnswer);
+}
+
+function getLastRobotAnswer() {
+    return $('#item-content .markdown').last().text();
+}
+
 function addRobotDialog(robotAnswer) {
+    if (robotAnswer === undefined) {
+        return;
+    }
     let chatHtml = `
     <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
         <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">

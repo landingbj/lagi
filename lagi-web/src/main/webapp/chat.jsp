@@ -392,5 +392,6 @@
     <script src="js/index.js?ver=${initParam.version}"></script>
     <script src="js/self.js?ver=${initParam.version}"></script>
     <script src="js/query.js?ver=${initParam.version}"></script>
+    <script src="js/zhipu.js?ver=${initParam.version}"></script>
   </body>
 </html>

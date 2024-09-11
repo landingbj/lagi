@@ -43,7 +43,7 @@ public class VectorStoreService {
     static {
         ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(100),
-                (r, executor)->{
+                (r, executor) -> {
                     log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
                 }
         ));
@@ -65,6 +65,10 @@ public class VectorStoreService {
             return null;
         }
         return vectorStore.getConfig();
+    }
+
+    public void addFileVectors(File file, Map<String, Object> metadatas) throws IOException {
+        addFileVectors(file, metadatas, vectorStore.getConfig().getDefaultCategory());
     }
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
@@ -249,12 +253,18 @@ public class VectorStoreService {
         return search(question, request.getCategory());
     }
 
+    public List<IndexSearchData> search(String question, Map<String, String> where) {
+        return search(question, where, vectorStore.getConfig().getDefaultCategory());
+    }
 
     public List<IndexSearchData> search(String question, String category) {
+        Map<String, String> where = new HashMap<>();
+        return search(question, where, category);
+    }
 
+    public List<IndexSearchData> search(String question, Map<String, String> where, String category) {
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
-        Map<String, String> where = new HashMap<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
         Set<String> esIds = bigdataService.getIds(question, category);
@@ -262,17 +272,17 @@ public class VectorStoreService {
             Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
             indexIds.retainAll(esIds);
             indexSearchDataList = indexSearchDataList.stream()
-                    .filter(indexSearchData->indexIds.contains(indexSearchData.getId()))
+                    .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
                     .collect(Collectors.toList());
         }
         String finalCategory = category;
         List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
                 .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
                 .collect(Collectors.toList());
-        return  futureResultList.stream().map(indexSearchDataFuture -> {
+        return futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("indexData get error");
             }
             return null;

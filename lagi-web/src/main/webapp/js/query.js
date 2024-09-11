@@ -32,6 +32,8 @@ function textQuery() {
     sleep(200).then(() => {
         if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
             socialAgentsConversation(question);
+        } else if (currentPromptDialog !== undefined && currentPromptDialog.key === PAPER_NAV_KEY) {
+            generateEssay(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
             getTextResult(question.trim(), robotAnswerJq, conversation);

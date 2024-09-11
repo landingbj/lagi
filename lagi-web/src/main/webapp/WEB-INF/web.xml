@@ -247,4 +247,13 @@
         <servlet-name>WorkerApiServlet</servlet-name>
         <url-pattern>/v1/worker/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>MedicineApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.MedicineApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MedicineApiServlet</servlet-name>
+        <url-pattern>/v1/medicine/*</url-pattern>
+    </servlet-mapping>
 </web-app>

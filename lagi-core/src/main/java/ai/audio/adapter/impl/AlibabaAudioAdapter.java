@@ -3,7 +3,9 @@ package ai.audio.adapter.impl;
 import ai.annotation.ASR;
 import ai.annotation.TTS;
 import ai.audio.adapter.IAudioAdapter;
+import ai.audio.pojo.FileTansAsrResult;
 import ai.audio.service.AlibabaAsrService;
+import ai.audio.service.AlibabaFileTransAsrService;
 import ai.audio.service.AlibabaTtsService;
 import ai.common.ModelService;
 import ai.common.pojo.*;
@@ -25,13 +27,13 @@ public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
 
     @Override
     public boolean verify() {
-        if(getAppKey() == null || getAppKey().startsWith("you")) {
+        if (getAppKey() == null || getAppKey().startsWith("you")) {
             return false;
         }
-        if(getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
+        if (getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
             return false;
         }
-        if(getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
+        if (getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
             return false;
         }
         return true;
@@ -39,12 +41,39 @@ public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
 
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
-        AlibabaAsrService asrService = new AlibabaAsrService(
-                getAppKey(),
+        return fileTansAsr(audio);
+    }
+
+    public AsrResult fileTansAsr(File audio) {
+        AlibabaFileTransAsrService demo = new AlibabaFileTransAsrService(
                 getAccessKeyId(),
-                getAccessKeySecret()
-        );
-        return gson.fromJson(asrService.asr(audio), AsrResult.class);
+                getAccessKeySecret(),
+                getAppKey());
+
+        String url = universalOSS.upload("asr/" + audio.getName(), audio);
+        String taskId = demo.submitFileTransRequest(url);
+        if (taskId != null) {
+            System.out.println("录音文件识别请求成功，task_id: " + taskId);
+        } else {
+            System.out.println("录音文件识别请求失败！");
+            return null;
+        }
+        // 第二步：根据任务ID轮询识别结果。
+        String result = demo.getFileTransResult(taskId);
+        if (result != null) {
+            System.out.println("录音文件识别结果查询成功：" + result);
+        } else {
+            System.out.println("录音文件识别结果查询失败！");
+        }
+        FileTansAsrResult fileTansAsrResult = gson.fromJson(result, FileTansAsrResult.class);
+        StringBuilder sb = new StringBuilder();
+        for (FileTansAsrResult.Sentence sentence : fileTansAsrResult.getSentences()) {
+            sb.append(sentence.getText());
+        }
+        return AsrResult.builder()
+                .status(LagiGlobal.ASR_STATUS_SUCCESS)
+                .result(sb.toString())
+                .build();
     }
 
     @Override
@@ -79,7 +108,7 @@ public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
             }
             response.close();
         } catch (Exception e) {
-           throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
         return result;
     }
