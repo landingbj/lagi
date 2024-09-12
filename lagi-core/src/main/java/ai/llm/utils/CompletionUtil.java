@@ -1,6 +1,7 @@
 package ai.llm.utils;
 
 import ai.common.pojo.IndexSearchData;
+import ai.config.ContextLoader;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
@@ -17,8 +18,12 @@ public class CompletionUtil {
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
 
 
-    private static final int MAX_INPUT = 4096;
-//    private static final int MAX_INPUT = 1024;
+    private static final int MAX_INPUT;
+
+    static {
+        Integer contextLength = ContextLoader.configuration.getContextLength();
+        MAX_INPUT = contextLength == null ? 1024*4  : contextLength;
+    }
 
     public static ChatCompletionResult getDummyCompletion() {
         DateFormat dateFormat = DateFormat.getDateTimeInstance();

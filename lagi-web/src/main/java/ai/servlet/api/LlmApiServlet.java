@@ -34,6 +34,7 @@ import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
+import ai.utils.MinimumEditDistance;
 import ai.vector.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -62,6 +63,7 @@ public class LlmApiServlet extends BaseServlet {
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private final Integer debugLevel = ContextLoader.configuration.getDebugLevel() == null ? 0 : ContextLoader.configuration.getDebugLevel();
 
     static {
         VectorCacheLoader.load();
@@ -96,6 +98,8 @@ public class LlmApiServlet extends BaseServlet {
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
                 indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                indexSearchDataList = rerank(lastMessage1,  indexSearchDataList);
                 if(indexSearchDataList.isEmpty()) {
                     String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
                     outPrintJson(resp, chatCompletionRequest, s);
@@ -131,6 +135,8 @@ public class LlmApiServlet extends BaseServlet {
             }
             if(indexSearchDataList == null) {
                 indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                indexSearchDataList = rerank(lastMessage1,  indexSearchDataList);
             }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
@@ -158,6 +164,17 @@ public class LlmApiServlet extends BaseServlet {
             }
             responsePrint(resp, toJson(result));
         }
+    }
+
+    private List<IndexSearchData> rerank(String question, List<IndexSearchData> indexSearchDataList) {
+        return indexSearchDataList.stream().peek(indexSearchData -> {
+            String text = indexSearchData.getText();
+            int distance = MinimumEditDistance.calculateMinEditDistance(question, text);
+            int len = text.length();
+            double ratio = (double) distance / len;
+            ratio =  (ratio * 0.9 + indexSearchData.getDistance() * 0.1) * indexSearchData.getDistance();
+            indexSearchData.setDistance((float) ratio);
+        }).sorted((o1, o2)-> Float.compare(o1.getDistance(), o2.getDistance())).collect(Collectors.toList());
     }
 
     private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {
@@ -209,6 +226,9 @@ public class LlmApiServlet extends BaseServlet {
     private EnhanceChatCompletionRequest getChatCompletionFromRequest(HttpServletRequest req, HttpSession session) throws IOException {
         ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
         EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
+        if(debugLevel >= 0) {
+            logger.warn("chatCompletionRequest:{}", JSONUtil.toJsonStr(chatCompletionRequest));
+        }
         if(chatCompletionRequest.getModel() == null
                 && preference != null
                 && preference.getLlm() != null) {

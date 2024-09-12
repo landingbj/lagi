@@ -184,6 +184,7 @@ const VIDEO_FILE_SIZE_LIMIT = 50 * 1024 * 1024;
 
 const FILE_SIZE_LIMIT = {
     "pdf": PDF_FILE_SIZE_LIMIT,
+    "wps": WORD_FILE_SIZE_LIMIT,
     "doc": WORD_FILE_SIZE_LIMIT,
     "docx": WORD_FILE_SIZE_LIMIT,
     "txt": TXT_FILE_SIZE_LIMIT,
@@ -222,7 +223,7 @@ const fileUploadButton = document.getElementById("addButton");
 fileUploadButton.addEventListener("click", function () {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
+    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm, .wps";
     fileInput.style.display = "none";
 
     // 将文件输入元素添加到页面
@@ -248,7 +249,9 @@ fileUploadButton.addEventListener("click", function () {
             let serverEndpoint = "";
             var fileStatus = "";
             if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
-                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx") {
+                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx"
+                || fileType === "wps"
+            ) {
                 question = "您所上传的文档文件名称为：" + selectedFile.name;
                 formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
                 serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;

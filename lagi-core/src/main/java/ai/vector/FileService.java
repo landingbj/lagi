@@ -19,6 +19,8 @@ import com.google.gson.Gson;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
 import org.apache.commons.io.IOUtils;
+import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.extractor.WordExtractor;
 
 public class FileService {
     private static final String EXTRACT_CONTENT_URL = AiGlobal.SAAS_URL + "/saas/extractContentWithImage";
@@ -63,6 +65,9 @@ public class FileService {
             case ".docx":
                 content = WordUtils.getContentsByWord(in, extString);
                 break;
+            case ".wps":
+                content = getContentWps(file.getAbsolutePath());
+                break;
             case ".txt":
                 content = getString(in);
                 break;
@@ -94,5 +99,35 @@ public class FileService {
         }
 
         return str;
+    }
+
+    public static String getContentWps(String path) {
+        StringBuilder content = new StringBuilder();
+        InputStream is = null;
+        try {
+            is = Files.newInputStream(new File(path).toPath());
+            HWPFDocument hwpf = new HWPFDocument(is);
+            WordExtractor wordExtractor = new WordExtractor(hwpf);
+            String[] paragraphText1 = wordExtractor.getParagraphText();
+            if (paragraphText1 != null) {
+                for (String paragraph : paragraphText1) {
+                    if (!paragraph.startsWith("    ")) {
+                        content.append(paragraph.trim()).append("\r\n");
+                    } else {
+                        content.append(paragraph);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return content.toString();
     }
 }

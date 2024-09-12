@@ -41,7 +41,7 @@ public class VectorStoreService {
     private static final ExecutorService executor;
 
     static {
-        ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 10, TimeUnit.SECONDS,
+        ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(100),
                 (r, executor)->{
                     log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
@@ -251,7 +251,7 @@ public class VectorStoreService {
 
 
     public List<IndexSearchData> search(String question, String category) {
-
+        question = question.replace(" \n", "");
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
         Map<String, String> where = new HashMap<>();
@@ -273,7 +273,7 @@ public class VectorStoreService {
             try {
                 return indexSearchDataFuture.get();
             }catch (Exception e) {
-                log.error("indexData get error");
+                log.error("indexData get error", e);
             }
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
@@ -294,16 +294,18 @@ public class VectorStoreService {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
-        queryCondition.setN(similarity_top_k);
+        queryCondition.setN(Math.max(similarity_top_k, 500));
+//        queryCondition.setN(similarity_top_k);
         queryCondition.setWhere(where);
         List<IndexRecord> indexRecords = this.query(queryCondition, category);
-        for (IndexRecord indexRecord : indexRecords) {
-            if (indexRecord.getDistance() > similarity_cutoff) {
-                continue;
-            }
-            IndexSearchData indexSearchData = toIndexSearchData(indexRecord);
-            result.add(indexSearchData);
-        }
+        result = indexRecords.stream().filter(indexRecord -> indexRecord.getDistance() <= similarity_cutoff).limit(similarity_top_k).map(this::toIndexSearchData).collect(Collectors.toList());
+//        for (IndexRecord indexRecord : indexRecords) {
+//            if (indexRecord.getDistance() > similarity_cutoff) {
+//                continue;
+//            }
+//            IndexSearchData indexSearchData = toIndexSearchData(indexRecord);
+//            result.add(indexSearchData);
+//        }
         return result;
     }
 

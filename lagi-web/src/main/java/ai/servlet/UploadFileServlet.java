@@ -341,17 +341,23 @@ public class UploadFileServlet extends HttpServlet {
             ex.printStackTrace();
         }
 
+        List<Map<String, String>> data = new ArrayList<>();
         if (!files.isEmpty()) {
             String content = "";
             for (File file : files) {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
+                    Map<String, String> map = new HashMap<>();
+                    map.put("filename", filename);
+                    map.put("filepath", file.getName());
+                    data.add(map);
                     new AddDocIndex(file, category, filename, level).start();
                 }
             }
         }
         if (!jsonResult.has("msg")) {
+            jsonResult.addProperty("data", gson.toJson(data));
             jsonResult.addProperty("status", "success");
         }
         PrintWriter out = resp.getWriter();
