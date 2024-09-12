@@ -5,63 +5,37 @@
 - **背景**：随着人工智能技术的飞速发展，越来越多的应用场景需要与 AI 模型进行交互，例如智能客服、语音助手、图像处理等。为了满足这些需求，本项目提供了多种 AI 功能，旨在帮助您轻松地将 AI 技术应用于您的业务场景，提升用户体验和效率。
 
 ## 开始之前
-- **配置要求**：您可以选择使用maven命令行工具进行封包，或者通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。请确保您的JDK版本至少满足8的要求。    
-- **引入依赖**：调用相关功能需引入依赖，可以通过 Maven引入或直接导入jar的方式。   
-  ***Maven引入***：
-  - 在项目的pom.xml的dependencies中加入以下内容:
+
+您可以选择直接导入jar，或使用或使用maven引入依赖，通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。
+
+**配置要求**：请确保您的JDK版本至少满足8的要求。
+
+### 一.直接导入jar 
+
+如您选择直接导入jar，您只需完成以下两步即可开始方法调用。
+
+- 1.导入jar：调用相关功能需下载并导入Lag[i] (联基) 的jar包，将它放入lib目录下。
+
+- 2.下载配置lagi.yml：调用相关功能需下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）
+
+### 二.maven引入依赖
+
+如您选择maven引入依赖，您只需完成以下三步即可开始方法调用。
+
+- 1.导入jar：调用相关功能需下载并导入Lag[i] (联基) 的jar包，将它放入lib目录下。
+
+- 2在项目的pom.xml的dependencies中加入以下内容:
     ```xml
-        <depxmlendency>
-          <groupId>com.landingbj</groupId>
-          <artifactId>lagi-core</artifactId>
-          <version>1.0.0</version>
-        </depxmlendency>
+        <dependency>
+            <groupId>com.landingbj</groupId>
+            <artifactId>lagi-core-1.0.0</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/lib/lagi-core-1.0.0.jar</systemPath>
+        </dependency>
     ```
 
-  ***直接导入jar***：
-  - 直接导入lagi-core-1.0.0.jar或导入以下jar，将它们放入到lagi-core的libs目录下即可：
-    ```text
-        ai_bp.jar;
-        ai_core.jar;
-        ai_gather.jar;
-        ai_index.jar;
-        ai_qa.jar;
-    ```
-
-## Docker Run
-  - **Dockerfile**：
-    ```text
-          # 使用官方 Tomcat 镜像作为基础镜像
-          FROM tomcat:8.5.46-jdk8-openjdk
-          
-          # 设置工作目录
-          WORKDIR /usr/local/tomcat/webapps
-          
-          # 拷贝项目 WAR 文件到容器
-          COPY myproject.war .
-          
-          # 暴露 8080 端口
-          EXPOSE 8080
-          
-          # 启动命令
-          CMD ["catalina.sh", "run"]
-    ```
-  - **使用方式**：
-    - 构建镜像
-    >docker build -t myproject-tomcat:1.0 .
-    - 运行容器
-    >docker run -d -p 8080:8080 myproject-tomcat:1.0
-
-- **参数说明**：
-    
-    >-d：以守护进程方式运行容器。   
-
-    >-p 8080:8080：将宿主机的 8080 端口映射到容器的 8080 端口。  
-  
-    >myproject-tomcat:1.0：指定镜像名称和标签。   
-- **注意**：
-
-    确保您的 WAR 文件已经正确构建并位于当前目录中。
-    如果您有额外的配置或依赖项，可能需要修改 Dockerfile 或者使用 Docker Compose 进行更复杂的配置。
+- 3.下载配置lagi.yml：调用相关功能需下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）
 
 ## 调用示列
 - 为了快速上手，我们提供了一些[示例代码](https://github.com/landingbj/lagi/blob/main/lagi-core/src/test/java/ai/example/Demo.java)，您可以根据需要进行修改和调试。
@@ -526,11 +500,11 @@ public void Test() {
 
 您可以直接通过import JAR包的方式使用lag[i] (联基),将一个传统的业务转换为大模型的业务。
 
-1. **创建JAR包**：
-    - 可借助Maven等构建工具将lagi-core打包成JAR包。
+1. **下载JAR包**：
+    - 可直接下载lag[i] (联基) JAR包。
 
 2. **导入JAR包**：
-    - 将生成的JAR包和libs目录下的所有JAR包复制到你的项目的lib目录中。
+    - 将下载的JAR包复制到你的项目的lib目录中。
 
 3. **导入并配置lagi.yml**：
     - 将lagi-web中的配置文件lagi.yml复制到你的项目的resources目录下，并配置模型地址和API密钥。
@@ -566,7 +540,7 @@ public void Test() {
 2. ***添加依赖***：
     - 在 Project 窗口中找到你的项目。
     - 右键点击项目，选择 Add Dependency...。
-    - 选择 Module Dependency 或 Project Dependency，然后选择lag[i] (联基) 项目的libs中的目录下的所有JAR包。
+    - 选择 Module Dependency 或 Project Dependency，然后选择lag[i] (联基) 的JAR包。
 
 3. ***同步项目***：
     - 在 Project 窗口中右键点击项目，选择 Build Project。
