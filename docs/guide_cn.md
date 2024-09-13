@@ -14,9 +14,11 @@
 
 如您选择直接导入jar，您只需完成以下两步即可开始方法调用。
 
-- 1.导入jar：调用相关功能需下载并导入Lag[i] (联基) 的jar包，将它放入lib目录下。
+- 1.下载jar：调用相关功能需下载Lag[i] (联基) 的jar包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）。
 
-- 2.下载配置lagi.yml：调用相关功能需下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）
+- 2.导入jar：调用相关功能需将jar放入您的lib目录下。
+
+ 注意：该jar内置默认配置文件lagi.yml，以外部配置优先解析。如您需要修改配置文件，可以直接下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）
 
 ### 二.maven引入依赖
 
@@ -24,7 +26,7 @@
 
 - 1.导入jar：调用相关功能需下载并导入Lag[i] (联基) 的jar包，将它放入lib目录下。
 
-- 2在项目的pom.xml的dependencies中加入以下内容:
+- 2.添加dependency：在项目的pom.xml的dependencies中加入以下内容:
     ```xml
         <dependency>
             <groupId>com.landingbj</groupId>
@@ -35,7 +37,7 @@
         </dependency>
     ```
 
-- 3.下载配置lagi.yml：调用相关功能需下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）
+注意：该jar内置默认配置文件lagi.yml，以外部配置优先解析。如您需要修改配置文件，可以直接下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）
 
 ## 调用示列
 - 为了快速上手，我们提供了一些[示例代码](https://github.com/landingbj/lagi/blob/main/lagi-core/src/test/java/ai/example/Demo.java)，您可以根据需要进行修改和调试。
@@ -501,18 +503,20 @@ public void Test() {
 您可以直接通过import JAR包的方式使用lag[i] (联基),将一个传统的业务转换为大模型的业务。
 
 1. **下载JAR包**：
-    - 可直接下载lag[i] (联基) JAR包。
+    - 可直接下载lag[i] (联基) JAR包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）。
 
 2. **导入JAR包**：
     - 将下载的JAR包复制到你的项目的lib目录中。
 
-3. **导入并配置lagi.yml**：
-    - 将lagi-web中的配置文件lagi.yml复制到你的项目的resources目录下，并配置模型地址和API密钥。
+3. **构建和运行项目**：
+    - 在您的项目中，构建和运行项目。
 
-4. **构建和运行项目**：
-    - 在你的项目中，构建和运行项目。
+通过这种方式，您可以将lag[i] (联基) 工程以JAR包直接集成到你的项目中。
 
-通过这种方式，你可以将lag[i] (联基) 工程以JAR包直接集成到你的项目中。
+**注意**：
+   - 该jar内置默认配置文件lagi.yml，以外部配置优先解析。
+   - 如您需要修改配置文件，您只需下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，将其放入您工程的resources目录下，即可开始启动构建项目了。
+   - lagi.yml详细配置可以参考[配置文档](config_zh.md)
 
 ### 方式二: 在Eclipse和IntelliJ中
 **Eclipse中集成项目**

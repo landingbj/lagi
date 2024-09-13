@@ -101,7 +101,6 @@ Thank you for your support of Lag[i] ! To help you get started quickly and easil
 Here is a list of available downloads:
 
 1. **Jar File**
-    - File Name: lagi-core-1.0.0-jar-with-dependencies.jar
+    - File Name: lagi-core-1.0.1-jar-with-dependencies.jar
     - File Size: 140MB
-    - Download Link: [Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.0-jar-with-dependencies.jar)
-    - Note: This jar needs to be used in conjunction with [`lagi.yml`](lagi-web/src/main/resources/lagi.yml)
+    - Download Link: [Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)

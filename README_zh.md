@@ -101,7 +101,6 @@ Lag[i] (联基) 项目还提供了多个RESTful API接口，方便用户将AI服
 以下是您可以直接下载使用的资源列表：
 
 1. **Jar File**
-    - 文件名称：lagi-core-1.0.0-jar-with-dependencies.jar
+    - 文件名称：lagi-core-1.0.1-jar-with-dependencies.jar
     - 文件大小：140MB
-    - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-core-1.0.0-jar-with-dependencies.jar)
-    - 注意：该jar需配合[`lagi.yml`](lagi-web/src/main/resources/lagi.yml)使用
+    - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)
