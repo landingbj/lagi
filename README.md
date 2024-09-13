@@ -93,3 +93,14 @@ Example：Set priority keywords and stop keywords:
 ### Online Demo
 
 To allow users to intuitively experience the powerful functionality and convenience of Lag[i] (Landing AGI), we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).
+
+## Downloads
+
+Thank you for your support of Lag[i] ! To help you get started quickly and easily, we have provided a pre-packaged Lag[i] application that is ready for immediate use.
+
+Here is a list of available downloads:
+
+1. **Jar File**
+    - File Name: lagi-core-1.0.1-jar-with-dependencies.jar
+    - File Size: 140MB
+    - Download Link: [Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)

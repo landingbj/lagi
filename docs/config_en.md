@@ -63,6 +63,14 @@ stores:
       access_key_secret: your-access-key-secret # the access key secret  used by the third-party storage object service
       bucket_name: ai-service-oss
       enable: true
+
+  # This part is the configuration of Elasticsearch
+  bigdata:
+    - name: elasticsearch # The name of the full-text search
+      driver: ai.bigdata.impl.ElasticsearchAdapter
+      host: localhost # IP address
+      port: 9200 # Port number
+      enable: false # Whether it is turned on
   # This section is the configuration of the retrieval enhancement build service
   rag:
     vector: chroma # The name of the vector database used by the service
