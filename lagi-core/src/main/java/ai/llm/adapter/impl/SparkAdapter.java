@@ -104,7 +104,9 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
             apiVersion = SparkApiVersion.V3_0;
         } else if (model.equals(SparkApiVersion.V3_5.getVersion())) {
             apiVersion = SparkApiVersion.V3_5;
-        } else {
+        }  else if (model.equals(SparkApiVersion.V4_0.getVersion())) {
+            apiVersion = SparkApiVersion.V4_0;
+        }  else {
             throw new RuntimeException("Unsupported model version: " + model);
         }
 

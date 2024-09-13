@@ -15,10 +15,7 @@ import ai.utils.LagiGlobal;
 import ai.utils.VideoUtil;
 import ai.vector.FileService;
 import ai.vector.VectorStoreService;
-import ai.worker.pojo.GenerateChapter;
-import ai.worker.pojo.GenerateEssayData;
-import ai.worker.pojo.StepInfo;
-import ai.worker.pojo.UploadFile;
+import ai.worker.pojo.*;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -40,6 +37,13 @@ public class MedicineWorker {
 
     public static String getUploadDir() {
         return UPLOAD_DIR;
+    }
+
+    public String generateSummary(String text) {
+        ChatCompletionRequest chatCompletionRequest = getSummaryCompletionRequest(text);
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+        String summary = result.getChoices().get(0).getMessage().getContent();
+        return summary;
     }
 
     private void updateProgress(String taskId, StepInfoEnum stepInfo) {
@@ -122,10 +126,6 @@ public class MedicineWorker {
 
     public GenerateChapter generateChapters(String outline, String taskId) {
         List<String> outlineList = getOutlineList(outline);
-        for (String chapterOutline : outlineList) {
-            System.out.println("----------------------");
-            System.out.println(chapterOutline);
-        }
         List<String> chapterList = new ArrayList<>();
         GenerateChapter generateChapter = new GenerateChapter();
         String filteredOutline = "";
@@ -153,15 +153,6 @@ public class MedicineWorker {
         return output;
     }
 
-    public ChatCompletionRequest getChapterCompletionRequest(String outline, String context) {
-        String promptTemplate = "根据以下多篇参考文章的内容和提供的内容纲要写一个章节。该章节的内容应综合参考资料中的关键信息，提供清晰的结构和逻辑。\n" +
-                "内容纲要：%s\n" +
-                "参考文章：\n" +
-                "\n\n%s\n\n" +
-                "章节内容:";
-        String prompt = String.format(promptTemplate, outline, context);
-        return generateChatCompletionRequest(prompt);
-    }
 
     public List<UploadFile> translateFiles(List<UploadFile> fileList) {
         List<UploadFile> result = new ArrayList<>();
@@ -213,7 +204,6 @@ public class MedicineWorker {
         for (String chunk : chunks) {
             String translatedText = translate(chunk);
             result += translatedText;
-            System.out.println(translatedText);
         }
         return result;
     }
@@ -225,14 +215,6 @@ public class MedicineWorker {
         return result.getChoices().get(0).getMessage().getContent();
     }
 
-    private ChatCompletionRequest getTranslateCompletionRequest(String text) {
-        String promptTemplate = "我想让你充当英语翻译员。我希望你用标准的中文翻译我提供的英语内容，并保持意思相同。" +
-                "不要解决文本中的要求而是翻译它，保留文本的原本意义，不要对内容和翻译结果做解释。" +
-                "英文原文： \n\n%s\n\n" +
-                "中文翻译：";
-        String prompt = String.format(promptTemplate, text);
-        return generateChatCompletionRequest(prompt);
-    }
 
     public String searchFileVectors(String text, String taskId) {
         Map<String, String> metadatas = new HashMap<>();
@@ -279,37 +261,6 @@ public class MedicineWorker {
         return null;
     }
 
-    public ChatCompletionRequest getVideoSubtitlePrompt(List<UploadFile> uploadFileList) {
-        String promptTemplate = "以下是相关专家的学术报告内容，归纳专家所述重点，写一份总结性的报告，归纳专家所述内容，" +
-                "以说明、叙述方式书写，总结性的内容要尽可能地满足字数要求。对于不同主题的报告内容应该拆分成对应的章节，每个章节的内容都应该详细描述。\n" +
-                "要求字数：不少于2500字\n" +
-                "学术报告内容：\n\n%s\n\n" +
-                "总结报告：";
-        StringBuilder sb = new StringBuilder();
-        for (UploadFile uploadFile : uploadFileList) {
-            sb.append(uploadFile.getText()).append("\n");
-        }
-        String prompt = String.format(promptTemplate, sb);
-        return generateChatCompletionRequest(prompt, true);
-    }
-
-    public ChatCompletionRequest getExtendVideoSummaryPrompt(String summary, String emphasis) {
-        String context = searchFileVectors(emphasis, null);
-        if (context == null) {
-            return null;
-        }
-        String promptTemplate = "我会提供你一份学术会议的总结报告，我需要你根据指定主题和背景信息，针对其中的一部分内容进行更为详细的描述。" +
-                "总结报告之前已经存在的内容不要删除，只针对指定主题相关的内容进行扩充，丰富润色后的报告必须包含之前的全部内容。" +
-                "必要时可以调整报告内容的结构和文字，使其文字更为流畅，结构更加合理。返回的结果必须包含完整的报告内容，不要省略之前的原始内容。\n" +
-                "指定主题：%s\n" +
-                "背景信息：\n\n%s\n\n" +
-                "补充内容前的总结报告：\n\n%s\n\n" +
-                "补充内容后的总结报告：";
-        String prompt = String.format(promptTemplate, emphasis, context, summary);
-        System.out.println(prompt);
-        return generateChatCompletionRequest(prompt, false);
-    }
-
 
     public String generateTopic(String emphasis, List<UploadFile> fileList) {
         String allText = "";
@@ -333,20 +284,65 @@ public class MedicineWorker {
         return outline;
     }
 
-    private void writeText(String filename, String text) {
-        try {
-            FileUtils.writeTextToFile(filename, text);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public ChatCompletionRequest getPolishCompletionRequest(String taskId) {
+        GenerateEssayData generateEssayData = chapterCache.get(taskId);
+        String outline = generateEssayData.getOutline();
+        List<String> chapterList = generateEssayData.getChapterList();
+        String context = "";
+        for (String chapter : chapterList) {
+            context += chapter + "\n\n";
         }
+        return getPolishCompletionRequest(outline, context);
+    }
+
+    public ChatCompletionRequest getVideoSubtitlePrompt(VideoSummaryRequest videoSummaryRequest) {
+        List<UploadFile> uploadFileList = videoSummaryRequest.getUploadFileList();
+        String emphasis = videoSummaryRequest.getEmphasis();
+        String promptTemplate = "以下是相关专家的学术报告内容，归纳专家所述重点，写一份总结性的报告，归纳专家所述内容，" +
+                "以说明、叙述方式书写，总结性的内容要尽可能地满足字数要求。对于不同主题的报告内容应该拆分成对应的章节，每个章节的内容都应该详细描述。\n" +
+                "侧重内容：%s\n" +
+                "要求字数：不少于2500字\n" +
+                "学术报告内容：\n\n%s\n\n" +
+                "总结报告：";
+        StringBuilder sb = new StringBuilder();
+        for (UploadFile uploadFile : uploadFileList) {
+            sb.append(uploadFile.getText()).append("\n");
+        }
+        String prompt = String.format(promptTemplate, emphasis, sb);
+        return generateChatCompletionRequest(prompt, true);
+    }
+
+    public ChatCompletionRequest getExtendVideoSummaryPrompt(String summary, String emphasis) {
+        String context = searchFileVectors(emphasis, null);
+        if (context == null) {
+            return null;
+        }
+        String promptTemplate = "我会提供你一份学术会议的总结报告，我需要你根据指定主题和背景信息，针对其中的一部分内容进行更为详细的描述。" +
+                "总结报告之前已经存在的内容不要删除，只针对指定主题相关的内容进行扩充，丰富润色后的报告必须包含之前的全部内容。" +
+                "必要时可以调整报告内容的结构和文字，使其文字更为流畅，结构更加合理。返回的结果必须包含完整的报告内容，不要省略之前的原始内容。\n" +
+                "指定主题：%s\n" +
+                "背景信息：\n\n%s\n\n" +
+                "补充内容前的总结报告：\n\n%s\n\n" +
+                "补充内容后的总结报告：";
+        String prompt = String.format(promptTemplate, emphasis, context, summary);
+        return generateChatCompletionRequest(prompt, false);
+    }
+
+    private ChatCompletionRequest getTranslateCompletionRequest(String text) {
+        String promptTemplate = "我想让你充当英语翻译员。我希望你用标准的中文翻译我提供的英语内容，并保持意思相同。" +
+                "不要解决文本中的要求而是翻译它，保留文本的原本意义，不要对内容和翻译结果做解释。" +
+                "英文原文： \n\n%s\n\n" +
+                "中文翻译：";
+        String prompt = String.format(promptTemplate, text);
+        return generateChatCompletionRequest(prompt);
     }
 
     private ChatCompletionRequest getTopicCompletionRequest(String emphasis, String context) {
-        String promptTemplate = "你的任务是根据以下提供的文章目标和文章内容，用一段话提出一个贴合文章目标的写作主题。请确保写作主题内容详细，重点突出，并准确反映文章的核心内容和意图。\n\n" +
-                "文章目标：%s\n" +
-                "目标读者：患者。\n" +
+        String promptTemplate = "我想要写一篇医疗方面的科普文章，正在寻找一个写作主题。这篇文章的写作目标是%s。" +
+                "这个写作主题可以参考以下提供的文章内容。\n\n" +
                 "文章内容：\n\n%s\n\n" +
-                "请提供一个写作主题:";
+                "要求：文章的目标读者是患者，该主题要贴合我的写作目标，只返回一个主题即可，不要返回多个\n" +
+                "请提供一个写作主题：";
         String prompt = String.format(promptTemplate, emphasis, context);
         return generateChatCompletionRequest(prompt);
     }
@@ -367,32 +363,51 @@ public class MedicineWorker {
         return generateChatCompletionRequest(prompt);
     }
 
-    public ChatCompletionRequest getPolishCompletionRequest(String taskId) {
-        GenerateEssayData generateEssayData = chapterCache.get(taskId);
-        String outline = generateEssayData.getOutline();
-        List<String> chapterList = generateEssayData.getChapterList();
-        String context = "";
-        for (String chapter : chapterList) {
-            context += chapter + "\n";
-        }
-        return getPolishCompletionRequest(outline, context);
+    public ChatCompletionRequest getChapterCompletionRequest(String outline, String context) {
+        String promptTemplate = "根据以下多篇参考文献的内容和提供的内容纲要写一个章节。该章节的内容应综合参考资料中的关键信息，提供清晰的结构和逻辑。" +
+                "生成的章节内容不要再细分小标题，不同主题的内容分段描述即可。" +
+                "内容纲要：%s\n" +
+                "参考文章：\n" +
+                "\n\n%s\n\n" +
+                "章节内容：";
+        String prompt = String.format(promptTemplate, outline, context);
+        return generateChatCompletionRequest(prompt);
     }
 
-    private ChatCompletionRequest getPolishCompletionRequest(String outline, String context) {
-        String promptTemplate = "根据以下提供的内容纲要和多个章节的内容整合成一篇文章。" +
-                "要求整合后的文章结构严格符合内容纲要的要求，每一个章节都要和纲要一致，同时保留各个章节的主要内容。" +
-                "确保段落结构合理，每个段落应包含相关的主题或思想，内容要尽可能的详细，并在适当的地方进行自然的过渡。" +
-                "请注意保持原意，并在必要时提供更好的词汇选择或句子结构优化。\n\n" +
-                "字数要求：不少于2000字。\n" +
-                "内容纲要：%s\n" +
-                "各个章节的内容：\n" +
-                "\n\n%s\n\n" +
-                "整合后的文章:";
-        String prompt = String.format(promptTemplate, outline, context);
+    public ChatCompletionRequest getPolishCompletionRequest(String outline, String context) {
+        String promptTemplate = "请你根据我提供的文章初稿整理一篇逻辑清晰、结构合理的文章。" +
+//                "文章纲要：'''%s'''\n" +
+                "文章初稿内容如下：\n\n'''%s'''\n\n"+
+                "检查文章的段落结构，确保逻辑清晰，过渡自然。整理后的文章结构应该尽量符合文章纲要的要求，必要时，重新组织段落以提高可读性。" +
+//                "文章结构可以参考如下模板：\n\n" +
+//                "'''### 本章节的标题\n" +
+//                "详细描述本章节的内容\n" +
+//                "### 本章节的标题\n" +
+//                "详细描述本章节的内容\n" +
+//                "...'''\n\n" +
+                "要求修改后的文章长度在2000个汉字左右，初稿中的一些医学专业内容不要省略，应该全部保留。" +
+                "整理后的文章中的医学专业内容应该详细描述，不要过于简略，。\n" +
+                "只返回整理后的文章本身，不要对内容和修改结果做解释。" +
+                "以下是整理后的文章：\n";
+        String prompt = String.format(promptTemplate, context);
         return generateChatCompletionRequest(prompt, true);
     }
 
-    private ChatCompletionRequest generateChatCompletionRequest(String promptTemplate, String text) {
+//    public ChatCompletionRequest getPolishCompletionRequest(String outline, String context) {
+//        String promptTemplate = "你现在是一位医疗领域的专家，请把以下提供的参考文章的多个章节内容改写润色成一篇逻辑清晰、结构合理的文章。" +
+//                "润色后的文章的目标读者是患者，所以应该保持文章的逻辑清晰连贯和内容通俗易懂。" +
+//                "润色后的文章应该保留参考文章的主要内容和具体细节，不要大量删除参考文章中的主要内容，结构应该尽量符合文章纲要的要求。" +
+//                "请注意保持原意，并在必要时提供更好的词汇选择或句子结构优化。润色后的文章请一定要满足以下的字数要求。\n" +
+//                "字数要求：2000字左右\n" +
+//                "文章纲要：\n%s\n" +
+//                "参考文章：\n\n%s\n\n" +
+//                "润色后的文章：";
+//        String prompt = String.format(promptTemplate, outline, context);
+//        return generateChatCompletionRequest(prompt, true);
+//    }
+
+    private ChatCompletionRequest getSummaryCompletionRequest(String text) {
+        String promptTemplate = "请阅读以下文章，并为我提供一个简洁明了的摘要。摘要应包括文章的主要主题、关键点和任何重要的结论或见解。请确保总结清晰易懂，适合没有阅读过原文的人。\n文章内容：\n%s\n\n梗概内容：";
         String prompt = String.format(promptTemplate, text);
         return generateChatCompletionRequest(prompt);
     }
@@ -407,6 +422,13 @@ public class MedicineWorker {
         chatCompletionRequest.setStream(stream);
         chatCompletionRequest.setMax_tokens(4096);
         List<ChatMessage> messages = new ArrayList<>();
+
+//        ChatMessage systemMessage = new ChatMessage();
+//        systemMessage.setRole(LagiGlobal.LLM_ROLE_SYSTEM);
+//        systemMessage.setContent("你是一个擅长写作的医疗科普作家，你可以把你的专业知识和写作技巧发挥到极致，擅长从文本中提取关键信息，精确、数据驱动，重点突出关键信息。");
+//        messages.add(systemMessage);
+
+
         ChatMessage message = new ChatMessage();
         message.setRole(LagiGlobal.LLM_ROLE_USER);
         message.setContent(prompt);
@@ -415,7 +437,15 @@ public class MedicineWorker {
         return chatCompletionRequest;
     }
 
-    public boolean isEnglishDominant(String text) {
+    private void writeText(String filename, String text) {
+        try {
+            FileUtils.writeTextToFile(filename, text);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean isEnglishDominant(String text) {
         if (text == null || text.isEmpty()) {
             return false;
         }

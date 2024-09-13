@@ -1,4 +1,5 @@
 const EMPHASIS_QUESTION = '本篇文章的侧重点是什么？'
+const MEETING_TOPIC_QUESTION = '请输入需要侧重的主题'
 const FAIL_PROMPT = '操作失败'
 const CHAPTER_DONE = 6
 
@@ -46,8 +47,6 @@ function generateEssay(input) {
         querying = false;
         return;
     }
-    console.log('generateEssay question', question);
-    console.log('generateEssay input', input);
     addUserDialog(input);
     prepareForGenerateEssay(input, currentFileList);
 
@@ -194,3 +193,157 @@ function generateEssay(input) {
     }
 }
 
+var meetingVideoFiles = [];
+
+function uploadVideoFiles(files) {
+    var formData = new FormData();
+
+    for (var i = 0; i < files.length; i++) {
+        console.log(files[i]);
+        formData.append('files[]', files[i]);
+    }
+
+    addRobotDialog("文件正在上传...");
+
+    $.ajax({
+        url: '/v1/medicine/uploadVideoFiles?category=' + window.category,
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (response) {
+            console.log('uploadFiles', response);
+            if (response.status === 'success') {
+                setLastRobotAnswer("文件已经上传成功");
+                addRobotDialog(MEETING_TOPIC_QUESTION);
+                // videoToText(response.data);
+                meetingVideoFiles = response.data;
+            }
+        },
+        error: function (jqXHR, textStatus, errorMessage) {
+            console.log('uploadFiles', errorMessage);
+        }
+    });
+}
+
+function generateMeetingSummary(input) {
+    let question = getLastRobotAnswer();
+    if (question.trim() !== MEETING_TOPIC_QUESTION) {
+        unlockInput();
+        enableQueryBtn();
+        querying = false;
+        return;
+    }
+
+    addUserDialog(input);
+    videoToText(meetingVideoFiles);
+
+    function videoToText(uploadFileList) {
+        $.ajax({
+            url: "/v1/medicine/videoToText",
+            type: "POST",
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(uploadFileList),
+            success: function (res) {
+                if (res.status === 'success') {
+                    setLastRobotAnswer("视频语音识别已完成");
+                    for (var i = 0; i < res.data.length; i++) {
+                        addRobotDialog('视频“' + res.data[i].realName + '”的语音识别结果：');
+                        addRobotDialog(res.data[i].text);
+                    }
+                    addRobotDialog('以下视频内容的摘要：');
+                    var videoSummaryRequest = {"uploadFileList": uploadFileList, "emphasis": input};
+                    generateVideoSummary(videoSummaryRequest);
+                } else {
+                    setLastRobotAnswer("视频语音识别失败");
+                }
+            },
+            error: function (res) {
+                setLastRobotAnswer("视频语音识别失败");
+            }
+        });
+    }
+
+    function generateVideoSummary(videoSummaryRequest) {
+        let question = "";
+        let conversation = {user: {question: question}, robot: {answer: ''}}
+        let robotAnswerJq = newConversation(conversation, false, true);
+        streamOutput(videoSummaryRequest, question, robotAnswerJq);
+    }
+
+    function streamOutput(paras, question, robootAnswerJq) {
+        async function generateStream(paras) {
+            const response = await fetch('/v1/medicine/generateVideoSummary', {
+                method: "POST",
+                cache: "no-cache",
+                keepalive: true,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "text/event-stream",
+                },
+                body: JSON.stringify(paras),
+            });
+
+            const reader = response.body.getReader();
+            let fullText = '';
+            let flag = true;
+            while (flag) {
+                const {value, done} = await reader.read();
+                let res = new TextDecoder().decode(value);
+                if (res.startsWith("error:")) {
+                    robootAnswerJq.html(res.replaceAll('error:', ''));
+                    return;
+                }
+                let chunkStr = new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+                const chunkArray = chunkStr.split("\n\n");
+                for (let i = 0; i < chunkArray.length; i++) {
+                    let chunk = chunkArray[i];
+                    if (chunk === "[DONE]") {
+                        CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+                        CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                        flag = false;
+                        result = `
+                        ${fullText}
+                        `
+                        robootAnswerJq.html(result);
+                        break;
+                    }
+                    var json = JSON.parse(chunk);
+                    if (json.choices === undefined) {
+                        queryLock = false;
+                        robootAnswerJq.html("调用失败！");
+                        break
+                    }
+                    if (json.choices.length === 0) {
+                        continue;
+                    }
+                    var chatMessage = json.choices[0].message;
+                    if (chatMessage.content === undefined) {
+                        continue;
+                    }
+                    var t = chatMessage.content;
+                    t = t.replaceAll("\n", "<br>");
+                    fullText += t;
+                    result = `
+                        ${fullText}
+                        `
+                    robootAnswerJq.html(result + '<p style="display: inline-block"></p>');
+                }
+            }
+        }
+
+        generateStream(paras).then(r => {
+            enableQueryBtn();
+            querying = false;
+        }).catch((err) => {
+            console.error(err);
+            enableQueryBtn();
+            querying = false;
+            queryLock = false;
+            if (!robootAnswerJq.text) {
+                robootAnswerJq.html("调用失败！");
+            }
+        });
+    }
+}

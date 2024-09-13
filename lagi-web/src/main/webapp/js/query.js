@@ -34,6 +34,8 @@ function textQuery() {
             socialAgentsConversation(question);
         } else if (currentPromptDialog !== undefined && currentPromptDialog.key === PAPER_NAV_KEY) {
             generateEssay(question);
+        } else if (currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_NAV_KEY) {
+            generateMeetingSummary(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
             getTextResult(question.trim(), robotAnswerJq, conversation);

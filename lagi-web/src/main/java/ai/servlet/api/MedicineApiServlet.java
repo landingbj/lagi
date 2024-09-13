@@ -9,6 +9,7 @@ import ai.utils.LRUCache;
 import ai.utils.SensitiveWordUtil;
 import ai.worker.pojo.GenerateEssayRequest;
 import ai.worker.pojo.UploadFile;
+import ai.worker.pojo.VideoSummaryRequest;
 import ai.worker.zhipu.MedicineWorker;
 import com.google.gson.reflect.TypeToken;
 import io.reactivex.Observable;
@@ -118,9 +119,9 @@ public class MedicineApiServlet extends BaseServlet {
         PrintWriter out = resp.getWriter();
 
         String json = requestToJson(req);
-        Type listType = new TypeToken<ArrayList<UploadFile>>() {
-        }.getType();
-        List<UploadFile> uploadFileList = gson.fromJson(json, listType);
+        VideoSummaryRequest videoSummaryRequest = gson.fromJson(json, VideoSummaryRequest.class);
+        List<UploadFile> uploadFileList = videoSummaryRequest.getUploadFileList();
+        String emphasis = videoSummaryRequest.getEmphasis();
 
         for (UploadFile uploadFile : uploadFileList) {
             String text = fileCache.get(uploadFile.getFileName());
@@ -128,7 +129,7 @@ public class MedicineApiServlet extends BaseServlet {
                 uploadFile.setText(text);
             }
         }
-        ChatCompletionRequest chatCompletionRequest = medicineWorker.getVideoSubtitlePrompt(uploadFileList);
+        ChatCompletionRequest chatCompletionRequest = medicineWorker.getVideoSubtitlePrompt(videoSummaryRequest);
         streamOutPrint(chatCompletionRequest, out);
         out.print("data: " + "[DONE]" + "\n\n");
         out.flush();
@@ -173,8 +174,7 @@ public class MedicineApiServlet extends BaseServlet {
                     File file = new File(filePath);
                     fi.write(file);
                     UploadFile uploadFile = UploadFile.builder().fileName(newName).realName(fi.getName()).filePath(filePath).build();
-                    fileList.add(UploadFile.builder().fileName(newName).realName(fi.getName()).filePath(filePath).build());
-                    System.out.println("File uploaded: " + uploadFile);
+                    fileList.add(uploadFile);
                 }
             }
         } catch (Exception e) {
@@ -193,7 +193,7 @@ public class MedicineApiServlet extends BaseServlet {
         List<String> textList = new ArrayList<>();
         for (UploadFile uploadFile : uploadFileList) {
             String videoPath = uploadFile.getFilePath();
-            String text = medicineWorker.getVideoSubtitle(videoPath);
+            String text = "medicineWorker.getVideoSubtitle(videoPath);";
             uploadFile.setText(text);
             textList.add(text);
             fileCache.put(uploadFile.getFileName(), text);
