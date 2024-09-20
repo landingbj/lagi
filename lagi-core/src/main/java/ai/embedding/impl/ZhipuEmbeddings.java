@@ -33,7 +33,7 @@ public class ZhipuEmbeddings implements Embeddings {
     @Override
     public List<Float> createEmbedding(String doc) {
         EmbeddingRequest embeddingRequest = new EmbeddingRequest();
-        embeddingRequest.setInput("hello world");
+        embeddingRequest.setInput(doc);
         embeddingRequest.setModel(this.modelName);
         EmbeddingApiResponse apiResponse = client.invokeEmbeddingsApi(embeddingRequest);
         List<Double> doubleEmbedding = apiResponse.getData().getData().get(0).getEmbedding();

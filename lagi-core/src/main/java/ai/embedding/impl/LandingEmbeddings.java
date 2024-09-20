@@ -1,7 +1,7 @@
 package ai.embedding.impl;
 
-import ai.common.client.AiServiceCall;
-import ai.common.client.AiServiceInfo;
+import ai.embedding.pojo.LagiEmbeddingResponse;
+import ai.utils.ApikeyUtil;
 import ai.embedding.EmbeddingConstant;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
@@ -9,36 +9,51 @@ import ai.embedding.pojo.OpenAIEmbeddingResponse;
 import ai.common.pojo.EmbeddingConfig;
 import com.google.common.cache.Cache;
 import com.google.gson.Gson;
+import okhttp3.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class LandingEmbeddings implements Embeddings {
     private final Gson gson = new Gson();
-    private static final AiServiceCall call = new AiServiceCall();
     private static final Cache<List<String>, List<List<Float>>> cache = EmbeddingConstant.getEmbeddingCache();
+    private final String apiKey;
+    private static final String apiEndpoint = "https://lagi.saasai.top/v1/embeddings";
 
     public LandingEmbeddings(EmbeddingConfig config) {
+        this.apiKey = config.getApi_key();
     }
 
     @Override
     public List<List<Float>> createEmbedding(List<String> docs) {
-        List<List<Float>> result = cache.getIfPresent(docs);
-        if (result != null) {
-            return result;
+        if (!ApikeyUtil.isApiKeyValid(apiKey)) {
+            throw new RuntimeException("Invalid landing embedding API key");
         }
-        OpenAIEmbeddingRequest request = new OpenAIEmbeddingRequest();
-        request.setInput(docs);
-        Object[] params = {gson.toJson(request)};
-        String json = call.callWS(AiServiceInfo.WSKngUrl, "embeddings", params)[0];
-        OpenAIEmbeddingResponse embeddingResponse = gson.fromJson(json, OpenAIEmbeddingResponse.class);
-        result = new ArrayList<>();
-        for (OpenAIEmbeddingResponse.EmbeddingData data : embeddingResponse.getData()) {
-            result.add(data.getEmbedding());
-        }
-        if (!result.isEmpty()) {
-            cache.put(docs, result);
+        List<List<Float>> result = new ArrayList<>();
+        try {
+            OkHttpClient client = new OkHttpClient();
+            MediaType JSON = MediaType.get("application/json; charset=utf-8");
+            OpenAIEmbeddingRequest openAIEmbeddingRequest = new OpenAIEmbeddingRequest();
+            openAIEmbeddingRequest.setInput(docs);
+            String jsonBody = gson.toJson(openAIEmbeddingRequest);
+            RequestBody body = RequestBody.create(jsonBody, JSON);
+            Request request = new Request.Builder()
+                    .url(apiEndpoint)
+                    .post(body)
+                    .build();
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Unexpected code " + response);
+                }
+                LagiEmbeddingResponse embeddingResponse = gson.fromJson(response.body().string(), LagiEmbeddingResponse.class);
+                if (embeddingResponse != null && "success".equals(embeddingResponse.getStatus())) {
+                    result = embeddingResponse.getData();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return result;
     }
