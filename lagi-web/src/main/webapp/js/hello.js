@@ -6,10 +6,10 @@ let models = [
     // {name:"GPT-3.5"}, {name:"GPT-4"}
 ]
 
-let introTable = [
-    [{title:"测试1", content:"内容1"},{title:"测试2", content:"内容2"},],
-    [{title:"测试3", content:"内容3"},{title:"测试4", content:"内容4"},],
-]
+// let introTable = [
+//   [{title:"测试1", content:"内容1"},{title:"测试2", content:"内容2"},],
+//  [{title:"测试3", content:"内容3"},{title:"测试4", content:"内容4"},],
+// ]
 
 let agent_title = 'AI智能体';
 let agent_tools = [
@@ -58,20 +58,20 @@ function loadIntroduces() {
                 return ;
             }
             introTable = [];
-            introTable.push(reponse.data.slice(0, 2)) ;
-            introTable.push(reponse.data.slice(2, 4)) ;
+            // introTable.push(reponse.data.slice(0, 2)) ;
+            // introTable.push(reponse.data.slice(2, 4)) ;
         },
         error: function(){
             // alert("返回失败");
 
         }
-    
+
     });
 }
 
 function initIntroduces() {
     loadIntroduces()
-    let html = '';  
+    let html = '';
     for (let i = 0; i < introTable.length; i++) {
         const row = introTable[i];
         html += `
@@ -128,7 +128,7 @@ function scroll() {
             var d = column.scrollWidth - column.clientWidth;
             $(column).find("p").addClass("scrollDiv");
         }
-    }   
+    }
 }
 
 
@@ -186,18 +186,18 @@ function chooseModel(index) {
 }
 
 function initTopTile() {
-	$.ajax({
-		type : "GET",
-		url : "user/getDefaultTitle",
-		success : function(res) {
-			if (res.status === 'success') {
-				$('#topTitle h1 span').html(res.data);
-			}
-		},
-		error: function(res) {
-			$('#topTitle h1 span').html(topTile);
-		}
-	});
+    $.ajax({
+        type : "GET",
+        url : "user/getDefaultTitle",
+        success : function(res) {
+            if (res.status === 'success') {
+                $('#topTitle h1 span').html(res.data);
+            }
+        },
+        error: function(res) {
+            $('#topTitle h1 span').html(topTile);
+        }
+    });
 }
 
 

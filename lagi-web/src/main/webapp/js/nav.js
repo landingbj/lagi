@@ -12,8 +12,8 @@ let MODEL_TYPE_VIDEOENHANCE = "videoEnhance";
 let MODEL_TYPE_TEXT2VIDEO = "text2Video";
 
 let MODEL_TYPES = [MODEL_TYPE_LLM, MODEL_TYPE_ASR, MODEL_TYPE_TTS, MODEL_TYPE_IMG2TEXT,
-     MODEL_TYPE_IMGENHANCE, MODEL_TYPE_IMGGEN ,MODEL_TYPE_VIDEOTRACK , 
-     MODEL_TYPE_VIDEOENHANCE, MODEL_TYPE_TEXT2VIDEO];
+    MODEL_TYPE_IMGENHANCE, MODEL_TYPE_IMGGEN ,MODEL_TYPE_VIDEOTRACK ,
+    MODEL_TYPE_VIDEOENHANCE, MODEL_TYPE_TEXT2VIDEO];
 
 let promptNavs = [
     {id:1, key:'znwd' , title: '智能问答',exampleImgSrc:'../images/znwd.png',
@@ -107,10 +107,10 @@ let promptNavs = [
         operation:'在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
         group : 2
     },
-    {id:15, key:MEETING_BOOKINGS, title: '会议预订',exampleImgSrc:'',
+    {id:15, key:MEETING_BOOKINGS, title: '会议预定',exampleImgSrc:'',
         exampleVedioSrc:'',
-        prompt:'该功能通过通过语音识别，实现语音会议预订等功能。',
-        operation:'在输入框内输入您的需求（会议预订），然后按照提示完成相关操作。',
+        prompt:'该功能通过通过语音识别，实现语音会议预定等功能。',
+        operation:'在输入框内输入您的需求（会议预定），然后按照提示完成相关操作。',
         group : 2
     }
     // {id:15, title: '数据服务',exampleImgSrc:'../images/sjfw.png',
@@ -189,7 +189,7 @@ function genNavItems(navs) {
             cls = 'tooltip text-gray-500';
             func='maintenance()';
         }
-        
+
         html += `
         <li class="relative z-[15]" ${style} data-projection-id="7" style="opacity: 1; height: auto;">
             <a  onclick=${func} data-tooltip="维护中" class="${cls} flex py-2 px-2 items-center gap-3 relative rounded-md hover:bg-default-100 dark:hover:bg-[#2A2B32] cursor-pointer break-all bg-default-50 hover:pr-4 dark:bg-default-900 group">
@@ -251,9 +251,9 @@ function genModelOptions(modelInfos) {
                 <option value="${modelInfo.model}"  disabled>${modelInfo.model}</option>
                 `;
             }
-            
+
         }
-    }   
+    }
     return res;
 }
 
@@ -273,7 +273,7 @@ function getModeList(type) {
             if(reponse.code !== 0) {
                 return ;
             }
-            res = reponse.data;   
+            res = reponse.data;
         },
         error: function(){
         }
@@ -444,28 +444,28 @@ function getAppListHtml() {
         }
     });
 }
-    function getMeetingBookings() {
-        let html = '';
-        let prompt = '<div>您可以对我说：“帮我预订明天下午3点的东四会议室，会议时长为一个小时,会议有5个人。”'+ '</br>'+
-            '这样我就可以帮您预订会议了！！！</div>';
-        addRobotDialog(prompt  + '</br>');
-        // $.ajax({
-        //     type: "GET",
-        //     contentType: "application/json;charset=utf-8",
-        //     url: "/v1/rpa/getAppList",
-        //     success: function(res) {
-        //         res.data.forEach((app) => {
-        //             let appName = app.appName;
-        //             let appIcon = app.appIcon;
-        //             html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
-        //             SOCIAL_APP_MAP.set(app.appId.toString(), app.appName);
-        //         });
-        //         let prompt = '<div>请问您想接入哪款社交软件</div>';
-        //         addRobotDialog(prompt + html + '</br>');
-        //     },
-        //     error: function(){
-        //         html = '返回失败';
-        //     }
-        // });
+function getMeetingBookings() {
+    let html = '';
+    let prompt = '<div>您可以对我说：“帮我预定明天下午3点的东四会议室，会议时长为一个小时,会议有5个人。”'+ '</br>'+
+        '这样我就可以帮您预定会议了！！！</div>';
+    addRobotDialog(prompt  + '</br>');
+    // $.ajax({
+    //     type: "GET",
+    //     contentType: "application/json;charset=utf-8",
+    //     url: "/v1/rpa/getAppList",
+    //     success: function(res) {
+    //         res.data.forEach((app) => {
+    //             let appName = app.appName;
+    //             let appIcon = app.appIcon;
+    //             html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
+    //             SOCIAL_APP_MAP.set(app.appId.toString(), app.appName);
+    //         });
+    //         let prompt = '<div>请问您想接入哪款社交软件</div>';
+    //         addRobotDialog(prompt + html + '</br>');
+    //     },
+    //     error: function(){
+    //         html = '返回失败';
+    //     }
+    // });
 
-    }
+}

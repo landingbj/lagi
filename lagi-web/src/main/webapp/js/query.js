@@ -127,7 +127,7 @@ function bookMeetingPrompt(action, prompt) {
         action.estimatedNumber = getTotalPeopleCount(prompt)
     }
 
-let outdate = {}
+    let outdate = {}
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
@@ -149,8 +149,9 @@ let outdate = {}
                     MeetingBookingsEntity = h5;
                     outdate = MeetingBookingsEntity;
                     outdate.meetingDate = outdate.date
+                    outdate.startTime = outdate.start_time
                     if (outdate === undefined || outdate === { skillCode: "1"} || outdate === {}) {
-                        let prompt1 = '<div>您可以对我说：“帮我预订明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预订会议了！！！</div>';
+                        let prompt1 = '<div>您可以对我说：“帮我预定明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预定会议了！！！</div>';
                         addRobotDialog( prompt1);
                         unlockInput();
                     } else if (outdate.estimatedNumber === undefined || outdate.estimatedNumber <= 0) {
@@ -174,13 +175,13 @@ let outdate = {}
                         unlockInput();
 
                     }  else if (outdate.duration > 120) {
-                        addRobotDialog( '抱歉，您预订的会议时间过长，会议时长不超过2小时（您可以告诉我：修改时长为半个小时，一个小时，两个小时...）</br>');
+                        addRobotDialog( '抱歉，您预定的会议时间过长，会议时长不超过2小时（您可以告诉我：修改时长为半个小时，一个小时，两个小时...）</br>');
                         unlockInput();
 
                     } else {
-                        if (prompt==='确认预订'){
-                            let html = '<div>' + '好的，已帮您预订了：' + '</div></br>';
-                            html += '<div>预订人id：' + JSON.stringify(outdate.userIde) + '</div></br>';
+                        if (prompt==='确定'){
+                            let html = '<div>' + '好的，已帮您预定了：' + '</div></br>';
+                            html += '<div>预定人id：' + JSON.stringify(outdate.userIde) + '</div></br>';
                             html += '<div>会议地点：' + JSON.stringify(outdate.location) + '</div></br>';
                             html += '<div>会议开始日期：' + JSON.stringify(outdate.date) + '</div></br>';
                             html += '<div>会议开始时间：' + JSON.stringify(outdate.start_time) + '</div></br>';
@@ -197,15 +198,15 @@ let outdate = {}
                             html += '<div>会议开始时间：' + JSON.stringify(outdate.start_time) + '</div></br>';
                             html += '<div>会议时长：' + JSON.stringify(outdate.duration) + '</div></br>';
                             html += '<div>会议人数：' + JSON.stringify(outdate.estimatedNumber) + '</div></br>';
-                            html += '<div>预订人：' + JSON.stringify(outdate.userIde) + '</div></br>';
-                            html += '<div>' + '您确认预订吗？（您可以告诉我：‘确认预订’ 或 ‘修改预订...’）' + '</div></br>';
+                            html += '<div>预定人：' + JSON.stringify(outdate.userIde) + '</div></br>';
+                            html += '<div>' + '您确认预定吗？（您可以告诉我：‘确定’ 或 ‘修改预定...’）' + '</div></br>';
                             addRobotDialog(html);
                             unlockInput();
 
                         }
                     }
                 }else {
-                    let prompt1 = '<div>您可以对我说：“帮我预订明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预订会议了！！！</div>';
+                    let prompt1 = '<div>您可以对我说：“帮我预定明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预定会议了！！！</div>';
                     addRobotDialog( prompt1);
                     unlockInput();
 
