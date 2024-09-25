@@ -14,7 +14,7 @@ You can choose to import the jar directly, or use maven to import dependencies a
 
 If you choose to import the jar directly, you only need to complete the following two steps to start the method call.
 
-- 1.Download jar: To call the relevant functions, you need to download the jar package of Lag[i].（[Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）
+- 1.Download jar: To call the relevant functions, you need to download the jar package of Lag[i].（[Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)）
 
 - 2.Import jar: To call related functions, you need to put the jar in your lib directory.
 
@@ -503,7 +503,7 @@ public void Test() {
 You can use lag[i] (Landing AGI) directly by importing JAR packages to turn a traditional business into a large model business.
 
 1. **Download JAR**：
-  - The lag[i] (Landing AGI) JAR package can be downloaded directly（[Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）.
+  - The lag[i] (Landing AGI) JAR package can be downloaded directly（[Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)）.
 
 2. **Importing JAR**：
   - Copy the downloaded JAR package to your project's lib directory.
@@ -554,8 +554,11 @@ In this way, you can integrate lag[i] (Landing AGI) directly into your project a
 - **Eclipse or IDEA cannot recognize the JAR package**：Make sure the JAR package is not corrupted and that its path is correct in the Eclipse or IntelliJ build path.
 - **Dependency conflict**：If you run into a dependency conflict, you may need to adjust your project's build path manually or use your IDE's dependency resolution feature to resolve the conflict.
 - **Note**：These steps provide a general framework, and the specific integration steps may vary depending on the complexity of the project and the version of the IDE.
+
 ### Option 3: Microservices docker
+
 Microservices Docker integration is a popular approach that allows you to package your application into a deployable container. You can introduce a lag[i] (Landing AGI) in Docker and integrate it into your own project. Here are some basic steps:   
+
 **1. Prepare lag[i] (Landing AGI) project:**
 - Make sure lag[i] (Landing AGI) is built correctly.
 - Use a build tool like Maven to package lag[i] (Landing AGI) into a WAR file.

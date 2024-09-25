@@ -14,7 +14,7 @@
 
 如您选择直接导入jar，您只需完成以下两步即可开始方法调用。
 
-- 1.下载jar：调用相关功能需下载Lag[i] (联基) 的jar包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）。
+- 1.下载jar：调用相关功能需下载Lag[i] (联基) 的jar包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)）。
 
 - 2.导入jar：调用相关功能需将jar放入您的lib目录下。
 
@@ -503,7 +503,7 @@ public void Test() {
 您可以直接通过import JAR包的方式使用lag[i] (联基),将一个传统的业务转换为大模型的业务。
 
 1. **下载JAR包**：
-    - 可直接下载lag[i] (联基) JAR包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）。
+    - 可直接下载lag[i] (联基) JAR包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)）。
 
 2. **导入JAR包**：
     - 将下载的JAR包复制到你的项目的lib目录中。
@@ -554,8 +554,11 @@ public void Test() {
 - **Eclipse或IDEA无法识别JAR包**：确保JAR包没有损坏，并且它的路径在Eclipse或IntelliJ的构建路径中是正确的。
 - **依赖冲突**：如果你遇到了依赖冲突，可能需要手动调整项目的构建路径或者使用IDE的依赖解析功能来解决冲突。
 - **注意**：这些步骤提供了一个大致的框架，具体的集成步骤可能会根据项目的复杂性和IDE的版本有所不同。
+
 ### 方式三:微服务docker
+
 微服务Docker集成是一种流行的方法，它允许你将你的应用打包成一个可部署的容器。你可以在Docker中引入一个lag[i] (联基)，并将它集成到自己的项目中。以下是一些基本步骤：  
+
 **1.准备lag[i] (联基) 工程：**
 - 确保 lag[i] (联基) 工程的构建正确无误。
 - 使用Maven等构建工具将 lag[i] (联基) 打包成 WAR 文件。

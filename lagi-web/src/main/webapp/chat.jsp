@@ -349,7 +349,7 @@
                       &nbsp;&nbsp;&nbsp;&nbsp;
                       联系邮箱: 
                       <a href="mailto:service@landingbj.com" style="text-decoration: none;">service@landingbj.com</a>
-                      &nbsp;&nbsp;&nbsp;&nbsp;联系电话: 027-87659116 &nbsp;&nbsp;&nbsp;&nbsp;<div>一种通用人工智能的实现验证</div>
+                      &nbsp;&nbsp;&nbsp;&nbsp;联系电话: 027-87659116 &nbsp;&nbsp;&nbsp;&nbsp;<div>内容由AI生成 &nbsp 一种通用人工智能的实现验证</div>
                     </div>
                   </div>
                   <!-- *********************** 底部end******************************** -->
