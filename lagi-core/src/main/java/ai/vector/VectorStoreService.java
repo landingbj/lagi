@@ -289,23 +289,34 @@ public class VectorStoreService {
         return extendedIndexSearchData;
     }
 
+    public List<IndexSearchData> searchByIds(List<String> ids, String category) {
+        List<IndexRecord> fetch = fetch(ids, category);
+        if(fetch == null) {
+            return Collections.emptyList();
+        }
+        List<IndexSearchData> indexSearchDataList = fetch.stream().map(this::toIndexSearchData).collect(Collectors.toList());
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, category)))
+                .collect(Collectors.toList());
+        return futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            }catch (Exception e) {
+                log.error("indexData get error", e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
     public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
                                         Map<String, String> where, String category) {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
         queryCondition.setN(Math.max(similarity_top_k, 500));
-//        queryCondition.setN(similarity_top_k);
         queryCondition.setWhere(where);
         List<IndexRecord> indexRecords = this.query(queryCondition, category);
         result = indexRecords.stream().filter(indexRecord -> indexRecord.getDistance() <= similarity_cutoff).limit(similarity_top_k).map(this::toIndexSearchData).collect(Collectors.toList());
-//        for (IndexRecord indexRecord : indexRecords) {
-//            if (indexRecord.getDistance() > similarity_cutoff) {
-//                continue;
-//            }
-//            IndexSearchData indexSearchData = toIndexSearchData(indexRecord);
-//            result.add(indexSearchData);
-//        }
         return result;
     }
 

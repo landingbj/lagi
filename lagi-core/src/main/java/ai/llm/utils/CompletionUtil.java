@@ -18,7 +18,7 @@ public class CompletionUtil {
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
 
 
-    private static final int MAX_INPUT;
+    public static final int MAX_INPUT;
 
     static {
         Integer contextLength = ContextLoader.configuration.getContextLength();

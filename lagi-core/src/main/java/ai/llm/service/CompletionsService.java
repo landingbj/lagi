@@ -215,16 +215,18 @@ public class CompletionsService implements ChatCompletion{
         ChatCompletionUtil.setLastMessage(request, prompt);
     }
 
-    public GetRagContext getRagContext(List<IndexSearchData> indexSearchDataList) {
+    public GetRagContext getRagContext(List<IndexSearchData> indexSearchDataList, int maxInput) {
         if (indexSearchDataList.isEmpty()) {
             return null;
         }
         List<String> filePaths = new ArrayList<>();
         List<String> filenames = new ArrayList<>();
+        List<String> chunkIds = new ArrayList<>();
         String context = indexSearchDataList.get(0).getText();
         if(indexSearchDataList.get(0).getFilepath() != null && indexSearchDataList.get(0).getFilename() != null) {
             filePaths.addAll(indexSearchDataList.get(0).getFilepath());
             filenames.addAll(indexSearchDataList.get(0).getFilename());
+            chunkIds.add(indexSearchDataList.get(0).getId());
         }
         double firstDistance = indexSearchDataList.get(0).getDistance();
         double lastDistance = firstDistance;
@@ -238,10 +240,14 @@ public class CompletionsService implements ChatCompletion{
                     if(data.getFilepath() != null && data.getFilename() != null) {
                         filePaths.addAll(data.getFilepath());
                         filenames.addAll(data.getFilename());
+                        chunkIds.add(data.getId());
                     }
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
+                    if(context.length() > maxInput) {
+                        break;
+                    }
                 } else {
                     break;
                 }
@@ -252,10 +258,14 @@ public class CompletionsService implements ChatCompletion{
                     if(data.getFilepath() != null && data.getFilename() != null) {
                         filePaths.addAll(data.getFilepath());
                         filenames.addAll(data.getFilename());
+                        chunkIds.add(data.getId());
                     }
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
+                    if(context.length() > maxInput) {
+                        break;
+                    }
                 } else {
                     break;
                 }
@@ -270,6 +280,10 @@ public class CompletionsService implements ChatCompletion{
                     if(data.getFilepath() != null && data.getFilename() != null) {
                         filePaths.addAll(data.getFilepath());
                         filenames.addAll(data.getFilename());
+                        chunkIds.add(data.getId());
+                    }
+                    if(context.length() > maxInput) {
+                        break;
                     }
                 } else {
                     break;
@@ -280,6 +294,7 @@ public class CompletionsService implements ChatCompletion{
                 .filenames(filenames)
                 .filePaths(filePaths)
                 .context(context)
+                .chunkIds(chunkIds)
                 .build();
     }
 

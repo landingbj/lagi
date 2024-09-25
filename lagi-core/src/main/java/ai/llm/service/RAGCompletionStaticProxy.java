@@ -124,7 +124,7 @@ public class RAGCompletionStaticProxy implements ChatCompletion{
 
     private GetRagContext getGetRagContext(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchData) {
         GetRagContext context;
-        context = completionsService.getRagContext(indexSearchData);
+        context = completionsService.getRagContext(indexSearchData, CompletionUtil.MAX_INPUT);
         String contextStr = CompletionUtil.truncate(context.getContext());
         context.setContext(contextStr);
         completionsService.addVectorDBContext(chatCompletionRequest, contextStr);

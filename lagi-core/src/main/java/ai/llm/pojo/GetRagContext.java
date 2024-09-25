@@ -13,4 +13,5 @@ public class GetRagContext {
     private String context;
     private List<String> filePaths;
     private List<String> filenames;
+    private List<String> chunkIds;
 }

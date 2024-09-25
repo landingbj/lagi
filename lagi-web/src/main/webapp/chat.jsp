@@ -26,6 +26,11 @@
 
 
   <body class="antialiased">
+    <div id="pdfMask" class="pdf-mask" >
+      <div class="pdf-box">
+        <img src="" style="width: 100%; height: auto"/>
+      </div>
+    </div>
     <div id="__next">
       <script>!function () { try { var d = document.documentElement, c = d.classList; c.remove('light', 'dark'); var e = localStorage.getItem('theme'); if ('system' === e || (!e && true)) { var t = '(prefers-color-scheme: dark)', m = window.matchMedia(t); if (m.media !== t || m.matches) { d.style.colorScheme = 'dark'; c.add('dark') } else { d.style.colorScheme = 'light'; c.add('light') } } else if (e) { c.add(e || '') } if (e === 'light' || e === 'dark') d.style.colorScheme = e } catch (e) { } }()</script>
       <div class="overflow-hidden w-full h-full relative flex z-0">

@@ -258,4 +258,13 @@
         <url-pattern>/ocr/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>pdf</servlet-name>
+        <servlet-class>ai.servlet.api.PdfPreviewServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>pdf</servlet-name>
+        <url-pattern>/pdf/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
