@@ -557,7 +557,23 @@ In this way, you can integrate lag[i] (Landing AGI) directly into your project a
 
 ### Option 3: Microservices docker
 
-Microservices Docker integration is a popular approach that allows you to package your application into a deployable container. You can introduce a lag[i] (Landing AGI) in Docker and integrate it into your own project. Here are some basic steps:   
+Microservices Docker integration is a popular approach that allows you to package your application into a deployable container. In order to make it easier to use Lag[i], we provide a packaged docker image that you can use directly.
+
+**1.Pull Lag[i] (Landing AGI) Docker Image：**
+
+- Pull Command：
+```text
+docker pull yinruoxi666/lagi-web:1.0.0
+```
+
+**2.Start Container：**
+
+- Start Container Command
+```text
+docker run -d --name lagi-web -p 8080:8080 yinruoxi666/lagi-web:1.0.0
+```
+
+**You can also introduce a Lag[i] (Landing AGI) in your own Docker and integrate it into your own projects. Here are some basic steps:**
 
 **1. Prepare lag[i] (Landing AGI) project:**
 - Make sure lag[i] (Landing AGI) is built correctly.

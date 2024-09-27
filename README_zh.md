@@ -98,9 +98,14 @@ Lag[i] (联基) 项目还提供了多个RESTful API接口，方便用户将AI服
 
 感谢您对Lag[i] (联基) 的支持!为了帮助您快速轻松地上手，我们提供了预先打包的Lag[i]应用程序，您可以根据需求选择合适的版本，直接下载既可立即使用。
 
-以下是您可以直接下载使用的资源列表：
+以下是您可以直接下载或拉取使用的资源列表：
 
 1. **Jar File**
     - 文件名称：lagi-core-1.0.2-jar-with-dependencies.jar
     - 文件大小：250.5MB
     - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)
+
+2. **Docker镜像**
+    - 镜像名称：yinruoxi666/lagi-web:1.0.0
+    - 拉取命令：`docker pull yinruoxi666/lagi-web:1.0.0`
+    - 容器启动命令：`docker run -d --name lagi-web -p 8080:8080 yinruoxi666/lagi-web:1.0.0`

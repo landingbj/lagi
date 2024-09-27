@@ -98,9 +98,14 @@ To allow users to intuitively experience the powerful functionality and convenie
 
 Thank you for your support of Lag[i] ! To help you get started quickly and easily, we have provided a pre-packaged Lag[i] application that is ready for immediate use.
 
-Here is a list of available downloads:
+Below is a list of resources that you can download or pull directly to use:
 
 1. **Jar File**
     - File Name: lagi-core-1.0.2-jar-with-dependencies.jar
     - File Size: 250.5MB
     - Download Link: [Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)
+
+2. **Docker Image**
+    - Image Name: yinruoxi666/lagi-web:1.0.0
+    - Pull Command: `docker pull yinruoxi666/lagi-web:1.0.0`
+    - Start Container Command: `docker run -d --name lagi-web -p 8080:8080 yinruoxi666/lagi-web:1.0.0`
