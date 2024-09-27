@@ -200,7 +200,10 @@ public class VectorApiServlet extends BaseServlet {
                         if(atomicInteger.get() != 1) {
                             return;
                         }
-                        instance.putToVectorLinkCache(indexSearchData.getId(), indexSearchData);
+                        instance.putVectorCache(indexSearchData.getId(), indexSearchData);
+                        if(indexSearchData.getParentId() != null) {
+                            instance.putVectorChildCache(indexSearchData.getParentId(), indexSearchData);
+                        }
                     });
                     atomicInteger.set(2);
                     log.error("finished preload category {} . ", preloadRequest.getCategory());

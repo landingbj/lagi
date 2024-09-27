@@ -279,14 +279,18 @@ public class VectorStoreService {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
+//    private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {
+//        IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
+//        if (extendedIndexSearchData == null) {
+//            extendedIndexSearchData = extendText(indexSearchData, category);
+//            vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
+//        }
+//        extendedIndexSearchData.setDistance(indexSearchData.getDistance());
+//        return extendedIndexSearchData;
+//    }
+
     private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {
-        IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
-        if (extendedIndexSearchData == null) {
-            extendedIndexSearchData = extendText(indexSearchData, category);
-            vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
-        }
-        extendedIndexSearchData.setDistance(indexSearchData.getDistance());
-        return extendedIndexSearchData;
+        return extendText(indexSearchData, category);
     }
 
     public List<IndexSearchData> searchByIds(List<String> ids, String category) {
@@ -353,13 +357,23 @@ public class VectorStoreService {
         if (parentId == null) {
             return null;
         }
-        return toIndexSearchData(this.fetch(parentId, category));
+        IndexSearchData cache = vectorCache.getVectorCache(parentId);
+        if(cache != null) {
+            return cache;
+        }
+        IndexSearchData indexSearchData = toIndexSearchData(this.fetch(parentId, category));
+        vectorCache.putVectorCache(parentId, indexSearchData);
+        return indexSearchData;
     }
 
     public IndexSearchData getChildIndex(String parentId, String category) {
         IndexSearchData result = null;
         if (parentId == null) {
             return null;
+        }
+        IndexSearchData cache = vectorCache.getVectorChildCache(parentId);
+        if(cache != null) {
+            return cache;
         }
         Map<String, String> where = new HashMap<>();
         where.put("parent_id", parentId);
@@ -370,6 +384,7 @@ public class VectorStoreService {
         if (indexRecords != null && !indexRecords.isEmpty()) {
             result = toIndexSearchData(indexRecords.get(0));
         }
+        vectorCache.putVectorChildCache(parentId, result);
         return result;
     }
 

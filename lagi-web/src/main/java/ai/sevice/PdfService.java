@@ -1,10 +1,11 @@
 package ai.sevice;
 
-import ai.utils.PDFTextExtractor;
+import ai.common.pojo.TextBlock;
 import ai.utils.PdfUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 
 public class PdfService {
@@ -12,14 +13,18 @@ public class PdfService {
 
     private static final Logger log = LoggerFactory.getLogger(PdfService.class);
 
-    public List<PDFTextExtractor.TextBlock> searchTextPCoordinate(String pdfPath, String searchWord) {
+    public List<TextBlock> searchTextPCoordinate(String pdfPath, String searchWord) {
         searchWord = searchWord.replaceAll("\\s+", "");
-        return PdfUtil.getWordsCoordinateByPath(pdfPath, searchWord);
+        List<List<TextBlock>> lists = PdfUtil.searchFromCache(pdfPath, searchWord, false);
+        if(lists.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return lists.get(0);
     }
 
-    public List<List<PDFTextExtractor.TextBlock>> searchAllTextPCoordinate(String pdfPath, String searchWord) {
+    public List<List<TextBlock>> searchAllTextPCoordinate(String pdfPath, String searchWord) {
         searchWord = searchWord.replaceAll("\\s+", "");
-        return PdfUtil.getAllWordsCoordinateByPath(pdfPath, searchWord);
+        return PdfUtil.searchFromCache(pdfPath, searchWord, true);
     }
 
     public String cropPageImage(String pdfPath, String pageDir, int pageIndex, int x0, int y0, int x1, int y1) {

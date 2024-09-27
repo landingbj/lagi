@@ -271,15 +271,25 @@
                             </ul>
                           </div>
                           </div>
+                          <div id = "zsk-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
+                            <div id="zsk-list" class="absolute left-2 z-50 agent-pannel w-32 "  >
+                              <!-- <div id = "zsk-head" class="agent-head  pt-2 pb-1 text-center"></div> -->
+                              <ul id = "zsk-select" class="pb-2">
+                              </ul>
+                            </div>
+                          </div>
 
-                        <div class="flex-col-reverse w-10 m-0 relative">
+                        <div class="flex-col-reverse w-28 m-0 relative">
                           
                           <div  class="absolute top-0  ml-2" style="display: none;" id = "textareaScretch"  onclick="showTextareaMask()">
                             <svg  style="width: 24px;height: 24px;" t="1703232823101" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6337" width="200" height="200"><path d="M838.116 732.779 877.7 693.195 511.979 327.549 146.3 693.195 185.883 732.779 512.003 406.652Z" p-id="6338" fill="#1296db"></path></svg>
                             <!-- 向下 -->
                             <!-- <svg t="1703233241892" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg> -->
                           </div>
-                          <div id="voiceIcon" class="absolute bottom-0 ml-2">
+                          <div id="zsk" class="absolute bottom-1.5 ml-2" style="width: 24px;height: 24px; margin-bottom: 5px;">
+                            <img   src="images/zsk.png" />
+                          </div>
+                          <div id="voiceIcon" class="absolute bottom-0 ml-12">
                             <svg id="voiceSvg"
                               style="width: 24px;height: 24px; margin-bottom: 5px;" t="1694870288752" class="icon" viewBox="0 0 1024 1024"
                               version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4046" width="200" height="200">

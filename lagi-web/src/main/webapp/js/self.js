@@ -656,3 +656,16 @@ agentButton.addEventListener("click", function (e) {
     });
     e.stopPropagation();
 });
+
+
+const zsk = document.getElementById("zsk");
+zsk.addEventListener("click", function (e) {
+    $('#zsk-container').toggle();
+    $(document).one("click", function(){
+        $("#zsk-container").hide();
+    });
+    e.stopPropagation();
+});
+
+
+

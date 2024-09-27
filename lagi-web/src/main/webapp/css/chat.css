@@ -235,3 +235,35 @@ pre .key {
     background-color: #fff;
     margin:80px auto;
 }
+
+
+
+.loading-box {
+	display: inline-block;
+	text-align: center;
+	font-size: 12px;
+	width: 120px;
+	height: 16px;
+	margin: 0px auto;
+}
+
+.loading-box>span {
+	animation: loader 1000ms infinite linear;
+	border-radius: 100%;
+	border: 3px solid #2dbb55;
+	border-left-color: transparent;
+	color: transparent;
+	display: inline-block;
+	line-height: 1.2;
+	width: 16px;
+	height: 16px;
+}
+@keyframes loader {
+	0% {  transform: rotate(0deg);  }
+	100% {transform: rotate(360deg);}
+}
+
+.agent-pannel .activate{
+	background-color: #07a4ff;
+	color: rgb(14, 13, 13);
+}

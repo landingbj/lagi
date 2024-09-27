@@ -2,7 +2,7 @@ window.category = "";
 
 window.finger = null;
 
-
+var rag = true;
 
 window.onload = function () {
     window.category = getCookie("category");
@@ -16,6 +16,29 @@ window.onload = function () {
     initHelloPage();
     loadTheme();
     showPromptNav();
+
+    let zsk_list = $("#zsk-select");
+    zsk_list.append(`<li data-value="${window.category}" class="activate">&nbsp; &nbsp;京能</li>
+    <li data-value  ="defualt">&nbsp;&nbsp; 不使用知识库</li>`)
+    zsk_list.click(function (e, a) {
+        let konwn = $(e.target).data('value');
+        if(konwn == 'defualt') {
+            rag = false;
+        } else {
+            rag = true;
+        }
+        window.category = konwn;
+        $(this).children('li').each(function(i, el){
+            let k = $(el);
+            if(el == e.target) {
+                k.addClass('activate');
+            } else {
+                k.removeClass('activate');
+            }
+        })
+    });
+
+
     Fingerprint2.get(function(components) {
         const values = components.map(function(component,index) {
             if (index === 0) { //把微信浏览器里UA的wifi或4G等网络替换成空,不然切换网络会ID不一样

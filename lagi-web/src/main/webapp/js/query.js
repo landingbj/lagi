@@ -267,6 +267,7 @@ const CONVERSATION_CONTEXT = [];
 function getTextResult(question, robootAnswerJq, conversation) {
     var result = '';
     var paras = {
+        "rag": rag,
         "category": window.category,
         "messages": CONVERSATION_CONTEXT.concat([
             {"role": "user", "content": question}
@@ -462,11 +463,12 @@ function streamOutput(paras, question, robootAnswerJq) {
                         ${fullText} <br>
                         ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
-                        ${chatMessage.context || chatMessage.contextChunkIds ?  `<div style="float: right;"><a style="cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
+                        ${chatMessage.context || chatMessage.contextChunkIds ?  `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
                         // `;
                 if(chatMessage.contextChunkIds) {
                     if(chatMessage.contextChunkIds instanceof Array) {
                         // filterChunk(chatMessage.filename, chatMessage.filepath, chatMessage.contextChunkIds, fullText, robootAnswerJq);
+                        // result += `<div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><br>`;
                         getCropRect(chatMessage.contextChunkIds, fullText, robootAnswerJq);
                     }
                 }
@@ -507,13 +509,16 @@ async function filterChunk(filenames, filePaths, contextChunkIds, result, jqObj)
             url: "pdf/filterChunk",
             data: JSON.stringify(params),
             success: function (res) {
+                jqObj.children('.loading-box').remove();
                 if(res.code !== 0) {
                     console.log(res);
+                    jqObj.apppend(`<div style="float: left; color:red;">未获取到文件截图</div>`);
                     return;
                 } 
                 let data = res.data;
                 if(!(data instanceof Array)) {
                     console.log(data);
+                    jqObj.apppend(`<div style="float: left;">未获取到截图</div>`);
                     return ;
                 }
                 let html = `<div  style="float: left;">${(function(){
@@ -556,19 +561,24 @@ async function getCropRect(contextChunkIds, result, jqObj) {
             url: "pdf/cropRect",
             data: JSON.stringify(params),
             success: function (res) {
+                jqObj.children('.context-box').children('.loading-box').remove();
+                let context_jq =  jqObj.children('.context-box');
                 if(res.code !== 0) {
                     console.log(res);
+                    context_jq.apppend(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
                     return;
                 } 
                 let data = res.data;
                 if(!(data instanceof Array)) {
+                    context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     console.log(data);
                     return ;
                 }
                 if(data.length == 0) {
+                    context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     return ;
                 }
-                let html = `<div  style="float: left;"><span>内容定位:</span>${(function(){
+                let html = `<div class="context-link" style="float: left;"><span>内容定位:</span>${(function(){
                     let h = '';
                     for(let i = 0; i < data.length; i++) {
                         let cropData =  data[i];
@@ -588,7 +598,7 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                     }
                     return h;
                 })()}</div><br>`;
-                jqObj.append(html);
+                context_jq.append(html);
             }
         });
     });

@@ -1,14 +1,18 @@
 package ai.utils;
 
+import ai.common.pojo.TextBlock;
+import ai.vector.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -21,6 +25,10 @@ public class PdfUtil {
     private static final String SOFFICE_PATH = "D:\\Tools\\LibreOffice\\program\\soffice.exe";
     private static final int ZOOM_SIZE = 1;
     private static final float DPI = 300;
+
+    public static final LRUCache<String, String> pdfStrCache = new LRUCache<>(100);
+    public static final LRUCache<String, List<TextBlock>> pdfTextBlockCache = new LRUCache<>(100);
+    public static ReentrantLock lock = new ReentrantLock();
 
     public static String convertToPdf(String docPath, String pdfPath) {
         try {
@@ -62,16 +70,26 @@ public class PdfUtil {
 
 
 
-    public static List<PDFTextExtractor.TextBlock> getWordsCoordinateByPath(String pdfPath, String searchWord) {
-        List<PDFTextExtractor.TextBlock>  data = new ArrayList<>();
+    public static List<TextBlock> getWordsCoordinateByPath(String pdfPath, String searchWord) {
+        List<TextBlock>  data = new ArrayList<>();
         try {
             PDDocument document = PDDocument.load(new File(pdfPath));
             PDFTextExtractor extractor = new PDFTextExtractor(searchWord, false);
+            PDFTextStripper pdfTextStripper = new PDFTextStripper();
             extractor.setSortByPosition(true);
-            // 提取每一页的文本块
             for (int i = 0; i < document.getNumberOfPages(); i++) {
                 extractor.setStartPage(i + 1);
                 extractor.setEndPage(i + 1);
+                pdfTextStripper.setStartPage(i+1);
+                pdfTextStripper.setEndPage(i+1);
+                String key = pdfPath + "-" + i;
+                String text = pdfStrCache.get(key);
+                if(text == null) {
+                    text = pdfTextStripper.getText(document).replaceAll("\\s+", "");
+                    pdfStrCache.put(key, text);
+                }
+                extractor.setCursorPoint(0);
+                extractor.setCurrentPageText(text);
                 extractor.getText(document);
                 boolean done = extractor.getDone();
                 if(done) {
@@ -87,15 +105,26 @@ public class PdfUtil {
         return data;
     }
 
-    public static List<List<PDFTextExtractor.TextBlock>> getAllWordsCoordinateByPath(String pdfPath, String searchWord) {
-        List<List<PDFTextExtractor.TextBlock>>  data = new ArrayList<>();
+    public static List<List<TextBlock>> getAllWordsCoordinateByPath(String pdfPath, String searchWord) {
+        List<List<TextBlock>>  data = new ArrayList<>();
         try {
             PDDocument document = PDDocument.load(new File(pdfPath));
             PDFTextExtractor extractor = new PDFTextExtractor(searchWord, true);
+            PDFTextStripper pdfTextStripper = new PDFTextStripper();
             extractor.setSortByPosition(true);
             for (int i = 0; i < document.getNumberOfPages(); i++) {
                 extractor.setStartPage(i + 1);
                 extractor.setEndPage(i + 1);
+                pdfTextStripper.setStartPage(i+1);
+                pdfTextStripper.setEndPage(i+1);
+                String key = pdfPath + "-" + i;
+                String text = pdfStrCache.get(key);
+                if(text == null) {
+                    text =pdfTextStripper.getText(document).replaceAll("\\s+", "");
+                    pdfStrCache.put(key, text);
+                }
+                extractor.setCursorPoint(0);
+                extractor.setCurrentPageText(text);
                 extractor.getText(document);
             }
             document.close();
@@ -106,7 +135,7 @@ public class PdfUtil {
         return data;
     }
 
-    private static List<List<Float>> convert(List<PDFTextExtractor.TextBlock> blocks) {
+    private static List<List<Float>> convert(List<TextBlock> blocks) {
         return blocks.stream().map(block -> {
             float pageNo = (float) block.getPageNo();
             List<Float> list = new ArrayList<>();
@@ -117,78 +146,77 @@ public class PdfUtil {
         }).collect(Collectors.toList());
     }
 
+    public static List<List<TextBlock>> searchFromCache(String path, String searchWord, boolean isAll) {
+        List<List<TextBlock>> res = new ArrayList<>();
+        List<TextBlock> textBlockFromCache = getTextBlockFromCache(path);
+        StringBuilder read = new StringBuilder();
+        List<Integer> counts = new ArrayList<>();
+        for (int i = 0; i < textBlockFromCache.size(); i++) {
+            String text = textBlockFromCache.get(i).getText();
+            read.append(text);
+            counts.add(text.length());
+            if(read.toString().contains(searchWord)) {
+                int countLen = 0;
+                int j = counts.size() - 1;
+                int m = 0;
+                for (; j >= 0; j--) {
+                    countLen += counts.get(j);
+                    m ++;
+                    if(countLen >= searchWord.length()) {
+                        break;
+                    }
+                }
+                List<TextBlock> textBlocks = textBlockFromCache.subList(i + 1 - m, i + 1);
+                res.add(textBlocks);
+                counts.clear();
+                read = new StringBuilder();
+                if(!isAll) {
+                    break;
+                }
+            }
+        }
+        return res;
+    }
 
-//    public static List<FileChunkResponse.Document> extractText(String pdfPath, int chunkSize) {
-//        try {
-//            PDDocument document = PDDocument.load(new File(pdfPath));
-//            PDFTextExtractor extractor = new PDFTextExtractor();
-//            extractor.setSortByPosition(true);
-//            List<FileChunkResponse.Document> data = new ArrayList<>();
-//            // 提取每一页的文本块
-//            for (int i = 0; i < document.getNumberOfPages(); i++) {
-//                extractor.setStartPage(i + 1);
-//                extractor.setEndPage(i + 1);
-//                extractor.getText(document);
-//                float x0 = Float.MAX_VALUE, y0 = Float.MAX_VALUE, x1 = Float.MIN_VALUE, y1 = Float.MIN_VALUE;
-//                FileChunkResponse.Document tempDoc = FileChunkResponse.Document.builder()
-//                        .pageNo(i+1)
-//                        .build();
-//                StringBuilder tempSb = new StringBuilder();
-//                int currentChunkSize = 0;
-//                boolean addBlank = false;
-//                boolean isStart = true;
-//                for (int j = 0; j < extractor.getTextBlocks().size() - 1; j++) {
-//                    PDFTextExtractor.TextBlock block = extractor.getTextBlocks().get(j);
-//                    System.out.println(block);
-//                    x0 = Math.min(block.getX(), x0);
-//                    y0 = Math.min(block.getY(), y0);
-//                    x1 = Math.max(block.getX() + block.getWidth(), x1);
-//                    y1 = Math.max(block.getY() + block.getHeight(), y1);
-//                    if(currentChunkSize < chunkSize) {
-//                        boolean isBlockBlank = block.getText().matches("\\s");
-//                        if(addBlank && isBlockBlank) {
-//                            continue;
-//                        }
-//                        addBlank = isBlockBlank;
-//                        tempSb.append(block.getText());
-//                        currentChunkSize++;
-//                    } else  {
-//                        tempDoc.setText(tempSb.toString());
-//                        tempDoc.setRect(Lists.newArrayList(x0, y0, x1, y1));
-//                        data.add(tempDoc);
-//                        if(isStart) {
-//                            tempDoc.setIsStart(true);
-//                            isStart = false;
-//                        }
-//                        tempDoc = FileChunkResponse.Document.builder()
-//                                .pageNo(block.getPageNo())
-//                                .build();
-//                        tempSb = new StringBuilder();
-//                        tempSb.append(block.getText());
-//                        currentChunkSize = block.getText().length();
-//                        x0 = Math.min(block.getX(), Float.MAX_VALUE);
-//                        y0 = Math.min(block.getY(), Float.MAX_VALUE);
-//                        x1 = Math.max(block.getX() + block.getWidth(), Float.MIN_VALUE);
-//                        y1 = Math.max(block.getY() + block.getHeight(), Float.MIN_VALUE);
-//                    }
-//                }
-//                tempSb.append(extractor.getTextBlocks().get(extractor.getTextBlocks().size() -1).getText());
-//                tempDoc.setText(tempSb.toString());
-//                tempDoc.setRect(Lists.newArrayList(x0, y0, x1, y1));
-//                data.add(tempDoc);
-//                if(isStart) {
-//                    tempDoc.setIsStart(true);
-//                }
-//                extractor.getTextBlocks().clear();
-//            }
-//            document.close();
-//            return data;
-//        } catch (IOException e) {
-//            log.error("Error reading PDF file: {}", e.getMessage());
-//        }
-//        return Collections.emptyList();
-//    }
+    public static List<TextBlock> getTextBlockFromCache(String pdfPath){
+        List<TextBlock>  textBlocks = new ArrayList<>();
+        if(pdfTextBlockCache.containsKey(pdfPath)) {
+            return pdfTextBlockCache.get(pdfPath);
+        }
+        try {
+            boolean b = lock.tryLock(30, TimeUnit.SECONDS);
+            if(!b) {
+                throw new RuntimeException("lock timeout");
+            }
+            if(pdfTextBlockCache.containsKey(pdfPath)) {
+                return pdfTextBlockCache.get(pdfPath);
+            }
+            FileService fileService = new FileService();
+            try {
+                File file = new File(pdfPath);
+                PDDocument document = PDDocument.load(file);
+                String fileContent = fileService.getFileContent(file);
+                PDFTextBlockExtractor pdfTextBlockExtractor = new PDFTextBlockExtractor(fileContent);
+                pdfTextBlockExtractor.setSortByPosition(true);
+                for (int i = 0; i < document.getNumberOfPages(); i++) {
+                    pdfTextBlockExtractor.setStartPage(i + 1);
+                    pdfTextBlockExtractor.setEndPage(i + 1);
+                    pdfTextBlockExtractor.getText(document);
+                }
+                textBlocks = pdfTextBlockExtractor.getTextBlocks();
+                document.close();
+                pdfTextBlockCache.put(pdfPath, textBlocks);
+            } catch (IOException e) {
+                log.error("get text block from cache error {}", pdfPath, e);
+            }
 
+        } catch (InterruptedException e) {
+            log.error("get lock error {}", pdfPath, e);
+        } finally {
+            lock.unlock();
+        }
+        return textBlocks;
+    }
 
     public static String getCroppedPageImage(String pdfPath, String pageDir, int pageIndex, int x0, int y0, int x1, int y1) throws IOException {
         // 加载PDF文档
@@ -252,12 +280,24 @@ public class PdfUtil {
 //                "2 规范性引用文件\n" +
 //                "下列文件对于本文件的应用是必不可少的。凡是注日期的引用文件，仅注日期的版本适用\n" +
 //                "于本文件。凡是不注日期的引用文件，其最新版本（包括所有的修改单）适用于本文件。";
-        String keyword =  "MY1.5MW风力发电机组故障处理手册工程服务总部-调试部编2011版MY1.5MW风力发电机组故障处理手册文件号：版本：V1.0IMY1.5MW风力发电机组故障处理手册编写：_______________校核：_______________批准：_______________编写日期：2011年5月MY1.5MW风力发电机组故障处理手册文件号：版本：V1.0II前言MY1.5MW风力发电机组是一套集机械、电气、液压、计算机控制及远程监控为一体的高科技产品，为确保调试及维护过程中发电机组稳定安全运行，作为工程技术人员除必须掌握必要的调试技能和调试步骤外，还必须具备一定的故障识别、处理能力。因此，学习本手册内容是非常必要的。本手册内容共分三章，详细介绍了MY1.5MW风力发电机组三大电气系统常见故障的产生原因和解决办法，并对故障处理过程中的相关注意事项做了必要说明。本手册由调试部技术研究组成员共同编写而成，其中第一部分SSB变桨部分由罗华兵编写，LTi变桨系统部分由白宗举编写，OAT变桨部分由郭卓锋编写，第二部分主控系统部分由邱长进编写，第三部分变频器部分由余秋爽编写。因时间仓促，难免有疏漏之处，欢迎各位读者批评指正。MY1.5MW风力发电机组故障处理手册有助于工程现场人员快速掌握风机调试技能和故障处理能力，同时对现场的运行维护工作也具有一定的指导意义！MY1.5MW风力发电机组故障处理手册文件号：版本：V1.0III目录第一部分：变桨系统..................................................................................................................................................................................................................................11.1、SSB变桨系统…………………………………………………………………………………………………………………………………………………..11.1.1、环境控制：......................................................................................................................................................................................................................11.1.2、变桨系统：......................................................................................................................................................................................................................21.1.3、SSB变桨系统常见故障：..............................................................................................................................................................................................41.2、LTi变桨系统……………………………………………………………………………………………………………………………………………………71.2.1、环境控制：......................................................................................................................................................................................................................71.2.2、变桨系统：......................................................................................................................................................................................................................91.2.3、LTi变桨常见故障：......................................................................................................................................................................................................151.3、OAT变桨系统…………………………………………………………………………………………………………………………………………………191.3.1、环境控制：....................................................................................................................................................................................................................191.3.2、变桨系统：....................................................................................................................................................................................................................21第二部分：主控系统................................................................................................................................................................................................................................302.1、机舱部分状态代码…………………………………………………………………………………………………………………………………………….332.1.1、机舱安全链：................................................................................................................................................................................................................332.1.2、机舱电控柜：..................................................................................................................................................................................................";
-        keyword = keyword.replaceAll("\\s+", "");
-        List<List<PDFTextExtractor.TextBlock>> allWordsCoordinateByPath = getAllWordsCoordinateByPath("C:\\Users\\Administrator\\Desktop\\京能\\风力发电机组故障处理手册.pdf", keyword);
-        System.out.println(allWordsCoordinateByPath.size());
-
-
-
+//        String keyword =  "轴控箱1（2、3）的电池箱温度1分钟平均值超过60℃（回滞温度50℃）";
+        String keyword =  "1、出现最大值一";
+//        keyword = keyword.replaceAll("\\s+", "");
+//        List<List<TextBlock>> allWordsCoordinateByPath = getAllWordsCoordinateByPath("C:\\Users\\Administrator\\Desktop\\京能\\风力发电机组故障处理手册.pdf", keyword);
+//        System.out.println(allWordsCoordinateByPath.size());
+        String filepath = "C:\\Users\\Administrator\\Desktop\\京能\\风力发电机组故障处理手册.pdf";
+        long start = System.currentTimeMillis();
+        List<List<TextBlock>> lists = searchFromCache(filepath, keyword, true);
+        long end = System.currentTimeMillis();
+//        long start1 = System.currentTimeMillis();
+//        lists = searchFromCache(filepath, keyword, true);
+//        long end1 = System.currentTimeMillis();
+//        long start2 = System.currentTimeMillis();
+//        lists = searchFromCache(filepath, keyword, false);
+//        long end2 = System.currentTimeMillis();
+        System.out.println("1 cost :" + (end -start));
+//        System.out.println("2 cost :" + (end1 -start1));
+//        System.out.println("3 cost :" + (end2 -start2));
+        lists.forEach(list -> list.forEach(System.out::println));
     }
 }

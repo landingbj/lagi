@@ -2,6 +2,7 @@ package ai.servlet.api;
 
 
 import ai.common.pojo.IndexSearchData;
+import ai.common.pojo.TextBlock;
 import ai.dto.*;
 import ai.learn.questionAnswer.KShingleFilter;
 import ai.response.ChunkDataResponse;
@@ -44,14 +45,14 @@ public class PdfPreviewServlet extends RestfulServlet {
         List<String> searchWords = request.getSearchWords();
         for (String word : searchWords) {
             List<String>  paths =  new ArrayList<>();
-            List<PDFTextExtractor.TextBlock> lists = pdfService.searchTextPCoordinate(request.getPdfPath(), word);
+            List<TextBlock> lists = pdfService.searchTextPCoordinate(request.getPdfPath(), word);
             if(lists.isEmpty()) {
                 continue;
             }
-            List<List<PDFTextExtractor.TextBlock>> pagesList = new ArrayList<>();
-            List<PDFTextExtractor.TextBlock> pageList = new ArrayList<>();
+            List<List<TextBlock>> pagesList = new ArrayList<>();
+            List<TextBlock> pageList = new ArrayList<>();
             int lastPageIndex = lists.get(0).getPageNo();
-            for (PDFTextExtractor.TextBlock list : lists) {
+            for (TextBlock list : lists) {
                 if(Objects.equals(lastPageIndex, list.getPageNo())) {
                     pageList.add(list);
                 } else {
@@ -62,7 +63,7 @@ public class PdfPreviewServlet extends RestfulServlet {
                 }
             }
             pagesList.add(pageList);
-            for (List<PDFTextExtractor.TextBlock> plist : pagesList) {
+            for (List<TextBlock> plist : pagesList) {
                 List<Integer> rect = calcCropRect(plist, extend);
                 int pageIndex = (int) Math.floor(plist.get(0).getPageNo() - 1);
                 String cropImage = pdfService.cropPageImage(request.getPdfPath(), fileDir, pageIndex, rect.get(0), rect.get(1), rect.get(2), rect.get(3));
@@ -157,7 +158,7 @@ public class PdfPreviewServlet extends RestfulServlet {
             return Collections.emptyList();
         }
         filePath = convertDoc2Pdf(uploadFile, filePath);
-        List<PDFTextExtractor.TextBlock> pCoordinates = null;
+        List<TextBlock> pCoordinates = null;
         Matcher matcher = qaMather(chunk);
         if(matcher != null) {
             pCoordinates = searchPdfByQA(matcher, filePath);
@@ -165,12 +166,11 @@ public class PdfPreviewServlet extends RestfulServlet {
         if(pCoordinates == null) {
             pCoordinates = pdfService.searchTextPCoordinate(filePath, chunk);
         }
-        // split page
-        Map<Integer, List<PDFTextExtractor.TextBlock>> pageCoordinateMap = pCoordinates.stream().collect(Collectors.groupingBy(PDFTextExtractor.TextBlock::getPageNo));
+        Map<Integer, List<TextBlock>> pageCoordinateMap = pCoordinates.stream().collect(Collectors.groupingBy(TextBlock::getPageNo));
         Map<Integer, String> cropMap =  new HashMap<>();
         KShingleFilter kShingleFilter = new KShingleFilter(cropRequest.getResult().length(), 0.3, 0.5);
-        for (Map.Entry<Integer, List<PDFTextExtractor.TextBlock>> entry : pageCoordinateMap.entrySet()) {
-            List<PDFTextExtractor.TextBlock> pCoordinate = entry.getValue();
+        for (Map.Entry<Integer, List<TextBlock>> entry : pageCoordinateMap.entrySet()) {
+            List<TextBlock> pCoordinate = entry.getValue();
             String ck = getChunkByMathOrPdfCoordinate(matcher, chunk, pCoordinate);
             boolean similar = kShingleFilter.isSimilar(cropRequest.getResult(), ck);
             if(!similar) {
@@ -185,7 +185,7 @@ public class PdfPreviewServlet extends RestfulServlet {
                 cropMap.put(entry.getKey(), path);
             }
         }
-        return pCoordinates.stream().map(PDFTextExtractor.TextBlock::getPageNo).distinct().map(cropMap::get).filter(Objects::nonNull).collect(Collectors.toList());
+        return pCoordinates.stream().map(TextBlock::getPageNo).distinct().map(cropMap::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     private String makeCropImageDir(String request) {
@@ -203,6 +203,7 @@ public class PdfPreviewServlet extends RestfulServlet {
         makeCropImageDir(request.getSession().getServletContext().getRealPath("static"));
         List<CropRequest> chunkData = cropRectRequest.getChunkData();
         List<CropRectResponse> res = new ArrayList<>();
+        Set<String> chunkSet = new HashSet<>();
         for (CropRequest cropRequest : chunkData) {
             String chunkId = cropRequest.getChunkId();
             List<IndexSearchData> indexSearchData = vectorStoreService.searchByIds(Lists.newArrayList(chunkId), cropRectRequest.getCategory());
@@ -214,29 +215,39 @@ public class PdfPreviewServlet extends RestfulServlet {
                 continue;
             }
             String chunk = data.getText().replaceAll("\\s+", "");
-            int extend = cropRequest.getExtend() == null ? 200 : cropRequest.getExtend();
+            if(!chunkSet.add(chunk)) {
+                continue;
+            }
+
+            int extend = cropRequest.getExtend() == null ? 400 : cropRequest.getExtend();
             String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
             String filePath = uploadDir + File.separator + data.getFilepath().get(0);
             File uploadFile = new File(filePath);
+            filePath = convertDoc2Pdf(uploadFile, filePath);
             if(!uploadFile.exists()) {
-                filePath = convertDoc2Pdf(uploadFile, filePath);
+                continue;
             }
-            List<PDFTextExtractor.TextBlock> pCoordinates = null;
+            KShingleFilter kShingleFilter = new KShingleFilter(4, 0.2, 0.5);
+            String minStr = chunk.length() < cropRequest.getResult().length() ? chunk : cropRequest.getResult();
+            String maxStr = chunk.length() < cropRequest.getResult().length() ?  cropRequest.getResult() : chunk;
+            boolean similar1 = kShingleFilter.isSimilar(minStr, maxStr);
+            if(!similar1) {
+                continue;
+            }
+            List<TextBlock> pCoordinates = null;
             Matcher matcher = qaMather(chunk);
             if(matcher != null) {
                 pCoordinates = searchPdfByQA(matcher, filePath);
             }
-            // search pdf
             if(pCoordinates == null) {
                 pCoordinates = pdfService.searchTextPCoordinate(filePath, chunk);
             }
             // split to page
-            Map<Integer, List<PDFTextExtractor.TextBlock>> pageCoordinateMap = pCoordinates.stream().collect(Collectors.groupingBy(PDFTextExtractor.TextBlock::getPageNo));
-            KShingleFilter kShingleFilter = new KShingleFilter(cropRequest.getResult().length(), 0.3, 0.5);
+            Map<Integer, List<TextBlock>> pageCoordinateMap = pCoordinates.stream().collect(Collectors.groupingBy(TextBlock::getPageNo));
             Map<Integer, PageRect> pageRectMap =  new HashMap<>();
             double minThreshold = 0.3;
-            for (Map.Entry<Integer, List<PDFTextExtractor.TextBlock>> entry : pageCoordinateMap.entrySet()) {
-                List<PDFTextExtractor.TextBlock> pCoordinate = entry.getValue();
+            for (Map.Entry<Integer, List<TextBlock>> entry : pageCoordinateMap.entrySet()) {
+                List<TextBlock> pCoordinate = entry.getValue();
                 String ck = getChunkByMathOrPdfCoordinate(matcher, chunk, pCoordinate);
                 double similar = detectSimilarity(0.3, cropRequest.getResult(), ck);
                 if(similar < minThreshold) {
@@ -250,7 +261,7 @@ public class PdfPreviewServlet extends RestfulServlet {
                 pageRectMap.put(entry.getKey(), PageRect.builder().page(entry.getKey()).rect(rect).build());
             }
             List<PageRect> rects = pCoordinates.stream()
-                    .map(PDFTextExtractor.TextBlock::getPageNo)
+                    .map(TextBlock::getPageNo)
                     .distinct()
                     .map(pageRectMap::get)
                     .filter(Objects::nonNull)
@@ -282,13 +293,13 @@ public class PdfPreviewServlet extends RestfulServlet {
         return max;
     }
 
-    private static String getChunkByMathOrPdfCoordinate(Matcher matcher, String chunk, List<PDFTextExtractor.TextBlock> pCoordinate) {
+    private static String getChunkByMathOrPdfCoordinate(Matcher matcher, String chunk, List<TextBlock> pCoordinate) {
         String ck = null;
         if(matcher != null) {
             ck = chunk;
         }else {
             StringBuilder pageText = new StringBuilder();
-            for (PDFTextExtractor.TextBlock i : pCoordinate) {
+            for (TextBlock i : pCoordinate) {
                 pageText.append(i.getText());
             }
             ck = pageText.toString();
@@ -325,34 +336,35 @@ public class PdfPreviewServlet extends RestfulServlet {
         return res;
     }
 
-    private List<PDFTextExtractor.TextBlock> searchPdfByQA(Matcher matcher, String filePath) {
-        List<PDFTextExtractor.TextBlock> pCoordinates = null;
+    private List<TextBlock> searchPdfByQA(Matcher matcher, String filePath) {
+        List<TextBlock> pCoordinates = null;
         int count = matcher.groupCount();
-        if (count > 2) {
+        int oneLineLen = 10;
+        if (count >= 2) {
             String s1 = matcher.group(count);
+            s1 = s1.substring(0, Math.min(oneLineLen, s1.length()));
             String s2 = matcher.group(count - 1);
-            List<List<PDFTextExtractor.TextBlock>> p1 = pdfService.searchAllTextPCoordinate(filePath, s1);
-            List<List<PDFTextExtractor.TextBlock>> p2 = pdfService.searchAllTextPCoordinate(filePath, s2);
-            pCoordinates = nearBlock(p1, p2, 300);
-            if (pCoordinates != null) {
-                String s3 = matcher.group(1);
-                List<List<PDFTextExtractor.TextBlock>> p3 = pdfService.searchAllTextPCoordinate(filePath, s3);
-                List<List<PDFTextExtractor.TextBlock>> c = new ArrayList<>();
-                c.add(pCoordinates);
-                List<PDFTextExtractor.TextBlock> temp = nearBlock(c, p3, 500);
-                if (temp != null) {
-                    pCoordinates.addAll(temp);
-                }
+            s2 = s2.substring(0, Math.min(oneLineLen, s2.length()));
+            String s3 = null;
+            if(count - 2 >= 1) {
+                s3 = matcher.group(count - 2);
+                s3 = s3.substring(0, Math.min(oneLineLen, s3.length()));
+            }
+            List<List<TextBlock>> p1 = pdfService.searchAllTextPCoordinate(filePath, s1);
+            List<List<TextBlock>> p2 = pdfService.searchAllTextPCoordinate(filePath, s2);
+            if(s3 != null) {
+                List<List<TextBlock>> p3 = pdfService.searchAllTextPCoordinate(filePath, s3);
+                pCoordinates = nearBlock(p1, p2, p3, 400);
             } else {
-                if (p1.size() == 1) {
-                    List<PDFTextExtractor.TextBlock> textBlocks = p1.get(0);
-                    int pageNo = textBlocks.get(0).getPageNo();
-                    textBlocks.add(0, PDFTextExtractor.TextBlock.builder().x(0).y(0).width(0).height(0).pageNo(pageNo).text("").build());
-                    pCoordinates = textBlocks;
-                }
+                pCoordinates = nearBlock(p1, p2, 400);
             }
         }
         return pCoordinates;
+    }
+
+    private String getLastLine(String str) {
+        String[] split = str.split("\r\n");
+        return split[split.length - 1].replaceAll("\\s+", "");
     }
 
 
@@ -382,7 +394,9 @@ public class PdfPreviewServlet extends RestfulServlet {
             Pattern.compile("故障名称:(.+)故障描述:(.+)故障原因:(.+)故障处理:(.+)"),
             Pattern.compile("故障名称:(.+)故障描述:(.+)故障处理:(.+)"),
             Pattern.compile("故障分类:(.+)位号:(.+)解决方法及建议:(.+)"),
-            Pattern.compile("故障分类:(.+)位号:(.+)故障名称:(.+)")
+            Pattern.compile("故障分类:(.+)位号:(.+)故障名称:(.+)"),
+            Pattern.compile("序号:(.+)故障:(.+)原因/描述:(.+)"),
+            Pattern.compile("序号:(.+)故障:(.+)故障解决方法:(.+)")
         );
         for (Pattern p : patterns) {
             Matcher matcher = p.matcher(chunk);
@@ -393,22 +407,22 @@ public class PdfPreviewServlet extends RestfulServlet {
         return null;
     }
 
-    private List<PDFTextExtractor.TextBlock> nearBlock(List<List<PDFTextExtractor.TextBlock>> p1, List<List<PDFTextExtractor.TextBlock>> p2, int distanceLimit) {
+    private List<TextBlock> nearBlock(List<List<TextBlock>> p1, List<List<TextBlock>> p2, int distanceLimit) {
         double powLimit = Math.pow(distanceLimit, 2);
-        for (List<PDFTextExtractor.TextBlock> list : p1) {
-            PDFTextExtractor.TextBlock point1 = list.get(0);
+        for (List<TextBlock> list : p1) {
+            TextBlock point1 = list.get(0);
             int page1 = point1.getPageNo();
-            for (List<PDFTextExtractor.TextBlock> list1 : p2) {
-                PDFTextExtractor.TextBlock point2 = list1.get(0);
+            for (List<TextBlock> list1 : p2) {
+                TextBlock point2 = list1.get(0);
                 int page2 = point2.getPageNo();
                 if(page1 != page2) {
                     continue;
                 }
                 double pow = Math.pow(point2.getX() - point1.getX(), 2) + Math.pow(point2.getY() - point1.getY(), 2);
                 if(pow <= powLimit) {
-                    List<PDFTextExtractor.TextBlock> res = new ArrayList<>(list.size() + list1.size());
-                    List<PDFTextExtractor.TextBlock> min = point1.getX() < point2.getX() ? list : list1;
-                    List<PDFTextExtractor.TextBlock> max = point1.getX() >= point2.getX() ? list : list1;
+                    List<TextBlock> res = new ArrayList<>(list.size() + list1.size());
+                    List<TextBlock> min = point1.getX() < point2.getX() ? list : list1;
+                    List<TextBlock> max = point1.getX() >= point2.getX() ? list : list1;
                     res.addAll(min);
                     res.addAll(max);
                     return res;
@@ -418,20 +432,52 @@ public class PdfPreviewServlet extends RestfulServlet {
         return null;
     }
 
-    private List<Integer> calcCropRect(List<PDFTextExtractor.TextBlock> textsPCoordinate, int extend) {
+
+    private List<TextBlock> nearBlock(List<List<TextBlock>> p1, List<List<TextBlock>> p2, List<List<TextBlock>> p3, int distanceLimit) {
+        double powLimit = Math.pow(distanceLimit, 2);
+        for (List<TextBlock> list : p1) {
+            TextBlock point1 = list.get(0);
+            int page1 = point1.getPageNo();
+            for (List<TextBlock> list1 : p2) {
+                TextBlock point2 = list1.get(0);
+                int page2 = point2.getPageNo();
+                if(page1 != page2) {
+                    continue;
+                }
+                for (List<TextBlock> list2 : p3) {
+                    TextBlock point3 = list2.get(0);
+                    int page3 = point3.getPageNo();
+                    if(page2 != page3) {
+                        continue;
+                    }
+                    double pow1 = Math.pow(point2.getX() - point1.getX(), 2) + Math.pow(point2.getY() - point1.getY(), 2);
+                    if(pow1 <= powLimit) {
+                        double pow2 = Math.pow(point3.getX() - point2.getX(), 2) + Math.pow(point3.getY() - point2.getY(), 2);
+                        if(pow2 <= powLimit) {
+                            List<TextBlock> res = new ArrayList<>(list.size() + list1.size());
+                            List<TextBlock> min = point1.getX() < point2.getX() ? list : list1;
+                            List<TextBlock> max = point1.getX() >= point2.getX() ? list : list1;
+                            res.addAll(min);
+                            res.addAll(max);
+                            return res;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<Integer> calcCropRect(List<TextBlock> textsPCoordinate, int extend) {
         if(textsPCoordinate.isEmpty()) {
             return Collections.emptyList();
         }
-        int x0 = Integer.MAX_VALUE;
         int y0 = Integer.MAX_VALUE;
-        int x1 = Integer.MIN_VALUE;
         int y1 = Integer.MIN_VALUE;
-        for (PDFTextExtractor.TextBlock list : textsPCoordinate) {
-            x0 = Math.min(x0, (int)list.getX() - extend);
+        for (TextBlock list : textsPCoordinate) {
             y0 = Math.min(y0, (int)list.getY() - extend);
-            x1 = Math.max(x1, (int)list.getX() + extend);
             y1 = Math.max(y1, (int)list.getY() + extend);
         }
-        return Lists.newArrayList(0, y0, x1, y1);
+        return Lists.newArrayList(0, y0, 1200, y1);
     }
 }
