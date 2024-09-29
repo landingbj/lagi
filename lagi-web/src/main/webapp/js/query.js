@@ -127,7 +127,7 @@ function bookMeetingPrompt(action, prompt) {
         action.estimatedNumber = getTotalPeopleCount(prompt)
     }
 
-    let outdate = {}
+let outdate = {}
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
@@ -148,7 +148,7 @@ function bookMeetingPrompt(action, prompt) {
                     const { h5 } = res.data; // 数据解构
                     MeetingBookingsEntity = h5;
                     outdate = MeetingBookingsEntity;
-                    outdate.meetingDate = outdate.date
+					outdate.meetingDate = outdate.date
                     outdate.startTime = outdate.start_time
                     if (outdate === undefined || outdate === { skillCode: "1"} || outdate === {}) {
                         let prompt1 = '<div>您可以对我说：“帮我预定明天下午3点的东四会议室，会议时长为一个小时，会议有5个人。”'+ '</br>'+ '这样我就可以帮您预定会议了！！！</div>';

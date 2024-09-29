@@ -206,7 +206,7 @@
                       <div id="topTitle"
                            class="align-center flex h-full w-full flex-col justify-center self-center px-2 pb-2 md:pb-[8vh]">
                         <div class="absolute right-2 top-2 text-gray-600 text-sm  sm:none">
-                          仅限邀请内测
+                          <!--仅限邀请内测 -->
                         </div>
                         <h1
                                 class="text-6xl font-semibold text-center t ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center flex-grow"
