@@ -389,6 +389,7 @@
 <script src="js/nav.js?ver=${initParam.version}"></script>
 <script src="js/index.js?ver=${initParam.version}"></script>
 <script src="js/self.js?ver=${initParam.version}"></script>
+<script src="js/meeting.js?ver=${initParam.version}"></script>
 <script src="js/query.js?ver=${initParam.version}"></script>
 </body>
 </html>

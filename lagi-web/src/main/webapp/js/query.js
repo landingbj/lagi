@@ -33,7 +33,9 @@ function textQuery() {
         if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
             socialAgentsConversation(question);
         } else if(currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_BOOKINGS){
-            bookMeetingConversation(question);
+            // bookMeetingConversation(question);
+            console.log("question", question)
+            addMeetingConversation(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
             getTextResult(question.trim(), robotAnswerJq, conversation);
@@ -527,6 +529,15 @@ function generalOutput(paras, question, robootAnswerJq) {
 }
 
 function streamOutput(paras, question, robootAnswerJq) {
+    function isJsonString(str) {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     async function generateStream(paras) {
         const response = await fetch('v1/chat/completions', {
             method: "POST",
@@ -542,6 +553,9 @@ function streamOutput(paras, question, robootAnswerJq) {
         const reader = response.body.getReader();
         let fullText = '';
         let flag = true;
+
+        let lastChunkPart = '';
+
         while (flag) {
             const {value, done} = await reader.read();
             let res =  new TextDecoder().decode(value);
@@ -549,8 +563,16 @@ function streamOutput(paras, question, robootAnswerJq) {
                 robootAnswerJq.html(res.replaceAll('error:', ''));
                 return;
             }
-            let chunkStr = new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+            let chunkStr = lastChunkPart + new TextDecoder().decode(value).replaceAll('data: ', '').trim();
             const chunkArray = chunkStr.split("\n\n");
+
+            let lastChunk = chunkArray[chunkArray.length - 1];
+            if (!isJsonString(chunkArray[chunkArray.length - 1]) && lastChunk !== "[DONE]" ) {
+                lastChunkPart = chunkArray.pop();
+            } else {
+                lastChunkPart = '';
+            }
+
             for (let i = 0; i < chunkArray.length; i++) {
                 let chunk = chunkArray[i];
                 if (chunk === "[DONE]") {

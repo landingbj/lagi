@@ -15,6 +15,7 @@ public class EmbeddingConstant {
     public static final String EMBEDDING_TYPE_ZHIPU = "Zhipu";
     public static final String EMBEDDING_TYPE_BAICHUAN = "Baichuan";
     public static final String EMBEDDING_TYPE_SENSECHAT = "SenseChat";
+    public static final String EMBEDDING_TYPE_TELECOM = "Telecom";
 
     public static Cache<List<String>, List<List<Float>>> getEmbeddingCache() {
         return CacheBuilder.newBuilder()

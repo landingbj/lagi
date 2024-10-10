@@ -23,6 +23,8 @@ public class EmbeddingFactory {
             return new BaichuanEmbeddings(config);
         } else if (EmbeddingConstant.EMBEDDING_TYPE_SENSECHAT.equalsIgnoreCase(type)){
             return new SenseChatEmbeddings(config);
+        } else if (EmbeddingConstant.EMBEDDING_TYPE_TELECOM.equalsIgnoreCase(type)){
+            return new TelecomGteEmbeddings(config);
         }
 
         throw new IllegalArgumentException("Invalid type: " + type);

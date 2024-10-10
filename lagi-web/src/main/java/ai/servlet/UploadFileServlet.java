@@ -393,7 +393,7 @@ public class UploadFileServlet extends HttpServlet {
             if (level == null) {
                 metadatas.put("level", "user");
             } else {
-                metadatas.put("level", "system");
+                metadatas.put("level", level);
             }
 
             try {
