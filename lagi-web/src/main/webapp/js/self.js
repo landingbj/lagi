@@ -206,7 +206,8 @@ const FILE_SIZE_LIMIT = {
 };
 
 function checkFileSizeLimit(selectedFile) {
-    const fileType = selectedFile.name.split('.').pop();
+    let fileType = selectedFile.name.split('.').pop();
+    fileType = fileType.toLowerCase();
     var fileSize = selectedFile.size;
     for (var type in FILE_SIZE_LIMIT) {
         if (fileType === type && fileSize < FILE_SIZE_LIMIT[type]) {
@@ -240,7 +241,8 @@ fileUploadButton.addEventListener("click", function () {
         const selectedFile = fileInput.files[0];
         if (selectedFile) {
             // 获取文件类型
-            const fileType = selectedFile.name.split('.').pop();
+            let fileType = selectedFile.name.split('.').pop();
+            fileType = fileType.toLowerCase();
 
             // 创建 FormData 对象
             const formData = new FormData();
