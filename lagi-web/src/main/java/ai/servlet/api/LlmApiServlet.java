@@ -165,14 +165,22 @@ public class LlmApiServlet extends BaseServlet {
         if (LagiGlobal.RAG_ENABLE) {
             indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
         }
-        if (BASEDONCONTEXT && indexSearchDataList.size() <= 0) {
+        if (BASEDONCONTEXT && indexSearchDataList.isEmpty()) {
             ChatCompletionResult temp = new ChatCompletionResult();
             ChatCompletionChoice choice = new ChatCompletionChoice();
             ChatMessage chatMessage = new ChatMessage();
-            chatMessage.setContent("您好！ 您的问题内容较为简略，请提供更详细的信息或具体化您的问题，以便我们能更准确地为您提供帮助。");
+            chatMessage.setContent("抱歉，我们无法回答相关问题。请提供政策类的相关问题，以便我们能更准确地为您提供帮助。");
             choice.setMessage(chatMessage);
             temp.setChoices(Lists.newArrayList(choice));
-            responsePrint(resp, toJson(temp));
+            if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
+                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+                out.print("data: " + toJson(temp) + "\n\n");
+                out.print("data: " + "[DONE]" + "\n\n");
+                out.flush();
+                out.close();
+            } else {
+                responsePrint(resp, toJson(temp));
+            }
             return;
         } else {
             chatCompletionResult = medusaService.locate(promptInput);

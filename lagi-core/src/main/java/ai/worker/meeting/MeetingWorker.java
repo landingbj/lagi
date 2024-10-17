@@ -39,6 +39,7 @@ public class MeetingWorker {
             return currentMeetingInfo;
         }
         setEmptyStringToNull(meetingInfo);
+        filterMeetingInfo(message, meetingInfo);
         return combineMeetingInfo(currentMeetingInfo, meetingInfo);
     }
 
@@ -58,6 +59,29 @@ public class MeetingWorker {
         if (meetingInfo.getAttendance() != null && meetingInfo.getAttendance().isEmpty()) {
             meetingInfo.setAttendance(null);
         }
+    }
+
+    private void filterMeetingInfo(String message, MeetingInfo meetingInfo) {
+        System.out.println("meetingInfo: " + meetingInfo);
+        if (!containsTimeUnit(message) && meetingInfo.getDuration() != null) {
+            meetingInfo.setDuration(null);
+        }
+        if (!containsMeetingAddress(message) && meetingInfo.getMeetingAddress() != null) {
+            meetingInfo.setMeetingAddress(null);
+        }
+    }
+
+    private boolean containsTimeUnit(String message) {
+        return message.contains("小时") || message.contains("分钟");
+    }
+
+    private boolean containsMeetingAddress(String message) {
+        for (String address : MEETING_ADDRESS_ARRAY) {
+            if (message.contains(address)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private MeetingInfo combineMeetingInfo(MeetingInfo currentMeetingInfo, MeetingInfo meetingInfo) {
@@ -152,12 +176,13 @@ public class MeetingWorker {
         LagiGlobal.getConfig();
         MeetingWorker meetingWorker = new MeetingWorker();
 //        String message = "帮我预定明天下午3点的酒仙桥会议室，会议时长为一个小时,会议有5个人。";
-        String message = "帮我预定明天的酒仙桥会议室，会议时长为一个小时。";
+//        String message = "帮我预定明天的酒仙桥会议室，会议时长为一个小时。";
+        String message = "我要预定明天会议室5人";
         MeetingInfo currentMeetingInfo = new MeetingInfo();
         currentMeetingInfo.setMeetingAddress("东四");
 
-        MeetingInfo meetingInfo = meetingWorker.extractAddMeetingInfo(message, currentMeetingInfo);
-        System.out.println("meetingInfo:\n" + meetingInfo);
-        System.out.println("meetingInfo:\n" + new Gson().toJson(meetingInfo));
+        MeetingInfo meetingInfo = meetingWorker.extractAddMeetingInfo(message, null);
+        System.out.println("meetingInfo: " + meetingInfo);
+        System.out.println("meetingInfo: " + new Gson().toJson(meetingInfo));
     }
 }
