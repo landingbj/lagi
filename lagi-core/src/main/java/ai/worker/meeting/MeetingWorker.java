@@ -62,7 +62,6 @@ public class MeetingWorker {
     }
 
     private void filterMeetingInfo(String message, MeetingInfo meetingInfo) {
-        System.out.println("meetingInfo: " + meetingInfo);
         if (!containsTimeUnit(message) && meetingInfo.getDuration() != null) {
             meetingInfo.setDuration(null);
         }
