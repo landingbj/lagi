@@ -249,6 +249,14 @@ If you are not satisfied with the large model or vector database that Lag[i] (La
 
 You can integrate internal data information into Lag[i] (Landing AGI) by uploading question-answer pairs, thereby customizing the training of a dedicated large model. During the model training process, the `distance` represents the similarity between your question and the uploaded question-answer pairs; the smaller the value, the higher the similarity. If the most matching question-answer pair identified by the model does not align with the actual intent of your question, you can further optimize the model’s performance by adding or deleting question-answer pairs. By continuously adjusting and optimizing your question-answer data, you can gradually enhance the model’s understanding of your questions, thus improving the accuracy of the system.
 
+### Training data processing architecture diagram
+
+![img.png](images/img_5.png)
+
+### Data processing flow diagram
+
+![img.png](images/img_6.png)
+
 ### 1.Upload data
 
 You can use the `POST /training/pairing` endpoint to upload your own Q&A pairs.
