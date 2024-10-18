@@ -7,6 +7,7 @@ import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
+import ai.learn.questionAnswer.KShingleFilter;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
@@ -37,6 +38,10 @@ public class VectorStoreService {
     private final IntentService intentService = new SampleIntentServiceImpl();
     private final BigdataService bigdataService = new BigdataService();
     private static final VectorCache vectorCache = VectorCache.getInstance();
+
+    private static final double threshold = 0.01d;
+    private static final double frequencyThreshold = 0;
+    private static final KShingleFilter kShingleFilter = new KShingleFilter(2, threshold, frequencyThreshold);
 
     public VectorStoreService() {
         if (LagiGlobal.RAG_ENABLE) {
@@ -252,7 +257,12 @@ public class VectorStoreService {
                 vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
             }
             extendedIndexSearchData.setDistance(indexSearchData.getDistance());
-            result.add(extendedIndexSearchData);
+//            System.out.println("\nquestion: " + question);
+//            System.out.println("text: " + extendedIndexSearchData.getText());
+//            System.out.println("isSimilar: " + kShingleFilter.isSimilar(question, extendedIndexSearchData.getText()));
+            if (kShingleFilter.isSimilar(question, extendedIndexSearchData.getText())) {
+                result.add(extendedIndexSearchData);
+            }
         }
         if (!indexIds.isEmpty()) {
             result.removeIf(indexSearchData -> !indexIds.contains(indexSearchData.getId()));
