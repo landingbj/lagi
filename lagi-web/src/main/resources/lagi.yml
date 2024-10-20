@@ -115,7 +115,7 @@ models:
     type: iFLYTEK
     enable: false
     drivers:
-      - model: v1.1,v2.1,v3.1,v3.5
+      - model: v1.1,v2.1,v3.1,v3.5,v4.0
         driver: ai.llm.adapter.impl.SparkAdapter
       - model: tti
         driver: ai.image.adapter.impl.SparkImageAdapter

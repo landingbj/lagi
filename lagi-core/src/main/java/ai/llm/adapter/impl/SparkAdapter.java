@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-@LLM(modelNames = {"v1.1", "v2.1", "v3.1", "v3.5"})
+@LLM(modelNames = {"v1.1", "v2.1", "v3.1", "v3.5", "v4.0"})
 public class SparkAdapter extends ModelService implements ILlmAdapter {
 
     @Override
@@ -104,7 +104,9 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
             apiVersion = SparkApiVersion.V3_0;
         } else if (model.equals(SparkApiVersion.V3_5.getVersion())) {
             apiVersion = SparkApiVersion.V3_5;
-        } else {
+        } else if (model.equals(SparkApiVersion.V4_0.getVersion())) {
+            apiVersion = SparkApiVersion.V4_0;
+        }else {
             throw new RuntimeException("Unsupported model version: " + model);
         }
 
