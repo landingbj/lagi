@@ -2,12 +2,13 @@ package ai.servlet.api;
 
 import ai.bigdata.BigdataService;
 import ai.common.pojo.IndexSearchData;
-import ai.vector.VectorDbService;
+import ai.migrate.service.UploadFileService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.VectorDeleteRequest;
 import ai.servlet.dto.VectorQueryRequest;
 import ai.servlet.dto.VectorUpsertRequest;
+import ai.vector.VectorDbService;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
@@ -26,6 +27,7 @@ public class VectorApiServlet extends BaseServlet {
     private final VectorStoreService vectorStoreService = new VectorStoreService();
     private final VectorDbService vectorDbService = new VectorDbService(null);
     private final BigdataService bigdataService = new BigdataService();
+    private final UploadFileService uploadFileService = new UploadFileService();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -135,6 +137,7 @@ public class VectorApiServlet extends BaseServlet {
         VectorDeleteRequest vectorDeleteRequest = reqBodyToObj(req, VectorDeleteRequest.class);
         String category = vectorDeleteRequest.getCategory();
         vectorStoreService.deleteCollection(category);
+        uploadFileService.deleteUploadFile(category);
         bigdataService.delete(category);
         Map<String, Object> result = new HashMap<>();
         result.put("status", "success");

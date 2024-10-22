@@ -58,7 +58,7 @@ public class FileService {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         InputStream in = Files.newInputStream(file.toPath());
         String content = null;
-        switch (extString) {
+        switch (extString.toLowerCase()) {
             case ".doc":
             case ".docx":
                 content = WordUtils.getContentsByWord(in, extString);

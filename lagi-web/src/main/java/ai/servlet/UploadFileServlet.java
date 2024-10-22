@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -46,6 +48,9 @@ public class UploadFileServlet extends HttpServlet {
     private final VectorStoreService vectorStoreService = new VectorStoreService();
     private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
+
+    private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(1);
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -347,7 +352,7 @@ public class UploadFileServlet extends HttpServlet {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
-                    new AddDocIndex(file, category, filename, level).start();
+                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
                 }
             }
         }
@@ -393,7 +398,7 @@ public class UploadFileServlet extends HttpServlet {
             if (level == null) {
                 metadatas.put("level", "user");
             } else {
-                metadatas.put("level", "system");
+                metadatas.put("level", level);
             }
 
             try {
