@@ -550,10 +550,13 @@ function streamOutput(paras, question, robootAnswerJq) {
             body: JSON.stringify(paras),
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const reader = response.body.getReader();
+
         let fullText = '';
         let flag = true;
-
         let lastChunkPart = '';
 
         while (flag) {
@@ -639,9 +642,7 @@ function streamOutput(paras, question, robootAnswerJq) {
         enableQueryBtn();
         querying = false;
         queryLock = false;
-        if(!robootAnswerJq.text) {
-            robootAnswerJq.html("调用失败！");
-        }
+        robootAnswerJq.html("调用失败！");
     });
 }
 

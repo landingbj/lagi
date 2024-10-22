@@ -169,3 +169,152 @@ POST `/chat/extractAddMeetingInfo`
 | »» startTime      | string  | 否   | 会议开始时间             |
 | »» duration       | string  | 否   | 会议时长                 |
 | »» attendance     | string  | 否   | 会议人数                 |
+
+## 获取文件列表
+
+GET /uploadFile/getUploadFileList
+
+### 请求参数
+
+| 名称       | 位置  | 类型   | 必选 | 说明       |
+| ---------- | ----- | ------ | ---- | ---------- |
+| category   | query | string | 否   | 数据类别   |
+| pageSize   | query | string | 否   | 分页的大小 |
+| pageNumber | query | string | 否   | 分页的序号 |
+
+> 返回示例
+
+```json
+{
+  "totalRow": 698,
+  "pageNumber": 1,
+  "data": [
+    {
+      "fileId": "2fb4748945684162b071590d2765650b",
+      "filename": "14.中电信京人力[2015]2号 关于印发《中国电信股份有限公司北京分公司员工退休管理办法》的通知.pdf",
+      "filepath": "202410132337313037.pdf",
+      "category": "bj-telecom"
+    },
+    {
+      "fileId": "272582a7e0e04b419448b6e648c44c13",
+      "filename": "2.员工因私出国（境）管理办法.doc",
+      "filepath": "202410132337336925.doc",
+      "category": "bj-telecom"
+    }
+  ],
+  "totalPage": 349,
+  "pageSize": 2,
+  "status": "success"
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义                                              | 说明 | 数据模型 |
+| ------ | ------------------------------------------------------- | ---- | -------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | none | Inline   |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称         | 类型     | 必选 | 约束 | 中文名 | 说明         |
+| ------------ | -------- | ---- | ---- | ------ | ------------ |
+| » totalRow   | integer  | true | none |        | 数据总数     |
+| » pageNumber | integer  | true | none |        | 分页的序号   |
+| » data       | [object] | true | none |        | none         |
+| »» fileId    | string   | true | none |        | 文件ID       |
+| »» filename  | string   | true | none |        | 文件名       |
+| »» filepath  | string   | true | none |        | 文件相对路径 |
+| »» category  | string   | true | none |        | 数据类别     |
+| » totalPage  | integer  | true | none |        | 分页总数     |
+| » pageSize   | integer  | true | none |        | 分页的大小   |
+| » status     | string   | true | none |        | 接口返回状态 |
+
+## 删除上传文件
+
+POST /uploadFile/deleteFile
+
+> Body 请求参数
+
+```json
+[
+  "b957969f382147b4b05592c1bfc719f2",
+  "07c7bbed732f47068ba8170d6858a4da",
+  "fd8c04b93f21408fafa57ffb9d26faa4",
+  "5f2dc303b5c74af2a5affeb513a93392"
+]
+```
+
+### 请求参数
+
+| 名称 | 位置 | 类型   | 必选 | 说明 |
+| ---- | ---- | ------ | ---- | ---- |
+| body | body | object | 否   | none |
+
+> 返回示例
+
+```json
+{
+  "status": "success"
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义                                              | 说明 | 数据模型 |
+| ------ | ------------------------------------------------------- | ---- | -------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | none | Inline   |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称     | 类型   | 必选 | 约束 | 中文名   | 说明 |
+| -------- | ------ | ---- | ---- | -------- | ---- |
+| » status | string | true | none | 返回状态 | none |
+
+
+## 上传私训学习文件
+
+POST `/training/upload`
+
+上传私训学习文件，支持txt、word、pdf格式
+
+### Body 请求参数
+
+```yaml
+fileToUpload: file://D:/知识图谱.pdf
+```
+
+### 请求参数
+
+| 名称              | 位置    | 类型             | 必选 | 说明       |
+|-----------------|-------|----------------|----|----------|
+| category        | query | string         | 是  | 指定的数据类别  |
+| body            | body  | object         | 否  | none     |
+| » fileToUpload  | body  | string(binary) | 是  | 所上传的私训文件 |
+
+### 返回示例
+
+> 成功
+
+```json
+{
+  "result": true
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义 | 说明 |
+|-----|-------|----|
+| 200 | OK    | 成功 |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称        | 类型      | 必选   | 说明        |
+|-----------|---------|------|-----------|
+| » result  | boolean | true | 上传私训文件的状态 |
