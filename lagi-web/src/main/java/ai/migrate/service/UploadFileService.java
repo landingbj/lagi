@@ -15,6 +15,14 @@ public class UploadFileService {
         return uploadFileDao.addUploadFile(entity);
     }
 
+    public int deleteUploadFile(String category)  {
+        try {
+            return uploadFileDao.deleteUploadFile(category);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public int deleteUploadFile(List<String> idList) {
         int result = -1;
         Conn conn = new Conn();

@@ -11,6 +11,17 @@ import ai.migrate.db.Conn;
 import ai.common.pojo.UploadFile;
 
 public class UploadFileDao {
+    public int deleteUploadFile(String category) throws SQLException {
+        IConn conn = new Conn();
+        int result = -1;
+        String sql = "DELETE FROM lagi_upload_file WHERE category = ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, category);
+        result = ps.executeUpdate();
+        BaseIndex.closeConnection(ps);
+        return result;
+    }
+
     public int deleteUploadFile(String fileId, Conn conn) throws SQLException {
         int result = -1;
         String sql = "DELETE FROM lagi_upload_file WHERE file_id = ?";
