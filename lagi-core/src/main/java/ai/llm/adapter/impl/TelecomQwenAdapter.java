@@ -70,5 +70,6 @@ public class TelecomQwenAdapter extends ModelService implements ILlmAdapter {
         if (request.getModel() == null) {
             request.setModel(getModel());
         }
+        request.setCategory(null);
     }
 }
