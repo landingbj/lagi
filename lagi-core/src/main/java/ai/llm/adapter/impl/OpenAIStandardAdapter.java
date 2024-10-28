@@ -22,7 +22,7 @@ import java.util.function.Function;
 public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(OpenAIStandardAdapter.class);
     private final Gson gson = new Gson();
-    private static final int HTTP_TIMEOUT = 5 * 1000;
+    private static final int HTTP_TIMEOUT = 5 * 60 * 1000;
 
 
     @Override
