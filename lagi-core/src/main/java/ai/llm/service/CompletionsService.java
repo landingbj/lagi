@@ -65,6 +65,7 @@ public class CompletionsService implements ChatCompletion{
                     return SensitiveWordUtil.filter(appointAdapter.completions(chatCompletionRequest));
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(appointAdapter, e.getCode());
+                    throw e;
                 }
             }
         }
