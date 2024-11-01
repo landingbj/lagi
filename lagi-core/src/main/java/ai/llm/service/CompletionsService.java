@@ -58,6 +58,7 @@ public class CompletionsService implements ChatCompletion{
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
         // The execution model is specified
+        RRException r = new RRException(LLMErrorConstants.OTHER_ERROR,"{\"error\":\"backend is not enabled.\"}");
         if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
             if(appointAdapter != null && notFreezingAdapter(appointAdapter)) {
@@ -65,7 +66,7 @@ public class CompletionsService implements ChatCompletion{
                     return SensitiveWordUtil.filter(appointAdapter.completions(chatCompletionRequest));
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(appointAdapter, e.getCode());
-                    throw e;
+                    r = e;
                 }
             }
         }
@@ -76,12 +77,14 @@ public class CompletionsService implements ChatCompletion{
         } else if("parallel".equals(getPolicy())) {
             return parallelGetChatCompletionResult(chatCompletionRequest, adapters);
         } else {
-            throw new RRException(LLMErrorConstants.OTHER_ERROR, "{\"error\" : \"unsupported strategy \"}");
+//            throw new RRException(LLMErrorConstants.OTHER_ERROR, "{\"error\" : \"unsupported strategy \"}");
         }
+        throw r;
     }
 
     private ChatCompletionResult failoverGetChatCompletionResult(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> ragAdapters) {
         chatCompletionRequest.setModel(null);
+        RRException r = new RRException(LLMErrorConstants.OTHER_ERROR,"{\"error\":\"failover -> backend is not enabled.\"}");
         for (ILlmAdapter adapter : ragAdapters) {
             ChatCompletionRequest copy = new ChatCompletionRequest();
             BeanUtil.copyProperties(chatCompletionRequest, copy);
@@ -89,10 +92,10 @@ public class CompletionsService implements ChatCompletion{
                 return SensitiveWordUtil.filter(adapter.completions(chatCompletionRequest));
             } catch (RRException e) {
                 freezingAdapterByErrorCode(adapter, e.getCode());
-                throw e;
+                r = e;
             }
         }
-        return null;
+        throw  r;
     }
 
 
