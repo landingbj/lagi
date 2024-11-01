@@ -11,8 +11,7 @@ import java.util.List;
 @ToString
 @Data
 public class ModelFunctions {
-    @JsonProperty("chat_policy")
-    private String chatPolicy;
+
     private List<EmbeddingConfig> embedding;
     @JsonProperty("chat")
     private List<Backend> chat;

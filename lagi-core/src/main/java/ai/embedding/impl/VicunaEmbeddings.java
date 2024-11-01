@@ -1,7 +1,6 @@
 package ai.embedding.impl;
 
 import ai.common.client.AiServiceCall;
-import ai.common.client.AiServiceInfo;
 import ai.common.pojo.EmbeddingConfig;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
@@ -11,8 +10,8 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class VicunaEmbeddings implements Embeddings {
     private final Gson gson = new Gson();
@@ -20,6 +19,11 @@ public class VicunaEmbeddings implements Embeddings {
     private String openAIAPIKey;
     private String modelName;
     private String apiEndpoint;
+    private ConnectionPool connectionPool = new ConnectionPool(
+            100, // 最大空闲连接数
+            100, // 保持连接的时间
+            TimeUnit.MINUTES
+    );
 
     public VicunaEmbeddings(EmbeddingConfig config) {
         this.openAIAPIKey = config.getApi_key();
@@ -29,8 +33,10 @@ public class VicunaEmbeddings implements Embeddings {
 
     public List<List<Float>> createEmbedding(List<String> docs) {
         List<List<Float>> result = new ArrayList<>();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectionPool(connectionPool)
+                .build();
         try {
-            OkHttpClient client = new OkHttpClient();
             MediaType JSON = MediaType.get("application/json; charset=utf-8");
             OpenAIEmbeddingRequest openAIEmbeddingRequest = new OpenAIEmbeddingRequest();
             openAIEmbeddingRequest.setInput(docs);

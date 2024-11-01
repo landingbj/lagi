@@ -2,12 +2,16 @@ package ai.llm.adapter.impl;
 
 import ai.annotation.LLM;
 import ai.common.ModelService;
+import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.pojo.LlmApiResponse;
+import ai.llm.utils.LLMErrorConstants;
+import ai.llm.utils.OpenAiApiUtil;
+import ai.llm.utils.convert.SenseConvert;
 import ai.openai.pojo.*;
-import ai.utils.qa.HttpUtil;
+import cn.hutool.core.text.StrFormatter;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.google.gson.Gson;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +20,6 @@ import java.util.*;
 
 @LLM(modelNames = {"SenseChat-Turbo","SenseChat-FunctionCall","SenseChat-5","SenseChat-128K","SenseChat-32K"})
 public class SenseChatAdapter extends ModelService implements ILlmAdapter {
-    private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(SenseChatAdapter.class);
     private static final String COMPLETIONS_URL = "https://api.sensenova.cn/v1/llm/chat-completions";
     private static final int HTTP_TIMEOUT = 15 * 1000;
@@ -35,44 +38,16 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
         String token = sign(getApiKey(),  getSecretKey());
-        headers.put("Authorization", "Bearer " + token);
-        String jsonResult = null;
         chatCompletionRequest.setModel(getModel());
         chatCompletionRequest.setStream(false);
-        try {
-            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, gson.toJson(chatCompletionRequest), HTTP_TIMEOUT);
-        } catch (Exception e) {
-            logger.error("HttpUtil这里有错", e);
+        LlmApiResponse completions = OpenAiApiUtil.completions(token, COMPLETIONS_URL, HTTP_TIMEOUT, chatCompletionRequest,
+                SenseConvert::convert2ChatCompletionResult, SenseConvert::convertByResponse);
+        if(completions.getCode() != 200) {
+            logger.error("SenseChat api code {},  error {}",completions.getCode(),  completions.getMsg());
+            throw new RRException(completions.getCode(), completions.getMsg());
         }
-        if (jsonResult == null) {
-            return null;
-        }
-        Map<String,Object> map = gson.fromJson(jsonResult, Map.class);
-        Map<String,Object> map1 = gson.fromJson(map.get("data").toString(), Map.class);
-        Usage usage = gson.fromJson(map1.get("usage").toString(), Usage.class);
-        List<Map<String,Object>> mapm = gson.fromJson(map1.get("choices").toString(), List.class);
-        Map<String,Object> map2 = mapm.get(0);
-        ChatMessage message = new ChatMessage();
-        message.setContent(map2.get("message").toString());
-        message.setRole("user");
-        List<ChatCompletionChoice> choices = new ArrayList<>();
-        ChatCompletionChoice choice = new ChatCompletionChoice();
-        choice.setIndex(0);
-        choice.setDelta(message);
-        choice.setMessage(message);
-        choice.setFinish_reason(map2.get("finish_reason").toString());
-        choices.add(choice);
-        ChatCompletionResult response = new ChatCompletionResult();
-        response.setUsage(usage);
-        response.setId(map1.get("id").toString());
-        response.setChoices(choices);
-        if (response == null || response.getChoices().isEmpty()) {
-            return null;
-        }
-        return response;
+        return completions.getData();
     }
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
@@ -82,6 +57,8 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
         Iterable<ChatCompletionResult> iterable = list;
         return Observable.fromIterable(iterable);
     }
+
+
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
             request.setModel(getModel());
@@ -101,8 +78,10 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
                     .withNotBefore(notBefore)
                     .sign(algo);
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            String msg = StrFormatter.format("{\"error\":\"{}\"}", e.getMessage());
+            Integer code = LLMErrorConstants.INVALID_AUTHENTICATION_ERROR;
+            logger.error("SenseChat api code {},  error {}",code, msg);
+            throw new RRException(code, msg);
         }
     }
 }

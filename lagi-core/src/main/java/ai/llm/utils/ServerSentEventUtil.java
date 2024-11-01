@@ -1,6 +1,5 @@
 package ai.llm.utils;
 
-import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.utils.ObservableList;
@@ -14,10 +13,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.SocketTimeoutException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -26,10 +24,16 @@ public class ServerSentEventUtil {
 
     private static final Logger log = LoggerFactory.getLogger(ServerSentEventUtil.class);
 
-    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func, ModelService modelService) {
-        return streamCompletions(json, apiUrl, apiKey, new HashMap<>(), func, modelService);
+    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Function<String, ChatCompletionResult> func,
+                                                                         ModelService modelService,
+                                                                         Function<Response, RRException> convertError
+                                                                         ) {
+        return streamCompletions(json, apiUrl, apiKey, new HashMap<>(), func, modelService, convertError);
     }
-    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl, String apiKey, Map<String,String> addHeader , Function<String, ChatCompletionResult> func, ModelService modelService) {
+    public static ObservableList<ChatCompletionResult> streamCompletions(String json, String apiUrl,
+                                                                         String apiKey, Map<String,String> addHeader ,
+                                                                         Function<String, ChatCompletionResult> func,
+                                                                         ModelService modelService, Function<Response, RRException> convertError) {
         OkHttpClient client = new OkHttpClient.Builder()
 //                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
                 .connectTimeout(10, TimeUnit.SECONDS)
@@ -50,7 +54,6 @@ public class ServerSentEventUtil {
 
         EventSource.Factory factory = EventSources.createFactory(client);
         ObservableList<ChatCompletionResult> result = new ObservableList<>();
-
         factory.newEventSource(request, new EventSourceListener() {
             @Override
             public void onOpen(@NotNull EventSource eventSource, @NotNull Response response) {
@@ -66,13 +69,16 @@ public class ServerSentEventUtil {
 
             @Override
             public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-                log.error("model request failed response : {}", response);
-                LLM annotation = modelService.getClass().getAnnotation(LLM.class);
-                 Arrays.stream(annotation.modelNames()).forEach(
-                    model->{
-                        CacheManager.put(model, Boolean.FALSE);
+                RRException exception = convertError.apply(response);
+                if(Objects.equals(exception.getCode(), LLMErrorConstants.PERMISSION_DENIED_ERROR)
+                        || Objects.equals(exception.getCode(), LLMErrorConstants.RESOURCE_NOT_FOUND_ERROR)
+                        || Objects.equals(exception.getCode(), LLMErrorConstants.INVALID_AUTHENTICATION_ERROR)) {
+                    String model = modelService.getModel();
+                    if(CacheManager.getInstance().get(model)) {
+                        CacheManager.getInstance().put(modelService.getModel(), false);
+                        log.error("The  model {} has been blocked : {}",modelService.getModel(), exception.getMsg());
                     }
-                );
+                }
                 if(t != null) {
                     log.error("model request failed error {}", t.getMessage());
                 }
@@ -92,4 +98,5 @@ public class ServerSentEventUtil {
         });
         return result;
     }
+
 }

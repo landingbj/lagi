@@ -1,13 +1,11 @@
 package ai.config;
 
 import ai.common.pojo.*;
-import ai.config.pojo.AgentConfig;
-import ai.config.pojo.ModelFunctions;
-import ai.config.pojo.StoreConfig;
-import ai.config.pojo.WorkerConfig;
+import ai.config.pojo.*;
 import ai.manager.*;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.ocr.OcrConfig;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -29,9 +27,13 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private ModelFunctions functions;
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
+    @JsonProperty("global")
+    private GlobalConfig global;
+
 
     @Override
     public void init() {
+        this.global = global == null ? new GlobalConfig() : global;
         EmbeddingManager.getInstance().register(functions.getEmbedding());
         BigdataManager.getInstance().register(stores.getBigdata());
         OSSManager.getInstance().register(stores.getOss());

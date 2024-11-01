@@ -101,7 +101,7 @@ public class SearchContainer extends ReduceContainer implements IRContainer {
 	}
 	
 	//mapper线程失败的处理
-	public void onMapperFail(String mapperName) 
+	public void onMapperFail(String mapperName, Integer priority, Throwable throwable)
 	{
 		threadNum --;
 		if(threadNum == 0) 

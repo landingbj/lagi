@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.common.ModelService;
+import ai.common.exception.RRException;
 import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
@@ -18,12 +19,9 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
-import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.service.LlmRouterDispatcher;
-import ai.llm.utils.CacheManager;
 import ai.llm.utils.CompletionUtil;
-import ai.manager.LlmManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -43,7 +41,6 @@ import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -147,16 +144,30 @@ public class LlmApiServlet extends BaseServlet {
             chatCompletionRequest.setMessages(chatMessages);
         }
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
-            resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-            streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
-        } else {
-            ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
-            if (context != null) {
-                CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+            try {
+                Observable<ChatCompletionResult> result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
+                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+                streamOutPrint(result, context, indexSearchDataList, out);
+            } catch (RRException e) {
+                resp.setStatus(e.getCode());
+                responsePrint(resp, e.getMsg());
             }
-            responsePrint(resp, toJson(result));
+
+        } else {
+            try {
+                ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+                if (context != null) {
+                    CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+                }
+                responsePrint(resp, toJson(result));
+            } catch (RRException e) {
+                resp.setStatus(e.getCode());
+                responsePrint(resp, e.getMsg());
+            }
         }
     }
+
+
 
     private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {
         if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
@@ -232,17 +243,8 @@ public class LlmApiServlet extends BaseServlet {
         return medusaRequest;
     }
 
-    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
-        if(limit <= 0 ) {
-            out.close();
-            return;
-        }
-        ChatCompletionRequest request = new ChatCompletionRequest();
-        BeanUtil.copyProperties(chatCompletionRequest, request);
-        ILlmAdapter ragAdapter = completionsService.getRagAdapter(request, indexSearchDataList);
-        Observable<ChatCompletionResult> observable = completionsService.streamCompletions(ragAdapter, request);
+    private void streamOutPrint(Observable<ChatCompletionResult> observable, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out) {
         final ChatCompletionResult[] lastResult = {null, null};
-        int finalLimit = limit - 1;
         observable.subscribe(
                 data -> {
                     lastResult[0] = data;
@@ -264,18 +266,13 @@ public class LlmApiServlet extends BaseServlet {
                 },
                 e -> {
                     logger.error("", e);
-                    ModelService modelService = (ModelService) ragAdapter;
-                    CacheManager.put(modelService.getModel(), false);
-                    streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
                 },
                 () -> {
                     if(lastResult[0] == null) {
-                        streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
                         return;
                     }
                     extracted(lastResult,indexSearchDataList,context, out);
                     lastResult[0].setChoices(lastResult[1].getChoices());
-
                     out.flush();
                     out.close();
                 }

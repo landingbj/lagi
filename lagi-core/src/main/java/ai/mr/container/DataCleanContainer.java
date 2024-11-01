@@ -79,7 +79,7 @@ public class DataCleanContainer extends ReduceContainer implements IRContainer {
 
 	//mapper线程失败的处理
 	@Override
-	public void onMapperFail(String mapperName) {
+	public void onMapperFail(String mapperName, Integer priority, Throwable throwable) {
 		latch.countDown();
 	}
 

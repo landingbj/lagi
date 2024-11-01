@@ -110,7 +110,7 @@ if(_DEBUG_3) {
 
 	//mapper线程失败的处理
 	@Override
-	public void onMapperFail(String mapperName) {
+	public void onMapperFail(String mapperName, Integer priority, Throwable throwable) {
 		latch.countDown();
 		
 if(_DEBUG_3) {

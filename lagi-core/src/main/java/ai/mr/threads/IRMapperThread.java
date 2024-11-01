@@ -17,7 +17,9 @@ import java.util.List;
 
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class IRMapperThread extends MapperThread {
 	IMapper mapper = null;
 	IRContainer container = null;
@@ -39,8 +41,8 @@ public class IRMapperThread extends MapperThread {
 			list = mapper.myMapping();
 			container.onMapperComplete(mapperName, list, priority);
 		} catch (Exception e) {
-			container.onMapperFail(mapperName);
-			e.printStackTrace();
+			container.onMapperFail(mapperName, priority, e);
+			log.error(e.getMessage());
 		}
 	}
 

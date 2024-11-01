@@ -72,14 +72,14 @@ public class PreferenceServlet extends RestfulServlet {
     }
 
     private String getModelName(String userModel, String defaultModel) {
-        return userModel == null  || (!CacheManager.get(userModel))? defaultModel : userModel;
+        return userModel == null  || (!CacheManager.getInstance().get(userModel))? defaultModel : userModel;
     }
 
     private <T> String getModelService(AIManager<T> aiManager) {
         if(!aiManager.getAdapters().isEmpty()) {
             ModelService modelService =  aiManager.getAdapters().stream()
                     .map(a-> (ModelService) a)
-                    .filter(a-> CacheManager.get(a.getModel()))
+                    .filter(a-> CacheManager.getInstance().get(a.getModel()))
                     .findAny()
                     .orElse(null);
             if (modelService != null) {
@@ -95,7 +95,7 @@ public class PreferenceServlet extends RestfulServlet {
         List<ModelInfo> orDefault = modelInfoMap.getOrDefault(type, Collections.emptyList()).stream()
                 .map(a->{
                     a = ObjectUtil.cloneByStream(a);
-                    a.setEnabled(a.getEnabled() && CacheManager.get(a.getModel()));
+                    a.setEnabled(a.getEnabled() && CacheManager.getInstance().get(a.getModel()));
                     return a;
                 })
                 .collect(Collectors.toList());

@@ -2,8 +2,10 @@ package ai.llm.adapter.impl;
 
 import ai.annotation.LLM;
 import ai.common.ModelService;
+import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.utils.MappingIterable;
+import ai.llm.utils.convert.QwenConvert;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -13,27 +15,22 @@ import com.alibaba.dashscope.aigc.generation.Generation;
 import com.alibaba.dashscope.aigc.generation.GenerationParam;
 import com.alibaba.dashscope.aigc.generation.GenerationResult;
 import com.alibaba.dashscope.common.Message;
+import com.alibaba.dashscope.exception.ApiException;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
-import com.google.gson.Gson;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 @LLM(modelNames = {"qwen-turbo","qwen-plus","qwen-max","qwen-max-1201","qwen-max-longcontext"})
 public class QwenAdapter extends ModelService implements ILlmAdapter {
-
-
-    @Override
-    public boolean verify() {
-        if(getApiKey() == null || getApiKey().startsWith("you")) {
-            return false;
-        }
-        return true;
-    }
 
 
     @Override
@@ -43,8 +40,10 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         GenerationResult result;
         try {
             result = gen.call(param);
-        } catch (NoApiKeyException | InputRequiredException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            RRException exception = QwenConvert.convert2RRexception(e);
+            log.error("qwen  api code {} error {}", exception.getCode(), exception.getMsg());
+            throw new RRException(exception.getCode(), exception.getMsg());
         }
         return convertResponse(result);
     }
@@ -60,6 +59,13 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
             throw new RuntimeException(e);
         }
         Iterable<GenerationResult> resultIterable = result.blockingIterable();
+        try {
+            boolean b = resultIterable.iterator().hasNext();
+        } catch (ApiException e) {
+            RRException exception = QwenConvert.convert2RRexception(e);
+            log.error("qwen  stream  api code {} error {}", exception.getCode(), exception.getMsg());
+            throw exception;
+        }
         Iterable<ChatCompletionResult> iterable = new MappingIterable<>(resultIterable, this::convertResponse);
         return Observable.fromIterable(iterable);
     }
@@ -109,5 +115,11 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         choices.add(choice);
         result.setChoices(choices);
         return result;
+    }
+
+    private void setDefaultModel(ChatCompletionRequest chatCompletionRequest) {
+        if(chatCompletionRequest.getModel() == null) {
+            chatCompletionRequest.setModel(getModel());
+        }
     }
 }
