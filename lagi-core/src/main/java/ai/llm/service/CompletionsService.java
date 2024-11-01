@@ -89,7 +89,7 @@ public class CompletionsService implements ChatCompletion{
             ChatCompletionRequest copy = new ChatCompletionRequest();
             BeanUtil.copyProperties(chatCompletionRequest, copy);
             try {
-                return SensitiveWordUtil.filter(adapter.completions(chatCompletionRequest));
+                return SensitiveWordUtil.filter(adapter.completions(copy));
             } catch (RRException e) {
                 freezingAdapterByErrorCode(adapter, e.getCode());
                 r = e;
@@ -125,7 +125,7 @@ public class CompletionsService implements ChatCompletion{
             for (ILlmAdapter adapter : ragAdapters) {
                 ChatCompletionRequest copy = new ChatCompletionRequest();
                 BeanUtil.copyProperties(chatCompletionRequest, copy);
-                registerMapper(chatCompletionRequest, adapter, contain);
+                registerMapper(copy, adapter, contain);
             }
             IReducer qaReducer = new QaReducer();
             contain.registerReducer(qaReducer);

@@ -14,7 +14,7 @@ public class GlobalConfig {
     @JsonCreator
     public GlobalConfig() {
         if(chat == null) {
-            chat = new ChatConfig();
+            chat = new ChatConfig(4096, "parallel", 7200);
         }
     }
 }
