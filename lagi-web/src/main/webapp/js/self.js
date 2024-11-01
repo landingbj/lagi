@@ -135,7 +135,7 @@ function txtTovoice(txt, emotion) {
 
                     voice_url = json.data;
                     const audioElement = document.getElementsByClassName('myAudio1')[len - 1];
-                    $(".myAudio1")[len-  1].src = json.data
+                    $(".myAudio1")[len - 1].src = json.data
                     const playButton = document.getElementsByClassName('playIcon1')[len - 1];
                     const audioSource = document.getElementById("audioSource");
                     // 添加点击事件处理程序来控制音频的播放和暂停
@@ -234,6 +234,11 @@ fileUploadButton.addEventListener("click", function () {
 
     // 监听文件选择事件
     fileInput.addEventListener("change", function () {
+        if (currentPromptDialog !== undefined && currentPromptDialog.key === OCR_NAV_KEY) {
+            uploadOcrFiles(fileInput.files);
+            return;
+        }
+
         disableQueryBtn();
 
         const selectedFile = fileInput.files[0];
@@ -386,6 +391,185 @@ fileUploadButton.addEventListener("click", function () {
         document.body.removeChild(fileInput);
     });
 });
+
+function uploadOcrFiles(files) {
+    var formData = new FormData();
+    var statusInterval = null;
+    var addIndexInterval = null;
+
+    for (var i = 0; i < files.length; i++) {
+        console.log(files[i]);
+        formData.append('files[]', files[i]);
+    }
+
+    let lang = $("#ocr-lang-select").val();
+
+    addRobotDialog("正在进行文件处理...");
+
+    $.ajax({
+        url: '/v1/audit/uploadFiles?lang=' + lang,
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (response) {
+            if (response.status === 'success') {
+                $('#item-content .markdown').last().text("文件处理完成，以下是OCR处理结果：");
+                for (var i = 0; i < response.data.length; i++) {
+                    var text = response.data[i];
+                    addRobotDialog(text + "<br>");
+                }
+            } else {
+                $('#item-content .markdown').last().text(response.msg);
+            }
+        },
+        error: function (jqXHR, textStatus, errorMessage) {
+            console.log('uploadFiles', errorMessage);
+            $('#item-content .markdown').last().text(response.msg);
+        }
+    });
+
+    function getAuditFileStatus(taskId) {
+        $.ajax({
+            type: "GET",
+            url: "/v1/audit/getAuditFileStatus?taskId=" + taskId,
+            success: function (res) {
+                if (res.data !== undefined) {
+                    let totalPageSize = res.data.totalPageSize;
+                    let processedPageSize = res.data.processedPageSize;
+                    let filename = res.data.filename;
+                    let text = '正在预处理文件《' + filename + "》，完成进度：" + processedPageSize + "/" + totalPageSize;
+                    $('#item-content .markdown').last().text(text);
+
+                    let processedFileSize = res.data.processedFileSize;
+                    let totalFileSize = res.data.totalFileSize;
+                    if (processedFileSize >= totalFileSize) {
+                        clearInterval(statusInterval);
+                        $('#item-content .markdown').last().text("文件预处理完成，下一步进行文件分析。");
+                        addRobotDialog("文件预处理成功，正在准备分析文件...");
+                        addIndexInterval = setInterval(getAddIndexProgress, 1000, taskId);
+                    }
+                }
+
+            },
+            error: function (res) {
+                clearInterval(statusInterval)
+            }
+        });
+    }
+
+    function getAddIndexProgress(taskId) {
+        $.ajax({
+            type: "GET",
+            url: "/v1/audit/getAddIndexProgress?taskId=" + taskId,
+            success: function (res) {
+                if (res.data !== undefined) {
+                    let processedFileSize = res.data.processedFileSize;
+                    let totalFileSize = res.data.totalFileSize;
+                    let filename = res.data.filename;
+                    let text = '正在分析文件《' + filename + "》，完成进度：" + processedFileSize + "/" + totalFileSize;
+                    $('#item-content .markdown').last().text(text);
+
+                    if (processedFileSize >= totalFileSize) {
+                        clearInterval(addIndexInterval);
+                        $('#item-content .markdown').last().text("文件分析完成，开始生成报告。");
+                        processAuditFile(taskId);
+                    }
+                }
+            },
+            error: function (res) {
+                clearInterval(addIndexInterval)
+            }
+        });
+    }
+
+    function processAuditFile(taskId) {
+        let question = "以下是您上传文件的审计报告：";
+        let conversation = {user: {question: question}, robot: {answer: ''}}
+        let robotAnswerJq = newConversation(conversation, false, true);
+        var paras = {
+            "taskId": taskId
+        };
+        auditStreamOutput(paras, question, robotAnswerJq);
+    }
+
+    function auditStreamOutput(paras, question, robootAnswerJq) {
+        async function generateStream(paras) {
+            const response = await fetch('/v1/audit/processAuditFile', {
+                method: "POST",
+                cache: "no-cache",
+                keepalive: true,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "text/event-stream",
+                },
+                body: JSON.stringify(paras),
+            });
+
+            const reader = response.body.getReader();
+            let fullText = '';
+            let flag = true;
+            while (flag) {
+                const {value, done} = await reader.read();
+                let res = new TextDecoder().decode(value);
+                if (res.startsWith("error:")) {
+                    robootAnswerJq.html(res.replaceAll('error:', ''));
+                    return;
+                }
+                let chunkStr = new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+                const chunkArray = chunkStr.split("\n\n");
+                for (let i = 0; i < chunkArray.length; i++) {
+                    let chunk = chunkArray[i];
+                    if (chunk === "[DONE]") {
+                        CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+                        CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                        flag = false;
+                        result = `
+                        ${fullText}
+                        `
+                        robootAnswerJq.html(result);
+                        break;
+                    }
+                    var json = JSON.parse(chunk);
+                    if (json.choices === undefined) {
+                        queryLock = false;
+                        robootAnswerJq.html("调用失败！");
+                        break
+                    }
+                    if (json.choices.length === 0) {
+                        continue;
+                    }
+                    var chatMessage = json.choices[0].message;
+                    if (chatMessage.content === undefined) {
+                        continue;
+                    }
+                    var t = chatMessage.content;
+                    t = t.replaceAll("\n", "<br>");
+                    fullText += t;
+                    result = `
+                        ${fullText}
+                        `
+                    robootAnswerJq.html(result + '<p style="display: inline-block"></p>');
+                }
+            }
+        }
+
+        generateStream(paras).then(r => {
+            enableQueryBtn();
+            querying = false;
+        }).catch((err) => {
+            console.error(err);
+            enableQueryBtn();
+            querying = false;
+            queryLock = false;
+            if (!robootAnswerJq.text) {
+                robootAnswerJq.html("调用失败！");
+            }
+        });
+    }
+
+}
 
 
 function textQuery1(questionRel, answerRel, fileStatus) {
@@ -646,11 +830,10 @@ var Recoder = {
 }
 
 
-
 const agentButton = document.getElementById("agentButton");
 agentButton.addEventListener("click", function (e) {
     $('#agent-container').toggle();
-    $(document).one("click", function(){
+    $(document).one("click", function () {
         $("#agent-container").hide();
     });
     e.stopPropagation();

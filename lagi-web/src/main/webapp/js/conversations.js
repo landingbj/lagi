@@ -116,9 +116,7 @@ function addRobotDialog(robotAnswer) {
             <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
                 <div class="flex flex-grow flex-col gap-3">
                     <div class="min-h-[20px] flex flex-col items-start gap-4">
-                        <div class="markdown prose-r w-full break-words dark:prose-invert light result-streaming">
-                            ${robotAnswer == '' ? '<p></p>' : robotAnswer} 
-                        </div>
+                        <div class="markdown prose-r w-full break-words dark:prose-invert light result-streaming">${robotAnswer == '' ? '<p></p>' : robotAnswer} </div>
                     </div>
                 </div>
                 </div>

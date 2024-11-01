@@ -216,4 +216,21 @@ pre .key {
 	height: 1.5em;
 	border-radius: 5px;
 	color: white;
-} 
+}
+
+#ocr-lang {
+	display: none;
+	font-size: 1em;
+}
+
+.ocr-lang-select-div{
+	padding-top: 5px;
+}
+
+.ocr-lang-select-span {
+	padding-top: 5px;
+}
+
+.markdown{
+	white-space: pre-line;
+}

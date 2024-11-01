@@ -178,6 +178,29 @@
                     <button id = "modelSaveBtn" class="inline-block" onclick="savePerference()">保存</button>
                   </div>
                 </div>
+
+                <div id="ocr-lang" class="w-full h-16 pl-10">
+                  <div class="inline-block ocr-lang-select-div float-left">
+                    <span class="inline-block ocr-lang-select-span float-left">语言选择：</span>
+                   </div>
+                  <div class="inline-block ocr-lang-select-div float-left">
+                    <select id="ocr-lang-select" class="w-20">
+                      <option value="chn" select>中文</option>
+                      <option value="eng">英文</option>
+                      <option value="ja">日文</option>
+                      <option value="lading">拉丁</option>
+                      <option value="kor">韩文</option>
+                      <option value="tai">泰文</option>
+                      <option value="rus">俄文</option>
+                      <option value="mys">马来文</option>
+                      <option value="idn">印尼文</option>
+                      <option value="viet">越南文</option>
+                      <option value="ukr">乌克兰文</option>
+                      <option value="tur">土耳其文</option>
+                      <option value="tamil">泰米尔文</option>
+                    </select>
+                  </div>
+                </div>
               </div>
               <div role="presentation" class="flex h-full">
                 <!-- 隐藏文本遮罩 -->

@@ -216,7 +216,7 @@ function socialCircles() {
     // 社交接入
     for(let i = 0; i < promptNavs.length; i++) {
         let nav = promptNavs[i];
-        if(nav.key == SOCIAL_NAV_KEY) {
+        if(nav.key === SOCIAL_NAV_KEY) {
             getPromptDialog(nav.id);
         }
     }
