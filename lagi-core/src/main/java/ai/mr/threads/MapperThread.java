@@ -21,7 +21,7 @@ public class MapperThread implements Runnable {
 			mapper.myMapping();
 		} 
 		catch (Exception e) {
-			container.onMapperFail(mapperName);
+			container.onMapperFail(mapperName, null, e);
 			e.printStackTrace();
 		}
 		

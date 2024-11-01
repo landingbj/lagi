@@ -2,8 +2,10 @@ package ai.llm.adapter.impl;
 
 import ai.annotation.LLM;
 import ai.common.ModelService;
+import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.utils.MappingIterable;
+import ai.llm.utils.convert.ErnieConvert;
 import ai.openai.pojo.*;
 import ai.utils.qa.ChatCompletionUtil;
 import com.baidubce.qianfan.Qianfan;
@@ -12,6 +14,7 @@ import com.baidubce.qianfan.model.chat.ChatRequest;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import com.baidubce.qianfan.model.chat.Message;
 import io.reactivex.Observable;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @LLM(modelNames = {"ERNIE-Speed-128K","ERNIE-Bot-turbo","ERNIE-4.0-8K","ERNIE-3.5-8K-0205","ERNIE-3.5-4K-0205", "ERNIE-3.5-8K-1222"})
 public class ErnieAdapter extends ModelService implements ILlmAdapter {
 
@@ -37,10 +41,16 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         String secretKey = this.getSecretKey();
         String apiKey = this.getApiKey();
-        Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
-        ChatRequest request = convertRequest(chatCompletionRequest);
-        ChatResponse response = qianfan.chatCompletion(request);
-        return convertResponse(response);
+        try {
+            Qianfan qianfan = new Qianfan(Auth.TYPE_OAUTH, apiKey, secretKey);
+            ChatRequest request = convertRequest(chatCompletionRequest);
+            ChatResponse response = qianfan.chatCompletion(request);
+            return convertResponse(response);
+        } catch (Exception e) {
+            RRException exception = ErnieConvert.convert2RRexception(e);
+            log.error("ERNIE api code {}  error {}",exception.getCode(), exception.getMsg());
+            throw exception;
+        }
     }
 
     @Override
@@ -54,9 +64,10 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
             Iterable<ChatCompletionResult> iterable = new MappingIterable<>(() -> iterator, this::convertResponse);
             return Observable.fromIterable(iterable);
         } catch (Exception e) {
-            e.printStackTrace();
+            RRException exception = ErnieConvert.convert2RRexception(e);
+            log.error("ERNIE stream api code {}  error {}",exception.getCode(), exception.getMsg());
+            throw exception;
         }
-        return null;
     }
 
     private ChatRequest convertRequest(ChatCompletionRequest request) {

@@ -64,7 +64,7 @@ public class PRMatrixContainer extends BaseContainer implements IContainer {
 
 	// mapper线程失败的处理
 	@Override
-	public void onMapperFail(String mapperName) {
+	public void onMapperFail(String mapperName, Integer priority, Throwable throwable) {
 		Iterator<Entry<String, IMapper>> it = mappersGroup.entrySet().iterator();
 		while (it.hasNext()) {
 			Entry<String, IMapper> entry = it.next();

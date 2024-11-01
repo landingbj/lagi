@@ -28,6 +28,10 @@ public class ModelService implements ModelVerify{
 
     @Override
     public boolean verify() {
+        if(getApiKey() == null || getApiKey().startsWith("you")) {
+            return false;
+        }
         return true;
     }
+
 }

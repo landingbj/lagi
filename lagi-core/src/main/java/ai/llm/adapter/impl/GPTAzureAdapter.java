@@ -2,21 +2,20 @@ package ai.llm.adapter.impl;
 
 import ai.annotation.LLM;
 import ai.common.ModelService;
-import ai.common.utils.ObservableList;
+import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
-import ai.llm.utils.ServerSentEventUtil;
+import ai.llm.pojo.LlmApiResponse;
+import ai.llm.utils.OpenAiApiUtil;;
+import ai.llm.utils.convert.GptAzureConvert;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
-import ai.utils.qa.HttpUtil;
 import com.google.gson.Gson;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 @LLM(modelNames = {"gpt-3.5-turbo","gpt-4-1106-preview","gpt-4o-20240513"})
 public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
@@ -26,13 +25,6 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
     private static final int HTTP_TIMEOUT = 30 * 1000;
 
 
-    @Override
-    public boolean verify() {
-        if(getApiKey() == null || getApiKey().startsWith("you")) {
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public String getApiAddress() {
@@ -42,24 +34,19 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
+        chatCompletionRequest.setCategory(null);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("api-key", getApiKey());
-        String jsonResult = null;
-        chatCompletionRequest.setCategory(null);
-        try {
-            jsonResult = HttpUtil.httpPost(getApiAddress(), headers, chatCompletionRequest, HTTP_TIMEOUT);
-        } catch (IOException e) {
-            logger.error("", e);
+
+        LlmApiResponse completions = OpenAiApiUtil.completions(getApiKey(), getApiAddress(), HTTP_TIMEOUT, chatCompletionRequest,
+                GptAzureConvert::convert2ChatCompletionResult, GptAzureConvert::convertByResponse,
+                headers);
+        if(completions.getCode() != 200) {
+            logger.error("open ai  api error {}", completions.getMsg());
+            throw new RRException(completions.getCode(), completions.getMsg());
         }
-        if (jsonResult == null) {
-            return null;
-        }
-        ChatCompletionResult response = gson.fromJson(jsonResult, ChatCompletionResult.class);
-        if (response == null || response.getChoices().isEmpty()) {
-            return null;
-        }
-        return response;
+        return completions.getData();
     }
 
     @Override
@@ -67,27 +54,19 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
         setDefaultModel(chatCompletionRequest);
         chatCompletionRequest.setCategory(null);
         String apiUrl = getApiAddress();
-        String json = gson.toJson(chatCompletionRequest);
         String apiKey = getApiKey();
-        Function<String, ChatCompletionResult> convertFunc = e -> {
-            if (e.equals("[DONE]")) {
-                return null;
-            }
-            ChatCompletionResult result = gson.fromJson(e, ChatCompletionResult.class);
-            result.getChoices().forEach(choice -> {
-                choice.setMessage(choice.getDelta());
-                choice.setDelta(null);
-            });
-            return result;
-        };
-        Map<String,String> addHeader = new HashMap() {{
-            put("api-key", apiKey);
-        }};
-        ObservableList<ChatCompletionResult> result =
-                ServerSentEventUtil.streamCompletions(json, apiUrl, apiKey,addHeader, convertFunc, this);
-        Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
-        return Observable.fromIterable(iterable);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("api-key", apiKey);
+        LlmApiResponse llmApiResponse = OpenAiApiUtil.streamCompletions(apiKey, apiUrl, HTTP_TIMEOUT, chatCompletionRequest,
+                GptAzureConvert::convertStreamLine2ChatCompletionResult, GptAzureConvert::convertByResponse, headers);
+        Integer code = llmApiResponse.getCode();
+        if(code != 200) {
+            logger.error("open ai stream api error {}", llmApiResponse.getMsg());
+            throw new RRException(code, llmApiResponse.getMsg());
+        }
+        return llmApiResponse.getStreamData();
     }
+
 
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {

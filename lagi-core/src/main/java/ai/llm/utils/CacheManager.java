@@ -1,5 +1,6 @@
 package ai.llm.utils;
 
+import ai.config.ContextLoader;
 import com.google.common.cache.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +16,14 @@ public class CacheManager {
 
     private static final long GUAVA_CACHE_DAY = 1;
 
-    private static LoadingCache<String, Boolean> GLOBAL_CACHE = null;
+    private final long GUAVA_CACHE_SECONDS;
 
-    static {
+    private  LoadingCache<String, Boolean> GLOBAL_CACHE = null;
+
+    private static final CacheManager INSTANCE = new CacheManager();
+
+    private CacheManager() {
+        GUAVA_CACHE_SECONDS = ContextLoader.configuration.getGlobal().getChat().getFreezeTime();
         try {
             GLOBAL_CACHE = loadCache(new CacheLoader <String, Boolean>() {
                 @Override
@@ -29,13 +35,17 @@ public class CacheManager {
             log.error("Cache error", e);
         }
     }
+    public static CacheManager getInstance(){
+        return INSTANCE;
+    }
 
 
-    private static LoadingCache<String, Boolean> loadCache(CacheLoader<String, Boolean> cacheLoader) throws Exception {
+
+    private LoadingCache<String, Boolean> loadCache(CacheLoader<String, Boolean> cacheLoader) throws Exception {
         LoadingCache<String, Boolean> cache = CacheBuilder.newBuilder()
                 .maximumSize(GUAVA_CACHE_SIZE)
-                .expireAfterAccess(GUAVA_CACHE_DAY, TimeUnit.HOURS)
-                .expireAfterWrite(GUAVA_CACHE_DAY, TimeUnit.HOURS)
+//                .expireAfterAccess(GUAVA_CACHE_SECONDS, TimeUnit.SECONDS)
+                .expireAfterWrite(GUAVA_CACHE_SECONDS, TimeUnit.SECONDS)
                 .removalListener(new RemovalListener <String, Boolean>() {
                     @Override
                     public void onRemoval(RemovalNotification<String, Boolean> rn) {
@@ -54,7 +64,7 @@ public class CacheManager {
      * @param key
      * @param value
      */
-    public static void put(String key, Boolean value) {
+    public void put(String key, Boolean value) {
         try {
             GLOBAL_CACHE.put(key, value);
         } catch (Exception e) {
@@ -63,7 +73,7 @@ public class CacheManager {
     }
 
 
-    public static void putAll(Map<? extends String, ? extends Boolean> map) {
+    public void putAll(Map<? extends String, ? extends Boolean> map) {
         try {
             GLOBAL_CACHE.putAll(map);
         } catch (Exception e) {
@@ -72,7 +82,7 @@ public class CacheManager {
     }
 
 
-    public static Boolean get(String key) {
+    public Boolean get(String key) {
         Boolean token = Boolean.TRUE;
         try {
             token = GLOBAL_CACHE.get(key);
@@ -83,7 +93,7 @@ public class CacheManager {
     }
 
 
-    public static void remove(Long key) {
+    public void remove(Long key) {
         try {
             GLOBAL_CACHE.invalidate(key);
         } catch (Exception e) {
@@ -92,7 +102,7 @@ public class CacheManager {
     }
 
 
-    public static void removeAll(Iterable<Long> keys) {
+    public void removeAll(Iterable<Long> keys) {
         try {
             GLOBAL_CACHE.invalidateAll(keys);
         } catch (Exception e) {
@@ -101,7 +111,7 @@ public class CacheManager {
     }
 
 
-    public static void removeAll() {
+    public void removeAll() {
         try {
             GLOBAL_CACHE.invalidateAll();
         } catch (Exception e) {
@@ -110,7 +120,7 @@ public class CacheManager {
     }
 
 
-    public static long size() {
+    public long size() {
         long size = 0;
         try {
             size = GLOBAL_CACHE.size();
@@ -120,15 +130,4 @@ public class CacheManager {
         return size;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        CacheManager.put("aaa", false);
-        Boolean s = CacheManager.get("aaa");
-        System.out.println(s);
-        Thread.sleep(1000);
-        s = CacheManager.get("aaa");
-        System.out.println(s);
-        Thread.sleep(3000);
-        s = CacheManager.get("aaa");
-        System.out.println("3s + 1s : " +s);
-    }
 }

@@ -4,6 +4,7 @@ import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.utils.MappingIterable;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.convert.ZhiPuConvert;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -22,18 +23,15 @@ import java.util.Optional;
 public class ZhipuAdapter extends ModelService implements ILlmAdapter {
 
 
-    @Override
-    public boolean verify() {
-        if(getApiKey() == null || getApiKey().startsWith("you")) {
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         ClientV4 client = new ClientV4.Builder(getApiKey()).build();
         ModelApiResponse invokeModelApiResp = client.invokeModelApi(convertRequest(chatCompletionRequest));
+        int code = invokeModelApiResp.getCode();
+        if(code != 200) {
+            throw ZhiPuConvert.convert2RRException(invokeModelApiResp);
+        }
         return convertResponse(invokeModelApiResp.getData());
     }
 
@@ -41,10 +39,15 @@ public class ZhipuAdapter extends ModelService implements ILlmAdapter {
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         ClientV4 client = new ClientV4.Builder(getApiKey()).build();
         ModelApiResponse sseModelApiResp = client.invokeModelApi(convertRequest(chatCompletionRequest));
+        int code = sseModelApiResp.getCode();
+        if(code != 200) {
+            throw ZhiPuConvert.convert2RRException(sseModelApiResp);
+        }
         Iterable<ModelData> resultIterable = sseModelApiResp.getFlowable().blockingIterable();
         Iterable<ChatCompletionResult> iterable = new MappingIterable<>(resultIterable, this::convertResponse);
         return Observable.fromIterable(iterable);
     }
+
 
     private com.zhipu.oapi.service.v4.model.ChatCompletionRequest convertRequest(ChatCompletionRequest request) {
         List<com.zhipu.oapi.service.v4.model.ChatMessage> messages = new ArrayList<>();

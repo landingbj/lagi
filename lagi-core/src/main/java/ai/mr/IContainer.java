@@ -6,7 +6,7 @@ public interface IContainer extends AutoCloseable {
 
 	public void onMapperComplete(String id);
 
-	public void onMapperFail(String id);
+	public void onMapperFail(String id, Integer priority, Throwable throwable);
 
 	public void onReducerComplete(String id);
 

@@ -2,17 +2,24 @@ package ai.llm.adapter.impl;
 
 import ai.annotation.LLM;
 import ai.common.ModelService;
+import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.convert.DouBaoConvert;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
+import com.volcengine.ark.runtime.exception.ArkHttpException;
 import com.volcengine.ark.runtime.model.completion.chat.ChatCompletionChunk;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessage;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessageRole;
 import com.volcengine.ark.runtime.service.ArkService;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,13 +30,7 @@ import java.util.stream.Collectors;
 public class DoubaoAdapter  extends ModelService implements ILlmAdapter {
 
 
-    @Override
-    public boolean verify() {
-        if(getApiKey() == null || getApiKey().startsWith("you")) {
-            return false;
-        }
-        return true;
-    }
+    private static final Logger log = LoggerFactory.getLogger(DoubaoAdapter.class);
 
     private String getModelEndpoint(String model) {
         Map<String, String> collect = Arrays.stream(alias.split(",")).collect(Collectors.toMap(a -> a.split("=")[0], a -> a.split("=")[1]));
@@ -38,32 +39,28 @@ public class DoubaoAdapter  extends ModelService implements ILlmAdapter {
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest request) {
         ArkService service = ArkService.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3/").build();
-        List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包人工智能助手").build();
-        ChatMessage userMessage = ChatMessage.builder().role(ChatMessageRole.USER).content(request.getMessages().get(0).getContent()).build();
-        messages.add(systemMessage);
-        messages.add(userMessage);
-
+        List<ChatMessage> messages = convertChatMessageList(request);
         com.volcengine.ark.runtime.model.completion.chat.ChatCompletionRequest chatCompletionRequest = com.volcengine.ark.runtime.model.completion.chat.ChatCompletionRequest.builder()
                 .model(getModelEndpoint(model))
                 .messages(messages)
                 .build();
-        com.volcengine.ark.runtime.model.completion.chat.ChatCompletionResult chatCompletion = service.createChatCompletion(chatCompletionRequest);
-
-        ChatCompletionResult result = new ChatCompletionResult();
-        BeanUtil.copyProperties(chatCompletion, result);
-        return result;
+        try {
+            com.volcengine.ark.runtime.model.completion.chat.ChatCompletionResult chatCompletion = service.createChatCompletion(chatCompletionRequest);
+            ChatCompletionResult result = new ChatCompletionResult();
+            BeanUtil.copyProperties(chatCompletion, result);
+            return result;
+        } catch (ArkHttpException e) {
+            log.error(e.toString());
+            RRException exception = new RRException(DouBaoConvert.convertByInt(e.statusCode), e.getMessage());
+            log.error("doubao api error code : {}, error: {}", exception.getCode(), exception.getMsg());
+            throw exception;
+        }
     }
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest request) {
         ArkService service = ArkService.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3/").build();
-        List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包人工智能助手").build();
-        ChatMessage userMessage = ChatMessage.builder().role(ChatMessageRole.USER).content(request.getMessages().get(0).getContent()).build();
-        messages.add(systemMessage);
-        messages.add(userMessage);
-
+        List<ChatMessage> messages = convertChatMessageList(request);
         com.volcengine.ark.runtime.model.completion.chat.ChatCompletionRequest streamChatCompletionRequest = com.volcengine.ark.runtime.model.completion.chat.ChatCompletionRequest.builder()
                 .model(getModelEndpoint(model))
                 .messages(messages)
@@ -81,12 +78,28 @@ public class DoubaoAdapter  extends ModelService implements ILlmAdapter {
                             }
                         }
                     });
-                }catch (Exception e) {
-                    System.out.println(e);
+                }catch (ArkHttpException e) {
+                    RRException exception = new RRException(DouBaoConvert.convertByInt(e.statusCode), e.getMessage());
+                    log.error("doubao api error code : {}, error: {}", exception.getCode(), exception.getMsg());
+                } finally {
+                    observableEmitter.onComplete();
                 }
-                observableEmitter.onComplete();
             });
         return iterable;
+    }
+
+    private static @NotNull List<ChatMessage> convertChatMessageList(ChatCompletionRequest request) {
+        List<ChatMessage> messages = new ArrayList<>();
+        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包人工智能助手").build();
+        List<ChatMessage> chatMessages = request.getMessages().stream()
+                .map(chatMessage -> ChatMessage.builder()
+                        .role(ChatMessageRole.valueOf(chatMessage.getRole()))
+                        .content(chatMessage.getContent())
+                        .build())
+                .collect(Collectors.toList());
+        messages.add(systemMessage);
+        messages.addAll(chatMessages);
+        return messages;
     }
 
     private ChatCompletionResult convertResponse(ChatCompletionChunk chatCompletionChunk) {

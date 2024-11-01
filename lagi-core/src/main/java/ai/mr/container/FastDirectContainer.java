@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import ai.common.exception.RRException;
 import ai.mr.AiGlobalMR;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
@@ -28,6 +29,8 @@ public class FastDirectContainer extends ReduceContainer implements IRContainer 
 	private List<Object> mapperResult = Collections.synchronizedList(new ArrayList<>());
 	private CountDownLatch latch = new CountDownLatch(0);
 	private IReducer reducer = null;
+	private volatile Integer maxPriority = -1;
+	private RRException rrException;
 	
 	//加载mapper与reducer类
 	@Override
@@ -78,8 +81,22 @@ public class FastDirectContainer extends ReduceContainer implements IRContainer 
 
 	//mapper线程失败的处理
 	@Override
-	public void onMapperFail(String mapperName) {
+	public void onMapperFail(String mapperName, Integer priority, Throwable throwable) {
 		latch.countDown();
+		if(throwable instanceof RRException) {
+			if(priority > maxPriority) {
+				synchronized (this) {
+					if(priority > maxPriority) {
+						maxPriority = priority;
+						rrException = (RRException) throwable;
+					}
+				}
+			}
+		}
+	}
+
+	public RRException getException() {
+		return rrException;
 	}
 
 	//reducer线程完成的处理
