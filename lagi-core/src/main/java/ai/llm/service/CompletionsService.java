@@ -53,7 +53,7 @@ public class CompletionsService implements ChatCompletion{
     }
 
     private String getPolicy() {
-        return ContextLoader.configuration.getGlobal().getChat().getPolicy();
+        return ContextLoader.configuration.getFunctions().getPolicy().getHandle();
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {

@@ -23,7 +23,7 @@ public class CacheManager {
     private static final CacheManager INSTANCE = new CacheManager();
 
     private CacheManager() {
-        GUAVA_CACHE_SECONDS = ContextLoader.configuration.getGlobal().getChat().getFreezeTime();
+        GUAVA_CACHE_SECONDS = ContextLoader.configuration.getFunctions().getPolicy().getGraceTime();
         try {
             GLOBAL_CACHE = loadCache(new CacheLoader <String, Boolean>() {
                 @Override
