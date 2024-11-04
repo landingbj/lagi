@@ -188,6 +188,32 @@ functions:
 
 ```
 
+路由政策配置
+
+```yaml
+functions:
+  policy:
+    #  handle Configuration: Currently, there are three values: parallel, failover, and polling. Parallel indicates concurrent invocation; failover indicates failover handling; polling indicates load balancing invocation. Scenario explanation：
+    # 1. When the model is not forcibly specified in the request or the specified model is invalid, the three strategies of parallel, failover, and polling take effect.
+    # 2. When the handle is set to parallel, the models configured for parallel execution will be invoked concurrently, returning the result of the fastest responding and highest-priority model call.
+    # 3. When the handle is set to failover, the models configured for serial execution will be executed in sequence according to priority. If any model returns successfully during the serial execution process, subsequent models will not be executed.
+    # 4. When the handle is set to polling, the models configured for round-robin execution will be invoked based on additional information such as the request IP and browser fingerprint, distributing requests evenly among the corresponding models.
+    # 5. When all models return failures, the HTTP request status code will be set to 600-608. The body will contain specific error messages. (The error code and message actually correspond to the failure information of the last model call.)
+    #  Error Codes： 
+    #     600 Invalid request parameters
+    #     601 Authorization error
+    #     602 Permission denied
+    #     603 Resource not found
+    #     604 Access frequency limit
+    #     605 Model internal error
+    #     606 Other errors
+    #     607 Timeout
+    #     608 No available models
+      handle: failover
+      grace_time: 20 # Retry interval after failure
+      maxgen: 3 # By default, the maximum number of retries after a fault occurs is Integer.MAX_VALUE
+```
+
 Agent configuration
 
 ```yaml
