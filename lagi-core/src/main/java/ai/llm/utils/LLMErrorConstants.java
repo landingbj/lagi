@@ -39,7 +39,7 @@ public class LLMErrorConstants {
     public static final Integer OTHER_ERROR = 606;
 
     /**
-     *  其他错误
+     *  超时
      */
     public static final Integer TIME_OUT = 607;
 
