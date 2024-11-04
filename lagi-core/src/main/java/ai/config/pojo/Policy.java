@@ -26,7 +26,7 @@ public class Policy {
     ) {
         this.handle = handle == null ? "parallel" : handle;
         this.graceTime = graceTime == null ? 3600 : graceTime;
-        this.maxGen = maxGen == null ? 1 : maxGen ;
+        this.maxGen = maxGen == null ? Integer.MAX_VALUE : maxGen ;
         this.contextLength = contextLength == null ? 4096 : contextLength;
     }
 }
