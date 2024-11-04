@@ -21,6 +21,7 @@ import ai.common.pojo.Backend;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.utils.CacheManager;
 import ai.llm.utils.LLMErrorConstants;
+import ai.llm.utils.PolicyConstants;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -76,9 +77,9 @@ public class CompletionsService implements ChatCompletion{
         List<ILlmAdapter> adapters = getLlmAdapters(indexSearchDataList);
         //  Operation strategy : failover or parallel or other
         String handle = getPolicy().getHandle();
-        if("failover".equals(handle)) {
+        if(PolicyConstants.FAILOVER.equals(handle)) {
             return failoverGetChatCompletionResult(chatCompletionRequest, adapters);
-        } else if("parallel".equals(handle)) {
+        } else if(PolicyConstants.PARALLEL.equals(handle)) {
             return parallelGetChatCompletionResult(chatCompletionRequest, adapters);
         } else {
 //            throw new RRException(LLMErrorConstants.OTHER_ERROR, "{\"error\" : \"unsupported strategy \"}");
