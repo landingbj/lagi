@@ -13,8 +13,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,10 +34,10 @@ public class OCRApiServlet extends RestfulServlet {
             uploadDirFile.mkdirs();
         }
         List<?> fileItems = upload.parseRequest(req);
-        if(fileItems == null || fileItems.isEmpty()) {
+        if (fileItems == null || fileItems.isEmpty()) {
             throw new RRException("缺少文件");
         }
-        List<File> files = fileItems.stream().map(fileItem->{
+        List<File> files = fileItems.stream().map(fileItem -> {
             FileItem fi = (FileItem) fileItem;
             if (!fi.isFormField()) {
                 String fileName = fi.getName();
@@ -68,22 +67,24 @@ public class OCRApiServlet extends RestfulServlet {
     public List<String> recognizePdf(HttpServletRequest req) throws Exception {
         DiskFileItemFactory factory = new DiskFileItemFactory();
         ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setFileSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
-        upload.setSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
+        upload.setFileSizeMax(MigrateGlobal.OCR_FILE_SIZE_LIMIT);
+        upload.setSizeMax(MigrateGlobal.OCR_FILE_SIZE_LIMIT);
         String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
         File uploadDirFile = new File(uploadDir);
         if (!uploadDirFile.isDirectory()) {
             uploadDirFile.mkdirs();
         }
         List<?> fileItems = upload.parseRequest(req);
-        if(fileItems == null || fileItems.isEmpty()) {
-            throw new RRException("缺少文件");
+        if (fileItems == null || fileItems.isEmpty()) {
+            throw new RRException("there is no any file");
         }
-        List<File> files = fileItems.stream().map(fileItem->{
+        List<File> files = new ArrayList<>();
+        List<String> langList = new ArrayList<>();
+        fileItems.stream().map(fileItem -> {
             FileItem fi = (FileItem) fileItem;
             if (!fi.isFormField()) {
                 String fileName = fi.getName();
-                File file = null;
+                File file;
                 String newName;
                 do {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -94,18 +95,29 @@ public class OCRApiServlet extends RestfulServlet {
                 } while (file.exists());
                 try {
                     fi.write(file);
-                    return file;
+                    files.add(file);
                 } catch (Exception e) {
                     log.error("file write error {}", e.getMessage());
-                    return null;
+                }
+            } else {
+                String name = fi.getFieldName();
+                String value = fi.getString();
+                if ("lang".equals(name)) {
+                    langList.add(value);
                 }
             }
             return null;
         }).collect(Collectors.toList());
         if (files.size() != 1) {
-            throw new RRException("只能上传一个文件");
+            throw new RRException("only one pdf file is allowed");
         }
-        List<String> pdfOrcResult = ocrService.recognizePdf(files.get(0));
+        if (langList.isEmpty()) {
+            langList.add("chn,eng");
+        }
+        List<String> pdfOrcResult = ocrService.recognizePdf(files.get(0), langList);
+        if (pdfOrcResult == null || pdfOrcResult.isEmpty()) {
+            throw new RRException("recognize pdf failed");
+        }
         return pdfOrcResult;
     }
 }
