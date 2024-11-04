@@ -5,7 +5,6 @@ import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.utils.ObservableList;
 import ai.llm.adapter.ILlmAdapter;
-import ai.llm.pojo.LlmApiResponse;
 import ai.llm.utils.LLMErrorConstants;
 import ai.llm.utils.convert.GptConvert;
 import ai.llm.utils.convert.SparkConvert;
@@ -92,19 +91,10 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
         SparkCustomListener sparkCustomListener = new SparkCustomListener(observableList, func, this, exception);
         sparkClient.chatStream(sparkRequest, sparkCustomListener);
         Iterable<ChatCompletionResult> iterable = observableList.getObservable().blockingIterable();
-        int timeOut = 10 * 60;
-        while (exception.getCode() == -1 && timeOut > 0) {
-            try {
-                Thread.sleep(100);
-            } catch (Exception ignored) {
-            }
-            timeOut--;
-        }
-        if(timeOut <= 0) {
-            exception.setCode(LLMErrorConstants.TIME_OUT);
-            exception.setMsg("wait time out error");
-            log.error("spark api stream: code {} error {}", exception.getCode(), exception.getMsg());
-            throw exception;
+        try {
+            iterable.iterator().hasNext();
+        } catch (Exception e) {
+
         }
         if(exception.getCode() != 200) {
             log.error("spark api stream: code {} error {}", exception.getCode(), exception.getMsg());
