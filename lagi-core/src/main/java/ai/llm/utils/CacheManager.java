@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class CacheManager {
@@ -21,6 +22,8 @@ public class CacheManager {
     private  LoadingCache<String, Boolean> GLOBAL_CACHE = null;
 
     private static final CacheManager INSTANCE = new CacheManager();
+
+    private static final Map<String, Integer> COUNT_KEY = new ConcurrentHashMap<>();
 
     private CacheManager() {
         GUAVA_CACHE_SECONDS = ContextLoader.configuration.getFunctions().getPolicy().getGraceTime();
@@ -67,10 +70,12 @@ public class CacheManager {
     public void put(String key, Boolean value) {
         try {
             GLOBAL_CACHE.put(key, value);
+            COUNT_KEY.put(key, COUNT_KEY.getOrDefault(key, 0) + 1);
         } catch (Exception e) {
             log.error("设置缓存值出错", e);
         }
     }
+
 
 
     public void putAll(Map<? extends String, ? extends Boolean> map) {
@@ -92,12 +97,24 @@ public class CacheManager {
         return token;
     }
 
+    public Integer getCount(String key) {
+        return COUNT_KEY.getOrDefault(key, 0);
+    }
 
-    public void remove(Long key) {
+
+    public void remove(String key) {
         try {
             GLOBAL_CACHE.invalidate(key);
         } catch (Exception e) {
             log.error("remove cache error", e);
+        }
+    }
+
+    public void removeCount(String key) {
+        try {
+            COUNT_KEY.remove(key);
+        } catch (Exception e) {
+            log.error("remove count error", e);
         }
     }
 
