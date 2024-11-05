@@ -89,7 +89,7 @@ public class CompletionsService implements ChatCompletion{
         throw r;
     }
 
-    private ChatCompletionResult failoverGetChatCompletionResult(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> ragAdapters) {
+    public ChatCompletionResult failoverGetChatCompletionResult(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> ragAdapters) {
         chatCompletionRequest.setModel(null);
         RRException r = new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL,"{\"error\":\"failover -> backend is not enabled.\"}");
         for (ILlmAdapter adapter : ragAdapters) {

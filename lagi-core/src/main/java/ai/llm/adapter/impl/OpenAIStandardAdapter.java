@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 @LLM(modelNames = {"*"})
 public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(OpenAIStandardAdapter.class);
-    private static final int HTTP_TIMEOUT = 5 * 1000;
+    private static final int HTTP_TIMEOUT = 30 * 1000;
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
