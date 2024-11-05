@@ -9,4 +9,6 @@ public class AgentConfig {
     @JsonProperty("driver")
     private String driver;
     private String apiKey;
+    private String token;
+    private String appId;
 }
