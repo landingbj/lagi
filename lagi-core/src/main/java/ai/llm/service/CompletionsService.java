@@ -15,11 +15,15 @@ import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
+import ai.config.pojo.Policy;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.pojo.Backend;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.utils.CacheManager;
 import ai.llm.utils.LLMErrorConstants;
+import ai.llm.utils.PolicyConstants;
+import ai.llm.utils.PollingScheduler;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -52,8 +56,8 @@ public class CompletionsService implements ChatCompletion{
         }
     }
 
-    private String getPolicy() {
-        return ContextLoader.configuration.getFunctions().getPolicy().getHandle();
+    private Policy getPolicy() {
+        return ContextLoader.configuration.getFunctions().getPolicy();
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
@@ -63,7 +67,9 @@ public class CompletionsService implements ChatCompletion{
             ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
             if(appointAdapter != null && notFreezingAdapter(appointAdapter)) {
                 try {
-                    return SensitiveWordUtil.filter(appointAdapter.completions(chatCompletionRequest));
+                    ChatCompletionResult result = SensitiveWordUtil.filter(appointAdapter.completions(chatCompletionRequest));
+                    unfreezeAdapter(appointAdapter);
+                    return result;
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(appointAdapter, e.getCode());
                     r = e;
@@ -72,24 +78,27 @@ public class CompletionsService implements ChatCompletion{
         }
         List<ILlmAdapter> adapters = getLlmAdapters(indexSearchDataList);
         //  Operation strategy : failover or parallel or other
-        if("failover".equals(getPolicy())) {
+        String handle = getPolicy().getHandle();
+        if(PolicyConstants.FAILOVER.equals(handle)) {
             return failoverGetChatCompletionResult(chatCompletionRequest, adapters);
-        } else if("parallel".equals(getPolicy())) {
+        } else if(PolicyConstants.PARALLEL.equals(handle)) {
             return parallelGetChatCompletionResult(chatCompletionRequest, adapters);
-        } else {
-//            throw new RRException(LLMErrorConstants.OTHER_ERROR, "{\"error\" : \"unsupported strategy \"}");
+        } else if(PolicyConstants.POLLING.equals(handle)){
+            return pollingGetChatCompletionResult(chatCompletionRequest, adapters);
         }
         throw r;
     }
 
     private ChatCompletionResult failoverGetChatCompletionResult(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> ragAdapters) {
         chatCompletionRequest.setModel(null);
-        RRException r = new RRException(LLMErrorConstants.OTHER_ERROR,"{\"error\":\"failover -> backend is not enabled.\"}");
+        RRException r = new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL,"{\"error\":\"failover -> backend is not enabled.\"}");
         for (ILlmAdapter adapter : ragAdapters) {
             ChatCompletionRequest copy = new ChatCompletionRequest();
             BeanUtil.copyProperties(chatCompletionRequest, copy);
             try {
-                return SensitiveWordUtil.filter(adapter.completions(copy));
+                ChatCompletionResult result = SensitiveWordUtil.filter(adapter.completions(copy));
+                unfreezeAdapter(adapter);
+                return result;
             } catch (RRException e) {
                 freezingAdapterByErrorCode(adapter, e.getCode());
                 r = e;
@@ -141,6 +150,56 @@ public class CompletionsService implements ChatCompletion{
         }
     }
 
+    private ChatCompletionResult pollingGetChatCompletionResult(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> ragAdapters) {
+        chatCompletionRequest.setModel(null);
+        RRException r = new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL,"{\"error\":\"failover -> backend is not enabled.\"}");
+        // no ipaddress use sample polling
+        if(chatCompletionRequest instanceof EnhanceChatCompletionRequest) {
+            EnhanceChatCompletionRequest enhanceChatCompletionRequest =  (EnhanceChatCompletionRequest) chatCompletionRequest;
+            int hash = enhanceChatCompletionRequest.getIp().hashCode();
+            while (!ragAdapters.isEmpty()) {
+                int index = Math.abs(hash) % ragAdapters.size();
+                ILlmAdapter adapter = ragAdapters.get(index);
+                if(adapter != null && notFreezingAdapter(adapter)) {
+                    ChatCompletionRequest copy = new ChatCompletionRequest();
+                    BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    try {
+                        ChatCompletionResult result = SensitiveWordUtil.filter(adapter.completions(copy));
+                        unfreezeAdapter(adapter);
+                        return result;
+                    } catch (RRException e) {
+                        freezingAdapterByErrorCode(adapter, e.getCode());
+                        r = e;
+                    }
+                }
+                ragAdapters.remove(index);
+            }
+        } else {
+            List<String> models = ragAdapters.stream().map(adapter -> {
+                ModelService modelService = (ModelService) adapter;
+                return modelService.getModel();
+            }).collect(Collectors.toList());
+            while (!models.isEmpty()) {
+                String model = PollingScheduler.schedule(models);
+                ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(model);
+                if(appointAdapter != null && notFreezingAdapter(appointAdapter)) {
+                    ChatCompletionRequest copy = new ChatCompletionRequest();
+                    BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    try {
+                        ChatCompletionResult result = SensitiveWordUtil.filter(appointAdapter.completions(copy));
+                        unfreezeAdapter(appointAdapter);
+                        return result;
+                    } catch (RRException e) {
+                        freezingAdapterByErrorCode(appointAdapter, e.getCode());
+                        r = e;
+                    }
+                }
+                models.remove(model);
+            }
+        }
+        throw  r;
+    }
+
     private void registerMapper(ChatCompletionRequest chatCompletionRequest, ILlmAdapter adapter, IRContainer contain) {
         Map<String, Object> params = new HashMap<>();
         params.put(LagiGlobal.CHAT_COMPLETION_REQUEST, chatCompletionRequest);
@@ -171,12 +230,14 @@ public class CompletionsService implements ChatCompletion{
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
-        RRException r = new RRException(LLMErrorConstants.OTHER_ERROR,"{\"error\":\"Stream backend is not enabled.\"}");
+        RRException r = new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL,"{\"error\":\"Stream backend is not enabled.\"}");
         if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter adapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
             if(adapter != null && notFreezingAdapter(adapter)) {
                 try {
-                    return  adapter.streamCompletions(chatCompletionRequest);
+                    Observable<ChatCompletionResult> result = adapter.streamCompletions(chatCompletionRequest);
+                    unfreezeAdapter(adapter);
+                    return  result;
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(adapter, e.getCode());
                     r = e;
@@ -186,20 +247,78 @@ public class CompletionsService implements ChatCompletion{
 
         chatCompletionRequest.setModel(null);
         List<ILlmAdapter> adapters = getLlmAdapters(indexSearchDataList);
-
-        for (ILlmAdapter adapter : adapters) {
-            ChatCompletionRequest copy = new ChatCompletionRequest();
-            BeanUtil.copyProperties(chatCompletionRequest, copy);
-            if (adapter != null) {
-                try {
-                    return  adapter.streamCompletions(copy);
-                } catch (RRException e) {
-                    freezingAdapterByErrorCode(adapter, e.getCode());
-                    r = e;
+        String handle = getPolicy().getHandle();
+        if(!PolicyConstants.POLLING.equals(handle)){
+            for (ILlmAdapter adapter : adapters) {
+                ChatCompletionRequest copy = new ChatCompletionRequest();
+                BeanUtil.copyProperties(chatCompletionRequest, copy);
+                if (adapter != null) {
+                    try {
+                        Observable<ChatCompletionResult> result = adapter.streamCompletions(copy);
+                        unfreezeAdapter(adapter);
+                        return result;
+                    } catch (RRException e) {
+                        freezingAdapterByErrorCode(adapter, e.getCode());
+                        r = e;
+                    }
                 }
             }
+        } else {
+            return pollingGetStreamChatCompletionResult(chatCompletionRequest, adapters);
         }
+
         throw r;
+    }
+
+    private Observable<ChatCompletionResult> pollingGetStreamChatCompletionResult(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> ragAdapters) {
+        RRException r = new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL,"{\"error\":\"failover -> backend is not enabled.\"}");
+
+        if(chatCompletionRequest instanceof EnhanceChatCompletionRequest) {
+            EnhanceChatCompletionRequest enhanceChatCompletionRequest =  (EnhanceChatCompletionRequest) chatCompletionRequest;
+            int hash = enhanceChatCompletionRequest.getIp().hashCode();
+            while (!ragAdapters.isEmpty()) {
+                int index = Math.abs(hash) % ragAdapters.size();
+                ILlmAdapter adapter = ragAdapters.get(index);
+                if(adapter != null && notFreezingAdapter(adapter)) {
+                    ChatCompletionRequest copy = new ChatCompletionRequest();
+                    BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    try {
+                        Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(copy);
+                        unfreezeAdapter(adapter);
+                        return chatCompletionResultObservable;
+                    }
+                    catch (RRException e) {
+                        freezingAdapterByErrorCode(adapter, e.getCode());
+                        r = e;
+                    }
+                }
+                ragAdapters.remove(index);
+            }
+        } else {
+            List<String> models = ragAdapters.stream().map(adapter -> {
+                ModelService modelService = (ModelService) adapter;
+                return modelService.getModel();
+            }).collect(Collectors.toList());
+            while (!models.isEmpty()) {
+                String model = PollingScheduler.schedule(models);
+                ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(model);
+                if(appointAdapter != null && notFreezingAdapter(appointAdapter)) {
+                    ChatCompletionRequest copy = new ChatCompletionRequest();
+                    BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    try {
+                        Observable<ChatCompletionResult> result = appointAdapter.streamCompletions(copy);
+                        unfreezeAdapter(appointAdapter);
+                        return result;
+                    } catch (RRException e) {
+                        freezingAdapterByErrorCode(appointAdapter, e.getCode());
+                        r = e;
+                    }
+                }
+                models.remove(model);
+            }
+        }
+
+        throw  r;
     }
 
     private List<ILlmAdapter> getLlmAdapters(List<IndexSearchData> indexSearchDataList) {
@@ -232,10 +351,14 @@ public class CompletionsService implements ChatCompletion{
 
     public boolean notFreezingAdapter(ILlmAdapter adapter) {
         ModelService modelService = (ModelService) adapter;
+        Integer freezingCount = CacheManager.getInstance().getCount(modelService.getModel());
+        if(freezingCount >= getPolicy().getMaxGen()) {
+            return false;
+        }
         return CacheManager.getInstance().get(modelService.getModel());
     }
 
-    public void freezingAdapterByErrorCode(ILlmAdapter adapter, int errorCode) {
+    public static void freezingAdapterByErrorCode(ILlmAdapter adapter, int errorCode) {
         if(errorCode == LLMErrorConstants.PERMISSION_DENIED_ERROR
                 || errorCode == LLMErrorConstants.RESOURCE_NOT_FOUND_ERROR
                 || errorCode == LLMErrorConstants.INVALID_AUTHENTICATION_ERROR) {
@@ -243,13 +366,20 @@ public class CompletionsService implements ChatCompletion{
         }
     }
 
-    public void freezingAdapter(ILlmAdapter adapter) {
+    public static void freezingAdapter(ILlmAdapter adapter) {
         ModelService modelService = (ModelService) adapter;
         String model = modelService.getModel();
         if(CacheManager.getInstance().get(model)) {
             CacheManager.getInstance().put(modelService.getModel(), false);
             log.error("The  model {} has been blocked.",modelService.getModel());
         }
+    }
+
+    public static void unfreezeAdapter(ILlmAdapter adapter) {
+        ModelService modelService = (ModelService) adapter;
+        String model = modelService.getModel();
+        CacheManager.getInstance().removeCount(model);
+        CacheManager.getInstance().remove(model);
     }
 
 

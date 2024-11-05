@@ -20,13 +20,11 @@ import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @LLM(modelNames = {"qwen-turbo","qwen-plus","qwen-max","qwen-max-1201","qwen-max-longcontext"})
@@ -117,9 +115,4 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         return result;
     }
 
-    private void setDefaultModel(ChatCompletionRequest chatCompletionRequest) {
-        if(chatCompletionRequest.getModel() == null) {
-            chatCompletionRequest.setModel(getModel());
-        }
-    }
 }

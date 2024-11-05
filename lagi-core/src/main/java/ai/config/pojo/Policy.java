@@ -1,5 +1,6 @@
 package ai.config.pojo;
 
+import ai.llm.utils.PolicyConstants;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -21,12 +22,12 @@ public class Policy {
     public Policy(
             @JsonProperty("handle") String handle,
             @JsonProperty("grace_time") Integer graceTime,
-            @JsonProperty("max_gen") Integer maxGen,
+            @JsonProperty("maxgen") Integer maxGen,
             @JsonProperty("context_length") Integer contextLength
     ) {
-        this.handle = handle == null ? "parallel" : handle;
+        this.handle = handle == null ? PolicyConstants.PARALLEL : handle;
         this.graceTime = graceTime == null ? 3600 : graceTime;
-        this.maxGen = maxGen == null ? 1 : maxGen ;
+        this.maxGen = maxGen == null ? Integer.MAX_VALUE : maxGen ;
         this.contextLength = contextLength == null ? 4096 : contextLength;
     }
 }
