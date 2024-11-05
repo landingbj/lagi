@@ -49,6 +49,16 @@ public enum IntentTypeEnum {
             "现在.*?几点",
             "现在.*?几点了",
             "几点了",}),
+
+    ADD_MEETING("add_meeting", new String[]{
+            "预定.*?会议",
+            "安排.*?会议",
+            "添加.*?会议",
+            "增加.*?会议",
+            "创建.*?会议",
+            "新建.*?会议"
+   }),
+
     TEXT("text", new String[]{}),;
 
 
