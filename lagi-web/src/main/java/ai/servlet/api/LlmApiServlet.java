@@ -19,6 +19,7 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
@@ -31,6 +32,7 @@ import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
+import ai.utils.ClientIpAddressUtil;
 import ai.vector.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -41,6 +43,7 @@ import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -143,6 +146,11 @@ public class LlmApiServlet extends BaseServlet {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
         }
+        EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
+                .ip(ClientIpAddressUtil.getClientIpAddress(req))
+                .build();
+        BeanUtil.copyProperties(chatCompletionRequest, enhance);
+        chatCompletionRequest = enhance;
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
                 Observable<ChatCompletionResult> result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
