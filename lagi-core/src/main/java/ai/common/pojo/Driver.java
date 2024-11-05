@@ -23,4 +23,5 @@ public class Driver {
     private String accessToken;
     private String securityKey;
     private String endpoint;
+    private String apiAddress;
 }
