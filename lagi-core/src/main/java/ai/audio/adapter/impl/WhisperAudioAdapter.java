@@ -7,62 +7,49 @@ import ai.common.pojo.AudioRequestParam;
 import ai.common.pojo.TTSRequestParam;
 import ai.common.pojo.TTSResult;
 import ai.utils.LagiGlobal;
+import ai.utils.OkHttpUtil;
+import com.google.gson.Gson;
+import lombok.Data;
+import okhttp3.*;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WhisperAudioAdapter extends ModelService implements IAudioAdapter {
 
-    private final String HOST = "localhost:9100";
-    private final String UPLOAD_FILE = "http://" + HOST + "/upload_file";
-    private final String AUDIO_TO_TEXT = "http://" + HOST + "/audio2text";
-    private final String TEXT_TO_AUDIO = "http://" + HOST + "/text2audio";
+    private final Gson gson = new Gson();
 
-    // AudioToText
+    private String getUploadUrl() {
+        return getEndpoint() + "/upload_file";
+    }
+    private String getAudio2TextUrl() {
+        return getEndpoint() + "/audio2text";
+    }
+    private String getText2Audio() {
+        return getEndpoint() + "/text2audio";
+    }
+
+
     @Override
     public AsrResult asr(File audio, AudioRequestParam param) {
         AsrResult result = new AsrResult();
         try {
             String filename = uploadFile(audio);
-            if (filename == null) {
-                result.setStatus(LagiGlobal.ASR_STATUS_FAILURE);
-                result.setMessage("File upload failed");
-                return result;
+            Map<String, Object> bodyObj = new HashMap<>();
+            bodyObj.put("filename", filename);
+            bodyObj.put("language", "zh");
+            String post = OkHttpUtil.post(getAudio2TextUrl(), null, gson.toJson(bodyObj));
+            IAsrResult parse = gson.fromJson(post, IAsrResult.class);
+            if(!(parse.getStatus().equals("success"))) {
+                throw new RuntimeException("parse audio failed");
             }
-
-            URL url = new URL(AUDIO_TO_TEXT);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-
-            // Build the request body, including language and uploaded file name
-            String jsonInputString = "{\"filename\":\"" + filename + "\",\"language\":\"" + param.getModel() + "\"}";
-
-            try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-                wr.writeBytes(jsonInputString);
-                wr.flush();
-            }
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-
-            String response = content.toString();
-            String textResult = parseResult(response, "result");
-
+            String textResult =  parse.getResult();
             result.setStatus(LagiGlobal.ASR_STATUS_SUCCESS);
             result.setResult(textResult);
         } catch (Exception e) {
-            e.printStackTrace();
             result.setStatus(LagiGlobal.ASR_STATUS_FAILURE);
-            result.setMessage("Audio to text processing failed");
+            result.setMessage(e.getMessage());
         }
         return result;
     }
@@ -72,79 +59,87 @@ public class WhisperAudioAdapter extends ModelService implements IAudioAdapter {
     public TTSResult tts(TTSRequestParam param) {
         TTSResult result = new TTSResult();
         try {
-            URL url = new URL(TEXT_TO_AUDIO);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-
-            // Build a request body, including necessary parameters
-            String jsonInputString = String.format(
-                    "{\"emotion\":\"%s\", \"text\":\"%s\", \"voice\":\"%s\", \"volume\":%d, \"speech_rate\":%d, \"pitch_rate\":%d}",
-                    param.getEmotion(), param.getText(), param.getVoice(), param.getVolume(), param.getSpeech_rate(), param.getPitch_rate()
-            );
-
-            try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-                wr.writeBytes(jsonInputString);
-                wr.flush();
+            Map<String, Object> bodyObj = new HashMap<>();
+            bodyObj.put("emotion", param.getEmotion());
+            bodyObj.put("text", param.getText());
+            String body = gson.toJson(bodyObj);
+            String post = OkHttpUtil.post(getText2Audio(), body);
+            ITtsResult apiResult = gson.fromJson(post, ITtsResult.class);
+            if(!(apiResult.getStatus().equals("success"))) {
+                throw new RuntimeException("Text to voiced voice processing failed");
             }
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-
-            String response = content.toString();
-            String audioUrl = parseResult(response, "data");
-
-            result.setStatus(LagiGlobal.ASR_STATUS_SUCCESS);
-            result.setResult(audioUrl);
+            String url =  apiResult.getData();
+            result.setStatus(LagiGlobal.TTS_STATUS_SUCCESS);
+            result.setResult(url);
         } catch (Exception e) {
-            e.printStackTrace();
-            result.setStatus(LagiGlobal.ASR_STATUS_FAILURE);
-            result.setMessage("Text to voiced voice processing failed");
+            result.setStatus(LagiGlobal.TTS_STATUS_FAILURE);
+            result.setMessage(e.getMessage());
         }
         return result;
     }
 
+    @Data
+    static
+    class ITtsResult {
+        private String status;
+        private String data;
+    }
+
+    @Data
+    static
+    class IAsrResult {
+        private String status;
+        private String result;
+    }
+
+    @Data
+    static
+    class IUploadResult {
+        private String status;
+        private String filename;
+    }
+
+
     private String uploadFile(File file) {
-        try {
-            URL url = new URL(UPLOAD_FILE);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
-            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=--Boundary");
+        // 创建 OkHttpClient 实例
+        OkHttpClient client = new OkHttpClient();
 
-            try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-                wr.writeBytes("--Boundary\r\n");
-                wr.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n");
-                wr.writeBytes("Content-Type: application/octet-stream\r\n\r\n");
-                Files.copy(file.toPath(), wr);
-                wr.writeBytes("\r\n--Boundary--\r\n");
-                wr.flush();
+        // 创建 RequestBody，用于封装文件
+        RequestBody fileBody = RequestBody.create(MediaType.parse("audio/mpeg"), file);
+        // 创建 MultipartBody，用于封装多个部分的数据
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addPart(Headers.of("Content-Disposition", "form-data; name=\"file\"; filename=\"" + file.getName() + "\""),
+                        fileBody)
+                .build();
+        // 创建请求
+        Request request = new Request.Builder()
+                .url(getUploadUrl())
+                .post(requestBody)
+                .build();
+
+        // 发送请求
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                IUploadResult iUploadResult = gson.fromJson(response.body().string(), IUploadResult.class);
+                return iUploadResult.getFilename();
+            } else {
+                throw new RuntimeException("Upload failed");
             }
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-
-            return parseResult(content.toString(), "filename");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        } catch (IOException e) {
+            throw new RuntimeException("Upload failed");
         }
     }
 
-    private String parseResult(String response, String key) {
-        int start = response.indexOf(key + "\":\"") + key.length() + 3;
-        int end = response.indexOf("\"", start);
-        return response.substring(start, end);
+    public static void main(String[] args) {
+        WhisperAudioAdapter whisperAudioAdapter = new WhisperAudioAdapter();
+        whisperAudioAdapter.setEndpoint("http://127.0.0.1:9100");
+//        TTSRequestParam ttsRequestParam = new TTSRequestParam();
+//        ttsRequestParam.setText("你好");
+//        ttsRequestParam.setEmotion("default");
+//        TTSResult tts = whisperAudioAdapter.tts(ttsRequestParam);
+//        System.out.println(tts);
+        AsrResult asr = whisperAudioAdapter.asr(new File("C:\\Users\\Administrator\\Desktop\\asaki.mp3"), null);
+        System.out.println(asr);
     }
 }
