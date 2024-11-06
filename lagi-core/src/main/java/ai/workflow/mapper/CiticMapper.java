@@ -3,6 +3,7 @@ package ai.workflow.mapper;
 import ai.common.pojo.Configuration;
 import ai.config.pojo.AgentConfig;
 import ai.learn.questionAnswer.KShingle;
+import ai.medusa.utils.LCS;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -11,6 +12,7 @@ import ai.utils.qa.ChatCompletionUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public class CiticMapper extends BaseMapper {
@@ -29,5 +31,15 @@ public class CiticMapper extends BaseMapper {
         String answer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
         double[] similarity = kShingle.similarity(question, answer, 2);
         return similarity[0];
+    }
+
+    public double getBadCaseSimilarity(String badCase, ChatCompletionResult chatCompletionResult) {
+        String answer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
+        Set<String> longestCommonSubstrings = LCS.findLongestCommonSubstrings(badCase, answer, 2);
+        return LCS.getLcsRatio(badCase, longestCommonSubstrings);
+    }
+
+    public double calculatePriority(double positive, double negative, int basePriority) {
+        return positive * 10 + negative * -10 + basePriority;
     }
 }

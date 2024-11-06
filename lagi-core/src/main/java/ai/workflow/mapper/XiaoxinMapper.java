@@ -25,21 +25,32 @@ public class XiaoxinMapper extends CiticMapper implements IMapper {
     private static final Logger logger = LoggerFactory.getLogger(XiaoxinMapper.class);
     private final XiaoxinAgent xiaoxinAgent = new XiaoxinAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.XiaoxinAgent"));
 
+    private final String BAD_CASE = "小信最近学习了很多关于基金方面的知识，其他领域还有所欠缺，您可以尝试换个方式描述您的问题。";
+
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
-        double similarity = -1;
+        double calPriority = 0;
+        double positive = 0;
+        double negative = 0;
         try {
             chatCompletionResult = xiaoxinAgent.chat(chatCompletionRequest);
-            similarity = getSimilarity(chatCompletionRequest, chatCompletionResult);
+            if(chatCompletionRequest != null) {
+                positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
+                negative = getBadCaseSimilarity(BAD_CASE, chatCompletionResult);
+                calPriority = calculatePriority(positive, negative, getPriority());
+            }
         } catch (IOException e) {
             logger.error("XiaoxinMapper.myMapping: chat error", e);
         }
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
-        result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, getPriority() * similarity);
+        result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);
+        logger.info("XiaoxinMapper.myMapping: positive = " + positive);
+        logger.info("XiaoxinMapper.myMapping: negative = " + negative);
+        logger.info("XiaoxinMapper.myMapping: calPriority = " + calPriority);
         return result;
     }
 

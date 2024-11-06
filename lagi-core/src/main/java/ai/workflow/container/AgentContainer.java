@@ -45,9 +45,9 @@ public class AgentContainer extends ReduceContainer implements IRContainer {
         mapperResult.add(list);
         double prior = (Double) list.get(AiGlobalMR.M_LIST_RESULT_PRIORITY);
         if (prior >= AiGlobalMR.FAST_DIRECT_PRIORITY) {
-            while (latch.getCount() > 0L) {
+//            while (latch.getCount() > 0L) {
                 latch.countDown();
-            }
+//            }
         } else {
             latch.countDown();
         }

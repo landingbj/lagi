@@ -28,6 +28,8 @@ public class RagMapper extends CiticMapper implements IMapper {
 
     private final Gson gson = new Gson();
 
+    private final String BAD_CASE = "我并不了解xxx具体的信息,分享更多关于xxx的信息";
+
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
@@ -41,16 +43,21 @@ public class RagMapper extends CiticMapper implements IMapper {
             logger.error("RagMapper.myMapping: OkHttpUtil.post error", e);
         }
         ChatCompletionResult chatCompletionResult = null;
-        double similarity = -1;
+        double calPriority = 0;
+        double positive = 0;
+        double negative = 0;
         if (responseJson != null) {
             chatCompletionResult = gson.fromJson(responseJson, ChatCompletionResult.class);
-            similarity = getSimilarity(chatCompletionRequest, chatCompletionResult);
+            positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
+            negative = getBadCaseSimilarity(BAD_CASE, chatCompletionResult);
+            calPriority = calculatePriority(positive, negative, getPriority());
         }
 
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
-        System.out.println("RagMapper.myMapping: similarity = " + similarity);
-        System.out.println("RagMapper.myMapping: getPriority = " + getPriority());
-        result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, getPriority() * similarity);
+        logger.info("RagMapper.myMapping: positive = " + positive);
+        logger.info("RagMapper.myMapping: negative = " + negative);
+        logger.info("RagMapper.myMapping: calPriority = " + calPriority);
+        result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);
         return result;
     }
 
