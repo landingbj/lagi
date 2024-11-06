@@ -273,7 +273,7 @@ function getTextResult(question, robootAnswerJq, conversation) {
         ]),
         "temperature": 0.8,
         "max_tokens": 1024,
-        "stream": true
+        "stream": false
     };
 
     var queryUrl = "search/detectIntent";
@@ -360,29 +360,37 @@ function generalOutput(paras, question, robootAnswerJq) {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: "v1/chat/completions",
+        url: "v1/worker/completions",
         data: JSON.stringify(paras),
         success: function (res) {
-
-            if (res === null || res.status === "failed") {
+            if (res.choices === undefined) {
+                queryLock = false;
                 robootAnswerJq.html("调用失败！");
                 return;
             }
-            var json = res.data[0];
-            var a = `
-                    <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>
-                    `
-            var t = json.text;
-            t = t.replaceAll("\n", "<br>");
+            if (res.choices.length === 0) {
+                return;
+            }
+            var chatMessage = res.choices[0].message;
+            if (chatMessage.filename !== undefined){
+                var a = '';
+                let isFirst = true;
+                for (let i = 0; i < chatMessage.filename.length; i++) {
+                    let marginLeft = isFirst ? '0' : '50px';
+                    a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a>`;
+                    isFirst = false;
+                }
+            }
+            if (chatMessage.content === undefined) {
+                return;
+            }
+            var fullText = chatMessage.content;
+            fullText = fullText.replaceAll("\n", "<br>");
             result = `
-                            ${t} <br>
-                            ${json.imageList != undefined ? `<img src='${json.imageList[0]}' alt='Image'>` : ""}
-                            ${json.filename != undefined ? `附件:${a}` : ""}<br>
-                    `
-            CONVERSATION_CONTEXT.push({"role": "user", "content": question});
-            CONVERSATION_CONTEXT.push({"role": "assistant", "content": json.text});
-
-            txtTovoice(json.text, "default");
+                        ${fullText} <br>
+                        ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
+                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
+                        `
             robootAnswerJq.html(result);
             enableQueryBtn();
             querying = false;
