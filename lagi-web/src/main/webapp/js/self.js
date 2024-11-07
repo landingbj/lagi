@@ -407,14 +407,15 @@ function uploadOcrFiles(files) {
     addRobotDialog("正在进行文件处理...");
 
     $.ajax({
-        url: '/v1/audit/uploadFiles?lang=' + lang,
+        // url: '/v1/audit/uploadFiles?lang=' + lang,
+        url: '/ocr/ocrRecognize?lang=' + lang,
         type: 'POST',
         data: formData,
         cache: false,
         contentType: false,
         processData: false,
         success: function (response) {
-            if (response.status === 'success') {
+            if (response.message === 'success') {
                 $('#item-content .markdown').last().text("文件处理完成，以下是OCR处理结果：");
                 for (var i = 0; i < response.data.length; i++) {
                     var text = response.data[i];

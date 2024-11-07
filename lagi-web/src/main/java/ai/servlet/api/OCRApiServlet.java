@@ -22,6 +22,82 @@ public class OCRApiServlet extends RestfulServlet {
     private static final String UPLOAD_DIR = "/upload";
     private final OcrService ocrService = new OcrService();
 
+    @Post("ocrRecognize")
+    public List<String> ocrRecognize(HttpServletRequest req) throws Exception {
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        upload.setFileSizeMax(MigrateGlobal.OCR_FILE_SIZE_LIMIT);
+        upload.setSizeMax(MigrateGlobal.OCR_FILE_SIZE_LIMIT);
+        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
+
+        File uploadDirFile = new File(uploadDir);
+        if (!uploadDirFile.isDirectory()) {
+            uploadDirFile.mkdirs();
+        }
+
+        List<?> fileItems = upload.parseRequest(req);
+        if (fileItems == null || fileItems.isEmpty()) {
+            throw new RRException("Missing files");
+        }
+
+        List<File> files = new ArrayList<>();
+        List<String> langList = new ArrayList<>();
+
+        for (Object fileItem : fileItems) {
+            FileItem fi = (FileItem) fileItem;
+            if (!fi.isFormField()) {
+                String fileName = fi.getName();
+                File file;
+                String newName;
+                do {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+                    newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
+                    newName = newName + fileName.substring(fileName.lastIndexOf("."));
+                    String lastFilePath = uploadDir + File.separator + newName;
+                    file = new File(lastFilePath);
+                } while (file.exists());
+
+                try {
+                    fi.write(file);
+                    files.add(file);
+                } catch (Exception e) {
+                    log.error("file write error {}", e.getMessage());
+                }
+            } else {
+                String name = fi.getFieldName();
+                String value = fi.getString();
+                if ("lang".equals(name)) {
+                    langList.add(value);
+                }
+            }
+        }
+
+        if (files.isEmpty()) {
+            throw new RRException("Missing files");
+        }
+
+        if (files.size() > 1 && !isPdfFile(files.get(0))) {
+            throw new RRException("only one pdf file is allowed");
+        }
+
+        if (langList.isEmpty() && isPdfFile(files.get(0))) {
+            langList.add("chn,eng,tai");
+        }
+
+        if (isPdfFile(files.get(0))) {
+            List<String> pdfOcrResult = ocrService.recognizePdf(files.get(0), langList);
+            if (pdfOcrResult == null || pdfOcrResult.isEmpty()) {
+                throw new RRException("Failed to recognize PDF");
+            }
+            return pdfOcrResult;
+        } else {
+            return ocrService.recognize(files);
+        }
+    }
+    private boolean isPdfFile(File file) {
+        String fileName = file.getName().toLowerCase();
+        return fileName.endsWith(".pdf");
+    }
     @Post("recognize")
     public List<String> recognize(HttpServletRequest req) throws Exception {
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -112,7 +188,7 @@ public class OCRApiServlet extends RestfulServlet {
             throw new RRException("only one pdf file is allowed");
         }
         if (langList.isEmpty()) {
-            langList.add("chn,eng");
+            langList.add("chn,eng,tai");
         }
         List<String> pdfOrcResult = ocrService.recognizePdf(files.get(0), langList);
         if (pdfOrcResult == null || pdfOrcResult.isEmpty()) {

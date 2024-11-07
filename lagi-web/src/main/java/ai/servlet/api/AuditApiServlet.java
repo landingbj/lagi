@@ -70,7 +70,7 @@ public class AuditApiServlet extends BaseServlet {
         String lang = req.getParameter("lang");
 
         if (lang == null || lang.isEmpty()) {
-            lang = "chn,eng";
+            lang = "chn,eng,tai";
         } else if (!lang.equals("eng")) {
             lang = lang + ",eng";
         }

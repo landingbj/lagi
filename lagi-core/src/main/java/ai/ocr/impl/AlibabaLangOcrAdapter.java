@@ -2,17 +2,12 @@ package ai.ocr.impl;
 
 import ai.annotation.OCR;
 import ai.common.ModelService;
-import ai.common.utils.FileUtils;
 import ai.ocr.IOcr;
 import ai.ocr.pojo.AlibabaOcrDocument;
-import com.aliyun.ocr_api20210707.models.RecognizeAdvancedRequest;
-import com.aliyun.ocr_api20210707.models.RecognizeAdvancedResponse;
 import com.aliyun.ocr_api20210707.models.RecognizeMultiLanguageRequest;
-import com.aliyun.ocr_api20210707.models.RecognizeMultiLanguageResponse;
 import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.checkerframework.checker.units.qual.A;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -45,15 +40,15 @@ public class AlibabaLangOcrAdapter extends ModelService implements IOcr {
     }
 
     public String recognize(BufferedImage image) {
-        return recognize(image, Arrays.asList("chn", "eng"));
+        return recognize(image, Arrays.asList("chn", "eng","tai"));
     }
 
     public String recognize(BufferedImage image, List<String> languages) {
         if (languages == null || languages.isEmpty()) {
-            languages = Arrays.asList("chn", "eng");
+            languages = Arrays.asList("chn", "eng","tai");
         }
         String result = null;
-        RecognizeMultiLanguageResponse response;
+        com.aliyun.ocr_api20210707.models.RecognizeMultiLanguageResponse response;
         try {
             com.aliyun.ocr_api20210707.Client client = createClient();
             ByteArrayOutputStream os = new ByteArrayOutputStream();
