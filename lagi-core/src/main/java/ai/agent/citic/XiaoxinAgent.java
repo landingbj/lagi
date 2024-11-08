@@ -9,6 +9,8 @@ import ai.utils.LRUCache;
 import ai.utils.OkHttpUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import java.util.Map;
 public class XiaoxinAgent {
     private static final Gson gson = new Gson();
     private static final String BASE_URL = "https://api-ngd.baidu.com/core/v3/query";
+    private static final Logger log = LoggerFactory.getLogger(XiaoxinAgent.class);
     private final AgentConfig agentConfig;
 
     public XiaoxinAgent(AgentConfig agentConfig) {
@@ -33,6 +36,8 @@ public class XiaoxinAgent {
         params.put("debug", "false");
         params.put("nlu", "false");
         String responseJson = OkHttpUtil.post(BASE_URL, headers, params, json);
+
+        log.info("xiaoxin response: " + responseJson);
         XiaoxinResponse response = gson.fromJson(responseJson, XiaoxinResponse.class);
         return convertResult(response);
     }

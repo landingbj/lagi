@@ -45,7 +45,7 @@ public class StockAgent {
     }
 
     private StockRequest convertRequest(ChatCompletionRequest request, AgentConfig agentConfig) {
-        String queryText = ChatCompletionUtil.getLastMessage(request);
+        String queryText = String.format("用大约 50 个字概述用三引号分隔的问题:\"\"\"%s\"\"\"", ChatCompletionUtil.getLastMessage(request));
         StockRequest stockRequest = StockRequest.builder()
                 .stream(request.getStream())
                 .app_id(agentConfig.getAppId())

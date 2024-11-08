@@ -8,15 +8,24 @@ import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
+import ai.utils.WorkPriorityWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 
+@Getter
+@Slf4j
 public class CiticMapper extends BaseMapper {
     protected static final Map<String, AgentConfig> AGENT_CONFIG_MAP = new HashMap<>();
+
+    private  String agentName = "citic";
+
+    private  String badcase = "抱歉, 我并不了解xxx具体的信息,分享更多关于xxx的信息";
 
     static {
         Configuration config = LagiGlobal.getConfig();
@@ -39,7 +48,25 @@ public class CiticMapper extends BaseMapper {
         return LCS.getLcsRatio(badCase, longestCommonSubstrings);
     }
 
-    public double calculatePriority(double positive, double negative, int basePriority) {
-        return positive * 10 + negative * -10 + basePriority;
+    public double calculatePriority(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
+
+        double positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
+        double negative = getBadCaseSimilarity(getBadcase(), chatCompletionResult);
+        double add =  getPriorityWordPriority(chatCompletionRequest, chatCompletionResult);
+        double calcPriority = positive * 10 + (negative * -10) + getPriority() + add;
+        log.info("{} .myMapping: add = {}" , getAgentName(), add);
+        log.info("{} .myMapping: positive = {}" , getAgentName(), positive);
+        log.info("{} .myMapping: negative = {}" , getAgentName(), negative);
+        log.info("{} .myMapping: calPriority = {}", getAgentName(),  calcPriority);
+        return calcPriority;
     }
+
+    public double getPriorityWordPriority(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
+        String question = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+        String answer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
+        boolean work = WorkPriorityWordUtil.isPriorityWord(getAgentName(), question, answer);
+        if(work) return 10;
+        else return 0;
+    }
+
 }
