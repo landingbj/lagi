@@ -22,7 +22,7 @@ public class XiaoxinResponse {
         private Answer answer;
         private String queryTime;
         private String answerTime;
-        private List<Action> actions;
+        private List<Object> actions;
         private boolean webhook;
         private boolean topAnythingElse;
         private boolean anythingElse;
