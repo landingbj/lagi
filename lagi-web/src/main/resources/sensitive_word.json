@@ -2,6 +2,6 @@
   "mask": "...",
   "level": 3,
   "rules": [
-
+    {"rule":"\"\"\"", "level": 2, "mask": "\""}
   ]
 }

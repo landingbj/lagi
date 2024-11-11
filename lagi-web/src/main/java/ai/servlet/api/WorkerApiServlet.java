@@ -4,6 +4,7 @@ import ai.audio.pojo.AsrResponse;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.servlet.BaseServlet;
+import ai.utils.SensitiveWordUtil;
 import ai.worker.audio.Asr4FlightsWorker;
 import ai.worker.citic.CiticAgentWorker;
 import ai.worker.pojo.Asr4FlightData;
@@ -43,6 +44,7 @@ public class WorkerApiServlet extends BaseServlet {
         String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
         ChatCompletionResult chatCompletionResult = citicAgentWorker.process(chatCompletionRequest, url);
+        chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
         responsePrint(resp, gson.toJson(chatCompletionResult));
     }
 
