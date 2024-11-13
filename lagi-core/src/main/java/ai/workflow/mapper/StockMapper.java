@@ -1,11 +1,13 @@
 package ai.workflow.mapper;
 
 import ai.agent.citic.StockAgent;
+import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
 import ai.worker.WorkerGlobal;
+import cn.hutool.core.bean.BeanUtil;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,7 @@ public class StockMapper extends CiticMapper implements IMapper {
 
     private  String badcase =  "很抱歉，您的问题与股票无关，我无法为您提供答案。";
 
-    private String agentName = "stock";
+    private String agentName = "股票智能体";
 
     @Override
     public List<?> myMapping() {
@@ -35,6 +37,9 @@ public class StockMapper extends CiticMapper implements IMapper {
         try {
             chatCompletionResult = stockAgent.chat(chatCompletionRequest);
             if(chatCompletionResult != null) {
+                ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+                BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
+                chatCompletionResult = chatCompletionResultWithSource;
                 calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
             }
         } catch (IOException e) {

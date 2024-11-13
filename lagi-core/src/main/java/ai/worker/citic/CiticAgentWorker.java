@@ -7,9 +7,9 @@ import ai.mr.IRContainer;
 import ai.mr.IReducer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
-import ai.utils.LagiGlobal;
 import ai.worker.WorkerGlobal;
 import ai.workflow.container.AgentContainer;
+import ai.workflow.mapper.ExchangeMapper;
 import ai.workflow.mapper.RagMapper;
 import ai.workflow.mapper.StockMapper;
 import ai.workflow.mapper.XiaoxinMapper;
@@ -29,7 +29,7 @@ public class CiticAgentWorker {
         try (IRContainer contain = new AgentContainer()) {
             IMapper ragMapper = new RagMapper();
             ragMapper.setParameters(params);
-            ragMapper.setPriority(WorkerGlobal.MAPPER_PRIORITY);
+            ragMapper.setPriority(WorkerGlobal.MAPPER_PRIORITY - 5);
             contain.registerMapper(ragMapper);
 
             IMapper xiaoxinMapper = new XiaoxinMapper();
@@ -41,6 +41,11 @@ public class CiticAgentWorker {
             stockMapper.setParameters(params);
             stockMapper.setPriority(WorkerGlobal.MAPPER_PRIORITY);
             contain.registerMapper(stockMapper);
+
+            IMapper exchangeMapper = new ExchangeMapper();
+            exchangeMapper.setParameters(params);
+            exchangeMapper.setPriority(WorkerGlobal.MAPPER_PRIORITY);
+            contain.registerMapper(exchangeMapper);
 
             IReducer agentReducer = new AgentReducer();
             contain.registerReducer(agentReducer);

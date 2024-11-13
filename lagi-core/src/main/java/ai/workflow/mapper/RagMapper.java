@@ -1,11 +1,13 @@
 package ai.workflow.mapper;
 
+import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
 import ai.utils.OkHttpUtil;
 import ai.worker.WorkerGlobal;
+import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -22,9 +24,9 @@ public class RagMapper extends CiticMapper implements IMapper {
 
     private final Gson gson = new Gson();
 
-    private String agentName = "rag";
+    private String agentName = "RAG";
 
-    private  String badcase = "我并不了解xxx具体的信息,分享更多关于xxx的信息";
+    private  String badcase = "抱歉,我并不了解xxx具体的信息,分享更多关于xxx的信息";
 
     @Override
     public List<?> myMapping() {
@@ -42,6 +44,9 @@ public class RagMapper extends CiticMapper implements IMapper {
         double calPriority = 0;
         if (responseJson != null) {
             chatCompletionResult = gson.fromJson(responseJson, ChatCompletionResult.class);
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+            BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
+            chatCompletionResult = chatCompletionResultWithSource;
             calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
         }
 
