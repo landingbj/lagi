@@ -26,6 +26,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private ModelFunctions functions;
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
+    private PromptConfig prompt;
 
     @Override
     public void init() {
