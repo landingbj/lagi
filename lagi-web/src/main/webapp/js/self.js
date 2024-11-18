@@ -4,6 +4,8 @@
 var lastFilePath = "";
 let mediaRecorder = null;
 let audioData = [];
+// 定义全局状态变量来控制 #agent-container 的显示状态
+let isAgentContainerVisible = false;
 
 // 播放录音
 function playRecording() {
@@ -655,3 +657,23 @@ agentButton.addEventListener("click", function (e) {
     });
     e.stopPropagation();
 });
+
+const promptButton = document.getElementById("promptButton");
+promptButton.addEventListener("click", function (e) {
+    // 切换显示/隐藏
+    isAgentContainerVisible = !isAgentContainerVisible;
+    $('#prompt-container').toggle();
+    e.stopPropagation();
+});
+$(document).on("click", function (event) {
+    // 如果 #agent-container 是显示状态并且点击的地方不在 #agent-container 和 agentButton 上
+    if (isAgentContainerVisible &&
+        !$(event.target).closest('#prompt-container').length &&
+        event.target !== promptButton) {
+        // 隐藏组件
+        $("#prompt-container").hide();
+        // 更新状态
+        isAgentContainerVisible = false;
+    }
+});
+
