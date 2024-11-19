@@ -56,7 +56,7 @@ public class CompletionsService implements ChatCompletion{
         }
     }
 
-    private Policy getPolicy() {
+    public static Policy getPolicy() {
         return ContextLoader.configuration.getFunctions().getPolicy();
     }
 
@@ -321,7 +321,7 @@ public class CompletionsService implements ChatCompletion{
         throw  r;
     }
 
-    private List<ILlmAdapter> getLlmAdapters(List<IndexSearchData> indexSearchDataList) {
+    public static List<ILlmAdapter> getLlmAdapters(List<IndexSearchData> indexSearchDataList) {
         // no effect backend
         List<ILlmAdapter> adapters;
         if(indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
@@ -349,7 +349,7 @@ public class CompletionsService implements ChatCompletion{
         throw new RuntimeException("Stream backend is not enabled.");
     }
 
-    public boolean notFreezingAdapter(ILlmAdapter adapter) {
+    public static boolean notFreezingAdapter(ILlmAdapter adapter) {
         ModelService modelService = (ModelService) adapter;
         Integer freezingCount = CacheManager.getInstance().getCount(modelService.getModel());
         if(freezingCount >= getPolicy().getMaxGen()) {
