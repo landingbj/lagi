@@ -53,7 +53,12 @@ public class CiticMapper extends BaseMapper {
         double positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
         double negative = getBadCaseSimilarity(getBadcase(), chatCompletionResult);
         double add =  getPriorityWordPriority(chatCompletionRequest, chatCompletionResult);
-        double calcPriority = positive * 10 + (negative * -10) + getPriority() + add;
+        double calcPriority;
+        if(negative > 0.8) {
+            calcPriority = getPriority()  + (negative * -10);
+        } else {
+            calcPriority = positive * 10  + getPriority() + add;
+        }
         log.info("{} .myMapping: add = {}" , getAgentName(), add);
         log.info("{} .myMapping: positive = {}" , getAgentName(), positive);
         log.info("{} .myMapping: negative = {}" , getAgentName(), negative);

@@ -10,6 +10,7 @@ import ai.worker.WorkerGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Getter
 public class RagMapper extends CiticMapper implements IMapper {
     protected int priority;
@@ -26,7 +28,7 @@ public class RagMapper extends CiticMapper implements IMapper {
 
     private String agentName = "RAG";
 
-    private  String badcase = "抱歉,我并不了解xxx具体的信息,分享更多关于xxx的信息";
+    private  String badcase = "很抱歉";
 
     @Override
     public List<?> myMapping() {
@@ -42,9 +44,16 @@ public class RagMapper extends CiticMapper implements IMapper {
         }
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
+        ChatCompletionResultWithSource chatCompletionResultWithSource;
         if (responseJson != null) {
             chatCompletionResult = gson.fromJson(responseJson, ChatCompletionResult.class);
-            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+            if(chatCompletionResult.getChoices() != null
+                    && !chatCompletionResult.getChoices().isEmpty()
+                    && chatCompletionResult.getChoices().get(0).getMessage().getContext() == null) {
+                chatCompletionResultWithSource = new ChatCompletionResultWithSource();
+            } else {
+                chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+            }
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
             calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
@@ -55,6 +64,18 @@ public class RagMapper extends CiticMapper implements IMapper {
         return result;
     }
 
+    public double calculatePriority(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
+
+        double positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
+        double negative = getBadCaseSimilarity(getBadcase(), chatCompletionResult);
+        double add =  getPriorityWordPriority(chatCompletionRequest, chatCompletionResult);
+        double calcPriority = positive * 5 + (negative * -5) + getPriority() + add;
+        log.info("{} .myMapping: add = {}" , getAgentName(), add);
+        log.info("{} .myMapping: positive = {}" , getAgentName(), positive);
+        log.info("{} .myMapping: negative = {}" , getAgentName(), negative);
+        log.info("{} .myMapping: calPriority = {}", getAgentName(),  calcPriority);
+        return calcPriority;
+    }
 
     @Override
     public void setPriority(int priority) {

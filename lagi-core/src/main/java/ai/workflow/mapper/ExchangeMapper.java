@@ -23,7 +23,7 @@ public class ExchangeMapper extends CiticMapper implements IMapper {
     private static final Logger logger = LoggerFactory.getLogger(ExchangeMapper.class);
     private final ExchangeAgent exchangeAgent = new ExchangeAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.ExchangeAgent"));
 
-    private  String badcase =  "很抱歉，您的问题与汇率无关，我无法为您提供答案。如果您有其他关于汇率转换的需求，请随时告诉我！";
+    private  String badcase =  "很抱歉";
 
     private String agentName = "汇率智能体";
 

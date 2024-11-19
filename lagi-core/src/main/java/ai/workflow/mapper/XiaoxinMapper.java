@@ -29,7 +29,7 @@ public class XiaoxinMapper extends CiticMapper implements IMapper {
     private static final Logger logger = LoggerFactory.getLogger(XiaoxinMapper.class);
     private final XiaoxinAgent xiaoxinAgent = new XiaoxinAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.XiaoxinAgent"));
 
-    private String badcase = "小信最近学习了很多关于基金方面的知识，其他领域还有所欠缺，您可以尝试换个方式描述您的问题。";
+    private String badcase = "小信最近学习了";
 
     private String agentName = "小信智能体";
 

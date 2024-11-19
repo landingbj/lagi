@@ -29,7 +29,7 @@ public class CiticAgentWorker {
         try (IRContainer contain = new AgentContainer()) {
             IMapper ragMapper = new RagMapper();
             ragMapper.setParameters(params);
-            ragMapper.setPriority(WorkerGlobal.MAPPER_PRIORITY - 5);
+            ragMapper.setPriority(WorkerGlobal.MAPPER_PRIORITY);
             contain.registerMapper(ragMapper);
 
             IMapper xiaoxinMapper = new XiaoxinMapper();
