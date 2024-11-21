@@ -3,20 +3,31 @@ package ai.example;
 import ai.audio.service.AudioService;
 import ai.common.pojo.*;
 import ai.config.ContextLoader;
+import ai.embedding.Embeddings;
+import ai.embedding.impl.ErnieEmbeddings;
+import ai.embedding.impl.TelecomGteEmbeddings;
 import ai.image.pojo.ImageEnhanceRequest;
 import ai.image.service.AllImageService;
 import ai.llm.service.CompletionsService;
+import ai.medusa.pojo.InstructionPairRequest;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.vector.VectorStoreService;
+import ai.vector.impl.ChromaVectorStore;
+import ai.vector.pojo.IndexRecord;
+import ai.vector.pojo.QueryCondition;
+import ai.vector.pojo.UpsertRecord;
 import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
+import org.junit.Test;
 
 import java.io.File;
-import java.util.Collections;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class Demo {
@@ -25,7 +36,12 @@ public class Demo {
         //initialize Profiles
         ContextLoader.loadContext();
     }
+    private final Embeddings ef = new TelecomGteEmbeddings(ContextLoader.configuration.getFunctions().getEmbedding().get(0));
 
+
+    private final ChromaVectorStore vectorStore = new ChromaVectorStore(ContextLoader.configuration.getStores().getVectors().get(0),ef);
+
+    private final VectorStoreService vectorStoreService = new VectorStoreService();
     /**
      * completions Demo Method
      * Demonstration function for testing the chat completion feature.
@@ -42,7 +58,7 @@ public class Demo {
         chatCompletionRequest.setCategory("default");
         ChatMessage message = new ChatMessage();
         message.setRole("user");
-        message.setContent("你好");
+        message.setContent("你好，你是那个公司开发的");
         chatCompletionRequest.setMessages(Lists.newArrayList(message));
         // Set the stream parameter to false
         chatCompletionRequest.setStream(false);
@@ -55,6 +71,8 @@ public class Demo {
         System.out.println("outcome:" + result.getChoices().get(0).getMessage().getContent());
 
     }
+
+
 
     /**
      * streamCompletions Demo Method
@@ -133,7 +151,7 @@ public class Demo {
      * then employs the audio service class to execute the TTS operation and receives the converted audio result.
      * Lastly, it prints out the result of the operation.
      */
-    public void Text2Audio(){
+    public static void Text2Audio(){
         // Initialize the TTS request parameter object and set the text for conversion
         TTSRequestParam request = new TTSRequestParam();
         request.setText("你好");
@@ -312,5 +330,145 @@ public class Demo {
 
     }
 
+        /**
+     * 查询相似度
+     * @param
+     * @return
+     */
+    public List<IndexRecord> query(String ttt){
+        int n = 32;
+        Map<String, String> where = new HashMap<>();
+        List<IndexRecord> list1 = new ArrayList<>();
+        while (n>0) {
+            QueryCondition queryCondition = new QueryCondition();
+            queryCondition.setN(n);
+            queryCondition.setText(ttt);
+            queryCondition.setWhere(where);
+            list1 =  vectorStore.query(queryCondition, "bj-telecom");
+            list1 = list1.stream()
+                    //.filter(record -> record.getDistance() < 0.5)
+                    .collect(Collectors.toList());
+            n=-1;
+        }
+        return list1;
+    }
+    @Test
+    public void ss(){
+        UpsertRecord upsertRecord = new UpsertRecord();
+        upsertRecord.setId("a375a16d303b4894bf2c4a16a917ae35111");
+        upsertRecord.setDocument("这个是传统类型");
+        Map<String, String> metadata = new HashMap<>();
+        // 添加键值对到Map中
+        metadata.put("seq", "1732167567766");
+        metadata.put("category", "bj-telecom");
+        metadata.put("file_id", "399bb6919b2a43cab340b88c06daee01");
+        metadata.put("filename", "（中电信京〔2024〕168号）《关于印发中国电信北京公司员工职业发展管理办法（2024版）的通知》.pdf");
+        metadata.put("filepath", "202410221728017583.pdf");
+        metadata.put("parent_id", "59124c97754947c3ab0a443fe536ccf1");
+        upsertRecord.setMetadata(metadata);
+        List<UpsertRecord> upsertRecords = new ArrayList<>();
+        upsertRecords.add(upsertRecord);
+        vectorStore.upsert(upsertRecords, "bj-telecom");
 
+        System.out.println(query("16升17岗条件是什么，需要多少积分"));
+
+    }
+
+
+         @Test
+        public void xiugai() {
+UpsertRecord upsertRecord = new UpsertRecord();
+upsertRecord.setId("40e9abd133304878ae0c2b3c2d1a14f1");
+
+String fff = "积分标准说明："+
+    "我们的晋升体系为不同岗位等级设定了明确的积分标准，以确保员工晋升的公平性和透明性。具体如下：\n"+
+    "辅助级：1升2岗需积分为20分。" +
+    "辅助级：2升3岗需积分为20分。" +
+    "辅助级：3升4岗需积分为20分。" +
+
+    "初级：4升5岗需积分为30分。" +
+    "初级：5升6岗需积分为30分。" +
+    "初级：6升7岗需积分为30分。" +
+    "初级：7升8岗需积分为30分。" +
+
+    "中级：8升9岗需积分为50分。" +
+    "中级：9升10岗需积分为50分。" +
+    "中级：10升11岗需积分为50分。" +
+    "中级：11升12岗需积分为50分。" +
+
+    "高级：12升13岗需积分为70分。" +
+    "高级：14升15岗需积分为70分。" +
+    "高级：15升16岗需积分为70分。" +
+    "高级：16升17岗需积分为70分。" +
+
+    "晋升流程："+
+    "公司每年将统一组织员工的职业发展和晋升工作。在满足晋升条件的基础上，员工可以根据自己的积分和个人意愿，选择是否晋升以及晋升的具体形式。"+
+    "积分使用规则：员工在晋升至相应的岗位等级或工资档次后，需从个人积分中扣除相应的积分数额，之后继续积累新的积分。"+
+    "若员工因提任而晋升超过一个等级，需扣除相应的晋升积分。若积分不足，将在新岗位等级上从0分重新开始积累。"+
+    "附则：本晋升办法自2024年6月28日起正式实施。若此前的规定与本办法存在冲突，应以本办法为准。"+
+    "本办法的最终解释权归北京公司人力资源部所有。"+
+    "发布信息："+
+    "本办法由中国电信北京公司办公室于2024年10月9日印发。";
+
+upsertRecord.setDocument(fff);
+
+
+
+Map<String, String> metadata = new HashMap<>();
+metadata.put("seq", "1732167567766"); // 假设这个seq是你需要的
+metadata.put("category", "bj-telecom");
+metadata.put("file_id", "7f4b4e0bc7184e55ba3ccb24e2883c68");
+metadata.put("filename", "（中电信京〔2024〕165号）《关于印发中国电信北京公司员工积分管理办法（2024版）的通知》.pdf");
+metadata.put("filepath", "202411211311536951.pdf");
+metadata.put("level", "user");
+metadata.put("parent_id", "8085d8a3db8b4b9ab7c5c3ea03219f32");
+upsertRecord.setMetadata(metadata);
+
+List<UpsertRecord> upsertRecords = new ArrayList<>();
+upsertRecords.add(upsertRecord);
+
+         vectorStore.upsert(upsertRecords, "bj-telecom");
+         System.out.println(query("计达到 4 个 A，且通过公司专业评审要求，岗位等级可晋升一等"));
+    }
+@Test
+    public void tistco1i() {
+       UpsertRecord upsertRecord = new UpsertRecord();
+        upsertRecord.setId("4a05db980da3421784432a8684528c78");
+        upsertRecord.setDocument("升岗需要什么条件？/这个问题需要根据提供的信息，从晋升路径，晋升需要多少积分，胜任力要求，积分是否保留来完整的综合回答我"
+        +"积分标准说明："+
+            "我们的晋升体系为不同岗位等级设定了明确的积分标准，以确保员工晋升的公平性和透明性。具体如下：\n"+
+            "辅助级：1升2岗需积分为20分。" +
+            "辅助级：2升3岗需积分为20分。" +
+            "辅助级：3升4岗需积分为20分。" +
+
+            "初级：4升5岗需积分为30分。" +
+            "初级：5升6岗需积分为30分。" +
+            "初级：6升7岗需积分为30分。" +
+            "初级：7升8岗需积分为30分。" +
+
+            "中级：8升9岗需积分为50分。" +
+            "中级：9升10岗需积分为50分。" +
+            "中级：10升11岗需积分为50分。" +
+            "中级：11升12岗需积分为50分。" +
+
+            "高级：12升13岗需积分为70分。" +
+            "高级：14升15岗需积分为70分。" +
+            "高级：15升16岗需积分为70分。" +
+            "高级：16升17岗需积分为70分。"
+        );
+
+Map<String, String> metadata = new HashMap<>();
+metadata.put("category", "bj-telecom");
+metadata.put("file_id", "7f4b4e0bc7184e55ba3ccb24e2883c68");
+metadata.put("filename", "（中电信京〔2024〕165号）《关于印发中国电信北京公司员工积分管理办法（2024版）的通知》.pdf");
+metadata.put("filepath", "202411211311536951.pdf");
+metadata.put("level", "user");
+metadata.put("parent_id", "a870295c0a8044479fd65b4e37ef1fe8");
+metadata.put("seq", "1732188524545");
+upsertRecord.setMetadata(metadata);
+
+List<UpsertRecord> upsertRecords = new ArrayList<>();
+upsertRecords.add(upsertRecord);
+         System.out.println(query("计达到 4 个 A，且通过公司专业评审要求，岗位等级可晋升一等"));
+    }
 }
