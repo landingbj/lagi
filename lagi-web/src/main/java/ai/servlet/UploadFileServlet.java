@@ -305,6 +305,7 @@ public class UploadFileServlet extends HttpServlet {
         HttpSession session = req.getSession();
         String category = req.getParameter("category");
         String level = req.getParameter("level");
+        String fileId = req.getParameter("fileId");
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "success");
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -352,7 +353,7 @@ public class UploadFileServlet extends HttpServlet {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
-                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
+                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
                 }
             }
         }
@@ -372,12 +373,14 @@ public class UploadFileServlet extends HttpServlet {
         private final String category;
         private final String filename;
         private final String level;
+        private String fileId;
 
-        public AddDocIndex(File file, String category, String filename, String level) {
+        public AddDocIndex(File file, String category, String filename, String level, String fileId) {
             this.file = file;
             this.category = category;
             this.filename = filename;
             this.level = level;
+            this.fileId = fileId;
         }
 
         public void run() {
@@ -388,7 +391,9 @@ public class UploadFileServlet extends HttpServlet {
 
         private void addDocIndexes() {
             Map<String, Object> metadatas = new HashMap<>();
-            String fileId = UUID.randomUUID().toString().replace("-", "");
+            if (fileId == null) {
+                fileId = UUID.randomUUID().toString().replace("-", "");
+            }
             String filepath = file.getName();
 
             metadatas.put("filename", filename);
