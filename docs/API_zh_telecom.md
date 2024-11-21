@@ -292,6 +292,7 @@ fileToUpload: file://D:/知识图谱.pdf
 | 名称              | 位置    | 类型             | 必选 | 说明       |
 |-----------------|-------|----------------|----|----------|
 | category        | query | string         | 是  | 指定的数据类别  |
+| fileId        | query | string         | 是  | 指定的文件ID  |
 | body            | body  | object         | 否  | none     |
 | » fileToUpload  | body  | string(binary) | 是  | 所上传的私训文件 |
 
