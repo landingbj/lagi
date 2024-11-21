@@ -8,6 +8,7 @@ import ai.common.pojo.VectorStoreConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
+import ai.vector.pojo.VectorCollection;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -38,7 +39,9 @@ public class VectorDbService {
             where.put("file_id", id);
             whereList.add(where);
         }
-        vectorStoreService.deleteWhere(whereList);
+        for (VectorCollection collection: vectorStoreService.listCollections()) {
+            vectorStoreService.deleteWhere(whereList, collection.getCategory());
+        }
     }
 
     public List<IndexSearchData> search(String question, String category) {
