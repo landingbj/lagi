@@ -5,7 +5,6 @@ import ai.agent.pojo.XiaoxinResponse;
 import ai.config.pojo.AgentConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
-import ai.utils.LRUCache;
 import ai.utils.OkHttpUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
@@ -16,11 +15,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class XiaoxinAgent {
+public class XiaoxinAgent extends CiticAgent{
     private static final Gson gson = new Gson();
     private static final String BASE_URL = "https://api-ngd.baidu.com/core/v3/query";
     private static final Logger log = LoggerFactory.getLogger(XiaoxinAgent.class);
-    private final AgentConfig agentConfig;
 
     public XiaoxinAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;

@@ -1,37 +1,48 @@
 package ai.workflow.mapper;
 
+import ai.agent.citic.CiticAgent;
 import ai.common.pojo.Configuration;
 import ai.config.pojo.AgentConfig;
 import ai.learn.questionAnswer.KShingle;
+import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.medusa.utils.LCS;
+import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.qa.AiGlobalQA;
 import ai.utils.LagiGlobal;
 import ai.utils.WorkPriorityWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
-import lombok.Getter;
+import ai.worker.WorkerGlobal;
+import cn.hutool.core.bean.BeanUtil;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 
-@Getter
 @Slf4j
-public class CiticMapper extends BaseMapper {
+public class CiticMapper extends BaseMapper implements IMapper {
     protected static final Map<String, AgentConfig> AGENT_CONFIG_MAP = new HashMap<>();
 
-    private  String agentName = "citic";
-
-    private  String badcase = "抱歉, 我并不了解xxx具体的信息,分享更多关于xxx的信息";
+    @Setter
+    private CiticAgent citicAgent;
 
     static {
         Configuration config = LagiGlobal.getConfig();
         for (AgentConfig agentConfig : config.getAgents()) {
             AGENT_CONFIG_MAP.put(agentConfig.getDriver(), agentConfig);
         }
+    }
+
+    public String getAgentName() {
+        return citicAgent.getAgentConfig().getName();
+    }
+
+    public String getBadcase() {
+        return citicAgent.getAgentConfig().getWrongCase();
     }
 
     public double getSimilarity(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
@@ -72,6 +83,29 @@ public class CiticMapper extends BaseMapper {
         boolean work = WorkPriorityWordUtil.isPriorityWord(getAgentName(), question, answer);
         if(work) return 10;
         else return 0;
+    }
+
+    @Override
+    public List<?> myMapping() {
+        List<Object> result = new ArrayList<>();
+        ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
+                WorkerGlobal.MAPPER_CHAT_REQUEST);
+        ChatCompletionResult chatCompletionResult = null;
+        double calPriority = 0;
+        try {
+            chatCompletionResult = citicAgent.chat(chatCompletionRequest);
+            if(chatCompletionRequest != null) {
+                ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
+                BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
+                chatCompletionResult = chatCompletionResultWithSource;
+                calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
+            }
+        } catch (IOException e) {
+            log.error("ExchangeMapper.myMapping: chat error", e);
+        }
+        result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
+        result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);
+        return result;
     }
 
 }

@@ -16,15 +16,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ExchangeAgent {
+public class ExchangeAgent  extends CiticAgent{
     private static final Logger logger = LoggerFactory.getLogger(StockAgent.class);
     private static final Gson gson = new Gson();
     private static final String BASE_URL = "https://qianfan.baidubce.com/v2/app/conversation/runs";
     private static final String NEW_CONVERSATION_URL = "https://qianfan.baidubce.com/v2/app/conversation";
     private static final LRUCache<String, String> sessionCache = new LRUCache<>(1000, 5, TimeUnit.DAYS);
 
-
-    private final AgentConfig agentConfig;
 
     public ExchangeAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
