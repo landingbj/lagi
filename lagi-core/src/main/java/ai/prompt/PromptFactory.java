@@ -71,15 +71,18 @@ public class PromptFactory {
         try {
             ObjectMapper mapper = new YAMLMapper();
             mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+            // 更新prompt_template.yml文件
+
             OutputStream configAsOutputStream = Files.newOutputStream(Paths.get("lagi-web/src/main/resources/prompt_template.yml"));
-//            mapper.writeValue(new File("lagi-web/src/main/resources/prompt_template.yml"), promptConfig);
+            mapper.writeValue(new File("lagi-web/src/main/resources/prompt_template.yml"), promptConfig);
         } catch (IOException e) {
             log.warn(e.getMessage());
         }
     }
     public static void main(String[] args) {
         PromptFactory promptFactory = new PromptFactory();
-        promptFactory.loadContext();
         log.info("{}",promptFactory.promptConfig);
+//        promptFactory.promptConfig.getPrompt().setEnable(false);
+//        promptFactory.savePromptConfig();
     }
 }
