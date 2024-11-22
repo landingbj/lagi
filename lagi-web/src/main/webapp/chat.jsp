@@ -26,6 +26,11 @@
 
 
 <body class="antialiased">
+    <div id="pdfMask" class="pdf-mask" >
+      <div class="pdf-box">
+        <img src="" style="width: 100%; height: auto"/>
+      </div>
+    </div>
 <div id="__next">
   <script>!function () { try { var d = document.documentElement, c = d.classList; c.remove('light', 'dark'); var e = localStorage.getItem('theme'); if ('system' === e || (!e && true)) { var t = '(prefers-color-scheme: dark)', m = window.matchMedia(t); if (m.media !== t || m.matches) { d.style.colorScheme = 'dark'; c.add('dark') } else { d.style.colorScheme = 'light'; c.add('light') } } else if (e) { c.add(e || '') } if (e === 'light' || e === 'dark') d.style.colorScheme = e } catch (e) { } }()</script>
   <div class="overflow-hidden w-full h-full relative flex z-0">
@@ -37,7 +42,7 @@
         <div class="flex h-full min-h-0 flex-col ">
           <div class="scrollbar-trigger relative h-full w-full flex-1 items-start border-white/20">
             <h2
-                    style="position: absolute; border: 0px; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; overflow-wrap: normal;">
+               style="position: absolute; border: 0px; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; overflow-wrap: normal;">
               历史对话</h2>
             <nav class="flex h-full w-full flex-col p-2" aria-label="Chat history">
               <div class="mb-1 flex flex-row gap-2">
@@ -266,6 +271,13 @@
                         </ul>
                       </div>
                     </div>
+                     <div id = "zsk-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
+                            <div id="zsk-list" class="absolute left-2 z-50 agent-pannel w-32 "  >
+                              <!-- <div id = "zsk-head" class="agent-head  pt-2 pb-1 text-center"></div> -->
+                              <ul id = "zsk-select" class="pb-2">
+                              </ul>
+                            </div>
+                          </div>
 
                     <div class="flex-col-reverse w-10 m-0 relative">
 
@@ -288,6 +300,30 @@
                       </div>
 
                     </div>
+                        <div class="flex-col-reverse w-28 m-0 relative">
+
+                          <div  class="absolute top-0  ml-2" style="display: none;" id = "textareaScretch"  onclick="showTextareaMask()">
+                            <svg  style="width: 24px;height: 24px;" t="1703232823101" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6337" width="200" height="200"><path d="M838.116 732.779 877.7 693.195 511.979 327.549 146.3 693.195 185.883 732.779 512.003 406.652Z" p-id="6338" fill="#1296db"></path></svg>
+                            <!-- 向下 -->
+                            <!-- <svg t="1703233241892" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg> -->
+                          </div>
+                          <div id="zsk" class="absolute bottom-1.5 ml-2" style="width: 24px;height: 24px; margin-bottom: 5px;">
+                            <img   src="images/zsk.png" />
+                          </div>
+                          <div id="voiceIcon" class="absolute bottom-0 ml-12">
+                            <svg id="voiceSvg"
+                              style="width: 24px;height: 24px; margin-bottom: 5px;" t="1694870288752" class="icon" viewBox="0 0 1024 1024"
+                              version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4046" width="200" height="200">
+                              <path
+                                d="M446.2 705.9c-99.1 0-180.2-81.1-180.2-180.2V245.4c0-99.1 81.1-180.2 180.2-180.2s180.2 81.1 180.2 180.2v280.3c0 99.1-81.1 180.2-180.2 180.2z"
+                                fill="#D6F3FA" p-id="4047"></path>
+                              <path
+                                d="M443.7 832.1c-3 12.8-16.3 20.2-28.9 16.4-132.1-41-224.8-158-234.6-296.2-0.9-13.1 9.3-24.4 22.5-24.4 11.7 0 21.5 8.9 22.3 20.6 8.3 120.1 88.9 221.8 203.8 257.2 11.1 3.4 17.6 15 14.9 26.4zM820.8 528c-11.6 0-21.5 8.9-22.3 20.5-10.4 148.1-132.3 265.7-282 269.8-0.5 0-1-0.3-1.5-0.3-0.9 0-1.7 0.4-2.5 0.5-1.3 0-2.6 0.2-3.9 0.2v0.6c-9.2 2.8-16 11.1-16 21.2v98.4c0 12.4 10.1 22.5 22.5 22.5s22.5-10.1 22.5-22.5v-76.6c163.5-14 294-145.7 305.8-309.8 0.8-13.2-9.5-24.5-22.6-24.5z m-503.3 35.3v-267C317.5 187.5 406 99 514.8 99s197.3 88.5 197.3 197.3v267c0 108.8-88.5 197.3-197.3 197.3s-197.3-88.5-197.3-197.3z m51.5 0c0 80.4 65.4 145.8 145.8 145.8s145.8-65.4 145.8-145.8v-267c0-80.4-65.4-145.8-145.8-145.8S369 215.9 369 296.3v267z m45.6-157.7h75.2c12.4 0 22.5-10.1 22.5-22.5s-10.1-22.5-22.5-22.5h-75.2c-12.4 0-22.5 10.1-22.5 22.5 0.1 12.4 10.2 22.5 22.5 22.5z m75.2 68.6c12.4 0 22.5-10.1 22.5-22.5s-10.1-22.5-22.5-22.5h-75.2c-12.4 0-22.5 10.1-22.5 22.5s10.1 22.5 22.5 22.5h75.2z"
+                                fill="#18BAE5" p-id="4048"></path>
+                            </svg>
+                          </div>
+
+                        </div>
 
                     <div
                             class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">

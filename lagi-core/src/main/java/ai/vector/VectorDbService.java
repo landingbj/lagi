@@ -1,10 +1,7 @@
-package ai.migrate.service;
+package ai.vector;
 
-import ai.embedding.EmbeddingFactory;
-import ai.embedding.Embeddings;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
-import ai.common.pojo.VectorStoreConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
@@ -23,6 +20,9 @@ public class VectorDbService {
 //        Embeddings embeddingFunction = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
         vectorStoreService = new VectorStoreService();
 
+    }
+    public VectorDbService() {
+        vectorStoreService = new VectorStoreService();
     }
 
     public boolean vectorStoreEnabled() {

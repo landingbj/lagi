@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -79,12 +80,20 @@ public class SampleIntentServiceImpl implements IntentService {
             intentResult.setContinuedIndex(lIndex);
             return intentResult;
         }
-        setIntentByVector(chatCompletionRequest, lIndex, lastQ, intentResult);
+//        setIntentByVector(chatCompletionRequest, lIndex, lastQ, intentResult);
+        intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
+        intentResult.setContinuedIndex(null);
         return intentResult;
     }
 
     private static void setIntentByVector(ChatCompletionRequest chatCompletionRequest, Integer lIndex, String lastQ, IntentResult intentResult) {
         VectorStoreService vectorStoreService = new VectorStoreService();
+        if(Pattern.matches("^[ a-zA-z0-9_、（）()\n\t\r]+", lastQ)) {
+            intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
+            intentResult.setContinuedIndex(null);
+            intentResult.setIndexSearchDataList(null);
+            return;
+        }
         String lQ = chatCompletionRequest.getMessages().get(lIndex).getContent();
         String complexQ = lQ + lastQ;
         lastQ = StrFilterUtil.filterPunctuations(lastQ);

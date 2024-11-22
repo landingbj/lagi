@@ -163,9 +163,12 @@ chromadb：
           url: http://localhost:8000
     
       rag:
-        - backend: chroma
-          enable: true
-          priority: 10
+        vector: chroma
+        # fulltext: elasticsearch
+        graph: landing
+        enable: true
+        priority: 10
+        default: "Please give prompt more precisely"
     ```
 
 ## 4.引入依赖
@@ -250,12 +253,13 @@ Lag[i] (联基) 提供了动态切换模型的功能，您可以在配置文件�
 
 您可以使用`POST /training/pairing`接口，上传特定的问答对。
 
-| 名称          | 位置    | 类型                 | 必选 | 说明      |
-|-------------|-------|--------------------|----|---------|
-| category    | body  | string             | 是  | 指定的数据类别 |
-| data        | body  | [object] or object | 是  | 问答对数据，支持对象或对象列表  |
-| 》instruction | body  | string             | 是  | 问题      |
-| 》output     | body  | string             | 是  | 答案      |
+| 名称           | 位置    | 类型                 | 必选  | 说明              |
+|--------------|-------|--------------------|-----|-----------------|
+| category     | body  | string             | 是   | 指定的数据类别         |
+| data         | body  | [object] or object | 是   | 问答对数据，支持对象或对象列表 |
+| 》instruction | body  | [object] or object | 是   | 问题字符或集合         |
+| 》output      | body  | [object] or object | 是   | 答案字符或集合          |
+| 》image       | body  | [object] or object | 否   | 相关图片对象集合        |
 
 如上传单个问答对，请求示例如下（一对一）：
 
@@ -264,7 +268,8 @@ Lag[i] (联基) 提供了动态切换模型的功能，您可以在配置文件�
     "category": "default",
     "data": {
         "instruction": "补办医师执业证书的整个流程包括哪些步骤？",
-        "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+        "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。",
+        "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
     }
 }
 ```
@@ -277,7 +282,8 @@ Lag[i] (联基) 提供了动态切换模型的功能，您可以在配置文件�
     "data": [
         {
             "instruction": "补办医师执业证书的整个流程包括哪些步骤？",
-            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。",
+            "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
         },
         {
             "instruction": "医师执业证书补办流程有哪些环节？",
@@ -298,7 +304,8 @@ Lag[i] (联基) 提供了动态切换模型的功能，您可以在配置文件�
                 "补办医师执业证书的整个流程包括哪些步骤？",
                 "医师执业证书补办流程有哪些环节？"
             ],
-            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。"
+            "output": "补办医师执业证书的流程包括五个步骤：申报/收件、受理、决定、制证、发证。",
+            "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
         }
     ]
 }

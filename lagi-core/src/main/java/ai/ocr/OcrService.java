@@ -5,6 +5,7 @@ import ai.common.utils.PdfUtils;
 import ai.manager.OcrManager;
 import ai.utils.LRUCache;
 import ai.ocr.pojo.OcrProgress;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class OcrService {
     private static final String ocrCacheDir = OcrConfig.getOcrCacheDir();
     private static final LRUCache<String, OcrProgress> processedPageSizeCache = new LRUCache<>(1000);
@@ -28,11 +30,16 @@ public class OcrService {
     public List<String> recognize(List<File> imageFileList) {
         List<String> result = new ArrayList<>();
         for (File file : imageFileList) {
+            if(file == null) {
+                result.add(null);
+                continue;
+            }
             try {
                 BufferedImage image = ImageIO.read(file);
                 result.add(recognize(image));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                log.error("read image error {}", e.getMessage());
+                result.add(null);
             }
         }
         return result;

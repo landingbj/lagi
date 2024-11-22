@@ -106,10 +106,9 @@ var voice_url = '';
 function txtTovoice(txt, emotion) {
     console.log(emotion, txt)
     // 获取最后一个进行播放。
-    const markdownElements = document.querySelectorAll(".markdown");
-    var len = markdownElements.length;
+    var len = $(".myAudio1").length;
 // 检查是否至少存在一个匹配的元素
-    if (markdownElements.length != 0) {
+    if (len > 0) {
         // 要发送的 JSON 数据
         const postData = {
             "model": "default",
@@ -135,9 +134,8 @@ function txtTovoice(txt, emotion) {
                     console.log(json.data);
 
                     voice_url = json.data;
-
                     const audioElement = document.getElementsByClassName('myAudio1')[len - 1];
-                    $(".myAudio1")[len - 1].src = json.data
+                    $(".myAudio1")[len-  1].src = json.data
                     const playButton = document.getElementsByClassName('playIcon1')[len - 1];
                     const audioSource = document.getElementById("audioSource");
                     // 添加点击事件处理程序来控制音频的播放和暂停
@@ -186,6 +184,7 @@ const VIDEO_FILE_SIZE_LIMIT = 50 * 1024 * 1024;
 
 const FILE_SIZE_LIMIT = {
     "pdf": PDF_FILE_SIZE_LIMIT,
+    "wps": WORD_FILE_SIZE_LIMIT,
     "doc": WORD_FILE_SIZE_LIMIT,
     "docx": WORD_FILE_SIZE_LIMIT,
     "txt": TXT_FILE_SIZE_LIMIT,
@@ -225,7 +224,7 @@ const fileUploadButton = document.getElementById("addButton");
 fileUploadButton.addEventListener("click", function () {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
+    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm, .wps";
     fileInput.style.display = "none";
 
     // 将文件输入元素添加到页面
@@ -252,7 +251,9 @@ fileUploadButton.addEventListener("click", function () {
             let serverEndpoint = "";
             var fileStatus = "";
             if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
-                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx") {
+                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx"
+                || fileType === "wps"
+            ) {
                 question = "您所上传的文档文件名称为：" + selectedFile.name;
                 formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
                 serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;
@@ -657,3 +658,16 @@ agentButton.addEventListener("click", function (e) {
     });
     e.stopPropagation();
 });
+
+
+const zsk = document.getElementById("zsk");
+zsk.addEventListener("click", function (e) {
+    $('#zsk-container').toggle();
+    $(document).one("click", function(){
+        $("#zsk-container").hide();
+    });
+    e.stopPropagation();
+});
+
+
+

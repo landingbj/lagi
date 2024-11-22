@@ -15,7 +15,14 @@ public class BigdataService {
     }
 
     public boolean upsert(TextIndexData data) {
-        return adapter.upsert(data);
+        if(adapter == null) {
+            return false;
+        }
+        try {
+            return adapter.upsert(data);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public List<TextIndexData> search(String keyword, String category) {

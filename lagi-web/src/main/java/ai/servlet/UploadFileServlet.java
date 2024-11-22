@@ -32,7 +32,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang3.StringUtils;
 
 import ai.vector.FileService;
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.utils.MigrateGlobal;
 
 import com.google.gson.Gson;
@@ -347,17 +347,23 @@ public class UploadFileServlet extends HttpServlet {
             ex.printStackTrace();
         }
 
+        List<Map<String, String>> data = new ArrayList<>();
         if (!files.isEmpty()) {
             String content = "";
             for (File file : files) {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
-                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
+                    Map<String, String> map = new HashMap<>();
+                    map.put("filename", filename);
+                    map.put("filepath", file.getName());
+                    data.add(map);
+                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId).start());
                 }
             }
         }
         if (!jsonResult.has("msg")) {
+            jsonResult.addProperty("data", gson.toJson(data));
             jsonResult.addProperty("status", "success");
         }
         PrintWriter out = resp.getWriter();

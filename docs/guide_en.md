@@ -5,63 +5,39 @@
 - **Background**： With the rapid development of artificial intelligence technology, more and more application scenarios require interaction with AI models, such as intelligent customer service, voice assistants, image processing, etc. To meet these needs, this project provides a variety of AI features designed to help you easily apply AI technologies to your business scenarios, improving user experience and efficiency.
 
 ## Before we begin
-- **Configuration requirements**：You can choose to use the maven command-line tool for wrapping, or run it through a mainstream integrated development environment (IDE) like IntelliJ IDEA. Make sure your JDK version meets at least 8.
-- **Import dependencies**： To access the functionality, we need to import dependencies, either from Maven or directly from the jar.   
-  ***Maven import***：
-    - Add the following to dependencies in the project pom.xml:
-      ```xml
-          <depxmlendency>
+
+You can choose to import the jar directly, or use maven to import dependencies and run them through a mainstream integrated development environment (IDE) such as IntelliJ IDEA.
+
+**Configuration Requirements**: Please make sure that your JDK version meets the requirements of at least 8.
+
+### One. Import the jar directly
+
+If you choose to import the jar directly, you only need to complete the following two steps to start the method call.
+
+- 1.Download jar: To call the relevant functions, you need to download the jar package of Lag[i].（[Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）
+
+- 2.Import jar: To call related functions, you need to put the jar in your lib directory.
+
+Note: This jar has a built-in default configuration file lagi.yml, which is resolved with external configuration first.If you need to modify the configuration file, you can directly download the configuration [lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml) and put it in the resources directory of your project.(For lagi.yml related configurations, please refer to [Configuration Document](config_en.md))
+
+### Two.Maven introduces dependencies
+
+If you choose to introduce dependencies to Maven, you only need to complete the following three steps to start the method call.
+
+- 1.Import jar：To call the relevant function, you need to download and import the jar package of Lag[i] (Landing AGI), And put it in the lib directory.。
+
+- 2.Add dependency：Add the following to the dependencies of the project's pom.xml:
+    ```xml
+        <dependency>
             <groupId>com.landingbj</groupId>
-            <artifactId>lagi-core</artifactId>
-            <version>1.0.0</version>
-          </depxmlendency>
-      ```
+            <artifactId>lagi-core-1.0.0</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/lib/lagi-core-1.0.0.jar</systemPath>
+        </dependency>
+    ```
 
-  ***Importing jar***：
-    - Either import lagu-core-1.0.0.jar or import the following jars and place them in the libs directory of lagu-core:
-      ```text
-          ai_bp.jar;
-          ai_core.jar;
-          ai_gather.jar;
-          ai_index.jar;
-          ai_qa.jar;
-      ```
-
-## Docker Run
-- **Dockerfile**：
-  ```text
-        # Use the official Tomcat image as the base image
-        FROM tomcat:8.5.46-jdk8-openjdk
-        
-        # Set the working directory
-        WORKDIR /usr/local/tomcat/webapps
-        
-        # Copy the project WAR file into the container
-        COPY myproject.war .
-        
-        # expose port 8080
-        EXPOSE 8080
-        
-        # Start command
-        CMD ["catalina.sh", "run"]
-  ```
-- **How to use**：
-  - Build images
-  >  docker build -t myproject-tomcat:1.0 .
-  - Run the container
-  >  docker run -d -p 8080:8080 myproject-tomcat:1.0
-
-- **Parameter description**：
-    
-    > -d: Run the container as a daemon.   
-
-    > -p 8080:8080: Maps port 8080 of the host machine to port 8080 of the container.  
-
-    > myproject-tomcat:1.0: Specifies the image name and label.   
-- **Note**：
-
-    Make sure your WAR file is built correctly and located in the current directory.   
-    If you have additional configuration or dependencies, you may need to modify the Dockerfile or use Docker Compose for more complex configuration.   
+Note: This jar has a built-in default configuration file lagi.yml, which is resolved with external configuration first.If you need to modify the configuration file, you can directly download the configuration [lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml) and put it in the resources directory of your project.(For lagi.yml related configurations, please refer to [Configuration Document](config_en.md))
 
 ## Calling the examples
 - To get started quickly, We provide some [Calling the examples](https://github.com/landingbj/lagi/blob/main/lagi-core/src/test/java/ai/example/Demo.java), you can modify and debug as needed.
@@ -298,7 +274,7 @@ No return value.
 >Example invocation:
 
 ```java
-import ai.migrate.service.VectorDbService;
+import ai.vector.VectorDbService;
 import ai.common.pojo.FileRequest;
 import ai.vector.VectorStoreService;
 
@@ -526,19 +502,21 @@ public void Test() {
 
 You can use lag[i] (Landing AGI) directly by importing JAR packages to turn a traditional business into a large model business.
 
-1. **Creating JAR**：
-  - Lagui-core can be packaged as a JAR using a build tool such as Maven.
+1. **Download JAR**：
+  - The lag[i] (Landing AGI) JAR package can be downloaded directly（[Download Jar File](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)）.
 
-2. **Importing JAR packages**：
-  - Copy the generated JAR and all the jars from the libs directory into your project's lib directory.
+2. **Importing JAR**：
+  - Copy the downloaded JAR package to your project's lib directory.
 
-3. **Import and configure lagui.yml**：
-  - Copy the configuration file lagi.yml from lagi-web to your project's resources directory and configure the model address and API key.
-
-4. **Build and run the project**：
+3. **Build and run the project**：
   - In your project, build and run the project.
 
 In this way, you can integrate lag[i] (Landing AGI) directly into your project as a JAR.
+
+**Note**:
+   - The JAR has a built-in default configuration file lagi.yml and is resolved preferentially by external configurations.
+   - If you need to modify the configuration file, you can simply download the configuration [lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml), put it in the resources directory of your project, and start building the project.
+   - For lagi.yml detailed configuration, please refer to [Configuration Document](config_en.md)
 
 ### Option 2: In Eclipse and IntelliJ
 **Integration project in Eclipse**
@@ -566,7 +544,7 @@ In this way, you can integrate lag[i] (Landing AGI) directly into your project a
 2. ***Adding dependencies***：
   - Locate your Project in the Project window.
   - Right-click on the project and select Add Dependency... .
-  - Select Module Dependency or Project Dependency, and then select all jars in the directories in the libs of the lag[i] (Landing AGI) project.
+  - Choose either Modurad Pendensi or Projeket de Pendensi, Then select the JAR package for lag[i] (Landing AGI)
 
 3. ***Synchronizing projects***：
   - Right-click the Project in the Project window and select Build Project.

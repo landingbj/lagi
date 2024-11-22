@@ -163,9 +163,12 @@ Select the configured vector database and fill in the corresponding configuratio
           url: http://localhost:8000
     
       rag:
-        - backend: chroma
-          enable: true
-          priority: 10
+        vector: chroma
+        # fulltext: elasticsearch
+        graph: landing
+        enable: true
+        priority: 10
+        default: "Please give prompt more precisely"
     ```
 
 ## 4. Import dependencies
@@ -251,11 +254,12 @@ You can integrate internal data information into Lag[i] (Landing AGI) by uploadi
 You can use the `POST /training/pairing` endpoint to upload your own Q&A pairs.
 
 | Name         | Position | Type     | Required | Description  |
-|--------------|-------|--------------------|---------|---------|
-| category    | body  | string             | true    | The specified data class |
-| data         | body  | [object] or object | true    | Question and answer pairs of data, supporting objects or lists of objects  |
-| 》instruction | body  | string             | true    | The problem     |
-| 》output      | body  | string             | true    | The answer     |
+|--------------|-------|--------------------|----------|---------|
+| category    | body  | string             | true     | The specified data class |
+| data         | body  | [object] or object | true     | Question and answer pairs of data, supporting objects or lists of objects  |
+| 》instruction | body  | string             | true     | The problem     |
+| 》output      | body  | string             | true     | The answer     |
+| 》image       | body  | [object] or object | false    | A collection of related picture objects        |
 
 Example request is as follows(one to one):
 
@@ -264,7 +268,8 @@ Example request is as follows(one to one):
     "category": "default",
     "data": {
         "instruction": "What are the steps in the whole process of reapplying for a doctor's practice certificate?",
-        "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+        "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance.",
+        "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
     }
 }
 ```
@@ -277,7 +282,8 @@ Example batch request is as follows(one to one):
     "data": [
         {
             "instruction": "What are the steps in the whole process of reapplying for a doctor's practice certificate?",
-            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance.",
+            "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
         },
         {
             "instruction": "The process of reapplying for medical practice certificate includes five steps:  declaration/receipt, acceptance, decision, certification and issuance.",
@@ -298,7 +304,8 @@ Example request is as follows(many to one):
                 "What are the steps in the whole process of reapplying for a doctor's practice certificate?",
                 "What are the links in the process of reapplying for doctor's practice certificate?"
             ],
-            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance."
+            "output": "The process of reapplying for medical practice certificate includes five steps: declaration/receipt, acceptance, decision, certification and issuance.",
+            "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
         }
     ]
 }

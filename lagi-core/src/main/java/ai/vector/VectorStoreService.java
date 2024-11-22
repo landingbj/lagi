@@ -3,6 +3,7 @@ package ai.vector;
 import ai.bigdata.BigdataService;
 import ai.bigdata.pojo.TextIndexData;
 import ai.common.pojo.*;
+import ai.common.utils.ThreadPoolManager;
 import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
@@ -24,16 +25,31 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class VectorStoreService {
+    private static final Logger log = LoggerFactory.getLogger(VectorStoreService.class);
     private final Gson gson = new Gson();
     private BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
+    private static final ExecutorService executor;
+
+    static {
+        ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 60, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(100),
+                (r, executor)->{
+                    log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
+                }
+        ));
+        executor = ThreadPoolManager.getExecutor("vector-service");
+    }
 
     private final IntentService intentService = new SampleIntentServiceImpl();
     private final BigdataService bigdataService = new BigdataService();
@@ -238,36 +254,67 @@ public class VectorStoreService {
         return search(question, request.getCategory());
     }
 
+
     public List<IndexSearchData> search(String question, String category) {
+        question = question.replace(" \n", "");
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
         Map<String, String> where = new HashMap<>();
-        List<IndexSearchData> result = new ArrayList<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
         Set<String> esIds = bigdataService.getIds(question, category);
-        Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
-        if (esIds != null) {
+        if (esIds != null && !esIds.isEmpty()) {
+            Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
             indexIds.retainAll(esIds);
+            indexSearchDataList = indexSearchDataList.stream()
+                    .filter(indexSearchData->indexIds.contains(indexSearchData.getId()))
+                    .collect(Collectors.toList());
         }
-        for (IndexSearchData indexSearchData : indexSearchDataList) {
-            IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
-            if (extendedIndexSearchData == null) {
-                extendedIndexSearchData = extendText(indexSearchData, category);
-                vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
+        String finalCategory = category;
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
+                .collect(Collectors.toList());
+        return  futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            }catch (Exception e) {
+                log.error("indexData get error", e);
             }
-            extendedIndexSearchData.setDistance(indexSearchData.getDistance());
-//            System.out.println("\nquestion: " + question);
-//            System.out.println("text: " + extendedIndexSearchData.getText());
-//            System.out.println("isSimilar: " + kShingleFilter.isSimilar(question, extendedIndexSearchData.getText()));
-            if (kShingleFilter.isSimilar(question, extendedIndexSearchData.getText())) {
-                result.add(extendedIndexSearchData);
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+//    private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {
+//        IndexSearchData extendedIndexSearchData = vectorCache.getFromVectorLinkCache(indexSearchData.getId());
+//        if (extendedIndexSearchData == null) {
+//            extendedIndexSearchData = extendText(indexSearchData, category);
+//            vectorCache.putToVectorLinkCache(indexSearchData.getId(), extendedIndexSearchData);
+//        }
+//        extendedIndexSearchData.setDistance(indexSearchData.getDistance());
+//        return extendedIndexSearchData;
+//    }
+
+    private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {
+        return extendText(indexSearchData, category);
+    }
+
+    public List<IndexSearchData> searchByIds(List<String> ids, String category) {
+        List<IndexRecord> fetch = fetch(ids, category);
+        if(fetch == null) {
+            return Collections.emptyList();
+        }
+        List<IndexSearchData> indexSearchDataList = fetch.stream().map(this::toIndexSearchData).collect(Collectors.toList());
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, category)))
+                .collect(Collectors.toList());
+        return futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            }catch (Exception e) {
+                log.error("indexData get error", e);
             }
-        }
-        if (!indexIds.isEmpty()) {
-            result.removeIf(indexSearchData -> !indexIds.contains(indexSearchData.getId()));
-        }
-        return result;
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
@@ -275,16 +322,10 @@ public class VectorStoreService {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
-        queryCondition.setN(similarity_top_k);
+        queryCondition.setN(Math.max(similarity_top_k, 500));
         queryCondition.setWhere(where);
         List<IndexRecord> indexRecords = this.query(queryCondition, category);
-        for (IndexRecord indexRecord : indexRecords) {
-            if (indexRecord.getDistance() > similarity_cutoff) {
-                continue;
-            }
-            IndexSearchData indexSearchData = toIndexSearchData(indexRecord);
-            result.add(indexSearchData);
-        }
+        result = indexRecords.stream().filter(indexRecord -> indexRecord.getDistance() <= similarity_cutoff).limit(similarity_top_k).map(this::toIndexSearchData).collect(Collectors.toList());
         return result;
     }
 
@@ -321,7 +362,13 @@ public class VectorStoreService {
         if (parentId == null) {
             return null;
         }
-        return toIndexSearchData(this.fetch(parentId, category));
+        IndexSearchData cache = vectorCache.getVectorCache(parentId);
+        if(cache != null) {
+            return cache;
+        }
+        IndexSearchData indexSearchData = toIndexSearchData(this.fetch(parentId, category));
+        vectorCache.putVectorCache(parentId, indexSearchData);
+        return indexSearchData;
     }
 
     public IndexSearchData getChildIndex(String parentId, String category) {
@@ -329,14 +376,20 @@ public class VectorStoreService {
         if (parentId == null) {
             return null;
         }
+        IndexSearchData cache = vectorCache.getVectorChildCache(parentId);
+        if(cache != null) {
+            return cache;
+        }
         Map<String, String> where = new HashMap<>();
         where.put("parent_id", parentId);
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setWhere(where);
+        queryCondition.setN(1);
         List<IndexRecord> indexRecords = this.query(queryCondition, category);
         if (indexRecords != null && !indexRecords.isEmpty()) {
             result = toIndexSearchData(indexRecords.get(0));
         }
+        vectorCache.putVectorChildCache(parentId, result);
         return result;
     }
 
@@ -352,14 +405,10 @@ public class VectorStoreService {
 
     public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
         String text = data.getText().trim();
-
+        String splitChar = "";
         if (data.getFilename() != null && data.getFilename().size() == 1
                 && data.getFilename().get(0).isEmpty()) {
-            if (data.getParentId() == null) {
-                text = text + "\n";
-            } else {
-                text = "\n" + text;
-            }
+            splitChar = "\n";
         }
 
         String parentId = data.getParentId();
@@ -367,7 +416,7 @@ public class VectorStoreService {
         for (int i = 0; i < parentDepth; i++) {
             IndexSearchData parentData = getParentIndex(parentId, category);
             if (parentData != null) {
-                text = parentData.getText() + text;
+                text = parentData.getText() + splitChar + text;
                 parentId = parentData.getParentId();
                 parentCount++;
             } else {
@@ -381,7 +430,7 @@ public class VectorStoreService {
         for (int i = 0; i < childDepth; i++) {
             IndexSearchData childData = getChildIndex(parentId, category);
             if (childData != null) {
-                text = text + childData.getText();
+                text = text + splitChar + childData.getText();
                 parentId = childData.getId();
             } else {
                 break;

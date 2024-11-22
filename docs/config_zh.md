@@ -11,7 +11,7 @@ system_title: Lagi
 models:
   # 单驱动模型情况下模型的配置。
   - name: chatgpt  # 后端服务的名称。
-    type: GPT  # 后端服务的类型，这里是GPT。
+    type: OpenAI  # 所属公司，例如这里是OpenAI
     enable: false # 这个标志决定了后端服务是否启用。“true”表示已启用。
     model: gpt-3.5-turbo,gpt-4-turbo # 驱动支持的模型列表
     driver: ai.llm.adapter.impl.GPTAdapter # 模型驱动
@@ -63,11 +63,22 @@ stores:
       access_key_secret: your-access-key-secret # 第三方存储对象的服务用到的 access key secret 
       bucket_name: ai-service-oss
       enable: true
+
+  # 这部分是elasticsearch的配置
+  bigdata:
+    - name: elasticsearch # 全文检索名称
+      driver: ai.bigdata.impl.ElasticsearchAdapter
+      host: localhost # 全文检索的elasticsearch地址
+      port: 9200 # 全文检索的elasticsearch的端口号
+      enable: false # 是否开启
   # 这部分是检索增强生成服务的配置
   rag:
-      - backend: chroma # 服务用到的向量数据库的名称
-        enable: true # 是否开启
-        priority: 10 # 优先级
+      vector: chroma # 服务用到的向量数据库的名称
+      fulltext: elasticsearch # 全文检索（可选填，如填写该配置，则开启该配置，不开启，直接注释即可）
+      graph: landing # 图检索（可选填，如填写该配置，则开启该配置，不开启，直接注释即可）
+      enable: true # 是否开启
+      priority: 10 # 优先级，当该优先级大于模型时,则匹配不到上下文就只返回default中提示语
+      default: "Please give prompt more precisely" # 如未匹配到上下文，则返回该提示语
   # 这部分是美杜莎的加速推理服务的配置
   medusa:
     enable: true # 是否开启

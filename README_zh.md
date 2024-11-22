@@ -93,3 +93,14 @@ Lag[i] (联基) 项目还提供了多个RESTful API接口，方便用户将AI服
 ### 在线Demo
 
 为了让用户能够直观感受到Lag[i] (联基) 的强大功能和便捷性，我们提供了一个在线Demo。您可以通过以下链接访问并体验：[https://lagi.landingbj.com](https://lagi.landingbj.com/)。
+
+### 直接下载
+
+感谢您对Lag[i] (联基) 的支持!为了帮助您快速轻松地上手，我们提供了预先打包的Lag[i]应用程序，您可以根据需求选择合适的版本，直接下载既可立即使用。
+
+以下是您可以直接下载使用的资源列表：
+
+1. **Jar File**
+    - 文件名称：lagi-core-1.0.1-jar-with-dependencies.jar
+    - 文件大小：140MB
+    - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-core-1.0.1-jar-with-dependencies.jar)

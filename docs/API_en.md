@@ -332,7 +332,8 @@ The data and instruction field supports either an object or a list of objects, a
     "category": "default",
     "data": {
         "instruction": "What are the steps involved in reissuing a medical practitioner's license?",
-        "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+        "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance.",
+        "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
     }
 }
 ```
@@ -347,7 +348,8 @@ The data and instruction field supports either an object or a list of objects, a
         },
         {
             "instruction": "What are the stages in the process of reissuing a medical practitioner's license?",
-            "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+            "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance.",
+            "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
         }
     ]
 }
@@ -363,6 +365,7 @@ The data and instruction field supports either an object or a list of objects, a
                 "What are the stages in the process of reissuing a medical practitioner's license?"
             ],
             "output": "The process of reissuing a medical practitioner's license includes five steps: application/receipt, acceptance, decision, certification, and issuance."
+            "image":"[{\"path\": \"https://downloads.saasai.top/vector/szu/8EB8BC9D3E5F4D987BBDB93ECEB_58E46C1C_6DCB0.png\"}]"
         }
     ]
 }
@@ -370,11 +373,14 @@ The data and instruction field supports either an object or a list of objects, a
 
 ### Request Parameters
 
-| Name       | Position | Type               | Required | Description             |
-| ---------- | -------- | ------------------ | -------- | ----------------------- |
-| body       | body     | object             | No       | none                    |
-| » category | body     | string             | Yes      | Specified data category |
-| » data     | body     | [object] or object | Yes      | Q&A pair data           |
+| Name           | Position | Type               | Required | Description                               |
+|----------------|----------| ------------------ |---------|-------------------------------------------|
+| body           | body     | object             | No      | none                                      |
+| » category     | body     | string             | Yes     | Specified data category                   |
+| » data         | body     | [object] or object | Yes     | Q&A pair data                             |
+| »» instruction | body     | [object] or object | Yes     | Question string or collection             |
+| »» output      | body     | [object] or object | Yes     | Answer string or collection               |
+| »» image       | body     | [object] or object | No      | A collection of related picture objects   |
 
 ### Return example
 

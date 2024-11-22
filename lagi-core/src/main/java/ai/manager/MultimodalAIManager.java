@@ -129,8 +129,9 @@ public class MultimodalAIManager {
                             Backend driver = new Backend();
                             driver.setBackend(model.getName());
                             CopyOptions copyOption = CopyOptions.create(null, true);
-                            BeanUtil.copyProperties(d, driver, copyOption);
                             BeanUtil.copyProperties(model, driver, copyOption);
+                            copyOption = CopyOptions.create(null, true);
+                            BeanUtil.copyProperties(d, driver, copyOption);
                             driver.setEnable(false);
                             return driver;
                         }).collect(Collectors.toList());

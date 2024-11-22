@@ -11,7 +11,7 @@ Model configuration
 models:
   # Model configuration in the case of single driver model.
   - name: chatgpt  # The name of the backend service.
-    type: GPT  # Type of backend service, in this case GPT.
+    type: OpenAI  # Type is the company, in this case OpenAI.
     enable: false # This flag determines whether the backend service is enabled or not. true: indicates that the function is enabled.
     model: gpt-3.5-turbo,gpt-4-turbo # list of models supported by the driver
     driver: ai.llm.adapter.impl.GPTAdapter # model driver
@@ -63,11 +63,22 @@ stores:
       access_key_secret: your-access-key-secret # the access key secret  used by the third-party storage object service
       bucket_name: ai-service-oss
       enable: true
+
+  # This part is the configuration of Elasticsearch
+  bigdata:
+    - name: elasticsearch # The name of the full-text search
+      driver: ai.bigdata.impl.ElasticsearchAdapter
+      host: localhost # IP address
+      port: 9200 # Port number
+      enable: false # Whether it is turned on
   # This section is the configuration of the retrieval enhancement build service
   rag:
-      - backend: chroma # The name of the vector database used by the service
-        enable: true # Enable or not
-        priority: 10 # priority for this function
+    vector: chroma # The name of the vector database used by the service
+    fulltext: elasticsearch # Full-text search (optional, if this configuration is filled in, this configuration will be enabled)
+    graph: landing # Graph retrieval (optional, if this configuration is filled in, this configuration will be enabled)
+    enable: true # Enable or not
+    priority: 10 # Priority for this function，When the priority is greater than the model, the prompt in default is returned if the context is not found
+    default: "Please give prompt more precisely" # If the context is not found, the cue is returned
   # This section is the configuration of Medusa's Accelerated Inference Service
   medusa:
     enable: true # Enable or not

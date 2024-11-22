@@ -384,15 +384,15 @@ public class Conn implements Serializable, IConn {
 		return null;
 	}
 
-	private static Connection initWithMysqlDriver() {
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			return DriverManager.getConnection("jdbc:mysql://localhost:3306/ai?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true", "root", "dir13652");
-		} catch (SQLException | ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+//	private static Connection initWithMysqlDriver() {
+//		try {
+//			Class.forName("com.mysql.jdbc.Driver");
+//			return DriverManager.getConnection("jdbc:mysql://localhost:3306/ai?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true", "root", "dir13652");
+//		} catch (SQLException | ClassNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		return null;
+//	}
 
 	private static Connection initConnection(String conname) {
 		if (_DEBUG_2) {
@@ -405,8 +405,10 @@ public class Conn implements Serializable, IConn {
 			result = initUseproxool(dbDriver, connStr);
 		} else if (defaultDBPool == AiGlobalDB.HIKARICP_DB_POOL) {
 			result = initUseHikari(conname);
-		} else {
-			result = initWithMysqlDriver();
+		}
+		else {
+			result = initUseHikari(conname);
+//			result = initWithMysqlDriver();
 		}
 		return result;
 	}

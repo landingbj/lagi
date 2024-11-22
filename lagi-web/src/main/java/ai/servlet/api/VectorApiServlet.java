@@ -4,6 +4,10 @@ import ai.bigdata.BigdataService;
 import ai.common.pojo.IndexSearchData;
 import ai.migrate.service.UploadFileService;
 import ai.migrate.service.VectorDbService;
+import ai.dto.VectorPreloadRequest;
+import ai.response.VectorStatusResponse;
+import ai.vector.VectorCache;
+import ai.vector.VectorDbService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.VectorDeleteRequest;
@@ -14,6 +18,7 @@ import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,12 +27,17 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class VectorApiServlet extends BaseServlet {
     private final VectorStoreService vectorStoreService = new VectorStoreService();
     private final VectorDbService vectorDbService = new VectorDbService(null);
     private final BigdataService bigdataService = new BigdataService();
     private final UploadFileService uploadFileService = new UploadFileService();
+
+    private final Map<String, AtomicInteger> preloadMap = new ConcurrentHashMap<>();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -47,6 +57,12 @@ public class VectorApiServlet extends BaseServlet {
             this.deleteByMetadata(req, resp);
         } else if (method.equals("deleteCollection")) {
             this.deleteCollection(req, resp);
+        } else if(method.equals("preload")) {
+            this.preload(req, resp);
+        } else if(method.equals("preloadStatus")) {
+            this.preloadStatus(req, resp);
+        } else if(method.equals("clearLoadStatus")) {
+            this.clearLoadStatus(req, resp);
         }
     }
 
@@ -155,5 +171,66 @@ public class VectorApiServlet extends BaseServlet {
             result.put("data", collections);
         }
         responsePrint(resp, toJson(result));
+    }
+
+    private void preload(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorPreloadRequest preloadRequest = reqBodyToObj(req, VectorPreloadRequest.class);
+        String category = preloadRequest.getCategory();
+        AtomicInteger atomicInteger = preloadMap.putIfAbsent(category, new AtomicInteger(0));
+        if (atomicInteger == null) {
+            doPreload(preloadMap.get(category), preloadRequest);
+        }
+        responsePrint(resp, toJson(VectorStatusResponse.builder().status(preloadMap.get(category).get()).build()));
+    }
+
+    private void doPreload(AtomicInteger atomicInteger, VectorPreloadRequest preloadRequest) {
+        if(atomicInteger.get() != 0) {
+            return;
+        }
+        synchronized (atomicInteger) {
+            if(atomicInteger.get() != 0) {
+                return;
+            }
+            new Thread(()->{
+                atomicInteger.set(1);
+                QueryCondition queryCondition = new QueryCondition();
+                queryCondition.setWhere(new HashMap<>());
+                List<IndexRecord> recordList = vectorStoreService.query(queryCondition, preloadRequest.getCategory());
+                if(recordList != null) {
+                    log.error("start preload category {} size : {}. ", preloadRequest.getCategory(), recordList.size());
+                    VectorCache instance = VectorCache.getInstance();
+                    recordList.stream().map(vectorStoreService::toIndexSearchData).forEach(indexSearchData -> {
+                        if(atomicInteger.get() != 1) {
+                            return;
+                        }
+                        instance.putVectorCache(indexSearchData.getId(), indexSearchData);
+                        if(indexSearchData.getParentId() != null) {
+                            instance.putVectorChildCache(indexSearchData.getParentId(), indexSearchData);
+                        }
+                    });
+                    atomicInteger.set(2);
+                    log.error("finished preload category {} . ", preloadRequest.getCategory());
+                }
+            }).start();
+        }
+    }
+
+
+    private void preloadStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorPreloadRequest preloadRequest = reqBodyToObj(req, VectorPreloadRequest.class);
+        String category = preloadRequest.getCategory();
+        AtomicInteger atomicInteger = preloadMap.getOrDefault(category, new AtomicInteger(0));
+        responsePrint(resp, toJson(VectorStatusResponse.builder().status(atomicInteger.get()).build()));
+    }
+
+    private void clearLoadStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        VectorPreloadRequest preloadRequest = reqBodyToObj(req, VectorPreloadRequest.class);
+        String category = preloadRequest.getCategory();
+        AtomicInteger atomicInteger = preloadMap.get(category);
+        atomicInteger.set(0);
+        responsePrint(resp, toJson(VectorStatusResponse.builder().status(atomicInteger.get()).build()));
     }
 }
