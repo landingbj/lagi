@@ -2,6 +2,10 @@
   "mask": "...",
   "level": 3,
   "rules": [
-    {"rule":"\"\"\"", "level": 2, "mask": "\""}
+    {"rule":"\"\"\"", "level": 2, "mask": "\""},
+	{"rule":"<id>[\\w\\-]+</id>", "level": 2, "mask": ""},
+	{"rule":"```json", "level": 2, "mask": ""},
+	{"rule":"\"answer\": \"", "level": 2, "mask": ""},
+	{"rule":"```", "level": 2, "mask": ""}
   ]
 }
