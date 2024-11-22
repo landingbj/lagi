@@ -19,14 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class StockAgent {
+public class StockAgent extends CiticAgent{
     private static final Logger logger = LoggerFactory.getLogger(StockAgent.class);
     private static final Gson gson = new Gson();
     private static final String BASE_URL = "https://qianfan.baidubce.com/v2/app/conversation/runs";
     private static final String NEW_CONVERSATION_URL = "https://qianfan.baidubce.com/v2/app/conversation";
     private static final LRUCache<String, String> sessionCache = new LRUCache<>(1000, 5, TimeUnit.DAYS);
 
-    private final AgentConfig agentConfig;
 
     public StockAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
@@ -45,7 +44,7 @@ public class StockAgent {
     }
 
     private StockRequest convertRequest(ChatCompletionRequest request, AgentConfig agentConfig) {
-        String queryText = String.format("用大约 50 个字概述用三引号分隔的问题:\"\"\"%s\"\"\"", ChatCompletionUtil.getLastMessage(request));
+        String queryText = String.format("用大约 100 个字回答用三引号分隔的问题:\"\"\"%s\"\"\"", ChatCompletionUtil.getLastMessage(request));
         StockRequest stockRequest = StockRequest.builder()
                 .stream(request.getStream())
                 .app_id(agentConfig.getAppId())

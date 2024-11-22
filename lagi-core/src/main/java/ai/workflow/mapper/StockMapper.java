@@ -23,7 +23,7 @@ public class StockMapper extends CiticMapper implements IMapper {
     private static final Logger logger = LoggerFactory.getLogger(StockMapper.class);
     private final StockAgent stockAgent = new StockAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.StockAgent"));
 
-    private  String badcase =  "很抱歉，您的问题与股票无关，我无法为您提供答案。";
+    private  String badcase =  "很抱歉";
 
     private String agentName = "股票智能体";
 
