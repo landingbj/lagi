@@ -293,9 +293,9 @@
                           
                         </div>
                         <!-- Insert the button and input between voiceIcon and queryContent -->
-                        <div id="promptButton" class=" flex-col-reverse m-2 flex-bottom">
-                          <div id="prompt">提示词</div>
-                        </div>
+<%--                        <div id="promptButton" class=" flex-col-reverse m-2 flex-bottom">--%>
+<%--                          <div id="prompt">提示词</div>--%>
+<%--                        </div>--%>
 
                         <div
                           class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">

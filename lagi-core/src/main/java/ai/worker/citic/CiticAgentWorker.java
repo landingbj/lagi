@@ -70,18 +70,8 @@ public class CiticAgentWorker {
                 if (promptFactory.getPromptConfig().getPrompt().getEnable()) {
                     chatCompletionRequest = promptFactory.loadPrompt(chatCompletionRequest);
                     CompletionsService completionsService = new CompletionsService();
-                    chatCompletionResult = completionsService.completions(chatCompletionRequest);
-                    try {
-                        responseJson = OkHttpUtil.post(url + "/v1/chat/completions", gson.toJson(chatCompletionRequest));
-                    } catch (IOException e) {
-//                    logger.error("RagMapper.myMapping: OkHttpUtil.post error", e);
-                    }
-                    if (responseJson != null) {
-                        chatCompletionResult = gson.fromJson(responseJson, ChatCompletionResult.class);
-                        ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource("提示词");
-                        BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
-                        chatCompletionResult = chatCompletionResultWithSource;
-                    }
+                    ChatCompletionResult promptFormatResult = completionsService.completions(chatCompletionRequest);
+                    BeanUtil.copyProperties(promptFormatResult, chatCompletionResult);
                 }
             }
         }

@@ -1,5 +1,6 @@
 package ai.prompt;
 
+import ai.config.ContextLoader;
 import ai.config.pojo.PromptConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -18,6 +20,10 @@ public class PromptFactory {
     String prompt = "input your prompt here %s";
     private PromptConfig promptConfig;
     private static final Logger log = LoggerFactory.getLogger(PromptFactory.class);
+
+    public PromptFactory() {
+        loadContext();
+    }
 
     public ChatCompletionRequest loadPrompt(ChatCompletionRequest request) {
         loadContext();
@@ -43,10 +49,13 @@ public class PromptFactory {
     }
     private void loadContext() {
         try {
-            InputStream resourceAsStream = Files.newInputStream(Paths.get("lagi-web/src/main/resources/prompt_template.yml"));
+
+//            InputStream resourceAsStream = Files.newInputStream(Paths.get("lagi-web/src/main/resources/prompt_template.yml"));
+            InputStream resourceAsStream = ContextLoader.class.getResourceAsStream("/prompt_template.yml");
             ObjectMapper mapper = new YAMLMapper();
             mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
             promptConfig = mapper.readValue(resourceAsStream, PromptConfig.class);
+            log.info("{}",promptConfig);
 
         } catch (IOException e) {
             log.warn(e.getMessage());
