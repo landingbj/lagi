@@ -7,8 +7,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -25,7 +24,9 @@ import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -38,6 +39,7 @@ import ai.utils.MigrateGlobal;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+@Slf4j
 public class UploadFileServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final Gson gson = new Gson();
@@ -348,13 +350,19 @@ public class UploadFileServlet extends HttpServlet {
 
         if (!files.isEmpty()) {
             String content = "";
+            JsonArray fileList = new JsonArray();
             for (File file : files) {
                 content = fileService.getFileContent(file);
                 if (!StringUtils.isEmpty(content)) {
                     String filename = realNameMap.get(file.getName());
                     uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("filename", filename);
+                    jsonObject.addProperty("filepath", file.getName());
+                    fileList.add(jsonObject);
                 }
             }
+            jsonResult.addProperty("data", fileList.toString());
         }
         if (!jsonResult.has("msg")) {
             jsonResult.addProperty("status", "success");
