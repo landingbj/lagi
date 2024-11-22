@@ -247,7 +247,34 @@
                       </div>
                       <!-- ***********************输入框前form end******************************** -->
 
-                     
+
+                      <!-- ***********************提示词框******************************** -->
+                      <div class="flex w-full " id="queryBox1">
+
+                        <div id="prompt-container1" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
+                          <input id="promptInput1" type="text" maxlength="256" placeholder="Enter up to 256 characters..." class="absolute right-1 z-50 prompt-pannel w-60 ">
+                        </div>
+
+                        <div class="flex-col-reverse w-10 m-0 relative">
+
+                          <div  class="absolute top-0  ml-2" style="display: none;" id = "textareaScretch1"  onclick="showTextareaMask()">
+                            <svg  style="width: 24px;height: 24px;" t="1703232823101" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6337" width="200" height="200"><path d="M838.116 732.779 877.7 693.195 511.979 327.549 146.3 693.195 185.883 732.779 512.003 406.652Z" p-id="6338" fill="#1296db"></path></svg>
+                            <!-- 向下 -->
+                            <!-- <svg t="1703233241892" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg> -->
+                          </div>
+                        </div>
+                        <div class="flex flex-col ml-2 flex-bottom" style="height: 24px">提示词</div>
+                        <div class="switch flex flex-col ml-2 flex-bottom">
+                          <input type="checkbox" id="toggle-switch">
+                          <span class="slider"></span>
+                        </div>
+                      </div>
+
+                      <!-- ***********************提示词框end******************************** -->
+
+
+
+
 
                       <!-- ***********************输入框******************************** -->
                       

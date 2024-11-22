@@ -227,4 +227,63 @@ pre .key {
 	height: 1.5em;
 	border-radius: 5px;
 	color: white;
-} 
+}
+
+/* 开关按钮的容器 */
+
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+}
+
+/* 隐藏实际的复选框 */
+.switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+/* 滑动按钮 */
+.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	transition: .4s;
+}
+
+.slider:before {
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	transition: .4s;
+}
+
+/* 当复选框被选中时 */
+input:checked + .slider {
+	background-color: #2196F3;
+}
+
+
+input:checked + .slider:before {
+	transform: translateX(26px);
+}
+
+
+/* 圆形滑动按钮 */
+.slider.round {
+	border-radius: 34px;
+}
+
+.slider.round:before {
+	border-radius: 50%;
+}

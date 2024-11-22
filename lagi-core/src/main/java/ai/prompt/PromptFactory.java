@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -65,6 +66,17 @@ public class PromptFactory {
         return promptConfig;
     }
 
+
+    public void savePromptConfig() {
+        try {
+            ObjectMapper mapper = new YAMLMapper();
+            mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+            OutputStream configAsOutputStream = Files.newOutputStream(Paths.get("lagi-web/src/main/resources/prompt_template.yml"));
+//            mapper.writeValue(new File("lagi-web/src/main/resources/prompt_template.yml"), promptConfig);
+        } catch (IOException e) {
+            log.warn(e.getMessage());
+        }
+    }
     public static void main(String[] args) {
         PromptFactory promptFactory = new PromptFactory();
         promptFactory.loadContext();
