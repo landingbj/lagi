@@ -1,5 +1,7 @@
 package ai.workflow.mapper;
 
+import ai.config.ContextLoader;
+import ai.config.pojo.RAGFunction;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -30,6 +32,7 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
 
     private  String badcase = "很抱歉";
 
+    private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
@@ -40,6 +43,8 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
         try {
             responseJson = OkHttpUtil.post(url + "/v1/chat/completions", gson.toJson(chatCompletionRequest));
         } catch (IOException e) {
+            String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
+            responseJson = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
             logger.error("RagMapper.myMapping: OkHttpUtil.post error", e);
         }
         ChatCompletionResult chatCompletionResult = null;
