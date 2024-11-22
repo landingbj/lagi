@@ -1,4 +1,4 @@
-package ai.agent.citic;
+package ai.agent.chat;
 
 import ai.agent.pojo.XiaoxinRequest;
 import ai.agent.pojo.XiaoxinResponse;
@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class XiaoxinAgent extends CiticAgent{
+public class XiaoxinAgent extends ChatAgent {
     private static final Gson gson = new Gson();
     private static final String BASE_URL = "https://api-ngd.baidu.com/core/v3/query";
     private static final Logger log = LoggerFactory.getLogger(XiaoxinAgent.class);

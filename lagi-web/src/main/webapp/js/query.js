@@ -273,7 +273,8 @@ function getTextResult(question, robootAnswerJq, conversation) {
         ]),
         "temperature": 0.8,
         "max_tokens": 1024,
-        "stream": false
+        "stream": true
+        // "stream": false
     };
 
     var queryUrl = "search/detectIntent";
@@ -360,7 +361,8 @@ function generalOutput(paras, question, robootAnswerJq) {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: "v1/worker/completions",
+        url: "v1/chat/completions",
+        // url: "v1/worker/completions",
         data: JSON.stringify(paras),
         success: function (res) {
             if (res.choices === undefined) {

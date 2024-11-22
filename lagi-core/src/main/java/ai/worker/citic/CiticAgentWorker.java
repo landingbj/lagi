@@ -1,6 +1,6 @@
 package ai.worker.citic;
 
-import ai.agent.citic.CiticAgent;
+import ai.agent.chat.ChatAgent;
 import ai.common.pojo.Configuration;
 import ai.config.pojo.AgentConfig;
 import ai.mr.IMapper;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CiticAgentWorker {
 
-    private static final List<CiticAgent> agents;
+    private static final List<ChatAgent> agents;
 
     static {
         Configuration config = LagiGlobal.getConfig();
@@ -35,19 +35,19 @@ public class CiticAgentWorker {
             try {
                 Class<?> clazz = Class.forName(driver);
                 Constructor<?> constructor = clazz.getConstructor(AgentConfig.class);
-                CiticAgent citicAgent = (CiticAgent)constructor.newInstance(agentConfig);
-                agents.add(citicAgent);
+                ChatAgent chatAgent = (ChatAgent)constructor.newInstance(agentConfig);
+                agents.add(chatAgent);
             } catch (Exception e) {
                 log.error("agent : {}, newInstance error {}", agentConfig, e);
             }
         }
     }
 
-    private static List<IMapper> buildMappers(List<CiticAgent> agents) {
+    private static List<IMapper> buildMappers(List<ChatAgent> agents) {
         return agents.stream().map(agent -> {
-            CiticMapper citicMapper = new CiticMapper();
-            citicMapper.setCiticAgent(agent);
-            return citicMapper;
+            ChatAgentMapper chatAgentMapper = new ChatAgentMapper();
+            chatAgentMapper.setChatAgent(agent);
+            return chatAgentMapper;
         }).collect(Collectors.toList());
     }
 

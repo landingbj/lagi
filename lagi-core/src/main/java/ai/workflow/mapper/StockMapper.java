@@ -1,6 +1,6 @@
 package ai.workflow.mapper;
 
-import ai.agent.citic.StockAgent;
+import ai.agent.chat.StockAgent;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -18,7 +18,7 @@ import java.util.List;
 
 
 @Getter
-public class StockMapper extends CiticMapper implements IMapper {
+public class StockMapper extends ChatAgentMapper implements IMapper {
     protected int priority;
     private static final Logger logger = LoggerFactory.getLogger(StockMapper.class);
     private final StockAgent stockAgent = new StockAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.StockAgent"));

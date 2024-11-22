@@ -1,4 +1,4 @@
-package ai.agent.citic;
+package ai.agent.chat;
 
 import ai.agent.pojo.*;
 import ai.common.exception.RRException;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Getter
-public class CozeAgent extends CiticAgent {
+public class CozeAgent extends ChatAgent {
     private static final Logger logger = LoggerFactory.getLogger(CozeAgent.class);
     private static final Gson gson = new Gson();
     private static final String CHAT_URL = "https://api.coze.cn/v3/chat";

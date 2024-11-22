@@ -1,6 +1,6 @@
 package ai.workflow.mapper;
 
-import ai.agent.citic.CiticAgent;
+import ai.agent.chat.ChatAgent;
 import ai.common.pojo.Configuration;
 import ai.config.pojo.AgentConfig;
 import ai.learn.questionAnswer.KShingle;
@@ -24,11 +24,11 @@ import java.util.*;
 
 
 @Slf4j
-public class CiticMapper extends BaseMapper implements IMapper {
+public class ChatAgentMapper extends BaseMapper implements IMapper {
     protected static final Map<String, AgentConfig> AGENT_CONFIG_MAP = new HashMap<>();
 
     @Setter
-    private CiticAgent citicAgent;
+    private ChatAgent chatAgent;
 
     static {
         Configuration config = LagiGlobal.getConfig();
@@ -38,11 +38,11 @@ public class CiticMapper extends BaseMapper implements IMapper {
     }
 
     public String getAgentName() {
-        return citicAgent.getAgentConfig().getName();
+        return chatAgent.getAgentConfig().getName();
     }
 
     public String getBadcase() {
-        return citicAgent.getAgentConfig().getWrongCase();
+        return chatAgent.getAgentConfig().getWrongCase();
     }
 
     public double getSimilarity(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
@@ -93,7 +93,7 @@ public class CiticMapper extends BaseMapper implements IMapper {
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
         try {
-            chatCompletionResult = citicAgent.chat(chatCompletionRequest);
+            chatCompletionResult = chatAgent.chat(chatCompletionRequest);
             if(chatCompletionRequest != null) {
                 ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
                 BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);

@@ -1,6 +1,6 @@
 package ai.workflow.mapper;
 
-import ai.agent.citic.ExchangeAgent;
+import ai.agent.chat.ExchangeAgent;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -18,7 +18,7 @@ import java.util.List;
 
 
 @Getter
-public class ExchangeMapper extends CiticMapper implements IMapper {
+public class ExchangeMapper extends ChatAgentMapper implements IMapper {
     protected int priority;
     private static final Logger logger = LoggerFactory.getLogger(ExchangeMapper.class);
     private final ExchangeAgent exchangeAgent = new ExchangeAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.ExchangeAgent"));

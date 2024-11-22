@@ -1,17 +1,11 @@
 package ai.workflow.mapper;
 
-import ai.agent.citic.StockAgent;
-import ai.agent.citic.XiaoxinAgent;
-import ai.common.pojo.Backend;
-import ai.config.pojo.AgentConfig;
+import ai.agent.chat.XiaoxinAgent;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
-import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
-import ai.utils.LagiGlobal;
-import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.WorkerGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import lombok.Getter;
@@ -21,10 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Getter
-public class XiaoxinMapper extends CiticMapper implements IMapper {
+public class XiaoxinMapper extends ChatAgentMapper implements IMapper {
     protected int priority;
     private static final Logger logger = LoggerFactory.getLogger(XiaoxinMapper.class);
     private final XiaoxinAgent xiaoxinAgent = new XiaoxinAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.XiaoxinAgent"));

@@ -20,7 +20,7 @@ import java.util.List;
 
 @Slf4j
 @Getter
-public class RagMapper extends CiticMapper implements IMapper {
+public class RagMapper extends ChatAgentMapper implements IMapper {
     protected int priority;
     private static final Logger logger = LoggerFactory.getLogger(RagMapper.class);
 
