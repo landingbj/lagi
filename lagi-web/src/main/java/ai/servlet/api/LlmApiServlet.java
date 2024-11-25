@@ -21,6 +21,7 @@ import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
+import ai.llm.schedule.QueueSchedule;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
@@ -61,6 +62,8 @@ public class LlmApiServlet extends BaseServlet {
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getPolicy().getEnableQueueHandle();
+    private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
 
     static {
         VectorCacheLoader.load();
@@ -153,7 +156,12 @@ public class LlmApiServlet extends BaseServlet {
         chatCompletionRequest = enhance;
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
-                Observable<ChatCompletionResult> result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
+                Observable<ChatCompletionResult> result;
+                if(enableQueueHandle) {
+                    result = queueSchedule.streamSchedule(chatCompletionRequest, indexSearchDataList);
+                } else {
+                    result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
+                }
                 resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
                 streamOutPrint(result, context, indexSearchDataList, out);
             } catch (RRException e) {
@@ -163,7 +171,12 @@ public class LlmApiServlet extends BaseServlet {
 
         } else {
             try {
-                ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+                ChatCompletionResult result;
+                if(enableQueueHandle) {
+                    result = queueSchedule.schedule(chatCompletionRequest, indexSearchDataList);
+                } else {
+                    result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+                }
                 if (context != null) {
                     CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
                 }

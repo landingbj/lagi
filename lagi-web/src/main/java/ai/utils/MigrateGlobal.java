@@ -34,7 +34,7 @@ public class MigrateGlobal {
         ADD_DOCS_CUSTOM_URL = VICUNA_INDEX_URL + "/index/add_docs_custom";
     }
 
-    public static final long DOC_FILE_SIZE_LIMIT = 5 * 1024 * 1024;
+    public static final long DOC_FILE_SIZE_LIMIT = 50 * 1024 * 1024;
     public static final long IMAGE_FILE_SIZE_LIMIT = 10 * 1024 * 1024;
     public static final long AUDIO_FILE_SIZE_LIMIT = 2 * 1024 * 1024;
     public static final long VIDEO_FILE_SIZE_LIMIT = 50 * 1024 * 1024;

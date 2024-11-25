@@ -71,6 +71,9 @@ public class LagiGlobal {
 
     private static void setAgentApiKey(Configuration config) {
         List<AgentConfig> agents = config.getAgents();
+        if(agents == null) {
+            return;
+        }
         for (AgentConfig agent : agents) {
             if (agent.getApiKey() != null) {
                 AGENT_API_KEY = agent.getApiKey();

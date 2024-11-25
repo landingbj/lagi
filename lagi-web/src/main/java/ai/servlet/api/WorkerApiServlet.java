@@ -1,14 +1,20 @@
 package ai.servlet.api;
 
 import ai.audio.pojo.AsrResponse;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
 import ai.servlet.BaseServlet;
+import ai.utils.SensitiveWordUtil;
 import ai.worker.audio.Asr4FlightsWorker;
+import ai.worker.citic.CiticAgentWorker;
 import ai.worker.pojo.Asr4FlightData;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 import java.io.*;
 import java.nio.file.Files;
@@ -17,6 +23,8 @@ import java.nio.file.Paths;
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 1024 * 1024 * 5, maxRequestSize = 1024 * 1024 * 5)
 public class WorkerApiServlet extends BaseServlet {
     private final Asr4FlightsWorker asr4FlightsWorker = new Asr4FlightsWorker();
+    private final CiticAgentWorker citicAgentWorker = new CiticAgentWorker();
+    private static final Gson gson = new Gson();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -26,7 +34,18 @@ public class WorkerApiServlet extends BaseServlet {
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("uploadVoice") || method.equals("asr4flights")) {
             this.asr4flights(req, resp);
+        } else if (method.equals("completions")) {
+            this.completions(req, resp);
         }
+    }
+
+    public void completions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
+        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        ChatCompletionResult chatCompletionResult = citicAgentWorker.process(chatCompletionRequest, url);
+        chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
+        responsePrint(resp, gson.toJson(chatCompletionResult));
     }
 
     public void asr4flights(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
