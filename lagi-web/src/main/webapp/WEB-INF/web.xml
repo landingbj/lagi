@@ -258,4 +258,13 @@
         <url-pattern>/ocr/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>instruction</servlet-name>
+        <servlet-class>ai.servlet.api.InstructionApiServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>instruction</servlet-name>
+        <url-pattern>/instruction/*</url-pattern>
+    </servlet-mapping>
 </web-app>
