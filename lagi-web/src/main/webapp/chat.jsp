@@ -247,7 +247,20 @@
                       </div>
                       <!-- ***********************输入框前form end******************************** -->
 
-                     
+
+                      <!-- ***********************提示词框******************************** -->
+                      <div class="flex w-full " id="queryBox1">
+
+                        <div class="flex flex-col ml-2 flex-bottom" style="justify-content: center">提示词</div>
+                        <div class="flex flex-col m-2 flex-bottom">
+                          <label class="switch" for="toggle-switch">
+                            <input type="checkbox" id="toggle-switch">
+                            <span class="slider round"></span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- ***********************提示词框end******************************** -->
 
                       <!-- ***********************输入框******************************** -->
                       
@@ -266,6 +279,10 @@
                             </ul>
                           </div>
                           </div>
+
+                        <div id="prompt-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
+                          <input id="promptInput" type="text" maxlength="256" placeholder="Enter up to 256 characters..." class="absolute right-1 z-50 prompt-pannel w-60 ">
+                        </div>
 
                         <div class="flex-col-reverse w-10 m-0 relative">
                           
@@ -288,6 +305,10 @@
                           </div>
                           
                         </div>
+                        <!-- Insert the button and input between voiceIcon and queryContent -->
+<%--                        <div id="promptButton" class=" flex-col-reverse m-2 flex-bottom">--%>
+<%--                          <div id="prompt">提示词</div>--%>
+<%--                        </div>--%>
 
                         <div
                           class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">
@@ -304,7 +325,7 @@
                           </button>
                           <!-- ******************发送按钮关闭***************************** -->
                         </div>
-                        
+
                         <div id="agentButton" class=" flex-col-reverse m-2 flex-bottom">
                           <img style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 1px;" t="1694871462493" class=" icon"
                           alt="agent"
@@ -329,8 +350,10 @@
                           </svg>
                         </div>
                       </div>
+
                       <!-- ***********************输入框end******************************** -->
                     </div>
+
                   </form>
                   
                   <!-- *********************** 底部******************************** -->

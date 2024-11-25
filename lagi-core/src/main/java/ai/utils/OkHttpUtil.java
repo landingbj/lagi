@@ -103,7 +103,7 @@ public class OkHttpUtil {
         Request request = requestBuilder.build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response.body().toString());
             return response.body().string();
         }
     }

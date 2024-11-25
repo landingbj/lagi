@@ -4,6 +4,8 @@
 var lastFilePath = "";
 let mediaRecorder = null;
 let audioData = [];
+// 定义全局状态变量来控制 #agent-container 的显示状态
+let isAgentContainerVisible = false;
 
 // 播放录音
 function playRecording() {
@@ -655,3 +657,33 @@ agentButton.addEventListener("click", function (e) {
     });
     e.stopPropagation();
 });
+
+const toggleSwitch = document.getElementById('toggle-switch');
+toggleSwitch.addEventListener('change', function() {
+    // if (this.checked) {
+    //     console.log('Switch is ON');
+    //     // 在这里添加打开开关后的操作
+    // } else {
+    //     console.log('Switch is OFF');
+    //     // 在这里添加关闭开关后的操作
+    // }
+    // 调用接口info/togglePromptSwitch更新后台的状态
+    $.ajax({
+        type: "POST",
+        url: "/info/togglePromptSwitch",
+        data: JSON.stringify({
+            "enable": this.checked
+        }),
+        success: function (res) {
+            if (res.message == "success") {
+                console.log("更新成功");
+            }
+        },
+        error: function (res) {
+            console.log("更新失败");
+        }
+    });
+});
+
+
+

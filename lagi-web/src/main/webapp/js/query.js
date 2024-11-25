@@ -16,6 +16,7 @@ function textQuery() {
     queryLock = true;
     disableQueryBtn();
     let question = $('#queryBox textarea').val();
+    let prompt = $('#promptInput').val();
     if (isBlank(question)) {
         alert("请输入有效字符串！！！");
         $('#queryBox textarea').val('');
@@ -24,6 +25,7 @@ function textQuery() {
         queryLock = false;
         return;
     }
+
 
     // 隐藏非对话内容
     hideHelloContent();
@@ -34,7 +36,7 @@ function textQuery() {
             socialAgentsConversation(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
-            getTextResult(question.trim(), robotAnswerJq, conversation);
+            getTextResult(prompt.trim() + question.trim(), robotAnswerJq, conversation);
         }
     })
 }

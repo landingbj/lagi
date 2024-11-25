@@ -25,6 +25,7 @@ function initHelloPage() {
     initModelSlide();
     initIntroduces();
     initAgentTool();
+    initPromptSwitch();
     $('#model-prefences').hide();
 }
 
@@ -224,4 +225,20 @@ function socialCircles() {
 
 function notifyAvailable() {
     // alert('功能不可用');
+}
+
+function initPromptSwitch() {
+    // 调用后台接口info/getPromptSwitchStatus获取当前开关状态。{"promptSwitch":true}
+    $.ajax({
+        type : "GET",
+        url : "info/getPromptSwitchStatus",
+        success : function(res) {
+            if(res.data.promptSwitch) {
+                $('#toggle-switch').prop('checked', true);
+            } else {
+                $('#toggle-switch').prop('checked', false);
+            }
+        }
+    });
+
 }

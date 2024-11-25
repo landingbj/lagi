@@ -1,14 +1,17 @@
 package ai.servlet;
 
-import java.util.*;
-
 import ai.common.pojo.Configuration;
 import ai.common.pojo.VectorStoreConfig;
+import ai.prompt.PromptFactory;
+import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Get;
 import ai.servlet.annotation.Param;
+import ai.servlet.annotation.Post;
 import ai.servlet.dto.Prompt;
 import ai.utils.MigrateGlobal;
 import ai.vector.VectorStoreService;
+
+import java.util.*;
 
 public class PageInfoServlet extends RestfulServlet{
 	
@@ -93,5 +96,22 @@ public class PageInfoServlet extends RestfulServlet{
 	public Map<String, Integer> getNavStatus() {
 		return navMap;
 	}
-	
+
+	@Get("getPromptSwitchStatus")
+	public Map<String,Object> getPromptSwitch() {
+		PromptFactory promptFactory = new PromptFactory();
+		Map<String,Object> map = new HashMap<>();
+		map.put("promptSwitch", promptFactory.getPromptConfig().getPrompt().getEnable());
+		return map;
+	}
+
+	@Post("togglePromptSwitch")
+	public int togglePromptSwitch(@Body Map<String, Object> map) {
+		boolean enable = (boolean) map.get("enable");
+		PromptFactory promptFactory = new PromptFactory();
+		promptFactory.getPromptConfig().getPrompt().setEnable(enable);
+		promptFactory.savePromptConfig();
+		return 1;
+	}
+
 }

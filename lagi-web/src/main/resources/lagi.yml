@@ -113,15 +113,15 @@ models:
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: iFLYTEK
-    enable: false
+    enable: true
     drivers:
       - model: v1.1,v2.1,v3.1,v3.5,v4.0
         driver: ai.llm.adapter.impl.SparkAdapter
       - model: tti
         driver: ai.image.adapter.impl.SparkImageAdapter
     app_id: your-app-id
-    api_key: you-api-key  # https://console.xfyun.cn/
-    secret_key: you-secret-key   # https://console.xfyun.cn/
+    api_key: your-api-key  # https://console.xfyun.cn/
+    secret_key: your-sectet-key   # https://console.xfyun.cn/
 
   # SenseChat(RiRiXin) is a large language model developed by SenseTime
   #  - name: SenseChat
@@ -243,10 +243,16 @@ functions:
       priority: 350
 
     - backend: kimi
-      model: moonshot-v1-8k
+      model: moonshot-v1-128k
       enable: false
       stream: true
       priority: 150
+
+    - backend: spark
+      model: v3.5
+      enable: true
+      stream: true
+      priority: 100
 
     - backend: chatgpt
       model: gpt-3.5-turbo
@@ -346,6 +352,20 @@ agents:
   - name: ding
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
+
+  - name: xiaoxin
+    driver: ai.agent.citic.XiaoxinAgent
+    token: your-token
+
+  - name: stock
+    driver: ai.agent.citic.StockAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: exchange
+    driver: ai.agent.citic.ExchangeAgent
+    token: your-token
+    app_id: your-app-id
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
