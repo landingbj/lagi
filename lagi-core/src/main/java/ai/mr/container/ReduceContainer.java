@@ -155,7 +155,7 @@ if (_DEBUG_3) {
 		}
 	}
 	
-	public Map<String, MapperThread> startThread(Map<String, IMapper> mappers, IRContainer container) {
+	public Map<String, MapperThread> 	startThread(Map<String, IMapper> mappers, IRContainer container) {
 		String mapperName;
 		IMapper mapper;
 

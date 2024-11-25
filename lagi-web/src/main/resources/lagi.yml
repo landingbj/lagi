@@ -100,7 +100,7 @@ models:
     enable: true
     model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
-    api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
+    api_key: sk-sNkpt6hIL3apx7ckwZXiV31LfhUyveXdVdRrJ25UvSvIWQil  #  url address https://platform.moonshot.cn/console/api-keys
 
   # Baichuan is a new generation of open source large language model launched by Baichuan AI
   #  - name: baichuan
@@ -113,15 +113,15 @@ models:
   # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
   - name: spark
     type: iFLYTEK
-    enable: false
+    enable: true
     drivers:
       - model: v1.1,v2.1,v3.1,v3.5,v4.0
         driver: ai.llm.adapter.impl.SparkAdapter
       - model: tti
         driver: ai.image.adapter.impl.SparkImageAdapter
-    app_id: your-app-id
-    api_key: you-api-key  # https://console.xfyun.cn/
-    secret_key: you-secret-key   # https://console.xfyun.cn/
+    app_id: 948cf4b6
+    api_key: 54f6e81f40a31d66d976496de895a7a4  # https://console.xfyun.cn/
+    secret_key: ZDYyMjNmMTlkYTE0YWRmOWUwZTYxNjYz   # https://console.xfyun.cn/
 
   # SenseChat(RiRiXin) is a large language model developed by SenseTime
   #  - name: SenseChat
@@ -243,10 +243,16 @@ functions:
       priority: 350
 
     - backend: kimi
-      model: moonshot-v1-8k
+      model: moonshot-v1-128k
       enable: false
       stream: true
       priority: 150
+
+    - backend: spark
+      model: v3.5
+      enable: true
+      stream: true
+      priority: 100
 
     - backend: chatgpt
       model: gpt-3.5-turbo
@@ -346,6 +352,20 @@ agents:
   - name: ding
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
+
+  - name: xiaoxin
+    driver: ai.agent.citic.XiaoxinAgent
+    token: NGD 385d5db5-292d-4f47-ac10-88b11b431368
+
+  - name: stock
+    driver: ai.agent.citic.StockAgent
+    token: bce-v3/ALTAK-K8RFTYHlovYJSMLLGbg4K/fe6f291fe2ba407b8021da91b58f23517122b1fa
+    app_id: db510aaa-3676-43c1-b569-352b1e052b2e
+
+  - name: exchange
+    driver: ai.agent.citic.ExchangeAgent
+    token: bce-v3/ALTAK-K8RFTYHlovYJSMLLGbg4K/fe6f291fe2ba407b8021da91b58f23517122b1fa
+    app_id: 269b837b-999f-4508-ae75-b8c1dace8b5e
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.

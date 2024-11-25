@@ -3,17 +3,21 @@ package ai.worker.citic;
 import ai.agent.citic.CiticAgent;
 import ai.common.pojo.Configuration;
 import ai.config.pojo.AgentConfig;
+import ai.llm.service.CompletionsService;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
+import ai.prompt.PromptFactory;
 import ai.worker.WorkerGlobal;
 import ai.workflow.container.AgentContainer;
 import ai.workflow.mapper.*;
 import ai.workflow.reducer.AgentReducer;
 import lombok.extern.slf4j.Slf4j;
+import cn.hutool.core.bean.BeanUtil;
+import com.google.gson.Gson;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -79,6 +83,15 @@ public class CiticAgentWorker {
             if (resultMatrix.get(0) != null) {
                 chatCompletionResult = resultMatrix.get(0);
                 System.out.println("CiticAgentWorker.process: chatCompletionResult = " + chatCompletionResult);
+                String responseJson = null;
+                final Gson gson = new Gson();
+                PromptFactory promptFactory = new PromptFactory();
+                if (promptFactory.getPromptConfig().getPrompt().getEnable()) {
+                    chatCompletionRequest = promptFactory.loadPrompt(chatCompletionRequest);
+                    CompletionsService completionsService = new CompletionsService();
+                    ChatCompletionResult promptFormatResult = completionsService.completions(chatCompletionRequest);
+                    BeanUtil.copyProperties(promptFormatResult, chatCompletionResult);
+                }
             }
         }
         return chatCompletionResult;

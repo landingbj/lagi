@@ -50,7 +50,6 @@ public class ContextLoader {
         }
         if(configuration == null) {
             try {
-
                 loadContextByFilePath("lagi-web/src/main/resources/lagi.yml");
             } catch (Exception e) {
                 log.warn(e.getMessage());
