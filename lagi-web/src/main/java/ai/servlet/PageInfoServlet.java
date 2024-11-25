@@ -99,7 +99,7 @@ public class PageInfoServlet extends RestfulServlet{
 
 	@Get("getPromptSwitchStatus")
 	public Map<String,Object> getPromptSwitch() {
-		PromptFactory promptFactory = new PromptFactory();
+		PromptFactory promptFactory = PromptFactory.getInstance();
 		Map<String,Object> map = new HashMap<>();
 		map.put("promptSwitch", promptFactory.getPromptConfig().getPrompt().getEnable());
 		return map;
@@ -108,7 +108,7 @@ public class PageInfoServlet extends RestfulServlet{
 	@Post("togglePromptSwitch")
 	public int togglePromptSwitch(@Body Map<String, Object> map) {
 		boolean enable = (boolean) map.get("enable");
-		PromptFactory promptFactory = new PromptFactory();
+		PromptFactory promptFactory = PromptFactory.getInstance();
 		promptFactory.getPromptConfig().getPrompt().setEnable(enable);
 		promptFactory.savePromptConfig();
 		return 1;

@@ -21,8 +21,11 @@ public class PromptFactory {
     String prompt = "input your prompt here %s";
     private PromptConfig promptConfig;
     private static final Logger log = LoggerFactory.getLogger(PromptFactory.class);
-
-    public PromptFactory() {
+    private static final PromptFactory INSTANCE = new PromptFactory();
+    public static PromptFactory getInstance() {
+        return INSTANCE;
+    }
+    private PromptFactory() {
         loadContext();
     }
 

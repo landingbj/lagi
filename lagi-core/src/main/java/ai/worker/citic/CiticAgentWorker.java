@@ -85,7 +85,7 @@ public class CiticAgentWorker {
                 System.out.println("CiticAgentWorker.process: chatCompletionResult = " + chatCompletionResult);
                 String responseJson = null;
                 final Gson gson = new Gson();
-                PromptFactory promptFactory = new PromptFactory();
+                PromptFactory promptFactory = PromptFactory.getInstance();
                 if (promptFactory.getPromptConfig().getPrompt().getEnable()) {
                     chatCompletionRequest = promptFactory.loadPrompt(chatCompletionRequest);
                     CompletionsService completionsService = new CompletionsService();
