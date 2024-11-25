@@ -658,22 +658,32 @@ agentButton.addEventListener("click", function (e) {
     e.stopPropagation();
 });
 
-const promptButton = document.getElementById("promptButton");
-promptButton.addEventListener("click", function (e) {
-    // 切换显示/隐藏
-    isAgentContainerVisible = !isAgentContainerVisible;
-    $('#prompt-container').toggle();
-    e.stopPropagation();
+const toggleSwitch = document.getElementById('toggle-switch');
+toggleSwitch.addEventListener('change', function() {
+    // if (this.checked) {
+    //     console.log('Switch is ON');
+    //     // 在这里添加打开开关后的操作
+    // } else {
+    //     console.log('Switch is OFF');
+    //     // 在这里添加关闭开关后的操作
+    // }
+    // 调用接口info/togglePromptSwitch更新后台的状态
+    $.ajax({
+        type: "POST",
+        url: "/info/togglePromptSwitch",
+        data: JSON.stringify({
+            "enable": this.checked
+        }),
+        success: function (res) {
+            if (res.message == "success") {
+                console.log("更新成功");
+            }
+        },
+        error: function (res) {
+            console.log("更新失败");
+        }
+    });
 });
-$(document).on("click", function (event) {
-    // 如果 #agent-container 是显示状态并且点击的地方不在 #agent-container 和 agentButton 上
-    if (isAgentContainerVisible &&
-        !$(event.target).closest('#prompt-container').length &&
-        event.target !== promptButton) {
-        // 隐藏组件
-        $("#prompt-container").hide();
-        // 更新状态
-        isAgentContainerVisible = false;
-    }
-});
+
+
 

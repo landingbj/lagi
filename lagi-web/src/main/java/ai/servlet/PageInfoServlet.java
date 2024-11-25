@@ -96,7 +96,7 @@ public class PageInfoServlet extends RestfulServlet{
 		return navMap;
 	}
 
-	@Get("getPromptSwitch")
+	@Get("getPromptSwitchStatus")
 	public Map<String,Object> getPromptSwitch() {
 		PromptFactory promptFactory = new PromptFactory();
 		Map<String,Object> map = new HashMap<>();
