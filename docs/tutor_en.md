@@ -502,19 +502,13 @@ You can improve the model's understanding of your questions and thus enhance sys
    
    Continuous monitoring and updates: Regularly monitor the model's performance in practical applications, and promptly update the model or training data to address data obsolescence issues.
 
-
-
 ## 10. Text and Image Recognition
-
-
 
 ### Endpoint
 
-**POST** `https://lagi.saasai.top/instruction/generate`
+**POST** `/instruction/generate`
 
 Upload a PDF file to extract training instructions from its content.
-
-
 
 ### Request Body Parameters
 
@@ -602,13 +596,11 @@ fileToUpload: file://E:\file\KnowledgeGraph.PDF
 }
 ```
 
-### What is the basis for extracting question-answer pairs?
+### FAQ
 
+#### What is the basis for extracting question-answer pairs?
 
-
-### Instruction Extraction Basis
-
-The following principles are applied to generate instruction sets:
+The large model is used to parse the document content. The process is mainly based on the following points:
 
 1. **Structured Extraction**: Identify and extract questions and their respective answers from the document.
 2. **Summarization**: Use natural language summarization to distill content into concise questions and responses.
