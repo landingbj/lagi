@@ -7,13 +7,18 @@ import ai.llm.adapter.ILlmAdapter;
 import ai.llm.utils.ServerSentEventUtil;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
-import ai.utils.qa.HttpUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.google.gson.Gson;
 import io.reactivex.Observable;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import javax.net.ssl.SSLContext;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -22,7 +27,7 @@ import java.util.function.Function;
 public class MoonshotAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(MoonshotAdapter.class);
     private final Gson gson = new Gson();
-    private static final int HTTP_TIMEOUT = 5 * 1000;
+    private static final int HTTP_TIMEOUT = 20 * 1000;
     private static final String COMPLETIONS_URL = "https://api.moonshot.cn/v1/chat/completions";
 
     @Override
@@ -41,8 +46,17 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
         headers.put("Authorization", "Bearer " + getApiKey());
         String jsonResult = null;
         try {
-            jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
-        } catch (IOException e) {
+            //jsonResult = HttpUtil.httpPost(COMPLETIONS_URL, headers, chatCompletionRequest, HTTP_TIMEOUT);
+
+            SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, NoopHostnameVerifier.INSTANCE);
+            HttpRequest request = HttpRequest.post(COMPLETIONS_URL)
+                    .headerMap(headers, false) // 设置请求头
+                    .body(gson.toJson(chatCompletionRequest)) // 设置请求体
+                    .timeout(HTTP_TIMEOUT); // 设置超时时间
+            HttpResponse response = request.execute();
+            jsonResult = response.body();
+        } catch (Exception e) {
             logger.error("", e);
         }
         if (jsonResult == null) {

@@ -14,13 +14,17 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.common.ModelService;
+import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
+import ai.config.pojo.RAGFunction;
+import ai.dto.EnhanceChatCompletionRequest;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.GetRagContext;
+import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CacheManager;
 import ai.llm.utils.CompletionUtil;
 import ai.manager.LlmManager;
@@ -38,11 +42,9 @@ import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.response.ChatMessageResponse;
 import ai.servlet.BaseServlet;
-import ai.utils.HttpUtil;
-import ai.utils.LagiGlobal;
-import ai.utils.MigrateGlobal;
-import ai.utils.SensitiveWordUtil;
+import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.worker.meeting.MeetingWorker;
@@ -64,7 +66,9 @@ public class LlmApiServlet extends BaseServlet {
     private final VectorDbService vectorDbService = new VectorDbService(config);
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
-    private final boolean BASEDONCONTEXT = ContextLoader.configuration.getStores().getRag().get(0).getDependingOnTheContext();
+    private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
+    private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private final Integer debugLevel = ContextLoader.configuration.getDebugLevel() == null ? 0 : ContextLoader.configuration.getDebugLevel();
     private final MeetingWorker meetingWorker = new MeetingWorker();
 
     static {
@@ -151,79 +155,60 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
-        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class);
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-        if (chatCompletionRequest.getModel() == null
-                && preference != null
-                && preference.getLlm() != null) {
-            chatCompletionRequest.setModel(preference.getLlm());
-        }
+        EnhanceChatCompletionRequest chatCompletionRequest = getChatCompletionFromRequest(req, session);
         ChatCompletionResult chatCompletionResult = null;
-        ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
-        PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
-        List<IndexSearchData> indexSearchDataList = new ArrayList<>();
-        if (LagiGlobal.RAG_ENABLE) {
-            indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
-        }
-        if (BASEDONCONTEXT && indexSearchDataList.isEmpty()) {
-            ChatCompletionResult temp = new ChatCompletionResult();
-            ChatCompletionChoice choice = new ChatCompletionChoice();
-            ChatMessage chatMessage = new ChatMessage();
-            chatMessage.setContent("抱歉，我们无法回答相关问题。请提供政策类的相关问题，以便我们能更准确地为您提供帮助。");
-            choice.setMessage(chatMessage);
-            temp.setChoices(Lists.newArrayList(choice));
-            if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
-                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-                out.print("data: " + toJson(temp) + "\n\n");
-                out.print("data: " + "[DONE]" + "\n\n");
-                out.flush();
-                out.close();
-            } else {
-                responsePrint(resp, toJson(temp));
+
+        List<IndexSearchData> indexSearchDataList = null;
+        String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
+
+
+        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
+            ModelService modelService = (ModelService) LlmRouterDispatcher
+                    .getRagAdapter(null).stream().findFirst().orElse(null);
+            if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                indexSearchDataList = rerank(lastMessage1,  indexSearchDataList);
+                if(indexSearchDataList.isEmpty()) {
+                    String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
+                    outPrintJson(resp, chatCompletionRequest, s);
+                    return ;
+                }
             }
-            return;
-        } else {
+        }
+
+        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
+            ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
+            PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             chatCompletionResult = medusaService.locate(promptInput);
-        }
-
-        if (chatCompletionResult != null) {
-            if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
-                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-                out.print("data: " + toJson(chatCompletionResult) + "\n\n");
-                out.print("data: " + "[DONE]" + "\n\n");
-                out.flush();
-                out.close();
+            if (chatCompletionResult != null) {
+                outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
+                logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+                return;
             } else {
-                responsePrint(resp, toJson(chatCompletionResult));
-            }
-            logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
-            return;
-        } else {
-            medusaService.triggerCachePut(promptInput);
-            if (medusaService.getPromptPool() != null) {
-                medusaService.getPromptPool().put(PooledPrompt.builder()
-                        .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                medusaService.triggerCachePut(promptInput);
+                if (medusaService.getPromptPool() != null) {
+                    medusaService.getPromptPool().put(PooledPrompt.builder()
+                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                }
             }
         }
-
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && LagiGlobal.RAG_ENABLE) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
-            if (StrUtil.isNotBlank(answer)) {
-                ChatCompletionResult temp = new ChatCompletionResult();
-                ChatCompletionChoice choice = new ChatCompletionChoice();
-                ChatMessage chatMessage = new ChatMessage();
-                chatMessage.setContent(answer);
-                choice.setMessage(chatMessage);
-                temp.setChoices(Lists.newArrayList(choice));
-                responsePrint(resp, toJson(temp));
+            if(StrUtil.isNotBlank(answer)) {
+                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
                 return;
             }
-
+            if(indexSearchDataList == null) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                indexSearchDataList = rerank(lastMessage1,  indexSearchDataList);
+            }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                context = completionsService.getRagContext(indexSearchDataList);
+                context = completionsService.getRagContext(indexSearchDataList, CompletionUtil.MAX_INPUT);
                 String contextStr = CompletionUtil.truncate(context.getContext());
                 context.setContext(contextStr);
                 completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
@@ -234,8 +219,7 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
-
-        if (!hasTruncate) {
+        if(!hasTruncate) {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
         }
@@ -244,15 +228,90 @@ public class LlmApiServlet extends BaseServlet {
             streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
-            CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+            if (context != null) {
+                CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+            }
             responsePrint(resp, toJson(result));
         }
     }
 
+
+    private List<IndexSearchData> rerank(String question, List<IndexSearchData> indexSearchDataList) {
+        return indexSearchDataList.stream().peek(indexSearchData -> {
+            String text = indexSearchData.getText();
+            int distance = MinimumEditDistance.calculateMinEditDistance(question, text);
+            int len = text.length();
+            double ratio = (double) distance / len;
+            ratio =  (ratio * 0.9 + indexSearchData.getDistance() * 0.1) * indexSearchData.getDistance();
+            indexSearchData.setDistance((float) ratio);
+        }).sorted((o1, o2)-> Float.compare(o1.getDistance(), o2.getDistance())).collect(Collectors.toList());
+    }
+
+    private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {
+        if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+            streamOutPrint(resp, chatCompletionResult);
+        } else {
+            outPrint(resp, chatCompletionResult);
+        }
+    }
+
+    private void outPrintJson(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, String s) throws IOException {
+        if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+            streamOutPrint(resp, s);
+        } else {
+            outPrint(resp, s);
+        }
+    }
+
+
+    private void outPrint(HttpServletResponse resp,  ChatCompletionResult chatCompletionResult) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        responsePrint(resp, toJson(chatCompletionResult));
+    }
+
+    private void outPrint(HttpServletResponse resp,  String json) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        responsePrint(resp, json);
+    }
+
+    private void streamOutPrint(HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print("data: " + toJson(chatCompletionResult) + "\n\n");
+        out.print("data: " + "[DONE]" + "\n\n");
+        out.flush();
+        out.close();
+    }
+
+    private void streamOutPrint(HttpServletResponse resp, String json) throws IOException {
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print("data: " + json + "\n\n");
+        out.print("data: " + "[DONE]" + "\n\n");
+        out.flush();
+        out.close();
+    }
+
+        private EnhanceChatCompletionRequest getChatCompletionFromRequest(HttpServletRequest req, HttpSession session) throws IOException {
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
+        EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
+        if(debugLevel >= 0) {
+            logger.warn("chatCompletionRequest:{}", JSONUtil.toJsonStr(chatCompletionRequest));
+        }
+        if(chatCompletionRequest.getModel() == null
+                && preference != null
+                && preference.getLlm() != null) {
+            chatCompletionRequest.setModel(preference.getLlm());
+        }
+        if(chatCompletionRequest.getRag() == null) {
+            chatCompletionRequest.setRag(true);
+        }
+        return chatCompletionRequest;
+    }
     private static ChatCompletionRequest getCompletionRequest(ChatCompletionRequest chatCompletionRequest) {
         List<Integer> integers = PromptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
         ChatCompletionRequest medusaRequest = null;
-        if (!integers.isEmpty()) {
+        if(!integers.isEmpty()) {
             Integer i = integers.get(0);
             List<ChatMessage> chatMessages = chatCompletionRequest.getMessages().subList(i, chatCompletionRequest.getMessages().size());
             medusaRequest = new ChatCompletionRequest();
@@ -267,7 +326,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
-        if (limit <= 0) {
+        if(limit <= 0 ) {
             out.close();
             return;
         }
@@ -300,45 +359,51 @@ public class LlmApiServlet extends BaseServlet {
                     logger.error("", e);
                     ModelService modelService = (ModelService) ragAdapter;
                     CacheManager.put(modelService.getModel(), false);
-                    streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, finalLimit);
+                    streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
                 },
                 () -> {
-                    if (lastResult[0] == null) {
-                        streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, finalLimit);
+                    if(lastResult[0] == null) {
+                        streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
                         return;
                     }
-                    extracted(lastResult, indexSearchDataList, context, out);
+                    extracted(lastResult,indexSearchDataList,context, out);
                     lastResult[0].setChoices(lastResult[1].getChoices());
+
                     out.flush();
                     out.close();
                 }
         );
     }
 
-    private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out) {
+
+       private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()
                 && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);
             List<String> imageList = vectorDbService.getImageFiles(indexData);
             List<String> filePaths = ragContext.getFilePaths().stream().distinct().collect(Collectors.toList());
             List<String> filenames = ragContext.getFilenames().stream().distinct().collect(Collectors.toList());
+            List<String> chunkIds = ragContext.getChunkIds().stream().distinct().collect(Collectors.toList());
             for (int i = 0; i < lastResult[0].getChoices().size(); i++) {
-                ChatMessage message = lastResult[0].getChoices().get(0).getMessage();
-                message.setContent("");
-                message.setContext(indexData.getText());
+//                ChatMessage message = lastResult[0].getChoices().get(0).getMessage();
+                ChatMessageResponse message = ChatMessageResponse.builder()
+                        .contextChunkIds(ragContext.getChunkIds())
+                        .build();
+//                message.setContext(ragContext.getContext());
                 IndexSearchData indexData1 = indexSearchDataList.get(i);
-                if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
-                        && indexData1.getFilename().get(0).isEmpty())) {
+                    if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
+                            && indexData1.getFilename().get(0).isEmpty())) {
                     message.setFilename(filenames);
                     message.setFilepath(filePaths);
+                    message.setContextChunkIds(chunkIds);
                 }
+                message.setContent("");
                 message.setImageList(imageList);
+                lastResult[0].getChoices().get(i).setMessage(message);
             }
             out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");
-            out.flush();
         }
         out.print("data: " + "[DONE]" + "\n\n");
-        out.flush();
     }
 
     private void embeddings(HttpServletRequest req, HttpServletResponse resp) throws IOException {

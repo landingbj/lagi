@@ -71,6 +71,6 @@ public class ContextLoader {
     public static void main(String[] args) {
 
         ContextLoader.loadContext();
-        System.out.println(ContextLoader.configuration);;
+        System.out.println(ContextLoader.configuration);
     }
 }

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TelecomGteEmbeddings implements Embeddings {
     private final Gson gson = new Gson();
@@ -30,6 +31,7 @@ public class TelecomGteEmbeddings implements Embeddings {
 
     @Override
     public List<List<Float>> createEmbedding(List<String> docs) {
+      docs = docs.stream().filter(doc -> doc != null).collect(Collectors.toList());
         int batchSize = 5;
         List<List<Float>> result = new ArrayList<>();
         for (int i = 0; i < docs.size(); i += batchSize) {

@@ -3,7 +3,6 @@ package ai.servlet.api;
 import ai.bigdata.BigdataService;
 import ai.common.pojo.IndexSearchData;
 import ai.migrate.service.UploadFileService;
-import ai.migrate.service.VectorDbService;
 import ai.dto.VectorPreloadRequest;
 import ai.response.VectorStatusResponse;
 import ai.vector.VectorCache;

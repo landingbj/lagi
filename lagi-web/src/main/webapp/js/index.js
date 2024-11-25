@@ -18,7 +18,7 @@ window.onload = function () {
     showPromptNav();
 
     let zsk_list = $("#zsk-select");
-    zsk_list.append(`<li data-value="${window.category}" class="activate">&nbsp; &nbsp;京能</li>
+    zsk_list.append(`<li data-value="${window.category}" class="activate">&nbsp; &nbsp;北京电信</li>
     <li data-value  ="defualt">&nbsp;&nbsp; 不使用知识库</li>`)
     zsk_list.click(function (e, a) {
         let konwn = $(e.target).data('value');

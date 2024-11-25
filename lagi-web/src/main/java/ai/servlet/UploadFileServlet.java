@@ -358,7 +358,7 @@ public class UploadFileServlet extends HttpServlet {
                     map.put("filename", filename);
                     map.put("filepath", file.getName());
                     data.add(map);
-                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId).start());
+                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
                 }
             }
         }
