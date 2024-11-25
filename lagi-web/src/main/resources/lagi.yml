@@ -100,7 +100,7 @@ models:
     enable: true
     model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
     driver: ai.llm.adapter.impl.MoonshotAdapter
-    api_key: sk-sNkpt6hIL3apx7ckwZXiV31LfhUyveXdVdRrJ25UvSvIWQil  #  url address https://platform.moonshot.cn/console/api-keys
+    api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
 
   # Baichuan is a new generation of open source large language model launched by Baichuan AI
   #  - name: baichuan
@@ -119,9 +119,9 @@ models:
         driver: ai.llm.adapter.impl.SparkAdapter
       - model: tti
         driver: ai.image.adapter.impl.SparkImageAdapter
-    app_id: 948cf4b6
-    api_key: 54f6e81f40a31d66d976496de895a7a4  # https://console.xfyun.cn/
-    secret_key: ZDYyMjNmMTlkYTE0YWRmOWUwZTYxNjYz   # https://console.xfyun.cn/
+    app_id: your-app-id
+    api_key: your-api-key  # https://console.xfyun.cn/
+    secret_key: your-sectet-key   # https://console.xfyun.cn/
 
   # SenseChat(RiRiXin) is a large language model developed by SenseTime
   #  - name: SenseChat
