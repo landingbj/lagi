@@ -3,6 +3,8 @@
   "level": 3,
   "rules": [
     {"rule":"\"\"\"", "level": 2, "mask": "\""},
+	{"rule":"#{1,100}", "level": 2, "mask": ""},
+	{"rule":"\\*{1,100}", "level": 2, "mask": ""},
 	{"rule":"<id>[\\w\\-]+</id>", "level": 2, "mask": ""},
 	{"rule":"front-hand-up", "level": 2, "mask": ""},
 	{"rule":"turn-right-hand-up", "level": 2, "mask": ""},
