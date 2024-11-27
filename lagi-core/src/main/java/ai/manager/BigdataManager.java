@@ -2,14 +2,13 @@ package ai.manager;
 
 
 import ai.bigdata.IBigdata;
-import ai.common.pojo.VectorStoreConfig;
 import ai.config.pojo.BigdataConfig;
-import ai.embedding.Embeddings;
 import cn.hutool.core.bean.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +32,7 @@ public class BigdataManager {
             return;
         }
         bigdataConfigs.forEach(bigdataConfig -> {
-            if(Boolean.FALSE.equals(bigdataConfig.getEnable())) {
+            if (Boolean.FALSE.equals(bigdataConfig.getEnable())) {
                 return;
             }
             Class<?> clazz;
@@ -60,6 +59,8 @@ public class BigdataManager {
         if(bigdataMap.isEmpty()) {
             return null;
         }
-        return bigdataMap.values().iterator().next();
+        Iterator<IBigdata> iterator = bigdataMap.values().iterator();
+        return iterator.hasNext() ? bigdataMap.values().iterator().next() : null;
+//        return bigdataMap.values().iterator().next();
     }
 }

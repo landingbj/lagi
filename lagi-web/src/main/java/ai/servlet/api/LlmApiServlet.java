@@ -1,29 +1,19 @@
 package ai.servlet.api;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import ai.common.ModelService;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
-import ai.dto.EnhanceChatCompletionRequest;
+import ai.common.pojo.EnhanceChatCompletionRequest;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.GetRagContext;
+import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CacheManager;
 import ai.llm.utils.CompletionUtil;
@@ -31,9 +21,6 @@ import ai.manager.LlmManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
-import ai.llm.service.CompletionsService;
-import ai.common.pojo.Configuration;
-import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
@@ -44,7 +31,10 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.response.ChatMessageResponse;
 import ai.servlet.BaseServlet;
-import ai.utils.*;
+import ai.utils.HttpUtil;
+import ai.utils.MigrateGlobal;
+import ai.utils.MinimumEditDistance;
+import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.worker.meeting.MeetingWorker;
@@ -57,6 +47,19 @@ import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LlmApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
@@ -157,11 +160,8 @@ public class LlmApiServlet extends BaseServlet {
         HttpSession session = req.getSession();
         EnhanceChatCompletionRequest chatCompletionRequest = getChatCompletionFromRequest(req, session);
         ChatCompletionResult chatCompletionResult = null;
-
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
-
-
         if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);

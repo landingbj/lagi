@@ -44,7 +44,7 @@ public class VectorStoreService {
     static {
         ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(100),
-                (r, executor)->{
+                (r, executor) -> {
                     log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
                 }
         ));
@@ -251,7 +251,51 @@ public class VectorStoreService {
         if (question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
+        if (request instanceof EnhanceChatCompletionRequest) {
+            EnhanceChatCompletionRequest enhanceRequest = (EnhanceChatCompletionRequest) request;
+            String userId = enhanceRequest.getUserId();
+            String identity = enhanceRequest.getIdentity();
+            if ("leader".equals(identity)) {
+                question = adjustQuestionForLeader(question);
+            } else if ("personnel".equals(identity)) {
+                question = adjustQuestionForPersonnel(question);
+            }
+        }
         return search(question, request.getCategory());
+    }
+
+    private String adjustQuestionForLeader(String originalQuestion) {
+        if (originalQuestion.contains("请假")) {
+            return "作为领导，您的请假流程是什么？" + originalQuestion;
+        } else if (originalQuestion.contains("出差")) {
+            return "作为领导，您的出差流程是什么？" + originalQuestion;
+        } else if (originalQuestion.contains("加班")) {
+            return "作为领导，如何安排团队成员加班？" + originalQuestion;
+        } else if (originalQuestion.contains("晋升")) {
+            return "作为领导，您如何评估晋升候选人？" + originalQuestion;
+        } else if (originalQuestion.contains("薪酬") || originalQuestion.contains("薪水")) {
+            return "作为领导，您如何调整团队成员薪酬？" + originalQuestion;
+        } else if (originalQuestion.contains("培训")) {
+            return "作为领导，如何审批培训申请？" + originalQuestion;
+        }
+        return "作为领导：" + originalQuestion;
+    }
+
+    private String adjustQuestionForPersonnel(String originalQuestion) {
+        if (originalQuestion.contains("请假")) {
+            return "作为员工，您的请假流程是什么？" + originalQuestion;
+        } else if (originalQuestion.contains("出差")) {
+            return "作为员工，您的出差申请流程是什么？" + originalQuestion;
+        } else if (originalQuestion.contains("加班")) {
+            return "作为员工，如何申请加班？" + originalQuestion;
+        } else if (originalQuestion.contains("晋升")) {
+            return "作为员工，如何申请晋升？" + originalQuestion;
+        } else if (originalQuestion.contains("薪酬") || originalQuestion.contains("薪水")) {
+            return "作为员工，如何申请薪酬调整？" + originalQuestion;
+        } else if (originalQuestion.contains("培训")) {
+            return "作为员工，如何申请参加培训？" + originalQuestion;
+        }
+        return "作为员工：" + originalQuestion;
     }
 
 
@@ -267,17 +311,17 @@ public class VectorStoreService {
             Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
             indexIds.retainAll(esIds);
             indexSearchDataList = indexSearchDataList.stream()
-                    .filter(indexSearchData->indexIds.contains(indexSearchData.getId()))
+                    .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
                     .collect(Collectors.toList());
         }
         String finalCategory = category;
         List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
                 .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
                 .collect(Collectors.toList());
-        return  futureResultList.stream().map(indexSearchDataFuture -> {
+        return futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("indexData get error", e);
             }
             return null;
@@ -300,7 +344,7 @@ public class VectorStoreService {
 
     public List<IndexSearchData> searchByIds(List<String> ids, String category) {
         List<IndexRecord> fetch = fetch(ids, category);
-        if(fetch == null) {
+        if (fetch == null) {
             return Collections.emptyList();
         }
         List<IndexSearchData> indexSearchDataList = fetch.stream().map(this::toIndexSearchData).collect(Collectors.toList());
@@ -310,7 +354,7 @@ public class VectorStoreService {
         return futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("indexData get error", e);
             }
             return null;
@@ -363,7 +407,7 @@ public class VectorStoreService {
             return null;
         }
         IndexSearchData cache = vectorCache.getVectorCache(parentId);
-        if(cache != null) {
+        if (cache != null) {
             return cache;
         }
         IndexSearchData indexSearchData = toIndexSearchData(this.fetch(parentId, category));
@@ -377,7 +421,7 @@ public class VectorStoreService {
             return null;
         }
         IndexSearchData cache = vectorCache.getVectorChildCache(parentId);
-        if(cache != null) {
+        if (cache != null) {
             return cache;
         }
         Map<String, String> where = new HashMap<>();

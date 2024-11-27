@@ -1,4 +1,4 @@
-package ai.dto;
+package ai.common.pojo;
 
 import ai.openai.pojo.ChatCompletionRequest;
 import lombok.*;
@@ -10,5 +10,11 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class EnhanceChatCompletionRequest extends ChatCompletionRequest {
+
     private Boolean rag;
+
+    private String userId;
+
+    private String identity; // "leader" or "personnel"
+
 }

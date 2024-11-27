@@ -8,13 +8,12 @@
 
 package ai.llm.service;
 
-import java.util.*;
-
 import ai.common.ModelService;
+import ai.common.pojo.Backend;
+import ai.common.pojo.EnhanceChatCompletionRequest;
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
 import ai.llm.adapter.ILlmAdapter;
-import ai.common.pojo.Backend;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.utils.CacheManager;
 import ai.manager.LlmManager;
@@ -22,7 +21,7 @@ import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
 import ai.mr.container.FastDirectContainer;
-import ai.mr.mapper.llm.*;
+import ai.mr.mapper.llm.UniversalMapper;
 import ai.mr.reducer.llm.QaReducer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -35,8 +34,10 @@ import io.reactivex.Observable;
 import lombok.extern.slf4j.Slf4j;
 import weixin.tools.TulingThread;
 
+import java.util.*;
+
 @Slf4j
-public class CompletionsService implements ChatCompletion{
+public class CompletionsService implements ChatCompletion {
     private static TulingThread tulingProcessor = null;
     private static final double DEFAULT_TEMPERATURE = 0.8;
     private static final int DEFAULT_MAX_TOKENS = 1024;
@@ -50,11 +51,11 @@ public class CompletionsService implements ChatCompletion{
     }
 
     private String getPolicy() {
-        if(ContextLoader.configuration != null
+        if (ContextLoader.configuration != null
                 && ContextLoader.configuration.getFunctions() != null
                 && ContextLoader.configuration.getFunctions().getChatPolicy() != null) {
             String chatPolicy = ContextLoader.configuration.getFunctions().getChatPolicy();
-            if("failover".equals(chatPolicy) || "parallel".equals(chatPolicy)) {
+            if ("failover".equals(chatPolicy) || "parallel".equals(chatPolicy)) {
                 return chatPolicy;
             }
         }
@@ -68,10 +69,10 @@ public class CompletionsService implements ChatCompletion{
             public void onMapperFail(String mapperName) {
                 super.onMapperFail(mapperName);
                 IMapper iMapper = mappersGroup.get(mapperName);
-                if(iMapper instanceof  UniversalMapper) {
+                if (iMapper instanceof UniversalMapper) {
                     UniversalMapper universalMapper = (UniversalMapper) iMapper;
                     ILlmAdapter adapter = universalMapper.getAdapter();
-                    if(adapter instanceof ModelService) {
+                    if (adapter instanceof ModelService) {
                         ModelService modelService = (ModelService) adapter;
                         CacheManager.put(modelService.getModel(), false);
                     }
@@ -81,15 +82,15 @@ public class CompletionsService implements ChatCompletion{
             boolean doCompleted = false;
             if (chatCompletionRequest.getModel() != null) {
                 ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
-                if(appointAdapter != null) {
+                if (appointAdapter != null) {
                     registerMapper(chatCompletionRequest, appointAdapter, contain);
                     doCompleted = true;
                 }
             }
             chatCompletionRequest.setModel(null);
-            if(!doCompleted) {
+            if (!doCompleted) {
                 List<ILlmAdapter> ragAdapters = null;
-                if(indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                     ragAdapters = LlmRouterDispatcher.getRagAdapter(indexSearchDataList.get(0).getText());
                 } else {
                     ragAdapters = LlmManager.getInstance().getAdapters();
@@ -98,18 +99,20 @@ public class CompletionsService implements ChatCompletion{
                 for (ILlmAdapter adapter : ragAdapters) {
                     if (adapter instanceof ModelService) {
                         ModelService modelService = (ModelService) adapter;
-                        if(CacheManager.get(modelService.getModel())) {
+                        if (CacheManager.get(modelService.getModel())) {
                             continue;
                         }
                         registerMapper(chatCompletionRequest, adapter, contain);
                         register = true;
-                        if("failover".equals(getPolicy())) {
+                        if ("failover".equals(getPolicy())) {
                             break;
                         }
                     }
                 }
-                if(!register && !ragAdapters.isEmpty()) {
-                    Optional.ofNullable(ragAdapters.get(0)).ifPresent(adapter -> {registerMapper(chatCompletionRequest, adapter, contain);});
+                if (!register && !ragAdapters.isEmpty()) {
+                    Optional.ofNullable(ragAdapters.get(0)).ifPresent(adapter -> {
+                        registerMapper(chatCompletionRequest, adapter, contain);
+                    });
                 }
             }
             IReducer qaReducer = new QaReducer();
@@ -138,7 +141,7 @@ public class CompletionsService implements ChatCompletion{
     }
 
     public ChatCompletionResult completions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
-        if(adapter != null) {
+        if (adapter != null) {
             return adapter.completions(chatCompletionRequest);
         }
         return null;
@@ -151,8 +154,8 @@ public class CompletionsService implements ChatCompletion{
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter adapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
-            if(adapter != null) {
-                return  adapter.streamCompletions(chatCompletionRequest);
+            if (adapter != null) {
+                return adapter.streamCompletions(chatCompletionRequest);
             }
         }
         chatCompletionRequest.setModel(null);
@@ -167,12 +170,12 @@ public class CompletionsService implements ChatCompletion{
 
 
     public ILlmAdapter getRagAdapter(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
-        if(chatCompletionRequest.getModel() != null) {
+        if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter appointAdapter = LlmManager.getInstance().getAdapter(chatCompletionRequest.getModel());
-            if(appointAdapter != null) {
+            if (appointAdapter != null) {
                 ModelService modelService = (ModelService) appointAdapter;
                 Boolean isEffectAdapter = CacheManager.get(modelService.getModel());
-                if(isEffectAdapter) {
+                if (isEffectAdapter) {
                     return appointAdapter;
                 }
             }
@@ -180,7 +183,7 @@ public class CompletionsService implements ChatCompletion{
         chatCompletionRequest.setModel(null);
         String indexData = indexSearchDataList == null || indexSearchDataList.isEmpty() ? null : indexSearchDataList.get(0).getText();
         List<ILlmAdapter> ragAdapters = LlmRouterDispatcher.getRagAdapter(indexData);
-        if(!(ragAdapters == null || ragAdapters.isEmpty())) {
+        if (!(ragAdapters == null || ragAdapters.isEmpty())) {
             Optional<ILlmAdapter> first = ragAdapters
                     .stream()
                     .filter(adapter -> {
@@ -194,13 +197,11 @@ public class CompletionsService implements ChatCompletion{
     }
 
     public Observable<ChatCompletionResult> streamCompletions(ILlmAdapter adapter, ChatCompletionRequest chatCompletionRequest) {
-        if(adapter != null) {
+        if (adapter != null) {
             return adapter.streamCompletions(chatCompletionRequest);
         }
         throw new RuntimeException("Stream backend is not enabled.");
     }
-
-
 
 
     private IMapper getMapper(Backend backendConfig, ILlmAdapter adapter) {
@@ -208,9 +209,42 @@ public class CompletionsService implements ChatCompletion{
     }
 
     public void addVectorDBContext(ChatCompletionRequest request, String context) {
+
         String lastMessage = ChatCompletionUtil.getLastMessage(request);
+
         String prompt = "以下是背景信息：\n--------------------\n%s\n--------------------\n" +
                 "根据上下文信息而非先前知识，回答以下这个问题，回答只基于上下文信息，不要随意扩展和发散内容，不要出现上下文里没有的信息: %s";
+
+        if (request instanceof EnhanceChatCompletionRequest) {
+            EnhanceChatCompletionRequest enhanceRequest = (EnhanceChatCompletionRequest) request;
+            String userId = enhanceRequest.getUserId();
+            String identity = enhanceRequest.getIdentity();
+            if (identity != null) {
+                String identitySpecificContext = "";
+
+                if (lastMessage.contains("请假")) {
+                    identitySpecificContext = getLeaveProcessContext(identity);
+                } else if (lastMessage.contains("出差")) {
+                    identitySpecificContext = getBusinessTripProcessContext(identity);
+                } else if (lastMessage.contains("加班")) {
+                    identitySpecificContext = getOvertimeProcessContext(identity);
+                } else if (lastMessage.contains("晋升")) {
+                    identitySpecificContext = getPromotionProcessContext(identity);
+                } else if (lastMessage.contains("薪酬") || lastMessage.contains("薪水")) {
+                    identitySpecificContext = getSalaryAdjustmentContext(identity);
+                } else if (lastMessage.contains("培训")) {
+                    identitySpecificContext = getTrainingApprovalContext(identity);
+                }
+
+                if (!identitySpecificContext.isEmpty()) {
+                    String roleInChinese = identity.equals("leader") ? "领导" : "员工";
+                    prompt = "根据用户身份信息：\n" +
+                            "身份: " + roleInChinese + "\n" +
+                            "背景信息：\n--------------------\n" + identitySpecificContext + "\n--------------------\n" +
+                            "根据上下文信息和用户身份，回答以下问题，仅依据上下文信息，不要随意扩展：\n%s";
+                }
+            }
+        }
         prompt = String.format(prompt, context, lastMessage);
         ChatCompletionUtil.setLastMessage(request, prompt);
     }
@@ -223,7 +257,7 @@ public class CompletionsService implements ChatCompletion{
         List<String> filenames = new ArrayList<>();
         List<String> chunkIds = new ArrayList<>();
         String context = indexSearchDataList.get(0).getText();
-        if(indexSearchDataList.get(0).getFilepath() != null && indexSearchDataList.get(0).getFilename() != null) {
+        if (indexSearchDataList.get(0).getFilepath() != null && indexSearchDataList.get(0).getFilename() != null) {
             filePaths.addAll(indexSearchDataList.get(0).getFilepath());
             filenames.addAll(indexSearchDataList.get(0).getFilename());
             chunkIds.add(indexSearchDataList.get(0).getId());
@@ -231,13 +265,13 @@ public class CompletionsService implements ChatCompletion{
         double firstDistance = indexSearchDataList.get(0).getDistance();
         double lastDistance = firstDistance;
         List<Double> diffList = new ArrayList<>();
-        for (int i = 1;i < indexSearchDataList.size();i ++) {
+        for (int i = 1; i < indexSearchDataList.size(); i++) {
             if (i == 1) {
                 IndexSearchData data = indexSearchDataList.get(i);
                 double diff = data.getDistance() - firstDistance;
                 double threshold = diff / firstDistance;
                 if (threshold < 0.25) {
-                    if(data.getFilepath() != null && data.getFilename() != null) {
+                    if (data.getFilepath() != null && data.getFilename() != null) {
                         filePaths.addAll(data.getFilepath());
                         filenames.addAll(data.getFilename());
                         chunkIds.add(data.getId());
@@ -245,7 +279,7 @@ public class CompletionsService implements ChatCompletion{
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
-                    if(context.length() > maxInput) {
+                    if (context.length() > maxInput) {
                         break;
                     }
                 } else {
@@ -255,7 +289,7 @@ public class CompletionsService implements ChatCompletion{
                 IndexSearchData data = indexSearchDataList.get(i);
                 double diff = data.getDistance() - lastDistance;
                 if (diff < diffList.get(0) * 0.618) {
-                    if(data.getFilepath() != null && data.getFilename() != null) {
+                    if (data.getFilepath() != null && data.getFilename() != null) {
                         filePaths.addAll(data.getFilepath());
                         filenames.addAll(data.getFilename());
                         chunkIds.add(data.getId());
@@ -263,7 +297,7 @@ public class CompletionsService implements ChatCompletion{
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
-                    if(context.length() > maxInput) {
+                    if (context.length() > maxInput) {
                         break;
                     }
                 } else {
@@ -277,12 +311,12 @@ public class CompletionsService implements ChatCompletion{
                     context += "\n" + data.getText();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
-                    if(data.getFilepath() != null && data.getFilename() != null) {
+                    if (data.getFilepath() != null && data.getFilename() != null) {
                         filePaths.addAll(data.getFilepath());
                         filenames.addAll(data.getFilename());
                         chunkIds.add(data.getId());
                     }
-                    if(context.length() > maxInput) {
+                    if (context.length() > maxInput) {
                         break;
                     }
                 } else {
@@ -336,5 +370,59 @@ public class CompletionsService implements ChatCompletion{
         chatCompletionRequest.setMessages(messages);
         chatCompletionRequest.setCategory(category);
         return chatCompletionRequest;
+    }
+
+    public String getLeaveProcessContext(String identity) {
+        if ("leader".equals(identity)) {
+            return "作为领导，您的请假申请需要先通过部门HR审核，然后提交给更高层管理者审批，最终由行政部门备案。";
+        } else if ("personnel".equals(identity)) {
+            return "作为员工，您需要向直接上级申请，请假获得批准后，再提交给HR部门备案。";
+        }
+        return "根据您的身份，具体的请假流程会有所不同。";
+    }
+
+    public String getBusinessTripProcessContext(String identity) {
+        if ("leader".equals(identity)) {
+            return "作为领导，您的出差申请需经过部门审批，并由行政或人力资源部门协调差旅安排。";
+        } else if ("personnel".equals(identity)) {
+            return "作为员工，您需要先向上级领导申请，获得批准后提交行政部门进行出差安排。";
+        }
+        return "根据您的身份，具体的出差申请流程会有所不同。";
+    }
+
+    public String getOvertimeProcessContext(String identity) {
+        if ("leader".equals(identity)) {
+            return "作为领导，您可以根据部门需求直接批准加班，并负责协调人员安排。";
+        } else if ("personnel".equals(identity)) {
+            return "作为员工，您需要先向直接上级申请加班，经批准后才可以进行加班。";
+        }
+        return "加班流程可能会根据身份有所不同。";
+    }
+
+    public String getPromotionProcessContext(String identity) {
+        if ("leader".equals(identity)) {
+            return "作为领导，您需要对员工晋升进行评估，并向上级部门报告决策。";
+        } else if ("personnel".equals(identity)) {
+            return "作为员工，您可以向上级申请晋升，审批流程需经过部门领导及HR审核。";
+        }
+        return "晋升流程可能会因身份不同而有所差异。";
+    }
+
+    public String getSalaryAdjustmentContext(String identity) {
+        if ("leader".equals(identity)) {
+            return "作为领导，您有权限决定团队成员的薪酬调整，并需与HR协作完成调整。";
+        } else if ("personnel".equals(identity)) {
+            return "作为员工，薪酬调整通常由领导提出并通过HR审核，员工可提出建议或申请。";
+        }
+        return "薪酬调整的具体流程会根据您的身份有所不同。";
+    }
+
+    public String getTrainingApprovalContext(String identity) {
+        if ("leader".equals(identity)) {
+            return "作为领导，您需要审核并批准团队成员的培训申请。";
+        } else if ("personnel".equals(identity)) {
+            return "作为员工，您可以向上级申请培训，申请需经过上级领导和HR的批准。";
+        }
+        return "培训审批流程会因身份不同而有所差异。";
     }
 }
