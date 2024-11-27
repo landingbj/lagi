@@ -4,26 +4,28 @@ import ai.annotation.OCR;
 import ai.common.ModelService;
 import ai.ocr.IOcr;
 import ai.ocr.pojo.AlibabaOcrDocument;
-import com.aliyun.ocr_api20210707.models.RecognizeAdvancedRequest;
-import com.aliyun.ocr_api20210707.models.RecognizeAdvancedResponse;
+import com.aliyun.ocr_api20210707.models.RecognizeMultiLanguageRequest;
 import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 @OCR(company = "alibaba", modelNames = "ocr")
-public class AlibabaOcrAdapter extends ModelService implements IOcr {
+public class AlibabaLangOcrAdapter extends ModelService implements IOcr {
 
     @Override
     public boolean verify() {
-        if(getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
+        if (getAccessKeyId() == null || getAccessKeyId().startsWith("you")) {
             return false;
         }
-        if(getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
+        if (getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
             return false;
         }
         return true;
@@ -38,34 +40,40 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
     }
 
     public String recognize(BufferedImage image) {
+        return recognize(image, Arrays.asList("chn", "eng","tai"));
+    }
+
+    public String recognize(BufferedImage image, List<String> languages) {
+        if (languages == null || languages.isEmpty()) {
+            languages = Arrays.asList("chn", "eng","tai");
+        }
         String result = null;
-        RecognizeAdvancedResponse response;
+        com.aliyun.ocr_api20210707.models.RecognizeMultiLanguageResponse response;
         try {
             com.aliyun.ocr_api20210707.Client client = createClient();
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             ImageIO.write(image, "png", os);
             InputStream bodyStream = new ByteArrayInputStream(os.toByteArray());
-            RecognizeAdvancedRequest recognizeAdvancedRequest = new RecognizeAdvancedRequest()
+
+            RecognizeMultiLanguageRequest recognizeMultiLanguageRequest = new RecognizeMultiLanguageRequest()
                     .setBody(bodyStream)
+                    .setLanguages(languages)
                     .setNeedRotate(true)
-                    .setOutputTable(true)
-                    .setNoStamp(true)
-                    .setParagraph(true);
+                    .setOutputTable(true);
+
             RuntimeOptions runtime = new RuntimeOptions();
-            response = client.recognizeAdvancedWithOptions(recognizeAdvancedRequest, runtime);
+            response = client.recognizeMultiLanguageWithOptions(recognizeMultiLanguageRequest, runtime);
             if (response != null && response.getStatusCode() == 200) {
                 result = response.getBody().getData();
                 result = toFormatedText(result);
             }
+
+//            result = FileUtils.readTextFromFile("E:/Desktop/ocr_lang.txt");
+//            result = toFormatedText(result);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return result;
-    }
-
-    @Override
-    public String recognize(BufferedImage image, List<String> languages) {
-        return "";
     }
 
     public String toFormatedText(String text) throws IOException {
@@ -75,13 +83,6 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
     }
 
     public String toFormatedText(AlibabaOcrDocument doc) {
-        Map<Integer, Integer> paraTableMap = new HashMap<>();
-        if (doc.getPrism_wordsInfo() != null) {
-            for (AlibabaOcrDocument.PrismWordInfo wordInfo : doc.getPrism_wordsInfo()) {
-                paraTableMap.put(wordInfo.getParagraphId(), wordInfo.getTableId());
-            }
-        }
-
         Map<Integer, String> tableHtmlMap = new HashMap<>();
         if (doc.getPrism_tablesInfo() != null) {
             for (AlibabaOcrDocument.PrismTablesInfo tablesInfo : doc.getPrism_tablesInfo()) {
@@ -93,20 +94,20 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
         StringBuilder sb = new StringBuilder();
         Set<Integer> processedTableSet = new HashSet<>();
 
-        for (int i = 0; i < doc.getPrism_paragraphsInfo().size(); i++) {
-            AlibabaOcrDocument.PrismParagraphInfo para = doc.getPrism_paragraphsInfo().get(i);
-            Integer tableId = paraTableMap.get(para.getParagraphId());
-            if (tableId != null && tableHtmlMap.containsKey(tableId)) {
+        for (int i = 0; i < doc.getPrism_wordsInfo().size(); i++) {
+            AlibabaOcrDocument.PrismWordInfo wordInfo = doc.getPrism_wordsInfo().get(i);
+            Integer tableId = wordInfo.getTableId();
+            if (tableHtmlMap.containsKey(tableId)) {
                 if (!processedTableSet.contains(tableId)) {
                     sb.append(tableHtmlMap.get(tableId));
                     processedTableSet.add(tableId);
-                    if (i < doc.getPrism_paragraphsInfo().size() - 1) {
+                    if (i < doc.getPrism_wordsInfo().size() - 1) {
                         sb.append("\n");
                     }
                 }
             } else {
-                sb.append(para.getWord());
-                if (i < doc.getPrism_paragraphsInfo().size() - 1) {
+                sb.append(wordInfo.getWord());
+                if (i < doc.getPrism_wordsInfo().size() - 1) {
                     sb.append("\n");
                 }
             }

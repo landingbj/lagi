@@ -4,7 +4,6 @@ import ai.annotation.OCR;
 import ai.common.ModelService;
 import ai.ocr.IOcr;
 import ai.ocr.pojo.BaiduOcrDocument;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.json.JSONObject;
@@ -52,6 +51,11 @@ public class BaiduOcrAdapter extends ModelService implements IOcr {
             throw new RuntimeException(e);
         }
         return result;
+    }
+
+    @Override
+    public String recognize(BufferedImage image, List<String> languages) {
+        return "";
     }
 
     public String toFormatedText(String text) throws IOException {

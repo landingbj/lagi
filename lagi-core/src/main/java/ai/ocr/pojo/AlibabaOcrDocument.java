@@ -96,6 +96,7 @@ public class AlibabaOcrDocument {
         private String word;
         private int x;
         private int y;
+        private int recClassify;
     }
 
     @Data

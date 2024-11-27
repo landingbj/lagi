@@ -20,23 +20,28 @@ public class OcrService {
     private static final String ocrCacheDir = OcrConfig.getOcrCacheDir();
     private static final LRUCache<String, OcrProgress> processedPageSizeCache = new LRUCache<>(1000);
 
-    public String recognize(BufferedImage image) {
+
+    public String image2Ocr(BufferedImage image, List<String> languages) {
         for (IOcr adapter : OcrManager.getInstance().getAdapters()) {
-            return adapter.recognize(image);
+            return adapter.recognize(image, languages);
         }
         return null;
     }
 
-    public List<String> recognize(List<File> imageFileList) {
+    public List<String> image2Ocr(List<File> imageFileList) {
+        return image2Ocr(imageFileList, null);
+    }
+
+    public List<String> image2Ocr(List<File> imageFileList, List<String> languages) {
         List<String> result = new ArrayList<>();
         for (File file : imageFileList) {
-            if(file == null) {
+            if (file == null) {
                 result.add(null);
                 continue;
             }
             try {
                 BufferedImage image = ImageIO.read(file);
-                result.add(recognize(image));
+                result.add(image2Ocr(image, languages));
             } catch (IOException e) {
                 log.error("read image error {}", e.getMessage());
                 result.add(null);
@@ -45,24 +50,18 @@ public class OcrService {
         return result;
     }
 
-    public List<String> recognizePdf(File file) throws IOException {
-        return recognizePdf(null, file, -1, -1);
+
+
+    public List<String> doc2ocr(File file, List<String> languages) throws IOException, PdfPageSizeLimitException {
+        return doc2ocr(null, file, -1, -1, languages);
     }
 
-    public List<List<String>> recognizePdf(String taskId, List<File> fileList) throws IOException {
-        List<List<String>> result = new ArrayList<>();
-        for (int i = 0; i < fileList.size(); i++) {
-            File file = fileList.get(i);
-            result.add(recognizePdf(taskId, file, i, fileList.size()));
-        }
-        OcrProgress ocrProgress = processedPageSizeCache.get(taskId);
-        ocrProgress.setProcessedFileSize(fileList.size());
-        ocrProgress.setTotalFileSize(fileList.size());
-        return result;
-    }
 
-    public List<String> recognizePdf(String taskId, File file, int processedFileSize, int totalFileSize) throws IOException {
+    public List<String> doc2ocr(String taskId, File file, int processedFileSize, int totalFileSize, List<String> languages) throws IOException, PdfPageSizeLimitException {
         List<BufferedImage> pageImages = PdfUtils.toImages(file);
+        if (pageImages.size() > 200) {
+            throw new PdfPageSizeLimitException();
+        }
         List<String> result = new ArrayList<>();
 
         String md5 = FileUtils.md5sum(file);
@@ -85,7 +84,7 @@ public class OcrService {
             if (new File(pageCacheFile).exists() && OcrConfig.isOcrCacheEnable()) {
                 resultText = FileUtils.readTextFromFile(pageCacheFile);
             } else {
-                resultText = recognize(image);
+                resultText = image2Ocr(image, languages);
                 if (resultText != null && OcrConfig.isOcrCacheEnable()) {
                     FileUtils.writeTextToFile(pageCacheFile, resultText);
                 }

@@ -13,9 +13,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 public class OCRApiServlet extends RestfulServlet {
@@ -23,26 +21,32 @@ public class OCRApiServlet extends RestfulServlet {
     private static final String UPLOAD_DIR = "/upload";
     private final OcrService ocrService = new OcrService();
 
-    @Post("recognize")
-    public List<String> recognize(HttpServletRequest req) throws Exception {
+    @Post("doc2ocr")
+    public List<String> doc2ocr(HttpServletRequest req) throws Exception {
         DiskFileItemFactory factory = new DiskFileItemFactory();
         ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setFileSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
-        upload.setSizeMax(MigrateGlobal.IMAGE_FILE_SIZE_LIMIT);
+        upload.setFileSizeMax(MigrateGlobal.OCR_FILE_SIZE_LIMIT);
+        upload.setSizeMax(MigrateGlobal.OCR_FILE_SIZE_LIMIT);
         String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
+
         File uploadDirFile = new File(uploadDir);
         if (!uploadDirFile.isDirectory()) {
             uploadDirFile.mkdirs();
         }
+
         List<?> fileItems = upload.parseRequest(req);
-        if(fileItems == null || fileItems.isEmpty()) {
-            throw new RRException("缺少文件");
+        if (fileItems == null || fileItems.isEmpty()) {
+            throw new RRException("Missing files");
         }
-        List<File> files = fileItems.stream().map(fileItem->{
+
+        List<File> files = new ArrayList<>();
+        List<String> langList = new ArrayList<>();
+
+        for (Object fileItem : fileItems) {
             FileItem fi = (FileItem) fileItem;
             if (!fi.isFormField()) {
                 String fileName = fi.getName();
-                File file = null;
+                File file;
                 String newName;
                 do {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -51,16 +55,64 @@ public class OCRApiServlet extends RestfulServlet {
                     String lastFilePath = uploadDir + File.separator + newName;
                     file = new File(lastFilePath);
                 } while (file.exists());
+
                 try {
                     fi.write(file);
-                    return file;
+                    files.add(file);
                 } catch (Exception e) {
                     log.error("file write error {}", e.getMessage());
-                    return null;
+                }
+            } else {
+                String name = fi.getFieldName();
+                String value = fi.getString();
+                if ("lang".equals(name)) {
+                    langList.add(value);
                 }
             }
-            return null;
-        }).collect(Collectors.toList());
-        return ocrService.recognize(files);
+        }
+        if (files.isEmpty()) {
+            throw new RRException("Missing files");
+        }
+        if(langList.isEmpty()) {
+            langList.add("chn,eng,tai");
+        }
+        String fileType =  getFileTypeByExtension(files.get(0));
+        if("PDF".equals(fileType)) {
+            if(files.size() > 1) {
+                throw new RRException("only one pdf file is allowed");
+            }
+            List<String> pdfOcrResult = ocrService.doc2ocr(files.get(0), langList);
+            if (pdfOcrResult == null || pdfOcrResult.isEmpty()) {
+                throw new RRException("Failed to recognize PDF");
+            }
+            return pdfOcrResult;
+        } else if("Image".equals(fileType)) {
+            return ocrService.image2Ocr(files, langList);
+        }
+        throw new RRException("unsupported file type");
     }
+
+    public static String getFileTypeByExtension(File file) {
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex < 0) {
+            return "Unknown";
+        }
+        String extension = fileName.substring(dotIndex + 1).toLowerCase();
+        switch (extension) {
+            case "pdf":
+                return "PDF";
+            case "jpg":
+            case "jpeg":
+            case "png":
+            case "gif":
+                return "Image";
+            case "doc":
+            case "docx":
+                return "DOC";
+            default:
+                return "Unknown";
+        }
+    }
+
 }

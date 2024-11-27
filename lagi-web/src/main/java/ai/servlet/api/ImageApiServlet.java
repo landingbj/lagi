@@ -90,7 +90,7 @@ public class ImageApiServlet extends BaseServlet {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        List<String> ocrResults = ocrService.recognize(fileList);
+        List<String> ocrResults = ocrService.image2Ocr(fileList);
         Map<String, Object> map = new HashMap<>();
         if (ocrResults == null || ocrResults.isEmpty()) {
             map.put("status", "failed");

@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 public class GotApiAdapter extends ModelService implements IOcr {
@@ -29,6 +30,51 @@ public class GotApiAdapter extends ModelService implements IOcr {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String recognize(BufferedImage image, List<String> languages) {
+        OkHttpClient client = new OkHttpClient();
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("tempImage", ".png");
+            boolean result = ImageIO.write(image, "png", tempFile);
+            if (!result) {
+                RequestBody fileBody = RequestBody.create(MediaType.parse("image/png"), tempFile);
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addPart(Headers.of("Content-Disposition", "form-data; name=\"file\"; filename=\"" + tempFile.getName() + "\""),
+                                fileBody)
+                        .addPart(Headers.of("Content-Disposition", "form-data; name=\"lans\""),
+                                RequestBody.create(MediaType.parse("text/plain"), String.join(",", languages)))
+                .build();
+                Request request = new Request.Builder()
+                        .url(getRecognizeUrl())
+                        .post(requestBody)
+                        .build();
+                try (Response response = client.newCall(request).execute()) {
+                    if (response.isSuccessful()) {
+                        IResult iResult = gson.fromJson(response.body().string(), IResult.class);
+                        if(!iResult.getStatus().equals("success")) {
+                            throw new RuntimeException("识别图片文字失败.");
+                        }
+                        return iResult.getResult();
+                    } else {
+                        throw new RuntimeException("识别图片文字失败..");
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("识别图片文字失败...");
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("识别图片文字失败....");
+        } finally {
+            // 删除临时文件（可选）
+            if (tempFile != null) {
+                tempFile.deleteOnExit();
+            }
+        }
+        throw new RuntimeException("识别图片文字失败.....");
     }
 
     private String recognize(File file) {
@@ -83,10 +129,4 @@ public class GotApiAdapter extends ModelService implements IOcr {
         private String result;
     }
 
-    public static void main(String[] args) {
-        GotApiAdapter gotApiAdapter = new GotApiAdapter();
-        gotApiAdapter.setEndpoint("http://127.0.0.1:9102");
-        String recognize = gotApiAdapter.recognize(new File("C:\\Users\\Administrator\\Desktop\\bushu\\shuiguo.jpg"));
-        System.out.println(recognize);
-    }
 }
