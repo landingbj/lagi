@@ -13,4 +13,5 @@ import java.util.List;
 @Builder
 public class ChatMessageResponse extends ChatMessage {
     private List<String> contextChunkIds;
+    private List<CropRectResponse> cropRectResponse;
 }

@@ -2,11 +2,11 @@ package ai.servlet.api;
 
 import ai.common.ModelService;
 import ai.common.pojo.Configuration;
+import ai.common.pojo.EnhanceChatCompletionRequest;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
-import ai.common.pojo.EnhanceChatCompletionRequest;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
@@ -30,7 +30,9 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.response.ChatMessageResponse;
+import ai.response.CropRectResponse;
 import ai.servlet.BaseServlet;
+import ai.sevice.PdfPreviewServlce;
 import ai.utils.HttpUtil;
 import ai.utils.MigrateGlobal;
 import ai.utils.MinimumEditDistance;
@@ -75,6 +77,8 @@ public class LlmApiServlet extends BaseServlet {
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
     private final Integer debugLevel = ContextLoader.configuration.getDebugLevel() == null ? 0 : ContextLoader.configuration.getDebugLevel();
     private final MeetingWorker meetingWorker = new MeetingWorker();
+
+    private final PdfPreviewServlce pdfPreviewServlce = new PdfPreviewServlce();
 
     static {
         VectorCacheLoader.load();
@@ -160,6 +164,7 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
+        String contextPath = session.getServletContext().getRealPath("");
         EnhanceChatCompletionRequest chatCompletionRequest = getChatCompletionFromRequest(req, session);
         ChatCompletionResult chatCompletionResult = null;
         List<IndexSearchData> indexSearchDataList = null;
@@ -167,19 +172,19 @@ public class LlmApiServlet extends BaseServlet {
         if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
-            if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
+            if (modelService != null && RAG_CONFIG.getPriority() > modelService.getPriority()) {
                 indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
                 String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
-                indexSearchDataList = rerank(lastMessage1,  indexSearchDataList);
-                if(indexSearchDataList.isEmpty()) {
+                indexSearchDataList = rerank(lastMessage1, indexSearchDataList);
+                if (indexSearchDataList.isEmpty()) {
                     String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
                     outPrintJson(resp, chatCompletionRequest, s);
-                    return ;
+                    return;
                 }
             }
         }
 
-        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
+        if (Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
             PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             chatCompletionResult = medusaService.locate(promptInput);
@@ -200,14 +205,14 @@ public class LlmApiServlet extends BaseServlet {
         if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
-            if(StrUtil.isNotBlank(answer)) {
-                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
+            if (StrUtil.isNotBlank(answer)) {
+                outPrintJson(resp, chatCompletionRequest, String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
                 return;
             }
-            if(indexSearchDataList == null) {
+            if (indexSearchDataList == null) {
                 indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
                 String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
-                indexSearchDataList = rerank(lastMessage1,  indexSearchDataList);
+                indexSearchDataList = rerank(lastMessage1, indexSearchDataList);
             }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList, CompletionUtil.MAX_INPUT);
@@ -221,27 +226,33 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             indexSearchDataList = null;
         }
-        if(!hasTruncate) {
+        if (!hasTruncate) {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
         }
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-            streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size());
+            streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size(), contextPath);
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
             if (context != null) {
                 CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
-                 ObjectMapper objectMapper = new ObjectMapper();
-                  JsonNode rootNode = objectMapper.readTree(toJson(result));
-                 JsonNode choicesNode = rootNode.path("choices");
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(toJson(result));
+                JsonNode choicesNode = rootNode.path("choices");
                 for (JsonNode choiceNode : choicesNode) {
                     JsonNode messageNode = choiceNode.path("message");
                     ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
+
+                    List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(context.getChunkIds(), messageNode.path("context").asText(), contextPath);
+                    if (!cropRectResponses.isEmpty()) {
+                        ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("cropRectResponse", cropRectResponses);
+                    }
                 }
+
                 responsePrint(resp, rootNode.toString());
-            }else {
-                 responsePrint(resp, toJson(result));
+            } else {
+                responsePrint(resp, toJson(result));
             }
 
         }
@@ -254,13 +265,13 @@ public class LlmApiServlet extends BaseServlet {
             int distance = MinimumEditDistance.calculateMinEditDistance(question, text);
             int len = text.length();
             double ratio = (double) distance / len;
-            ratio =  (ratio * 0.9 + indexSearchData.getDistance() * 0.1) * indexSearchData.getDistance();
+            ratio = (ratio * 0.9 + indexSearchData.getDistance() * 0.1) * indexSearchData.getDistance();
             indexSearchData.setDistance((float) ratio);
-        }).sorted((o1, o2)-> Float.compare(o1.getDistance(), o2.getDistance())).collect(Collectors.toList());
+        }).sorted((o1, o2) -> Float.compare(o1.getDistance(), o2.getDistance())).collect(Collectors.toList());
     }
 
     private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {
-        if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+        if (Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
             streamOutPrint(resp, chatCompletionResult);
         } else {
             outPrint(resp, chatCompletionResult);
@@ -268,7 +279,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void outPrintJson(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, String s) throws IOException {
-        if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+        if (Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
             streamOutPrint(resp, s);
         } else {
             outPrint(resp, s);
@@ -276,12 +287,12 @@ public class LlmApiServlet extends BaseServlet {
     }
 
 
-    private void outPrint(HttpServletResponse resp,  ChatCompletionResult chatCompletionResult) throws IOException {
+    private void outPrint(HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         responsePrint(resp, toJson(chatCompletionResult));
     }
 
-    private void outPrint(HttpServletResponse resp,  String json) throws IOException {
+    private void outPrint(HttpServletResponse resp, String json) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         responsePrint(resp, json);
     }
@@ -304,26 +315,27 @@ public class LlmApiServlet extends BaseServlet {
         out.close();
     }
 
-        private EnhanceChatCompletionRequest getChatCompletionFromRequest(HttpServletRequest req, HttpSession session) throws IOException {
-        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
+    private EnhanceChatCompletionRequest getChatCompletionFromRequest(HttpServletRequest req, HttpSession session) throws IOException {
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class);
         EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
-        if(debugLevel >= 0) {
+        if (debugLevel >= 0) {
             logger.warn("chatCompletionRequest:{}", JSONUtil.toJsonStr(chatCompletionRequest));
         }
-        if(chatCompletionRequest.getModel() == null
+        if (chatCompletionRequest.getModel() == null
                 && preference != null
                 && preference.getLlm() != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
-        if(chatCompletionRequest.getRag() == null) {
+        if (chatCompletionRequest.getRag() == null) {
             chatCompletionRequest.setRag(true);
         }
         return chatCompletionRequest;
     }
+
     private static ChatCompletionRequest getCompletionRequest(ChatCompletionRequest chatCompletionRequest) {
         List<Integer> integers = PromptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
         ChatCompletionRequest medusaRequest = null;
-        if(!integers.isEmpty()) {
+        if (!integers.isEmpty()) {
             Integer i = integers.get(0);
             List<ChatMessage> chatMessages = chatCompletionRequest.getMessages().subList(i, chatCompletionRequest.getMessages().size());
             medusaRequest = new ChatCompletionRequest();
@@ -337,8 +349,8 @@ public class LlmApiServlet extends BaseServlet {
         return medusaRequest;
     }
 
-    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit) {
-        if(limit <= 0 ) {
+    private void streamOutPrint(ChatCompletionRequest chatCompletionRequest, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out, int limit, String contextPath) {
+        if (limit <= 0) {
             out.close();
             return;
         }
@@ -371,14 +383,14 @@ public class LlmApiServlet extends BaseServlet {
                     logger.error("", e);
                     ModelService modelService = (ModelService) ragAdapter;
                     CacheManager.put(modelService.getModel(), false);
-                    streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
+                    streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, finalLimit, contextPath);
                 },
                 () -> {
-                    if(lastResult[0] == null) {
-                        streamOutPrint(chatCompletionRequest, context,indexSearchDataList, out, finalLimit);
+                    if (lastResult[0] == null) {
+                        streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, finalLimit, contextPath);
                         return;
                     }
-                    extracted(lastResult,indexSearchDataList,context, out);
+                    extracted(lastResult, indexSearchDataList, context, out, contextPath);
                     lastResult[0].setChoices(lastResult[1].getChoices());
 
                     out.flush();
@@ -388,7 +400,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
 
-       private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out) {
+    private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out, String contextPath) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()
                 && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);
@@ -397,14 +409,15 @@ public class LlmApiServlet extends BaseServlet {
             List<String> filenames = ragContext.getFilenames().stream().distinct().collect(Collectors.toList());
             List<String> chunkIds = ragContext.getChunkIds().stream().distinct().collect(Collectors.toList());
             for (int i = 0; i < lastResult[0].getChoices().size(); i++) {
-//                ChatMessage message = lastResult[0].getChoices().get(0).getMessage();
+                List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(ragContext.getChunkIds(), ragContext.getContext(), contextPath);
+
                 ChatMessageResponse message = ChatMessageResponse.builder()
                         .contextChunkIds(ragContext.getChunkIds())
+                        .cropRectResponse(cropRectResponses)
                         .build();
-//                message.setContext(ragContext.getContext());
                 IndexSearchData indexData1 = indexSearchDataList.get(i);
-                    if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
-                            && indexData1.getFilename().get(0).isEmpty())) {
+                if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
+                        && indexData1.getFilename().get(0).isEmpty())) {
                     message.setFilename(filenames);
                     message.setFilepath(filePaths);
                     message.setContextChunkIds(chunkIds);
