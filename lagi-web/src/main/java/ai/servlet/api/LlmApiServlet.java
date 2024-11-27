@@ -43,6 +43,8 @@ import ai.worker.pojo.MeetingInfo;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -230,8 +232,18 @@ public class LlmApiServlet extends BaseServlet {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
             if (context != null) {
                 CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+                 ObjectMapper objectMapper = new ObjectMapper();
+                  JsonNode rootNode = objectMapper.readTree(toJson(result));
+                 JsonNode choicesNode = rootNode.path("choices");
+                for (JsonNode choiceNode : choicesNode) {
+                    JsonNode messageNode = choiceNode.path("message");
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
+                }
+                responsePrint(resp, rootNode.toString());
+            }else {
+                 responsePrint(resp, toJson(result));
             }
-            responsePrint(resp, toJson(result));
+
         }
     }
 
