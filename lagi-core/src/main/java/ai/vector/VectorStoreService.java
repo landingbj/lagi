@@ -282,21 +282,26 @@ public class VectorStoreService {
     }
 
     private String adjustQuestionForPersonnel(String originalQuestion) {
-        if (originalQuestion.contains("请假")) {
-            return "作为员工，您的请假流程是什么？" + originalQuestion;
+        if (originalQuestion.contains("年假")) {
+            return "作为普通员工，您的年假请假流程是什么？" + originalQuestion;
+        } else if (originalQuestion.contains("病假")) {
+            return "作为普通员工，您的病假请假流程是什么？" + originalQuestion;
+        } else if (originalQuestion.contains("请假")) {
+            return "作为普通员工，您的请假流程是什么？" + originalQuestion;
         } else if (originalQuestion.contains("出差")) {
-            return "作为员工，您的出差申请流程是什么？" + originalQuestion;
+            return "作为普通员工，您的出差申请流程是什么？" + originalQuestion;
         } else if (originalQuestion.contains("加班")) {
-            return "作为员工，如何申请加班？" + originalQuestion;
+            return "作为普通员工，如何申请加班？" + originalQuestion;
         } else if (originalQuestion.contains("晋升")) {
-            return "作为员工，如何申请晋升？" + originalQuestion;
+            return "作为普通员工，如何申请晋升？" + originalQuestion;
         } else if (originalQuestion.contains("薪酬") || originalQuestion.contains("薪水")) {
-            return "作为员工，如何申请薪酬调整？" + originalQuestion;
+            return "作为普通员工，如何申请薪酬调整？" + originalQuestion;
         } else if (originalQuestion.contains("培训")) {
-            return "作为员工，如何申请参加培训？" + originalQuestion;
+            return "作为普通员工，如何申请参加培训？" + originalQuestion;
         }
-        return "作为员工：" + originalQuestion;
+        return "作为普通员工：" + originalQuestion;
     }
+
 
 
     public List<IndexSearchData> search(String question, String category) {

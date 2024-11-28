@@ -237,7 +237,7 @@ public class CompletionsService implements ChatCompletion {
                 }
 
                 if (!identitySpecificContext.isEmpty()) {
-                    String roleInChinese = identity.equals("leader") ? "领导" : "员工";
+                    String roleInChinese = identity.equals("leader") ? "领导" : "普通员工";
                     prompt = "根据用户身份信息：\n" +
                             "身份: " + roleInChinese + "\n" +
                             "背景信息：\n--------------------\n" + identitySpecificContext + "\n--------------------\n" +
@@ -376,7 +376,7 @@ public class CompletionsService implements ChatCompletion {
         if ("leader".equals(identity)) {
             return "作为领导，您的请假申请需要先通过部门HR审核，然后提交给更高层管理者审批，最终由行政部门备案。";
         } else if ("personnel".equals(identity)) {
-            return "作为员工，您需要向直接上级申请，请假获得批准后，再提交给HR部门备案。";
+            return "作为普通员工，您需要向直接上级申请，请假获得批准后，再提交给HR部门备案。";
         }
         return "根据您的身份，具体的请假流程会有所不同。";
     }
@@ -385,7 +385,7 @@ public class CompletionsService implements ChatCompletion {
         if ("leader".equals(identity)) {
             return "作为领导，您的出差申请需经过部门审批，并由行政或人力资源部门协调差旅安排。";
         } else if ("personnel".equals(identity)) {
-            return "作为员工，您需要先向上级领导申请，获得批准后提交行政部门进行出差安排。";
+            return "作为普通员工，您需要先向上级领导申请，获得批准后提交行政部门进行出差安排。";
         }
         return "根据您的身份，具体的出差申请流程会有所不同。";
     }
@@ -394,7 +394,7 @@ public class CompletionsService implements ChatCompletion {
         if ("leader".equals(identity)) {
             return "作为领导，您可以根据部门需求直接批准加班，并负责协调人员安排。";
         } else if ("personnel".equals(identity)) {
-            return "作为员工，您需要先向直接上级申请加班，经批准后才可以进行加班。";
+            return "作为普通员工，您需要先向直接上级申请加班，经批准后才可以进行加班。";
         }
         return "加班流程可能会根据身份有所不同。";
     }
@@ -403,7 +403,7 @@ public class CompletionsService implements ChatCompletion {
         if ("leader".equals(identity)) {
             return "作为领导，您需要对员工晋升进行评估，并向上级部门报告决策。";
         } else if ("personnel".equals(identity)) {
-            return "作为员工，您可以向上级申请晋升，审批流程需经过部门领导及HR审核。";
+            return "作为普通员工，您可以向上级申请晋升，审批流程需经过部门领导及HR审核。";
         }
         return "晋升流程可能会因身份不同而有所差异。";
     }
@@ -412,7 +412,7 @@ public class CompletionsService implements ChatCompletion {
         if ("leader".equals(identity)) {
             return "作为领导，您有权限决定团队成员的薪酬调整，并需与HR协作完成调整。";
         } else if ("personnel".equals(identity)) {
-            return "作为员工，薪酬调整通常由领导提出并通过HR审核，员工可提出建议或申请。";
+            return "作为普通员工，薪酬调整通常由领导提出并通过HR审核，员工可提出建议或申请。";
         }
         return "薪酬调整的具体流程会根据您的身份有所不同。";
     }
@@ -421,7 +421,7 @@ public class CompletionsService implements ChatCompletion {
         if ("leader".equals(identity)) {
             return "作为领导，您需要审核并批准团队成员的培训申请。";
         } else if ("personnel".equals(identity)) {
-            return "作为员工，您可以向上级申请培训，申请需经过上级领导和HR的批准。";
+            return "作为普通员工，您可以向上级申请培训，申请需经过上级领导和HR的批准。";
         }
         return "培训审批流程会因身份不同而有所差异。";
     }
