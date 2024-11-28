@@ -798,7 +798,7 @@ function cropByRects(dom) {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: "pdf/cropByRect",
+        url: "chat/pdf/cropByRect",
         data: JSON.stringify(param),
         success: function (res) {
             if(res.code !== 0) {
@@ -836,7 +836,7 @@ function cropFromFile(dom) {
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: "pdf/crop",
+        url: "chat/pdf/crop",
         data: JSON.stringify(param),
         success: function (res) {
             if(res.code !== 0) {
