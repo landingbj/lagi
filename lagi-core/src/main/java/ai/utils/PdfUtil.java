@@ -226,7 +226,7 @@ public class PdfUtil {
             PDFRenderer renderer = new PDFRenderer(document);
 
             // 渲染页面为图像
-//            BufferedImage fullPageImage = renderer.renderImageWithDPI(pageIndex, DPI );
+            renderer.renderImageWithDPI(pageIndex, 105 );
             BufferedImage fullPageImage = renderer.renderImage(pageIndex, ZOOM_SIZE);
             int width = fullPageImage.getWidth();
             int height = fullPageImage.getHeight();

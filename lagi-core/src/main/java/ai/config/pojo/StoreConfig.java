@@ -2,6 +2,7 @@ package ai.config.pojo;
 
 import ai.common.pojo.Medusa;
 import ai.common.pojo.VectorStoreConfig;
+import ai.database.pojo.MysqlJdbc;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -15,4 +16,5 @@ public class StoreConfig {
     private RAGFunction rag;
     private List<BigdataConfig> bigdata;
     private Medusa medusa;
+    private MysqlJdbc database;
 }

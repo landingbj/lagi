@@ -130,19 +130,6 @@ public class LlmApiServlet extends BaseServlet {
         if (entity.get("msg") != null) {
             String cleanedText = removePeopleDescription(entity.get("msg"));
             entity.put("msg", cleanedText);
-
-//            String[] places = {"东四", "西单", "酒仙桥", "洋桥", "大郊亭", "房山", "顺义", "昌平", "大兴", "平谷", "密云", "延庆", "通州", "海淀北", "德胜门", "兆泰"};
-//            for (String place : places) {
-//                if (entity.get("msg").contains(place)) {
-//                    if (entity.get("entity")!=null){
-//                        Map<String, Object> obj = gson.fromJson(entity.get("entity"), Map.class);
-//                        obj.put("location", place);
-//                        entity.put("entity", gson.toJson(obj));
-//                    }
-//                  return;
-//                }
-//            }
-
         }
 
         String jsonResult = null;
@@ -151,12 +138,6 @@ public class LlmApiServlet extends BaseServlet {
         } catch (Exception e) {
             System.out.println(e);
         }
-//        Map<String, String> map = null;
-//
-////        if (jsonResult != null){
-//         //   map = gson.fromJson(requestToJson(req), Map.class);
-//        //}
-
         responsePrint(resp, jsonResult);
     }
 
@@ -244,10 +225,10 @@ public class LlmApiServlet extends BaseServlet {
                     JsonNode messageNode = choiceNode.path("message");
                     ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
 
-                    List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(context.getChunkIds(), messageNode.path("context").asText(), contextPath);
-                    if (!cropRectResponses.isEmpty()) {
-                        ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("cropRectResponse", cropRectResponses);
-                    }
+                    //List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(context.getChunkIds(), messageNode.path("context").asText(), contextPath);
+//                    if (!cropRectResponses.isEmpty()) {
+//                        ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("cropRectResponse", cropRectResponses);
+//                    }
                 }
 
                 responsePrint(resp, rootNode.toString());
@@ -409,17 +390,17 @@ public class LlmApiServlet extends BaseServlet {
             List<String> filenames = ragContext.getFilenames().stream().distinct().collect(Collectors.toList());
             List<String> chunkIds = ragContext.getChunkIds().stream().distinct().collect(Collectors.toList());
             for (int i = 0; i < lastResult[0].getChoices().size(); i++) {
-                List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(ragContext.getChunkIds(), ragContext.getContext(), contextPath);
+                //List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(ragContext.getChunkIds(), ragContext.getContext(), contextPath);
 
                 ChatMessageResponse message = ChatMessageResponse.builder()
                         .contextChunkIds(ragContext.getChunkIds())
-                        .cropRectResponse(cropRectResponses)
                         .build();
                 IndexSearchData indexData1 = indexSearchDataList.get(i);
                 if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
                         && indexData1.getFilename().get(0).isEmpty())) {
                     message.setFilename(filenames);
                     message.setFilepath(filePaths);
+                    message.setContext(indexData1.getText());
                     message.setContextChunkIds(chunkIds);
                 }
                 message.setContent("");
