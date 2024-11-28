@@ -224,6 +224,7 @@ public class LlmApiServlet extends BaseServlet {
                 for (JsonNode choiceNode : choicesNode) {
                     JsonNode messageNode = choiceNode.path("message");
                     ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
+                    //((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("chunkData", context);
 
                     //List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(context.getChunkIds(), messageNode.path("context").asText(), contextPath);
 //                    if (!cropRectResponses.isEmpty()) {

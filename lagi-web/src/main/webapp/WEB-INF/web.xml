@@ -272,7 +272,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>pdf</servlet-name>
-        <url-pattern>/pdf/*</url-pattern>
+        <url-pattern>/chat/pdf/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

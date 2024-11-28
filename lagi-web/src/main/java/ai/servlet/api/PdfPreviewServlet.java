@@ -271,9 +271,30 @@ public class PdfPreviewServlet extends RestfulServlet {
                         .build());
             }
         }
-        return res;
+        return merge(res);
     }
 
+     public List<CropRectResponse> merge(List<CropRectResponse> chunkData) {
+        Map<String, List<CropRectResponse>> groupedByFilePath = chunkData.stream()
+                .collect(Collectors.groupingBy(CropRectResponse::getFilePath));
+        List<CropRectResponse> result = new ArrayList<>();
+
+        for (Map.Entry<String, List<CropRectResponse>> entry : groupedByFilePath.entrySet()) {
+            String filePath = entry.getKey();
+            List<CropRectResponse> group = entry.getValue();
+            List<PageRect> mergedRects = group.stream()
+                    .flatMap(response -> response.getRects().stream())
+                    .distinct()
+                    .collect(Collectors.toList());
+            CropRectResponse mergedResponse = new CropRectResponse();
+            mergedResponse.setFilePath(filePath);
+            mergedResponse.setFilename(group.get(0).getFilename());
+            mergedResponse.setRects(mergedRects);
+            result.add(mergedResponse);
+        }
+
+        return result;
+    }
     private double detectSimilarity(double threshold,  String result, String text) {
         double max = 0.0;
         String maxStr = result.length() > text.length() ? result : text;
