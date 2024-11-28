@@ -236,13 +236,21 @@ public class CompletionsService implements ChatCompletion {
                     identitySpecificContext = getTrainingApprovalContext(identity);
                 }
 
+                /*if (!identitySpecificContext.isEmpty()) {
+                    String roleInChinese = identity.equals("leader") ? "领导" : "普通员工";
+                    prompt = "根据用户身份信息：\n" +
+                            "身份: " + roleInChinese + "\n" +
+                            "背景信息：\n--------------------\n" + identitySpecificContext + "\n--------------------\n" +
+                            "根据上下文信息和用户身份，回答以下问题，仅依据上下文信息，不要随意扩展，不要重复说明身份或背景信息：\n%s";
+                }*/
                 if (!identitySpecificContext.isEmpty()) {
                     String roleInChinese = identity.equals("leader") ? "领导" : "普通员工";
                     prompt = "根据用户身份信息：\n" +
                             "身份: " + roleInChinese + "\n" +
                             "背景信息：\n--------------------\n" + identitySpecificContext + "\n--------------------\n" +
-                            "根据上下文信息和用户身份，回答以下问题，仅依据上下文信息，不要随意扩展：\n%s";
+                            "请根据上下文信息和用户身份，回答以下问题，仅依据上下文信息，不要随意扩展，不要添加背景总结或扩展内容，不要重复身份或背景描述：\n%s";
                 }
+
             }
         }
         prompt = String.format(prompt, context, lastMessage);
