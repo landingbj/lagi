@@ -74,13 +74,75 @@ public class VectorStoreService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         List<FileChunkResponse.Document> docs;
-        FileChunkResponse response = fileService.extractContent(file);
+        FileChunkResponse response = null;
+                //fileService.extractContent(file);
         if (response != null && response.getStatus().equals("success")) {
             docs = response.getData();
         } else {
             docs = fileService.splitChunks(file, 512);
         }
         List<FileInfo> fileList = new ArrayList<>();
+        Map<String, String> fileTileMap = new HashMap<>();
+
+        fileTileMap.put("承租人所需资料清单及示例","承租人所需资料清单及示例");
+        fileTileMap.put("深圳大学职工政策性住房信息申报表","深圳大学职工政策性住房信息申报表");
+        fileTileMap.put("政策性住房信息调查表（申请人原单位）","政策性住房信息调查表（申请人原单位）");
+        fileTileMap.put("政策性住房信息调查表（配偶单位）","政策性住房信息调查表（配偶单位）");
+        fileTileMap.put("个人诚信申报信息承诺书（政策性住房信息申报）","个人诚信申报信息承诺书（政策性住房信息申报）");
+        fileTileMap.put("轮候到周转房时需提交的材料清单","轮候到周转房时需提交的材料清单");
+        fileTileMap.put("深圳大学周转房入住申请表","深圳大学周转房入住申请表");
+        fileTileMap.put("未婚声明","未婚声明");
+        fileTileMap.put("后勤保障部开展暑期重点项目及安全生产工作检查","后勤保障部开展暑期重点项目及安全生产工作检查");
+        fileTileMap.put("市场监管局南山局党组书记、局长崔红兵一行到我校调研餐饮保障工作","市场监管局南山局党组书记、局长崔红兵一行到我校调研餐饮保障工作");
+
+        fileTileMap.put("（中电信京〔2024〕74号）《关于印发中国电信北京公司领导人员请假休假管理办法的通知》","关于印发中国电信北京公司领导人员请假休假管理办法的通知");
+        fileTileMap.put("（中电信京〔2024〕112号）《关于印发中国电信北京公司员工培养锻炼实施办法及2024年培养锻炼实施方案的通知》", "关于印发中国电信北京公司员工培养锻炼实施办法及2024年培养锻炼实施方案的通知");
+        fileTileMap.put("72.关于印发《中国电信北京公司领导人员转任非领导职务管理办法（试行）》的通知", "关于印发《中国电信北京公司领导人员转任非领导职务管理办法（试行）》的通知");
+        fileTileMap.put("73.党委联系专家制度-中电信京党委〔2020〕17 号", "关于建立党委成员联系服务专家制度的通知");
+        fileTileMap.put("关于规范北京市电信公司员工着装及仪容、仪表的通知", "关于规范北京市电信公司员工着装及仪容、仪表的通知");
+        fileTileMap.put("关于进一步加强企业生产经营纪律的补充通知(中电信京人力[2013]15号)", "关于进一步加强企业生产经营纪律的补充通知");
+        fileTileMap.put("关于进一步加强生产经营纪律的通知", "关于进一步加强生产经营纪律的通知");
+        fileTileMap.put("关于完善领导人员管理相关事宜的通知（中电信京〔2019〕248号）", "关于完善领导人员管理相关事宜的通知");
+        fileTileMap.put("关于修订中国电信北京公司困难员工帮扶资金管理办法（暂行）的通知", "关于修订中国电信北京公司困难员工帮扶资金管理办法（暂行）的通知");
+        fileTileMap.put("关于印发《中国电信北京公司部门骨干人才选拔使用程序指导意见》的通知 (1)", "关于印发中国电信北京公司部门骨干人才选拔使用程序指导意见的通知");
+        fileTileMap.put("关于印发《中国电信北京公司部门骨干人才选拔使用程序指导意见》的通知", "关于印发中国电信北京公司部门骨干人才选拔使用程序指导意见的通知");
+        fileTileMap.put("关于印发《中国电信北京公司党委关于领导人员管理的规定》的通知 中电信京党委〔2023〕16号", "关于印发中国电信北京公司党委关于领导人员管理规定的通知");
+        fileTileMap.put("关于印发《中国电信北京公司高潜质人才管理办法（试行）》的通知", "关于印发中国电信北京公司高潜质人才管理办法（试行）的通知");
+        fileTileMap.put("关于印发《中国电信北京公司关于员工违反劳动合同法第三十九条予以解除劳动合同的实施细则》的通知", "关于印发《中国电信北京公司关于员工违反劳动合同法第三十九条予以解除劳动合同的实施细则》的通知");
+        fileTileMap.put("关于印发《中国电信北京公司领导人员轮岗交流管理办法（试行）》的通知", "关于印发中国电信北京公司领导人员轮岗交流管理办法（试行）的通知");
+        fileTileMap.put("关于印发《中国电信股份有限公司北京分公司员工纪律惩戒管理办法》的通知中电信京〔2021〕40号", "关于印发中国电信股份有限公司北京分公司员工纪律惩戒管理办法的通知");
+        fileTileMap.put("关于印发北京公司党委与领导人员谈心谈话办法的通知（中电信京党委〔2020〕75号）", "关于印发北京公司党委与领导人员谈心谈话办法的通知");
+        fileTileMap.put("关于印发北京公司专家专业工作考核实施办法的通知（试行）中电信京〔2021〕106号", "关于印发北京公司专家专业工作考核实施办法（试行）的通知");
+        fileTileMap.put("关于印发中国电信北京公司干部人事档案管理办法的通知", "关于印发中国电信北京公司干部人事档案管理办法的通知");
+        fileTileMap.put("关于印发中国电信北京公司高层次专业人才管理服务实施办法的通知中电信京〔2019〕113号", "关于印发中国电信北京公司高层次专业人才管理服务实施办法的通知");
+        fileTileMap.put("关于印发中国电信北京公司人才云平台运营管理办法的通知中电信京〔2021〕102号", "关于印发中国电信北京公司人才云平台运营管理办法的通知");
+        fileTileMap.put("关于印发中国电信北京公司员工胜任力管理办法（试行）的通知中电信京〔2019〕82号", "关于印发中国电信北京公司员工胜任力管理办法（试行）的通知");
+        fileTileMap.put("关于印发中国电信北京公司员工职业发展管理办法（2021版）的通知中电信京〔2021〕110号", "关于印发中国电信北京公司员工职业发展管理办法（2021 版）的通知");
+        fileTileMap.put("关于印发中国电信北京公司专业职务聘任管理办法的通知", "关于印发中国电信北京公司专业职务聘任管理办法的通知");
+        fileTileMap.put("关于印发中国电信股份有限公司北京分公司员工考勤及请假休假管理办法的通知 中电信京〔2021〕92号","关于印发中国电信股份有限公司北京分公司员工考勤及请假休假理办法的通知");
+        fileTileMap.put("关于中国电信北京公司领导人员转任非领导职务相关管理工作的通知", "关于中国电信北京公司领导人员转任非领导职务相关管理工作的通知");
+        fileTileMap.put("中电信京〔2021〕111号", "关于印发中国电信北京公司岗位管理办法（2021 版）的通知");
+        fileTileMap.put("中电信京〔2022〕170号", "关于完善领导人员管理相关事宜的通知");
+        fileTileMap.put("中电信京〔2023〕40号", "关于印发中国电信北京公司领导人员转任非领导职务管理办法的通知");
+        fileTileMap.put("中电信京〔2023〕41号", "关于印发中国电信北京公司总监制实施办法的通知");
+        fileTileMap.put("中电信京〔2023〕51号", "关于印发中国电信北京公司员工职业发展管理办法（2023 版）的通知");
+        fileTileMap.put("中电信京〔2023〕132号", "关于印发中国电信北京公司高层次专业人才管理服务办法的通知");
+        fileTileMap.put("中电信京人力[2015]2号","关于印发《中国电信股份有限公司北京分公司员工退休管理办法》的通知");
+        String ttt=(String) metadatas.get("filename");
+        int i = ttt.lastIndexOf(".");
+        String substring = ttt.substring(0, i);
+
+        String title = fileTileMap.get(substring);
+        System.out.println(substring);
+        System.out.println(title);
+        FileInfo fi = new FileInfo();
+        String e = UUID.randomUUID().toString().replace("-", "");
+        fi.setEmbedding_id(e);
+        fi.setText(title);
+        Map<String, Object> t = new HashMap<>(metadatas);
+        fi.setMetadatas(t);
+        fileList.add(fi);
+
         for (FileChunkResponse.Document doc : docs) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");
@@ -145,6 +207,9 @@ public class VectorStoreService {
     }
 
     public void upsert(List<UpsertRecord> upsertRecords, String category) {
+        upsertRecords = upsertRecords.stream()
+            .filter(record -> record.getDocument() != null)
+            .collect(Collectors.toList());
         for (UpsertRecord upsertRecord : upsertRecords) {
             TextIndexData data = new TextIndexData();
             data.setId(upsertRecord.getId());

@@ -3,6 +3,8 @@ package ai.example;
 import ai.audio.service.AudioService;
 import ai.common.pojo.*;
 import ai.config.ContextLoader;
+import ai.database.impl.MysqlAdapter;
+import ai.database.pojo.MysqlObject;
 import ai.embedding.Embeddings;
 import ai.embedding.impl.ErnieEmbeddings;
 import ai.embedding.impl.TelecomGteEmbeddings;
@@ -22,7 +24,9 @@ import ai.vector.pojo.UpsertRecord;
 import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
 import io.reactivex.Observable;
+import org.apache.poi.ss.formula.functions.T;
 import org.junit.Test;
 
 import java.io.File;
@@ -379,5 +383,150 @@ public class Demo {
 
         vectorStore.upsert(upsertRecords, "bj-telecom");
          System.out.println(query("计达到 4 个 A，且通过公司专业评审要求，岗位等级可晋升一等"));
+    }
+
+
+@Test
+    public void tistco2i() {
+        String demand = "2024年全国协议酒店中5星级酒店有哪几家";
+       String out = chat1(demand);
+       System.out.println("out1的回答是："+out);
+        String outcome =  "";
+       List<Map<String, Object>> list = new ArrayList<>();
+         Gson gson = new Gson();
+            if (out != null){
+                outcome =  extractContentWithinBraces(out);
+                 //System.out.println("outcome:" + outcome);
+                String sql = extractContentWithinBraces(outcome);
+                System.out.println("sql:" + sql);
+                list = new AiZindexUserDao().sqlToValue(sql);
+
+                for (Object o : list) {
+                    System.out.println(gson.toJson(o));
+                }
+            }else {
+                System.out.println("chat1 is null");
+            }
+
+            String msg = chat2(demand,gson.toJson(list));
+            System.out.println("最终的回答"+msg);
+
+    }
+
+    public String chat1(String demand) {
+        //mock request
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setMax_tokens(1024);
+        chatCompletionRequest.setCategory("default");
+        ChatMessage message = new ChatMessage();
+        message.setRole("user");
+        message.setContent("现在你是一个数据分析师,MYSQL大神,请根据用户提供的表的信息，以及用户的需求，写出效率最高的SQL." +
+                "表信息如下：表名:hotel_agreement； 字段:id主键，整型；tier表示档位，字符串类型；" +
+                "province表示省份，字符串类型； city表示城市，字符串类型；" +
+                "hotel_name表示酒店名称，字符串类型；star_rating表示星级， 字符串类型；" +
+                "room_type表示房间类型，字符串类型；hotel_address表示酒店地址，字符串类型；" +
+                "distance_from_group表示距离集团（公里）， 字符串类型；" +
+                "unavailable_dates表示协议价不可用日期，字符串类型；contact_info表示酒店联系人/电话（预定方式），字符串类型；" +
+                "data_source表示数据来源，字符串类型；applicable_brand表示适用品牌，字符串类型；" +
+                "remarks表示备注，字符串类型；agreement_price2表示2024年协议价（元/间）， 字符串类型；" +
+                "agreement_price3表示2024年协议价（元/间），字符串类型；agreement_price4表示2024年协议价（元/间），字符串类型。" +
+                "输并且要求输出的S0L以#开头,以#结尾，样例如下:" +
+                "{SELECT * FROM hotel_agreement;}  {SELECT COUNT(*)FROM hotel_agreement;}" +
+                "注意不需要分析过程，" +
+                "用户需求:" + demand
+        );
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+        // Set the stream parameter to false
+        chatCompletionRequest.setStream(false);
+        // Create an instance of CompletionsService
+        CompletionsService completionsService = new CompletionsService();
+        // Call the completions method to process the chat completion request
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+        String out = null;
+          if (result != null) {
+              out = result.getChoices().get(0).getMessage().getContent();
+          }
+        return out;
+    }
+
+     public String chat2(String demand,String outMsg) {
+        //mock request
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setMax_tokens(1024);
+        chatCompletionRequest.setCategory("default");
+        ChatMessage message = new ChatMessage();
+        message.setRole("user");
+        message.setContent("现在你是一个数据分析师,请根据用户提供的表的信息，用户的需求，以及你查询数据库返回的信息，给客户一个满意的回答." +
+                "表信息如下：表名:hotel_agreement； 字段:id主键，整型；tier表示档位，字符串类型；" +
+                "province表示省份 ；city表示城市；" +
+                "hotel_name表示酒店名称；star_rating表示星级；" +
+                "room_type表示房间类型；hotel_address表示酒店地址；" +
+                "distance_from_group表示距离集团（公里）；" +
+                "unavailable_dates表示协议价不可用的日期；contact_info表示酒店联系人/电话（预定方式）；" +
+                "data_source表示数据来源；applicable_brand表示适用品牌；" +
+                "remarks表示备注；agreement_price2表示2024年协议价（元/间）；" +
+                "agreement_price3表示2024年协议价（元/间）；agreement_price4表示2024年协议价（元/间）。" +
+                "用户需求:“" + demand+"”。" +
+                "你结合需求查数据库返回的信息的信息是：“"+outMsg+
+                "”注意不需要分析过程。");
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+        // Set the stream parameter to false
+        chatCompletionRequest.setStream(false);
+        // Create an instance of CompletionsService
+        CompletionsService completionsService = new CompletionsService();
+        // Call the completions method to process the chat completion request
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+        String out = null;
+        if(result != null){
+            out = result.getChoices().get(0).getMessage().getContent();
+        }
+        return out;
+    }
+
+
+
+    public static String extractContentWithinBraces(String input) {
+       // input = input.replaceAll("\\s", "");
+       // input = input.replace("，", ",");
+        if (input == null || !input.contains("#") || !input.contains("#")) {
+            return input;
+        }
+        if (input.matches(".*#.*#.*")) {
+            int startIndex = input.indexOf("#");
+            int endIndex = input.indexOf("#", startIndex + 1); // 从第一个#之后开始查找第二个#
+
+             if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+                return input.substring(startIndex + 1, endIndex);
+            } else {
+                System.out.println("只找到了一个 # 字符");
+            }
+        }
+        //System.out.println("outcome:" + input);
+        return input;
+    }
+
+    @Test
+    public void mysql() {
+        List<Map<String, Object>> list = new AiZindexUserDao().sqlToValue("SELECT * FROM hotel_agreement WHERE agreement_price4 BETWEEN 300 AND 500;");
+        //System.out.println(list.toArray());
+        Gson gson = new Gson();
+        for (Object o : list) {
+            System.out.println(gson.toJson(o));
+        }
+    }
+
+
+    class AiZindexUserDao extends MysqlAdapter {
+        /**
+         * 查询
+         *
+         * @return
+         */
+            public List<Map<String,Object>> sqlToValue(String sql) {
+            List<Map<String,Object>> list = select(sql);
+            return list.size() > 0 && list != null ? list : new ArrayList<>();
+        }
     }
 }

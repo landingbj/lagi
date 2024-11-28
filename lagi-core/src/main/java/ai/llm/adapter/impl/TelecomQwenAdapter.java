@@ -63,6 +63,7 @@ public class TelecomQwenAdapter extends ModelService implements ILlmAdapter {
         };
         ObservableList<ChatCompletionResult> result = ServerSentEventUtil.streamCompletions(json, this.getApiAddress(), apiKey, convertFunc, this);
         Iterable<ChatCompletionResult> iterable = result.getObservable().blockingIterable();
+        System.out.println("streamCompletions"+gson.toJson(iterable));
         return Observable.fromIterable(iterable);
     }
 
