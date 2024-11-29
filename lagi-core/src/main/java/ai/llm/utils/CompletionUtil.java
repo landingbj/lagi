@@ -41,9 +41,11 @@ public class CompletionUtil {
             List<String> imageList = new ArrayList<>();
 
             for (IndexSearchData indexSearchData : indexSearchDataList) {
-                List<String> images = vectorStoreService.getImageFiles(indexSearchData);
-                if (images != null){
-                      imageList.addAll(images);
+                if (indexSearchData.getImage() != null){
+                       List<String> images = vectorStoreService.getImageFiles(indexSearchData);
+                    if (images != null){
+                          imageList.addAll(images);
+                    }
                 }
             }
             imageList = imageList.stream().distinct().collect(Collectors.toList());
@@ -51,8 +53,8 @@ public class CompletionUtil {
             for (int i = 0; i < result.getChoices().size(); i++) {
                 ChatMessage message = result.getChoices().get(i).getMessage();
                 message.setContext(context.getContext());
-                message.setFilename(context.getFilenames());
-                message.setFilepath(context.getFilePaths());
+                message.setFilename(new ArrayList<>(new HashSet<>(context.getFilenames())));
+                message.setFilepath(new ArrayList<>(new HashSet<>(context.getFilePaths())));
                 message.setImageList(imageList);
             }
         }
