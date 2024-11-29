@@ -9,21 +9,19 @@ POST `/chat/completions`
 ### Body 请求参数
 
 ```json
-{
-  "stream": false,
-  "temperature": 0.8,
-  "max_tokens": 2048,
-  "category": "bj-telecom",
-  "identity": "leader",
-  "messages": [
     {
-      "role": "user",
-      "content": "请假"
+      "stream": false,
+      "temperature": 0.8,
+      "max_tokens": 2048,
+      "category": "bj-telecom",
+      "identity": "leader",
+      "messages": [
+        {
+          "role": "user",
+          "content": "请假"
+        }
+      ]
     }
-  ]
-}   }
-  ]
-}
 ```
 
 ### 请求参数
@@ -328,7 +326,7 @@ fileToUpload: file://D:/知识图谱.pdf
 
 ## 根据上下文查询页码
 
-POST `/pdf/cropRect`
+POST `/chat/pdf/cropRect`
 
 输入上下文，定位页码。
 
@@ -409,7 +407,7 @@ POST `/pdf/cropRect`
 
 ## 根据页码朔源图片
 
-POST `/pdf/cropByRect`
+POST `/chat/pdf/cropByRect`
 
 输入上下文，定位页码。
 

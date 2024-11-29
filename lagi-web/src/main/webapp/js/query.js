@@ -665,7 +665,7 @@ async function filterChunk(filenames, filePaths, contextChunkIds, result, jqObj)
         $.ajax({
             type: "POST",
             contentType: "application/json;charset=utf-8",
-            url: "pdf/filterChunk",
+            url: "chat/pdf/filterChunk",
             data: JSON.stringify(params),
             success: function (res) {
                 jqObj.children('.loading-box').remove();
@@ -717,7 +717,7 @@ async function getCropRect(contextChunkIds, result, jqObj) {
         $.ajax({
             type: "POST",
             contentType: "application/json;charset=utf-8",
-            url: "pdf/cropRect",
+            url: "chat/pdf/cropRect",
             data: JSON.stringify(params),
             success: function (res) {
                 jqObj.children('.context-box').children('.loading-box').remove();
