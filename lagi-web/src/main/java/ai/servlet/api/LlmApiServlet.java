@@ -24,13 +24,11 @@ import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
-import ai.migrate.service.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.response.ChatMessageResponse;
-import ai.response.CropRectResponse;
 import ai.servlet.BaseServlet;
 import ai.sevice.PdfPreviewServlce;
 import ai.utils.HttpUtil;
@@ -39,6 +37,7 @@ import ai.utils.MinimumEditDistance;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
+import ai.vector.VectorDbService;
 import ai.worker.meeting.MeetingWorker;
 import ai.worker.pojo.AddMeetingRequest;
 import ai.worker.pojo.MeetingInfo;
@@ -217,7 +216,7 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
             if (context != null) {
-                CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+                CompletionUtil.populateContext(result, indexSearchDataList, context);
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode rootNode = objectMapper.readTree(toJson(result));
                 JsonNode choicesNode = rootNode.path("choices");
@@ -396,14 +395,11 @@ public class LlmApiServlet extends BaseServlet {
                 ChatMessageResponse message = ChatMessageResponse.builder()
                         .contextChunkIds(ragContext.getChunkIds())
                         .build();
-                IndexSearchData indexData1 = indexSearchDataList.get(i);
-                if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
-                        && indexData1.getFilename().get(0).isEmpty())) {
-                    message.setFilename(filenames);
-                    message.setFilepath(filePaths);
-                    message.setContext(indexData1.getText());
-                    message.setContextChunkIds(chunkIds);
-                }
+                message.setFilename(filenames);
+                message.setFilepath(filePaths);
+                message.setContext(ragContext.getContext());
+                message.setContextChunkIds(chunkIds);
+
                 message.setContent("");
                 message.setImageList(imageList);
                 lastResult[0].getChoices().get(i).setMessage(message);

@@ -2,6 +2,7 @@ package ai.llm.utils;
 
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
+import ai.llm.pojo.GetRagContext;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
@@ -9,9 +10,8 @@ import ai.vector.VectorStoreService;
 import com.google.gson.Gson;
 
 import java.text.DateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CompletionUtil {
     private static final Gson gson = new Gson();
@@ -35,19 +35,24 @@ public class CompletionUtil {
         return gson.fromJson(json, ChatCompletionResult.class);
     }
 
-    public static void populateContext(ChatCompletionResult result, List<IndexSearchData> indexSearchDataList, String context) {
+    public static void populateContext(ChatCompletionResult result, List<IndexSearchData> indexSearchDataList, GetRagContext context) {
         if (result != null && !result.getChoices().isEmpty()
                 && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-            IndexSearchData indexData = indexSearchDataList.get(0);
-            List<String> imageList = vectorStoreService.getImageFiles(indexData);
+            List<String> imageList = new ArrayList<>();
+
+            for (IndexSearchData indexSearchData : indexSearchDataList) {
+                List<String> images = vectorStoreService.getImageFiles(indexSearchData);
+                if (images != null){
+                      imageList.addAll(images);
+                }
+            }
+            imageList = imageList.stream().distinct().collect(Collectors.toList());
+
             for (int i = 0; i < result.getChoices().size(); i++) {
                 ChatMessage message = result.getChoices().get(i).getMessage();
-                message.setContext(context);
-                if (!(indexData.getFilename() != null && indexData.getFilename().size() == 1
-                        && indexData.getFilename().get(0).isEmpty())) {
-                    message.setFilename(indexData.getFilename());
-                }
-                message.setFilepath(indexData.getFilepath());
+                message.setContext(context.getContext());
+                message.setFilename(context.getFilenames());
+                message.setFilepath(context.getFilePaths());
                 message.setImageList(imageList);
             }
         }

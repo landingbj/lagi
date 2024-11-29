@@ -74,13 +74,13 @@ public class VectorStoreService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         List<FileChunkResponse.Document> docs;
-        FileChunkResponse response = null;
+//        FileChunkResponse response = null;
                 //fileService.extractContent(file);
-        if (response != null && response.getStatus().equals("success")) {
-            docs = response.getData();
-        } else {
+//        if (response != null && response.getStatus().equals("success")) {
+//            docs = response.getData();
+//        } else {
             docs = fileService.splitChunks(file, 512);
-        }
+//        }
         List<FileInfo> fileList = new ArrayList<>();
         Map<String, String> fileTileMap = new HashMap<>();
 

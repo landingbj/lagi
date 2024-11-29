@@ -386,7 +386,7 @@ public class Demo {
     }
 
 
-@Test
+    @Test
     public void tistco2i() {
         String demand = "2024年全国协议酒店中5星级酒店有哪几家";
        String out = chat1(demand);

@@ -54,7 +54,7 @@ public class RAGCompletionStaticProxy implements ChatCompletion{
         }
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchData);
         if (context != null) {
-            CompletionUtil.populateContext(result, indexSearchData, context.getContext());
+            CompletionUtil.populateContext(result, indexSearchData, context);
         }
         return result;
     }
