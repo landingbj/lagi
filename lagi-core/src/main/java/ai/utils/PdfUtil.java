@@ -11,6 +11,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -65,44 +66,6 @@ public class PdfUtil {
         Process process = processBuilder.start();
         int exitCode = process.waitFor();
         return exitCode;
-    }
-
-
-
-
-    public static List<TextBlock> getWordsCoordinateByPath(String pdfPath, String searchWord) {
-        List<TextBlock>  data = new ArrayList<>();
-        try {
-            PDDocument document = PDDocument.load(new File(pdfPath));
-            PDFTextExtractor extractor = new PDFTextExtractor(searchWord, false);
-            PDFTextStripper pdfTextStripper = new PDFTextStripper();
-            extractor.setSortByPosition(true);
-            for (int i = 0; i < document.getNumberOfPages(); i++) {
-                extractor.setStartPage(i + 1);
-                extractor.setEndPage(i + 1);
-                pdfTextStripper.setStartPage(i+1);
-                pdfTextStripper.setEndPage(i+1);
-                String key = pdfPath + "-" + i;
-                String text = pdfStrCache.get(key);
-                if(text == null) {
-                    text = pdfTextStripper.getText(document).replaceAll("\\s+", "");
-                    pdfStrCache.put(key, text);
-                }
-                extractor.setCursorPoint(0);
-                extractor.setCurrentPageText(text);
-                extractor.getText(document);
-                boolean done = extractor.getDone();
-                if(done) {
-                    return extractor.getTextBlocks();
-                }
-            }
-            extractor.getTextBlocks().clear();
-            document.close();
-            return data;
-        } catch (IOException e) {
-            log.error("Error reading PDF file: {}", e.getMessage());
-        }
-        return data;
     }
 
     public static List<List<TextBlock>> getAllWordsCoordinateByPath(String pdfPath, String searchWord) {
@@ -245,15 +208,17 @@ public class PdfUtil {
 //            int croppedHeight = (y1 - y0) ;
 //            int croppedX = x0 ;
 //            int croppedY = y0 ;
-            String pageImagePath = pageDir + "\\" + (pageIndex + 1) + "_" + x0 + "_" + y0 + "_" + x1 + "_" + y1 + ".png";
+            String pageImagePath = pageDir + "/" + (pageIndex + 1) + "_" + x0 + "_" + y0 + "_" + x1 + "_" + y1 + ".png";
          //   System.out.println(pageImagePath);
             // 裁剪图像
             BufferedImage croppedImage = fullPageImage.getSubimage(croppedX, croppedY, croppedWidth, croppedHeight);
             System.out.println(pageImagePath + "    finished");
+             // croppedImage = pageImagePath.replace("\\", "/");
             // 保存图像
             File pageFile = new File(pageImagePath);
+            // String path = pageFile.getAbsolutePath();
             ImageIO.write(croppedImage, "png", pageFile);
-            return pageImagePath;
+            return pageFile.getAbsolutePath();
         }
     }
 

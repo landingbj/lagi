@@ -87,7 +87,7 @@ public class PdfPreviewServlet extends RestfulServlet {
                     }
                     if(i.getFilepath() != null && !i.getFilepath().isEmpty()) {
                         boolean similar = kShingleFilter.isSimilar(chunkFilterRequest.getResult(), i.getText());
-                        System.out.println(similar);
+                        //System.out.println(similar);
                         return similar;
                     }
                     return false;
@@ -330,7 +330,7 @@ public class PdfPreviewServlet extends RestfulServlet {
     public List<String> cropByRect(HttpServletRequest request, @Body CropRectRequest cropRectRequest) {
         String cropImageBaseDirs = StringUtils.left(cropImageBaseDir, cropImageBaseDir.length() - 1);
 
-        String baseDir = makeCropImageDir(request.getSession().getServletContext().getRealPath("static") + "\\" + cropImageBaseDirs);
+        String baseDir = makeCropImageDir(request.getSession().getServletContext().getRealPath("static") + "/" + cropImageBaseDirs);
         List<CropRequest> chunkData = cropRectRequest.getChunkData();
         List<String> res = new ArrayList<>();
         for (CropRequest cropRequest : chunkData) {
@@ -352,7 +352,8 @@ public class PdfPreviewServlet extends RestfulServlet {
                         }
                         String cropImage = pdfService.cropPageImage(filePath, dir  , rect.getPage() - 1, rect.getRect().get(0), rect.getRect().get(1), rect.getRect().get(2), rect.getRect().get(3));
                         if(cropImage != null) {
-                            String path = "static/" +  cropImageBaseDir + uploadFile.getName().split("\\.")[0]+ "/"+ new File(cropImage).getName();
+                            String path = "static/" +  cropImageBaseDir + uploadFile.getName().split("\\.")[0]+ new File(cropImage).getName();
+                            path= path.replace("\\", "/");
                             res.add(path);
                         }
                     }
