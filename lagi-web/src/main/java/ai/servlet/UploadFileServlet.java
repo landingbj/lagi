@@ -398,7 +398,7 @@ public class UploadFileServlet extends HttpServlet {
         private void addDocIndexes() {
             Map<String, Object> metadatas = new HashMap<>();
             if (fileId == null) {
-                fileId = UUID.randomUUID().toString().replace("-", "");
+                fileId = UUID.randomUUID().toString().replace("\\", "");
             }
             String filepath = file.getName();
 

@@ -15,6 +15,7 @@ import ai.utils.PdfUtil;
 import ai.vector.VectorStoreService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletRequest;
@@ -327,7 +328,9 @@ public class PdfPreviewServlet extends RestfulServlet {
 
     @Post("cropByRect")
     public List<String> cropByRect(HttpServletRequest request, @Body CropRectRequest cropRectRequest) {
-        String baseDir = makeCropImageDir(request.getSession().getServletContext().getRealPath("static") + "/" + cropImageBaseDir);
+        String cropImageBaseDirs = StringUtils.left(cropImageBaseDir, cropImageBaseDir.length() - 1);
+
+        String baseDir = makeCropImageDir(request.getSession().getServletContext().getRealPath("static") + "\\" + cropImageBaseDirs);
         List<CropRequest> chunkData = cropRectRequest.getChunkData();
         List<String> res = new ArrayList<>();
         for (CropRequest cropRequest : chunkData) {
@@ -342,9 +345,14 @@ public class PdfPreviewServlet extends RestfulServlet {
                 List<PageRect> rects = cropRequest.getRects();
                 if(rects != null && !rects.isEmpty()) {
                     for (PageRect rect : rects) {
-                        String cropImage = pdfService.cropPageImage(filePath, baseDir, rect.getPage() - 1, rect.getRect().get(0), rect.getRect().get(1), rect.getRect().get(2), rect.getRect().get(3));
+                        String dir = baseDir + File.separator + uploadFile.getName().split("\\.")[0];
+                        File file = new File(dir);
+                        if(!file.exists()) {
+                            file.mkdirs();
+                        }
+                        String cropImage = pdfService.cropPageImage(filePath, dir  , rect.getPage() - 1, rect.getRect().get(0), rect.getRect().get(1), rect.getRect().get(2), rect.getRect().get(3));
                         if(cropImage != null) {
-                            String path = "static/" +  cropImageBaseDir + new File(cropImage).getName();
+                            String path = "static/" +  cropImageBaseDir + uploadFile.getName().split("\\.")[0]+ "/"+ new File(cropImage).getName();
                             res.add(path);
                         }
                     }

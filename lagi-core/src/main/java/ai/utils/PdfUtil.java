@@ -245,8 +245,8 @@ public class PdfUtil {
 //            int croppedHeight = (y1 - y0) ;
 //            int croppedX = x0 ;
 //            int croppedY = y0 ;
-            String pageImagePath = pageDir + "/" + (pageIndex + 1) + "_" + x0 + "_" + y0 + "_" + x1 + "_" + y1 + ".png";
-            System.out.println(pageImagePath);
+            String pageImagePath = pageDir + "\\" + (pageIndex + 1) + "_" + x0 + "_" + y0 + "_" + x1 + "_" + y1 + ".png";
+         //   System.out.println(pageImagePath);
             // 裁剪图像
             BufferedImage croppedImage = fullPageImage.getSubimage(croppedX, croppedY, croppedWidth, croppedHeight);
             System.out.println(pageImagePath + "    finished");
