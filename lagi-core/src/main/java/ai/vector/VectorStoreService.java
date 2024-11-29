@@ -320,11 +320,11 @@ public class VectorStoreService {
             EnhanceChatCompletionRequest enhanceRequest = (EnhanceChatCompletionRequest) request;
             String userId = enhanceRequest.getUserId();
             String identity = enhanceRequest.getIdentity();
-            if ("leader".equals(identity)) {
-                question = adjustQuestionForLeader(question);
-            } else if ("personnel".equals(identity)) {
-                question = adjustQuestionForPersonnel(question);
-            }
+//            if ("leader".equals(identity)) {
+//                question = adjustQuestionForLeader(question);
+//            } else if ("personnel".equals(identity)) {
+//                question = adjustQuestionForPersonnel(question);
+//            }
         }
         return search(question, request.getCategory());
     }

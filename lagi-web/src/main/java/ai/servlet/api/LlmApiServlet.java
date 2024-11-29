@@ -57,6 +57,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,45 @@ public class LlmApiServlet extends BaseServlet {
             }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList, CompletionUtil.MAX_INPUT);
+                String identity = chatCompletionRequest.getIdentity();
+                if ("personnel".equals(identity)) {
+                    List<Integer> indicesToRemove = new ArrayList<>();
+                    for (int i = 0; i < context.getFilenames().size(); i++) {
+                        if (context.getFilenames().get(i).contains("领导")) {
+                            indicesToRemove.add(i);
+                        }
+                    }
+                    boolean hasEmployeeFile = context.getFilenames().stream().anyMatch(name -> name.contains("员工"));
+                    boolean hasLeaderFile = !indicesToRemove.isEmpty();
+
+                    if (hasEmployeeFile && hasLeaderFile) {
+                        for (int i = indicesToRemove.size() - 1; i >= 0; i--) {
+                            int index = indicesToRemove.get(i);
+                            context.getFilenames().remove(index);
+                            context.getFilePaths().remove(index);
+                            context.getChunkIds().remove(index);
+                        }
+                    }
+                }
+                if ("leader".equals(identity)) {
+                    List<Integer> indicesToRemove = new ArrayList<>();
+                    for (int i = 0; i < context.getFilenames().size(); i++) {
+                        if (context.getFilenames().get(i).contains("员工")) {
+                            indicesToRemove.add(i);
+                        }
+                    }
+                    boolean hasLeaderFile = context.getFilenames().stream().anyMatch(name -> name.contains("领导"));
+                    boolean hasEmployeeFile = !indicesToRemove.isEmpty();
+
+                    if (hasLeaderFile && hasEmployeeFile) {
+                        for (int i = indicesToRemove.size() - 1; i >= 0; i--) {
+                            int index = indicesToRemove.get(i);
+                            context.getFilenames().remove(index);
+                            context.getFilePaths().remove(index);
+                            context.getChunkIds().remove(index);
+                        }
+                    }
+                }
                 String contextStr = CompletionUtil.truncate(context.getContext());
                 context.setContext(contextStr);
                 completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
