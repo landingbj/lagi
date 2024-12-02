@@ -352,7 +352,7 @@ public class PdfPreviewServlet extends RestfulServlet {
                         }
                         String cropImage = pdfService.cropPageImage(filePath, dir  , rect.getPage() - 1, rect.getRect().get(0), rect.getRect().get(1), rect.getRect().get(2), rect.getRect().get(3));
                         if(cropImage != null) {
-                            String path = "static/" +  cropImageBaseDir + uploadFile.getName().split("\\.")[0]+ new File(cropImage).getName();
+                            String path = "static/" +  cropImageBaseDir + uploadFile.getName().split("\\.")[0]+"/"+ new File(cropImage).getName();
                             path= path.replace("\\", "/");
                             res.add(path);
                         }

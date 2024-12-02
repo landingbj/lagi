@@ -98,6 +98,140 @@ public class LlmApiServlet extends BaseServlet {
             this.conversationtApi(req, resp);
         } else if (method.equals("extractAddMeetingInfo")) {
             this.extractAddMeetingInfo(req, resp);
+        } else if (method.equals("meetingMinutes")) {
+            this.meetingMinutes(req, resp);
+        }
+    }
+
+    private void meetingMinutes(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+          resp.setContentType("application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        HttpSession session = req.getSession();
+        String contextPath = session.getServletContext().getRealPath("");
+        EnhanceChatCompletionRequest chatCompletionRequest = getChatCompletionFromRequest(req, session);
+        ChatCompletionResult chatCompletionResult = null;
+        List<IndexSearchData> indexSearchDataList = null;
+        String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
+        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
+            ModelService modelService = (ModelService) LlmRouterDispatcher
+                    .getRagAdapter(null).stream().findFirst().orElse(null);
+            if (modelService != null && RAG_CONFIG.getPriority() > modelService.getPriority()) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                indexSearchDataList = rerank(lastMessage1, indexSearchDataList);
+                if (indexSearchDataList.isEmpty()) {
+                    String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
+                    outPrintJson(resp, chatCompletionRequest, s);
+                    return;
+                }
+            }
+        }
+
+        if (Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
+            ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
+            PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
+            chatCompletionResult = medusaService.locate(promptInput);
+            if (chatCompletionResult != null) {
+                outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
+                logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+                return;
+            } else {
+                medusaService.triggerCachePut(promptInput);
+                if (medusaService.getPromptPool() != null) {
+                    medusaService.getPromptPool().put(PooledPrompt.builder()
+                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                }
+            }
+        }
+        boolean hasTruncate = false;
+        GetRagContext context = null;
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && Boolean.TRUE.equals(chatCompletionRequest.getRag())) {
+            String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+            String answer = VectorCacheLoader.get2L2(lastMessage);
+            if (StrUtil.isNotBlank(answer)) {
+                outPrintJson(resp, chatCompletionRequest, String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
+                return;
+            }
+            if (indexSearchDataList == null) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                String lastMessage1 = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                indexSearchDataList = rerank(lastMessage1, indexSearchDataList);
+            }
+            if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                context = completionsService.getRagContext(indexSearchDataList, CompletionUtil.MAX_INPUT);
+                String identity = chatCompletionRequest.getIdentity();
+                if ("personnel".equals(identity)) {
+                    List<Integer> indicesToRemove = new ArrayList<>();
+                    for (int i = 0; i < context.getFilenames().size(); i++) {
+                        if (context.getFilenames().get(i).contains("领导")) {
+                            indicesToRemove.add(i);
+                        }
+                    }
+                    boolean hasEmployeeFile = context.getFilenames().stream().anyMatch(name -> name.contains("员工"));
+                    boolean hasLeaderFile = !indicesToRemove.isEmpty();
+
+                    if (hasEmployeeFile && hasLeaderFile) {
+                        for (int i = indicesToRemove.size() - 1; i >= 0; i--) {
+                            int index = indicesToRemove.get(i);
+                            context.getFilenames().remove(index);
+                            context.getFilePaths().remove(index);
+                            context.getChunkIds().remove(index);
+                        }
+                    }
+                }
+                if ("leader".equals(identity)) {
+                    List<Integer> indicesToRemove = new ArrayList<>();
+                    for (int i = 0; i < context.getFilenames().size(); i++) {
+                        if (context.getFilenames().get(i).contains("员工")) {
+                            indicesToRemove.add(i);
+                        }
+                    }
+                    boolean hasLeaderFile = context.getFilenames().stream().anyMatch(name -> name.contains("领导"));
+                    boolean hasEmployeeFile = !indicesToRemove.isEmpty();
+
+                    if (hasLeaderFile && hasEmployeeFile) {
+                        for (int i = indicesToRemove.size() - 1; i >= 0; i--) {
+                            int index = indicesToRemove.get(i);
+                            context.getFilenames().remove(index);
+                            context.getFilePaths().remove(index);
+                            context.getChunkIds().remove(index);
+                        }
+                    }
+                }
+                String contextStr = CompletionUtil.truncate(context.getContext());
+                context.setContext(contextStr);
+                completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
+                ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
+                chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
+                hasTruncate = true;
+            }
+        } else {
+            indexSearchDataList = null;
+        }
+        if (!hasTruncate) {
+            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
+            chatCompletionRequest.setMessages(chatMessages);
+        }
+        if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
+            resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+            streamOutPrint(chatCompletionRequest, context, indexSearchDataList, out, LlmManager.getInstance().getAdapters().size(), contextPath);
+        } else {
+            ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+            if (context != null) {
+                CompletionUtil.populateContext(result, indexSearchDataList, context);
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(toJson(result));
+                JsonNode choicesNode = rootNode.path("choices");
+                for (JsonNode choiceNode : choicesNode) {
+                    JsonNode messageNode = choiceNode.path("message");
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
+                }
+
+                responsePrint(resp, rootNode.toString());
+            } else {
+                responsePrint(resp, toJson(result));
+            }
+
         }
     }
 

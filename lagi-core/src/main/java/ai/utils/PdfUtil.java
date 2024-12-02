@@ -189,7 +189,7 @@ public class PdfUtil {
             PDFRenderer renderer = new PDFRenderer(document);
 
             // 渲染页面为图像
-            renderer.renderImageWithDPI(pageIndex, 105 );
+            renderer.renderImageWithDPI(pageIndex, 105);
             BufferedImage fullPageImage = renderer.renderImage(pageIndex, ZOOM_SIZE);
             int width = fullPageImage.getWidth();
             int height = fullPageImage.getHeight();
@@ -198,9 +198,9 @@ public class PdfUtil {
             x1 = Math.min(width, x1);
             y1 = Math.min(height, y1);
 //            // 计算裁剪区域
-            int croppedWidth = (x1 - x0) * ZOOM_SIZE ;
+            int croppedWidth = (x1 - x0) * ZOOM_SIZE;
             int croppedHeight = (y1 - y0) * ZOOM_SIZE;
-            int croppedX = x0 * ZOOM_SIZE ;
+            int croppedX = x0 * ZOOM_SIZE;
             int croppedY = y0 * ZOOM_SIZE;
 
 //            // 计算裁剪区域
@@ -209,60 +209,16 @@ public class PdfUtil {
 //            int croppedX = x0 ;
 //            int croppedY = y0 ;
             String pageImagePath = pageDir + "/" + (pageIndex + 1) + "_" + x0 + "_" + y0 + "_" + x1 + "_" + y1 + ".png";
-         //   System.out.println(pageImagePath);
+            //   System.out.println(pageImagePath);
             // 裁剪图像
             BufferedImage croppedImage = fullPageImage.getSubimage(croppedX, croppedY, croppedWidth, croppedHeight);
             System.out.println(pageImagePath + "    finished");
-             // croppedImage = pageImagePath.replace("\\", "/");
+            // croppedImage = pageImagePath.replace("\\", "/");
             // 保存图像
             File pageFile = new File(pageImagePath);
             // String path = pageFile.getAbsolutePath();
             ImageIO.write(croppedImage, "png", pageFile);
             return pageFile.getAbsolutePath();
         }
-    }
-
-    public static void main(String[] args) {
-//        String keyword = "本标准代替Q/BJCE-204.03-06-2019《员工培训管理办法》，自本标准实施之日起，原标\n" +
-//                "准作废。\n" +
-//                "本标准的附录A、附录B、附录C、附录D、附录E、附录F、附录G为规范性附录。\n" +
-//                "本标准由清洁能源公司党委组织部（人力资源部）提出并归口管理。\n" +
-//                "本标准起草部室：党委组织部（人力资源部）\n" +
-//                "本标准起草人：马宴维\n" +
-//                "本标准修改人：王晓东\n" +
-//                "本标准审核人：曲 展\n" +
-//                "本标准复核人：曹满胜\n" +
-//                "本标准批准人：张凤阳\n" +
-//                "本标准于2011年12月31日首次发布，2013年10月第一次修编，2016年7月第二次修编，2019\n" +
-//                "年11月第三次修编,2022年3月第四次修编。\n" +
-//                "人力资源管理 Q/BJCE-204.03-06-2022\n" +
-//                "1\n" +
-//                "员工培训管理办法\n" +
-//                "1 范围\n" +
-//                "本标准规定了清洁能源公司培训管理的职责、管理内容与方法、报告和记录、检查与考\n" +
-//                "核。\n" +
-//                "本标准适用于清洁能源公司培训管理工作。\n" +
-//                "2 规范性引用文件\n" +
-//                "下列文件对于本文件的应用是必不可少的。凡是注日期的引用文件，仅注日期的版本适用\n" +
-//                "于本文件。凡是不注日期的引用文件，其最新版本（包括所有的修改单）适用于本文件。";
-//        String keyword =  "轴控箱1（2、3）的电池箱温度1分钟平均值超过60℃（回滞温度50℃）";
-        String keyword =  "1、出现最大值一";
-//        keyword = keyword.replaceAll("\\s+", "");
-//        List<List<TextBlock>> allWordsCoordinateByPath = getAllWordsCoordinateByPath("C:\\Users\\Administrator\\Desktop\\京能\\风力发电机组故障处理手册.pdf", keyword);
-//        System.out.println(allWordsCoordinateByPath.size());
-        String filepath = "C:\\Users\\Administrator\\Desktop\\京能\\风力发电机组故障处理手册.pdf";
-        long start = System.currentTimeMillis();
-        List<List<TextBlock>> lists = searchFromCache(filepath, keyword, true);
-        long end = System.currentTimeMillis();
-//        long start1 = System.currentTimeMillis();
-//        lists = searchFromCache(filepath, keyword, true);
-//        long end1 = System.currentTimeMillis();
-//        long start2 = System.currentTimeMillis();
-//        lists = searchFromCache(filepath, keyword, false);
-//        long end2 = System.currentTimeMillis();
-        System.out.println("1 cost :" + (end -start));
-//        System.out.println("2 cost :" + (end1 -start1));
-//        System.out.println("3 cost :" + (end2 -start2));
-        lists.forEach(list -> list.forEach(System.out::println));
     }
 }

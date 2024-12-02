@@ -164,6 +164,10 @@
         <servlet-name>llm</servlet-name>
         <url-pattern>/chat/extractAddMeetingInfo</url-pattern>
     </servlet-mapping>
+       <servlet-mapping>
+        <servlet-name>llm</servlet-name>
+        <url-pattern>/chat/meetingMinutes</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>llm</servlet-name>
         <url-pattern>/v1/embeddings</url-pattern>

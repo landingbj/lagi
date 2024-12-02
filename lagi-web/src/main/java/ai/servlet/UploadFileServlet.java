@@ -20,7 +20,9 @@ import ai.common.pojo.*;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.InstructionData;
 import ai.medusa.pojo.InstructionPairRequest;
+import ai.medusa.pojo.InstructionPairRequestContractedHotels;
 import ai.migrate.service.UploadFileService;
+import ai.servlet.dto.MeetingMinutesRequest;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
@@ -48,6 +50,7 @@ public class UploadFileServlet extends HttpServlet {
     private final VectorStoreService vectorStoreService = new VectorStoreService();
     private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
+    private static final String UPLOAD_HYJY = "/upload/HYJY";
 
     private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(1);
 
@@ -74,6 +77,12 @@ public class UploadFileServlet extends HttpServlet {
             this.getUploadFileList(req, resp);
         } else if (method.equals("pairing")) {
             this.pairing(req, resp);
+        } else if (method.equals("pairingContractedHotels")) {
+            this.pairingContractedHotels(req, resp);
+        } else if (method.equals("pairingMeetingMinutes")) {
+            this.pairingMeetingMinutes(req, resp);
+        } else if (method.equals("uploadMeetingMinutes")) {
+            this.uploadMeetingMinutes(req, resp);
         }
     }
 
@@ -99,6 +108,96 @@ public class UploadFileServlet extends HttpServlet {
                     Map<String, String> metadata = new HashMap<>();
                     metadata.put("category", category);
                     metadata.put("level", level);
+                    metadata.put("filename", "");
+                    metadata.put("seq", Long.toString(timestamp));
+                    List<UpsertRecord> upsertRecords = new ArrayList<>();
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(metadata)
+                            .withDocument(instruction)
+                            .build());
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(new HashMap<>(metadata))
+                            .withDocument(output)
+                            .build());
+                    String s = instruction.replaceAll("\n","");
+                    VectorCacheLoader.put2L2(s, timestamp, output);
+                    vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
+                }
+            }
+            medusaService.load(qaMap, category);
+        }).start();
+
+        PrintWriter out = resp.getWriter();
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+    }
+
+     private void pairingContractedHotels(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        InstructionPairRequestContractedHotels instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequestContractedHotels.class);
+        long timestamp = Instant.now().toEpochMilli();
+        new Thread(() -> {
+            List<InstructionData> instructionDataList = instructionPairRequest.getData();
+            String category = instructionPairRequest.getCategory();
+            String level = Optional.ofNullable(instructionPairRequest.getLevel()).orElse("user");
+            Map<String, String> qaMap = new HashMap<>();
+            for (InstructionData data : instructionDataList) {
+                for (String instruction : data.getInstruction()) {
+                    instruction = instruction.trim();
+                    String output = data.getOutput().trim();
+                    qaMap.put(instruction, output);
+                    Map<String, String> metadata = new HashMap<>();
+                    metadata.put("category", category);
+                    metadata.put("level", level);
+                    metadata.put("place", instructionPairRequest.getPlace());
+                    metadata.put("filename", "");
+                    metadata.put("seq", Long.toString(timestamp));
+                    List<UpsertRecord> upsertRecords = new ArrayList<>();
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(metadata)
+                            .withDocument(instruction)
+                            .build());
+                    upsertRecords.add(UpsertRecord.newBuilder()
+                            .withMetadata(new HashMap<>(metadata))
+                            .withDocument(output)
+                            .build());
+                    String s = instruction.replaceAll("\n","");
+                    VectorCacheLoader.put2L2(s, timestamp, output);
+                    vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
+                }
+            }
+            medusaService.load(qaMap, category);
+        }).start();
+
+        PrintWriter out = resp.getWriter();
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+    }
+
+     private void pairingMeetingMinutes(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        InstructionPairRequestContractedHotels instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequestContractedHotels.class);
+        long timestamp = Instant.now().toEpochMilli();
+        new Thread(() -> {
+            List<InstructionData> instructionDataList = instructionPairRequest.getData();
+            String category = instructionPairRequest.getCategory();
+            String level = Optional.ofNullable(instructionPairRequest.getLevel()).orElse("user");
+            Map<String, String> qaMap = new HashMap<>();
+            for (InstructionData data : instructionDataList) {
+                for (String instruction : data.getInstruction()) {
+                    instruction = instruction.trim();
+                    String output = data.getOutput().trim();
+                    qaMap.put(instruction, output);
+                    Map<String, String> metadata = new HashMap<>();
+                    metadata.put("category", category);
+                    metadata.put("level", level);
+                    metadata.put("place", instructionPairRequest.getPlace());
                     metadata.put("filename", "");
                     metadata.put("seq", Long.toString(timestamp));
                     List<UpsertRecord> upsertRecords = new ArrayList<>();
@@ -294,6 +393,118 @@ public class UploadFileServlet extends HttpServlet {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+        PrintWriter out = resp.getWriter();
+        out.write(gson.toJson(jsonResult));
+        out.flush();
+        out.close();
+    }
+
+    private void uploadMeetingMinutes(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession();
+//         String category = req.getParameter("category");
+//        String level = req.getParameter("level");
+//        String fileId = req.getParameter("fileId");
+
+        MeetingMinutesRequest meetingMinutesRequest = new MeetingMinutesRequest();
+        meetingMinutesRequest.setCategory(req.getParameter("category"));
+        meetingMinutesRequest.setLevel(req.getParameter("level"));
+        meetingMinutesRequest.setId(req.getParameter("fileId"));
+        meetingMinutesRequest.setNumber(req.getParameter("number"));
+        meetingMinutesRequest.setMeetingCategory(req.getParameter("meetingCategory"));
+        meetingMinutesRequest.setTitle(req.getParameter("title"));
+        meetingMinutesRequest.setDrafter(req.getParameter("drafter"));
+        meetingMinutesRequest.setMeetingPlace(req.getParameter("meetingPlace"));
+        meetingMinutesRequest.setHostingUnit(req.getParameter("hostingUnit"));
+        meetingMinutesRequest.setPhone(req.getParameter("phone"));
+        meetingMinutesRequest.setConfidentiality(req.getParameter("confidentiality"));
+        meetingMinutesRequest.setCopyNumber(req.getParameter("copyNumber"));
+        meetingMinutesRequest.setDistribution(req.getParameter("distribution"));
+        meetingMinutesRequest.setUrgency(req.getParameter("urgency"));
+        meetingMinutesRequest.setBody(req.getParameter("body"));
+        meetingMinutesRequest.setAuthorizer(req.getParameter("authorizer"));
+
+        String category = meetingMinutesRequest.getCategory();
+        String level = meetingMinutesRequest.getLevel();
+        String fileId = meetingMinutesRequest.getId();
+
+       String introduce = "编号为：" + meetingMinutesRequest.getNumber() +
+               "，会议类别为：" + meetingMinutesRequest.getMeetingCategory() +
+               "，主题为：" + meetingMinutesRequest.getTitle() +
+               "，拟稿人为：" + meetingMinutesRequest.getDrafter() +
+               "，会议地点为：" + meetingMinutesRequest.getMeetingPlace() +
+               "，会议承办单位为：" + meetingMinutesRequest.getHostingUnit() +
+               "，会议时间为：" + meetingMinutesRequest.getMeetingTime() +
+               "，电话为：" + meetingMinutesRequest.getPhone() +
+               "，密级为：" + meetingMinutesRequest.getConfidentiality() +
+               "，份号为：" + meetingMinutesRequest.getCopyNumber() +
+               "，分送单位为：" + meetingMinutesRequest.getDistribution() +
+               "，印发日期为：" + meetingMinutesRequest.getIssueDate() +
+               "，缓急为：" + meetingMinutesRequest.getUrgency() +
+               "，正文链接为：：" + meetingMinutesRequest.getBody() +
+               "，授权人为：" + meetingMinutesRequest.getAuthorizer() + "。";
+
+
+        JsonObject jsonResult = new JsonObject();
+        jsonResult.addProperty("status", "success");
+
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+            upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+            upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
+        }
+
+        List<File> files = new ArrayList<>();
+        Map<String, String> realNameMap = new HashMap<>();
+
+        try {
+            List<?> fileItems = upload.parseRequest(req);
+            for (Object fileItem : fileItems) {
+                FileItem fi = (FileItem) fileItem;
+                if (!fi.isFormField()) {
+                    String fileName = fi.getName();
+                    File file;
+                    String newName;
+                    do {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+                        newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
+                        newName = newName + fileName.substring(fileName.lastIndexOf("."));
+                        String lastFilePath = uploadDir + File.separator + newName;
+                        file = new File(lastFilePath);
+                        session.setAttribute(newName, file.toString());
+                        session.setAttribute("lastFilePath", lastFilePath);
+                    } while (file.exists());
+                    fi.write(file);
+                    files.add(file);
+                    realNameMap.put(file.getName(), fileName);
+                }
+            }
+        } catch (Exception ex) {
+            jsonResult.addProperty("msg", "解析文件出现错误--会议纪要");
+            ex.printStackTrace();
+        }
+
+        List<Map<String, String>> data = new ArrayList<>();
+        if (!files.isEmpty()) {
+            String content = "";
+            for (File file : files) {
+                content = fileService.getFileContent(file);
+                if (!StringUtils.isEmpty(content)) {
+                    String filename = realNameMap.get(file.getName());
+                    Map<String, String> map = new HashMap<>();
+                    map.put("filename", filename);
+                    map.put("filepath", file.getName());
+                    data.add(map);
+                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
+                }
+            }
+        }
+        if (!jsonResult.has("msg")) {
+            jsonResult.addProperty("data", gson.toJson(data));
+            jsonResult.addProperty("status", "success");
         }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));

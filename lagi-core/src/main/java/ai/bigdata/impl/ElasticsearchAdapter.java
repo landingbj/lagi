@@ -22,6 +22,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -62,6 +63,19 @@ public class ElasticsearchAdapter implements IBigdata {
 
     @Override
     public List<TextIndexData> search(String keyword, String category) {
+         // 检查索引是否存在
+        BooleanResponse indexExistsResponse = null;
+          try {
+            indexExistsResponse = client.indices().exists(i -> i.index(category));
+        } catch (IOException e) {
+            logger.error("Error while checking index existence", e);
+            return new ArrayList<>();
+        }
+
+        if (!indexExistsResponse.value()) {
+            logger.warn("Index {} does not exist", category);
+            return new ArrayList<>();
+        }
         SearchResponse<TextIndexData> searchResponse = null;
         try {
             searchResponse = client.search(s -> s.index(category).
