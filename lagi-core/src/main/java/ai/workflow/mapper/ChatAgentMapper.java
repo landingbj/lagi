@@ -1,8 +1,6 @@
 package ai.workflow.mapper;
 
-import ai.agent.chat.ChatAgent;
-import ai.common.pojo.Configuration;
-import ai.config.pojo.AgentConfig;
+import ai.agent.chat.AbstractChatAgent;
 import ai.learn.questionAnswer.KShingle;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.medusa.utils.LCS;
@@ -11,7 +9,6 @@ import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
-import ai.utils.LagiGlobal;
 import ai.utils.WorkPriorityWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.WorkerGlobal;
@@ -24,17 +21,10 @@ import java.util.*;
 
 @Slf4j
 public class ChatAgentMapper extends BaseMapper implements IMapper {
-//    protected static final Map<String, AgentConfig> AGENT_CONFIG_MAP = new HashMap<>();
 
     @Setter
-    protected ChatAgent chatAgent;
+    protected AbstractChatAgent chatAgent;
 
-//    static {
-//        Configuration config = LagiGlobal.getConfig();
-//        for (AgentConfig agentConfig : config.getAgents()) {
-//            AGENT_CONFIG_MAP.put(agentConfig.getDriver(), agentConfig);
-//        }
-//    }
 
     public String getAgentName() {
         return chatAgent.getAgentConfig().getName();

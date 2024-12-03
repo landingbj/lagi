@@ -7,7 +7,7 @@ import ai.openai.pojo.ChatCompletionResult;
 import lombok.Getter;
 
 @Getter
-abstract public class ChatAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
+abstract public class AbstractChatAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
     protected AgentConfig agentConfig;
 
     @Override

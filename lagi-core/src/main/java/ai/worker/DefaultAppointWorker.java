@@ -4,7 +4,6 @@ import ai.agent.Agent;
 import ai.worker.pojo.WorkData;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,15 +18,7 @@ public class DefaultAppointWorker<T, R> extends Worker<T, R> {
             return;
         }
         for (Agent<T, R> agent : agentList){
-            Class<? extends Agent> clazz = agent.getClass();
-            try {
-                Field field = clazz.getDeclaredField("agentName");
-                field.setAccessible(true);
-                String name = (String)field.get(agent);
-                agentMap.put(name, agent);
-            }catch ( Exception e) {
-                log.error("agent list convert to map  error ", e);
-            }
+            agentMap.put(agent.getAgentName(), agent);
         }
     }
 

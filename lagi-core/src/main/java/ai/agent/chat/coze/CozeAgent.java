@@ -1,6 +1,6 @@
 package ai.agent.chat.coze;
 
-import ai.agent.chat.ChatAgent;
+import ai.agent.chat.BaseChatAgent;
 import ai.agent.pojo.*;
 import ai.common.exception.RRException;
 import ai.config.pojo.AgentConfig;
@@ -24,19 +24,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Getter
-public class CozeAgent extends ChatAgent {
+public class CozeAgent extends BaseChatAgent {
     private static final Logger logger = LoggerFactory.getLogger(CozeAgent.class);
     private static final Gson gson = new Gson();
     private static final String CHAT_URL = "https://api.coze.cn/v3/chat";
     private static final String QUERY_STATUS_URL = "https://api.coze.cn/v3/chat/retrieve";
     private static final String QUERY_RESULT_URL = "https://api.coze.cn/v3/chat/message/list";
     private final Integer maxLoopTimes = 120;
-    private final String agentName;
 
 
     public CozeAgent(AgentConfig agentConfig) {
-        this.agentConfig = agentConfig;
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
     }
 
 

@@ -1,8 +1,6 @@
 package ai.workflow.mapper;
 
-import ai.agent.chat.qianfan.XiaoxinAgent;
 import ai.llm.pojo.ChatCompletionResultWithSource;
-import ai.manager.AgentManager;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -13,7 +11,6 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +18,6 @@ import java.util.List;
 public class XiaoxinMapper extends ChatAgentMapper implements IMapper {
     protected int priority;
     private static final Logger logger = LoggerFactory.getLogger(XiaoxinMapper.class);
-//    private final XiaoxinAgent xiaoxinAgent = AgentManager.getInstance().get("小信智能体");
 
     private String badcase = "小信最近学习了";
 

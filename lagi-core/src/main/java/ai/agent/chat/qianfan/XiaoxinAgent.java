@@ -1,6 +1,6 @@
 package ai.agent.chat.qianfan;
 
-import ai.agent.chat.ChatAgent;
+import ai.agent.chat.BaseChatAgent;
 import ai.agent.pojo.XiaoxinRequest;
 import ai.agent.pojo.XiaoxinResponse;
 import ai.common.exception.RRException;
@@ -11,7 +11,6 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.OkHttpUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,17 +18,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class XiaoxinAgent extends ChatAgent {
+public class XiaoxinAgent extends BaseChatAgent {
     private static final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(XiaoxinAgent.class);
     private static final String BASE_URL = "https://api-ngd.baidu.com/core/v3/query";
     private static final Logger log = LoggerFactory.getLogger(XiaoxinAgent.class);
-    @Getter
-    private final String agentName;
+
 
     public XiaoxinAgent(AgentConfig agentConfig) {
-        this.agentConfig = agentConfig;
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
     }
 
     @Override

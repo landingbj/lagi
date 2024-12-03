@@ -1,7 +1,7 @@
 package ai.worker.chat;
 
 import ai.agent.Agent;
-import ai.agent.chat.ChatAgent;
+import ai.agent.chat.AbstractChatAgent;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.worker.DefaultBestWorker;
@@ -18,7 +18,7 @@ public class BestChatAgentWorker extends DefaultBestWorker<ChatCompletionRequest
         super(agents);
         mappers = agents.stream().map(agent -> {
             ChatAgentMapper chatAgentMapper = new ChatAgentMapper();
-            chatAgentMapper.setChatAgent((ChatAgent) agent);
+            chatAgentMapper.setChatAgent((AbstractChatAgent) agent);
             return chatAgentMapper;
         }).collect(Collectors.toList());
     }

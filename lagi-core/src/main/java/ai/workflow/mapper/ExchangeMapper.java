@@ -1,6 +1,5 @@
 package ai.workflow.mapper;
 
-import ai.agent.chat.qianfan.ExchangeAgent;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;

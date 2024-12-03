@@ -1,7 +1,13 @@
 package ai.agent;
 
 
+import lombok.Getter;
+
+@Getter
 public abstract class Agent<T, R>{
+
+    protected String agentName;
+
     public abstract void connect();
 
     public abstract void terminate();

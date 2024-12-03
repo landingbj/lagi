@@ -1,6 +1,6 @@
 package ai.agent.chat.rag;
 
-import ai.agent.chat.ChatAgent;
+import ai.agent.chat.BaseChatAgent;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.RAGFunction;
@@ -8,26 +8,19 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.OkHttpUtil;
 import com.google.gson.Gson;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
 @Slf4j
-public class RagAgent extends ChatAgent {
+public class RagAgent extends BaseChatAgent {
 
     private final Gson gson = new Gson();
 
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
 
-    private final AgentConfig agentConfig;
-
-    @Getter
-    private final String agentName;
-
     public RagAgent(AgentConfig agentConfig) {
-        this.agentConfig = agentConfig;
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ai.agent.chat.qianfan;
 
-import ai.agent.chat.ChatAgent;
+import ai.agent.chat.BaseChatAgent;
 import ai.agent.pojo.*;
 import ai.common.exception.RRException;
 import ai.common.utils.LRUCache;
@@ -11,7 +11,6 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.OkHttpUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,18 +19,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ExchangeAgent  extends ChatAgent {
+public class QianFanAgent extends BaseChatAgent {
     private static final Logger logger = LoggerFactory.getLogger(StockAgent.class);
     private static final Gson gson = new Gson();
     private static final String BASE_URL = "https://qianfan.baidubce.com/v2/app/conversation/runs";
     private static final String NEW_CONVERSATION_URL = "https://qianfan.baidubce.com/v2/app/conversation";
     private static final LRUCache<String, String> sessionCache = new LRUCache<>(1000, 5, TimeUnit.DAYS);
-    @Getter
-    private final String agentName;
 
-    public ExchangeAgent(AgentConfig agentConfig) {
-        this.agentConfig = agentConfig;
-        this.agentName = agentConfig.getName();
+    public QianFanAgent(AgentConfig agentConfig) {
+        super(agentConfig);
     }
 
     @Override
