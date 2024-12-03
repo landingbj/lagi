@@ -1,10 +1,7 @@
 package ai.agent.social;
 
-import ai.agent.Agent;
 import ai.agent.AgentGlobal;
-import ai.agent.exception.ConnectionTimeoutException;
-import ai.agent.exception.StartAgentException;
-import ai.agent.exception.StopAgentException;
+import ai.agent.Agent;
 import ai.agent.exception.TerminateAgentException;
 import ai.agent.pojo.*;
 import ai.agent.service.RpaService;
@@ -17,7 +14,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class SocialAgent extends Agent {
+public abstract class SocialAgent extends Agent<AgentData, AgentData> {
     private static final String SAAS_URL = AgentGlobal.SAAS_URL;
     private static final Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
@@ -43,6 +40,10 @@ public abstract class SocialAgent extends Agent {
 
     public SocialAgentParam getParam() {
         return param;
+    }
+
+    public AgentData communicate(AgentData data){
+        return null;
     }
 
     @Override

@@ -1,10 +1,13 @@
 package ai.worker;
 
-public abstract class Worker {
-    public abstract void work();
 
-    public abstract void start();
+import ai.worker.pojo.WorkData;
 
-    public abstract void stop();
+public abstract class Worker<T, R> {
+    public abstract R work(WorkData<T> data);
+
+    public abstract R call(WorkData<T> data);
+
+    public abstract void notify(WorkData<T> data);
 
 }

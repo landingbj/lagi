@@ -36,6 +36,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
         MultimodalAIManager.register(models, functions);
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
         OcrConfig.init(functions.getImage2ocr());
+        AgentManager.getInstance().register(agents);
+        WorkerManager.getInstance().register(workers);
     }
 
 

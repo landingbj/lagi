@@ -7,7 +7,6 @@ import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
-import ai.utils.OkHttpUtil;
 import ai.worker.WorkerGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,25 +31,18 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
     private  String badcase = "很抱歉";
 
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
+
+
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
-        String url = (String) this.getParameters().get(WorkerGlobal.MAPPER_RAG_URL);
-        String responseJson = null;
-        try {
-            responseJson = OkHttpUtil.post(url + "/v1/chat/completions", gson.toJson(chatCompletionRequest));
-        } catch (IOException e) {
-            String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
-            responseJson = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
-            logger.error("RagMapper.myMapping: OkHttpUtil.post error", e);
-        }
-        ChatCompletionResult chatCompletionResult = null;
+
+        ChatCompletionResult chatCompletionResult = chatAgent.communicate(chatCompletionRequest);
         double calPriority = 0;
         ChatCompletionResultWithSource chatCompletionResultWithSource;
-        if (responseJson != null) {
-            chatCompletionResult = gson.fromJson(responseJson, ChatCompletionResult.class);
+        if (chatCompletionResult != null) {
             if(chatCompletionResult.getChoices() != null
                     && !chatCompletionResult.getChoices().isEmpty()
                     && chatCompletionResult.getChoices().get(0).getMessage().getContext() == null) {

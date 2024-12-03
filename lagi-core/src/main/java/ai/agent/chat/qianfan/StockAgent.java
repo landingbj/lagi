@@ -1,16 +1,20 @@
-package ai.agent.chat;
+package ai.agent.chat.qianfan;
 
+import ai.agent.chat.ChatAgent;
 import ai.agent.pojo.NewConversationRequest;
 import ai.agent.pojo.NewConversationResponse;
 import ai.agent.pojo.StockRequest;
 import ai.agent.pojo.StockResponse;
+import ai.common.exception.RRException;
 import ai.config.pojo.AgentConfig;
+import ai.llm.utils.LLMErrorConstants;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.common.utils.LRUCache;
 import ai.utils.OkHttpUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,22 +29,30 @@ public class StockAgent extends ChatAgent {
     private static final String BASE_URL = "https://qianfan.baidubce.com/v2/app/conversation/runs";
     private static final String NEW_CONVERSATION_URL = "https://qianfan.baidubce.com/v2/app/conversation";
     private static final LRUCache<String, String> sessionCache = new LRUCache<>(1000, 5, TimeUnit.DAYS);
-
+    @Getter
+    private final String agentName;
 
     public StockAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
+        this.agentName = agentConfig.getName();
     }
 
-    public ChatCompletionResult chat(ChatCompletionRequest request) throws IOException {
+    @Override
+    public ChatCompletionResult communicate(ChatCompletionRequest request) {
         StockRequest stockRequest = convertRequest(request, this.agentConfig);
         String json = gson.toJson(stockRequest);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("X-Appbuilder-Authorization", "Bearer " + this.agentConfig.getToken());
-        String responseJson = OkHttpUtil.post(BASE_URL, headers, new HashMap<>(), json);
-        System.out.println(responseJson);
-        StockResponse response = gson.fromJson(responseJson, StockResponse.class);
-        return convertResult(response);
+        try {
+            String responseJson = OkHttpUtil.post(BASE_URL, headers, new HashMap<>(), json);
+            System.out.println(responseJson);
+            StockResponse response = gson.fromJson(responseJson, StockResponse.class);
+            return convertResult(response);
+        }catch (Exception e) {
+            logger.error("StockAgent error", e);
+        }
+        throw new RRException(LLMErrorConstants.OTHER_ERROR, "StockAgent error");
     }
 
     private StockRequest convertRequest(ChatCompletionRequest request, AgentConfig agentConfig) {

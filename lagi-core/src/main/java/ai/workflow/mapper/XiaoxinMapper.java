@@ -1,7 +1,8 @@
 package ai.workflow.mapper;
 
-import ai.agent.chat.XiaoxinAgent;
+import ai.agent.chat.qianfan.XiaoxinAgent;
 import ai.llm.pojo.ChatCompletionResultWithSource;
+import ai.manager.AgentManager;
 import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -20,7 +21,7 @@ import java.util.List;
 public class XiaoxinMapper extends ChatAgentMapper implements IMapper {
     protected int priority;
     private static final Logger logger = LoggerFactory.getLogger(XiaoxinMapper.class);
-    private final XiaoxinAgent xiaoxinAgent = new XiaoxinAgent(AGENT_CONFIG_MAP.get("ai.agent.citic.XiaoxinAgent"));
+//    private final XiaoxinAgent xiaoxinAgent = AgentManager.getInstance().get("小信智能体");
 
     private String badcase = "小信最近学习了";
 
@@ -33,16 +34,12 @@ public class XiaoxinMapper extends ChatAgentMapper implements IMapper {
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
-        try {
-            chatCompletionResult = xiaoxinAgent.chat(chatCompletionRequest);
-            if(chatCompletionRequest != null) {
-                ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
-                BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
-                chatCompletionResult = chatCompletionResultWithSource;
-                calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
-            }
-        } catch (IOException e) {
-            logger.error("XiaoxinMapper.myMapping: chat error", e);
+        chatCompletionResult = chatAgent.communicate(chatCompletionRequest);
+        if(chatCompletionRequest != null) {
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+            BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
+            chatCompletionResult = chatCompletionResultWithSource;
+            calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
         }
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
         result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);

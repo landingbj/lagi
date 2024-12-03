@@ -5,13 +5,11 @@ import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.TextBlock;
 import ai.dto.*;
 import ai.learn.questionAnswer.KShingleFilter;
-import ai.response.ChunkDataResponse;
 import ai.response.CropRectResponse;
 import ai.servlet.RestfulServlet;
 import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Post;
 import ai.sevice.PdfService;
-import ai.utils.PDFTextExtractor;
 import ai.utils.PdfUtil;
 import ai.vector.VectorStoreService;
 import com.google.common.collect.Lists;
@@ -35,158 +33,7 @@ public class PdfPreviewServlet extends RestfulServlet {
 
     private static final String UPLOAD_DIR = "/upload";
 
-//    private KShingleFilter kShingleFilter = new KShingleFilter(4, 0.3, 0.5);
 
-    @Post("genPdfCrop")
-    public List<List<String>> searchTextPCoordinate(@Body PdfSearchRequest request) {
-        String fileDir = makeCropImageDir(cropImageBaseDir + request.getFileName().split("\\.")[0]);
-        int extend = request.getExtend() == null ? 50 : request.getExtend();
-        List<List<String>>  res  = new ArrayList<>();
-        List<String> searchWords = request.getSearchWords();
-        for (String word : searchWords) {
-            List<String>  paths =  new ArrayList<>();
-            List<TextBlock> lists = pdfService.searchTextPCoordinate(request.getPdfPath(), word);
-            if(lists.isEmpty()) {
-                continue;
-            }
-            List<List<TextBlock>> pagesList = new ArrayList<>();
-            List<TextBlock> pageList = new ArrayList<>();
-            int lastPageIndex = lists.get(0).getPageNo();
-            for (TextBlock list : lists) {
-                if(Objects.equals(lastPageIndex, list.getPageNo())) {
-                    pageList.add(list);
-                } else {
-                    pagesList.add(pageList);
-                    pageList = new ArrayList<>();
-                    pageList.add(list);
-                    lastPageIndex = list.getPageNo();
-                }
-            }
-            pagesList.add(pageList);
-            for (List<TextBlock> plist : pagesList) {
-                List<Integer> rect = calcCropRect(plist, extend);
-                int pageIndex = (int) Math.floor(plist.get(0).getPageNo() - 1);
-                String cropImage = pdfService.cropPageImage(request.getPdfPath(), fileDir, pageIndex, rect.get(0), rect.get(1), rect.get(2), rect.get(3));
-                paths.add(cropImage);
-            }
-            res.add(paths);
-        }
-        return res;
-    }
-
-
-    @Post("filterChunk")
-    public List<ChunkDataResponse> filterChunk(@Body ChunkFilterRequest chunkFilterRequest) {
-        List<IndexSearchData> indexSearchData = vectorStoreService.searchByIds(chunkFilterRequest.getChunkIds(), chunkFilterRequest.getCategory());
-        Set<String> context = new HashSet<>();
-        KShingleFilter kShingleFilter = new KShingleFilter(chunkFilterRequest.getResult().length(), 0.3, 0.5);
-        return indexSearchData.stream()
-                .filter(i-> {
-                    if(!context.add(i.getText())) {
-                        return false;
-                    }
-                    if(i.getFilepath() != null && !i.getFilepath().isEmpty()) {
-                        boolean similar = kShingleFilter.isSimilar(chunkFilterRequest.getResult(), i.getText());
-                        System.out.println(similar);
-                        return similar;
-                    }
-                    return false;
-                })
-                .map(i -> ChunkDataResponse.builder()
-                        .chunk(i.getText())
-                        .filePath(i.getFilepath().get(0))
-                        .filename(i.getFilename().get(0))
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-
-
-    private boolean isSimilar(KShingleFilter kShingleFilter, String text, String result) {
-        List<String> objects = splitChunk(text, 512);
-        for (String s : objects) {
-            boolean similar = kShingleFilter.isSimilar(result, s);
-            if(similar) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String bigChunkSearch(KShingleFilter kShingleFilter, String text, String result) {
-        List<String> objects = splitChunk(text, 512);
-        for (String s : objects) {
-            boolean similar = kShingleFilter.isSimilar(result, s);
-            System.out.println(text);
-            System.out.println(similar);
-            if(similar) {
-                return s;
-            }
-        }
-        return text;
-    }
-
-    private static List<String> splitChunk(String text, int size) {
-        List<String> objects = new ArrayList<>();
-        for(int i = 0; i < text.length(); i+=size) {
-            int limit = Math.min(i + size, text.length());
-            String substring = text.substring(i, limit);
-            objects.add(substring);
-        }
-        return objects;
-    }
-
-
-
-    @Post("crop")
-    public List<String> crop(HttpServletRequest request,  @Body CropRequest cropRequest) {
-        String baseDir = makeCropImageDir(request.getSession().getServletContext().getRealPath("static") + "/" + cropImageBaseDir);
-        Integer extend = cropRequest.getExtend() == null ? 200 : cropRequest.getExtend();
-        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
-
-        List<IndexSearchData> indexSearchData = vectorStoreService.searchByIds(Lists.newArrayList(cropRequest.getChunkId()), cropRequest.getCategory());
-        if(indexSearchData == null || indexSearchData.isEmpty()) {
-            return Collections.emptyList();
-        }
-        if(indexSearchData.get(0).getFilepath() == null  || indexSearchData.get(0).getFilepath().isEmpty()) {
-            return Collections.emptyList();
-        }
-        String chunk = indexSearchData.get(0).getText().replaceAll("\\s+", "");
-        String filePath = uploadDir + File.separator + indexSearchData.get(0).getFilepath().get(0);
-        File uploadFile = new File(filePath);
-        if(!uploadFile.exists()) {
-            return Collections.emptyList();
-        }
-        filePath = convertDoc2Pdf(uploadFile, filePath);
-        List<TextBlock> pCoordinates = null;
-        Matcher matcher = qaMather(chunk);
-        if(matcher != null) {
-            pCoordinates = searchPdfByQA(matcher, filePath);
-        }
-        if(pCoordinates == null) {
-            pCoordinates = pdfService.searchTextPCoordinate(filePath, chunk);
-        }
-        Map<Integer, List<TextBlock>> pageCoordinateMap = pCoordinates.stream().collect(Collectors.groupingBy(TextBlock::getPageNo));
-        Map<Integer, String> cropMap =  new HashMap<>();
-        KShingleFilter kShingleFilter = new KShingleFilter(cropRequest.getResult().length(), 0.3, 0.5);
-        for (Map.Entry<Integer, List<TextBlock>> entry : pageCoordinateMap.entrySet()) {
-            List<TextBlock> pCoordinate = entry.getValue();
-            String ck = getChunkByMathOrPdfCoordinate(matcher, chunk, pCoordinate);
-            boolean similar = kShingleFilter.isSimilar(cropRequest.getResult(), ck);
-            if(!similar) {
-                continue;
-            }
-            List<Integer> rect = calcCropRect(pCoordinate, extend);
-            int pageIndex = entry.getKey() - 1;
-            String cropImage = pdfService.cropPageImage(filePath, baseDir, pageIndex, rect.get(0), rect.get(1), rect.get(2), rect.get(3));
-            if(cropImage != null) {
-                File file = new File(cropImage);
-                String path = "static/" +  cropImageBaseDir + file.getName();
-                cropMap.put(entry.getKey(), path);
-            }
-        }
-        return pCoordinates.stream().map(TextBlock::getPageNo).distinct().map(cropMap::get).filter(Objects::nonNull).collect(Collectors.toList());
-    }
 
     private String makeCropImageDir(String request) {
         //获取static文件夹的路径
@@ -380,23 +227,8 @@ public class PdfPreviewServlet extends RestfulServlet {
     }
 
     private Matcher qaMather(String chunk) {
-
-//        故障分类:硬件比较仪。编号85位号:位10/11解决方法及建议:未用。
-//        故障分类	位号	故障名称	故障原因	解决方法及建议
-//        故障分类:硬件比较仪。编号85位号:位15故障名称:定子电流U标号（1=+）
         List<Pattern> patterns = Lists.newArrayList(
-            Pattern.compile("状态代码:(.+)名称:(.+)原因/描述:(.+)解决办法:(.+)"),
-            Pattern.compile("状态代码:(.+)名称:(.+)描述:(.+)故障解决办法:(.+)"),
-            Pattern.compile("状态代码:(.+)名称:(.+)描述:(.+)解决办法:(.+)"),
-            Pattern.compile("序号:(.+)故障:(.+)原因/描述:(.+)解决办法:(.+)"),
-            Pattern.compile("序号:(.+)报警字:(.+)报警信息:(.+)故障解决办法:(.+)"),
-            Pattern.compile("故障分类:(.+)位号:(.+)故障名称:(.+)故障原因:(.+)解决方法及建议:(.+)"),
-            Pattern.compile("故障名称:(.+)故障描述:(.+)故障原因:(.+)故障处理:(.+)"),
-            Pattern.compile("故障名称:(.+)故障描述:(.+)故障处理:(.+)"),
-            Pattern.compile("故障分类:(.+)位号:(.+)解决方法及建议:(.+)"),
-            Pattern.compile("故障分类:(.+)位号:(.+)故障名称:(.+)"),
-            Pattern.compile("序号:(.+)故障:(.+)原因/描述:(.+)"),
-            Pattern.compile("序号:(.+)故障:(.+)故障解决方法:(.+)")
+
         );
         for (Pattern p : patterns) {
             Matcher matcher = p.matcher(chunk);

@@ -6,7 +6,7 @@ import ai.agent.social.*;
 import ai.config.pojo.AgentConfig;
 
 public class AgentFactory {
-    public static Agent getAgent(AgentConfig agentConfig, AgentParam agentParam) {
+    public static SocialAgent getAgent(AgentConfig agentConfig, AgentParam agentParam) {
         switch (agentConfig.getDriver()) {
             case AgentGlobal.WECHAT_AGENT_CLASS:
                 return new WechatAgent(agentParam);

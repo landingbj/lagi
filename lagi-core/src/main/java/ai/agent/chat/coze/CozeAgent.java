@@ -1,5 +1,6 @@
-package ai.agent.chat;
+package ai.agent.chat.coze;
 
+import ai.agent.chat.ChatAgent;
 import ai.agent.pojo.*;
 import ai.common.exception.RRException;
 import ai.config.pojo.AgentConfig;
@@ -30,10 +31,12 @@ public class CozeAgent extends ChatAgent {
     private static final String QUERY_STATUS_URL = "https://api.coze.cn/v3/chat/retrieve";
     private static final String QUERY_RESULT_URL = "https://api.coze.cn/v3/chat/message/list";
     private final Integer maxLoopTimes = 120;
+    private final String agentName;
 
 
     public CozeAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
+        this.agentName = agentConfig.getName();
     }
 
 
@@ -55,7 +58,8 @@ public class CozeAgent extends ChatAgent {
         return gson.fromJson(s, responseType);
     }
 
-    public ChatCompletionResult chat(ChatCompletionRequest request) {
+    @Override
+    public ChatCompletionResult communicate(ChatCompletionRequest request) {
         CozeChatRequest chatRequest = convertRequest(request, agentConfig);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");

@@ -15,4 +15,5 @@ public class AgentConfig {
     private String appId;
     private String userId;
     private String wrongCase;
+    private String endpoint;
 }

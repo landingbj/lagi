@@ -7,11 +7,14 @@ import ai.agent.pojo.SocialReceiveData;
 import ai.agent.pojo.SocialSendData;
 import ai.agent.social.SocialAgent;
 import ai.config.pojo.AgentConfig;
+import ai.worker.pojo.WorkData;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class RobotWorker extends SocialWorker {
     private static final long SLEEP_TIME = 1000 * 5;
-    private boolean running = false;
+    private AtomicBoolean running = new AtomicBoolean(false);
     private final String username;
 
     public RobotWorker(AgentConfig agentConfig) {
@@ -33,12 +36,11 @@ public class RobotWorker extends SocialWorker {
     }
 
     @Override
-    public void work() {
-        this.running = true;
+    public Boolean work(WorkData<Boolean> data) {
         agent.connect();
         agent.start();
 
-        while (running) {
+        while (running.get()) {
             SocialReceiveData receiveData = (SocialReceiveData) agent.receive();
             if (receiveData.getStatus().equals(AgentGlobal.SUCCESS)) {
                 String text = getCompletionResult(receiveData.getData());
@@ -50,16 +52,21 @@ public class RobotWorker extends SocialWorker {
             sleep(SLEEP_TIME);
         }
         agent.stop();
+        return null;
+    }
+
+
+    @Override
+    public Boolean call(WorkData<Boolean> data) {
+        return null;
     }
 
     @Override
-    public void start() {
-        Thread workerThread = new Thread(this::work);
-        workerThread.start();
-    }
-
-    @Override
-    public void stop() {
-        running = false;
+    public void notify(WorkData<Boolean> data) {
+        running.set(data.getData());
+        if(running.get()) {
+            Thread workerThread = new Thread(()->work(null));
+            workerThread.start();
+        }
     }
 }

@@ -5,25 +5,29 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.servlet.BaseServlet;
 import ai.utils.SensitiveWordUtil;
+import ai.worker.DefaultWorker;
 import ai.worker.audio.Asr4FlightsWorker;
-import ai.worker.citic.CiticAgentWorker;
 import ai.worker.pojo.Asr4FlightData;
+import ai.worker.pojo.WorkData;
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+@Slf4j
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 1024 * 1024 * 5, maxRequestSize = 1024 * 1024 * 5)
 public class WorkerApiServlet extends BaseServlet {
     private final Asr4FlightsWorker asr4FlightsWorker = new Asr4FlightsWorker();
-    private final CiticAgentWorker citicAgentWorker = new CiticAgentWorker();
+    private final DefaultWorker defaultWorker = new DefaultWorker();
+
+
     private static final Gson gson = new Gson();
 
     @Override
@@ -39,11 +43,12 @@ public class WorkerApiServlet extends BaseServlet {
         }
     }
 
-    public void completions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    public void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-        ChatCompletionResult chatCompletionResult = citicAgentWorker.process(chatCompletionRequest, url);
+        WorkData<ChatCompletionRequest> chatCompletionRequestWorkData = new WorkData<>();
+        chatCompletionRequestWorkData.setData(chatCompletionRequest);
+        ChatCompletionResult chatCompletionResult = defaultWorker.work(chatCompletionRequestWorkData);
         chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
         responsePrint(resp, gson.toJson(chatCompletionResult));
     }
@@ -77,7 +82,10 @@ public class WorkerApiServlet extends BaseServlet {
             while ((bytesRead = input.read(buffer)) != -1) {
                 output.write(buffer, 0, bytesRead);
             }
-            result = asr4FlightsWorker.process(Asr4FlightData.builder().resPath(resPath).build());
+            WorkData<Asr4FlightData> chatCompletionRequestWorkData = new WorkData<>();
+            Asr4FlightData build = Asr4FlightData.builder().resPath(resPath).build();
+            chatCompletionRequestWorkData.setData(build);
+            result = asr4FlightsWorker.call(chatCompletionRequestWorkData);
         } catch (IOException e) {
             result = new AsrResponse(1, "识别失败");
             e.printStackTrace();

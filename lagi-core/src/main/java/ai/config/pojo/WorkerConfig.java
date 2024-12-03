@@ -9,4 +9,5 @@ public class WorkerConfig {
     @JsonProperty("worker")
     private String worker;
     private String agent;
+    private String agents;
 }

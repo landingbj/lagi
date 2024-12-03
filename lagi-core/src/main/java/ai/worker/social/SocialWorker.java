@@ -1,6 +1,7 @@
 package ai.worker.social;
 
 import ai.agent.Agent;
+import ai.agent.social.SocialAgent;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -11,8 +12,8 @@ import ai.worker.WorkerGlobal;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class SocialWorker extends Worker {
-    protected Agent agent;
+public abstract class SocialWorker extends Worker<Boolean, Boolean> {
+    protected SocialAgent agent;
 
     protected CompletionsService completionsService = new CompletionsService();
 

@@ -19,23 +19,22 @@ import cn.hutool.core.bean.BeanUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.util.*;
 
 
 @Slf4j
 public class ChatAgentMapper extends BaseMapper implements IMapper {
-    protected static final Map<String, AgentConfig> AGENT_CONFIG_MAP = new HashMap<>();
+//    protected static final Map<String, AgentConfig> AGENT_CONFIG_MAP = new HashMap<>();
 
     @Setter
-    private ChatAgent chatAgent;
+    protected ChatAgent chatAgent;
 
-    static {
-        Configuration config = LagiGlobal.getConfig();
-        for (AgentConfig agentConfig : config.getAgents()) {
-            AGENT_CONFIG_MAP.put(agentConfig.getDriver(), agentConfig);
-        }
-    }
+//    static {
+//        Configuration config = LagiGlobal.getConfig();
+//        for (AgentConfig agentConfig : config.getAgents()) {
+//            AGENT_CONFIG_MAP.put(agentConfig.getDriver(), agentConfig);
+//        }
+//    }
 
     public String getAgentName() {
         return chatAgent.getAgentConfig().getName();
@@ -92,16 +91,12 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
-        try {
-            chatCompletionResult = chatAgent.chat(chatCompletionRequest);
-            if(chatCompletionRequest != null) {
-                ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
-                BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
-                chatCompletionResult = chatCompletionResultWithSource;
-                calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
-            }
-        } catch (IOException e) {
-            log.error("ExchangeMapper.myMapping: chat error", e);
+        chatCompletionResult = chatAgent.communicate(chatCompletionRequest);
+        if(chatCompletionRequest != null) {
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
+            BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
+            chatCompletionResult = chatCompletionResultWithSource;
+            calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
         }
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
         result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);
