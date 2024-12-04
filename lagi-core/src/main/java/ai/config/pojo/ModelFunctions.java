@@ -42,6 +42,10 @@ public class ModelFunctions {
     private List<Backend> speech2clone;
     @JsonProperty("image2ocr")
     private List<Backend> image2ocr;
+    @JsonProperty("doc2ocr")
+    private List<Backend> doc2orc;
+    @JsonProperty("doc2instruct")
+    private List<Backend> doc2instruct;
 
     @JsonCreator
     public ModelFunctions(

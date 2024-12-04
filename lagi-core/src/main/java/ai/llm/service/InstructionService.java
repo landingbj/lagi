@@ -1,17 +1,16 @@
 package ai.llm.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import ai.llm.pojo.InstructionEntity;
+import ai.manager.LlmInstructionManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 
 public class InstructionService {
     private static final int[] CHUNK_SIZE = {512, 1000, 4000};
-    private final CompletionsService completionService = new CompletionsService();
+    private final CompletionsService completionService = new CompletionsService(LlmInstructionManager.getInstance());
 
     public List<InstructionEntity> getInstructionList(String content) {
         int chunkSize = CHUNK_SIZE[0];

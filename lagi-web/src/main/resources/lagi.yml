@@ -54,6 +54,8 @@ models:
       - model: vision
         driver: ai.video.adapter.impl.AlibabaVisionAdapter
         oss: alibaba
+      - model: ocr
+        driver: ai.ocr.impl.AlibabaLangOcrAdapter
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
     access_key_id: your-access-key-id
@@ -75,7 +77,7 @@ models:
       - model: enhance
         driver: ai.image.adapter.impl.BaiduAiImageAdapter
         api_key: your-api-key
-        secret_key: 9your-sercet-key
+        secret_key: your-sercet-key
       - model: aiVideo
         driver: ai.video.adapter.impl.BaiduVideoAdapter
         api_key: your-api-key
@@ -210,22 +212,31 @@ stores:
       bucket_name: ai-service-oss
       enable: true
 
-  bigdata:
+  text:
     - name: elasticsearch
-      driver: ai.bigdata.impl.ElasticsearchAdapter
+      driver: ai.bigdata.impl.ElasticSearchAdapter
       host: localhost
       port: 9200
       enable: true
 
-  rag:
+  database:
+    name: mysql
+    jdbcUrl: you-jdbc-url
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: your-username
+    password: your-password
+
+  rag: # Retrieval-Augmented Generation (RAG) is a framework designed to enhance the accuracy and relevance of large language models by integrating external knowledge retrieval.
     vector: chroma
     fulltext: elasticsearch
     graph: landing
-    enable: true
+    enable: false
     priority: 10
     default: "Please give prompt more precisely"
+    track:
+      enable: true
 
-  medusa:
+  medusa: # Medusa is a caching tool designed to accelerate the response of large models.
     enable: false
     algorithm: hash
 
@@ -307,6 +318,12 @@ functions:
       enable: true
       priority: 10
 
+  image2ocr:
+    - backend: qwen
+      model: ocr
+      enable: true
+      priority: 10
+
   text2video:
     - backend: landing
       model: video
@@ -331,6 +348,17 @@ functions:
       enable: true
       priority: 10
 
+  doc2ocr:
+    - backend: qwen
+      model: ocr
+      enable: true
+      priority: 10
+
+  doc2instruct:
+    - backend: landing
+      model: cascade
+      enable: true
+      priority: 10
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.

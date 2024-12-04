@@ -2,6 +2,8 @@ package ai.ocr;
 
 import ai.common.utils.FileUtils;
 import ai.common.utils.PdfUtils;
+import ai.manager.AIManager;
+import ai.manager.DocOcrManager;
 import ai.manager.OcrManager;
 import ai.utils.LRUCache;
 import ai.ocr.pojo.OcrProgress;
@@ -20,9 +22,22 @@ public class OcrService {
     private static final String ocrCacheDir = OcrConfig.getOcrCacheDir();
     private static final LRUCache<String, OcrProgress> processedPageSizeCache = new LRUCache<>(1000);
 
+    private final AIManager<IOcr> imageOrcManager;
+    private final AIManager<IOcr> docOcrManager;
 
-    public String image2Ocr(BufferedImage image, List<String> languages) {
-        for (IOcr adapter : OcrManager.getInstance().getAdapters()) {
+    public OcrService() {
+        this.imageOrcManager = OcrManager.getInstance();
+        this.docOcrManager = DocOcrManager.getInstance();
+    }
+
+
+    private List<IOcr> getAdapterByBackends(AIManager<IOcr> ocrAIManager) {
+        return ocrAIManager.getAdapters();
+    }
+
+    private String ocr(BufferedImage image, List<String> languages, AIManager<IOcr> aiManager) {
+
+        for (IOcr adapter : getAdapterByBackends(aiManager)) {
             return adapter.recognize(image, languages);
         }
         return null;
@@ -41,7 +56,7 @@ public class OcrService {
             }
             try {
                 BufferedImage image = ImageIO.read(file);
-                result.add(image2Ocr(image, languages));
+                result.add(ocr(image, languages, imageOrcManager));
             } catch (IOException e) {
                 log.error("read image error {}", e.getMessage());
                 result.add(null);
@@ -84,7 +99,7 @@ public class OcrService {
             if (new File(pageCacheFile).exists() && OcrConfig.isOcrCacheEnable()) {
                 resultText = FileUtils.readTextFromFile(pageCacheFile);
             } else {
-                resultText = image2Ocr(image, languages);
+                resultText = ocr(image, languages, docOcrManager);
                 if (resultText != null && OcrConfig.isOcrCacheEnable()) {
                     FileUtils.writeTextToFile(pageCacheFile, resultText);
                 }

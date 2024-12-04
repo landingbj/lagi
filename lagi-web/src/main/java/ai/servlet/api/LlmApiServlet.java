@@ -180,6 +180,7 @@ public class LlmApiServlet extends BaseServlet {
                 }
                 if (context != null) {
                     CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+                    addChunkIds(result, context);
                 }
                 responsePrint(resp, toJson(result));
             } catch (RRException e) {
@@ -189,6 +190,14 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
+    private void addChunkIds(ChatCompletionResult result, GetRagContext context) {
+        result.getChoices().forEach(choice -> {
+            ChatMessage message = choice.getMessage();
+            ChatMessageResponse build = ChatMessageResponse.builder().contextChunkIds(context.getChunkIds()).build();
+            BeanUtil.copyProperties(message, build);
+            choice.setMessage(build);
+        });
+    }
 
 
     private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {

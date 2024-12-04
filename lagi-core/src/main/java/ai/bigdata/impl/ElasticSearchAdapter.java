@@ -28,11 +28,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ElasticsearchAdapter implements IBigdata {
+public class ElasticSearchAdapter implements IBigdata {
     private final ElasticsearchClient client;
-    private static final Logger logger = LoggerFactory.getLogger(ElasticsearchAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchAdapter.class);
 
-    public ElasticsearchAdapter(BigdataConfig config) {
+    public ElasticSearchAdapter(BigdataConfig config) {
         RestClientBuilder builder;
         if (config.getUsername() == null || config.getPassword() == null) {
             builder = RestClient.builder(new HttpHost(config.getHost(), config.getPort()));

@@ -15,4 +15,5 @@ public class RAGFunction {
     private Integer priority;
     @JsonProperty("default")
     private String defaultText;
+    private RAGTrackConfig track;
 }

@@ -3,6 +3,7 @@ package ai.servlet.api;
 
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.TextBlock;
+import ai.config.ContextLoader;
 import ai.dto.*;
 import ai.learn.questionAnswer.KShingleFilter;
 import ai.response.CropRectResponse;
@@ -33,7 +34,9 @@ public class PdfPreviewServlet extends RestfulServlet {
 
     private static final String UPLOAD_DIR = "/upload";
 
-
+    private final boolean enabledRagTrack = ContextLoader.configuration.getStores().getRag().getTrack() == null ?
+            Boolean.FALSE :
+            Boolean.TRUE.equals(ContextLoader.configuration.getStores().getRag().getTrack().getEnable());
 
     private String makeCropImageDir(String request) {
         //获取static文件夹的路径
@@ -47,6 +50,9 @@ public class PdfPreviewServlet extends RestfulServlet {
 
     @Post("cropRect")
     public List<CropRectResponse> cropRect(HttpServletRequest request, @Body CropRectRequest cropRectRequest) {
+        if(!enabledRagTrack) {
+            return Collections.emptyList();
+        }
         makeCropImageDir(request.getSession().getServletContext().getRealPath("static"));
         List<CropRequest> chunkData = cropRectRequest.getChunkData();
         List<CropRectResponse> res = new ArrayList<>();

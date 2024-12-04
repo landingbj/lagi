@@ -3,6 +3,7 @@ package ai.llm.service;
 import ai.common.ModelService;
 import ai.config.ContextLoader;
 import ai.llm.adapter.ILlmAdapter;
+import ai.manager.AIManager;
 import ai.manager.LlmManager;
 import cn.hutool.core.bean.BeanUtil;
 
@@ -82,12 +83,11 @@ public class LlmRouterDispatcher {
                 .collect(Collectors.toList());
     }
 
-    public static List<ILlmAdapter> getRagAdapter(String indexData) {
-        List<ILlmAdapter> adapters = LlmManager.getInstance().getAdapters();
+    public static List<ILlmAdapter> getRagAdapter(AIManager<ILlmAdapter> llmAdapterAIManager, String indexData) {
         if (indexData == null) {
-            return adapters;
+            return llmAdapterAIManager.getAdapters();
         }
-        return adapters.stream()
+        return llmAdapterAIManager.getAdapters().stream()
                 .map(adapter -> (ModelService) adapter)
                 .sorted((o1, o2) -> {
                     String pattern1 = getPattern(o1.getRouter());
@@ -122,6 +122,10 @@ public class LlmRouterDispatcher {
                 })
                 .map(modelService -> (ILlmAdapter) modelService)
                 .collect(Collectors.toList());
+    }
+
+    public static List<ILlmAdapter> getRagAdapter(String indexData) {
+        return getRagAdapter(LlmManager.getInstance(), indexData);
     }
 
     private static String getPattern(String router) {

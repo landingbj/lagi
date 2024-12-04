@@ -44,6 +44,7 @@ public class MultimodalAIManager {
             List<String> modelNameList = Arrays.stream(modelListStr.split(",")).map(String::trim).collect(Collectors.toList());
             if(modelService instanceof ILlmAdapter) {
                 register(modelNameList, LlmManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getChat());
+                register(modelNameList, LlmInstructionManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getDoc2instruct());
             }
             if(modelService instanceof IAudioAdapter) {
                 register(modelNameList, TTSManager.getInstance(), (IAudioAdapter) modelService, modelFunctions.getText2speech());
@@ -66,6 +67,7 @@ public class MultimodalAIManager {
             }
             if(modelService instanceof IOcr) {
                 register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getImage2ocr());
+                register(modelNameList, DocOcrManager.getInstance(), (IOcr) modelService, modelFunctions.getDoc2orc());
             }
             if(modelService instanceof Video2trackAdapter) {
                 register(modelNameList, Video2TrackManager.getInstance(), (Video2trackAdapter) modelService, modelFunctions.getVideo2Track());
@@ -84,6 +86,9 @@ public class MultimodalAIManager {
 
     private static  <T> void register(List<String> modelNames, AIManager<T> aiManager, T adapter, List<Backend> functions) {
         try {
+            if(functions == null) {
+                return;
+            }
             Map<String, Backend> funcMap = functions.stream().collect(Collectors.toMap(Backend::getBackend, model -> model));
             ModelService modelService = (ModelService) adapter;
             Backend func = funcMap.get(modelService.getBackend());
