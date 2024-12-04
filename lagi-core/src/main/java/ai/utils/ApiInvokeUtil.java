@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 public class ApiInvokeUtil {
 
     private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(
-            10, // 最大空闲连接数
-            15, // 保持连接的时间
+            100, // 最大空闲连接数
+            120, // 保持连接的时间
             TimeUnit.MINUTES
     );
 
@@ -36,6 +36,8 @@ public class ApiInvokeUtil {
     public static String post(String url, Map<String, String> headers, String bodyStr, int timeout, TimeUnit unit) {
          OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeout,unit)
+                .readTimeout(timeout, unit)
+                .writeTimeout(timeout, unit)
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
