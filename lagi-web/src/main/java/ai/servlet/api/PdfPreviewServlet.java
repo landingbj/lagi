@@ -34,9 +34,7 @@ public class PdfPreviewServlet extends RestfulServlet {
 
     private static final String UPLOAD_DIR = "/upload";
 
-    private final boolean enabledRagTrack = ContextLoader.configuration.getStores().getRag().getTrack() == null ?
-            Boolean.FALSE :
-            Boolean.TRUE.equals(ContextLoader.configuration.getStores().getRag().getTrack().getEnable());
+    private final boolean enabledRagTrack = Boolean.TRUE.equals(ContextLoader.configuration.getStores().getRag().getTrack());
 
     private String makeCropImageDir(String request) {
         //获取static文件夹的路径

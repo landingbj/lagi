@@ -226,15 +226,14 @@ stores:
     username: your-username
     password: your-password
 
-  rag: # Retrieval-Augmented Generation (RAG) is a framework designed to enhance the accuracy and relevance of large language models by integrating external knowledge retrieval.
+  rag: # RAG enhances large language models by integrating external knowledge retrieval.
     vector: chroma
     fulltext: elasticsearch
     graph: landing
     enable: false
     priority: 10
     default: "Please give prompt more precisely"
-    track:
-      enable: true
+    track: true
 
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
     enable: false

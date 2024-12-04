@@ -85,8 +85,7 @@ stores:
       enable: true # 是否开启
       priority: 10 # 优先级，当该优先级大于模型时,则匹配不到上下文就只返回default中提示语
       default: "Please give prompt more precisely" # 如未匹配到上下文，则返回该提示语
-      track:
-        enable: true # 开启文档跟踪
+      track: true # 开启文档跟踪
   # 这部分是美杜莎的加速推理服务的配置
   medusa:
     enable: true # 是否开启

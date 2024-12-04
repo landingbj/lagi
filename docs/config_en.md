@@ -85,8 +85,7 @@ stores:
     enable: true # Enable or not
     priority: 10 # Priority for this function，When the priority is greater than the model, the prompt in default is returned if the context is not found
     default: "Please give prompt more precisely" # If the context is not found, the cue is returned
-    track:
-      enable: true # enable document tracking
+    track: true # enable document tracking
   # This section is the configuration of Medusa's Accelerated Inference Service
   medusa:
     enable: true # Enable or not
