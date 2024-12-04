@@ -5,6 +5,7 @@ import ai.common.pojo.IndexSearchData;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;
 import ai.vector.VectorStoreService;
+import ai.vector.pojo.MeetingMinutes;
 import ai.vector.pojo.VectorCollection;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -62,6 +63,11 @@ public class VectorDbService {
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         vectorStoreService.addFileVectors(file, metadatas, category);
     }
+
+    public void addFileVectors(File file, Map<String, Object> metadatas, String category, String title) throws IOException {
+        vectorStoreService.addMeetingVectors(file, metadatas, category, title);
+    }
+
 
     public List<String> getImageFiles(IndexSearchData indexData) {
         return vectorStoreService.getImageFiles(indexData);

@@ -1,5 +1,6 @@
 let SOCIAL_NAV_KEY = 'sjjr';
 let MEETING_BOOKINGS = 'hyyd';
+let MEETING_MINUTES = 'hyjy';
 
 let MODEL_TYPE_LLM = "llm";
 let MODEL_TYPE_ASR = "asr";
@@ -112,6 +113,13 @@ let promptNavs = [
         prompt:'该功能通过通过语音识别，实现语音会议预定等功能。',
         operation:'在输入框内输入您的需求（会议预定），然后按照提示完成相关操作。',
         group : 2
+    },
+        {id:3, key:MEETING_MINUTES, title: '会议纪要',exampleImgSrc:'',
+        models: ["llm"],
+        exampleVedioSrc:'',
+        prompt:'该功能可帮您查找摘要会议内容。',
+        operation:'您可以问我：“昨天开的会讲了什么？”',
+        group : 3
     }
 ]
 
@@ -408,6 +416,10 @@ function typing (i, str, jq, callback, ...args) {
             resetSocialPromptStep();
             getMeetingBookings();
         }
+        if (currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_MINUTES) {
+            resetSocialPromptStep();
+            getMeetingMinutes();
+        }
     }
 }
 
@@ -439,28 +451,15 @@ function getAppListHtml() {
         }
     });
 }
-    function getMeetingBookings() {
+function getMeetingBookings() {
         let html = '';
         let prompt = '<div>您可以对我说：“帮我预定明天下午3点的东四会议室，会议时长为一个小时,会议有5个人。”'+ '</br>'+
             '这样我就可以帮您预定会议了！！！</div>';
         addRobotDialog(prompt  + '</br>');
-        // $.ajax({
-        //     type: "GET",
-        //     contentType: "application/json;charset=utf-8",
-        //     url: "/v1/rpa/getAppList",
-        //     success: function(res) {
-        //         res.data.forEach((app) => {
-        //             let appName = app.appName;
-        //             let appIcon = app.appIcon;
-        //             html += '<div class="appType"><img src="' + appIcon + '" alt="' + appName + '"><div class="appTypeName">' + appName + '</div></div>';
-        //             SOCIAL_APP_MAP.set(app.appId.toString(), app.appName);
-        //         });
-        //         let prompt = '<div>请问您想接入哪款社交软件</div>';
-        //         addRobotDialog(prompt + html + '</br>');
-        //     },
-        //     error: function(){
-        //         html = '返回失败';
-        //     }
-        // });
-
+    }
+function getMeetingMinutes() {
+        let html = '';
+        let prompt = '<div>您可以对我说：“今天的会议讲了什么？”'+ '</br>'+
+            '这样我就可以帮您摘要内容了！！！</div>';
+        addRobotDialog(prompt  + '</br>');
     }

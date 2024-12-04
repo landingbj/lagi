@@ -36,6 +36,9 @@ function textQuery() {
             // bookMeetingConversation(question);
             console.log("question", question)
             addMeetingConversation(question);
+        } else if(currentPromptDialog !== undefined && currentPromptDialog.key === MEETING_MINUTES){
+            console.log("question", question)
+            addMeetingMinutes(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
             getTextResult(question.trim(), robotAnswerJq, conversation);

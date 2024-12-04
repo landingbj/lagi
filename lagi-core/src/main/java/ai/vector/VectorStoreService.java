@@ -146,6 +146,35 @@ public class VectorStoreService {
         upsertFileVectors(fileList, category);
     }
 
+    public void addMeetingVectors(File file, Map<String, Object> metadatas, String category,String title) throws IOException {
+        List<FileChunkResponse.Document> docs;
+        docs = fileService.splitChunks(file, 512);
+        List<FileInfo> fileList = new ArrayList<>();
+
+        System.out.println(title);
+        FileInfo fi = new FileInfo();
+        String e = UUID.randomUUID().toString().replace("-", "");
+        fi.setEmbedding_id(e);
+        fi.setText(title);
+        Map<String, Object> t = new HashMap<>(metadatas);
+        fi.setMetadatas(t);
+        fileList.add(fi);
+
+        for (FileChunkResponse.Document doc : docs) {
+            FileInfo fileInfo = new FileInfo();
+            String embeddingId = UUID.randomUUID().toString().replace("-", "");
+            fileInfo.setEmbedding_id(embeddingId);
+            fileInfo.setText(doc.getText());
+            Map<String, Object> tmpMetadatas = new HashMap<>(metadatas);
+            if (doc.getImages() != null) {
+                tmpMetadatas.put("image", gson.toJson(doc.getImages()));
+            }
+            fileInfo.setMetadatas(tmpMetadatas);
+            fileList.add(fileInfo);
+        }
+        upsertFileVectors(fileList, category);
+    }
+
     public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category) {
         this.upsertCustomVectors(upsertRecords, category, false);
     }

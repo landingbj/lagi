@@ -78,3 +78,41 @@ function addMeetingPrompt(message) {
         }
     });
 }
+
+function addMeetingMinutes(question){
+    let questionHtml = '<div>' + question + '</div>';
+    addUserDialog(questionHtml);
+    addMeetingMinutesPrompt(question);
+}
+function addMeetingMinutesPrompt(question){
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/chat/meetingMinutes",
+        data: JSON.stringify(paras),
+        success: function (res) {
+            if (res === null || res.status === "failed") {
+                robootAnswerJq.html("调用失败！");
+                return;
+            }
+            var json = res.data[0];
+            var a = `
+                    <a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${json.filepath}&fileName=${json.filename}">${json.filename}</a>
+                    `
+            var t = json.text;
+            t = t.replaceAll("\n", "<br>");
+            result = `
+                            ${t} <br>
+                            ${json.imageList != undefined ? `<img src='${json.imageList[0]}' alt='Image'>` : ""}
+                            ${json.filename != undefined ? `附件:${a}` : ""}<br>
+                    `
+            CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+            CONVERSATION_CONTEXT.push({"role": "assistant", "content": json.text});
+
+            txtTovoice(json.text, "default");
+            robootAnswerJq.html(result);
+            enableQueryBtn();
+            querying = false;
+        }
+    });
+}

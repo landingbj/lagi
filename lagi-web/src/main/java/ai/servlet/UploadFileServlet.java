@@ -1,6 +1,7 @@
 package ai.servlet;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -145,6 +146,7 @@ public class UploadFileServlet extends HttpServlet {
             String level = Optional.ofNullable(instructionPairRequest.getLevel()).orElse("user");
             Map<String, String> qaMap = new HashMap<>();
             for (InstructionData data : instructionDataList) {
+                if (data!=null){
                 for (String instruction : data.getInstruction()) {
                     instruction = instruction.trim();
                     String output = data.getOutput().trim();
@@ -153,6 +155,7 @@ public class UploadFileServlet extends HttpServlet {
                     metadata.put("category", category);
                     metadata.put("level", level);
                     metadata.put("place", instructionPairRequest.getPlace());
+                    metadata.put("type", instructionPairRequest.getType());
                     metadata.put("filename", "");
                     metadata.put("seq", Long.toString(timestamp));
                     List<UpsertRecord> upsertRecords = new ArrayList<>();
@@ -168,6 +171,9 @@ public class UploadFileServlet extends HttpServlet {
                     VectorCacheLoader.put2L2(s, timestamp, output);
                     vectorStoreService.upsertCustomVectors(upsertRecords, category, true);
                 }
+                }else{
+                    System.out.println("导入的jons是"+"null");
+                }
             }
             medusaService.load(qaMap, category);
         }).start();
@@ -182,7 +188,7 @@ public class UploadFileServlet extends HttpServlet {
 
      private void pairingMeetingMinutes(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        InstructionPairRequestContractedHotels instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequestContractedHotels.class);
+        InstructionPairRequest instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequest.class);
         long timestamp = Instant.now().toEpochMilli();
         new Thread(() -> {
             List<InstructionData> instructionDataList = instructionPairRequest.getData();
@@ -197,7 +203,6 @@ public class UploadFileServlet extends HttpServlet {
                     Map<String, String> metadata = new HashMap<>();
                     metadata.put("category", category);
                     metadata.put("level", level);
-                    metadata.put("place", instructionPairRequest.getPlace());
                     metadata.put("filename", "");
                     metadata.put("seq", Long.toString(timestamp));
                     List<UpsertRecord> upsertRecords = new ArrayList<>();
@@ -402,114 +407,173 @@ public class UploadFileServlet extends HttpServlet {
 
     private void uploadMeetingMinutes(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
-//         String category = req.getParameter("category");
-//        String level = req.getParameter("level");
-//        String fileId = req.getParameter("fileId");
 
         MeetingMinutesRequest meetingMinutesRequest = new MeetingMinutesRequest();
-        meetingMinutesRequest.setCategory(req.getParameter("category"));
-        meetingMinutesRequest.setLevel(req.getParameter("level"));
-        meetingMinutesRequest.setId(req.getParameter("fileId"));
-        meetingMinutesRequest.setNumber(req.getParameter("number"));
-        meetingMinutesRequest.setMeetingCategory(req.getParameter("meetingCategory"));
-        meetingMinutesRequest.setTitle(req.getParameter("title"));
-        meetingMinutesRequest.setDrafter(req.getParameter("drafter"));
-        meetingMinutesRequest.setMeetingPlace(req.getParameter("meetingPlace"));
-        meetingMinutesRequest.setHostingUnit(req.getParameter("hostingUnit"));
-        meetingMinutesRequest.setPhone(req.getParameter("phone"));
-        meetingMinutesRequest.setConfidentiality(req.getParameter("confidentiality"));
-        meetingMinutesRequest.setCopyNumber(req.getParameter("copyNumber"));
-        meetingMinutesRequest.setDistribution(req.getParameter("distribution"));
-        meetingMinutesRequest.setUrgency(req.getParameter("urgency"));
-        meetingMinutesRequest.setBody(req.getParameter("body"));
-        meetingMinutesRequest.setAuthorizer(req.getParameter("authorizer"));
 
-        String category = meetingMinutesRequest.getCategory();
+        Field[] fields = MeetingMinutesRequest.class.getDeclaredFields();
+
+        JsonObject jsonResult = new JsonObject();
+
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            String parameterValue = req.getParameter(fieldName);
+            if (parameterValue != null && !parameterValue.isEmpty()) {
+                field.setAccessible(true);
+                try {
+                    if (field.getType().equals(Date.class)) {
+                        // 将字符串转为 Date 类型
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 请根据需要调整格式
+                        Date dateValue = sdf.parse(parameterValue);
+                        field.set(meetingMinutesRequest, dateValue);
+                    } else {
+                        // 其他类型直接设置值
+                        field.set(meetingMinutesRequest, parameterValue);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("字段映射出错了---");
+                }
+            }
+        }
+
+        String[] categorys = stringSplitter(meetingMinutesRequest.getAuthorizer());
+        if (categorys.length <= 0 || meetingMinutesRequest.getId()==null || meetingMinutesRequest.getId().isEmpty()){
+            jsonResult.addProperty("status", "failed");
+            jsonResult.addProperty("data", "The authorizer or id is empty");
+            PrintWriter out = resp.getWriter();
+            out.write(gson.toJson(jsonResult));
+            out.flush();
+            out.close();
+            return;
+        }
         String level = meetingMinutesRequest.getLevel();
         String fileId = meetingMinutesRequest.getId();
 
-       String introduce = "编号为：" + meetingMinutesRequest.getNumber() +
-               "，会议类别为：" + meetingMinutesRequest.getMeetingCategory() +
-               "，主题为：" + meetingMinutesRequest.getTitle() +
-               "，拟稿人为：" + meetingMinutesRequest.getDrafter() +
-               "，会议地点为：" + meetingMinutesRequest.getMeetingPlace() +
-               "，会议承办单位为：" + meetingMinutesRequest.getHostingUnit() +
-               "，会议时间为：" + meetingMinutesRequest.getMeetingTime() +
-               "，电话为：" + meetingMinutesRequest.getPhone() +
-               "，密级为：" + meetingMinutesRequest.getConfidentiality() +
-               "，份号为：" + meetingMinutesRequest.getCopyNumber() +
-               "，分送单位为：" + meetingMinutesRequest.getDistribution() +
-               "，印发日期为：" + meetingMinutesRequest.getIssueDate() +
-               "，缓急为：" + meetingMinutesRequest.getUrgency() +
-               "，正文链接为：：" + meetingMinutesRequest.getBody() +
-               "，授权人为：" + meetingMinutesRequest.getAuthorizer() + "。";
 
+        StringBuilder introduceBuilder = new StringBuilder();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormats = new SimpleDateFormat("yyyy-MM-dd");
 
-        JsonObject jsonResult = new JsonObject();
+        // 检查并添加每个字段，如果字段不为空
+        if (meetingMinutesRequest.getNumber() != null && !meetingMinutesRequest.getNumber().isEmpty()) {
+            introduceBuilder.append("编号为：").append(meetingMinutesRequest.getNumber()).append("，");
+        }
+        if (meetingMinutesRequest.getMeetingCategory() != null && !meetingMinutesRequest.getMeetingCategory().isEmpty()) {
+            introduceBuilder.append("会议类别为：").append(meetingMinutesRequest.getMeetingCategory()).append("，");
+        }
+        if (meetingMinutesRequest.getTitle() != null && !meetingMinutesRequest.getTitle().isEmpty()) {
+            introduceBuilder.append("主题为：").append(meetingMinutesRequest.getTitle()).append("，");
+        }
+        if (meetingMinutesRequest.getDrafter() != null && !meetingMinutesRequest.getDrafter().isEmpty()) {
+            introduceBuilder.append("拟稿人为：").append(meetingMinutesRequest.getDrafter()).append("，");
+        }
+        if (meetingMinutesRequest.getMeetingPlace() != null && !meetingMinutesRequest.getMeetingPlace().isEmpty()) {
+            introduceBuilder.append("会议地点为：").append(meetingMinutesRequest.getMeetingPlace()).append("，");
+        }
+        if (meetingMinutesRequest.getHostingUnit() != null && !meetingMinutesRequest.getHostingUnit().isEmpty()) {
+            introduceBuilder.append("会议承办单位为：").append(meetingMinutesRequest.getHostingUnit()).append("，");
+        }
+        if (meetingMinutesRequest.getMeetingTime() != null) {
+            Date issueDate = meetingMinutesRequest.getMeetingTime();
+            String msg = dateFormat.format(issueDate);
+            introduceBuilder.append("会议时间为：").append(msg).append("，");
+        }
+        if (meetingMinutesRequest.getPhone() != null && !meetingMinutesRequest.getPhone().isEmpty()) {
+            introduceBuilder.append("电话为：").append(meetingMinutesRequest.getPhone()).append("，");
+        }
+        if (meetingMinutesRequest.getConfidentiality() != null && !meetingMinutesRequest.getConfidentiality().isEmpty()) {
+            introduceBuilder.append("密级为：").append(meetingMinutesRequest.getConfidentiality()).append("，");
+        }
+        if (meetingMinutesRequest.getCopyNumber() != null && !meetingMinutesRequest.getCopyNumber().isEmpty()) {
+            introduceBuilder.append("份号为：").append(meetingMinutesRequest.getCopyNumber()).append("，");
+        }
+        if (meetingMinutesRequest.getDistribution() != null && !meetingMinutesRequest.getDistribution().isEmpty()) {
+            introduceBuilder.append("分送单位为：").append(meetingMinutesRequest.getDistribution()).append("，");
+        }
+        if (meetingMinutesRequest.getIssueDate() != null ) {
+            Date issueDate = meetingMinutesRequest.getIssueDate();
+             String formattedDate = dateFormats.format(issueDate);
+            introduceBuilder.append("印发日期为：").append(formattedDate).append("，");
+        }
+        if (meetingMinutesRequest.getUrgency() != null && !meetingMinutesRequest.getUrgency().isEmpty()) {
+            introduceBuilder.append("缓急为：").append(meetingMinutesRequest.getUrgency()).append("，");
+        }
+        if (meetingMinutesRequest.getContent() != null && !meetingMinutesRequest.getContent().isEmpty()) {
+            introduceBuilder.append("正文链接为：").append(meetingMinutesRequest.getContent()).append("。");
+        }
+        introduceBuilder.append(";/n");
+        String introduce = introduceBuilder.toString();
+
         jsonResult.addProperty("status", "success");
+        for (String category : categorys) {
+                DiskFileItemFactory factory = new DiskFileItemFactory();
+                ServletFileUpload upload = new ServletFileUpload(factory);
+                    upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+                    upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+                String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+                if (!new File(uploadDir).isDirectory()) {
+                    new File(uploadDir).mkdirs();
+                }
 
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(factory);
-            upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-            upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-        String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
-        if (!new File(uploadDir).isDirectory()) {
-            new File(uploadDir).mkdirs();
-        }
+                List<File> files = new ArrayList<>();
+                Map<String, String> realNameMap = new HashMap<>();
+                try {
+                    List<?> fileItems = upload.parseRequest(req);
+                    for (Object fileItem : fileItems) {
+                        FileItem fi = (FileItem) fileItem;
+                        if (!fi.isFormField()) {
+                            String fileName = fi.getName();
 
-        List<File> files = new ArrayList<>();
-        Map<String, String> realNameMap = new HashMap<>();
+                            String newName = fileId + fileName.substring(fileName.lastIndexOf("."));
+                            String lastFilePath = uploadDir + File.separator + newName;
+                            File file = new File(lastFilePath);
 
-        try {
-            List<?> fileItems = upload.parseRequest(req);
-            for (Object fileItem : fileItems) {
-                FileItem fi = (FileItem) fileItem;
-                if (!fi.isFormField()) {
-                    String fileName = fi.getName();
-                    File file;
-                    String newName;
-                    do {
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-                        newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
-                        newName = newName + fileName.substring(fileName.lastIndexOf("."));
-                        String lastFilePath = uploadDir + File.separator + newName;
-                        file = new File(lastFilePath);
-                        session.setAttribute(newName, file.toString());
-                        session.setAttribute("lastFilePath", lastFilePath);
-                    } while (file.exists());
-                    fi.write(file);
-                    files.add(file);
-                    realNameMap.put(file.getName(), fileName);
+                            while (!file.exists()){
+                                fi.write(file);
+
+                            }
+                            files.add(file);
+                            realNameMap.put(file.getName(), fileName);
+                            session.setAttribute(newName, file.toString());
+                            session.setAttribute("lastFilePath", lastFilePath);
+                        }
+                    }
+                } catch (Exception ex) {
+                    jsonResult.addProperty("msg", "There was an error parsing the file - meeting minutes");
+                    ex.printStackTrace();
+                }
+             List<Map<String, String>> data = new ArrayList<>();
+            if (!files.isEmpty()) {
+                String content = "";
+                for (File file : files) {
+                    content = fileService.getFileContent(file);
+                    if (!StringUtils.isEmpty(content)) {
+                        String filename = realNameMap.get(file.getName());
+                        Map<String, String> map = new HashMap<>();
+                        map.put("filename", filename);
+                        map.put("filepath", file.getName());
+                        data.add(map);
+                        uploadExecutorService.submit(new AddMeetingIndex(file, category, filename, level, fileId,introduce));
+                    }
                 }
             }
-        } catch (Exception ex) {
-            jsonResult.addProperty("msg", "解析文件出现错误--会议纪要");
-            ex.printStackTrace();
-        }
-
-        List<Map<String, String>> data = new ArrayList<>();
-        if (!files.isEmpty()) {
-            String content = "";
-            for (File file : files) {
-                content = fileService.getFileContent(file);
-                if (!StringUtils.isEmpty(content)) {
-                    String filename = realNameMap.get(file.getName());
-                    Map<String, String> map = new HashMap<>();
-                    map.put("filename", filename);
-                    map.put("filepath", file.getName());
-                    data.add(map);
-                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
-                }
+            if (!jsonResult.has("msg")) {
+                jsonResult.addProperty("data", gson.toJson(data));
+                jsonResult.addProperty("status", "success");
             }
-        }
-        if (!jsonResult.has("msg")) {
-            jsonResult.addProperty("data", gson.toJson(data));
-            jsonResult.addProperty("status", "success");
         }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
         out.close();
+    }
+
+    private String[] stringSplitter(String authorizer) {
+        String formattedString = authorizer.replace('，', ',');
+               formattedString = formattedString.replaceAll(",$", "");
+        String[] splitStrings = formattedString.split(",");
+        return splitStrings;
+
     }
 
     private void uploadLearningFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -617,6 +681,7 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("category", category);
             metadatas.put("filepath", filepath);
             metadatas.put("file_id", fileId);
+
             if (level == null) {
                 metadatas.put("level", "user");
             } else {
@@ -625,6 +690,63 @@ public class UploadFileServlet extends HttpServlet {
 
             try {
                 vectorDbService.addFileVectors(this.file, metadatas, category);
+                UploadFile entity = new UploadFile();
+                entity.setCategory(category);
+                entity.setFilename(filename);
+                entity.setFilepath(filepath);
+                entity.setFileId(fileId);
+                uploadFileService.addUploadFile(entity);
+            } catch (IOException | SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public class AddMeetingIndex extends Thread {
+        private final VectorDbService vectorDbService = new VectorDbService(config);
+        private final File file;
+        private final String category;
+        private final String filename;
+        private final String level;
+        private String fileId;
+        private String title;
+
+        public AddMeetingIndex(File file, String category, String filename, String level, String fileId, String title) {
+            this.file = file;
+            this.category = category;
+            this.filename = filename;
+            this.level = level;
+            this.fileId = fileId;
+            this.title = title;
+        }
+
+        public void run() {
+            if (vectorDbService.vectorStoreEnabled()) {
+                addMeetingIndexes();
+            }
+        }
+
+        private void addMeetingIndexes() {
+            Map<String, Object> metadatas = new HashMap<>();
+            if (fileId == null) {
+                fileId = UUID.randomUUID().toString().replace("\\", "");
+            }
+            String filepath = file.getName();
+
+            metadatas.put("filename", filename);
+            metadatas.put("category", category);
+            metadatas.put("filepath", filepath);
+            metadatas.put("file_id", fileId);
+            metadatas.put("title", title);
+
+            if (level == null) {
+                metadatas.put("level", "user");
+            } else {
+                metadatas.put("level", level);
+            }
+
+            try {
+                vectorDbService.addFileVectors(this.file, metadatas, category,title);
                 UploadFile entity = new UploadFile();
                 entity.setCategory(category);
                 entity.setFilename(filename);

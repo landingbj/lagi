@@ -78,7 +78,7 @@ public class LlmApiServlet extends BaseServlet {
     private final Integer debugLevel = ContextLoader.configuration.getDebugLevel() == null ? 0 : ContextLoader.configuration.getDebugLevel();
     private final MeetingWorker meetingWorker = new MeetingWorker();
 
-    private final PdfPreviewServlce pdfPreviewServlce = new PdfPreviewServlce();
+    //private final PdfPreviewServlce pdfPreviewServlce = new PdfPreviewServlce();
 
     static {
         VectorCacheLoader.load();

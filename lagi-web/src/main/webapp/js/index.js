@@ -19,7 +19,10 @@ window.onload = function () {
 
     let zsk_list = $("#zsk-select");
     zsk_list.append(`<li data-value="${window.category}" class="activate">&nbsp; &nbsp;北京电信</li>
-    <li data-value  ="defualt">&nbsp;&nbsp; 不使用知识库</li>`)
+    <li data-value="A00694" >&nbsp; &nbsp;A00694</li>
+    <li data-value="A00028" >&nbsp; &nbsp;A00028</li>
+    <li data-value="A03455" >&nbsp; &nbsp;A03455</li>
+    <li data-value="defualt">&nbsp;&nbsp; 不使用知识库</li>`)
     zsk_list.click(function (e, a) {
         let konwn = $(e.target).data('value');
         if(konwn == 'defualt') {

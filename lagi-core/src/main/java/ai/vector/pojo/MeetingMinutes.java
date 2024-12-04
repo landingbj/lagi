@@ -1,12 +1,12 @@
-package ai.servlet.dto;
+package ai.vector.pojo;
 
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
-public class MeetingMinutesRequest {
-//    private String category;
+public class MeetingMinutes {
+    private String category;
     private String level;
 
     private String id;                  // ID/fileId;
