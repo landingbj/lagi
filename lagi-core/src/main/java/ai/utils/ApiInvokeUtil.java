@@ -1,11 +1,22 @@
 package ai.utils;
 
+import ai.common.exception.RRException;
+import ai.common.utils.ObservableList;
+import ai.llm.utils.LLMErrorConstants;
+import cn.hutool.core.text.StrFormatter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import okhttp3.sse.EventSource;
+import okhttp3.sse.EventSourceListener;
+import okhttp3.sse.EventSources;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 @Slf4j
 public class ApiInvokeUtil {
@@ -92,6 +103,88 @@ public class ApiInvokeUtil {
             log.error(e.getMessage());
         }
         return null;
+    }
+
+
+    public static <R> ObservableList<R> sse(String url, Map<String, String> headers, String json,
+                                                   Integer timeout, TimeUnit timeUnit, Function<String, R> convertResponseFunc) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(timeout, timeUnit)
+                .connectionPool(CONNECTION_POOL)
+                .build();
+        MediaType mediaType = MediaType.get("application/json");
+        RequestBody body = RequestBody.create(json, mediaType);
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .header("Accept", "text/event-stream")
+                .post(body);
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                requestBuilder.addHeader(header.getKey(), header.getValue());
+            }
+        }
+        Request request = requestBuilder.build();
+        EventSource.Factory factory = EventSources.createFactory(client);
+        ObservableList<R> res = new ObservableList<>();
+        RRException exception = new RRException();
+        factory.newEventSource(request, new EventSourceListener() {
+            @Override
+            public void onOpen(@NotNull EventSource eventSource, @NotNull Response response) {
+                int code = response.code();
+                try {
+                    String bodyStr = response.body().string();
+                    if(code != 200) {
+                        exception.setCode(code);
+                        exception.setMsg(bodyStr);
+                        closeConnection(eventSource);
+                    } else {
+                    }
+                } catch (IOException e) {
+
+                }
+            }
+            @Override
+            public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
+                R chatCompletionResult = convertResponseFunc.apply(data);
+                if (chatCompletionResult != null) {
+                    res.add(chatCompletionResult);
+                }
+            }
+            @Override
+            public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
+                if(t instanceof SocketTimeoutException) {
+                    exception.setCode(LLMErrorConstants.TIME_OUT);
+                    exception.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
+                } else {
+                    try {
+                        String bodyStr = response.body().string();
+                        exception.setCode(response.code());
+                        exception.setMsg(bodyStr);
+                    } catch (Exception e) {
+                        exception.setCode(LLMErrorConstants.OTHER_ERROR);
+                        exception.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
+                    }
+                }
+                if(t != null) {
+                    log.error("model request failed error {}", t.getMessage());
+                }
+                closeConnection(eventSource);
+            }
+
+            @Override
+            public void onClosed(@NotNull EventSource eventSource) {
+                closeConnection(eventSource);
+            }
+
+            private void closeConnection(EventSource eventSource) {
+                res.onComplete();
+                eventSource.cancel();
+                client.dispatcher().executorService().shutdown();
+            }
+        });
+        Iterable<R> iterable = res.getObservable().blockingIterable();
+        iterable.iterator().hasNext();
+        return res;
     }
 
 }
