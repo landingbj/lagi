@@ -11,6 +11,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
 import ai.prompt.PromptFactory;
+import ai.utils.SensitiveWordUtil;
 import ai.worker.WorkerGlobal;
 import ai.workflow.container.AgentContainer;
 import ai.workflow.mapper.*;
@@ -83,11 +84,10 @@ public class CiticAgentWorker {
             if (resultMatrix.get(0) != null) {
                 chatCompletionResult = resultMatrix.get(0);
                 System.out.println("CiticAgentWorker.process: chatCompletionResult = " + chatCompletionResult);
-                String responseJson = null;
-                final Gson gson = new Gson();
                 PromptFactory promptFactory = PromptFactory.getInstance();
                 if (promptFactory.getPromptConfig().getPrompt().getEnable()) {
-                    chatCompletionRequest = promptFactory.loadPrompt(chatCompletionRequest);
+                    chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
+                    chatCompletionRequest = promptFactory.loadPrompt(chatCompletionResult);
                     CompletionsService completionsService = new CompletionsService();
                     ChatCompletionResult promptFormatResult = completionsService.completions(chatCompletionRequest);
                     BeanUtil.copyProperties(promptFormatResult, chatCompletionResult);

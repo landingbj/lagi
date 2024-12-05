@@ -2,11 +2,17 @@ package ai.prompt;
 
 import ai.config.ContextLoader;
 import ai.config.pojo.PromptConfig;
+import ai.llm.utils.CompletionUtil;
+import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.qa.ChatCompletionUtil;
+import cn.hutool.core.bean.BeanUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +31,7 @@ public class PromptFactory {
     public static PromptFactory getInstance() {
         return INSTANCE;
     }
+    private Gson gson = new Gson();
     private PromptFactory() {
         loadContext();
     }
@@ -39,6 +46,15 @@ public class PromptFactory {
         message.setContent(String.format(prompt, message.getContent()));
         return request;
     }
+
+    public ChatCompletionRequest loadPrompt(ChatCompletionResult result) {
+        loadContext();
+        String answer = ((ChatCompletionChoice)result.getChoices().get(result.getChoices().size() - 1)).getMessage().getContent();
+        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.8,\"max_tokens\":1024,\"stream\":false}", answer);
+        return gson.fromJson(requestString, ChatCompletionRequest.class);
+    }
+
+
 
     public ChatCompletionRequest loadPrompt(ChatCompletionRequest request,String roleName) {
         loadContext();
