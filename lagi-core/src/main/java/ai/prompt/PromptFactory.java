@@ -50,7 +50,7 @@ public class PromptFactory {
     public ChatCompletionRequest loadPrompt(ChatCompletionResult result) {
         loadContext();
         String answer = ((ChatCompletionChoice)result.getChoices().get(result.getChoices().size() - 1)).getMessage().getContent();
-        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.8,\"max_tokens\":1024,\"stream\":false}", answer);
+        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.5,\"max_tokens\":1024,\"stream\":false}", answer);
         return gson.fromJson(requestString, ChatCompletionRequest.class);
     }
 
