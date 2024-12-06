@@ -355,17 +355,17 @@ agents:
 
   - name: xiaoxin
     driver: ai.agent.citic.XiaoxinAgent
-    token: NGD 385d5db5-292d-4f47-ac10-88b11b431368
+    token: your-token
 
   - name: stock
     driver: ai.agent.citic.StockAgent
-    token: bce-v3/ALTAK-K8RFTYHlovYJSMLLGbg4K/fe6f291fe2ba407b8021da91b58f23517122b1fa
-    app_id: db510aaa-3676-43c1-b569-352b1e052b2e
+    token: your-token
+    app_id: your-app-id
 
   - name: exchange
     driver: ai.agent.citic.ExchangeAgent
-    token: bce-v3/ALTAK-K8RFTYHlovYJSMLLGbg4K/fe6f291fe2ba407b8021da91b58f23517122b1fa
-    app_id: 269b837b-999f-4508-ae75-b8c1dace8b5e
+    token: your-token
+    app_id: your-app-id
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
