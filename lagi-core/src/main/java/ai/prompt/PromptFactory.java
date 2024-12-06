@@ -2,13 +2,11 @@ package ai.prompt;
 
 import ai.config.ContextLoader;
 import ai.config.pojo.PromptConfig;
-import ai.llm.utils.CompletionUtil;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.qa.ChatCompletionUtil;
-import cn.hutool.core.bean.BeanUtil;
+import ai.utils.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -19,9 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class PromptFactory {
     String prompt = "input your prompt here %s";
@@ -50,7 +45,13 @@ public class PromptFactory {
     public ChatCompletionRequest loadPrompt(ChatCompletionResult result) {
         loadContext();
         String answer = ((ChatCompletionChoice)result.getChoices().get(result.getChoices().size() - 1)).getMessage().getContent();
-        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.5,\"max_tokens\":1024,\"stream\":false}", answer);
+        String prompt = promptConfig.getPrompt().getRoles().stream()
+                .findFirst()
+                .map(item-> {
+                    return StringUtils.isNotBlank(item.getPrompt()) ? item.getPrompt().replaceAll("%s", answer) : "%s";
+                })
+                .orElse("%s");
+        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.5,\"max_tokens\":1024,\"stream\":false}", prompt);
         return gson.fromJson(requestString, ChatCompletionRequest.class);
     }
 
@@ -98,10 +99,9 @@ public class PromptFactory {
         }
     }
     public static void main(String[] args) {
-        PromptFactory promptFactory = new PromptFactory();
-        promptFactory.loadContext();
-        log.info("{}",promptFactory.promptConfig);
-        promptFactory.promptConfig.getPrompt().setEnable(false);
-        promptFactory.savePromptConfig();
+        String pattern = "你是一个中信金融方面的业务人员，请将问题和回答进行包装。 \\n问题：\\n###%s###\\n回答：\\n###%s###\\n要求: 如果是日常回答，则按提供的原文提供，如果是金融、股票或者汇率的问题，则以专业的方式回答。 请直接输出结果";
+
+        String msg = pattern.replaceAll("%s", "你好吗？");
+        System.out.println(msg);
     }
 }
