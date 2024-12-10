@@ -58,7 +58,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         userMessage.setRole("user");
         userMessage.setContent(userMsg);
         chatMessages.add(userMessage);
-        request.setMax_tokens(1024);
+        request.setMax_tokens(4096);
         request.setTemperature(0);
         request.setMessages(chatMessages);
         System.out.println("request = " + gson.toJson(request));
@@ -106,9 +106,9 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             } catch (Exception e) {
 
             }
-            assistant_msg = parseThoughts(responseTemplate.getThoughts());
-            agent_scratch.append(StrUtil.format("\nobservation: {} \nexecute action results: {}",observation, call_result));
-            history.add(Lists.newArrayList(StrUtil.format("工具调用结果为:{}\n {}", call_result, user_msg), assistant_msg));
+            assistant_msg = parseThoughts(responseTemplate.getThoughts(), call_result);
+            agent_scratch.append(StrUtil.format("\nobservation: {} \nexecute action results: {}",observation, call_result == null ? "查询失败": "查询成功"));
+            history.add(Lists.newArrayList(user_msg, assistant_msg));
         }
         if(finalAnswer == null) {
             return null;
@@ -117,12 +117,12 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         return gson.fromJson(format, ChatCompletionResult.class);
     }
 
-    private String parseThoughts(Thoughts thoughts) {
-        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{},call_result:{}",
+    private String parseThoughts(Thoughts thoughts, String actionResult) {
+        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{},action_result:{}",
                 thoughts.getPlain(),
                 thoughts.getReasoning(),
                 thoughts.getCriticism(),
-                thoughts.getSpeak());
+                thoughts.getSpeak(), actionResult);
     }
 
     @Override
