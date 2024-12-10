@@ -31,7 +31,7 @@ public class OpenAiApiUtil {
 
     private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(
             10, // 最大空闲连接数
-            15, // 保持连接的时间
+            60, // 保持连接的时间
             TimeUnit.MINUTES
     );
 
@@ -66,6 +66,8 @@ public class OpenAiApiUtil {
                                              Map<String, String> headers) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeout, TimeUnit.SECONDS)
+                .readTimeout(timeout, TimeUnit.SECONDS)
+                .writeTimeout(timeout, TimeUnit.SECONDS)
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType mediaType = MediaType.get("application/json");

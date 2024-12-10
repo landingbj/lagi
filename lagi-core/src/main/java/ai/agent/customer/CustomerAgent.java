@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
-    private final Integer maxTryTimes = 10;
+    private final Integer maxTryTimes = 5;
     private final CompletionsService  completionsService= new CompletionsService();
     private final Gson gson = new Gson();
     protected List<ToolInfo> toolInfoList;
@@ -86,7 +86,12 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             System.out.println("结束调用大模型, 耗时：" + (System.currentTimeMillis()  - start));
             String answer = result.getChoices().get(0).getMessage().getContent();
             System.out.println("调用结果：" + answer);
-            ResponseTemplate responseTemplate = gson.fromJson(answer, ResponseTemplate.class);
+            ResponseTemplate responseTemplate;
+            try {
+                responseTemplate = gson.fromJson(answer, ResponseTemplate.class);
+            } catch (Exception e) {
+                continue;
+            }
             Action action = responseTemplate.getAction();
             if("finish".equals(action.getName())) {
                 finalAnswer = (String) action.getArgs().get("answer");

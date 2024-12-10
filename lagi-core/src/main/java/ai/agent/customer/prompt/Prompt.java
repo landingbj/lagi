@@ -50,8 +50,7 @@ public class Prompt {
             "{}\n" +
             "agent_scratch:{}\n" +
             "你应该只以json格式响应，响应格式如下:\n" +
-            "{}\n" +
-            "确保响应结果可以由python json.loads解析";
+            "{}\n" + "确保响应结果只包含一个json对象且可以由python json.loads解析";
 
     private static String convert2String(List<String> con) {
         StringBuffer sb = new StringBuffer();
