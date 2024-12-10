@@ -109,6 +109,7 @@ public class LlmApiServlet extends BaseServlet {
         HttpSession session = req.getSession();
         String contextPath = session.getServletContext().getRealPath("");
         EnhanceChatCompletionRequest chatCompletionRequest = getChatCompletionFromRequest(req, session);
+        chatCompletionRequest.setMeeting(true);
         ChatCompletionResult chatCompletionResult = null;
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";

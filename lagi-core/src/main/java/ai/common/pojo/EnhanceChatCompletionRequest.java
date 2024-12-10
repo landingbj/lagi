@@ -17,4 +17,6 @@ public class EnhanceChatCompletionRequest extends ChatCompletionRequest {
 
     private String identity; // "leader" or "personnel"
 
+    private Boolean meeting;
+
 }

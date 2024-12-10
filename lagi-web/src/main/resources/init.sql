@@ -19,6 +19,14 @@ create table if not exists lagi_upload_file
     category varchar(50)  not null
 );
 
+create table if not exists lagi_upload_meeting_file
+(
+    id Integer primary key autoincrement,
+    file_id  char(32)     not null,
+    filename varchar(50)  not null,
+    filepath varchar(250) not null,
+    category varchar(50)  not null
+);
 
 create table if not exists lagi_user_preference
 (

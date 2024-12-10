@@ -45,6 +45,16 @@ public class VectorDbService {
         }
     }
 
+    public void deleteDoc(List<String> idList,String category) {
+        List<Map<String, String>> whereList = new ArrayList<>();
+        for (String id : idList) {
+            Map<String, String> where = new HashMap<>();
+            where.put("file_id", id);
+            whereList.add(where);
+        }
+        vectorStoreService.deleteWhere(whereList, category);
+    }
+
     public List<IndexSearchData> search(String question, String category) {
         List<IndexSearchData> search = vectorStoreService.search(question, category);
         return PriorityWordUtil.sortByPriorityWord(search);

@@ -219,6 +219,7 @@ public class CompletionsService implements ChatCompletion {
             EnhanceChatCompletionRequest enhanceRequest = (EnhanceChatCompletionRequest) request;
             String userId = enhanceRequest.getUserId();
             String identity = enhanceRequest.getIdentity();
+            Boolean meeting = enhanceRequest.getMeeting();
             if (identity != null) {
                 String identitySpecificContext = "";
 
@@ -251,6 +252,10 @@ public class CompletionsService implements ChatCompletion {
                             "请根据上下文信息和用户身份，回答以下问题，仅依据上下文信息，不要随意扩展，不要添加背景总结或扩展内容，不要重复身份或背景信息：\n%s";
                 }
 
+            }else if (meeting!=null&&meeting){
+                //,注意：我没做特别要求就不用告诉我参会人员，记录人，拟稿人，电话。
+                 prompt = "请完整的描述出\n会议编号：\n、类别：\n、主题：\n、会议时间：\n、会议内容：\n,如果有多个会议请分别回答。" +
+                        "根据上下文信息而非先前知识，回答以下这个问题，回答只基于上下文信息，不要随意扩展和发散内容，不要出现上下文里没有的信息: %s";
             }
         }
         prompt = String.format(prompt, context, lastMessage);

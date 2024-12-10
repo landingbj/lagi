@@ -2,6 +2,7 @@ package ai.database.impl;
 
 import ai.config.ContextLoader;
 import ai.database.pojo.MysqlJdbc;
+import ai.database.pojo.TableColumnInfo;
 
 import java.lang.reflect.Field;
 import java.sql.*;
@@ -34,13 +35,18 @@ public class MysqlAdapter {
      */
     public Connection getCon() {
         Connection con = null;
+
         try {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             con = DriverManager.getConnection(url,username,password);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return con;
-    }
+        return con;}
 
     /**
      * 关闭连接
@@ -255,6 +261,57 @@ public class MysqlAdapter {
             close(con, pre, res);// 关闭连接
         }
         return 0;// 失败返回0
+    }
+
+    /**
+     * 获取列信息
+     *
+     * @param tableName
+     */
+    public List<TableColumnInfo> getTableColumnInfo(String tableName) {
+        ResultSet resultSet = null;
+         Connection con = null;
+        List<TableColumnInfo> columnInfos = new ArrayList<>();
+        try {
+            con = getCon();
+            DatabaseMetaData metaData = con.getMetaData();
+            resultSet = metaData.getColumns(null, null, tableName, null);
+
+            while (resultSet.next()) {
+                // 获取列名、列类型、列大小等
+                String columnName = resultSet.getString("COLUMN_NAME");
+                String columnType = resultSet.getString("TYPE_NAME");
+                int columnSize = resultSet.getInt("COLUMN_SIZE");
+                String columnRemark = resultSet.getString("REMARKS");
+                String tableType = resultSet.getString("TABLE_NAME");
+                    TableColumnInfo columnInfo = new TableColumnInfo(
+                        tableName,
+                        tableType,
+                        columnName,
+                        columnType,
+                        columnSize,
+                        columnRemark
+                );
+
+                columnInfos.add(columnInfo);
+            }
+        }catch (Exception e){
+          return null;
+        } finally {
+            close(con, null,resultSet);// 关闭连接
+        }
+
+        return columnInfos;
+    }
+
+            /**
+         * 查询
+         *
+         * @return
+         */
+    public List<Map<String,Object>> sqlToValue(String sql) {
+        List<Map<String,Object>> list = select(sql);
+        return list.size() > 0 && list != null ? list : new ArrayList<>();
     }
 
 }

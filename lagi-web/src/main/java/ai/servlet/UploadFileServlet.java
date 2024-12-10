@@ -2,6 +2,7 @@ package ai.servlet;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -10,6 +11,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
+import ai.vector.pojo.VectorCollection;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import ai.common.pojo.*;
+import ai.config.ContextLoader;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.InstructionData;
 import ai.medusa.pojo.InstructionPairRequest;
@@ -26,6 +31,11 @@ import ai.migrate.service.UploadFileService;
 import ai.servlet.dto.MeetingMinutesRequest;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
+import ai.embedding.Embeddings;
+import ai.embedding.impl.TelecomGteEmbeddings;
+import ai.vector.impl.ChromaVectorStore;
+import ai.vector.pojo.IndexRecord;
+import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.UpsertRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.reflect.TypeToken;
@@ -52,8 +62,11 @@ public class UploadFileServlet extends HttpServlet {
     private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
     private static final String UPLOAD_HYJY = "/upload/HYJY";
+    private static final String MEETING_PATH = "HYJY/";
 
     private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(1);
+    private final Embeddings ef = new TelecomGteEmbeddings(ContextLoader.configuration.getFunctions().getEmbedding().get(0));
+    private final ChromaVectorStore vectorStore = new ChromaVectorStore(ContextLoader.configuration.getStores().getVectors().get(0),ef);
 
 
     @Override
@@ -84,14 +97,58 @@ public class UploadFileServlet extends HttpServlet {
             this.pairingMeetingMinutes(req, resp);
         } else if (method.equals("uploadMeetingMinutes")) {
             this.uploadMeetingMinutes(req, resp);
+        } else if (method.equals("deleteCategoryFile")) {
+            this.deleteCategoryFile(req, resp);
+        } else if (method.equals("getMeetingUploadFileList")) {
+            this.getMeetingUploadFileList(req, resp);
+        } else if (method.equals("permissionSettings")) {
+            this.permissionSettings(req, resp);
         }
     }
+
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         this.doGet(req, resp);
     }
 
+    private void getMeetingUploadFileList(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+    resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        int pageSize = Integer.MAX_VALUE;
+        int pageNumber = 1;
+
+        String category = req.getParameter("category");
+
+        if (req.getParameter("pageNumber") != null) {
+            pageSize = Integer.parseInt(req.getParameter("pageSize"));
+            pageNumber = Integer.parseInt(req.getParameter("pageNumber"));
+        }
+
+        Map<String, Object> map = new HashMap<>();
+        List<UploadFile> result = null;
+        int totalRow = 0;
+        try {
+            result = uploadFileService.getMeetingUploadFileList(pageNumber, pageSize, category);
+            totalRow = uploadFileService.getMeetingTotalRow(category);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (result != null) {
+            map.put("status", "success");
+            int totalPage = (int) Math.ceil((double) totalRow / pageSize);
+            map.put("totalRow", totalRow);
+            map.put("totalPage", totalPage);
+            map.put("pageNumber", pageNumber);
+            map.put("pageSize", pageSize);
+            map.put("data", result);
+        } else {
+            map.put("status", "failed");
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+    }
     private void pairing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         InstructionPairRequest instructionPairRequest = mapper.readValue(requestToJson(req), InstructionPairRequest.class);
@@ -245,6 +302,135 @@ public class UploadFileServlet extends HttpServlet {
         out.close();
     }
 
+    private void deleteCategoryFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        req.setCharacterEncoding("utf-8");
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String, Object> map = new HashMap<>();
+
+        Map<String, Object> map1 = parseJsonToMap(req);
+        if (map1.get("category")!=null&&map1.get("idList")!=null){
+             List<String> idList = (List<String>) map1.get("idList");
+             String category = map1.get("category").toString();
+             vectorDbService.deleteDoc(idList,category);
+             uploadFileService.deleteCategoryFile(idList,category);
+             map.put("status", "success");
+        }else if (map1.get("category")==null&&map1.get("idList")!=null){
+            List<String> idList = (List<String>) map1.get("idList");
+             vectorDbService.deleteDoc(idList);
+             uploadFileService.deleteCategoryFile(idList,null);
+             map.put("status", "success");
+        }else {
+            map.put("status", "failed");
+            map.put("data", "请检测请求参数！");
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+    }
+
+    public void permissionSettings(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        Map<String, Object> map = new HashMap<>();
+        String authorizer = req.getParameter("authorizer");
+        String fileId = req.getParameter("fileId");
+        if (authorizer!=null&&fileId!=null){
+            String[] categorys = stringSplitter(authorizer);
+            QueryCondition queryCondition = new QueryCondition();
+                Map<String, String> where = new HashMap<>();
+                where.put("file_id", fileId);
+                queryCondition.setWhere(where);
+
+            //查
+            List<IndexRecord> indexRecords = new ArrayList<>();
+            String filename = "";
+            String filepath = "";
+            for (VectorCollection collection: vectorStoreService.listCollections()) {
+                indexRecords = vectorStoreService.query(queryCondition,collection.getCategory());
+                if (indexRecords.size()>0){
+                filename = indexRecords.get(0).getMetadata().get("filename").toString();
+                filepath = indexRecords.get(0).getMetadata().get("filepath").toString();
+                break;
+                }
+            }
+            if(indexRecords.size()>0){
+                    //删
+                    List<Map<String, String>> whereList = new ArrayList<>();
+                        whereList.add(where);
+                    vectorStore.deleteWhere(whereList);
+                    List<String> idList = new ArrayList<>();
+                    idList.add(fileId);
+                    uploadFileService.deleteCategoryFile(idList,null);
+                     //增
+                    for (String category : categorys) {
+                        for (IndexRecord indexRecord : indexRecords) {
+                        UpsertRecord upsertRecord = new UpsertRecord();
+                        upsertRecord.setDocument(indexRecord.getDocument());
+                        upsertRecord.setId(indexRecord.getId());
+                        Map<String, String> convertedMap = indexRecord.getMetadata().entrySet().stream()
+                        .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> String.valueOf(entry.getValue())
+                        ));
+                        upsertRecord.setMetadata(convertedMap);
+
+                        List<UpsertRecord> upsertRecords = new ArrayList<>();
+                        upsertRecords.add(upsertRecord);
+                        vectorStore.upsert(upsertRecords, category);
+                        }
+                        try {
+                        UploadFile entity = new UploadFile();
+                        entity.setCategory(category);
+                        entity.setFilename(filename);
+                        entity.setFilepath(filepath);
+                        entity.setFileId(fileId);
+                        uploadFileService.addUploadMeetingFile(entity);
+                        }catch (Exception e){
+                             map.put("status", "failed");
+                             map.put("data", "请检测请求参数！");
+                            break;
+                        }
+
+                    }
+                    map.put("status", "success");
+                    map.put("data", "权限更新成功！");
+                }else {
+                    map.put("status", "failed");
+                    map.put("data", "向量数据库，未找到该文件！");
+                }
+            }else {
+             map.put("status", "failed");
+             map.put("data", "请检测请求参数！");
+            }
+
+
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+
+    }
+     public static Map<String, Object> parseJsonToMap(HttpServletRequest req) throws IOException {
+        StringBuilder jsonBuilder = new StringBuilder();
+        BufferedReader reader = req.getReader();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            jsonBuilder.append(line);
+        }
+        String json = jsonBuilder.toString();
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, Object>>() {}.getType();
+        Map<String, Object> map = gson.fromJson(json, type);
+        if (map.containsKey("category")) {
+            Object hobbiesObj = map.get("category");
+            if (hobbiesObj instanceof List) {
+                List<String> hobbies = (List<String>) hobbiesObj;
+                //System.out.println("fileIds: " + hobbies);
+            }
+        }
+        return map;
+    }
+
     private void getUploadFileList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         int pageSize = Integer.MAX_VALUE;
@@ -287,12 +473,18 @@ public class UploadFileServlet extends HttpServlet {
     private void downloadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String filePath = req.getParameter("filePath");
         String fileName = req.getParameter("fileName");
+        String type = req.getParameter("type");
         // 设置响应内容类型
         resp.setContentType("application/pdf");
         String encodedFileName = URLEncoder.encode(fileName, "UTF-8");
         resp.setHeader("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"");
+        String uploadDir = "";
+        if (type==null){
+             uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
+        }else {
+             uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+        }
 
-        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
         // 读取文件并写入响应流
         try {
             FileInputStream fileInputStream = new FileInputStream(uploadDir + File.separator + filePath);
@@ -503,14 +695,14 @@ public class UploadFileServlet extends HttpServlet {
         }
         introduceBuilder.append(";/n");
         String introduce = introduceBuilder.toString();
-
+        List<Map<String, String>> data = new ArrayList<>();
         jsonResult.addProperty("status", "success");
-        for (String category : categorys) {
-                DiskFileItemFactory factory = new DiskFileItemFactory();
-                ServletFileUpload upload = new ServletFileUpload(factory);
-                    upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-                    upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-                String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
                 if (!new File(uploadDir).isDirectory()) {
                     new File(uploadDir).mkdirs();
                 }
@@ -530,7 +722,6 @@ public class UploadFileServlet extends HttpServlet {
 
                             while (!file.exists()){
                                 fi.write(file);
-
                             }
                             files.add(file);
                             realNameMap.put(file.getName(), fileName);
@@ -542,7 +733,7 @@ public class UploadFileServlet extends HttpServlet {
                     jsonResult.addProperty("msg", "There was an error parsing the file - meeting minutes");
                     ex.printStackTrace();
                 }
-             List<Map<String, String>> data = new ArrayList<>();
+        for (String category : categorys) {
             if (!files.isEmpty()) {
                 String content = "";
                 for (File file : files) {
@@ -557,11 +748,12 @@ public class UploadFileServlet extends HttpServlet {
                     }
                 }
             }
-            if (!jsonResult.has("msg")) {
+
+        }
+          if (!jsonResult.has("msg")) {
                 jsonResult.addProperty("data", gson.toJson(data));
                 jsonResult.addProperty("status", "success");
             }
-        }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
@@ -572,7 +764,9 @@ public class UploadFileServlet extends HttpServlet {
         String formattedString = authorizer.replace('，', ',');
                formattedString = formattedString.replaceAll(",$", "");
         String[] splitStrings = formattedString.split(",");
-        return splitStrings;
+         Set<String> set = new HashSet<>(Arrays.asList(splitStrings));
+        String[] uniqueStrings = set.toArray(new String[0]);
+        return uniqueStrings;
 
     }
 
@@ -675,7 +869,7 @@ public class UploadFileServlet extends HttpServlet {
             if (fileId == null) {
                 fileId = UUID.randomUUID().toString().replace("\\", "");
             }
-            String filepath = file.getName();
+            String filepath = MEETING_PATH+file.getName();
 
             metadatas.put("filename", filename);
             metadatas.put("category", category);
@@ -752,7 +946,7 @@ public class UploadFileServlet extends HttpServlet {
                 entity.setFilename(filename);
                 entity.setFilepath(filepath);
                 entity.setFileId(fileId);
-                uploadFileService.addUploadFile(entity);
+                uploadFileService.addUploadMeetingFile(entity);
             } catch (IOException | SQLException e) {
                 e.printStackTrace();
             }

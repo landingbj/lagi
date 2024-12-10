@@ -279,4 +279,14 @@
         <url-pattern>/chat/pdf/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>sql</servlet-name>
+        <servlet-class>ai.servlet.api.SqlApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>sql</servlet-name>
+        <url-pattern>/chat/sql/*</url-pattern>
+    </servlet-mapping>
+
+
 </web-app>

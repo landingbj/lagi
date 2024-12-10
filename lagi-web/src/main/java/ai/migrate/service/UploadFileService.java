@@ -15,6 +15,14 @@ public class UploadFileService {
         return uploadFileDao.addUploadFile(entity);
     }
 
+    public int addUploadMeetingFile(UploadFile entity) throws SQLException {
+        return uploadFileDao.addUploadMeetingFile(entity);
+    }
+
+    public boolean getAddCount(String fileId) throws SQLException {
+        return uploadFileDao.getAddCount(fileId);
+    }
+
     public int deleteUploadFile(String category)  {
         try {
             return uploadFileDao.deleteUploadFile(category);
@@ -55,11 +63,47 @@ public class UploadFileService {
         return result;
     }
 
+     public int deleteCategoryFile (List<String> idList,String category) {
+          int result = -1;
+        Conn conn = new Conn();
+        try {
+            conn.setAutoCommit(false);
+            if (category == null){
+               for (String fileId : idList) {
+                result = uploadFileDao.deleteUploadMeetingFile(fileId, conn);
+               }
+            }else {
+                for (String fileId : idList) {
+                result = uploadFileDao.deleteUploadMeetingFile(fileId,category, conn);
+               }
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        } finally {
+            conn.close();
+        }
+        return result;
+     }
+
     public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category) throws SQLException {
         if (category == null) {
             return uploadFileDao.getUploadFileList(pageNumber, pageSize);
         }
         return uploadFileDao.getUploadFileList(pageNumber, pageSize, category);
+    }
+
+    public List<UploadFile> getMeetingUploadFileList(int pageNumber, int pageSize, String category) throws SQLException {
+        if (category == null) {
+            return uploadFileDao.getMeetingUploadFileList(pageNumber, pageSize);
+        }
+        return uploadFileDao.getMeetingUploadFileList(pageNumber, pageSize, category);
     }
     
     public int getTotalRow(String category) throws SQLException {
@@ -67,5 +111,11 @@ public class UploadFileService {
             return uploadFileDao.getTotalRow();
         }
         return uploadFileDao.getTotalRow(category);
+    }
+    public int getMeetingTotalRow(String category) throws SQLException {
+        if (category == null) {
+            return uploadFileDao.getMeetingTotalRow();
+        }
+        return uploadFileDao.getMeetingTotalRow(category);
     }
 }

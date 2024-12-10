@@ -32,6 +32,27 @@ public class UploadFileDao {
         return result;
     }
 
+    public int deleteUploadMeetingFile(String fileId,String category, Conn conn) throws SQLException {
+        int result = -1;
+        String sql = "DELETE FROM lagi_upload_meeting_file WHERE file_id = ? AND category = ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, fileId);
+        ps.setString(2, category);
+        result = ps.executeUpdate();
+        BaseIndex.closeConnection(ps);
+        return result;
+    }
+
+    public int deleteUploadMeetingFile(String fileId, Conn conn) throws SQLException {
+        int result = -1;
+        String sql = "DELETE FROM lagi_upload_meeting_file WHERE file_id = ? ";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, fileId);
+        result = ps.executeUpdate();
+        BaseIndex.closeConnection(ps);
+        return result;
+    }
+
     public int addUploadFile(UploadFile entity) throws SQLException {
         IConn conn = new Conn();
         int result = -1;
@@ -44,6 +65,36 @@ public class UploadFileDao {
         result = ps.executeUpdate();
         BaseIndex.closeConnection(ps, conn);
         return result;
+    }
+
+    public int addUploadMeetingFile(UploadFile entity) throws SQLException {
+        IConn conn = new Conn();
+        int result = -1;
+        String sql = "INSERT INTO lagi_upload_meeting_file (file_id, filename, filepath, category) VALUES (?, ?, ?, ?)";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, entity.getFileId());
+        ps.setString(2, entity.getFilename());
+        ps.setString(3, entity.getFilepath());
+        ps.setString(4, entity.getCategory());
+        result = ps.executeUpdate();
+        BaseIndex.closeConnection(ps, conn);
+        return result;
+    }
+
+    public boolean getAddCount(String fileId) throws SQLException {
+        IConn conn = new Conn();
+        int result = -1;
+        String sql = "select * from lagi_upload_file where file_id = ?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, fileId);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            result = rs.getInt(1);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result<0;
     }
     
     public UploadFile getUploadFileList(String fileId, Conn conn) throws SQLException {
@@ -74,6 +125,50 @@ public class UploadFileDao {
         ps = conn.prepareStatement(sql);
         ps.setInt(1, (pageNumber - 1) * pageSize);
         ps.setInt(2, pageSize);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            UploadFile entity = new UploadFile();
+            entity.setFileId(rs.getString(1));
+            entity.setFilename(rs.getString(2));
+            entity.setFilepath(rs.getString(3));
+            entity.setCategory(rs.getString(4));
+            result.add(entity);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result;
+    }
+
+    public List<UploadFile> getMeetingUploadFileList(int pageNumber, int pageSize) throws SQLException {
+        IConn conn = new Conn();
+        List<UploadFile> result = new ArrayList<>();
+        String sql = "select file_id, filename, filepath, category from lagi_upload_meeting_file limit ?,?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setInt(1, (pageNumber - 1) * pageSize);
+        ps.setInt(2, pageSize);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            UploadFile entity = new UploadFile();
+            entity.setFileId(rs.getString(1));
+            entity.setFilename(rs.getString(2));
+            entity.setFilepath(rs.getString(3));
+            entity.setCategory(rs.getString(4));
+            result.add(entity);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result;
+    }
+     public List<UploadFile> getMeetingUploadFileList(int pageNumber, int pageSize,String category) throws SQLException {
+        IConn conn = new Conn();
+        List<UploadFile> result = new ArrayList<>();
+        String sql = "select file_id, filename, filepath, category from lagi_upload_meeting_file where category=? limit ?,?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, category);
+        ps.setInt(2, (pageNumber - 1) * pageSize);
+        ps.setInt(3, pageSize);
         rs = ps.executeQuery();
         while (rs.next()) {
             UploadFile entity = new UploadFile();
@@ -124,11 +219,42 @@ public class UploadFileDao {
         BaseIndex.closeConnection(rs, ps, conn);
         return result;
     }
-    
+
     public int getTotalRow(String category) throws SQLException {
         Conn conn = new Conn();
         int result = -1;
         String sql = "SELECT count(*) FROM lagi_upload_file where category=?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, category);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            result = rs.getInt(1);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result;
+    }
+
+    public int getMeetingTotalRow() throws SQLException {
+        Conn conn = new Conn();
+        int result = -1;
+        String sql = "SELECT count(*) FROM lagi_upload_meeting_file";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            result = rs.getInt(1);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result;
+    }
+    
+    public int getMeetingTotalRow(String category) throws SQLException {
+        Conn conn = new Conn();
+        int result = -1;
+        String sql = "SELECT count(*) FROM lagi_upload_meeting_file where category=?";
         PreparedStatement ps = null;
         ResultSet rs = null;
         ps = conn.prepareStatement(sql);
