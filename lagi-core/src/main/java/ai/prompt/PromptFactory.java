@@ -51,7 +51,8 @@ public class PromptFactory {
                     return StringUtils.isNotBlank(item.getPrompt()) ? item.getPrompt().replaceAll("%s", answer) : "%s";
                 })
                 .orElse("%s");
-        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.5,\"max_tokens\":1024,\"stream\":false}", prompt);
+        String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.001,\"max_tokens\":4096,\"stream\":false}", prompt);
+        log.info("promptFactory : {}", requestString);
         return gson.fromJson(requestString, ChatCompletionRequest.class);
     }
 
