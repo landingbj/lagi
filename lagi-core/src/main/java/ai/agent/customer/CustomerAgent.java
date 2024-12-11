@@ -73,6 +73,8 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
         int count = maxTryTimes;
         String finalAnswer = null;
+        String imageUrl = null;
+        String fileUrl = null;
         String question = data.getMessages().get(data.getMessages().size() - 1).getContent();
         StringBuilder agent_scratch = new StringBuilder();
         String user_msg = "决定用哪个工具若觉得任务已完成调用完成工具";
@@ -95,6 +97,8 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             Action action = responseTemplate.getAction();
             if("finish".equals(action.getName())) {
                 finalAnswer = (String) action.getArgs().get("answer");
+                imageUrl = (String) action.getArgs().get("imageUrl");
+                fileUrl = (String) action.getArgs().get("fileUrl");
                 break;
             }
             String observation = responseTemplate.getThoughts().getSpeak();
@@ -114,11 +118,19 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             return null;
         }
         String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", finalAnswer);
-        return gson.fromJson(format, ChatCompletionResult.class);
+        ChatCompletionResult chatCompletionResult = gson.fromJson(format, ChatCompletionResult.class);
+        ChatMessage message = chatCompletionResult.getChoices().get(0).getMessage();
+        if(fileUrl != null) {
+            message.setFilepath(Lists.newArrayList(fileUrl));
+        }
+        if(imageUrl != null) {
+            message.setImage(imageUrl);
+        }
+        return chatCompletionResult;
     }
 
     private String parseThoughts(Thoughts thoughts, String actionResult) {
-        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{},action_result:{}",
+        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{}\nresult of action :{}",
                 thoughts.getPlain(),
                 thoughts.getReasoning(),
                 thoughts.getCriticism(),
