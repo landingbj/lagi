@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -76,6 +77,41 @@ public class ApiInvokeUtil {
         return null;
     }
 
+    public static String post(String url, Map<String, String> headers, Map<String, String> form, int timeout, TimeUnit unit) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(timeout,unit)
+                .readTimeout(timeout, unit)
+                .writeTimeout(timeout, unit)
+                .connectionPool(CONNECTION_POOL)
+                .build();
+        Set<String> key = form.keySet();
+        FormBody.Builder formBuilder = new FormBody.Builder();
+        for (String s : key) {
+            formBuilder.add(s, form.get(s));
+        }
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .post(formBuilder.build());
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                requestBuilder.addHeader(header.getKey(), header.getValue());
+            }
+        }
+        Request request = requestBuilder.build();
+        try (Response response = client.newCall(request).execute();){
+            String reponseBody = response.body().string();
+            if(response.isSuccessful()) {
+                return reponseBody;
+            }
+            else {
+                log.error("http code {} , body {}", response.code(), reponseBody);
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
     public static String get(String url, Map<String, String> queryParams, Map<String, String> headers, int timeout, TimeUnit unit) {
         url = buildUrlByQuery(url, queryParams);
          OkHttpClient client = new OkHttpClient.Builder()
@@ -105,25 +141,31 @@ public class ApiInvokeUtil {
         return null;
     }
 
-
-    public static <R> ObservableList<R> sse(String url, Map<String, String> headers, String json,
-                                                   Integer timeout, TimeUnit timeUnit, Function<String, R> convertResponseFunc) {
+    public static <R> ObservableList<R> sse(String url, Map<String, String> headers, Map<String, String> form,
+                                            Integer timeout, TimeUnit timeUnit, Function<String, R> convertResponseFunc) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeout, timeUnit)
                 .connectionPool(CONNECTION_POOL)
                 .build();
-        MediaType mediaType = MediaType.get("application/json");
-        RequestBody body = RequestBody.create(json, mediaType);
+        Set<String> key = form.keySet();
+        FormBody.Builder formBuilder = new FormBody.Builder();
+        for (String s : key) {
+            formBuilder.add(s, form.get(s));
+        }
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .header("Accept", "text/event-stream")
-                .post(body);
+                .post(formBuilder.build());
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 requestBuilder.addHeader(header.getKey(), header.getValue());
             }
         }
         Request request = requestBuilder.build();
+        return sse(convertResponseFunc, client, request);
+    }
+
+    private static <R> ObservableList<R> sse(Function<String, R> convertResponseFunc, OkHttpClient client, Request request) {
         EventSource.Factory factory = EventSources.createFactory(client);
         ObservableList<R> res = new ObservableList<>();
         RRException exception = new RRException();
@@ -185,6 +227,28 @@ public class ApiInvokeUtil {
         Iterable<R> iterable = res.getObservable().blockingIterable();
         iterable.iterator().hasNext();
         return res;
+    }
+
+
+    public static <R> ObservableList<R> sse(String url, Map<String, String> headers, String json,
+                                                   Integer timeout, TimeUnit timeUnit, Function<String, R> convertResponseFunc) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(timeout, timeUnit)
+                .connectionPool(CONNECTION_POOL)
+                .build();
+        MediaType mediaType = MediaType.get("application/json");
+        RequestBody body = RequestBody.create(json, mediaType);
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .header("Accept", "text/event-stream")
+                .post(body);
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                requestBuilder.addHeader(header.getKey(), header.getValue());
+            }
+        }
+        Request request = requestBuilder.build();
+        return sse(convertResponseFunc, client, request);
     }
 
 }

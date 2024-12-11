@@ -66,18 +66,20 @@ public class Prompt {
         String con = convert2String(constraints);
         String res = convert2String(resurces);
         String best = convert2String(best_practices);
-        Map<String, Object> args = Maps.newHashMap();
-        args.put("args name", "args value");
-        Action action = Action.builder().name("action name").args(args).build();
-        Thoughts thoughts = Thoughts.builder()
-                .plain("简短的描述短期的规划和长期的计划列表")
-                .criticism("建设良好的自我批评")
-                .speak("当前步骤返回给用户的总结")
-                .reasoning("推理")
-                .build();
-        ResponseTemplate build = ResponseTemplate.builder().action(action).thoughts(thoughts).build();
-        Gson gson = new Gson();
-        String json = gson.toJson(build);
+        String json = "{\n" +
+                "  \"action\": {\n" +
+                "    \"name\": \"action name\",\n" +
+                "    \"args\": {\n" +
+                "      \"args name\": \"args value\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"thoughts\": {\n" +
+                "    \"plain\": \"简短的描述短期的规划和长期的计划列表\",\n" +
+                "    \"criticism\": \"建设良好的自我批评\",\n" +
+                "    \"speak\": \"当前步骤返回给用户的总结\",\n" +
+                "    \"reasoning\": \"推理\"\n" +
+                "  }\n" +
+                "}";
         return StrUtil.format(template, query, con, tools, res, best, agent_scratch, json);
     }
 
