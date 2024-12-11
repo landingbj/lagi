@@ -7,6 +7,8 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.StringUtils;
+import cn.hutool.core.text.StrFormatter;
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -14,9 +16,11 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 
 public class PromptFactory {
     String prompt = "input your prompt here %s";
@@ -48,9 +52,12 @@ public class PromptFactory {
         String prompt = promptConfig.getPrompt().getRoles().stream()
                 .findFirst()
                 .map(item-> {
-                    return StringUtils.isNotBlank(item.getPrompt()) ? item.getPrompt().replaceAll("%s", answer) : "%s";
+                    return StringUtils.isNotBlank(item.getPrompt()) ? StrUtil.format(item.getPrompt(), new HashMap<String, String>() {{
+                        put("question", answer);
+                        put("answer", answer);
+                    }}) : answer;
                 })
-                .orElse("%s");
+                .orElse(answer);
         String requestString = String.format("{\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"temperature\":0.001,\"max_tokens\":4096,\"stream\":false}", prompt);
         log.info("promptFactory : {}", requestString);
         return gson.fromJson(requestString, ChatCompletionRequest.class);
