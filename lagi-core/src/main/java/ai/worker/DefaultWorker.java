@@ -7,7 +7,7 @@ import ai.router.Routers;
 
 public class DefaultWorker {
 
-    private Routers routers;
+    private final Routers routers;
 
     public DefaultWorker() {
         this.routers = Routers.getInstance();

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
-    private final Integer maxTryTimes = 5;
+    private final Integer maxTryTimes = 3;
     private final CompletionsService  completionsService= new CompletionsService();
     private final Gson gson = new Gson();
     protected List<ToolInfo> toolInfoList;
@@ -58,7 +58,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         userMessage.setRole("user");
         userMessage.setContent(userMsg);
         chatMessages.add(userMessage);
-        request.setMax_tokens(4096);
+        request.setMax_tokens(1024);
         request.setTemperature(0);
         request.setMessages(chatMessages);
         System.out.println("request = " + gson.toJson(request));
@@ -77,7 +77,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         String fileUrl = null;
         String question = data.getMessages().get(data.getMessages().size() - 1).getContent();
         StringBuilder agent_scratch = new StringBuilder();
-        String user_msg = "决定用哪个工具若觉得任务已完成调用完成工具";
+        String user_msg = "决定用哪个工具若认为任务已完成或工具调用失败直接调用finish工具";
         String assistant_msg = "";
         List<List<String>> history = new ArrayList<>();
         while (count-- > 0){
@@ -92,11 +92,12 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             try {
                 responseTemplate = gson.fromJson(answer, ResponseTemplate.class);
             } catch (Exception e) {
+                agent_scratch.append("\nobservation: 返回的结果不符合要求的json格式");
                 continue;
             }
             Action action = responseTemplate.getAction();
             if("finish".equals(action.getName())) {
-                finalAnswer = (String) action.getArgs().get("answer");
+                finalAnswer = (String) action.getArgs().get("result");
                 imageUrl = (String) action.getArgs().get("imageUrl");
                 fileUrl = (String) action.getArgs().get("fileUrl");
                 break;
@@ -120,21 +121,21 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", finalAnswer);
         ChatCompletionResult chatCompletionResult = gson.fromJson(format, ChatCompletionResult.class);
         ChatMessage message = chatCompletionResult.getChoices().get(0).getMessage();
-        if(fileUrl != null) {
+        if(StrUtil.isNotBlank(fileUrl)) {
             message.setFilepath(Lists.newArrayList(fileUrl));
         }
-        if(imageUrl != null) {
-            message.setImage(imageUrl);
+        if(StrUtil.isNotBlank(imageUrl)) {
+            message.setImageList(Lists.newArrayList(imageUrl));
         }
         return chatCompletionResult;
     }
 
     private String parseThoughts(Thoughts thoughts, String actionResult) {
-        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{}\nresult of action :{}",
+        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{}\nobservation :{}",
                 thoughts.getPlain(),
                 thoughts.getReasoning(),
                 thoughts.getCriticism(),
-                thoughts.getSpeak(), actionResult);
+                thoughts.getSpeak(), actionResult == null? "调用失败": "调用成功结果如下:"+actionResult);
     }
 
     @Override

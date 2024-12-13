@@ -20,7 +20,7 @@ public class FinishTool extends AbstractTool {
         toolInfo = ToolInfo.builder().name("finish")
                 .description("这是一个任务完成工具当任务完成时接受最终结果")
                 .args(Lists.newArrayList(
-                        ToolArg.builder().name("answer").type("string").description("输出最终的任务结果").build(),
+                        ToolArg.builder().name("result").type("string").description("任务最终的文本回答").build(),
                         ToolArg.builder().name("imageUrl").type("string").description("任务结果中的图片地址").build(),
                         ToolArg.builder().name("fileUrl").type("string").description("任务结果中文件地址").build()
                 )).build();

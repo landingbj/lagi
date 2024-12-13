@@ -84,17 +84,14 @@ public class LlmApiServlet extends BaseServlet {
         } else if (method.equals("embeddings")) {
             this.embeddings(req, resp);
         } else if(method.equals("go")) {
-            this.go("pass", req, resp);
-        } else if(method.startsWith("go/")) {
-            String routerPath = method.substring(3);
-            this.go(routerPath, req, resp);
+            this.go(req, resp);
         }
     }
 
-    private void go(String routerPath, HttpServletRequest req, HttpServletResponse resp) throws IOException{
+    private void go(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         resp.setContentType("application/json;charset=utf-8");
         LLmRequest lLmRequest = reqBodyToObj(req, LLmRequest.class);
-        ChatCompletionResult work = defaultWorker.work(routerPath, lLmRequest);
+        ChatCompletionResult work = defaultWorker.work(lLmRequest.getRouter(), lLmRequest);
         responsePrint(resp, toJson(work));
     }
 
