@@ -8,7 +8,6 @@ import ai.utils.SensitiveWordUtil;
 import ai.worker.DefaultWorker;
 import ai.worker.audio.Asr4FlightsWorker;
 import ai.worker.pojo.Asr4FlightData;
-import ai.worker.pojo.WorkData;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,9 +45,7 @@ public class WorkerApiServlet extends BaseServlet {
     public void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
-        WorkData<ChatCompletionRequest> chatCompletionRequestWorkData = new WorkData<>();
-        chatCompletionRequestWorkData.setData(chatCompletionRequest);
-        ChatCompletionResult chatCompletionResult = defaultWorker.work(chatCompletionRequestWorkData);
+        ChatCompletionResult chatCompletionResult = defaultWorker.work("best", chatCompletionRequest);
         chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
         responsePrint(resp, gson.toJson(chatCompletionResult));
     }
@@ -82,10 +79,8 @@ public class WorkerApiServlet extends BaseServlet {
             while ((bytesRead = input.read(buffer)) != -1) {
                 output.write(buffer, 0, bytesRead);
             }
-            WorkData<Asr4FlightData> chatCompletionRequestWorkData = new WorkData<>();
             Asr4FlightData build = Asr4FlightData.builder().resPath(resPath).build();
-            chatCompletionRequestWorkData.setData(build);
-            result = asr4FlightsWorker.call(chatCompletionRequestWorkData);
+            result = asr4FlightsWorker.call(build);
         } catch (IOException e) {
             result = new AsrResponse(1, "识别失败");
             e.printStackTrace();

@@ -9,6 +9,7 @@ public class BaseChatAgent extends AbstractChatAgent{
     public BaseChatAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
         this.agentName = agentConfig.getName();
+        this.badCase = agentConfig.getWrongCase() != null ? agentConfig.getWrongCase() : badCase;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package ai.worker;
 
 import ai.agent.Agent;
-import ai.worker.pojo.WorkData;
+import cn.hutool.core.bean.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -18,31 +18,38 @@ public class DefaultAppointWorker<T, R> extends Worker<T, R> {
             return;
         }
         for (Agent<T, R> agent : agentList){
-            agentMap.put(agent.getAgentName(), agent);
+            if(agent.getAgentName() == null) {
+                continue;
+            }
+            try {
+                agentMap.put(agent.getAgentName(), agent);
+            } catch (Exception e) {
+                log.error("agent register error", e);
+            }
         }
     }
 
     @Override
-    public R work(WorkData<T> data) {
+    public R work(T data) {
         return null;
     }
 
     @Override
-    public R call(WorkData<T> data) {
-        String agentId = data.getAgentId();
+    public R call(T data) {
+        String agentId = (String)BeanUtil.getFieldValue(data, "agentId");
         Agent<T, R> trAgent = agentMap.get(agentId);
         if(trAgent != null) {
-            return trAgent.communicate(data.getData());
+            return trAgent.communicate(data);
         }
         return null;
     }
 
     @Override
-    public void notify(WorkData<T> data) {
-        String agentId = data.getAgentId();
+    public void notify(T data) {
+        String agentId = (String)BeanUtil.getFieldValue(data, "agentId");
         Agent<T, R> trAgent = agentMap.get(agentId);
         if(trAgent != null) {
-            trAgent.send(data.getData());
+            trAgent.send(data);
         }
     }
 }

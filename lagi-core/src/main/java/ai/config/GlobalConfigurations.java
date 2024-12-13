@@ -5,6 +5,7 @@ import ai.config.pojo.*;
 import ai.manager.*;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.ocr.OcrConfig;
+import ai.router.Routers;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -26,6 +27,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private ModelFunctions functions;
     private List<AgentConfig> agents;
     private List<WorkerConfig> workers;
+    private List<RouterConfig> routers;
 
     @Override
     public void init() {
@@ -38,6 +40,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         OcrConfig.init(functions.getImage2ocr());
         AgentManager.getInstance().register(agents);
         WorkerManager.getInstance().register(workers);
+        Routers.getInstance().register(routers);
     }
 
 

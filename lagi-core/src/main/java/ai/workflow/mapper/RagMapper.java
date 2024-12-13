@@ -39,7 +39,7 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
 
-        ChatCompletionResult chatCompletionResult = chatAgent.communicate(chatCompletionRequest);
+        ChatCompletionResult chatCompletionResult = agent.communicate(chatCompletionRequest);
         double calPriority = 0;
         ChatCompletionResultWithSource chatCompletionResultWithSource;
         if (chatCompletionResult != null) {
@@ -63,7 +63,7 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
     public double calculatePriority(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
 
         double positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
-        double negative = getBadCaseSimilarity(getBadcase(), chatCompletionResult);
+        double negative = getBadCaseSimilarity(getBadCase(), chatCompletionResult);
         double add =  getPriorityWordPriority(chatCompletionRequest, chatCompletionResult);
         double calcPriority = positive * 5 + (negative * -5) + getPriority() + add;
         log.info("{} .myMapping: add = {}" , getAgentName(), add);

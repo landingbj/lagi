@@ -4,7 +4,6 @@ import ai.agent.Agent;
 import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.worker.pipeline.AgentConsumer;
 import ai.worker.pipeline.AgentProducer;
-import ai.worker.pojo.WorkData;
 
 import java.io.Serializable;
 import java.util.List;
@@ -26,18 +25,18 @@ public class DefaultPipelineWorker<T extends Serializable, R extends Serializabl
     }
 
     @Override
-    public R work(WorkData<T> data) {
+    public R work(T data) {
         pipeline.start();
         return null;
     }
 
     @Override
-    public R call(WorkData<T> data) {
+    public R call(T data) {
         return null;
     }
 
     @Override
-    public void notify(WorkData<T> data) {
+    public void notify(T data) {
 
     }
 }

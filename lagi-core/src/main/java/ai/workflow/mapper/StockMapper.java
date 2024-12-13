@@ -31,7 +31,7 @@ public class StockMapper extends ChatAgentMapper implements IMapper {
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
-        chatCompletionResult = chatAgent.communicate(chatCompletionRequest);
+        chatCompletionResult = agent.communicate(chatCompletionRequest);
         if(chatCompletionResult != null) {
             ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);

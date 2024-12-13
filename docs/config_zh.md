@@ -217,11 +217,11 @@ functions:
 ```yaml
 functions:
   policy:
-    #  handle配置 目前有parallel、failover、polling 3种值， parallel表示并行调用，failover表示故障转移, polling表示负载轮询调用, 场景解释：
-    # 1. 当请求中未强制指定模型, 或指定的模型无效时 ，parallel、failover、polling 3种策略生效
+    #  handle配置 目前有parallel、failover、failover 3种值， parallel表示并行调用，failover表示故障转移, polling表示负载轮询调用, 场景解释：
+    # 1. 当请求中未强制指定模型, 或指定的模型无效时 ，parallel、failover、failover 3种策略生效
     # 2. 当指定handle为 parallel 配置的模型并行执行， 返回响应最快且优先级最高的模型调用结果
     # 3. 当指定handle为 failover 配置的模型串行执行， 模型按优先级串行执行， 串行执行过程中任意模型返回成功， 后面的模型不再执行。
-    # 4. 当指定handle为 polling 配置的模型轮询执行， 请求会根据请求的ip、浏览器指纹 等额外信息， 均衡分配请求给对应的模型执行。
+    # 4. 当指定handle为 failover 配置的模型轮询执行， 请求会根据请求的ip、浏览器指纹 等额外信息， 均衡分配请求给对应的模型执行。
     # 5. 当所有的模型都返回失败时, 会设置 http 请求的状态码为 600-608。 body里为具体的错误信息。 (错误码错误信息实际为最后一个模型调用失败的信息)
     #  错误码： 
     #     600 请求参数不合法

@@ -4,14 +4,12 @@ import ai.agent.Agent;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
 import ai.mr.IReducer;
-import ai.worker.pojo.WorkData;
 import ai.workflow.container.AgentContainer;
 import ai.workflow.reducer.AgentReducer;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class DefaultBestWorker<T, R> extends Worker<T, R>{
 
@@ -20,18 +18,11 @@ public class DefaultBestWorker<T, R> extends Worker<T, R>{
     public DefaultBestWorker(List<Agent<T, R>> agents) {
     }
 
-
-    public DefaultBestWorker(List<Agent<T, R>> agents,
-                             Function<List<Agent<T, R>>, List<IMapper>> convertFunc) {
-        this.mappers = convertFunc.apply(agents);
-    }
-
-
     @Override
-    public  R work(WorkData<T> data){
+    public  R work(T data){
         R result = null;
         Map<String, Object> params = new HashMap<>();
-        params.put(WorkerGlobal.MAPPER_CHAT_REQUEST, data.getData());
+        params.put(WorkerGlobal.MAPPER_CHAT_REQUEST, data);
         try (IRContainer contain = new AgentContainer()) {
             for (IMapper mapper : this.mappers) {
                 mapper.setParameters(params);
@@ -51,11 +42,11 @@ public class DefaultBestWorker<T, R> extends Worker<T, R>{
     }
 
     @Override
-    public  R call(WorkData<T> data){
+    public  R call(T data){
         return null;
     }
 
     @Override
-    public void notify(WorkData<T> data){
+    public void notify(T data){
     }
 }

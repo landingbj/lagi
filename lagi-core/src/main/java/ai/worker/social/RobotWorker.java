@@ -7,7 +7,6 @@ import ai.agent.pojo.SocialReceiveData;
 import ai.agent.pojo.SocialSendData;
 import ai.agent.social.SocialAgent;
 import ai.config.pojo.AgentConfig;
-import ai.worker.pojo.WorkData;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,7 +35,7 @@ public class RobotWorker extends SocialWorker {
     }
 
     @Override
-    public Boolean work(WorkData<Boolean> data) {
+    public Boolean work(Boolean data) {
         agent.connect();
         agent.start();
 
@@ -57,13 +56,13 @@ public class RobotWorker extends SocialWorker {
 
 
     @Override
-    public Boolean call(WorkData<Boolean> data) {
+    public Boolean call(Boolean data) {
         return null;
     }
 
     @Override
-    public void notify(WorkData<Boolean> data) {
-        running.set(data.getData());
+    public void notify(Boolean data) {
+        running.set(data);
         if(running.get()) {
             Thread workerThread = new Thread(()->work(null));
             workerThread.start();

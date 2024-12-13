@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,5 +53,10 @@ public class AgentManager {
     public  Agent<?, ?> get(String key)
     {
         return agentsMap.getOrDefault(key, null);
+    }
+
+    public  List<Agent<?, ?>> agents()
+    {
+        return new ArrayList<>(agentsMap.values());
     }
 }

@@ -1,6 +1,6 @@
 package ai.workflow.mapper;
 
-import ai.agent.chat.AbstractChatAgent;
+import ai.agent.Agent;
 import ai.learn.questionAnswer.KShingle;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.medusa.utils.LCS;
@@ -19,19 +19,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 
 
+@Setter
 @Slf4j
 public class ChatAgentMapper extends BaseMapper implements IMapper {
 
-    @Setter
-    protected AbstractChatAgent chatAgent;
+    protected Agent<ChatCompletionRequest, ChatCompletionResult> agent;
 
 
     public String getAgentName() {
-        return chatAgent.getAgentConfig().getName();
+        return agent.getAgentName();
     }
 
-    public String getBadcase() {
-        return chatAgent.getAgentConfig().getWrongCase();
+    public String getBadCase() {
+        return agent.getBadCase();
     }
 
     public double getSimilarity(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
@@ -51,7 +51,7 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
     public double calculatePriority(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
 
         double positive = getSimilarity(chatCompletionRequest, chatCompletionResult);
-        double negative = getBadCaseSimilarity(getBadcase(), chatCompletionResult);
+        double negative = getBadCaseSimilarity(getBadCase(), chatCompletionResult);
         double add =  getPriorityWordPriority(chatCompletionRequest, chatCompletionResult);
         double calcPriority;
         if(negative > 0.8) {
@@ -81,7 +81,7 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
-        chatCompletionResult = chatAgent.communicate(chatCompletionRequest);
+        chatCompletionResult = agent.communicate(chatCompletionRequest);
         if(chatCompletionRequest != null) {
             ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);

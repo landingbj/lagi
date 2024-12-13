@@ -7,6 +7,7 @@ import lombok.Getter;
 public abstract class Agent<T, R>{
 
     protected String agentName;
+    protected String badCase="抱歉";
 
     public abstract void connect();
 
