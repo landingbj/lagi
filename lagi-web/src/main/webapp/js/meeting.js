@@ -82,14 +82,139 @@ function addMeetingPrompt(message) {
 function addMeetingMinutes(question){
     let questionHtml = '<div>' + question + '</div>';
     addUserDialog(questionHtml);
-    addMeetingMinutesPrompt(question);
+    //addMeetingMinutesPrompt(question);
+        var MeetingMinutesparas = {
+        "rag": rag,
+        "category": window.category,
+        "messages": CONVERSATION_CONTEXT.concat([
+            {"role": "user", "content": question}
+        ]),
+        "temperature": 0.8,
+        "max_tokens": 1024,
+        "stream": true
+    };
+
+    MeetingMinutesStream(MeetingMinutesparas);
+
 }
+
+  async function MeetingMinutesStream(paras) {
+        const response = await fetch('/chat/meetingMinutes', {
+            method: "POST",
+            cache: "no-cache",
+            keepalive: true,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "text/event-stream",
+            },
+            body: JSON.stringify(paras),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const reader = response.body.getReader();
+
+        let fullText = '';
+        let flag = true;
+        let lastChunkPart = '';
+
+        while (flag) {
+            const {value, done} = await reader.read();
+            let res =  new TextDecoder().decode(value);
+            if(res.startsWith("error:")) {
+                robootAnswerJq.html(res.replaceAll('error:', ''));
+                return;
+            }
+            let chunkStr = lastChunkPart + new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+            const chunkArray = chunkStr.split("\n\n");
+
+            let lastChunk = chunkArray[chunkArray.length - 1];
+            if (!isJsonString(chunkArray[chunkArray.length - 1]) && lastChunk !== "[DONE]" ) {
+                lastChunkPart = chunkArray.pop();
+            } else {
+                lastChunkPart = '';
+            }
+
+            for (let i = 0; i < chunkArray.length; i++) {
+                let chunk = chunkArray[i];
+                if (chunk === "[DONE]") {
+                    CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                    flag = false;
+                    break;
+                }
+
+                let json = JSON.parse(chunk);
+                if (json.choices === undefined) {
+                    queryLock = false;
+                    robootAnswerJq.html("调用失败！");
+                    break
+                }
+                if (json.choices.length === 0) {
+                    continue;
+                }
+                let chatMessage = json.choices[0].message;
+                let a = '';
+                if (chatMessage.filename === undefined){
+
+                }else{
+                    //var a = '<ul style="list-style:none;padding-left:5px;">';
+                    a = '';
+                    let isFirst = true; // 标记是否是第一个文件名
+
+                    for (let i = 0; i < chatMessage.filename.length; i++) {
+                        let marginLeft = isFirst ? '0' : '50px';
+                        a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a>`;
+                        isFirst = false;
+                        //console.log("这里的路径是："+chatMessage.filepath[i]);
+                        //a+=`<a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a><br>`;
+                    }
+                    //a +='</ul>'
+                }
+
+                if (chatMessage.content === undefined) {
+                    continue;
+                }
+                let t = chatMessage.content;
+                t = t.replaceAll("\n", "<br>");
+                fullText += t;
+                result = `
+                        ${fullText} <br>
+                        ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
+                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
+                        ${chatMessage.context || chatMessage.contextChunkIds ?  `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
+                        // `;
+                if(chatMessage.contextChunkIds) {
+                    if(chatMessage.contextChunkIds instanceof Array) {
+                        // filterChunk(chatMessage.filename, chatMessage.filepath, chatMessage.contextChunkIds, fullText, robootAnswerJq);
+                        // result += `<div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><br>`;
+                        getCropRect(chatMessage.contextChunkIds, fullText, robootAnswerJq);
+                    }
+                }
+                robootAnswerJq.html(result);
+            }
+        }
+    }
+
+     MeetingMinutesStream(paras).then(r => {
+        let lastAnswer = CONVERSATION_CONTEXT[CONVERSATION_CONTEXT.length - 1]["content"]
+        txtTovoice(lastAnswer, "default");
+        enableQueryBtn();
+        querying = false;
+    }).catch((err) => {
+        console.error(err);
+        enableQueryBtn();
+        querying = false;
+        queryLock = false;
+        robootAnswerJq.html("调用失败！");
+    });
 function addMeetingMinutesPrompt(question){
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
         url: "/chat/meetingMinutes",
-        data: JSON.stringify(paras),
+        data: JSON.stringify(question),
         success: function (res) {
             if (res === null || res.status === "failed") {
                 robootAnswerJq.html("调用失败！");

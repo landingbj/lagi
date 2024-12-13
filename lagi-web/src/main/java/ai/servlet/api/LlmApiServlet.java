@@ -38,6 +38,7 @@ import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
+import ai.vertex.node.impl.Message;
 import ai.worker.meeting.MeetingWorker;
 import ai.worker.pojo.AddMeetingRequest;
 import ai.worker.pojo.MeetingInfo;
@@ -219,16 +220,28 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
             if (context != null) {
-                CompletionUtil.populateContext(result, indexSearchDataList, context);
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode rootNode = objectMapper.readTree(toJson(result));
-                JsonNode choicesNode = rootNode.path("choices");
-                for (JsonNode choiceNode : choicesNode) {
-                    JsonNode messageNode = choiceNode.path("message");
-                    ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
+                List choices = result.getChoices();
+                if (choices!=null&&choices.size()>0){
+                    String content = result.getChoices().get(0).getMessage().getContent();
+                    if (content!=null&&content.contains("没有找到相关的会议")){
+                        ChatMessage choices1 = new ChatMessage();
+                        choices1.setContent(content);
+                        choices1.setRole(result.getChoices().get(0).getMessage().getRole());
+                        choices.set(0,choices1);
+                        responsePrint(resp, toJson(result));
+                    }else {
+                         CompletionUtil.populateContext(result, indexSearchDataList, context);
+                         ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode rootNode = objectMapper.readTree(toJson(result));
+                        JsonNode choicesNode = rootNode.path("choices");
+                        for (JsonNode choiceNode : choicesNode) {
+                            JsonNode messageNode = choiceNode.path("message");
+                            ((com.fasterxml.jackson.databind.node.ObjectNode) messageNode).putPOJO("contextChunkIds", context.getChunkIds());
+                        }
+                        responsePrint(resp, rootNode.toString());
+                    }
                 }
 
-                responsePrint(resp, rootNode.toString());
             } else {
                 responsePrint(resp, toJson(result));
             }
@@ -564,21 +577,33 @@ public class LlmApiServlet extends BaseServlet {
             List<String> filePaths = ragContext.getFilePaths().stream().distinct().collect(Collectors.toList());
             List<String> filenames = ragContext.getFilenames().stream().distinct().collect(Collectors.toList());
             List<String> chunkIds = ragContext.getChunkIds().stream().distinct().collect(Collectors.toList());
-            for (int i = 0; i < lastResult[0].getChoices().size(); i++) {
+            Boolean isIndependent = false;
+            for (int j = 0; j < lastResult.length; j++) {
+                 for (int i = 0; i < lastResult[j].getChoices().size(); i++) {
                 //List<CropRectResponse> cropRectResponses = pdfPreviewServlce.cropRect(ragContext.getChunkIds(), ragContext.getContext(), contextPath);
 
-                ChatMessageResponse message = ChatMessageResponse.builder()
-                        .contextChunkIds(ragContext.getChunkIds())
-                        .build();
-                message.setFilename(filenames);
-                message.setFilepath(filePaths);
-                message.setContext(ragContext.getContext());
-                message.setContextChunkIds(chunkIds);
+                ChatMessageResponse message = new ChatMessageResponse();
 
-                message.setContent("");
-                message.setImageList(imageList);
-                lastResult[0].getChoices().get(i).setMessage(message);
+                ChatMessage msg = lastResult[j].getChoices().get(i).getMessage();
+                if (msg!=null&&msg.getContent().contains("没有找到相关的会议")){
+                     isIndependent = true;
+                }
+                 if (isIndependent){
+                        message.setRole(msg.getRole());
+                        message.setContent("");
+                    }else if (msg!=null&&msg.getContent()!=null){
+                      message.setFilename(filenames);
+                      message.setFilepath(filePaths);
+                      message.setContext(ragContext.getContext());
+                      message.setContextChunkIds(chunkIds);
+                      message.setImageList(imageList);
+                      message.setContent("");
+                 }
+                    lastResult[0].getChoices().get(i).setMessage(message);
+
+              }
             }
+
             out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");
         }
         out.print("data: " + "[DONE]" + "\n\n");

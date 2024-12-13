@@ -160,6 +160,22 @@ public class VectorStoreService {
         fi.setMetadatas(t);
         fileList.add(fi);
 
+        String fileName = metadatas.get("filename").toString();
+        if (fileName!=null){
+            int dotIndex = fileName.lastIndexOf(".");
+            if (dotIndex != -1 && fileName.substring(dotIndex).equals(".pdf")) {
+                fileName = fileName.substring(0, dotIndex);
+            }
+            FileInfo fi1 = new FileInfo();
+            String e1 = UUID.randomUUID().toString().replace("-", "");
+            fi1.setEmbedding_id(e1);
+            fi1.setText(fileName);
+            Map<String, Object> t1 = new HashMap<>(metadatas);
+              t1.remove("parent_id");
+            fi1.setMetadatas(t1);
+            fileList.add(fi1);
+        }
+
         for (FileChunkResponse.Document doc : docs) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");

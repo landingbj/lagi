@@ -118,4 +118,16 @@ public class UploadFileService {
         }
         return uploadFileDao.getMeetingTotalRow(category);
     }
+    public int getMeetingFileIdTotalRow(String category,String file_id) throws SQLException {
+        return uploadFileDao.getMeetingTotalRow(category,file_id);
+    }
+     public List<String> getMeetingPermissions(String file_id){
+        List<String> categories = null;
+        try {
+            categories = uploadFileDao.getMeetingPermissions(file_id);
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+       return categories;
+    }
 }

@@ -182,6 +182,7 @@ public class UploadFileDao {
         return result;
     }
 
+
     public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category) throws SQLException {
         IConn conn = new Conn();
         List<UploadFile> result = new ArrayList<>();
@@ -265,5 +266,40 @@ public class UploadFileDao {
         }
         BaseIndex.closeConnection(rs, ps, conn);
         return result;
+    }
+
+     public int getMeetingTotalRow(String category,String file_id) throws SQLException {
+        Conn conn = new Conn();
+        int result = -1;
+        String sql = "SELECT count(*) FROM lagi_upload_meeting_file where category=? AND file_id = ?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, category);
+        ps.setString(2, file_id);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            result = rs.getInt(1);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result;
+    }
+
+     public List<String> getMeetingPermissions(String file_id) throws SQLException {
+        Conn conn = new Conn();
+        int result = -1;
+        String sql = "SELECT DISTINCT category FROM lagi_upload_meeting_file WHERE file_id = ?; ";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, file_id);
+        rs = ps.executeQuery();
+
+        List<String> categories = new ArrayList<>();
+        while (rs.next()) {
+            categories.add(rs.getString("category"));
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return categories;
     }
 }

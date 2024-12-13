@@ -114,7 +114,7 @@ let promptNavs = [
         operation:'在输入框内输入您的需求（会议预定），然后按照提示完成相关操作。',
         group : 2
     },
-        {id:3, key:MEETING_MINUTES, title: '会议纪要',exampleImgSrc:'',
+   {id:3, key:MEETING_MINUTES, title: '会议纪要',exampleImgSrc:'',
         models: ["llm"],
         exampleVedioSrc:'',
         prompt:'该功能可帮您查找摘要会议内容。',
