@@ -374,6 +374,86 @@ agents:
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
 
+  - name: 小信智能体
+    wrong_case: 小信最近学习了
+    driver: ai.agent.chat.qianfan.XiaoxinAgent
+    token: your-token
+
+  - name: 股票智能体
+    wrong_case: 抱歉
+    driver: ai.agent.chat.coze.CozeAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: 汇率智能体
+    wrong_case: 抱歉
+    driver: ai.agent.chat.coze.CozeAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: RAG
+    driver: ai.agent.chat.rag.RagAgent
+    endpoint: http://127.0.0.1:8080
+
+  - name: 文心智能体
+    driver: ai.agent.chat.wenxin.BaiduAgent
+    app_id: your-app-id
+    api_key: your-api-key
+
+  - name: 腾讯元器
+    driver: ai.agent.chat.tencent.YuanQiAgent
+    app_id: your-app-id
+    api_key: your-api-key
+
+  - name: 小红书智能体
+    driver: ai.agent.chat.zhipu.ZhipuAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: weather_agent
+    driver: ai.agent.customer.WeatherAgent
+    token: your-token
+    app_id: weather_agent
+
+  - name: oil_price_agent
+    driver: ai.agent.customer.OilPriceAgent
+    token: your-token
+    app_id: oil_price_agent
+
+  - name: bmi_agent
+    driver: ai.agent.customer.BmiAgent
+    token: your-token
+    app_id: bmi_agent
+
+  - name: food_calorie_agent
+    driver: ai.agent.customer.FoodCalorieAgent
+    token: your-token
+    app_id: food_calorie_agent
+
+  - name: dishonest_person_search_agent
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+    token: your-token
+    app_id: dishonest_person_search_agent
+
+  - name: high_speed_ticket_agent
+    driver: ai.agent.customer.HighSpeedTicketAgent
+    app_id: high_speed_ticket_agent
+
+  - name: history_in_today_agent
+    driver: ai.agent.customer.HistoryInToDayAgent
+    app_id: history_in_today_agent
+
+  - name: youdao_agent
+    driver: ai.agent.customer.YouDaoAgent
+    app_id: your-app-id
+    token: your-token
+
+  - name: image_gen_agent
+    driver: ai.agent.customer.ImageGenAgent
+    app_id: your-app-id
+    endpoint: http://127.0.0.1:8080
+    token: image_gen_agent
+
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
 workers:
@@ -392,3 +472,24 @@ workers:
   # Example for Airport Enhancement
   - name: asr4flights
     worker: ai.worker.social.Asr4FlightsWorker
+
+  - name: BestWorker
+    worker: ai.worker.chat.BestChatAgentWorker
+
+  - name: appointedWorker
+    worker: ai.worker.DefaultAppointWorker
+
+
+routers:
+  - name: best
+      #    rule: (小信智能体&股票智能体&汇率智能体)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+      # A,B -> failover, first A, if A fail, then B;
+      # A&B -> parallel, call A and B concurrently, choose the proper only one result;
+    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
+    rule: (小信智能体&股票智能体&汇率智能体)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+
+  - name: pass
+    rule: '%'
+    # % is a wildcard to represent agent name.
+    # if specified, invoke this agent.
+    # if just % is given, % would be decided by parameter at calling time.

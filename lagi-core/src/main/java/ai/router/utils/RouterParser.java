@@ -67,12 +67,8 @@ public class RouterParser {
     }
 
     private static Route buildPatternRule(String path, String router) {
-//        String regx = StrUtil.format("[\\w\\p{IsHan}]", POLLING_SEPARATOR, FAILOVER_SEPARATOR, PARALLEL_SEPARATOR);
         String regx = StrUtil.format("[\\w\\-_\\p{IsHan}]+([{}{}{}][\\w\\-_\\p{IsHan}]+)*", POLLING_SEPARATOR, FAILOVER_SEPARATOR, PARALLEL_SEPARATOR);
-//        String regx = StrUtil.format("[\\w]+([{}{}{}][\\w]+)*", POLLING_SEPARATOR, FAILOVER_SEPARATOR, PARALLEL_SEPARATOR);
-//        System.out.println(regx);
         String s = router.replaceAll(regx, "func");
-        System.out.println(s);
         char separator = 0;
         if(s.contains(""+POLLING_SEPARATOR)) {
             separator = POLLING_SEPARATOR;

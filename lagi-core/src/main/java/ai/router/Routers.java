@@ -41,7 +41,6 @@ public class Routers {
 
     public void addRoute(String rule, Route route) {
         routes.put(rule, route);
-        System.out.println("add route " + rule);
     }
 
     public ChatCompletionResult dispatch(String path, ChatCompletionRequest request) {

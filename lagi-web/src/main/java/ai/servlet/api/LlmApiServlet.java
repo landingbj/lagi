@@ -34,17 +34,19 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.response.ChatMessageResponse;
+import ai.router.pojo.LLmRequest;
+import ai.servlet.BaseServlet;
 import ai.utils.ClientIpAddressUtil;
 import ai.vector.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
+import ai.worker.DefaultWorker;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -65,6 +67,7 @@ public class LlmApiServlet extends BaseServlet {
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getPolicy().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
+    private final DefaultWorker defaultWorker = new DefaultWorker();
 
     static {
         VectorCacheLoader.load();
@@ -80,7 +83,19 @@ public class LlmApiServlet extends BaseServlet {
             this.completions(req, resp);
         } else if (method.equals("embeddings")) {
             this.embeddings(req, resp);
+        } else if(method.equals("go")) {
+            this.go("pass", req, resp);
+        } else if(method.startsWith("go/")) {
+            String routerPath = method.substring(3);
+            this.go(routerPath, req, resp);
         }
+    }
+
+    private void go(String routerPath, HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setContentType("application/json;charset=utf-8");
+        LLmRequest lLmRequest = reqBodyToObj(req, LLmRequest.class);
+        ChatCompletionResult work = defaultWorker.work(routerPath, lLmRequest);
+        responsePrint(resp, toJson(work));
     }
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
