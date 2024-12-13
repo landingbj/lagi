@@ -18,6 +18,13 @@ public class StoppingWordUtil {
 
     static {
         List<String> wordList = JsonFileLoadUtil.readWordListJson("/stopping_word.json");
+        addWords(wordList);
+    }
+
+    public static void addWords(List<String> wordList) {
+        if(wordList == null) {
+            return;
+        }
         ahoCorasick.addWords(wordList);
         patterns.addAll(wordList);
     }

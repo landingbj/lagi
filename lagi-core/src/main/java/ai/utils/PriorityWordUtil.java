@@ -14,6 +14,10 @@ public class PriorityWordUtil  {
 
     static {
         List<String> wordList = JsonFileLoadUtil.readWordListJson("/priority_word.json");
+        addWords(wordList);
+    }
+
+    public static void addWords(List<String> wordList) {
         ahoCorasick.addWords(wordList);
     }
 

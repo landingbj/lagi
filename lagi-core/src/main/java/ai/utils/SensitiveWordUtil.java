@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class SensitiveWordUtil {
 
@@ -20,9 +19,13 @@ public class SensitiveWordUtil {
     static {
 
         WordRules wordRules = JsonFileLoadUtil.readWordLRulesList("/sensitive_word.json", WordRules.class);
+        pushWordRule(wordRules);
+    }
+
+    public static void pushWordRule(WordRules wordRules) {
         if(wordRules != null) {
             if(wordRules.getRules() != null) {
-                ruleMap = wordRules.getRules().stream()
+                wordRules.getRules().stream()
                         .filter(r-> StrUtil.isNotBlank(r.getRule()))
                         .peek(r-> {
                             r.setRule(r.getRule().toLowerCase());
@@ -33,7 +36,9 @@ public class SensitiveWordUtil {
                                 r.setLevel(wordRules.getLevel());
                             }
                         })
-                        .collect(Collectors.toMap(WordRule::getRule, r->r));
+                        .forEach(r->{
+                            ruleMap.put(r.getRule(), r);
+                        });
             }
         }
     }

@@ -12,6 +12,10 @@ public class RetainWordUtil {
 
     static {
         List<String> wordList = JsonFileLoadUtil.readWordListJson("/retain_word.json");
+        addWords(wordList);
+    }
+
+    public static void addWords(List<String> wordList) {
         set.addAll(wordList);
     }
 
