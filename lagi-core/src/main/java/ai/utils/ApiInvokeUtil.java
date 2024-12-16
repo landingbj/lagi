@@ -18,9 +18,26 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import javax.net.ssl.*;
+import java.security.cert.X509Certificate;
 
 @Slf4j
 public class ApiInvokeUtil {
+
+    private static final TrustManager[] TRUST_ALL_CERTIFICATES = new TrustManager[]{
+        new X509TrustManager() {
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[]{};
+            }
+
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }
+    };
+
 
     private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(
             100, // 最大空闲连接数
@@ -45,34 +62,49 @@ public class ApiInvokeUtil {
         return sb.toString();
     }
 
-    public static String post(String url, Map<String, String> headers, String bodyStr, int timeout, TimeUnit unit) {
-         OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(timeout,unit)
-                .readTimeout(timeout, unit)
-                .writeTimeout(timeout, unit)
-                .connectionPool(CONNECTION_POOL)
-                .build();
-        MediaType JSON = MediaType.get("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(bodyStr, JSON);
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .post(body);
-        if (headers != null) {
-            for (Map.Entry<String, String> header : headers.entrySet()) {
-                requestBuilder.addHeader(header.getKey(), header.getValue());
+   public static String post(String url, Map<String, String> headers, String bodyStr, int timeout, TimeUnit unit) {
+
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, TRUST_ALL_CERTIFICATES, new java.security.SecureRandom());
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(timeout, unit)
+                    .readTimeout(timeout, unit)
+                    .writeTimeout(timeout, unit)
+                    .connectionPool(new ConnectionPool())
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTIFICATES[0])
+                    .hostnameVerifier((hostname, session) -> true)
+                    .build();
+
+            MediaType JSON = MediaType.get("application/json; charset=utf-8");
+            RequestBody body = RequestBody.create(bodyStr, JSON);
+
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(url)
+                    .post(body);
+
+            if (headers != null) {
+                for (Map.Entry<String, String> header : headers.entrySet()) {
+                    requestBuilder.addHeader(header.getKey(), header.getValue());
+                }
             }
-        }
-        Request request = requestBuilder.build();
-        try (Response response = client.newCall(request).execute();){
-            String reponseBody = response.body().string();
-            if(response.isSuccessful()) {
-                return reponseBody;
+
+            Request request = requestBuilder.build();
+            try (Response response = client.newCall(request).execute()) {
+                String responseBody = response.body().string();
+                if (response.isSuccessful()) {
+                    return responseBody;
+                } else {
+                    log.error("HTTP code {} , body {}", response.code(), responseBody);
+                }
+            } catch (IOException e) {
+                log.error("Request failed: {}", e.getMessage());
+                System.out.println("Request failed: " + e);
             }
-            else {
-                log.error("http code {} , body {}", response.code(), reponseBody);
-            }
-        } catch (IOException e) {
-            log.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("SSL initialization failed: {}", e.getMessage());
         }
         return null;
     }
