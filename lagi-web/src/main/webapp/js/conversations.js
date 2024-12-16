@@ -95,7 +95,7 @@ function newConversation(conv, questionEnable=true, answerEnable=true) {
 
 
 function newRobotStartDialog(robotAnswer) {
-    $('#item-content').empty();
+    // $('#item-content').empty();
     return addRobotDialog(robotAnswer)
 }
 
@@ -167,7 +167,7 @@ function loadConversationNav() {
 function loadConversation(convId) {
     conversatonsList = loadConvs();
     const convs = conversatonsList[convId].convs;
-    $('#item-content').empty();
+    // $('#item-content').empty();
     if(convs.length == 0) {
         showHelloContent();
     } else{

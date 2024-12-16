@@ -9859,3 +9859,91 @@ pre[class*=language-] {
 #intercom-container {
     display: none
 }
+
+.sub-nav {
+    padding-left: 40px;
+    display: block;
+    opacity: 0;  /* 初始为透明 */
+    transform: translateY(-10px);  /* 初始时向上偏移 */
+    pointer-events: none;  /* 初始状态下不响应点击 */
+    transition: opacity 0.3s ease, transform 0.3s ease;  /* 添加动画效果 */
+}
+
+.sub-nav.hidden {
+    display: none;
+}
+
+.sub-nav:not(.hidden) {
+    opacity: 1;  /* 展开时变为不透明 */
+    transform: translateY(0);  /* 展开时恢复正常位置 */
+    pointer-events: auto;  /* 展开时可响应点击 */
+}
+
+.sub-nav-item {
+    margin: 8px 0;
+}
+
+.sub-nav-link {
+    color: #fff;
+    text-decoration: none;
+}
+
+.arrow {
+    font-size: 18px;
+    transition: transform 0.3s ease; /* 动画效果 */
+    user-select: none; /* 禁止选中 */
+}
+
+.arrow.down {
+    transform: rotate(90deg); /* 向下旋转 */
+}
+
+a.active {
+    background-color: #2A2B32; /* 适合的背景色，或者跟hover样式一致 */
+}
+
+/* 展开后的二级菜单背景色加深 */
+.sub-nav.bg-darker {
+    background-color: #2a2b32; /* 加深的背景色 */
+}
+
+#ball-div {
+    width: 50%;
+    height: 55%;
+    position: fixed;
+    margin: 0;
+    right: 355px;
+    bottom: 285px;
+    z-index: 9999;
+    background-color: transparent;
+    user-select: none; /* 禁止选中文本 */
+    cursor: grab; /* 鼠标样式 */
+}
+
+#ball-div:active {
+    cursor: grabbing; /* 鼠标拖拽样式 */
+}
+
+#ball-div span {
+    position: absolute;
+    font-size: 18px;
+    color: #838383;
+    text-decoration: none;
+    font-weight: bold;
+    user-select: none; /* 禁止选中文本 */
+    display: inline-block; /* 使 <span> 标签像块级元素一样 */
+    width: auto;  /* 根据内容自动调整宽度 */
+    height: auto; /* 根据内容自动调整高度 */
+}
+
+
+
+
+/*!* 添加 hover 效果 *!*/
+/*#ball-div a:hover {*/
+/*    border: 1px solid #eee;*/
+/*    background: #00bdfe;*/
+/*    color: white;*/
+/*    border-radius: 5px;*/
+/*    text-decoration: none;*/
+/*}*/

@@ -6,7 +6,7 @@ let dialogHtml = `
 
 function changeChat(data) {
     console.log("intDialog", data);
-    $('#item-content').empty();
+    // $('#item-content').empty();
     $('#item-content').append(dialogHtml);
     loadChat(data);
 }

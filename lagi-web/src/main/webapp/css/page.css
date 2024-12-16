@@ -6349,3 +6349,50 @@ pre[class*=language-] {
 body {
     counter-reset: katexEqnNo mmlEqnNo
 }
+
+.sub-nav {
+    padding-left: 40px;
+    display: block;
+    opacity: 0;  /* 初始为透明 */
+    transform: translateY(-10px);  /* 初始时向上偏移 */
+    pointer-events: none;  /* 初始状态下不响应点击 */
+    transition: opacity 0.3s ease, transform 0.3s ease;  /* 添加动画效果 */
+}
+
+.sub-nav.hidden {
+    display: none;
+}
+
+.sub-nav:not(.hidden) {
+    opacity: 1;  /* 展开时变为不透明 */
+    transform: translateY(0);  /* 展开时恢复正常位置 */
+    pointer-events: auto;  /* 展开时可响应点击 */
+}
+
+.sub-nav-item {
+    margin: 8px 0;
+}
+
+.sub-nav-link {
+    color: #fff;
+    text-decoration: none;
+}
+
+.arrow {
+    font-size: 18px;
+    transition: transform 0.3s ease; /* 动画效果 */
+    user-select: none; /* 禁止选中 */
+}
+
+.arrow.down {
+    transform: rotate(90deg); /* 向下旋转 */
+}
+
+a.active {
+    background-color: #2A2B32; /* 适合的背景色，或者跟hover样式一致 */
+}
+
+/* 展开后的二级菜单背景色加深 */
+.sub-nav.bg-darker {
+    background-color: #2a2b32; /* 加深的背景色 */
+}

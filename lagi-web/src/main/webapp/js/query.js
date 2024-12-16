@@ -1,5 +1,27 @@
 let queryLock = false;
 var PromptDialog = 0;
+
+const words = [
+    "股票", "天气", "油价", "新闻", "财经", "健康", "医疗",
+    "教育", "游戏", "购物", "电影推荐", "美食", "食谱",
+    "旅行", "翻译", "心理咨询", "投资", "区块链", "AI绘画",
+    "编程助手", "数据分析", "社交媒体", "聊天", "运动健身", "租车",
+    "交通", "智能家居", "宠物护理", "时尚", "工作助手", "营销",
+    "SEO优化", "招聘", "天气预报", "空气质量", "旅行规划", "导航",
+    "语音助手", "虚拟助手", "记账", "理财", "房产估值", "租房助手",
+    "日程管理", "音乐推荐", "图书推荐", "家装设计", "电商", "促销分析",
+    "心理健康", "疾病诊断", "运动分析", "天气提醒", "历史知识",
+    "科学探索", "编程教学", "语言学习", "语法检查", "面试准备", "写作助手",
+    "论文查重", "考试复习", "定制化学习", "儿童教育", "旅游翻译",
+    "语音翻译", "多语言沟通", "实时翻译", "新闻追踪", "事件提醒",
+    "个人助理", "学习路径", "职业规划", "求职简历", "招聘筛选",
+    "游戏攻略", "竞技分析", "运动战术", "健身计划", "减脂",
+    "心率监控", "血压监控", "睡眠分析", "营养摄入", "减压助手",
+    "会议记录", "在线课堂", "绘画教学", "智能合同助手", "法律顾问",
+    "税务助手", "智能财务", "危机预测", "客户服务", "自然灾害预警",
+    "环保数据", "气候变化", "星座运势", "心理测试", "名人信息"
+];
+
 // 绑定页面回车事件
 $('#queryContent').keydown(function (event) {
     if (event.keyCode === 13) {
@@ -8,7 +30,33 @@ $('#queryContent').keydown(function (event) {
     }
 });
 
-function textQuery() {
+
+function showBallDiv() {
+    const ballDiv = document.getElementById("ball-div");
+    if (ballDiv) {
+        ballDiv.style.display = "block";
+    }
+}
+
+function hideBallDiv() {
+    const ballDiv = document.getElementById("ball-div");
+    if (ballDiv) {
+        ballDiv.style.display = "none";
+    }
+}
+
+function matchingAgents(word) {
+    $('#item-content').hide();
+    showBallDiv();
+    highlightWord(word);
+    setTimeout(() => {
+        hideBallDiv();
+        resetBallState();
+        $('#item-content').show();
+    }, 3000);
+}
+
+async function textQuery() {
     if (queryLock) {
         alert("有对话正在进行请耐心等待");
         return;
@@ -24,9 +72,18 @@ function textQuery() {
         queryLock = false;
         return;
     }
+    for (let word of words) {
+        if (question.includes(word)) {
+            setTimeout(() => {
+                matchingAgents(word);
+            }, 0);
+            break;
+        }
+    }
 
     // 隐藏非对话内容
     hideHelloContent();
+
     $('#queryBox textarea').val('');
     let conversation = {user: {question: question}, robot: {answer: ''}}
     sleep(200).then(() => {
@@ -88,20 +145,20 @@ function socialAgentsConversation(question) {
 function nextPrompt(action, prompt) {
     if (action === TIMER_WHO) {
         TIMER_DATA["contact"] = prompt;
-        addRobotDialog( '请问您想发什么消息？</br>');
+        addRobotDialog('请问您想发什么消息？</br>');
         setSocialPromptStepDone(action);
         unlockInput();
         return;
     } else if (action === TIMER_WHAT) {
         TIMER_DATA["message"] = prompt;
-        addRobotDialog( '现在吗？还是之后具体什么时间？</br>');
+        addRobotDialog('现在吗？还是之后具体什么时间？</br>');
         setSocialPromptStepDone(action);
         unlockInput();
         return;
     } else if (action === TIMER_WHEN) {
         getStandardTime(action, prompt);
         return;
-    }  else if (action === ROBOT_ENABLE) {
+    } else if (action === ROBOT_ENABLE) {
         startRobot(action, prompt);
         return;
     }
@@ -116,7 +173,8 @@ function nextPrompt(action, prompt) {
             } else {
                 if (action === GET_QR_CODE) {
                     let appIdList = res.appId.split(',');
-                    SOCIAL_CHANEL["appIdList"] = JSON.parse(JSON.stringify(appIdList));;
+                    SOCIAL_CHANEL["appIdList"] = JSON.parse(JSON.stringify(appIdList));
+                    ;
                     let username = res.username;
                     let channelId = res.channelId;
                     if (appIdList.length > 0) {
@@ -146,12 +204,12 @@ function getStandardTime(action, prompt) {
             if (res.status === "success") {
                 TIMER_DATA["sendTime"] = res.data;
                 TIMER_DATA["appId"] = SOCIAL_CHANEL["appId"];
-                TIMER_DATA["channelId"]= SOCIAL_CHANEL["channelId"];
-                addRobotDialog( '已收到您的指令，请等待好消息。</br>');
+                TIMER_DATA["channelId"] = SOCIAL_CHANEL["channelId"];
+                addRobotDialog('已收到您的指令，请等待好消息。</br>');
                 setSocialPromptStepDone(action);
                 addTimerTask();
             } else {
-                addRobotDialog( '现在吗？还是之后具体什么时间？</br>');
+                addRobotDialog('现在吗？还是之后具体什么时间？</br>');
             }
             unlockInput();
         },
@@ -175,7 +233,7 @@ function startRobot(prompt, action) {
         data: JSON.stringify(startRobotRequest),
         success: function (res) {
             if (res.status === "success" && res.robotEnable) {
-                addRobotDialog( '好的，协助您默认打理半个小时。</br>');
+                addRobotDialog('好的，协助您默认打理半个小时。</br>');
             }
             setSocialPromptStepDone(action);
             resetSocialPromptStep();
@@ -197,7 +255,7 @@ function addTimerTask() {
             if (res.status === "failed") {
             } else {
             }
-            addRobotDialog( '您需要将后续会话，委托给助理自动答复吗？</br>');
+            addRobotDialog('您需要将后续会话，委托给助理自动答复吗？</br>');
         },
         error: function () {
             returnFailedResponse();
@@ -215,7 +273,7 @@ function getLoginQrCode(appId, username) {
             if (res.status === 10) {
                 let appName = SOCIAL_APP_MAP.get(appId);
                 let qrCodeUrl = res.image_url;
-                let html = '<div>请扫描以下'+ appName + '的二维码授权：</div></br><img src="' + qrCodeUrl + '" alt="二维码" />';
+                let html = '<div>请扫描以下' + appName + '的二维码授权：</div></br><img src="' + qrCodeUrl + '" alt="二维码" />';
                 addRobotDialog(html + '</br>');
                 getLoginStatus(appId, username);
             }
@@ -252,7 +310,7 @@ function getLoginStatus(appId, username) {
             } else {
                 setSocialPromptStepDone(GET_QR_CODE);
                 unlockInput();
-                addRobotDialog( '请问您想给谁发消息(需要您存在的通讯录中的人名或群名)。</br>');
+                addRobotDialog('请问您想给谁发消息(需要您存在的通讯录中的人名或群名)。</br>');
             }
             console.log(res);
         },
@@ -374,7 +432,7 @@ function generalOutput(paras, question, robootAnswerJq) {
                 return;
             }
             var chatMessage = res.choices[0].message;
-            if (chatMessage.filename !== undefined){
+            if (chatMessage.filename !== undefined) {
                 var a = '';
                 let isFirst = true;
                 for (let i = 0; i < chatMessage.filename.length; i++) {
@@ -434,8 +492,8 @@ function streamOutput(paras, question, robootAnswerJq) {
 
         while (flag) {
             const {value, done} = await reader.read();
-            let res =  new TextDecoder().decode(value);
-            if(res.startsWith("error:")) {
+            let res = new TextDecoder().decode(value);
+            if (res.startsWith("error:")) {
                 robootAnswerJq.html(res.replaceAll('error:', ''));
                 return;
             }
@@ -443,7 +501,7 @@ function streamOutput(paras, question, robootAnswerJq) {
             const chunkArray = chunkStr.split("\n\n");
 
             let lastChunk = chunkArray[chunkArray.length - 1];
-            if (!isJsonString(chunkArray[chunkArray.length - 1]) && lastChunk !== "[DONE]" ) {
+            if (!isJsonString(chunkArray[chunkArray.length - 1]) && lastChunk !== "[DONE]") {
                 lastChunkPart = chunkArray.pop();
             } else {
                 lastChunkPart = '';
@@ -468,9 +526,9 @@ function streamOutput(paras, question, robootAnswerJq) {
                 }
                 var chatMessage = json.choices[0].message;
 
-                if (chatMessage.filename === undefined){
+                if (chatMessage.filename === undefined) {
 
-                }else{
+                } else {
                     //var a = '<ul style="list-style:none;padding-left:5px;">';
                     var a = '';
                     let isFirst = true; // 标记是否是第一个文件名
@@ -499,10 +557,10 @@ function streamOutput(paras, question, robootAnswerJq) {
                         ${fullText} <br>
                         ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
-                        ${chatMessage.context || chatMessage.contextChunkIds ?  `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
-                        // `;
-                if(chatMessage.contextChunkIds) {
-                    if(chatMessage.contextChunkIds instanceof Array) {
+                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
+                // `;
+                if (chatMessage.contextChunkIds) {
+                    if (chatMessage.contextChunkIds instanceof Array) {
                         // filterChunk(chatMessage.filename, chatMessage.filepath, chatMessage.contextChunkIds, fullText, robootAnswerJq);
                         // result += `<div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><br>`;
                         getCropRect(chatMessage.contextChunkIds, fullText, robootAnswerJq);
@@ -523,7 +581,7 @@ function streamOutput(paras, question, robootAnswerJq) {
         enableQueryBtn();
         querying = false;
         queryLock = false;
-        if(!robootAnswerJq.text) {
+        if (!robootAnswerJq.text) {
             robootAnswerJq.html("调用失败！");
         }
     });
@@ -535,7 +593,7 @@ async function filterChunk(filenames, filePaths, contextChunkIds, result, jqObj)
 
         var params = {
             "category": window.category,
-            'chunkIds' : contextChunkIds,
+            'chunkIds': contextChunkIds,
             'result': result
         }
         $.ajax({
@@ -545,25 +603,25 @@ async function filterChunk(filenames, filePaths, contextChunkIds, result, jqObj)
             data: JSON.stringify(params),
             success: function (res) {
                 jqObj.children('.loading-box').remove();
-                if(res.code !== 0) {
+                if (res.code !== 0) {
                     console.log(res);
                     jqObj.apppend(`<div style="float: left; color:red;">未获取到文件截图</div>`);
                     return;
                 }
                 let data = res.data;
-                if(!(data instanceof Array)) {
+                if (!(data instanceof Array)) {
                     console.log(data);
                     jqObj.apppend(`<div style="float: left;">未获取到截图</div>`);
-                    return ;
+                    return;
                 }
-                let html = `<div  style="float: left;">${(function(){
+                let html = `<div  style="float: left;">${(function () {
                     let h = '';
-                    for(let i = 0; i < data.length; i++) {
-                        let cropData =  data[i];
-                        let chunk =  cropData.chunk;
-                        let filename =  cropData.filename;
-                        let filePath =  cropData.filePath;
-                        h += `<a style="cursor: pointer; margin-left:12px" data-name="${filename}" data-chunk="${chunk}" data-path="${filePath}" data-result="${result}"  data-url="" onclick=cropFromFile(this) >${i+1}</a>`;
+                    for (let i = 0; i < data.length; i++) {
+                        let cropData = data[i];
+                        let chunk = cropData.chunk;
+                        let filename = cropData.filename;
+                        let filePath = cropData.filePath;
+                        h += `<a style="cursor: pointer; margin-left:12px" data-name="${filename}" data-chunk="${chunk}" data-path="${filePath}" data-result="${result}"  data-url="" onclick=cropFromFile(this) >${i + 1}</a>`;
                     }
                     return h;
                 })()}</div><br>`;
@@ -575,20 +633,20 @@ async function filterChunk(filenames, filePaths, contextChunkIds, result, jqObj)
 
 async function getCropRect(contextChunkIds, result, jqObj) {
     return new Promise((resolve, reject) => {
-        if(contextChunkIds.length === 0) {
-            return ;
+        if (contextChunkIds.length === 0) {
+            return;
         }
         let chunkData = []
-        for(let i = 0; i < contextChunkIds.length ; i++) {
+        for (let i = 0; i < contextChunkIds.length; i++) {
             let c_data = {
-                "chunkId":contextChunkIds[i],
+                "chunkId": contextChunkIds[i],
                 "result": result
             }
             chunkData.push(c_data);
         }
         var params = {
             "category": window.category,
-            'chunkData' : chunkData,
+            'chunkData': chunkData,
         }
         $.ajax({
             type: "POST",
@@ -597,39 +655,39 @@ async function getCropRect(contextChunkIds, result, jqObj) {
             data: JSON.stringify(params),
             success: function (res) {
                 jqObj.children('.context-box').children('.loading-box').remove();
-                let context_jq =  jqObj.children('.context-box');
-                if(res.code !== 0) {
+                let context_jq = jqObj.children('.context-box');
+                if (res.code !== 0) {
                     console.log(res);
                     context_jq.apppend(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
                     return;
                 }
                 let data = res.data;
-                if(!(data instanceof Array)) {
+                if (!(data instanceof Array)) {
                     context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     console.log(data);
-                    return ;
+                    return;
                 }
-                if(data.length == 0) {
+                if (data.length == 0) {
                     context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
-                    return ;
+                    return;
                 }
-                let html = `<div class="context-link" style="float: left;"><span>内容定位:</span>${(function(){
+                let html = `<div class="context-link" style="float: left;"><span>内容定位:</span>${(function () {
                     let h = '';
-                    for(let i = 0; i < data.length; i++) {
-                        let cropData =  data[i];
+                    for (let i = 0; i < data.length; i++) {
+                        let cropData = data[i];
                         let pages = []
                         let rects = []
-                        let pageRect =  cropData.rects;
-                        for(let j = 0; j < pageRect.length; j++) {
+                        let pageRect = cropData.rects;
+                        for (let j = 0; j < pageRect.length; j++) {
                             let pr = pageRect[j];
                             pages.push(pr.page);
                             rects.push(pr.rect);
                         }
                         pages = JSON.stringify(pages);
                         rects = JSON.stringify(rects);
-                        let filename =  cropData.filename;
-                        let filePath =  cropData.filePath;
-                        h += `<a style="cursor: pointer; margin-left:12px; color:cornflowerblue" data-name="${filename}"  data-pages="${pages}"  data-rects="${rects}" data-path="${filePath}" data-result="${result}"  data-url="" onclick=cropByRects(this) >${i+1}</a>`;
+                        let filename = cropData.filename;
+                        let filePath = cropData.filePath;
+                        h += `<a style="cursor: pointer; margin-left:12px; color:cornflowerblue" data-name="${filename}"  data-pages="${pages}"  data-rects="${rects}" data-path="${filePath}" data-result="${result}"  data-url="" onclick=cropByRects(this) >${i + 1}</a>`;
                     }
                     return h;
                 })()}</div><br>`;
@@ -642,9 +700,9 @@ async function getCropRect(contextChunkIds, result, jqObj) {
 function cropByRects(dom) {
     let jqObj = $(dom);
     let url = jqObj.data('urls');
-    if(url) {
+    if (url) {
         showImageMask(url);
-        return ;
+        return;
     }
     // updata url
     let filename = jqObj.data('name');
@@ -653,10 +711,10 @@ function cropByRects(dom) {
     let pages = jqObj.data('pages')
     let rects = jqObj.data('rects');
     let pageRects = [];
-    for(let i = 0; i < pages.length; i++) {
+    for (let i = 0; i < pages.length; i++) {
         pageRects.push({
-            "page":pages[i],
-            "rect":rects[i]
+            "page": pages[i],
+            "rect": rects[i]
         });
     }
     let chunkData = [];
@@ -669,7 +727,7 @@ function cropByRects(dom) {
     chunkData.push(c_data);
     let param = {
         "category": window.category,
-        'chunkData' : chunkData
+        'chunkData': chunkData
     }
     $.ajax({
         type: "POST",
@@ -677,12 +735,12 @@ function cropByRects(dom) {
         url: "pdf/cropByRect",
         data: JSON.stringify(param),
         success: function (res) {
-            if(res.code !== 0) {
+            if (res.code !== 0) {
                 console.log(res);
                 return;
             }
             let data = res.data;
-            if(data.length && data.length > 0) {
+            if (data.length && data.length > 0) {
                 let urls = data.join();
                 jqObj.data("urls", data.join());
                 showImageMask(urls);
@@ -694,9 +752,9 @@ function cropByRects(dom) {
 function cropFromFile(dom) {
     let jqObj = $(dom);
     let url = jqObj.data('urls');
-    if(url) {
+    if (url) {
         showImageMask(url);
-        return ;
+        return;
     }
     // updata url
     let chunk = jqObj.data('chunk');
@@ -704,9 +762,9 @@ function cropFromFile(dom) {
     let filePath = jqObj.data('path');
     let result = jqObj.data('result');
     let param = {
-        'filename' : filename,
-        'filePath' : filePath,
-        'chunk' : chunk,
+        'filename': filename,
+        'filePath': filePath,
+        'chunk': chunk,
         'result': result
     }
     $.ajax({
@@ -715,12 +773,12 @@ function cropFromFile(dom) {
         url: "pdf/crop",
         data: JSON.stringify(param),
         success: function (res) {
-            if(res.code !== 0) {
+            if (res.code !== 0) {
                 console.log(res);
                 return;
             }
             let data = res.data;
-            if(data.length && data.length > 0) {
+            if (data.length && data.length > 0) {
                 let urls = data.join();
                 jqObj.data("urls", data.join());
                 showImageMask(urls);
@@ -731,7 +789,7 @@ function cropFromFile(dom) {
 
 
 $('#pdfMask').mouseup(
-    function() {
+    function () {
         $('#pdfMask').hide();
     }
 );
@@ -752,9 +810,9 @@ function retry(index) {
         "max_tokens": 1024,
         "stream": true
     };
-    let question = preArr[preArr.length-1]['content']
+    let question = preArr[preArr.length - 1]['content']
     addUserDialog(question);
-    let robootAnswerJq =  addRobotDialog('');
+    let robootAnswerJq = addRobotDialog('');
     if (paras["stream"]) {
         streamOutput(paras, question, robootAnswerJq);
     } else {

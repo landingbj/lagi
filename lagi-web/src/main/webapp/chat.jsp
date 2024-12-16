@@ -173,7 +173,7 @@
             </div>
             <!-- 上部导航条 -->
             <!-- *************************************************主要结构********************************* -->
-            <main class="relative h-full w-full transition-width overflow-auto flex-1">
+            <main class="relative h-full w-full transition-width overflow-hidden flex-1">
               <div>
                 <div id="model-prefences" class="w-full h-16 pl-10">
                   <div id="model-selects" class="inline-block model-selects  float-left">
@@ -181,6 +181,7 @@
                   <div class="model-btns w-20 flex-1 inline-block">
                     <button id = "modelClearBtn" class="inline-block" onclick="clearPreference()">重置所有</button>
                     <button id = "modelSaveBtn" class="inline-block" onclick="savePerference()">保存</button>
+<%--                    <button id = "test" class="inline-block" onclick="matchingAgents()">匹配智能体</button>--%>
                   </div>
                 </div>
               </div>
@@ -193,7 +194,7 @@
                   <textarea class="w-full h-full"  id = "textareaCopy"></textarea>
                 </div>
 
-                <div id="hello-page" class="flex-1 overflow-hidden">
+                <div id="hello-page" class="flex-1 overflow-hidden" >
                   <div class="react-scroll-to-bottom--css-dlyqs-79elbk h-full dark:bg-gray-800">
                     <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu">
                       <div class="flex flex-col text-sm dark:bg-gray-800 h-full">
@@ -207,24 +208,23 @@
                               </div>
                             </div>
                           </div>
-                          <!-- ************************************************中部 标题**************************** -->
-                          <div id="topTitle"
-                            class="align-center flex h-full w-full flex-col justify-center self-center px-2 pb-2 md:pb-[8vh]">
-                            <div class="absolute right-2 top-2 text-gray-600 text-sm  sm:none">
-                              仅限邀请内测
-                            </div>
-                            <h1
-                              class="text-6xl font-semibold text-center t ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center flex-grow"
-                              style="color: #838383;"
-                              >
-                              <!-- style="color: #51B4EF;" -->
-                              <span></span>
-                            </h1>
+                          <!-- 球形div -->
+                          <div id="ball-div">
                           </div>
                           <!-- ************************************************中部 标题end**************************** -->
-                          <div id="item-content" class="flex h-full w-full flex-col  px-2 pb-32 md:pb-[8vh]"
-                            style="overflow: auto;">
-
+                          <div id="item-content" class="flex  w-full flex-col  px-2 pb-32 md:pb-[8vh]"style="overflow: auto;height: calc(100vh - 14vh);" >
+                            <!-- ************************************************中部 标题**************************** -->
+                            <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]" style="height: calc(8vh);">
+                              <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
+                                仅限邀请内测
+                              </div>
+                              <h1
+                                      class="text-6xl font-semibold text-center t ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center flex-grow"
+                                      style="color: #838383;">
+                                <!-- style="color: #51B4EF;" -->
+                                <span></span>
+                              </h1>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -232,7 +232,7 @@
                   </div>
                 </div>
                 <div
-                  class="absolute bottom-0 left-0 w-full border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2 md:pl-2 md:w-[calc(100%-.5rem)]">
+                  class="absolute bottom-0 left-0  border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2 md:pl-2 md:w-[calc(100%-.5rem)]">
                   <form
                     class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
                     <div class="relative flex h-full flex-1 items-stretch md:flex-col">
@@ -311,27 +311,17 @@
                         </div>
                         
                         <div id="agentButton" class=" flex-col-reverse m-2 flex-bottom">
-                          <img style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 1px;" t="1694871462493" class=" icon"
+                          <img style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 0px;" t="1694871462493" class=" icon"
                           alt="agent"
                           src="images/agent.png"
                           />
                         </div>
 
-                        <div id="addButton" class=" flex-col-reverse m-2 flex-bottom"><svg id="addSvg"
-                            style="width: 26px;height: 26px; float: left;right: 100px; margin-bottom: 0px;" t="1694871462493" class=" icon"
-                            viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6730"
-                            width="200" height="200">
-                            <path
-                              d="M888.640638 178.095187 344.424912 178.095187c0 0-37.257555-65.74333-75.9109-65.74333L93.247242 112.351857c-15.407921 0-27.907607 15.117302-27.907607 33.675984l0 50.736545c0 18.508539 12.499685 33.624818 27.907607 33.624818l796.417725 0c15.408945 0 26.220175-7.514137 26.220175-26.022677l0.067538 0.38374C915.95268 186.241728 904.049582 178.095187 888.640638 178.095187z"
-                              fill="#2DAAD2" p-id="6731"></path>
-                            <path
-                              d="M958.413747 833.260841c0 18.508539-12.500709 33.624818-27.90863 33.624818L93.247242 866.88566c-15.407921 0-27.907607-15.116279-27.907607-33.624818L65.339636 294.90559c0-18.508539 12.499685-33.625842 27.907607-33.625842l837.257875 0c15.408945 0 27.90863 15.117302 27.90863 33.625842L958.413747 833.260841z"
-                              fill="#3399CC" p-id="6732"></path>
-                            <path d="M351.692433 523.843746l320.318376 0 0 80.529081-320.318376 0 0-80.529081Z"
-                              fill="#FFFFFF" p-id="6733"></path>
-                            <path d="M471.659735 403.923516l80.479963 0 0 320.319399-80.479963 0 0-320.319399Z"
-                              fill="#FFFFFF" p-id="6734"></path>
-                          </svg>
+                        <div id="addButton" class=" flex-col-reverse m-2 flex-bottom">
+                          <img style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 0px;" t="1694871462493" class=" icon"
+                               alt="agent"
+                               src="images/wjsc.png"
+                          />
                         </div>
                       </div>
                       <!-- ***********************输入框end******************************** -->
@@ -397,5 +387,6 @@
     <script src="js/index.js?ver=${initParam.version}"></script>
     <script src="js/self.js?ver=${initParam.version}"></script>
     <script src="js/query.js?ver=${initParam.version}"></script>
+    <script src="js/ball.js"></script>
   </body>
 </html>
