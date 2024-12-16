@@ -9908,17 +9908,40 @@ a.active {
 }
 
 #ball-div {
-    width: 50%;
-    height: 55%;
-    position: fixed;
+    width: 40vw;  /* 宽度占视口宽度的20% */
+    height: 55vh; /* 高度占视口高度的20% */
+    /*position: fixed;*/
+    position: absolute;
     margin: 0;
-    right: 355px;
-    bottom: 285px;
+    right: 23vw;   /* 距离右边5% */
+    bottom: 33vh;  /* 距离底部5% */
     z-index: 9999;
     background-color: transparent;
+    /*background-color: green;*/
     user-select: none; /* 禁止选中文本 */
     cursor: grab; /* 鼠标样式 */
 }
+
+/* 针对400x832大小手机屏幕的优化 */
+@media (max-width: 400px) and (max-height: 832px) {
+    #ball-div {
+        width: 50vw;  /* 屏幕宽度的25% */
+        height: 50vh; /* 屏幕高度的25% */
+        right: 23vw;   /* 右侧距离8% */
+        bottom: 33vh;  /* 底部距离8% */
+    }
+}
+
+/* 如果屏幕小于等于 400px 宽，宽度和高度调整得更小 */
+@media (max-width: 400px) {
+    #ball-div {
+        width: 50vw;  /* 屏幕宽度的25% */
+        height: 50vh; /* 屏幕高度的25% */
+        right: 23vw;   /* 右侧距离8% */
+        bottom: 33vh;  /* 底部距离8% */
+    }
+}
+
 
 #ball-div:active {
     cursor: grabbing; /* 鼠标拖拽样式 */
