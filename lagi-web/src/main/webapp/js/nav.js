@@ -14,6 +14,8 @@ let MODEL_TYPES = [MODEL_TYPE_LLM, MODEL_TYPE_ASR, MODEL_TYPE_TTS, MODEL_TYPE_IM
     MODEL_TYPE_IMGENHANCE, MODEL_TYPE_IMGGEN, MODEL_TYPE_VIDEOTRACK,
     MODEL_TYPE_VIDEOENHANCE, MODEL_TYPE_TEXT2VIDEO];
 
+let currentAppId = null;
+
 
 let promptNavs = [
     {
@@ -23,89 +25,130 @@ let promptNavs = [
         title: '大模型',
         subNavs: [
             {
-                id: 1, key: 'znwd', title: '智能问答', exampleImgSrc: '../images/znwd.png',
+                id: 101,
+                agentId: '7438888028623798291',
+                title: '股票智能体',
                 models: ["llm"],
                 exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该功能可以针对用户需求帮助用户快速获取信息、解决问题，提高工作效率和便捷性。可用于对话沟通、智能营销、智能客服、情感沟通等需要沟通对话的场景',
-                operation: '在输入框内输入您的需求（如“请告诉我康熙皇帝在位几年？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                prompt: '该智能体可帮助用户获取实时股市行情、分析股票走势，为投资决策提供支持。',
+                operation: '在输入框内输入您的需求（如“今日股市行情如何？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 2, key: 'wbsc', title: '文本生成', exampleImgSrc: '../images/wbsc.png',
+                id: 102,
+                agentId: '7439565885150691343',
+                title: '汇率智能体',
                 models: ["llm"],
-                exampleVedioSrc: '../video/wbsc.mp4',
-                prompt: '该功能可以根据用户的需求，生成精准匹配的创作文本。',
-                operation: '在输入框内输入您的需求（如“写一份关于唐朝的故事”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体提供全球主要货币汇率查询，帮助用户随时了解汇率变化。',
+                operation: '在输入框内输入您的需求（如“当前人民币对美元的汇率是多少？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 3, key: 'yysb', title: '语音识别', exampleImgSrc: '../images/yysb.png',
-                models: ["asr"],
-                exampleVedioSrc: '../video/yysb.mp4',
-                prompt: '该功能可使得大模型与用户进行语音交互、用语音识别代替手写或打字转输入。',
-                operation: '长按输入框最左侧的话筒按钮，同时开始说话，按钮松手后会自动识别文字到输入框。'
+                id: 103,
+                agentId: 'YjQOEJzUQKmOQsxaQVTww1wc4pihUb23',
+                title: '文心智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体能帮助用户处理文本相关任务，如总结、写作、校对等。',
+                operation: '在输入框内输入您的需求（如“总结一下我的会议纪要”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 4, key: 'qrqs', title: '千人千声', exampleImgSrc: '../images/qrqs.png',
-                models: ["tts"],
-                exampleVedioSrc: '../video/qrqs.mp4',
-                prompt: '该功能的语音回答可采用不同情绪音色，可以为个人用户提供更加便捷、高效的交互方式和更加生动形象的语音体验，为企业提供更优质的服务质量和更高效的工作流程。',
-                operation: '在Lagi对您的输入内容作出回应的最右侧，点击“默认”按钮，即可看到多种可供选择的情绪音色。选中其中一个音色后，点击旁边的竖着的三个点，即可选择播放及播放倍速。'
+                id: 104,
+                agentId: 'VeePGDJsRHqn',
+                title: '腾讯元器智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体专注于提供腾讯元器相关的信息和服务，便捷用户查询。',
+                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 5, key: 'ktsh', title: '看图说话', exampleImgSrc: '../images/ktsh.png',
-                models: ["img2Text"],
-                exampleVedioSrc: '../video/ktsh.mp4',
-                status: 1,
-                prompt: '该功能可自动提取上传图片的信息，并生成对图片的描述，帮助用户理解图片内容。',
-                operation: `点击输入框最右侧的文件夹图标，选择图片并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
-         已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
-         此时请在输入框内输入“看图说话”，Lagi将会对您的请求作出响应。`
+                id: 105,
+                agentId: '1864494095439970304',
+                title: '小红书智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体帮助用户获取小红书平台上的热点话题、帖子推荐及评论互动。',
+                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 6, key: 'hzzq', title: '画质增强', exampleImgSrc: '../images/txzq.png',
-                models: ["imgEnhance"],
-                exampleVedioSrc: '../video/txzq.mp4',
-                status: 1,
-                prompt: '该功能可以提升图像清晰度、色彩表现、对比度，并减少噪声和杂点，从而增强图像的视觉效果和可读性',
-                operation: `点击输入框最右侧的文件夹图标，选择图片并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
-        已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
-        此时请在输入框内输入“画质增强”，Lagi将会对您的请求作出响应。`
+                id: 106,
+                agentId: 'weather_agent',
+                title: '天气智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体可以实时查询天气信息，帮助用户了解当天的天气状况。',
+                operation: '在输入框内输入您的需求（如“今天北京天气如何？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 7, key: 'tpsc', title: '图片生成', exampleImgSrc: '../images/tpsc.png',
-                models: ["imgGen"],
-                exampleVedioSrc: '../video/tpsc.mp4',
-                status: 1,
-                prompt: '该功能可根据用户的需求，生成精准匹配的图片，为用户提供配图',
-                operation: '在输入框内输入您的需求（如“生成一张风景图”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
-            },
-
-            {
-                id: 8, key: 'spzz', title: '视频追踪', exampleImgSrc: '../images/spzz.png',
-                models: ["videoTrack"],
-                exampleVedioSrc: '../video/spzz.mp4',
-                status: 1,
-                prompt: '该功能可对上传视频的内容进行搜索、编辑和创作视频。跟踪人物进行轨迹绘制，框选等操作。',
-                operation: '点击输入框最右侧的文件夹图标，选择视频并点击“打开”，即可上传。Lagi将会自动您的请求做出响应。'
+                id: 107,
+                agentId: 'oil_price_agent',
+                title: '油价智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体提供实时油价查询，帮助用户随时了解油价走势。',
+                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 9, key: 'spzq', title: '视频增强', exampleImgSrc: '../images/spzq.png',
-                models: ["videoEnhance"],
-                exampleVedioSrc: '../video/spzq.mp4',
-                status: 1,
-                prompt: '该功能可以显著提升视频的质量和观感体验，让观众享受更加清晰、生动、流畅的画面效果。这些技术在影视制作、视频修复、在线视频流等领域具有广泛的应用前景。',
-                operation: `点击输入框最右侧的文件夹图标，选择视频并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
-            已经收到您上传的视频。如果您想视频追踪，请输入“视频追踪”。如果您想视频增强，请输入“视频增强”。
-            此时请在输入框内输入“视频增强”，Lagi将会对您的请求作出响应。`
+                id: 108,
+                agentId: 'bmi_agent',
+                title: '体重指数智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体帮助用户计算并分析体重指数（BMI），提供健康建议。',
+                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             },
             {
-                id: 10, key: 'spsc', title: '视频生成', exampleImgSrc: '../images/spsc.png',
-                models: ["text2Video"],
-                exampleVedioSrc: '../video/spsc.mp4',
-                status: 1,
-                prompt: '该功能可对根据上传的图像，自动生成与之相关的视频。这有助于提高视频的创新性和生产效率，为影视制作、游戏开发、广告创意等领域提供更多的可能性。',
-                operation: `点击输入框最右侧的文件夹图标，选择图片并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
-         已经收到您上传的图片。如果您想生成视频，请输入"视频生成"。如果您想增强图片，请输入"图像增强"。如果您想使用AI描述图片，请输入"看图说话"。
-         此时请在输入框内输入“生成视频”，Lagi将会对您的请求作出响应。`
+                id: 109,
+                agentId: 'food_calorie_agent',
+                title: '食物卡路里智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体提供食物卡路里的查询，帮助用户掌握饮食的热量信息。',
+                operation: '在输入框内输入您的需求（如“某食物的卡路里含量是多少？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 110,
+                agentId: 'dishonest_person_search_agent',
+                title: '查询失信人员智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体帮助用户查询失信人员信息，了解失信名单。',
+                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 111,
+                agentId: 'high_speed_ticket_agent',
+                title: '高铁票查询智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体提供高铁票的查询服务，帮助用户轻松获取车票信息。',
+                operation: '在输入框内输入您的需求（如“查询北京到上海的高铁票”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 112,
+                agentId: 'history_in_today_agent',
+                title: '历史的今天智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体为用户提供“历史的今天”相关事件和历史资料。',
+                operation: '在输入框内输入您的需求（如“今天历史上发生了什么？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 113,
+                agentId: 'youdao_agent',
+                title: '有道翻译智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体提供高质量的语言翻译服务，支持多种语言互译。',
+                operation: '在输入框内输入您的需求（如“请翻译‘你好’为英文”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 114,
+                agentId: 'image_gen_agent',
+                title: '图像生成智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '该智能体根据用户需求生成高质量的图像，支持多种风格和主题。',
+                operation: '在输入框内输入您的需求（如“生成一幅秋天的风景画”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             }
         ]
     },
@@ -116,12 +159,102 @@ let promptNavs = [
         title: '智能体',
         subNavs: [
             {
-                id: 11, key: 'kjsx', title: '快捷私训', exampleImgSrc: '../images/kjsx.png',
-                exampleVedioSrc: '../video/kjsx.mp4',
-                prompt: '该功能可对用户进行个性化推荐、训练某行业或领域的专业翻译、解决冷启动问题、保护数据隐私等，用户可根据需求和偏好投喂数据，使其能够提供更加个性化和定制化的服务。',
-                operation: `点击输入框最右侧的文件夹图标，选择文件并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
-         已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。
-         此时请在输入框内输入您的询问内容，Lagi将会对您的请求作出响应。`
+                id: 101,agentId: '7438888028623798291', title: '股票智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：股票智能体',
+                operation: '在输入框内输入您的需求（如“今日股市行情如何？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 102,agentId: '7439565885150691343', title: '汇率智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：汇率智能体',
+                operation: '在输入框内输入您的需求（如“当前人民币对美元的汇率是多少？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 103,agentId: 'YjQOEJzUQKmOQsxaQVTww1wc4pihUb23', title: '文心智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：文心智能体',
+                operation: '在输入框内输入您的需求（如“总结一下我的会议纪要”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 104,agentId: 'VeePGDJsRHqn', title: '腾讯元器智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：腾讯元器智能体',
+                operation: '在输入框内输入您的需求（如“”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 105,agentId: '1864494095439970304', title: '小红书智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：小红书智能体',
+                operation: '在输入框内输入您的需求（如“”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 106,agentId: 'weather_agent', title: '天气智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：天气智能体',
+                operation: '在输入框内输入您的需求（如“今天北京天气如何”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 107,agentId: 'oil_price_agent', title: '油价智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：油价智能体',
+                operation: '在输入框内输入您的需求（如“”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 108,agentId: 'bmi_agent', title: '体重指数智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：体重指数智能体',
+                operation: '在输入框内输入您的需求（如“”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 109,agentId: 'food_calorie_agent', title: '食物卡路里智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：食物卡路里智能体',
+                operation: '在输入框内输入您的需求（如“今天北京天气如何”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 110,agentId: 'dishonest_person_search_agent', title: '查询失信人员智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：查询失信人员智能体',
+                operation: '在输入框内输入您的需求（如“”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 111,agentId: 'high_speed_ticket_agent', title: '高铁票查询智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：高铁票查询智能体',
+                operation: '在输入框内输入您的需求（如“”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 112,agentId: 'history_in_today_agent', title: '历史的今天智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：食物卡路里智能体',
+                operation: '在输入框内输入您的需求（如“今天北京天气如何”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 113,agentId: 'youdao_agent', title: '有道翻译智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：有道翻译智能体',
+                operation: '在输入框内输入您的需求（如“今天北京天气如何”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+            },
+            {
+                id: 113,agentId: 'image_gen_agent', title: '图像生成智能体',
+                models: ["llm"],
+                exampleVedioSrc: '../video/znwd.mp4',
+                prompt: '当前智能体为：图像生成智能体',
+                operation: '在输入框内输入您的需求（如“今天北京天气如何”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
             }
         ]
     },
@@ -132,6 +265,14 @@ let promptNavs = [
         title: '编排',
         subNavs: [
             {
+                id: 11, key: 'kjsx', title: '快捷私训', exampleImgSrc: '../images/kjsx.png',
+                exampleVedioSrc: '../video/kjsx.mp4',
+                prompt: '该功能可对用户进行个性化推荐、训练某行业或领域的专业翻译、解决冷启动问题、保护数据隐私等，用户可根据需求和偏好投喂数据，使其能够提供更加个性化和定制化的服务。',
+                operation: `点击输入框最右侧的文件夹图标，选择文件并点击“打开”，即可上传。Lagi将会根据上载的内容对您作出如下提示：
+                            已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。
+                            此时请在输入框内输入您的询问内容，Lagi将会对您的请求作出响应。`
+            },
+            {
                 id: 12, key: 'zlsc', title: '指令生成', exampleImgSrc: '../images/sczl.png',
                 exampleVedioSrc: '../video/sczl.mp4',
                 prompt: '该功能是指，当用户提供一篇文档时，大模型能够自动分析文档内容，理解其结构和语义，然后生成与之相关的指令集。这些指令集可以是一系列操作步骤、代码片段、或者是针对特定任务的指导说明。',
@@ -139,7 +280,6 @@ let promptNavs = [
 			已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入"帮我生成指令集”。
 			此时请在输入框内输入“帮我生成指令集”，Lagi将会对您的请求作出响应。`
             },
-
             {
                 id: 13, key: 'twhp', title: '图文混排', exampleImgSrc: '../images/twhp.png',
                 exampleVedioSrc: '../video/twhp.mp4',
@@ -315,9 +455,10 @@ function genSubNavItems(subNavs) {
         const subNav = subNavs[i];
         console.log("subNav.id:" + subNav.id);
 
+        // 如果子菜单项包含 app_id，我们将其存储在 data-app-id 中
         subHtml += `
         <li class="sub-nav-item">
-            <a onclick="getPromptDialog(${subNav.id})" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}">
+            <a onclick="getPromptDialog(${subNav.id}, '${subNav.app_id}')" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.app_id}">
                 ${subNav.title}
             </a>
         </li>
@@ -327,8 +468,9 @@ function genSubNavItems(subNavs) {
     return subHtml;
 }
 
+
 // 添加点击激活事件
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     // 检查点击是否在二级菜单项上
     if (e.target && e.target.classList.contains('sub-nav-link')) {
         // 获取所有二级菜单项
@@ -452,7 +594,6 @@ function getModeList(type) {
 let currentNav = null;
 
 
-
 function getPromptDialog(id) {
 
 
@@ -479,6 +620,8 @@ function getPromptDialog(id) {
         return;
     }
 
+    currentAppId = nav.agentId;
+
     // 加载模型选择（子导航项）
     loadModelSelect(nav);
 
@@ -490,11 +633,15 @@ function getPromptDialog(id) {
     let answerJq = newRobotStartDialog('');
 
     // 播放视频（如果存在）
-    let vedioHtml = nav.exampleVedioSrc ? `
-        <video controls width="100%" style="border:10px solid #238efc; border-radius:15px">
-            <source src="${nav.exampleVedioSrc}" type="video/mp4" />
-        </video>
-    ` : '';
+    let vedioHtml = '';
+    if (nav.exampleVedioSrc) {
+        vedioHtml = `
+            <video controls width="100%" style="border:10px solid #238efc; border-radius:15px">
+                <source src="${nav.exampleVedioSrc}" type="video/mp4" />
+            </video>
+        `;
+    }
+
 
     // 重置计时器
     clearTimeout(timer);

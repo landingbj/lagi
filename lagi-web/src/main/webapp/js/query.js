@@ -2,28 +2,13 @@ let queryLock = false;
 var PromptDialog = 0;
 
 const words = [
-    "股票", "天气", "油价", "新闻", "财经", "健康", "医疗",
-    "教育", "游戏", "购物", "电影推荐", "美食", "食谱",
-    "旅行", "翻译", "心理咨询", "投资", "区块链", "AI绘画",
-    "编程助手", "数据分析", "社交媒体", "聊天", "运动健身", "租车",
-    "交通", "智能家居", "宠物护理", "时尚", "工作助手", "营销",
-    "SEO优化", "招聘", "天气预报", "空气质量", "旅行规划", "导航",
-    "语音助手", "虚拟助手", "记账", "理财", "房产估值", "租房助手",
-    "日程管理", "音乐推荐", "图书推荐", "家装设计", "电商", "促销分析",
-    "心理健康", "疾病诊断", "运动分析", "天气提醒", "历史知识",
-    "科学探索", "编程教学", "语言学习", "语法检查", "面试准备", "写作助手",
-    "论文查重", "考试复习", "定制化学习", "儿童教育", "旅游翻译",
-    "语音翻译", "多语言沟通", "实时翻译", "新闻追踪", "事件提醒",
-    "个人助理", "学习路径", "职业规划", "求职简历", "招聘筛选",
-    "游戏攻略", "竞技分析", "运动战术", "健身计划", "减脂",
-    "心率监控", "血压监控", "睡眠分析", "营养摄入", "减压助手",
-    "会议记录", "在线课堂", "绘画教学", "智能合同助手", "法律顾问",
-    "税务助手", "智能财务", "危机预测", "客户服务", "自然灾害预警",
-    "环保数据", "气候变化", "星座运势", "心理测试", "名人信息"
+    "股票", "汇率", "文心", "腾讯元器", "小红书", "天气", "油价", "体重指数",
+    "食物卡路里", "失信人员查询", "高铁票查询", "历史的今天", "有道翻译", "图像生成"
 ];
 
 // 绑定页面回车事件
 $('#queryContent').keydown(function (event) {
+    console.log("event:" + event)
     if (event.keyCode === 13) {
         event.preventDefault();
         textQuery();
@@ -72,14 +57,17 @@ async function textQuery() {
         queryLock = false;
         return;
     }
-    for (let word of words) {
-        if (question.includes(word)) {
-            setTimeout(() => {
-                matchingAgents(word);
-            }, 0);
-            break;
+
+    let agentId = currentAppId;
+
+        for (let word of words) {
+            if (question.includes(word)) {
+                setTimeout(() => {
+                    matchingAgents(word);
+                }, 0);
+                break;
+            }
         }
-    }
 
     // 隐藏非对话内容
     hideHelloContent();
@@ -91,7 +79,7 @@ async function textQuery() {
             socialAgentsConversation(question);
         } else {
             let robotAnswerJq = newConversation(conversation);
-            getTextResult(question.trim(), robotAnswerJq, conversation);
+            getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
         }
     })
 }
@@ -322,7 +310,7 @@ function getLoginStatus(appId, username) {
 
 const CONVERSATION_CONTEXT = [];
 
-function getTextResult(question, robootAnswerJq, conversation) {
+function getTextResult(question, robootAnswerJq, conversation, agentId) {
     var result = '';
     var paras = {
         "category": window.category,
@@ -331,9 +319,14 @@ function getTextResult(question, robootAnswerJq, conversation) {
         ]),
         "temperature": 0.8,
         "max_tokens": 1024,
-        "stream": true
-        // "stream": false
+        // "stream": true,
+        "stream": false
     };
+    if (agentId) {
+        paras["router"] = "pass";
+        paras["agentId"] = agentId;
+        paras["stream"] = false;
+    }
 
     var queryUrl = "search/detectIntent";
     $.ajax({
@@ -416,10 +409,11 @@ function getTextResult(question, robootAnswerJq, conversation) {
 }
 
 function generalOutput(paras, question, robootAnswerJq) {
+    let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
-        url: "v1/chat/completions",
+        url: url,
         // url: "v1/worker/completions",
         data: JSON.stringify(paras),
         success: function (res) {
@@ -460,6 +454,8 @@ function generalOutput(paras, question, robootAnswerJq) {
 }
 
 function streamOutput(paras, question, robootAnswerJq) {
+    console.log("paras.agentId: " + paras.agentId)
+
     function isJsonString(str) {
         try {
             JSON.parse(str);
@@ -470,7 +466,8 @@ function streamOutput(paras, question, robootAnswerJq) {
     }
 
     async function generateStream(paras) {
-        const response = await fetch('v1/chat/completions', {
+        let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
+        const response = await fetch(url, {
             method: "POST",
             cache: "no-cache",
             keepalive: true,
