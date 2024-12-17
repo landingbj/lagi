@@ -152,6 +152,94 @@ POST `/chat/completions`
 | »» completion_tokens   | integer  | true  | 生成的令牌数量                                     |
 | »» total_tokens        | integer  | true  | 请求中使用的总令牌数量                                 |
 
+
+## 智能体调用接口
+
+POST `/chat/go`
+
+输入prompt，获取智能体的回答。
+
+### Body 请求参数
+
+```json
+{
+  "router": "pass",
+  "agentId": "weather_agent",
+  "temperature": 0.8,
+  "max_tokens": 500,
+  "messages": [
+    {
+      "role": "user",
+      "content": "今天武汉的天气如何。"
+    }
+  ]
+}
+```
+
+### 请求参数
+
+| 名称              | 位置   | 类型       | 必选 | 说明                                                                                         |
+|-----------------|------|----------|----|--------------------------------------------------------------------------------------------|
+| body            | body | object   | 否  | none                                                                                       |
+| » router         | body | string   | 是  | 路由规则,该值取于router 配置项, 具体请参考[路由配置](./config.md#路由配置) 接口会按规则调用智能体                             |                                                                            |
+| » agentId      | body | string   | 否  | 当指定路由规则为%通配时，能指定调用所有智能体, 值为智能体配置里配置的智能体名字。                                                 |
+| » temperature   | body | number   | 是  | 用来控制语言模型生成文本的创造性和多样性<br/>的参数，范围再0-1之间，调低温度会让模型<br/>生成更加确定和高概率的文本，而调高温<br/>度则会增加文本的随机性和多样性。 |
+| » max_tokens    | body | integer  | 是  | 可以生成的最大token数。                                                                             |
+| » messages      | body | [object] | 是  | 提交的消息列表                                                                                    |
+| »» role         | body | string   | 否  | user或者assistant, user表示用户提交，<br/>assistant表示智能体输出                                          |
+| »» content      | body | string   | 否  | 请求内容                                                                                       |
+
+### 返回示例
+
+> 成功
+
+```json
+{
+  "source": "weather_agent",
+  "created": 0,
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "content": "今天武汉的天气是晴天，温度为7℃，湿度为59%，风力小于等于3级，风向为北。更新时间为2024-12-16 18:01:56。"
+      }
+    }
+  ]
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义 | 说明 |
+|-----|-------|----|
+| 200 | OK    | 成功 |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称                   | 类型       | 必选    | 说明                                            |
+|----------------------|----------|-------|-----------------------------------------------|
+| » id                 | string   | true  | 唯一标识符                                         |
+| » object             | string   | true  | 对象类型                                          |
+| » created            | integer  | true  | 聊天完成创建时的Unix时间戳（秒）                            | 
+| » source             | integer  | true  | 源智能体名称                                        | 
+| » imageList          | array   | true  | 图片理解列表                                        | 
+| » filepath          | array   | true  | 文件列表                                          | 
+| » created            | integer  | true  | 聊天完成创建时的Unix时间戳（秒）                            | 
+| » choices            | [object] | true  | 选择的列表                                         |
+| »» index             | integer  | false | 对象的索引                                         |
+| »» message           | object   | false | 返回的消息                                         |
+| »»» role             | string   | true  | user或assistant, user表示用户提交，<br/>assistant表示大模型输出 |
+| »»» content          | string   | true  | 大模型的输出内容                                      |
+| »»» context          | string   | false | 向量数据库查出来的上下文信息                                |
+| »» finish_reason     | string   | false | 模型停止生成的原因                                     |
+| » usage              | object   | true  | 完成请求的使用统计                                     |
+| »» prompt_tokens     | integer  | true  | 提示中的令牌数量。                                     |
+| »» completion_tokens | integer  | true  | 生成的令牌数量                                       |
+| »» total_tokens      | integer  | true  | 请求中使用的总令牌数量                                   |
+| »» total_tokens      | integer  | true  | 请求中使用的总令牌数量                                   |
+
 ## 语音识别
 
 POST `/audio/speech2text`

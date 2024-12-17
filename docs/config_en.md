@@ -270,4 +270,62 @@ workers:
     agent: ding
     worker: ai.worker.social.RobotWorker
 
+  - name: weather_agent
+    driver: ai.agent.customer.WeatherAgent
+    token: your-token
+    app_id: weather_agent
+
+  - name: oil_price_agent
+    driver: ai.agent.customer.OilPriceAgent
+    token: your-token
+    app_id: oil_price_agent
+
+  - name: bmi_agent
+    driver: ai.agent.customer.BmiAgent
+    token: your-token
+    app_id: bmi_agent
+
+  - name: food_calorie_agent
+    driver: ai.agent.customer.FoodCalorieAgent
+    token: your-token
+    app_id: food_calorie_agent
+
+  - name: dishonest_person_search_agent
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+    token: your-token
+    app_id: dishonest_person_search_agent
+
+  - name: high_speed_ticket_agent
+    driver: ai.agent.customer.HighSpeedTicketAgent
+    app_id: high_speed_ticket_agent
+
+  - name: history_in_today_agent
+    driver: ai.agent.customer.HistoryInToDayAgent
+    app_id: history_in_today_agent
+
+  - name: youdao_agent
+    driver: ai.agent.customer.YouDaoAgent
+    app_id: your-app-id
+    token: your-token
+
+  - name: image_gen_agent
+    driver: ai.agent.customer.ImageGenAgent
+    app_id: your-app-id
+    endpoint: http://127.0.0.1:8080
+    token: image_gen_agent
+# router configuration
+routers:
+  - name: best
+      #    rule: (weather_agent&food_calorie_agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+      # A,B -> failover, first A, if A fail, then B;
+    # A&B -> parallel, call A and B concurrently, choose the proper only one result;
+    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
+    rule: (weather_agent&food_calorie_agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+
+  - name: pass
+    rule: '%'
+    # % is a wildcard to represent agent name.
+    # if specified, invoke this agent.
+    # if just % is given, % would be decided by parameter at calling time.
+
 ```

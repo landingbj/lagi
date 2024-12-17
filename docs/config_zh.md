@@ -255,7 +255,51 @@ agents:
   - name: ding
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
+    
+  - name: weather_agent
+    driver: ai.agent.customer.WeatherAgent
+    token: your-token
+    app_id: weather_agent
 
+  - name: oil_price_agent
+    driver: ai.agent.customer.OilPriceAgent
+    token: your-token
+    app_id: oil_price_agent
+
+  - name: bmi_agent
+    driver: ai.agent.customer.BmiAgent
+    token: your-token
+    app_id: bmi_agent
+
+  - name: food_calorie_agent
+    driver: ai.agent.customer.FoodCalorieAgent
+    token: your-token
+    app_id: food_calorie_agent
+
+  - name: dishonest_person_search_agent
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+    token: your-token
+    app_id: dishonest_person_search_agent
+
+  - name: high_speed_ticket_agent
+    driver: ai.agent.customer.HighSpeedTicketAgent
+    app_id: high_speed_ticket_agent
+
+  - name: history_in_today_agent
+    driver: ai.agent.customer.HistoryInToDayAgent
+    app_id: history_in_today_agent
+
+  - name: youdao_agent
+    driver: ai.agent.customer.YouDaoAgent
+    app_id: your-app-id
+    token: your-token
+
+  - name: image_gen_agent
+    driver: ai.agent.customer.ImageGenAgent
+    app_id: your-app-id
+    endpoint: http://127.0.0.1:8080
+    token: image_gen_agent
+    
 # 这部分表示智能体实际作业的配置
 workers:
   - name: qq-robot # 作业名称
@@ -270,6 +314,20 @@ workers:
     agent: ding
     worker: ai.worker.social.RobotWorker
 
+# 路由配置
+routers:
+  - name: best
+      #    rule: (weather_agent&food_calorie_agent)  # A|B ->轮询，A或B，表示在A和B之间随机轮询；
+      # A,B ->故障转移，首先A，如果A失败，然后B；
+    # A&B ->并行，同时调用A和B，选择合适的结果只有一个
+    # 该规则可以组合为((A&B&C),(E|F))，这意味着首先同时调用ABC，如果失败，则随机调用E或F
+    rule: (weather_agent&food_calorie_agent)  # A|B ->轮询，A或B，表示在A和B内随机轮询；
+
+  - name: pass
+    rule: '%'
+    # %是表示的通配符。
+    # 如果指定，则调用该代理
+    # 如果只给出%，则%将由调用时的参数决定。
 ```
 
 
