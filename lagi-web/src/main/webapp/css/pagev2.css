@@ -224,7 +224,7 @@ video {
 
 img,
 video {
-    height: auto;
+    height: 80%;
     max-width: 100%
 }
 
@@ -275,9 +275,9 @@ textarea {
 select:focus,
 textarea:focus {
     --tw-ring-inset: var(--tw-empty,
-            /*!*/
-            /*!*/
-        );
+        /*!*/
+        /*!*/
+    );
     --tw-ring-offset-width: 0px;
     --tw-ring-offset-color: #fff;
     --tw-ring-color: #2563eb;
@@ -376,9 +376,9 @@ select {
 [type=checkbox]:focus,
 [type=radio]:focus {
     --tw-ring-inset: var(--tw-empty,
-            /*!*/
-            /*!*/
-        );
+        /*!*/
+        /*!*/
+    );
     --tw-ring-offset-width: 2px;
     --tw-ring-offset-color: #fff;
     --tw-ring-color: #2563eb;
@@ -1379,9 +1379,9 @@ textarea:focus {
 .form-select:focus,
 .form-textarea:focus {
     --tw-ring-inset: var(--tw-empty,
-            /*!*/
-            /*!*/
-        );
+        /*!*/
+        /*!*/
+    );
     --tw-ring-offset-width: 0px;
     --tw-ring-offset-color: #fff;
     --tw-ring-color: #2563eb;
@@ -9907,40 +9907,50 @@ a.active {
     background-color: #2a2b32; /* 加深的背景色 */
 }
 
-#ball-div {
+#introduces {
     width: 40vw;  /* 宽度占视口宽度的20% */
-    height: 55vh; /* 高度占视口高度的20% */
+    height: 10vh; /* 高度占视口高度的20% */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 9vh ;
+    padding-bottom: 15vh;
+    /*background-color: green;*/
+}
+
+#ball-div {
+    width: 48vw;  /* 屏幕宽度的25% */
+    height: 48vh; /* 屏幕高度的25% */
     /*position: fixed;*/
-    position: absolute;
-    margin: 0;
-    right: 23vw;   /* 距离右边5% */
-    bottom: 33vh;  /* 距离底部5% */
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2vh ;
     z-index: 9999;
     background-color: transparent;
-    /*background-color: green;*/
+    /*background-color: goldenrod;*/
     user-select: none; /* 禁止选中文本 */
     cursor: grab; /* 鼠标样式 */
 }
 
-/* 针对400x832大小手机屏幕的优化 */
+/*!* 针对400x832大小手机屏幕的优化 *!
 @media (max-width: 400px) and (max-height: 832px) {
     #ball-div {
-        width: 50vw;  /* 屏幕宽度的25% */
-        height: 50vh; /* 屏幕高度的25% */
-        right: 23vw;   /* 右侧距离8% */
-        bottom: 33vh;  /* 底部距离8% */
+        width: 50vw;  !* 屏幕宽度的25% *!
+        height: 50vh; !* 屏幕高度的25% *!
+        right: 23vw;   !* 右侧距离8% *!
+        bottom: 33vh;  !* 底部距离8% *!
     }
 }
 
-/* 如果屏幕小于等于 400px 宽，宽度和高度调整得更小 */
+!* 如果屏幕小于等于 400px 宽，宽度和高度调整得更小 *!
 @media (max-width: 400px) {
     #ball-div {
-        width: 50vw;  /* 屏幕宽度的25% */
-        height: 50vh; /* 屏幕高度的25% */
-        right: 23vw;   /* 右侧距离8% */
-        bottom: 33vh;  /* 底部距离8% */
+        width: 50vw;  !* 屏幕宽度的25% *!
+        height: 50vh; !* 屏幕高度的25% *!
+        right: 23vw;   !* 右侧距离8% *!
+        bottom: 33vh;  !* 底部距离8% *!
     }
-}
+}*/
 
 
 #ball-div:active {

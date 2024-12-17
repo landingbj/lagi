@@ -38,11 +38,11 @@ function showHelloContent() {
 
 
 function hideHelloContent() {
-    $('#introduces').hide();
-    $('#modelChoices').hide();
+    // $('#introduces').hide();
+    // $('#modelChoices').hide();
     // $('#topTitle').hide();
     // $('#item-content').empty();
-    hideBallDiv(); // 隐藏球形 div
+    // hideBallDiv(); // 隐藏球形 div
 }
 
 function loadIntroduces() {
