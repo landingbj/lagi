@@ -1,0 +1,495 @@
+system_title: lag[i]
+
+models:
+  # Landing is a MOE model provided by Beijing Landing Technologies
+  - name: landing
+    type: Landing
+    enable: true
+    drivers:
+      - model: turing,qa,tree,proxy,cascade
+        driver: ai.llm.adapter.impl.LandingAdapter
+      - model: image
+        driver: ai.image.adapter.impl.LandingImageAdapter
+      - model: landing-tts,landing-asr
+        driver: ai.audio.adapter.impl.LandingAudioAdapter
+      - model: video
+        driver: ai.video.adapter.impl.LandingVideoAdapter
+        oss: landing
+    api_key: your-api-key # http://saas.landingbj.com/
+
+  # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
+  #  - name: fastchat
+  #    type: Vicuna
+  #    enable: false
+  #    model: vicuna-13b,vicuna-7b,vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+  #    driver: ai.llm.adapter.impl.VicunaAdapter
+  #    api_address: http://localhost:8090/v1/chat/completions
+
+  # ChatGPT is a state-of-the-art language model developed by OpenAI
+  - name: chatgpt
+    type: OpenAI
+    enable: false
+    model: gpt-3.5-turbo,gpt-4-1106-preview
+    driver: ai.llm.adapter.impl.GPTAdapter
+    api_key: your-api-key # https://platform.openai.com/
+
+  # ChatGPT-Azure is a version of the ChatGPT model integrated into Microsoft Azure's suite of AI services.
+  #  - name: chatgpt-azure
+  #    type: Microsoft
+  #    model: gpt-3.5-turbo,gpt-4-1106-preview,gpt-4o-20240513
+  #    enable: true
+  #    driver: ai.llm.adapter.impl.GPTAzureAdapter
+  #    endpoint: your-endpoint
+  #    api_key: your-api-key
+
+  #  qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
+  - name: qwen
+    type: Alibaba
+    enable: false
+    drivers:
+      - model: qwen-turbo,qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
+        driver: ai.llm.adapter.impl.QwenAdapter
+      - model: asr
+        driver: ai.audio.adapter.impl.AlibabaAudioAdapter
+      - model: vision
+        driver: ai.video.adapter.impl.AlibabaVisionAdapter
+        oss: alibaba
+      - model: ocr
+        driver: ai.ocr.impl.AlibabaLangOcrAdapter
+    # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
+    api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
+    access_key_id: your-access-key-id
+    access_key_secret: your-access-key-secret
+
+  #  ERNIE Bot (WenxinYiyan) is an advanced large-scale language model developed by Baidu
+  - name: ernie
+    type: Baidu
+    enable: true
+    drivers:
+      - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
+        driver: ai.llm.adapter.impl.ErnieAdapter
+      - model: Fuyu-8B,Stable-Diffusion-XL
+        driver: ai.image.adapter.impl.BaiduImageAdapter
+      - model: translate
+        driver: ai.translate.adapter.impl.BaiduTranslateAdapter
+        app_id: your-api-key
+        security_key: your-security-key
+      - model: enhance
+        driver: ai.image.adapter.impl.BaiduAiImageAdapter
+        api_key: your-api-key
+        secret_key: your-sercet-key
+      - model: aiVideo
+        driver: ai.video.adapter.impl.BaiduVideoAdapter
+        api_key: your-api-key
+        secret_key: your-sercet-key
+    # help document https://developer.baidu.com/article/detail.html?id=1089328
+    #  url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
+    app_id: your-app-id
+    api_key: your-api-key
+    secret_key: your-sercet-key
+
+  #  chatGLM is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
+  #  - name: chatglm
+  #    type: Zhipu
+  #    enable: false
+  #    model: glm-3-turbo,glm-4, glm-4v
+  #    driver: ai.llm.adapter.impl.ZhipuAdapter
+  #    api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
+
+  # Kimi is an intelligent assistant product developed by Moonshot AI.
+  - name: kimi
+    type: Moonshot
+    enable: true
+    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+    driver: ai.llm.adapter.impl.MoonshotAdapter
+    api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
+
+  # Baichuan is a new generation of open source large language model launched by Baichuan AI
+  #  - name: baichuan
+  #    type: Baichuan
+  #    enable: false
+  #    model: Baichuan2-Turbo,Baichuan2-Turbo-192k,Baichuan2-53B
+  #    driver: ai.llm.adapter.impl.BaichuanAdapter
+  #    api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
+
+  # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
+  - name: spark
+    type: iFLYTEK
+    enable: false
+    drivers:
+      - model: v1.1,v2.1,v3.1,v3.5,v4.0
+        driver: ai.llm.adapter.impl.SparkAdapter
+      - model: tti
+        driver: ai.image.adapter.impl.SparkImageAdapter
+    app_id: your-app-id
+    api_key: you-api-key  # https://console.xfyun.cn/
+    secret_key: you-secret-key   # https://console.xfyun.cn/
+
+  # SenseChat(RiRiXin) is a large language model developed by SenseTime
+  #  - name: SenseChat
+  #    type: SenseTime
+  #    enable: false
+  #    model: SenseChat-Turbo,SenseChat-FunctionCall,SenseChat-5,SenseChat-128K,SenseChat-32K #SenseChat
+  #    driver: ai.llm.adapter.impl.SenseChatAdapter
+  #    api_key: your-api-key
+  #    secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
+
+  # Gemini is a family of multimodal large language models developed by Google DeepMind.
+  #  - name: gemini
+  #    type: Google
+  #    enable: true
+  #    model: gemini-1.5-flash-latest,gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.5-pro-latest
+  #    driver: ai.llm.adapter.impl.GeminiAdapter
+  #    api_key: your-api-key
+
+  # Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
+  #  - name: doubao
+  #    type: ByteDance
+  #    enable: true
+  #    drivers:
+  #      # url address https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey
+  #      - model: doubao-pro-4k,doubao-pro-32k
+  #        driver: ai.llm.adapter.impl.DoubaoAdapter
+  #        # https://console.volcengine.com/speech/app
+  #      - model: openspeech
+  #        driver: ai.audio.adapter.impl.VolcEngineAudioAdapter
+  #        oss: landing
+  #    api_key: your-api-key
+  #    app_id : your-app-id
+  #    access_token: your-access-token
+  #    alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
+  #    # address https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
+
+stores:
+  vector:
+    # Chroma is an AI-native open-source embedding database
+    # The official website is https://www.trychroma.com/
+    - name: chroma
+      driver: ai.vector.impl.ChromaVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:8000
+
+    # Pinecone is a vector database for building large-scale machine learning applications
+    # The official website is https://www.pinecone.io/
+    - name: pinecone
+      driver: ai.vector.impl.PineconeVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      environment: your-environment
+      project_name: your-project-name
+      index_name: your-index-name
+      api_key: your-api-key
+
+    # Milvus is an open-source vector database designed for storing and searching large volumes of vector data.
+    # The official website is https://milvus.io/
+    - name: milvus
+      driver: ai.vector.impl.MilvusVectorStore
+      default_category: default
+      similarity_top_k: 3
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:19530
+      token: your-token
+
+  oss:
+    - name: landing
+      driver: ai.oss.impl.LandingOSS
+      bucket_name: lagi
+      enable: true
+
+    - name: alibaba
+      driver: ai.oss.impl.AlibabaOSS
+      access_key_id: your-access-key-id
+      access_key_secret: your-access-key-secret
+      bucket_name: ai-service-oss
+      enable: true
+
+  text:
+    - name: elasticsearch
+      driver: ai.bigdata.impl.ElasticSearchAdapter
+      host: localhost
+      port: 9200
+      enable: true
+
+  database:
+    name: mysql
+    jdbcUrl: you-jdbc-url
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: your-username
+    password: your-password
+
+  rag: # RAG enhances large language models by integrating external knowledge retrieval.
+    vector: chroma
+    fulltext: elasticsearch
+    graph: landing
+    enable: false
+    priority: 10
+    default: "Please give prompt more precisely"
+    track: true
+
+  medusa: # Medusa is a caching tool designed to accelerate the response of large models.
+    enable: false
+    algorithm: hash
+
+functions:
+  embedding:
+    - backend: qwen
+      type: Qwen
+      api_key: you-api-key
+
+  chat:
+    - backend: landing
+      model: cascade
+      enable: true
+      stream: true
+      priority: 350
+
+    - backend: kimi
+      model: moonshot-v1-8k
+      enable: false
+      stream: true
+      priority: 150
+
+    - backend: chatgpt
+      model: gpt-3.5-turbo
+      enable: false
+      stream: true
+      priority: 120
+
+    - backend: ernie
+      model: ERNIE-Speed-128K
+      enable: false
+      stream: true
+      priority: 10
+
+  translate:
+    - backend: ernie
+      model: translate
+      enable: true
+      priority: 10
+
+  speech2text:
+    - backend: qwen
+      model: asr
+      enable: true
+      priority: 10
+
+  text2speech:
+    - backend: landing
+      model: tts
+      enable: true
+      priority: 10
+
+  speech2clone:
+    - backend: doubao
+      model: openspeech
+      enable: true
+      priority: 10
+      others: your-speak-id
+
+  text2image:
+    - backend: spark
+      model: tti
+      enable: true
+      priority: 10
+    - backend: ernie
+      model: Stable-Diffusion-XL
+      enable: true
+      priority: 5
+
+  image2text:
+    - backend: ernie
+      model: Fuyu-8B
+      enable: true
+      priority: 10
+
+  image2enhance:
+    - backend: ernie
+      model: enhance
+      enable: true
+      priority: 10
+
+  image2ocr:
+    - backend: qwen
+      model: ocr
+      enable: true
+      priority: 10
+
+  text2video:
+    - backend: landing
+      model: video
+      enable: true
+      priority: 10
+
+  image2video:
+    - backend: qwen
+      model: vision
+      enable: true
+      priority: 10
+
+  video2track:
+    - backend: landing
+      model: video
+      enable: true
+      priority: 10
+
+  video2enhance:
+    - backend: qwen
+      model: vision
+      enable: true
+      priority: 10
+
+  doc2ocr:
+    - backend: qwen
+      model: ocr
+      enable: true
+      priority: 10
+
+  doc2instruct:
+    - backend: landing
+      model: cascade
+      enable: true
+      priority: 10
+
+# The following is the configuration of agents, name is the name of the agent,
+# type is the type of the agent, class is the implement class of the agent.
+agents:
+  - name: qq
+    api_key: your-api-key
+    driver: ai.agent.social.QQAgent
+
+  - name: wechat
+    api_key: your-api-key
+    driver: ai.agent.social.WechatAgent
+
+  - name: ding
+    api_key: your-api-key
+    driver: ai.agent.social.DingAgent
+
+  - name: XiaoxinAgent
+    wrong_case: /u5c0f/u4fe1/u6700/u8fd1/u5b66/u4e60/u4e86
+    driver: ai.agent.chat.qianfan.XiaoxinAgent
+    token: your-token
+
+  - name: StockAgent
+    wrong_case: /u62b1/u6b49
+    driver: ai.agent.chat.coze.CozeAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: ExchangeRateAgent
+    wrong_case: /u62b1/u6b49
+    driver: ai.agent.chat.coze.CozeAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: RAG
+    driver: ai.agent.chat.rag.RagAgent
+    endpoint: http://127.0.0.1:8080
+
+  - name: WenxinAgent
+    driver: ai.agent.chat.wenxin.BaiduAgent
+    app_id: your-app-id
+    api_key: your-api-key
+
+  - name: TencentYuanQi
+    driver: ai.agent.chat.tencent.YuanQiAgent
+    app_id: your-app-id
+    api_key: your-api-key
+
+  - name: XiaohongshuAgent
+    driver: ai.agent.chat.zhipu.ZhipuAgent
+    token: your-token
+    app_id: your-app-id
+
+  - name: weather_agent
+    driver: ai.agent.customer.WeatherAgent
+    token: your-token
+    app_id: weather_agent
+
+  - name: oil_price_agent
+    driver: ai.agent.customer.OilPriceAgent
+    token: your-token
+    app_id: oil_price_agent
+
+  - name: bmi_agent
+    driver: ai.agent.customer.BmiAgent
+    token: your-token
+    app_id: bmi_agent
+
+  - name: food_calorie_agent
+    driver: ai.agent.customer.FoodCalorieAgent
+    token: your-token
+    app_id: food_calorie_agent
+
+  - name: dishonest_person_search_agent
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+    token: your-token
+    app_id: dishonest_person_search_agent
+
+  - name: high_speed_ticket_agent
+    driver: ai.agent.customer.HighSpeedTicketAgent
+    app_id: high_speed_ticket_agent
+
+  - name: history_in_today_agent
+    driver: ai.agent.customer.HistoryInToDayAgent
+    app_id: history_in_today_agent
+
+  - name: youdao_agent
+    driver: ai.agent.customer.YouDaoAgent
+    app_id: your-app-id
+    token: your-token
+
+  - name: image_gen_agent
+    driver: ai.agent.customer.ImageGenAgent
+    app_id: your-app-id
+    endpoint: http://127.0.0.1:8080
+    token: image_gen_agent
+
+# The following is the configuration of workers, name is the name of the worker,
+# agent is the agent used by the worker, class is the implement class of the worker.
+workers:
+  - name: qq-robot
+    agent: qq
+    worker: ai.worker.social.RobotWorker
+
+  - name: wechat-robot
+    agent: wechat
+    worker: ai.worker.social.RobotWorker
+
+  - name: ding-robot
+    agent: ding
+    worker: ai.worker.social.RobotWorker
+
+  # Example for Airport Enhancement
+  - name: asr4flights
+    worker: ai.worker.social.Asr4FlightsWorker
+
+  - name: BestWorker
+    worker: ai.worker.chat.BestChatAgentWorker
+
+  - name: appointedWorker
+    worker: ai.worker.DefaultAppointWorker
+
+
+routers:
+  - name: best
+      #    rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+      # A,B -> failover, first A, if A fail, then B;
+    # A&B -> parallel, call A and B concurrently, choose the proper only one result;
+    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
+    rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+
+  - name: pass
+    rule: '%'
+    # % is a wildcard to represent agent name.
+    # if specified, invoke this agent.
+    # if just % is given, % would be decided by parameter at calling time.
