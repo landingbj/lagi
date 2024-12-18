@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import ai.servlet.dto.CompanyIncomingDocumentsRequest;
 import ai.vector.pojo.VectorCollection;
 
 import javax.servlet.ServletException;
@@ -106,6 +107,8 @@ public class UploadFileServlet extends HttpServlet {
             this.permissionSettings(req, resp);
         } else if (method.equals("permissionSettingsIncrement")) {
             this.permissionSettingsIncrement(req, resp);
+        } else if (method.equals("uploadCompanyIncomingDocuments")) {
+            this.uploadCompanyIncomingDocuments(req, resp);
         }
     }
 
@@ -113,6 +116,132 @@ public class UploadFileServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         this.doGet(req, resp);
+    }
+    private void uploadCompanyIncomingDocuments(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        HttpSession session = req.getSession();
+        CompanyIncomingDocumentsRequest crequest = new CompanyIncomingDocumentsRequest();
+
+        Field[] fields = CompanyIncomingDocumentsRequest.class.getDeclaredFields();
+
+        JsonObject jsonResult = new JsonObject();
+
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            String parameterValue = req.getParameter(fieldName);
+            if (parameterValue != null && !parameterValue.isEmpty()) {
+                field.setAccessible(true);
+                try {
+                    if (field.getType().equals(Date.class)) {
+                        // 将字符串转为 Date 类型
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // 请根据需要调整格式
+                        Date dateValue = sdf.parse(parameterValue);
+                        field.set(crequest, dateValue);
+                    } else {
+                        // 其他类型直接设置值
+                        field.set(crequest, parameterValue);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("字段映射出错了---");
+                }
+            }
+        }
+
+        if (crequest.getId()==null || crequest.getId().isEmpty()){
+            jsonResult.addProperty("status", "failed");
+            jsonResult.addProperty("data", "The id is empty");
+            PrintWriter out = resp.getWriter();
+            out.write(gson.toJson(jsonResult));
+            out.flush();
+            out.close();
+            return;
+        }
+        String level = crequest.getLevel();
+        String fileId = crequest.getId();
+
+        StringBuilder introduceBuilder = new StringBuilder();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        if (crequest.getSerialNumber() != null && !crequest.getSerialNumber().isEmpty()) {
+            introduceBuilder.append("流水号为：").append(crequest.getSerialNumber()).append(",/n");
+        }
+        if (crequest.getReceiptDate() != null) {
+            introduceBuilder.append("收文日期为：").append(dateFormat.format(crequest.getReceiptDate())).append(",/n");
+        }
+        if (crequest.getDocumentNumber() != null && !crequest.getDocumentNumber().isEmpty()) {
+            introduceBuilder.append("来文字号为：").append(crequest.getDocumentNumber()).append(",/n");
+        }
+        if (crequest.getIssuingUnit() != null && !crequest.getIssuingUnit().isEmpty()) {
+            introduceBuilder.append("来文单位：").append(crequest.getIssuingUnit()).append(",/n");
+        }
+        if (crequest.getDocumentTitle() != null && !crequest.getDocumentTitle().isEmpty()) {
+            introduceBuilder.append("标题为：").append(crequest.getDocumentTitle()).append(",/n");
+        }
+
+        introduceBuilder.append(";/n");
+        String introduce = introduceBuilder.toString();
+        List<Map<String, String>> data = new ArrayList<>();
+        jsonResult.addProperty("status", "success");
+
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
+        }
+
+        List<File> files = new ArrayList<>();
+        Map<String, String> realNameMap = new HashMap<>();
+        try {
+            List<?> fileItems = upload.parseRequest(req);
+            for (Object fileItem : fileItems) {
+                FileItem fi = (FileItem) fileItem;
+                if (!fi.isFormField()) {
+                    String fileName = fi.getName();
+
+                    String newName = fileId + fileName.substring(fileName.lastIndexOf("."));
+                    String lastFilePath = uploadDir + File.separator + newName;
+                    File file = new File(lastFilePath);
+
+                    while (!file.exists()){
+                        fi.write(file);
+                    }
+                    files.add(file);
+                    realNameMap.put(file.getName(), fileName);
+                    session.setAttribute(newName, file.toString());
+                    session.setAttribute("lastFilePath", lastFilePath);
+                }
+            }
+        } catch (Exception ex) {
+            jsonResult.addProperty("msg", "There was an error parsing the file - Company incoming documents");
+            ex.printStackTrace();
+        }
+        if (!files.isEmpty()) {
+                String content = "";
+                for (File file : files) {
+                    content = fileService.getFileContent(file);
+                    if (!StringUtils.isEmpty(content)) {
+                        String filename = realNameMap.get(file.getName());
+                        Map<String, String> map = new HashMap<>();
+                        map.put("filename", filename);
+                        map.put("filepath", file.getName());
+                        data.add(map);
+                        uploadExecutorService.submit(new AddMeetingIndex(file, "GSSW", filename, level, fileId,introduce));
+                    }
+                }
+        }
+
+
+        if (!jsonResult.has("msg")) {
+            jsonResult.addProperty("data", gson.toJson(data));
+            jsonResult.addProperty("status", "success");
+        }
+        PrintWriter out = resp.getWriter();
+        out.write(gson.toJson(jsonResult));
+        out.flush();
+        out.close();
     }
 
     private void getMeetingUploadFileList(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
@@ -695,6 +824,7 @@ public class UploadFileServlet extends HttpServlet {
     }
 
     private void uploadMeetingMinutes(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
         HttpSession session = req.getSession();
 
         MeetingMinutesRequest meetingMinutesRequest = new MeetingMinutesRequest();
@@ -975,8 +1105,8 @@ public class UploadFileServlet extends HttpServlet {
             if (fileId == null) {
                 fileId = UUID.randomUUID().toString().replace("\\", "");
             }
-            String filepath = MEETING_PATH+file.getName();
-
+            //String filepath = MEETING_PATH+file.getName();
+            String filepath = file.getName();
             metadatas.put("filename", filename);
             metadatas.put("category", category);
             metadatas.put("filepath", filepath);

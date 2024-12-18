@@ -495,7 +495,7 @@ POST `/chat/pdf/cropByRect`
 | » message | string   | true | 状态码    |
 | » data    | [object] | true | 相对路径列表 |
 
-## 会议纪要问答接口
+## 业务类问答接口
 
 POST `/chat/meetingMinutes`
 
@@ -509,6 +509,7 @@ POST `/chat/meetingMinutes`
       "temperature": 0.8,
       "max_tokens": 2048,
       "category": "A00723",
+      "business":"HYJY",
       "messages": [
         {
           "role": "user",
@@ -521,13 +522,14 @@ POST `/chat/meetingMinutes`
 ### 请求参数
 
 | 名称            | 位置   | 类型       | 必选  | 说明                                                                                         |
-| ------------- | ---- | -------- | --- | ------------------------------------------------------------------------------------------ |
+| ------------- | ---- | -------- | --- |--------------------------------------------------------------------------------------------|
 | body          | body | object   | 否   | none                                                                                       |
 | » model       | body | string   | 否   | 模型类型                                                                                       |
 | » stream      | body | boolean  | 否   | 是否使用流式接口                                                                                   |
 | » temperature | body | number   | 是   | 用来控制语言模型生成文本的创造性和多样性<br/>的参数，范围再0-1之间，调低温度会让模型<br/>生成更加确定和高概率的文本，而调高温<br/>度则会增加文本的随机性和多样性。 |
 | » max_tokens  | body | integer  | 是   | 可以生成的最大token数。                                                                             |
 | » category    | body | string   | 否   | 授权人编号                                                                                      |
+| » business    | body | string | 是   | 业务类型（会议纪要：HYJY,公司收文：GSSW）                                                                  |
 | » messages    | body | [object] | 是   | 提交的消息列表                                                                                    |
 | »» role       | body | string   | 否   | user或者assistant, user表示用户提交，<br/>assistant表示大模型输出                                          |
 | »» content    | body | string   | 否   | 请求内容                                                                                       |
@@ -613,24 +615,24 @@ fileToUpload: file://D:/会议纪要.pdf
 
 ### 请求参数（Query 参数）
 
-| 名称              | 位置    | 类型                           | 必选  | 说明           |
-|-----------------| ----- |------------------------------| --- |--------------|
-| id              | query | string                       | 是   | 文件id         |
-| number          | query | string                       | 否   | 编号           |
-| meetingCategory | body  | string                       | 否   | 会议类别         |
-| title           | body  | string                       | 否   | 主题(文件名称)     |
-| drafter         | body  | string                       | 否   | 拟稿人          |
-| meetingPlace    | body  | string                       | 否   | 会议地点         |
-| hostingUnit     | body  | string                       | 否   | 会议承办单位       |
-| meetingTime     | body  | string（yyyy-MM-dd HH:mm:ss） | 否   | 会议时间         |
-| phone           | body  | string                       | 否   | 电话           |
-| confidentiality | body  | string                       | 否   | 密级           |
-| copyNumber      | body  | string                       | 否   | 份号           |
-| distribution    | body  | string                       | 否   | 分送单位         |
-| urgency         | body  | string                       | 否   | 缓急           |
-| issueDate       | body  | string（yyyy-MM-dd ）         | 否   | 印发日期         |
-| authorizer      | body  | string                       | 是   | 权限人(多个用逗号分隔) |
-| » fileToUpload  | body  | string(binary)               | 是   | 所上传的会议纪要文件   |
+| 名称              | 位置     | 类型                  | 必选  | 说明         |
+|-----------------|--------|---------------------| --- |------------|
+| id              | query  | string              | 是   | 文件id       |
+| number          | query  | string              | 否   | 编号         |
+| meetingCategory | query  | string              | 否   | 会议类别       |
+| title           | query  | string              | 否   | 主题(文件名称)   |
+| drafter         | query  | string              | 否   | 拟稿人        |
+| meetingPlace    | query  | string              | 否   | 会议地点       |
+| hostingUnit     | query  | string              | 否   | 会议承办单位     |
+| meetingTime     | query  | string（yyyy-MM-dd）  | 否   | 会议时间       |
+| phone           | query  | string              | 否   | 电话         |
+| confidentiality | query  | string              | 否   | 密级         |
+| copyNumber      | query  | string              | 否   | 份号         |
+| distribution    | query  | string              | 否   | 分送单位       |
+| urgency         | query  | string              | 否   | 缓急         |
+| issueDate       | query  | string（yyyy-MM-dd ） | 否   | 印发日期       |
+| authorizer      | query  | string              | 是   | 固定传：HYJY   |
+| » fileToUpload  | body   | string(binary)      | 是   | 所上传的会议纪要文件 |
 
 ### 返回示例
 
@@ -656,17 +658,17 @@ fileToUpload: file://D:/会议纪要.pdf
 | -------- | ------- | ---- | --------- |
 | » result | boolean | true | 上传私训文件的状态 |
 
-## 获取会议纪要文件列表
+## 获取业务类文件列表
 
 GET /uploadFile/getMeetingUploadFileList
 
 ### 请求参数
 
-| 名称         | 位置    | 类型     | 必选  | 说明    |
-| ---------- | ----- | ------ | --- |-------|
-| category   | query | string | 否   | 授权人编号 |
-| pageSize   | query | string | 否   | 分页的大小 |
-| pageNumber | query | string | 否   | 分页的序号 |
+| 名称         | 位置    | 类型     | 必选  | 说明              |
+| ---------- | ----- | ------ | --- |-----------------|
+| category   | query | string | 否   | 业务类型（HYJY或GSSW） |
+| pageSize   | query | string | 否   | 分页的大小           |
+| pageNumber | query | string | 否   | 分页的序号           |
 
 > 返回示例
 
@@ -717,7 +719,7 @@ GET /uploadFile/getMeetingUploadFileList
 | » pageSize   | integer   | true | none | 分页的大小  |
 | » status     | string    | true | none | 接口返回状态 |
 
-## 删除会议纪要
+## 删除业务类文件
 
 POST /uploadFile/deleteCategoryFile
 
@@ -725,7 +727,7 @@ POST /uploadFile/deleteCategoryFile
 
 ```json
 {
-    "category": "A03161",
+    "category": "HYJY",
     "idList": [
       "00a8ee8ea6e0426c804370ae78313398",
       "09a8ee8ea6e0426c804370ae78313398"
@@ -735,11 +737,11 @@ POST /uploadFile/deleteCategoryFile
 
 ### 请求参数
 
-| 名称       | 位置   | 类型     | 必选 | 说明                            |
-|----------| ---- | ------ |----|-------------------------------|
-| body     | body | object | 是  | none                          |
-| category | body | object | 否  | 授权人权限编码（不填即为删除所有授权人的fileId文件）  |
-| idList   | body | object | 是  | 文件fileId列表                    |
+| 名称       | 位置   | 类型     | 必选 | 说明              |
+|----------| ---- | ------ |----|-----------------|
+| body     | body | object | 是  | none            |
+| category | body | object | 否  | 业务类型（HYJY或GSSW） |
+| idList   | body | object | 是  | 文件fileId列表      |
 
 > 返回示例
 
@@ -763,17 +765,17 @@ POST /uploadFile/deleteCategoryFile
 | -------- | ------ | ---- | ---- | ---- | ---- |
 | » status | string | true | none | 返回状态 | none |
 
-## 下载会议纪要
+## 下载业务类文件
 
 GET /uploadFile/downloadFile
 
 ### 请求参数
 
-| 名称       | 位置   | 类型     | 必选 | 说明                    |
-|----------| ---- |--------|----|-----------------------|
-| filePath | body | string | 否  | 文件相对路径                |  
-| fileName | body | string | 否  | 文件名称                  |
-| type     | body | string | 是  | 文件fileId列表（会议固定给"HYJY"） |
+| 名称      | 位置  | 类型    | 必选| 说明                                               |
+|----------| ---- |--------|----|--------------------------------------------------|
+| filePath | body | string | 否  | 文件相对路径                                           |  
+| fileName | body | string | 否  | 文件名称                                             |
+| type     | body | string | 是  | 文件类型（如不加该参数，则下载制度文件，会议纪要固定给"HYJY"，公司收文固定给"GSSW"） |
 
 > 返回示例
 
@@ -797,7 +799,7 @@ GET /uploadFile/downloadFile
 | -------- | ------ | ---- | ---- | ---- | ---- |
 | » status | string | true | none | 返回状态 | none |
 
-## 会议纪要权限更新
+## 会议纪要权限更新(弃用)
 
 GET /uploadFile/permissionSettings
 
@@ -831,3 +833,51 @@ GET /uploadFile/permissionSettings
 | 名称       | 类型     | 必选   | 约束   | 中文名  | 说明   |
 | -------- | ------ | ---- | ---- | ---- | ---- |
 | » status | string | true | none | 返回状态 | none |
+
+## 上传公司收文
+
+POST `/training/uploadCompanyIncomingDocuments`
+
+上传公司收文
+
+### Body 请求参数
+
+```yaml
+fileToUpload: file://D:/公司收文.pdf
+```
+
+### 请求参数（Query 参数）
+
+| 名称                 | 位置     | 类型                  | 必选  | 说明           |
+|--------------------|--------|---------------------| --- |--------------|
+| id                 | query  | string              | 是   | 文件id         |
+| serialNumber       | query  | string              | 否   | 流水号           |
+| receiptDate        | query  | string（yyyy-MM-dd） | 否   | 收文日期         |
+| documentNumber     | query  | string              | 否   | 来文字号     |
+| issuingUnit        | query  | string              | 否   | 来文单位          |
+| documentTitle      | query  | string              | 否   | 标题          |
+| » fileToUpload     | body   | string(binary)      | 是   | 所上传的 公司收文 文件 |
+
+### 返回示例
+
+> 成功
+
+```json
+{
+  "result": true
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义 | 说明  |
+| --- | ----- | --- |
+| 200 | OK    | 成功  |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称       | 类型      | 必选   | 说明        |
+| -------- | ------- | ---- | --------- |
+| » result | boolean | true | 上传文件的状态 |

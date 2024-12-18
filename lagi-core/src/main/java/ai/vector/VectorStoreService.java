@@ -12,6 +12,7 @@ import ai.learn.questionAnswer.KShingleFilter;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
+import ai.utils.HttpUtil;
 import ai.utils.LagiGlobal;
 import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
@@ -21,6 +22,8 @@ import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
 import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -358,6 +361,9 @@ public class VectorStoreService {
 //            } else if ("personnel".equals(identity)) {
 //                question = adjustQuestionForPersonnel(question);
 //            }
+            if (enhanceRequest.getMeeting()){
+                return search(question, enhanceRequest);
+            }
         }
         return search(question, request.getCategory());
     }
@@ -429,6 +435,88 @@ public class VectorStoreService {
             }
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    /**
+     * 会议纪要的向量查询
+     * @param question
+     * @param request
+     * @return
+     */
+    public List<IndexSearchData> search(String question, EnhanceChatCompletionRequest request) {
+        question = question.replace(" \n", "");
+        int  similarity_top_k = 100;
+        double similarity_cutoff = 0.5;
+        String category = "HYJY";
+        if (request.getBusiness()!= null){
+             category = request.getBusiness();
+        }
+        Map<String, String> where = new HashMap<>();
+        List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+        Set<String> esIds = bigdataService.getIds(question, category);
+        if (esIds != null && !esIds.isEmpty()) {
+            Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
+            indexIds.retainAll(esIds);
+            indexSearchDataList = indexSearchDataList.stream()
+                    .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
+                    .collect(Collectors.toList());
+        }
+        String finalCategory = category;
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
+                .collect(Collectors.toList());
+        List<IndexSearchData> indexSearchDatas = futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            } catch (Exception e) {
+                log.error("indexData get error", e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+
+        Map<String, Object> entity = new HashMap<>();
+        List<String> ids = indexSearchDatas.stream()
+                .map(IndexSearchData::getFileId)
+                .distinct()
+                .collect(Collectors.toList());
+        String authorizer = request.getCategory();
+        entity.put("docIds", ids);
+        entity.put("workNumber", authorizer);
+        entity.put("business", "HYJY");
+        List<String> permissions = getPermissions(entity);
+        Set<String> idSet = new HashSet<>(permissions);
+        List<IndexSearchData> intersection =indexSearchDatas.stream()
+                .filter(data -> idSet.contains(data.getFileId()))
+                .collect(Collectors.toList());
+        return intersection;
+    }
+
+    private List<String> getPermissions(Map<String, Object> entity){
+        String apiurl = "http://10.62.74.4:5001/oaInterface/sysAuth/putDocUserAuth";
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        String jsonResult = null;
+        try {
+            jsonResult = HttpUtil.httpPost(apiurl, headers, entity, 20 * 1000);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        List<String> documentIds = new ArrayList<>();
+        if (jsonResult != null) {
+            documentIds = parseJsonToDocumentIds(jsonResult);
+        }
+        return documentIds;
+    }
+    private static List<String> parseJsonToDocumentIds(String jsonResult) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonResult);
+            JsonNode dataNode = rootNode.get("data");
+            return objectMapper.convertValue(dataNode, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 //    private IndexSearchData extendIndexSearchData(IndexSearchData indexSearchData, String category) {

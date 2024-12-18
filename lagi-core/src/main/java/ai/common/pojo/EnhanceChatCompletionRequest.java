@@ -19,4 +19,5 @@ public class EnhanceChatCompletionRequest extends ChatCompletionRequest {
 
     private Boolean meeting;
 
+    private String business;// "HYJY" or "GSSW"
 }
