@@ -9907,50 +9907,60 @@ a.active {
     background-color: #2a2b32; /* 加深的背景色 */
 }
 
+/* #introduces 设为相对宽度和高度 */
 #introduces {
-    width: 40vw;  /* 宽度占视口宽度的20% */
-    height: 10vh; /* 高度占视口高度的20% */
+    width: 40vw;  /* 宽度占视口宽度的40% */
+    height: 15vh; /* 高度占视口高度的15% */
     margin-left: auto;
     margin-right: auto;
-    margin-top: 9vh ;
-    padding-bottom: 15vh;
-    /*background-color: green;*/
+    margin-top: 9vh; /* 上间距调整为10vh */
+    padding-bottom: 10vh;
 }
 
+/* #ball-div 使用相对单位 */
 #ball-div {
-    width: 48vw;  /* 屏幕宽度的25% */
-    height: 48vh; /* 屏幕高度的25% */
-    /*position: fixed;*/
+    width: 48vw;  /* 屏幕宽度的48% */
+    height: 48vh; /* 屏幕高度的48% */
     position: relative;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 2vh ;
-    z-index: 9999;
+    margin-top: 2vh;
     background-color: transparent;
-    /*background-color: goldenrod;*/
     user-select: none; /* 禁止选中文本 */
     cursor: grab; /* 鼠标样式 */
 }
 
-/*!* 针对400x832大小手机屏幕的优化 *!
-@media (max-width: 400px) and (max-height: 832px) {
+/* 默认情况下，屏幕小于768px时进行调整 */
+@media (max-width: 768px) {
+    #introduces {
+        width: 80vw;  /* 更适合小屏幕的宽度 */
+        height: 20vh;
+        margin-top: 5vh;  /* 适配小屏幕时减少上边距 */
+    }
+
     #ball-div {
-        width: 50vw;  !* 屏幕宽度的25% *!
-        height: 50vh; !* 屏幕高度的25% *!
-        right: 23vw;   !* 右侧距离8% *!
-        bottom: 33vh;  !* 底部距离8% *!
+        width: 80vw;  /* 适配小屏幕，缩小球形容器的尺寸 */
+        height: 40vh;
     }
 }
 
-!* 如果屏幕小于等于 400px 宽，宽度和高度调整得更小 *!
-@media (max-width: 400px) {
-    #ball-div {
-        width: 50vw;  !* 屏幕宽度的25% *!
-        height: 50vh; !* 屏幕高度的25% *!
-        right: 23vw;   !* 右侧距离8% *!
-        bottom: 33vh;  !* 底部距离8% *!
+/* 超小屏幕（例如手机）适配 */
+@media (max-width: 480px) {
+    #introduces {
+        width: 90vw;  /* 更大宽度适配手机 */
+        height: 10vh;
     }
-}*/
+
+    #ball-div {
+        width: 90vw;  /* 更适合手机的宽度 */
+        height: 20vh;
+    }
+
+    /* 在小屏幕上减少字体大小和间距 */
+    #topTitle h1 {
+        font-size: 3rem; /* 确保标题不超出屏幕 */
+    }
+}
 
 
 #ball-div:active {
@@ -9959,18 +9969,30 @@ a.active {
 
 #ball-div span {
     position: absolute;
-    font-size: 18px;
+    font-size: 2rem;  /* 使用 rem 单位，基于根字体大小 */
     color: #838383;
     text-decoration: none;
     font-weight: bold;
     user-select: none; /* 禁止选中文本 */
-    display: inline-block; /* 使 <span> 标签像块级元素一样 */
-    width: auto;  /* 根据内容自动调整宽度 */
-    height: auto; /* 根据内容自动调整高度 */
+    display: inline-block;
+    width: auto;
+    height: auto;
+    text-align: center; /* 确保文字在容器内居中 */
 }
 
+/* 当屏幕宽度小于 768px 时，调整字体大小 */
+@media (max-width: 768px) {
+    #ball-div span {
+        font-size: 1.5rem;  /* 在小屏幕下减小字体大小 */
+    }
+}
 
-
+/* 当屏幕宽度小于 480px 时，进一步减小字体 */
+@media (max-width: 480px) {
+    #ball-div span {
+        font-size: 1.2rem;  /* 在极小屏幕下减小字体大小 */
+    }
+}
 
 /*!* 添加 hover 效果 *!*/
 /*#ball-div a:hover {*/
@@ -9980,3 +10002,4 @@ a.active {
 /*    border-radius: 5px;*/
 /*    text-decoration: none;*/
 /*}*/
+

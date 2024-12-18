@@ -76,14 +76,14 @@ async function textQuery() {
 
     let agentId = currentAppId;
 
-        for (let word of words) {
-            if (question.includes(word)) {
-                setTimeout(() => {
-                    matchingAgents(word);
-                }, 0);
-                break;
-            }
+    for (let word of words) {
+        if (question.includes(word)) {
+            setTimeout(() => {
+                matchingAgents(word);
+            }, 0);
+            break;
         }
+    }
 
     // 隐藏非对话内容
     hideHelloContent();
