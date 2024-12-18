@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 public class HistoryInToDayAgent extends CustomerAgent {
     public HistoryInToDayAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         HistoryInTodayTool tool = new HistoryInTodayTool(agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(tool.getToolInfo(),

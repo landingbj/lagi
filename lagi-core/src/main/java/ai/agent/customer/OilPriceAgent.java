@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 public class OilPriceAgent extends CustomerAgent {
     public OilPriceAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         OilPriceSearchTool oilPriceSearchTool = new OilPriceSearchTool(agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(oilPriceSearchTool.getToolInfo(),

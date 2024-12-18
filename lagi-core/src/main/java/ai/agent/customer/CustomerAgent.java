@@ -5,6 +5,7 @@ import ai.agent.customer.pojo.*;
 import ai.agent.customer.prompt.Prompt;
 import ai.agent.customer.tools.*;
 import ai.config.ContextLoader;
+import ai.config.pojo.AgentConfig;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -24,6 +25,11 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
     private final Gson gson = new Gson();
     protected List<ToolInfo> toolInfoList;
 
+    public CustomerAgent(AgentConfig agentConfig) {
+        this.agentConfig = agentConfig;
+        toolInfoList = new ArrayList<>();
+    }
+
     public CustomerAgent() {
         toolInfoList = new ArrayList<>();
     }
@@ -33,7 +39,6 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         if(toolInfoList == null) {
             return;
         }
-        System.out.println("toolInfoList = " + toolInfoList);
     }
     private ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
         ChatCompletionRequest request = new ChatCompletionRequest();

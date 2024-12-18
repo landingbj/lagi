@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 public class BmiAgent extends CustomerAgent {
     public BmiAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         BMITool bmiTool = new BMITool(agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(bmiTool.getToolInfo(),

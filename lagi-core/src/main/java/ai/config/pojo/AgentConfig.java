@@ -1,11 +1,13 @@
 package ai.config.pojo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
+@Builder
 @ToString
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AgentConfig {
     private String name;
     @JsonProperty("driver")
