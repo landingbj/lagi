@@ -374,7 +374,7 @@ agents:
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
 
-  - name: XiaoxinAgent
+  - name: citicbankAgent
     wrong_case: /u5c0f/u4fe1/u6700/u8fd1/u5b66/u4e60/u4e86
     driver: ai.agent.chat.qianfan.XiaoxinAgent
     token: your-token
@@ -395,7 +395,7 @@ agents:
     driver: ai.agent.chat.rag.RagAgent
     endpoint: http://127.0.0.1:8080
 
-  - name: WenxinAgent
+  - name: yiyanAgent
     driver: ai.agent.chat.wenxin.BaiduAgent
     app_id: your-app-id
     api_key: your-api-key
@@ -483,7 +483,7 @@ workers:
 routers:
   - name: best
       #    rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
-      # A,B -> failover, first A, if A fail, then B;
+    # A,B -> failover, first A, if A fail, then B;
     # A&B -> parallel, call A and B concurrently, choose the proper only one result;
     # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
     rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
