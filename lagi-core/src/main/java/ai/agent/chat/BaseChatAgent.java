@@ -4,12 +4,15 @@ import ai.config.pojo.AgentConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 
-public class BaseChatAgent extends AbstractChatAgent{
+import static ai.utils.UnicodeStringUtil.decodeUnicode;
+import static ai.utils.UnicodeStringUtil.replaceSlashUWithBackslashU;
+
+public class BaseChatAgent extends AbstractChatAgent {
 
     public BaseChatAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
         this.agentName = agentConfig.getName();
-        this.badCase = agentConfig.getWrongCase() != null ? agentConfig.getWrongCase() : badCase;
+        this.badCase = agentConfig.getWrongCase() != null ? decodeUnicode(replaceSlashUWithBackslashU(agentConfig.getWrongCase())) : badCase;
     }
 
     @Override
