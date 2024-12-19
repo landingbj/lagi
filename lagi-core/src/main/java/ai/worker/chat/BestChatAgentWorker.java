@@ -25,7 +25,7 @@ public class BestChatAgentWorker extends DefaultBestWorker<ChatCompletionRequest
     @Override
     protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentsBySkillMap(List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents, ChatCompletionRequest data) {
         SkillMap skillMap = new SkillMap();
-        return skillMap.getAgentByIntent(agents, ChatCompletionUtil.getLastMessage(data), 5.0);
+        return skillMap.filterAgentByIntentKeyword(agents, ChatCompletionUtil.getLastMessage(data), 5.0);
     }
 
     @Override

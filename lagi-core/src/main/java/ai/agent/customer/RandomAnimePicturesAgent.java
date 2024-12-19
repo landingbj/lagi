@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 public class RandomAnimePicturesAgent extends CustomerAgent {
     public RandomAnimePicturesAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         RandomAnimePicturesTool weatherSearchTool = new RandomAnimePicturesTool();
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),

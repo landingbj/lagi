@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 
 public class HighSpeedTicketAgent extends CustomerAgent {
     public HighSpeedTicketAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         HighSpeedTicketTool tool = new HighSpeedTicketTool(agentConfig.getToken());
         CalendarTool calendarTool = new CalendarTool();
         FinishTool finishTool = new FinishTool();

@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 public class FoodCalorieAgent extends CustomerAgent {
     public FoodCalorieAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         FoodCalorieTool foodCalorieTool = new FoodCalorieTool(agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(foodCalorieTool.getToolInfo(),

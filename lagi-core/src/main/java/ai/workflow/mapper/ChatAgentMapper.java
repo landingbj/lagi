@@ -28,11 +28,11 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
 
 
     public String getAgentName() {
-        return agent.getAgentName();
+        return agent.getAgentConfig().getName();
     }
 
     public String getBadCase() {
-        return agent.getBadCase();
+        return agent.getAgentConfig().getWrongCase() == null ? "抱歉" : agent.getAgentConfig().getWrongCase();
     }
 
     public double getSimilarity(ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) {
@@ -88,8 +88,12 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
             calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
-            SkillMap skillMap = new SkillMap();
-            skillMap.updateOrInsert(getAgentName(), ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult), null);
+            try {
+                SkillMap skillMap = new SkillMap();
+                skillMap.saveAgentScore(agent.getAgentConfig(), ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+            } catch (Exception e) {
+                log.error("saveAgentScore error", e);
+            }
         }
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
         result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);
