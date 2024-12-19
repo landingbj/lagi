@@ -568,6 +568,7 @@ function getPromptDialog(id) {
 
     if (!(nav.prompt && nav.operation)) {
         $('#queryContent').val(nav.templateIssues);
+        resetBallState();
         highlightWord(nav.title);
         return;
     }
