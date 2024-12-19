@@ -513,3 +513,23 @@ routers:
     # % is a wildcard to represent agent name.
     # if specified, invoke this agent.
     # if just % is given, % would be decided by parameter at calling time.
+
+#  Filter rule
+filters:
+  # Sensitive words filter
+  sensitive:
+    mask: "*"
+    # 1:replace all returns with blank a string, 2:Replace the matched strings with a mask string, 3:replace the matched strings with an empty string
+    level: 2
+    rules:
+      - rule: 'openai'
+  # Vector index words with high priority
+  priority:
+    - car
+    - weather
+  # Conversational stop word
+  stopping:
+    - bye
+  # Conversational continuation words
+  continue:
+    - about

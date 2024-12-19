@@ -8,6 +8,7 @@ public class WorkerConfig {
     private String name;
     @JsonProperty("worker")
     private String worker;
+    private String route;
     private String agent;
     private String agents;
 }
