@@ -213,7 +213,8 @@ stores:
       enable: true
 
   text:
-    - name: elasticsearch
+    # This  is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
+    - name: elastic
       driver: ai.bigdata.impl.ElasticSearchAdapter
       host: localhost
       port: 9200
@@ -228,7 +229,7 @@ stores:
 
   rag: # RAG enhances large language models by integrating external knowledge retrieval.
     vector: chroma
-    fulltext: elasticsearch
+    fulltext: elastic
     graph: landing
     enable: false
     priority: 10
@@ -362,93 +363,112 @@ functions:
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.
 agents:
+  # This agent is an automation tool for QQ chat application, enabling social interactions and services.
   - name: qq
     api_key: your-api-key
     driver: ai.agent.social.QQAgent
 
+  # This agent is an automation tool for WeChat chat application, supporting social interactions and message management.
   - name: wechat
     api_key: your-api-key
     driver: ai.agent.social.WechatAgent
 
+  # This agent is an automation tool for DingTalk chat application, providing work collaboration and information exchange services.
   - name: ding
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
 
-  - name: citicbankAgent
+  # This agent is the customer service agent for CITIC Bank, handling user queries and service requests.
+  - name: citic
     wrong_case: /u5c0f/u4fe1/u6700/u8fd1/u5b66/u4e60/u4e86
     driver: ai.agent.chat.qianfan.XiaoxinAgent
     token: your-token
 
-  - name: StockAgent
+  # This agent is a stock query tool, providing stock market information, analysis, and related services.
+  - name: stock
     wrong_case: /u62b1/u6b49
     driver: ai.agent.chat.coze.CozeAgent
     token: your-token
     app_id: your-app-id
 
-  - name: ExchangeRateAgent
+  # This agent is an exchange rate query tool, providing real-time exchange rates for major global currencies.
+  - name: exchangeRate
     wrong_case: /u62b1/u6b49
     driver: ai.agent.chat.coze.CozeAgent
     token: your-token
     app_id: your-app-id
 
-  - name: RAG
+  # This agent is a Retrieval-Augmented Generation (RAG) model tool, used for combining external knowledge for text generation.
+  - name: knowledge
     driver: ai.agent.chat.rag.RagAgent
     endpoint: http://127.0.0.1:8080
 
-  - name: yiyanAgent
+  # This agent is for Baidu's Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
+  - name: yiYan
     driver: ai.agent.chat.wenxin.BaiduAgent
     app_id: your-app-id
     api_key: your-api-key
 
-  - name: TencentYuanQi
+  # This agent is for Tencent YuanQi, providing automated support for Tencent-related products and services.
+  - name: yuanQi
     driver: ai.agent.chat.tencent.YuanQiAgent
     app_id: your-app-id
     api_key: your-api-key
 
-  - name: XiaohongshuAgent
+  # This agent is for the Xiaohongshu (Little Red Book) platform, providing user content recommendations, search, and interaction functionalities.
+  - name: xiaohongshu
     driver: ai.agent.chat.zhipu.ZhipuAgent
     token: your-token
     app_id: your-app-id
 
-  - name: weather_agent
+  # This agent is for weather queries, helping users obtain real-time weather information and forecasts.
+  - name: weather
     driver: ai.agent.customer.WeatherAgent
     token: your-token
     app_id: weather_agent
 
-  - name: oil_price_agent
+  # This agent is for oil price queries, providing real-time oil price information and helping users track price fluctuations.
+  - name: oil
     driver: ai.agent.customer.OilPriceAgent
     token: your-token
     app_id: oil_price_agent
 
-  - name: bmi_agent
+  # This agent is for Body Mass Index (BMI) calculations and health management, helping users assess their weight health status.
+  - name: bmi
     driver: ai.agent.customer.BmiAgent
     token: your-token
     app_id: bmi_agent
 
-  - name: food_calorie_agent
+  # This agent is for food calorie queries, helping users understand the calorie content of different foods.
+  - name: calorie
     driver: ai.agent.customer.FoodCalorieAgent
     token: your-token
     app_id: food_calorie_agent
 
-  - name: dishonest_person_search_agent
+  # This agent is for querying dishonest persons, helping users access information about people listed as untrustworthy.
+  - name: dishonest
     driver: ai.agent.customer.DishonestPersonSearchAgent
     token: your-token
     app_id: dishonest_person_search_agent
 
-  - name: high_speed_ticket_agent
+  # This agent is for high-speed train ticket queries, providing services to help users quickly find train ticket information.
+  - name: ticket
     driver: ai.agent.customer.HighSpeedTicketAgent
     app_id: high_speed_ticket_agent
 
-  - name: history_in_today_agent
+  # This agent is for querying "On This Day in History," providing users with important historical events that happened on each day.
+  - name: history
     driver: ai.agent.customer.HistoryInToDayAgent
     app_id: history_in_today_agent
 
-  - name: youdao_agent
+  # This agent is for Youdao translation services, supporting translation between multiple languages.
+  - name: youdao
     driver: ai.agent.customer.YouDaoAgent
     app_id: your-app-id
     token: your-token
 
-  - name: image_gen_agent
+  # This agent is for image generation, producing high-quality images based on user input.
+  - name: image
     driver: ai.agent.customer.ImageGenAgent
     app_id: your-app-id
     endpoint: http://127.0.0.1:8080
@@ -482,7 +502,7 @@ workers:
 
 routers:
   - name: best
-      #    rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+    #    rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
     # A,B -> failover, first A, if A fail, then B;
     # A&B -> parallel, call A and B concurrently, choose the proper only one result;
     # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
