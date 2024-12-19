@@ -479,14 +479,17 @@ agents:
 workers:
   - name: qq-robot
     agent: qq
+    route: pass(qq)
     worker: ai.worker.social.RobotWorker
 
   - name: wechat-robot
     agent: wechat
+    route: pass(wechat)
     worker: ai.worker.social.RobotWorker
 
   - name: ding-robot
     agent: ding
+    route: pass(ding)
     worker: ai.worker.social.RobotWorker
 
   # Example for Airport Enhancement
@@ -494,9 +497,11 @@ workers:
     worker: ai.worker.social.Asr4FlightsWorker
 
   - name: BestWorker
-    worker: ai.worker.chat.BestChatAgentWorker
+    route: best(weather, oil)
+    worker: ai.worker.DefaultBestWorker
 
   - name: appointedWorker
+    route: pass(%)
     worker: ai.worker.DefaultAppointWorker
 
 
@@ -506,7 +511,7 @@ routers:
     # A,B -> failover, first A, if A fail, then B;
     # A&B -> parallel, call A and B concurrently, choose the proper only one result;
     # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
-    rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+    rule: (A&B)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
 
   - name: pass
     rule: '%'

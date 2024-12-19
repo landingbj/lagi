@@ -35,6 +35,7 @@ public class SkillMap {
 
     private static final String DB_URL = "jdbc:sqlite:saas.db";
 
+    private static final int maxTry = 3;
 
     static {
         try {
@@ -185,7 +186,6 @@ public class SkillMap {
         request.setMax_tokens(1024);
         request.setTemperature(0);
         request.setMessages(chatMessages);
-        System.out.println("request = " + gson.toJson(request));
         return completionsService.completions(request);
     }
 
@@ -203,7 +203,7 @@ public class SkillMap {
         if(agentIntentScoreByIntent == null || agentIntentScoreByIntent.isEmpty()) {
             return agentList;
         }
-        Map<String, AgentIntentScore> map = agentIntentScoreByIntent.stream().collect(Collectors.toMap(AgentIntentScore::getAgentName, a -> a));
+        Map<String, AgentIntentScore> map = agentIntentScoreByIntent.stream().collect(Collectors.toMap(AgentIntentScore::getAgentId, a -> a));
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> res = agentList.stream().filter(agent -> {
             AgentIntentScore agentIntentScore = map.get(agent.getAgentConfig().getAppId());
             if (agentIntentScore == null) {
@@ -256,13 +256,19 @@ public class SkillMap {
 
 
     private static List<AgentIntentScore> combineAgentScore(List<AgentIntentScore> agentIntentScores, int size) {
-        Map<String, Double> agentScoreMap = agentIntentScores.stream().collect(Collectors.toMap(AgentIntentScore::getAgentName, a -> 0.0));
+        Map<String, AgentIntentScore> agentScoreMap = new HashMap<>();
         for (AgentIntentScore agentIntentScore : agentIntentScores) {
             String agentName = agentIntentScore.getAgentName();
-            agentScoreMap.compute(agentName, (k, score) -> score + agentIntentScore.getScore());
+            AgentIntentScore cached = agentScoreMap.get(agentName);
+            if(cached == null) {
+                agentScoreMap.put(agentName, AgentIntentScore.builder().agentId(agentIntentScore.getAgentId())
+                        .agentName(agentIntentScore.getAgentName()).score(agentIntentScore.getScore()).build());
+            } else {
+                cached.setScore(cached.getScore() + agentIntentScore.getScore());
+            }
         }
-        agentIntentScores = agentIntentScores.stream()
-                .peek(a -> a.setScore(agentScoreMap.get(a.getAgentName()) / size))
+        agentIntentScores = agentScoreMap.values().stream()
+                .peek(a -> a.setScore(a.getScore()/ size))
                 .filter(a -> a.getScore() > 6)
                 .sorted(Comparator.comparingDouble(AgentIntentScore::getScore).reversed())
                 .collect(Collectors.toList());
@@ -291,7 +297,7 @@ public class SkillMap {
         Double score = scoring(question, answer);
         if(score > 0) {
             double similarity = getSimilarity(question, answer);
-            score = Math.min(10, score * 0.7  * (similarity * 0.3 * 10)) ;
+            score = Math.min(10, score * 0.7  + (similarity * 0.3 * 10)) ;
         }
         AgentIntentScore agentScore = AgentIntentScore.builder()
                 .agentId(agentConfig.getAppId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
@@ -327,8 +333,14 @@ public class SkillMap {
     }
 
     public IntentResponse intentDetect(String question) {
-        ChatCompletionResult chatCompletionResult = callLLm(StrUtil.format(intent_prompt_template, question), Collections.emptyList(), "请提取一下用户的意图里的关键词");
-        return gson.fromJson(ChatCompletionUtil.getFirstAnswer(chatCompletionResult), IntentResponse.class);
+        for (int i = 0;i < maxTry; i++) {
+            try {
+                ChatCompletionResult chatCompletionResult = callLLm(StrUtil.format(intent_prompt_template, question), Collections.emptyList(), "请提取一下用户的意图里的关键词");
+                return gson.fromJson(ChatCompletionUtil.getFirstAnswer(chatCompletionResult), IntentResponse.class);
+            } catch (Exception e) {
+            }
+        }
+        return null;
     }
 
 
@@ -354,10 +366,16 @@ public class SkillMap {
     }
 
     public Double scoring(String question, String answer) {
-        ChatCompletionResult chatCompletionResult = callLLm(StrUtil.format(score_prompt_template, question, answer), Collections.emptyList(), "请给出问题和答案的相关性评分");
-        String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
-        ScoreResponse scoreResponse = gson.fromJson(firstAnswer, ScoreResponse.class);
-        return scoreResponse.getScore();
+        for (int i = 0;i < maxTry; i++) {
+            try {
+                ChatCompletionResult chatCompletionResult = callLLm(StrUtil.format(score_prompt_template, question, answer), Collections.emptyList(), "请给出问题和答案的相关性评分");
+                String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
+                ScoreResponse scoreResponse = gson.fromJson(firstAnswer, ScoreResponse.class);
+                return scoreResponse.getScore();
+            } catch (Exception e) {
+            }
+        }
+        return null;
     }
 
 
