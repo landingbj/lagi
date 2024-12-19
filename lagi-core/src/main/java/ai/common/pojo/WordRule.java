@@ -6,6 +6,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Builder
+@NoArgsConstructor
 public class WordRule {
 
     private String rule;
