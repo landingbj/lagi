@@ -1,64 +1,94 @@
 package ai.worker;
 
 import ai.agent.Agent;
-import ai.mr.IMapper;
-import ai.mr.IRContainer;
-import ai.mr.IReducer;
-import ai.workflow.container.AgentContainer;
-import ai.workflow.reducer.AgentReducer;
+import ai.config.pojo.WorkerConfig;
+import ai.manager.AgentManager;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+import ai.router.Route;
+import ai.router.Routers;
+import ai.router.utils.RouterParser;
+import ai.utils.qa.ChatCompletionUtil;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-public class DefaultBestWorker<T, R> extends Worker<T, R>{
+import java.util.*;
+import java.util.stream.Collectors;
 
-    protected List<Agent<T, R>> agents;
+public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatCompletionResult>{
 
-    public DefaultBestWorker(List<Agent<T, R>> agents) {
-        this.agents = agents;
+    protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = new ArrayList<>();
+
+    protected WorkerConfig workerConfig;
+
+    private final Route route;
+
+    public DefaultBestWorker(WorkerConfig workerConfig) {
+        this.workerConfig = workerConfig;
+        String ruleName = getRuleName(workerConfig.getRoute());
+        this.route = Routers.getInstance().getRoute(ruleName);
+        List<String> params = getParams(workerConfig.getRoute());
+        if(params.size() == 1 && RouterParser.WILDCARD_STRING.equals(params.get(0))) {
+            List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
+            for (Agent<?, ?> agent : allAgents) {
+                String appId = agent.getAgentConfig().getAppId();
+                if(appId != null) {
+                    try {
+                        agents.add((Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+        if(params.size() > 1) {
+            for (String agentId : params) {
+                Agent<ChatCompletionRequest, ChatCompletionResult> agent =
+                        (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(agentId);
+                if(agent != null) {
+                    agents.add(agent);
+                }
+            }
+        }
     }
 
-    protected List<IMapper> convert2Mapper(List<Agent<T, R>> agents) {
-        return Collections.emptyList();
+    private static String getRuleName(String route) {
+        int i = route.indexOf("(");
+        return route.substring(0, i);
     }
 
-    protected List<Agent<T, R>> filterAgentsBySkillMap(List<Agent<T, R>> agents, T data) {
-        return agents;
+    private static List<String> getParams(String route) {
+        int s = route.indexOf("(");
+        int e = route.indexOf(")");
+        return Arrays.stream(route.substring(s + 1, e).split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
+
+
+    protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentsBySkillMap(List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents, ChatCompletionRequest data) {
+        SkillMap skillMap = new SkillMap();
+        return skillMap.filterAgentByIntentKeyword(agents, ChatCompletionUtil.getLastMessage(data), 5.0);
     }
 
 
     @Override
-    public  R work(T data){
-        R result = null;
-        Map<String, Object> params = new HashMap<>();
-        params.put(WorkerGlobal.MAPPER_CHAT_REQUEST, data);
-        List<Agent<T, R>> filtered = filterAgentsBySkillMap(agents, data);
-        try (IRContainer contain = new AgentContainer()) {
-            for (IMapper mapper : convert2Mapper(filtered)) {
-                mapper.setParameters(params);
-                mapper.setPriority(WorkerGlobal.MAPPER_PRIORITY);
-                contain.registerMapper(mapper);
-            }
-            IReducer agentReducer = new AgentReducer();
-            contain.registerReducer(agentReducer);
-            @SuppressWarnings("unchecked")
-            List<R> resultMatrix = (List<R>) contain.Init().running();
-            if (resultMatrix.get(0) != null) {
-                result = resultMatrix.get(0);
-                System.out.println("DefaultBestWorker.process: result = " + result);
-            }
+    public  ChatCompletionResult work(ChatCompletionRequest data){
+        ChatCompletionResult result = null;
+        if(route == null) {
+            return null;
+        }
+        List<ChatCompletionResult> results = route.invoke(data, filterAgentsBySkillMap(agents, data));
+        if(results != null && !results.isEmpty()) {
+            result = results.get(0);
         }
         return result;
     }
 
     @Override
-    public  R call(T data){
+    public  ChatCompletionResult call(ChatCompletionRequest data){
         return null;
     }
 
     @Override
-    public void notify(T data){
+    public void notify(ChatCompletionRequest data){
     }
 }

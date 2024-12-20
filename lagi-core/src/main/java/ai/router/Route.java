@@ -1,19 +1,24 @@
 package ai.router;
 
+import ai.agent.Agent;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.function.Function;
 
 @Getter
-@AllArgsConstructor
 public class Route {
-    private String rule;
-    private Function<ChatCompletionRequest, ChatCompletionResult> handler;
+    protected String name;
+    protected List<Function<ChatCompletionRequest, ChatCompletionResult>> handlers;
 
-    public ChatCompletionResult handle(ChatCompletionRequest request) {
-        return handler.apply(request);
+    public Route(String name) {
+        this.name = name;
     }
+
+    public List<ChatCompletionResult> invoke(ChatCompletionRequest request, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents) {
+        return null;
+    }
+
 }

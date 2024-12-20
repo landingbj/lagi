@@ -91,7 +91,7 @@ public class LlmApiServlet extends BaseServlet {
     private void go(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         resp.setContentType("application/json;charset=utf-8");
         LLmRequest lLmRequest = reqBodyToObj(req, LLmRequest.class);
-        ChatCompletionResult work = defaultWorker.work(lLmRequest.getRouter(), lLmRequest);
+        ChatCompletionResult work = defaultWorker.work(lLmRequest.getWorker(), lLmRequest);
         responsePrint(resp, toJson(work));
     }
 
