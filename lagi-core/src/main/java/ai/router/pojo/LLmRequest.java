@@ -11,6 +11,6 @@ import lombok.*;
 @ToString
 public class LLmRequest extends ChatCompletionRequest {
     private String agentId;
-    private String router;
+    private String worker;
     private String userInfo;
 }

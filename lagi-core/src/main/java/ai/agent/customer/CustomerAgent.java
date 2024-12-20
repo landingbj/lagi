@@ -5,6 +5,7 @@ import ai.agent.customer.pojo.*;
 import ai.agent.customer.prompt.Prompt;
 import ai.agent.customer.tools.*;
 import ai.config.ContextLoader;
+import ai.config.pojo.AgentConfig;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -24,6 +25,11 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
     private final Gson gson = new Gson();
     protected List<ToolInfo> toolInfoList;
 
+    public CustomerAgent(AgentConfig agentConfig) {
+        this.agentConfig = agentConfig;
+        toolInfoList = new ArrayList<>();
+    }
+
     public CustomerAgent() {
         toolInfoList = new ArrayList<>();
     }
@@ -33,7 +39,6 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         if(toolInfoList == null) {
             return;
         }
-        System.out.println("toolInfoList = " + toolInfoList);
     }
     private ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
         ChatCompletionRequest request = new ChatCompletionRequest();
@@ -111,8 +116,10 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             } catch (Exception e) {
 
             }
-            assistant_msg = parseThoughts(responseTemplate.getThoughts(), call_result);
+            assistant_msg = parseThoughts(responseTemplate.getThoughts());
             agent_scratch.append(StrUtil.format("\nobservation: {} \nexecute action results: {}",observation, call_result == null ? "查询失败": "查询成功"));
+            call_result = call_result == null? "查询失败": "查询成功结果如下:"+call_result;
+            user_msg = call_result + "\n" + user_msg;
             history.add(Lists.newArrayList(user_msg, assistant_msg));
         }
         if(finalAnswer == null) {
@@ -130,12 +137,12 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         return chatCompletionResult;
     }
 
-    private String parseThoughts(Thoughts thoughts, String actionResult) {
-        return StrUtil.format("plan: {}\nreasoning:{}\ncriticism: {}\nobservation:{}\nobservation :{}",
+    private String parseThoughts(Thoughts thoughts) {
+        return StrUtil.format("plan: {}\n reasoning:{}\n criticism: {}\n observation:{}",
                 thoughts.getPlain(),
                 thoughts.getReasoning(),
                 thoughts.getCriticism(),
-                thoughts.getSpeak(), actionResult == null? "调用失败": "调用成功结果如下:"+actionResult);
+                thoughts.getSpeak());
     }
 
     @Override

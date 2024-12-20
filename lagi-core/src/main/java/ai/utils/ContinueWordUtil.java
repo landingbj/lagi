@@ -13,6 +13,10 @@ public class ContinueWordUtil {
 
     static {
         List<String> wordList = JsonFileLoadUtil.readWordListJson("/continue_word.json");
+        addWords(wordList);
+    }
+
+    public static void addWords(List<String> wordList) {
         patterns.addAll(wordList);
     }
 

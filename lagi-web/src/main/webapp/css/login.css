@@ -1,0 +1,140 @@
+.btn-open-modal {
+    margin: 50px auto;
+    display: block;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-open-modal:hover {
+    background-color: #45a049;
+}
+
+#userMenu {
+    z-index: 10;
+}
+
+/* 遮罩层 */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: #fff;
+    padding: 1em;
+    width: 23em;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.modal h2 {
+    text-align: center;
+    margin-bottom: 0.8em;
+}
+
+.modal input {
+    width: 100%;
+    padding: 0.5em;
+    margin-bottom: 0.6em;
+    box-sizing: border-box;
+}
+
+.captcha-container {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.captcha-image {
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.modal button {
+    display: block;
+    margin: 0.5em auto;
+    padding: 0.5em;
+    width: 12em;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal button:hover {
+    background-color: #0055ff;
+}
+
+.modal a {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    text-decoration: none;
+    color: #007BFF;
+}
+
+.modal a:hover {
+    text-decoration: underline;
+}
+
+#login-form, #register-form {
+    position: relative;
+}
+
+
+.close-modal-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 10px;
+}
+
+
+.close-modal-container .close-modal {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    width: 1em;
+    color: #333;
+    border-radius: 4px;
+}
+
+.close-modal-container .close-modal:hover {
+    background-color: #ececf1;
+}
+
+.hidden {
+    display: none;
+}
+
+.captcha-container {
+    margin-bottom: 0;
+}
+
+.captcha-container input {
+    margin-bottom: 0;
+}
+
+.error-message {
+    display: none;
+    color: red;
+    text-align: center;
+    margin: 0.5em 0 0.5em 0;
+}

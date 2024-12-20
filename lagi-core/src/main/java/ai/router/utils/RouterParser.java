@@ -1,23 +1,9 @@
 package ai.router.utils;
 
-import ai.agent.Agent;
 import ai.common.exception.RRException;
-import ai.manager.AgentManager;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.router.Failover;
-import ai.router.Parallel;
-import ai.router.Polling;
-import ai.router.Route;
-import ai.worker.DefaultAppointWorker;
-import ai.worker.DefaultBestWorker;
-import ai.worker.chat.BestChatAgentWorker;
-import cn.hutool.core.util.StrUtil;
+import ai.router.*;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class RouterParser {
@@ -29,7 +15,13 @@ public class RouterParser {
     public static final char PARALLEL_SEPARATOR = '&';
     public static final char FAILOVER_SEPARATOR = ',';
 
+    public static final String POLLING_SEPARATOR_STRING = POLLING_SEPARATOR + "";
+    public static final String PARALLEL_SEPARATOR_STRING = PARALLEL_SEPARATOR + "";
+    public static final String FAILOVER_SEPARATOR_STRING = FAILOVER_SEPARATOR + "";
+
     public static final char WILDCARD = '%';
+
+    public static final String WILDCARD_STRING = WILDCARD + "";
 
     public static boolean checkValid(String router) {
         Stack<Integer> stack = new Stack<>();
@@ -56,82 +48,48 @@ public class RouterParser {
         return stack.isEmpty();
     }
 
+    public static String getRuleName(String route) {
+        int i = route.indexOf("(");
+        return route.substring(0, i);
+    }
+
+    public static List<String> getParams(String route) {
+        int s = route.indexOf("(");
+        int e = route.indexOf(")");
+        return Arrays.stream(route.substring(s + 1, e).split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
+
+
     public static Route parse(String path, String router) {
         if(!checkValid(router)) {
             throw new RRException(400, "Invalid router rule");
         }
-        if((""+WILDCARD).equals(router)) {
-            return buildWildcardRule(path);
+        List<String> params = RouterParser.getParams(router);
+        if(params.size() == 1 && WILDCARD_STRING.equals(params.get(0))) {
+            return new WildcardRoute(path);
         }
-        return buildPatternRule(path, router);
+        // only support one rule
+        boolean contains = router.contains(POLLING_SEPARATOR_STRING);
+        boolean contains1 = router.contains(PARALLEL_SEPARATOR_STRING);
+        boolean contains2 = router.contains(FAILOVER_SEPARATOR_STRING);
+        if(contains && !contains1 && !contains2) {
+            return new PollingRoute(path);
+        }
+        if(contains1 && !contains && !contains2) {
+            return new ParallelRoute(path);
+        }
+        if(contains2 && !contains && !contains1) {
+            return new FailOverRoute(path);
+        }
+        throw new RRException(400, "not support rule");
     }
 
-    private static Route buildPatternRule(String path, String router) {
-        String regx = StrUtil.format("[\\w\\-_\\p{IsHan}]+([{}{}{}][\\w\\-_\\p{IsHan}]+)*", POLLING_SEPARATOR, FAILOVER_SEPARATOR, PARALLEL_SEPARATOR);
-        String s = router.replaceAll(regx, "func");
-        char separator = 0;
-        if(s.contains(""+POLLING_SEPARATOR)) {
-            separator = POLLING_SEPARATOR;
-        } else if(s.contains(""+FAILOVER_SEPARATOR)) {
-            separator = FAILOVER_SEPARATOR;
-        } else if (s.contains(""+PARALLEL_SEPARATOR)) {
-            separator = PARALLEL_SEPARATOR;
-        }
-        Pattern pattern = Pattern.compile(regx);
-        Matcher matcher = pattern.matcher(router);
-        List<Function<ChatCompletionRequest, ChatCompletionResult>> functions = new ArrayList<>();
-        while (matcher.find()) {
-            String group = matcher.group();
-            functions.add( buildSingleFunc(group));
-        }
-        if(separator == 0) {
-            return new Route(path, functions.stream().findFirst().orElse(null));
-        }
-        Function<ChatCompletionRequest, ChatCompletionResult> function = null;
-        if(s.contains(""+POLLING_SEPARATOR)) {
-            function = new Polling<>(functions);
-        } else if(s.contains(""+FAILOVER_SEPARATOR)) {
-            function = new Failover<>(functions);
-        } else if (s.contains(""+PARALLEL_SEPARATOR)) {
-//            function = new Parallel<>(functions);
-            throw new RRException("not support rule");
-        }
-        return new Route(path, function);
-    }
-
-    private static Function<ChatCompletionRequest, ChatCompletionResult> buildSingleFunc(String r) {
-        if(r.contains(""+FAILOVER_SEPARATOR)) {
-            List<Function<ChatCompletionRequest, ChatCompletionResult>> functions = Arrays.stream(r.split("" + FAILOVER_SEPARATOR)).map(a -> {
-                Agent<ChatCompletionRequest, ChatCompletionResult> agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(a);
-                return (Function<ChatCompletionRequest, ChatCompletionResult>) agent::communicate;
-            }) .collect(Collectors.toList());
-            return new Failover<>(functions);
-        } else if(r.contains(""+POLLING_SEPARATOR)) {
-            List<Function<ChatCompletionRequest, ChatCompletionResult>> functions = Arrays.stream(r.split("" + POLLING_SEPARATOR)).map(a -> {
-                Agent<ChatCompletionRequest, ChatCompletionResult> agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(a);
-                return (Function< ChatCompletionRequest, ChatCompletionResult>) agent::communicate;
-            }) .collect(Collectors.toList());
-            return  new Polling<>(functions);
-        } else if(r.contains(""+PARALLEL_SEPARATOR)) {
-            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = Arrays.stream(r.split("" + PARALLEL_SEPARATOR)).map(a -> (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(a)).filter(Objects::nonNull).collect(Collectors.toList());
-            DefaultBestWorker<ChatCompletionRequest, ChatCompletionResult> worker = new BestChatAgentWorker(agents);
-            return new Parallel<>(worker::work);
-        }
-        return null;
-    }
-
-
-    private static Route buildWildcardRule(String path) {
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = AgentManager.getInstance().agents().stream()
-                .map(a -> (Agent<ChatCompletionRequest, ChatCompletionResult>) a) .collect(Collectors.toList());
-        DefaultAppointWorker<ChatCompletionRequest, ChatCompletionResult> defaultAppointWorker = new DefaultAppointWorker<>(agents);
-        return new Route(path, defaultAppointWorker::call);
-    }
 
     public static void main(String[] args) {
         System.out.println(parse("a", "(小信智能体,a)"));
         System.out.println(parse("a", "((a&b&c),(c|d))"));
-//        System.out.println(parse("a", "((a&b&c),((d,c)|(e,f)))"));
     }
 
 

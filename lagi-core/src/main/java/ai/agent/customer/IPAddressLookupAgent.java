@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 public class IPAddressLookupAgent extends CustomerAgent{
     public IPAddressLookupAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         IPAddressLookupTool weatherSearchTool = new IPAddressLookupTool();
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),

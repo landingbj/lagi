@@ -1,9 +1,6 @@
 package ai.router;
 
-import ai.common.exception.RRException;
 import ai.config.pojo.RouterConfig;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
 import ai.router.utils.RouterParser;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -43,11 +40,8 @@ public class Routers {
         routes.put(rule, route);
     }
 
-    public ChatCompletionResult dispatch(String path, ChatCompletionRequest request) {
-        Route route = routes.get(path);
-        if (route != null) {
-            return route.handle(request);
-        }
-        throw new RRException(404, "Not Found" + path);
+    public Route getRoute(String rule) {
+        return routes.get(rule);
     }
+
 }

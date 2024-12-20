@@ -2,6 +2,7 @@ package ai.database.impl;
 
 import ai.config.ContextLoader;
 import ai.database.pojo.SQLJdbc;
+import ai.database.pojo.TableColumnInfo;
 
 import java.lang.reflect.Field;
 import java.sql.*;
@@ -11,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class MysqlAdapter {
-    // 定义连接数据库所需参数
     private static String driver;
     private static String url;
     private static String username;
@@ -34,13 +34,14 @@ public class MysqlAdapter {
      */
     public Connection getCon() {
         Connection con = null;
+
         try {
+            Class.forName("com.mysql.jdbc.Driver");
             con = DriverManager.getConnection(url,username,password);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return con;
-    }
+        return con;}
 
     /**
      * 关闭连接
@@ -107,33 +108,31 @@ public class MysqlAdapter {
         ResultSet res = null;
         List<T> list = new ArrayList<T>();
         try {
-            con = getCon();// 打开连接
-            pre = con.prepareStatement(sql);// 创建执行者,预编译
-            // 为?占位符设置参数
+            con = getCon();
+            pre = con.prepareStatement(sql);
             for (int i = 0; i < objs.length; i++) {
-                pre.setObject(i + 1, objs[i]);// 从位置1开始设置
+                pre.setObject(i + 1, objs[i]);
             }
-            res = pre.executeQuery();// 执行sql
+            res = pre.executeQuery();
             while (res.next()) {
-                T t = claz.newInstance();// 创建实例
-                Field[] fields = claz.getDeclaredFields();// 获取所有字段
-                // 遍历所有字段
+                T t = claz.newInstance();
+                Field[] fields = claz.getDeclaredFields();
                 for (Field f : fields) {
-                    f.setAccessible(true);// 设置私有字段可以访问
-                    f.set(t, res.getObject(f.getName()));// 设置字段
+                    f.setAccessible(true);
+                    f.set(t, res.getObject(f.getName()));
 
                 }
-                list.add(t);// 添加至集合
+                list.add(t);
             }
         } catch (SQLException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         } finally {
-            close(con, pre, res);// 关闭连接
+            close(con, pre, res);
         }
-        return list;// 返回集合,没有数据则返回null
+        return list;
     }
 
-     /**
+    /**
      * 无实体类的通用查询
      *
      */
@@ -180,19 +179,18 @@ public class MysqlAdapter {
         PreparedStatement pre = null;
         ResultSet res = null;
         try {
-            con = getCon();// 打开连接
-            pre = con.prepareStatement(sql);// 创建执行者,预编译
-            // 为?占位符设置参数
+            con = getCon();
+            pre = con.prepareStatement(sql);
             for (int i = 0; i < objs.length; i++) {
-                pre.setObject(i + 1, objs[i]);// 从位置1开始设置
+                pre.setObject(i + 1, objs[i]);
             }
-            return pre.executeUpdate();// 返回受影响的行数
+            return pre.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            close(con, pre, res);// 关闭连接
+            close(con, pre, res);
         }
-        return 0;// 失败返回0
+        return 0;
     }
 
     /**
@@ -205,27 +203,26 @@ public class MysqlAdapter {
         Connection con = null;
         PreparedStatement pre = null;
         try {
-            con = getCon();// 打开连接
-            pre = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);// 创建执行者,预编译
-            // 为?占位符设置参数
+            con = getCon();
+            pre = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             for (int i = 0; i < objs.length; i++) {
-                pre.setObject(i + 1, objs[i]);// 从位置1开始设置
+                pre.setObject(i + 1, objs[i]);
             }
-            int rowsAffected = pre.executeUpdate();// 返回受影响的行数
+            int rowsAffected = pre.executeUpdate();
             int newCid = 0;
             ResultSet generatedKeys = pre.getGeneratedKeys();
             if (rowsAffected > 0) {
                 if (generatedKeys.next()) {
-                    newCid = generatedKeys.getInt(1); // 获取自增ID
+                    newCid = generatedKeys.getInt(1);
                 }
             }
             return newCid;
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            close(con, pre);// 关闭连接
+            close(con, pre);
         }
-        return 0;// 失败返回0
+        return 0;
     }
 
     /**
@@ -239,22 +236,66 @@ public class MysqlAdapter {
         PreparedStatement pre = null;
         ResultSet res = null;
         try {
-            con = getCon();// 打开连接
-            pre = con.prepareStatement(sql);// 创建执行者,预编译
-            // 为?占位符设置参数
+            con = getCon();
+            pre = con.prepareStatement(sql);
             for (int i = 0; i < objs.length; i++) {
-                pre.setObject(i + 1, objs[i]);// 从位置1开始设置
+                pre.setObject(i + 1, objs[i]);
             }
-            res = pre.executeQuery();// 执行查询,返回结果集
+            res = pre.executeQuery();
             if (res.next()) {
-                return res.getInt(1);// 结果集的第一列
+                return res.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            close(con, pre, res);// 关闭连接
+            close(con, pre, res);
         }
-        return 0;// 失败返回0
+        return 0;
+    }
+
+    /**
+     * 获取列信息
+     *
+     * @param tableName
+     */
+    public List<TableColumnInfo> getTableColumnInfo(String tableName) {
+        ResultSet resultSet = null;
+        Connection con = null;
+        List<TableColumnInfo> columnInfos = new ArrayList<>();
+        try {
+            con = getCon();
+            DatabaseMetaData metaData = con.getMetaData();
+            resultSet = metaData.getColumns(null, null, tableName, null);
+
+            while (resultSet.next()) {
+                String columnName = resultSet.getString("COLUMN_NAME");
+                String columnType = resultSet.getString("TYPE_NAME");
+                int columnSize = resultSet.getInt("COLUMN_SIZE");
+                String columnRemark = resultSet.getString("REMARKS");
+                String tableType = resultSet.getString("TABLE_NAME");
+                TableColumnInfo columnInfo = new TableColumnInfo(
+                        tableName,
+                        tableType,
+                        columnName,
+                        columnType,
+                        columnSize,
+                        columnRemark
+                );
+
+                columnInfos.add(columnInfo);
+            }
+        }catch (Exception e){
+            return null;
+        } finally {
+            close(con, null,resultSet);// 关闭连接
+        }
+
+        return columnInfos;
+    }
+
+    public List<Map<String,Object>> sqlToValue(String sql) {
+        List<Map<String,Object>> list = select(sql);
+        return list.size() > 0 && list != null ? list : new ArrayList<>();
     }
 
 }

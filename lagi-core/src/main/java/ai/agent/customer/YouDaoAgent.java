@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 public class YouDaoAgent extends CustomerAgent {
 
     public YouDaoAgent(AgentConfig agentConfig) {
-        this.agentName = agentConfig.getName();
+        super(agentConfig);
         YouDaoTool youDaoTool = new YouDaoTool(agentConfig.getAppId(), agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(youDaoTool.getToolInfo(),

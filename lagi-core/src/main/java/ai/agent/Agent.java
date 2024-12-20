@@ -1,13 +1,13 @@
 package ai.agent;
 
 
+import ai.config.pojo.AgentConfig;
 import lombok.Getter;
 
 @Getter
 public abstract class Agent<T, R>{
 
-    protected String agentName;
-    protected String badCase="抱歉";
+    protected AgentConfig agentConfig;
 
     public abstract void connect();
 

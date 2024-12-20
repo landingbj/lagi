@@ -118,130 +118,88 @@ let promptNavs = [
         title: '智能体',
         subNavs: [
             {
-                id: 101,
-                agentId: '7438888028623798291',
-                title: '股票智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体可帮助用户获取实时股市行情、分析股票走势，为投资决策提供支持。',
-                operation: '在输入框内输入您的需求（如“今日股市行情如何？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 101,
+                "agentId": "stock",
+                "title": "股票助手",
+                "templateIssues": "今天的股市行情如何?"
             },
             {
-                id: 102,
-                agentId: '7439565885150691343',
-                title: '汇率智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体提供全球主要货币汇率查询，帮助用户随时了解汇率变化。',
-                operation: '在输入框内输入您的需求（如“当前人民币对美元的汇率是多少？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 102,
+                "agentId": "exchangeRate",
+                "title": "汇率助手",
+                "templateIssues": "当前美元对人民币汇率是多少?"
             },
             {
-                id: 103,
-                agentId: 'YjQOEJzUQKmOQsxaQVTww1wc4pihUb23',
-                title: '文心智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体能帮助用户处理文本相关任务，如总结、写作、校对等。',
-                operation: '在输入框内输入您的需求（如“总结一下我的会议纪要”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 103,
+                "agentId": "yiYan",
+                "title": "文心助手",
+                "templateIssues": "请帮我写一篇关于科技创新的文章"
             },
             {
-                id: 104,
-                agentId: 'VeePGDJsRHqn',
-                title: '腾讯元器智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体专注于提供腾讯元器相关的信息和服务，便捷用户查询。',
-                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 104,
+                "agentId": "yuanQi",
+                "title": "元器助手",
+                "templateIssues": "这款电子元器件的规格是什么?"
             },
             {
-                id: 105,
-                agentId: '1864494095439970304',
-                title: '小红书智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体帮助用户获取小红书平台上的热点话题、帖子推荐及评论互动。',
-                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 105,
+                "agentId": "xiaohongshu",
+                "title": "红书优选",
+                "templateIssues": "推荐一些适合冬季穿的羽绒服"
             },
             {
-                id: 106,
-                agentId: 'weather_agent',
-                title: '天气智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体可以实时查询天气信息，帮助用户了解当天的天气状况。',
-                operation: '在输入框内输入您的需求（如“今天北京天气如何？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 106,
+                "agentId": "weather",
+                "title": "天气助手",
+                "templateIssues": "今天北京天气如何?"
             },
             {
-                id: 107,
-                agentId: 'oil_price_agent',
-                title: '油价智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体提供实时油价查询，帮助用户随时了解油价走势。',
-                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 107,
+                "agentId": "oil",
+                "title": "油价助手",
+                "templateIssues": "今天的国际油价是多少?"
             },
             {
-                id: 108,
-                agentId: 'bmi_agent',
-                title: '体重指数智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体帮助用户计算并分析体重指数（BMI），提供健康建议。',
-                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 108,
+                "agentId": "bmi",
+                "title": "体重指数",
+                "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
             },
             {
-                id: 109,
-                agentId: 'food_calorie_agent',
-                title: '食物卡路里智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体提供食物卡路里的查询，帮助用户掌握饮食的热量信息。',
-                operation: '在输入框内输入您的需求（如“某食物的卡路里含量是多少？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 109,
+                "agentId": "calorie",
+                "title": "健康饮食",
+                "templateIssues": "一份鸡胸肉的卡路里是多少?"
             },
             {
-                id: 110,
-                agentId: 'dishonest_person_search_agent',
-                title: '查询失信人员智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体帮助用户查询失信人员信息，了解失信名单。',
-                operation: '在输入框内输入您的需求，并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 110,
+                "agentId": "dishonest",
+                "title": "失信查询",
+                "templateIssues": "请帮我查询一下这个人的失信记录"
             },
             {
-                id: 111,
-                agentId: 'high_speed_ticket_agent',
-                title: '高铁票查询智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体提供高铁票的查询服务，帮助用户轻松获取车票信息。',
-                operation: '在输入框内输入您的需求（如“查询北京到上海的高铁票”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 111,
+                "agentId": "ticket",
+                "title": "高铁助手",
+                "templateIssues": "从北京到上海的高铁票价是多少?"
             },
             {
-                id: 112,
-                agentId: 'history_in_today_agent',
-                title: '历史的今天智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体为用户提供“历史的今天”相关事件和历史资料。',
-                operation: '在输入框内输入您的需求（如“今天历史上发生了什么？”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 112,
+                "agentId": "history",
+                "title": "历史今日",
+                "templateIssues": "今天在历史上发生了哪些重大事件?"
             },
             {
-                id: 113,
-                agentId: 'youdao_agent',
-                title: '有道翻译智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体提供高质量的语言翻译服务，支持多种语言互译。',
-                operation: '在输入框内输入您的需求（如“请翻译‘你好’为英文”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 113,
+                "agentId": "youdao",
+                "title": "有道翻译",
+                "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
             {
-                id: 114,
-                agentId: 'image_gen_agent',
-                title: '图像生成智能体',
-                models: ["llm"],
-                exampleVedioSrc: '../video/znwd.mp4',
-                prompt: '该智能体根据用户需求生成高质量的图像，支持多种风格和主题。',
-                operation: '在输入框内输入您的需求（如“生成一幅秋天的风景画”），并点击右侧Logo发送需求，Lagi将会对您作出响应。'
+                "id": 114,
+                "agentId": "image",
+                "title": "图像生成",
+                "templateIssues": "帮我生成一张海滩风景的图像"
             }
         ]
     },
@@ -445,7 +403,7 @@ function genSubNavItems(subNavs) {
         // 如果子菜单项包含 agentId，我们将其存储在 data-app-id 中
         subHtml += `
         <li class="sub-nav-item">
-            <a onclick="getPromptDialog(${subNav.id}, '${subNav.agentId}')" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+            <a onclick="getPromptDialog(${subNav.id})" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
                 ${subNav.title}
             </a>
         </li>
@@ -580,7 +538,6 @@ function getModeList(type) {
 
 let currentNav = null;
 
-
 function getPromptDialog(id) {
 
 
@@ -606,8 +563,17 @@ function getPromptDialog(id) {
         alert("找不到对应的信息");
         return;
     }
-
     currentAppId = nav.agentId;
+
+
+    if (!(nav.prompt && nav.operation)) {
+        $('#queryContent').val(nav.templateIssues);
+        resetBallState();
+        highlightWord(nav.title);
+        return;
+    }
+
+    $('#queryContent').val('');
 
     // 加载模型选择（子导航项）
     loadModelSelect(nav);
@@ -615,7 +581,6 @@ function getPromptDialog(id) {
     // 隐藏首页内容
     hideHelloContent();
 
-    // 构建提示框内容
     let answer = buildPromptDialogContent(nav);
     let answerJq = newRobotStartDialog('');
 

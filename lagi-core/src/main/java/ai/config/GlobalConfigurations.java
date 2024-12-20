@@ -6,10 +6,7 @@ import ai.manager.*;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.ocr.OcrConfig;
 import ai.router.Routers;
-import ai.utils.PriorityWordUtil;
-import ai.utils.RetainWordUtil;
-import ai.utils.SensitiveWordUtil;
-import ai.utils.StoppingWordUtil;
+import ai.utils.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -44,8 +41,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
         OcrConfig.init(functions.getImage2ocr());
         AgentManager.getInstance().register(agents);
-        WorkerManager.getInstance().register(workers);
         Routers.getInstance().register(routers);
+        WorkerManager.getInstance().register(workers);
         registerFilter();
     }
 
@@ -54,6 +51,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         StoppingWordUtil.addWords(filters.getStopping());
         PriorityWordUtil.addWords(filters.getPriority());
         RetainWordUtil.addWords(filters.getRetain());
+        ContinueWordUtil.addWords(filters.getContinueWords());
     }
 
 

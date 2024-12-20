@@ -3,9 +3,13 @@ package ai.agent.customer.tools;
 import ai.agent.customer.pojo.ToolArg;
 import ai.agent.customer.pojo.ToolInfo;
 import ai.utils.ApiInvokeUtil;
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import lombok.Setter;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +42,18 @@ public class WeatherSearchTool extends AbstractTool {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("Authorization", token);
-        return ApiInvokeUtil.post(API_ADDRESS, headers, "{\"city\":\"" + city + "\"}", 15, TimeUnit.SECONDS);
+        String post = ApiInvokeUtil.post(API_ADDRESS, headers, "{\"city\":\"" + city + "\"}", 15, TimeUnit.SECONDS);
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, Object>>(){}.getType();
+        Map<String, Object> map = gson.fromJson(post, type);
+        if (map == null) {
+            return "查询天气信息失败";
+        }
+        if(((Double)map.get("code")).intValue() != 200) {
+            return "查询天气信息失败";
+        }
+        Map<String, Object> data = (Map<String, Object>)map.get("data");
+        return StrUtil.format("{province}-{city} 天气:{weather} 温度:{temperature}, 湿度:{humidity}, 风力:{windpower}, 风向：{winddirection}， 更新时间{update_time}", data );
     }
 
 

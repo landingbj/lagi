@@ -1,15 +1,9 @@
 package ai.agent.customer.prompt;
 
-import ai.agent.customer.pojo.Action;
-import ai.agent.customer.pojo.ResponseTemplate;
-import ai.agent.customer.pojo.Thoughts;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
 
 import java.util.List;
-import java.util.Map;
 
 public class Prompt {
 
