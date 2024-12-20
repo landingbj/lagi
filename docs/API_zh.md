@@ -767,3 +767,130 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 |-----------|----------------|------|-----------|
 | » status  | string         | true | 返回的结果状态   |
 | » data    | List< string > | true | 返回识别的文字数组 |
+
+## 文本生成SQL
+
+POST `/sql/text2sql`
+
+选择一个表输入需求，生成一个可执行的SQL语句。
+
+### Body 请求参数
+
+```json
+{
+  "demand":"帮我查一下京伦饭店的情况",
+  "tableName":"hotel_agreement"
+}
+```
+
+### 请求参数
+
+| 名称          | 位置  | 类型      | 必选    | 说明   |
+|-------------|------|---------|--------|------|
+| body        | body | object  | 否      | none |
+| » demand    | body | string  | 是      | 用户需求   |
+| » tableName | body | string  | 是      | 用户选定的表名   |
+
+### 返回示例
+
+> 成功
+
+```json
+{
+  "data": {
+    "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
+    "demand": "帮我查一下京伦饭店的情况",
+    "tableName": "hotel_agreement"
+  },
+  "status": "success"
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义 | 说明   |
+|------|-------|------|
+| 200  | OK    | 成功   |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称           | 类型      | 必选   | 说明      |
+|--------------|---------|------|---------|
+| » status     | string  | true | 返回的结果状态 |
+| » data       | object  | true | 返回内容    |
+| »» sql       | string  | true | 生成的SQL语句 |
+| »» demand    | string  | true | 用户需求    |
+| »» tableName | string  | true | 用户选定的表名 |
+
+## SQL生成文本
+
+POST `/sql/sql2text`
+
+输入文本生成的SQL查询文本信息。
+
+### Body 请求参数
+
+```json
+{
+  "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
+  "demand": "帮我查一下京伦饭店的情况",
+  "tableName": "hotel_agreement"
+}
+```
+
+### 请求参数
+
+| 名称          | 位置  | 类型    | 必选     | 说明   |
+|-------------|------|---------|--------|------|
+| body        | body | object  | 否      | none |
+| » sql       | body | string  | true   | 生成的SQL语句 |
+| » demand    | body | string  | 是      | 用户需求   |
+| » tableName | body | string  | 是      | 用户选定的表名   |
+
+### 返回示例
+
+> 成功
+
+```json
+{
+  "data": "您好，关于您查询的京伦饭店的信息如下：\n\n- **城市**: 北京市\n- **协议价**: 650元/间（具体价格可能因房型和日期有所不同）\n- **距离集团**: 10.3公里\n- **酒店地址**: 北京市朝阳区建国门外大街3号\n- **联系方式**: 010-65002266转客房预定部\n- **数据来源**: 附件3：2024年中国电信集团总部及全国连锁协议酒店清单\n- **酒店名称**: 京伦饭店\n- **星级**: 四星\n- **房间类型**: 标准间\n- **备注**: 目前没有特别的备注信息\n\n如有其他问题，请随时告知。",
+  "list": [
+    {
+      "city": "北京市",
+      "unavailable_dates": "",
+      "agreement_price": "650，600",
+      "distance_from_group": "10.3",
+      "hotel_address": "北京市朝阳区建国门外大街3号",
+      "contact_info": "010-65002266转客房预定部",
+      "data_source": "附件3：2024年中国电信集团总部及全国连锁协议酒店清单",
+      "hotel_name": "京伦饭店",
+      "tier": "档位一：600元以内/天标准-1人入住推荐（含单早）",
+      "province": "北京",
+      "applicable_brand": "",
+      "star_rating": "四星",
+      "id": 10,
+      "remarks": "",
+      "room_type": "标准间"
+    }
+  ],
+  "status": "success"
+}
+```
+
+### 返回结果
+
+| 状态码 | 状态码含义 | 说明   |
+|------|-------|------|
+| 200  | OK    | 成功   |
+
+### 返回数据结构
+
+状态码 **200**
+
+| 名称       | 类型      | 必选   | 说明       |
+|----------|---------|------|----------|
+| » status | string  | true | 返回的结果状态  |
+| » data   | string  | true | 返回内容     |
+| » list   | object  | true | 数据表中询的内容 |
