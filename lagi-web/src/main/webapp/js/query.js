@@ -330,7 +330,7 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         "stream": false
     };
     if (agentId) {
-        paras["router"] = "pass";
+        paras["worker"] = "appointedWorker";
         paras["agentId"] = agentId;
         paras["stream"] = false;
     }

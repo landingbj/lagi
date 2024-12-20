@@ -515,7 +515,7 @@ routers:
     rule: (A&B)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
 
   - name: pass
-    rule: '%'
+    rule: (%)
     # % is a wildcard to represent agent name.
     # if specified, invoke this agent.
     # if just % is given, % would be decided by parameter at calling time.

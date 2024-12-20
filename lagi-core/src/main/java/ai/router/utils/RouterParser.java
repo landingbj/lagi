@@ -4,6 +4,7 @@ import ai.common.exception.RRException;
 import ai.router.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class RouterParser {
 
@@ -47,11 +48,26 @@ public class RouterParser {
         return stack.isEmpty();
     }
 
+    public static String getRuleName(String route) {
+        int i = route.indexOf("(");
+        return route.substring(0, i);
+    }
+
+    public static List<String> getParams(String route) {
+        int s = route.indexOf("(");
+        int e = route.indexOf(")");
+        return Arrays.stream(route.substring(s + 1, e).split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
+
+
     public static Route parse(String path, String router) {
         if(!checkValid(router)) {
             throw new RRException(400, "Invalid router rule");
         }
-        if(WILDCARD_STRING.equals(router)) {
+        List<String> params = RouterParser.getParams(router);
+        if(params.size() == 1 && WILDCARD_STRING.equals(params.get(0))) {
             return new WildcardRoute(path);
         }
         // only support one rule
