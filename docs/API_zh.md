@@ -772,7 +772,7 @@ file: file://D:\Test\Datasets\Image\kppziguz230716233346.jpg
 
 POST `/sql/text2sql`
 
-选择一个表输入需求，生成一个可执行的SQL语句。
+选择一张表后输入需求，生成一个可执行的SQL语句。
 
 ### Body 请求参数
 
@@ -828,7 +828,7 @@ POST `/sql/text2sql`
 
 POST `/sql/sql2text`
 
-输入文本生成的SQL查询文本信息。
+传入SQL查询文本信息。
 
 ### Body 请求参数
 
