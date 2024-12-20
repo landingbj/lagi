@@ -208,7 +208,7 @@
                         </div>
                       </div>
 
-                      <div id="item-content" class="w-full" style="overflow: auto;height: calc(87vh);" >
+                      <div id="item-content" class="w-full" style="overflow: auto;" >
                         <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]" style="height: calc(8vh);">
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
                             仅限邀请内测

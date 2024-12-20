@@ -3438,7 +3438,7 @@ textarea:focus {
 }
 
 .grid-cols-\[repeat\(auto-fit\2c minmax\(250px\2c 1fr\)\)\] {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))
 }
 
 .grid-rows-\[minmax\(10px\2c _1fr\)_auto_minmax\(10px\2c _1fr\)\] {
@@ -9915,6 +9915,7 @@ a.active {
     margin-right: auto;
     margin-top: 9vh; /* 上间距调整为10vh */
     padding-bottom: 10vh;
+    position: relative;
 }
 
 /* #ball-div 使用相对单位 */
@@ -9935,12 +9936,13 @@ a.active {
     #introduces {
         width: 80vw;  /* 更适合小屏幕的宽度 */
         height: 20vh;
-        margin-top: 5vh;  /* 适配小屏幕时减少上边距 */
+        margin-top: 6vh;  /* 适配小屏幕时减少上边距 */
     }
 
     #ball-div {
         width: 80vw;  /* 适配小屏幕，缩小球形容器的尺寸 */
         height: 40vh;
+        margin-top: 2vh;
     }
 }
 
@@ -9948,12 +9950,13 @@ a.active {
 @media (max-width: 480px) {
     #introduces {
         width: 90vw;  /* 更大宽度适配手机 */
-        height: 10vh;
+        height: 20vh;
     }
 
     #ball-div {
         width: 90vw;  /* 更适合手机的宽度 */
-        height: 20vh;
+        height: 32vh;
+        margin-top: 2vh;
     }
 
     /* 在小屏幕上减少字体大小和间距 */
@@ -10003,3 +10006,15 @@ a.active {
 /*    text-decoration: none;*/
 /*}*/
 
+/* 默认样式 */
+[data-projection-id="1"] {
+    /*height: auto;*/
+    /*padding: 20px;*/
+}
+
+/* 手机端样式 */
+@media (max-width: 768px) {
+    [data-projection-id="1"] {
+        /*height: 1vh; !* 缩小 div 高度 *!*/
+    }
+}

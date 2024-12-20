@@ -27,7 +27,15 @@
 
 
 #item-content {
-	height: 96vh;
+	--winow-height: 87vh;
+	height:  calc(var(--winow-height));
+}
+
+@media (max-width: 768px) {
+	#item-content {
+		--winow-height: 75vh;
+		height:  calc(var(--winow-height));
+	}
 }
 
 
@@ -55,7 +63,7 @@
 /* 滚动速度，值越大越慢 */
 .scrollDiv {
 	position: relative;
-	animation: scroll 15s infinite linear; 
+	animation: scroll 15s infinite linear;
 }
 
 /* 滚动范围 */
@@ -67,7 +75,7 @@
 #queryContent::-webkit-scrollbar {
 	display: none; /* Chrome Safari */
   }
-  
+
 #demo {
 	scrollbar-width: none; /* firefox */
 	-ms-overflow-style: none; /* IE 10+ */
@@ -151,7 +159,7 @@ pre .key {
 .agent-pannel ul li {
 	cursor: pointer;
 	font-size: 1em;
-	
+
 }
 
 .agent-pannel ul li:hover {

@@ -1,5 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const words = [
+    // 检测设备类型：是否为手机
+    const isMobile = window.innerWidth <= 768;
+
+    // 根据是否为手机端调整 words 数组的长度
+    const words = isMobile ? ["股票助手", "汇率助手", "文心助手", "元器助手", "红书优选",
+        "天气助手", "油价助手", "体重指数", "健康饮食", "失信查询",
+        "高铁助手", "历史今日", "有道翻译", "图像生成", "旅行", "心理咨询",
+        "编程助手", "数据分析", "社交媒体", "聊天", "运动健身", "租车",
+        "交通", "智能家居", "宠物护理", "时尚", "工作助手", "营销",
+        "SEO优化", "招聘", "天气预报", "空气质量", "旅行规划", "导航"] : [
         "股票助手", "汇率助手", "文心助手", "元器助手", "红书优选",
         "天气助手", "油价助手", "体重指数", "健康饮食", "失信查询",
         "高铁助手", "历史今日", "有道翻译", "图像生成", "旅行", "心理咨询",
@@ -17,9 +26,9 @@ document.addEventListener('DOMContentLoaded', function () {
         "心率监控", "血压监控", "睡眠分析", "营养摄入", "减压助手",
         "会议记录", "在线课堂", "绘画教学", "智能合同助手", "法律顾问",
         "税务助手", "智能财务", "危机预测", "客户服务", "自然灾害预警",
-        "环保数据", "气候变化", "星座运势", "心理测试", "名人信息",
-        "投资", "区块链",
-    ];
+        "环保数据", "气候变化", "星座运势", "心理测试", "名人信息"]
+    ;
+
 
     let radius = 0;
     const dtr = Math.PI / 180;
@@ -246,23 +255,6 @@ document.addEventListener('DOMContentLoaded', function () {
             aA[i].style.fontWeight = ''; // 恢复默认字体粗细
         });
     };
-
-/*
-    // 动态计算 radius
-    function updateRadius() {
-        const containerWidth = oDiv.offsetWidth;
-        const containerHeight = oDiv.offsetHeight;
-        radius = Math.min(containerWidth, containerHeight) / 2;
-    }
-
-    window.addEventListener('resize', function() {
-        updateRadius();
-        positionAll(); // 重新计算位置
-    });
-
-// 初始化时计算 radius
-    updateRadius();
-*/
 
 
     // Expose the highlightWord function to the global scope
