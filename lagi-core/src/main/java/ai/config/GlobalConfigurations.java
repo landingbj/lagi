@@ -41,8 +41,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
         OcrConfig.init(functions.getImage2ocr());
         AgentManager.getInstance().register(agents);
-        WorkerManager.getInstance().register(workers);
         Routers.getInstance().register(routers);
+        WorkerManager.getInstance().register(workers);
         registerFilter();
     }
 

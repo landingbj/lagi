@@ -40,7 +40,7 @@ public class WorkerManager {
                 Object o = constructor.newInstance(conf);
                 workerMaps.put(name, (Worker<?, ?>) o);
             } catch (Exception e) {
-                log.error("worker {} register error {}", name, e);
+//                log.error("worker {} register error {}", name, e);
             }
             }
         );

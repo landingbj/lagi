@@ -119,85 +119,85 @@ let promptNavs = [
         subNavs: [
             {
                 "id": 101,
-                "agentId": "7438888028623798291",
+                "agentId": "stock",
                 "title": "股票助手",
                 "templateIssues": "今天的股市行情如何?"
             },
             {
                 "id": 102,
-                "agentId": "7439565885150691343",
+                "agentId": "exchangeRate",
                 "title": "汇率助手",
                 "templateIssues": "当前美元对人民币汇率是多少?"
             },
             {
                 "id": 103,
-                "agentId": "YjQOEJzUQKmOQsxaQVTww1wc4pihUb23",
+                "agentId": "yiYan",
                 "title": "文心助手",
                 "templateIssues": "请帮我写一篇关于科技创新的文章"
             },
             {
                 "id": 104,
-                "agentId": "VeePGDJsRHqn",
+                "agentId": "yuanQi",
                 "title": "元器助手",
                 "templateIssues": "这款电子元器件的规格是什么?"
             },
             {
                 "id": 105,
-                "agentId": "1864494095439970304",
+                "agentId": "xiaohongshu",
                 "title": "红书优选",
                 "templateIssues": "推荐一些适合冬季穿的羽绒服"
             },
             {
                 "id": 106,
-                "agentId": "weather_agent",
+                "agentId": "weather",
                 "title": "天气助手",
                 "templateIssues": "今天北京天气如何?"
             },
             {
                 "id": 107,
-                "agentId": "oil_price_agent",
+                "agentId": "oil",
                 "title": "油价助手",
                 "templateIssues": "今天的国际油价是多少?"
             },
             {
                 "id": 108,
-                "agentId": "bmi_agent",
+                "agentId": "bmi",
                 "title": "体重指数",
                 "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
             },
             {
                 "id": 109,
-                "agentId": "food_calorie_agent",
+                "agentId": "calorie",
                 "title": "健康饮食",
                 "templateIssues": "一份鸡胸肉的卡路里是多少?"
             },
             {
                 "id": 110,
-                "agentId": "dishonest_person_search_agent",
+                "agentId": "dishonest",
                 "title": "失信查询",
                 "templateIssues": "请帮我查询一下这个人的失信记录"
             },
             {
                 "id": 111,
-                "agentId": "high_speed_ticket_agent",
+                "agentId": "ticket",
                 "title": "高铁助手",
                 "templateIssues": "从北京到上海的高铁票价是多少?"
             },
             {
                 "id": 112,
-                "agentId": "history_in_today_agent",
+                "agentId": "history",
                 "title": "历史今日",
                 "templateIssues": "今天在历史上发生了哪些重大事件?"
             },
             {
                 "id": 113,
-                "agentId": "youdao_agent",
+                "agentId": "youdao",
                 "title": "有道翻译",
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
             {
                 "id": 114,
-                "agentId": "image_gen_agent",
+                "agentId": "image",
                 "title": "图像生成",
                 "templateIssues": "帮我生成一张海滩风景的图像"
             }

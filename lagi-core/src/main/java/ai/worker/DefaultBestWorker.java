@@ -24,13 +24,13 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
 
     public DefaultBestWorker(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
-        String ruleName = getRuleName(workerConfig.getRoute());
+        String ruleName = RouterParser.getRuleName(workerConfig.getRoute());
         this.route = Routers.getInstance().getRoute(ruleName);
-        List<String> params = getParams(workerConfig.getRoute());
+        List<String> params = RouterParser.getParams(workerConfig.getRoute());
         if(params.size() == 1 && RouterParser.WILDCARD_STRING.equals(params.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
-                String appId = agent.getAgentConfig().getAppId();
+                String appId = agent.getAgentConfig().getName();
                 if(appId != null) {
                     try {
                         agents.add((Agent<ChatCompletionRequest, ChatCompletionResult>) agent);

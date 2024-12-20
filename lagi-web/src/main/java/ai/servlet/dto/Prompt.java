@@ -1,7 +1,14 @@
 package ai.servlet.dto;
 
+import lombok.*;
+
 import java.io.Serializable;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+@Builder
 public class Prompt implements Serializable{
 
 	/**
@@ -13,31 +20,7 @@ public class Prompt implements Serializable{
 	
 	private String content;
 
-	public String getTitle() {
-		return title;
-	}
+	private String agentId;
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public String getContent() {
-		return content;
-	}
-
-	public void setContent(String content) {
-		this.content = content;
-	}
-
-	@Override
-	public String toString() {
-		return "Prompt [title=" + title + ", content=" + content + "]";
-	}
-	
-	public Prompt(String title, String content) {
-		this.title = title;
-		this.content = content;
-	}
-	
 	
 }

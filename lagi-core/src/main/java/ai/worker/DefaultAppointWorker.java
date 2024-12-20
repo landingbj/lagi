@@ -13,11 +13,9 @@ import cn.hutool.core.bean.BeanUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatCompletionResult> {
@@ -32,15 +30,15 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
 
     public DefaultAppointWorker(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
-        String routeName = getRuleName(workerConfig.getRoute());
+        String routeName = RouterParser.getRuleName(workerConfig.getRoute());
         this.route = Routers.getInstance().getRoute(routeName);
-        List<String> agents = getParams(workerConfig.getRoute());
+        List<String> agents = RouterParser.getParams(workerConfig.getRoute());
         if(agents.size() == 1 && RouterParser.WILDCARD_STRING.equals(agents.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
                 if(agent.getAgentConfig() !=null && agent.getAgentConfig().getAppId() !=null) {
                     try {
-                        String appId = agent.getAgentConfig().getAppId();
+                        String appId = agent.getAgentConfig().getName();
                         agentMap.put(appId, (Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
                     } catch (Exception ignored) {
                     }
@@ -52,24 +50,12 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
                 Agent<ChatCompletionRequest, ChatCompletionResult> agent =
                         (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(agentId);
                 if(agent != null) {
-                    agentMap.put(agent.getAgentConfig().getAppId(), agent);
+                    agentMap.put(agent.getAgentConfig().getName(), agent);
                 }
             }
         }
     }
 
-    private static String getRuleName(String route) {
-        int i = route.indexOf("(");
-        return route.substring(0, i);
-    }
-
-    private static List<String> getParams(String route) {
-        int s = route.indexOf("(");
-        int e = route.indexOf(")");
-        return Arrays.stream(route.substring(s + 1, e).split(","))
-                .map(String::trim)
-                .collect(Collectors.toList());
-    }
 
     @Override
     public ChatCompletionResult work(ChatCompletionRequest data) {

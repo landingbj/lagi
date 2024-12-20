@@ -86,7 +86,10 @@ function initIntroduces() {
 
 function fillQueryText(That) {
     let content = $(That).data('content');
+    let agent = $(That).data('agent');
     $('#queryContent').val(content);
+    $('#queryContent').data("agent", agent);
+    currentAppId = agent;
 }
 
 function addTr(ls) {
@@ -95,7 +98,7 @@ function addTr(ls) {
         const col = ls[i];
         html += `
         <div data-projection-id="1" style="opacity: 1; transform: none;">
-        <button type="button" data-content="${col.content}" onclick="fillQueryText(this)" class="btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal" as="button">
+        <button type="button" data-content="${col.content}" data-agent ="${col.agentId ? col.agentId: ""}"   onclick="fillQueryText(this)" class="btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal" as="button">
                 <div class="flex w-full gap-2 items-center justify-center">
                     <div class="flex w-full items-center justify-between">
                         <div class="flex flex-col overflow-hidden">

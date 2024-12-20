@@ -203,7 +203,7 @@ public class SkillMap {
         if(agentIntentScoreByIntent == null || agentIntentScoreByIntent.isEmpty()) {
             return agentList;
         }
-        Map<String, AgentIntentScore> map = agentIntentScoreByIntent.stream().collect(Collectors.toMap(AgentIntentScore::getAgentId, a -> a));
+        Map<String, AgentIntentScore> map = agentIntentScoreByIntent.stream().collect(Collectors.toMap(AgentIntentScore::getAgentName, a -> a));
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> res = agentList.stream().filter(agent -> {
             AgentIntentScore agentIntentScore = map.get(agent.getAgentConfig().getAppId());
             if (agentIntentScore == null) {
@@ -211,8 +211,8 @@ public class SkillMap {
             }
             return agentIntentScore.getScore() > edge;
         }).sorted((o1, o2) -> {
-            AgentIntentScore s1 = map.get(o1.getAgentConfig().getAppId());
-            AgentIntentScore s2 = map.get(o2.getAgentConfig().getAppId());
+            AgentIntentScore s1 = map.get(o1.getAgentConfig().getName());
+            AgentIntentScore s2 = map.get(o2.getAgentConfig().getName());
             return s2.getScore().compareTo(s1.getScore());
         }).collect(Collectors.toList());
         if(res.isEmpty()) {
