@@ -135,7 +135,7 @@ public class SqlApiServlet extends BaseServlet {
     }
 
     public String tableParsing(String tableNeam) {
-      List<TableColumnInfo> list = new MysqlAdapter().getTableColumnInfo("hotel_agreement");
+      List<TableColumnInfo> list = new MysqlAdapter().getTableColumnInfo(tableNeam);
                StringBuilder tableresult = new StringBuilder();
                 Map<String, List<TableColumnInfo>> groupedByTable = list.stream()
                    .collect(Collectors.groupingBy(TableColumnInfo::getTableName));
