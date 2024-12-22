@@ -4,6 +4,10 @@
 
 Lag[i] (Landing AGI) is a solution designed by Beijing Landing Technologies Co.,Ltd. specifically for the significant gap between the powerful forces of the large model open-source community and enterprise application deployment. It is an enterprise-level composite multimodal large model middleware aimed at bridging this gap, by providing a secure and professional platform, enabling enterprises to customize and deploy large models in a low-cost, efficient manner.
 
+### Online Demo
+
+To allow users to intuitively experience the powerful functionality and convenience of Lag[i] (Landing AGI), we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).
+
 ### Quick Start
 
 For developers, we provide a simple way to compile and run the Lag[i] (Landing AGI) application. You can choose to use the Maven command-line tool to package, or run it through mainstream Integrated Development Environments (IDEs) like IntelliJ IDEA. Please ensure your JDK version meets at least the requirements of version 8.
@@ -89,10 +93,6 @@ Example：Set priority keywords and stop keywords:
   "openai"
 ]
 ```
-
-### Online Demo
-
-To allow users to intuitively experience the powerful functionality and convenience of Lag[i] (Landing AGI), we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).
 
 ## Downloads
 
