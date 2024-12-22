@@ -11,13 +11,14 @@ import ai.servlet.dto.LoginRequest;
 import ai.servlet.dto.LoginResponse;
 import ai.servlet.dto.RegisterRequest;
 import ai.servlet.dto.RegisterResponse;
+import ai.utils.MigrateGlobal;
 import ai.utils.OkHttpUtil;
 import com.google.gson.Gson;
 
 public class UserService {
     private final UserDao userDao = new UserDao();
     private final Gson gson = new Gson();
-    private static final String SAAS_BASE_URL = "https://saas.landingbj.com";
+    private static final String SAAS_BASE_URL = MigrateGlobal.SAAS_BASE_URL;
 
     public String getRandomCategory() {
         String category = UUID.randomUUID().toString().replace("-", "");

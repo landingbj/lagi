@@ -9,6 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgentConfig {
+    private Integer id;
+    private String lagiUserId;
     private String name;
     @JsonProperty("driver")
     private String driver;
