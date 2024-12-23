@@ -119,7 +119,6 @@
                 <div class="group relative" data-headlessui-state="">
                   <div id="userMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white login-hidden border border-gray-200 rounded-md shadow-lg">
                     <ul>
-                      <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">问题反馈</li>
                       <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
                     </ul>
                   </div>
