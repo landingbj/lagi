@@ -88,6 +88,7 @@ function authLoginCookie() {
             data: JSON.stringify({"cookieValue": auth}),
             success: function (data) {
                 if (data.status === 'success') {
+                    localStorage.setItem('userId', data.data.userId);
                     $('#user_box').html(data.data.username);
                 }
             },
@@ -96,6 +97,7 @@ function authLoginCookie() {
         });
     }
 }
+
 
 function submitLogin() {
     const errorDiv = document.getElementById('login-error');
@@ -121,6 +123,8 @@ function submitLogin() {
             if (data.status === 'success') {
                 $('#user_box').html(data.data.username);
                 closeModal();
+                location.reload(true);
+
             } else {
                 errorDiv.style.display = 'block';
                 if (data.msg !== undefined) {
@@ -146,6 +150,7 @@ function deleteCookie(cname) {
 function logout() {
     deleteCookie('lagi-auth');
     deleteCookie('userId');
+    localStorage.removeItem('userId');
     window.location.reload();
 }
 

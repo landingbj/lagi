@@ -9928,7 +9928,7 @@ a.active {
     margin-top: 2vh;
     background-color: transparent;
     user-select: none; /* 禁止选中文本 */
-    cursor: grab; /* 鼠标样式 */
+    /*cursor: grab; !* 鼠标样式 *!*/
 }
 
 /* 默认情况下，屏幕小于768px时进行调整 */
@@ -10017,4 +10017,262 @@ a.active {
     [data-projection-id="1"] {
         /*height: 1vh; !* 缩小 div 高度 *!*/
     }
+}
+
+
+
+/* 弹窗样式 */
+#agent-form-modal.modal {
+    display: none;           /* 默认隐藏 */
+    position: fixed;
+    z-index: 1;
+    left: 47%;
+    top: 14%;
+    justify-content: center;
+    align-items: center;
+}
+
+#agent-form-modal .modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    box-sizing: border-box;
+}
+
+#agent-form-modal .modal-content form {
+    display: flex;
+    flex-direction: column;
+}
+
+#agent-form-modal .modal-content label {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#agent-form-modal .modal-content input,
+#agent-form-modal .modal-content select {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#agent-form-modal .modal-content button {
+    margin-top: 15px;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* agent-list-container 样式 */
+#agent-list-container {
+    display: none;           /* 默认隐藏 */
+    width: 100%;             /* 宽度占满父容器 */
+    height: 100%;            /* 高度占满父容器 */
+    box-sizing: border-box;  /* 包括内边距和边框 */
+    background-color: white;  /* 背景颜色，根据需要调整 */
+    padding: 20px;  /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+/* 禁止选中的样式 */
+#agent-list-container .no-select {
+    user-select: none;
+}
+
+/* 虚化效果 */
+#agent-list-container .blurred {
+    pointer-events: none;  /* 禁止与虚化区域的交互 */
+}
+
+/* 新增智能体按钮 */
+#agent-list-container button {
+    font-size: 16px;
+    border: none;
+    background-color: #007BFFFF;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* 收费金额输入框容器 */
+#agent-list-container #pricePerReqContainer {
+    margin-top: 10px;
+}
+
+#agent-list-container #pricePerReq {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#agent-list-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#agent-list-container th, #agent-list-container td {
+    padding: 10px;
+    text-align: center;
+}
+
+#agent-list-container button {
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.agent-list-container {
+    display: none;           /* 默认隐藏 */
+    width: 100%;             /* 宽度占满父容器 */
+    height: 100%;            /* 高度占满父容器 */
+    box-sizing: border-box;  /* 包括内边距和边框 */
+    background-color: white;  /* 背景颜色，根据需要调整 */
+    padding: 20px;  /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 禁止选中的样式 */
+.no-select {
+    user-select: none;
+}
+
+/* 虚化效果 */
+.blurred {
+    pointer-events: none;  /* 禁止与虚化区域的交互 */
+}
+
+/* 新增智能体按钮 */
+#agent-list-container button {
+    font-size: 16px;
+    border: none;
+    background-color: #007BFFFF;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* 收费金额输入框容器 */
+#pricePerReqContainer {
+    margin-top: 10px;
+}
+
+#pricePerReq {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 仅影响 id 为 agent-list-container 下的表格 */
+#agent-list-container table {
+    width: 100%;               /* 表格宽度 100% */
+    border-collapse: collapse; /* 合并边框 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的 th 和 td */
+#agent-list-container th,
+#agent-list-container td {
+    padding: 10px;             /* 设置单元格内边距 */
+    text-align: center;        /* 文字居中对齐 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的 button */
+#agent-list-container button {
+    padding: 5px 10px;         /* 按钮内边距 */
+    margin: 5px;               /* 按钮外边距 */
+    cursor: pointer;          /* 鼠标悬停时显示指针 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的分页容器 */
+#agent-list-container .pagination {
+    display: flex;             /* 使用 flexbox 布局 */
+    justify-content: center;   /* 水平居中对齐分页按钮 */
+    margin-top: 20px;          /* 分页区域与表格之间的距离 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的分页按钮 */
+#agent-list-container .pagination button {
+    margin: 0 5px;             /* 按钮之间的间距 */
+}
+
+
+/* 设置表格的整体样式 */
+#agent-list {
+    width: 100%;  /* 设置表格宽度为100% */
+    border-collapse: collapse;  /* 合并表格的边框 */
+    margin-top: 20px;  /* 给表格顶部加一点间距 */
+}
+
+/* 设置表头的样式 */
+#agent-list thead {
+    background-color: #007BFFFF;  /* 设置表头背景色 */
+    color: white;  /* 设置表头文字颜色为白色 */
+    text-align: center;  /* 表头文字居中 */
+    font-weight: bold;  /* 表头文字加粗 */
+}
+
+/* 设置表格单元格的样式 */
+#agent-list th, #agent-list td {
+    border: 1px solid #ddd;  /* 设置单元格边框 */
+    padding: 12px;  /* 设置单元格的内边距 */
+    text-align: center;  /* 内容居中 */
+}
+
+/* 设置表格奇偶行的背景色 */
+#agent-list tbody tr:nth-child(even) {
+    background-color: #f2f2f2;  /* 偶数行背景色 */
+}
+
+#agent-list tbody tr:nth-child(odd) {
+    background-color: #fff;  /* 奇数行背景色 */
+}
+
+/* 鼠标悬停行时的效果 */
+#agent-list tbody tr:hover {
+    background-color: #f1f1f1;  /* 鼠标悬停时背景色 */
+    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+}
+
+/* 设置最后一列按钮的样式 */
+#agent-list .actions button {
+    background-color: #007BFFFF;  /* 按钮背景色 */
+    color: white;  /* 按钮文字颜色 */
+    border: none;  /* 去除按钮边框 */
+    padding: 6px 12px;  /* 设置按钮内边距 */
+    border-radius: 4px;  /* 设置按钮圆角 */
+    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+    margin: 2px;  /* 按钮之间有一点间隔 */
+}
+
+/* 鼠标悬停在按钮上时的效果 */
+#agent-list .actions button:hover {
+    background-color: #007BFFFF;  /* 鼠标悬停时按钮颜色 */
 }

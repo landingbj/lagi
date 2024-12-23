@@ -11,7 +11,7 @@ let introTable = [
     [{title:"测试3", content:"内容3"},{title:"测试4", content:"内容4"},],
 ]
 
-let agent_title = 'AI智能体';
+let agent_title = '我的智能体';
 let agent_tools = [
     {name:'社交圈', bind_func: 'socialCircles', available:true},
     {name:'视频流', bind_func: 'notifyAvailable', available:false},
@@ -206,6 +206,12 @@ function initTopTile() {
 
 function initAgentTool() {
     $('#agent-head').html(agent_title);
+
+    /*$('#agent-head').on('click', function() {
+        loadAgentList(1);
+        openAgentList();
+    });*/
+
     $('#agent-tools').empty();
     for (let index = 0; index < agent_tools.length; index++) {
         const agent = agent_tools[index];

@@ -248,9 +248,24 @@ let promptNavs = [
                 group: 2
             }
         ]
+    },
+    {
+        id: 15,
+        key: 'mine',
+        icon: 'mine',
+        title: '我的',
+        subNavs: [
+            {
+                id: 666,
+                title: '我的智能体',
+            }
+        ]
     }
 ];
 
+if (!localStorage.getItem('userId')) {
+    promptNavs = promptNavs.filter(nav => nav.id !== 15);
+}
 
 function loadNavStatus() {
     $.ajax({
@@ -456,6 +471,12 @@ function getIconSvg(icon) {
                         <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM12 3h6v4h-6zm-2 0H6v4h4zm6 14H6v-4h10z"></path>
                     </svg>`;
             break;
+        case 'mine':
+            svg = `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 21s5-3.5 8-6c2.5-2.5 4-5 4-8A4 4 0 0 0 12 3a4 4 0 0 0-8 4c0 3 1.5 5.5 4 8 3 2.5 8 6 8 6z"></path>
+</svg>
+`;
+            break;
         default:
             svg = `<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                         <path d="M0 0h24v24H0z" fill="none"></path>
@@ -540,6 +561,13 @@ let currentNav = null;
 
 function getPromptDialog(id) {
 
+    closeAgentList();
+    $('#queryBox').show();
+    $('#introduces').show();
+    // $('#modelChoices').show();
+    $('#topTitle').show();
+    $('#item-content').show();
+    showBallDiv();
 
     // debugger
     let nav = null;
@@ -558,11 +586,27 @@ function getPromptDialog(id) {
         if (nav) break;  // 如果找到子导航，则跳出循环
     }
 
+
     // 如果未找到指定ID的导航项
     if (nav == null) {
         alert("找不到对应的信息");
         return;
     }
+
+    if (id === 666) {
+        $('#introduces').hide();
+        $('#model-prefences').hide();
+        $('#modelChoices').hide();
+        $('#topTitle').hide();
+        // $('#item-content').empty();
+        $('#item-content').hide();
+        hideBallDiv(); // 隐藏球形 div
+        loadAgentList(1);
+        openAgentList();
+        $('#queryBox').hide();
+        return;
+    }
+
     currentAppId = nav.agentId;
 
 

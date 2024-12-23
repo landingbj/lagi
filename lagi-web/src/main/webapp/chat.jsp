@@ -218,7 +218,32 @@
                           </div>
                         </div>
                       </div>
+                      <!-- 智能体列表开始 -->
+                      <div class="agent-list-container" class="w-full" id="agent-list-container">
 
+                        <button onclick="openAgentModal()">发布智能体</button>
+                        <%--                        <span class="close-btn" onclick="closeAgentList()">&times;</span>--%>
+                        <table id="agent-list" border="1">
+                          <thead>
+                          <tr>
+                            <th>智能体姓名</th>
+                            <th>智能体平台</th>
+                            <th>智能体Token</th>
+                            <th>智能体App ID</th>
+                            <th>是否收费</th>
+                            <th>每次请求收费</th>
+                            <th>操作</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                          <%--    动态生成的智能体数据行--%>
+                          </tbody>
+                        </table>
+                        <div class="pagination" id="pagination">
+                          <!-- 分页按钮将动态添加到这里 -->
+                        </div>
+                      </div>
+                      <!-- 智能体列表结束 -->
                       <div id="item-content" class="w-full" style="overflow: auto;" >
                         <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]" style="height: calc(8vh);">
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
@@ -244,6 +269,7 @@
                         </div>
                         <!-- ***********************输入框前form end******************************** -->
                       </div>
+
                     </div>
                   </div>
                 </div>
@@ -303,7 +329,7 @@
                       <!-- bg-gray-900 -->
                       <button onclick="textQuery()" type="button" id="queryBtn"
                               class="absolute p-1 rounded-md text-gray-500 bottom-1.5 right-1 md:bottom-2.5 md:right-2 hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
-                        <img style="height:24px" src="images/rj.png">
+                        <img style="position: relative;height: 25px;top: 6px;" src="images/rj.png">
                       </button>
                       <!-- ******************发送按钮关闭***************************** -->
                     </div>
@@ -406,6 +432,46 @@
     <a href="#" onclick="showLoginPage()">已有账号？返回登录</a>
   </div>
 </div>
+
+
+<!-- 新增/编辑智能体弹窗开始 -->
+<div id="agent-form-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeAgentModal()">&times;</span>
+    <form id="agent-form">
+      <label for="agent-name">智能体姓名：</label>
+      <input type="text" id="agent-name" required>
+      <label for="platform">智能体平台：</label>
+      <select id="platform" required>
+        <option value="ai.agent.chat.qianfan.XiaoxinAgent">千帆</option>
+        <option value="ai.agent.chat.coze.CozeAgent">扣子</option>
+        <option value="ai.agent.chat.tencent.YuanQiAgent">元器</option>
+        <option value="ai.agent.chat.zhipu.ZhipuAgent">智谱</option>
+      </select>
+      <label for="token">智能体Token：</label>
+      <input type="text" id="token" required>
+      <label for="app-id">智能体App ID：</label>
+      <input type="text" id="app-id" required>
+      <div style="display: flex; align-items: center;">
+        <label>是否收费：</label>
+        <label for="isFeeRequiredYes" style="margin-right: 5px;">是</label>
+        <input type="radio" id="isFeeRequiredYes" name="isFeeRequired" value="true" style="width: 1px; margin-bottom: -0.4em;">
+
+        <label for="isFeeRequiredNo" style="margin-right: 5px; padding-left: 10px;">否</label>
+        <input type="radio" id="isFeeRequiredNo" name="isFeeRequired" value="false" style="width: 1px; margin-bottom: -0.4em;" checked>
+      </div>
+      <div id="pricePerReqContainer" style="display: none;">
+        <label for="pricePerReq">每次请求收费：</label>
+        <input type="number" id="pricePerReq" step="0.01" min="0">
+      </div>
+      <button type="button" onclick="saveAgent()">保存</button>
+    </form>
+  </div>
+</div>
+<!-- 新增/编辑智能体弹窗结束 -->
+
+
+
 <!-- mobile debug 插件 -->
 <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
 <script src="libs/jquery-3.1.1.min.js"></script>
@@ -420,6 +486,7 @@
 <script src="js/self.js?ver=${initParam.version}"></script>
 <script src="js/query.js?ver=${initParam.version}"></script>
 <script src="js/ball.js"></script>
+<script src="js/agent.js"></script>
 <script src="js/login.js?ver=${initParam.version}"></script>
 </body>
 </html>
