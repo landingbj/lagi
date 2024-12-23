@@ -3,6 +3,7 @@ package ai.servlet.api;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpSession;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.pojo.Medusa;
+import ai.common.utils.ThreadPoolManager;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
 import ai.dto.ModelPreferenceDto;
@@ -68,8 +70,11 @@ public class LlmApiServlet extends BaseServlet {
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getPolicy().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
+    private static ExecutorService executorService;
 
     static {
+        ThreadPoolManager.registerExecutor("dynamic-stream");
+        executorService = ThreadPoolManager.getExecutor("dynamic-stream");
         VectorCacheLoader.load();
     }
 
@@ -92,8 +97,48 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         LLmRequest lLmRequest = reqBodyToObj(req, LLmRequest.class);
         ChatCompletionResult work = defaultWorker.work(lLmRequest.getWorker(), lLmRequest);
-        responsePrint(resp, toJson(work));
+        if(Boolean.FALSE.equals(lLmRequest.getStream())) {
+            responsePrint(resp, toJson(work));
+        }
+        String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
+        convert2streamAndOutput(firstAnswer, resp, work);
     }
+
+    
+
+    private ChatCompletionResult convertResponse(String response) {
+        String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", response);
+        return JSONUtil.toBean(format, ChatCompletionResult.class);
+    }
+
+    private void convert2streamAndOutput(String firstAnswer, HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        int length = 5;
+        for (int i = 0; i < firstAnswer.length(); i += length) {
+            int end = Math.min(i + length, firstAnswer.length());
+            try {
+                String substring = firstAnswer.substring(i, end);
+                ChatCompletionResult result = convertResponse(substring);
+                ChatCompletionResult filter = SensitiveWordUtil.filter(result);
+                String msg = gson.toJson(filter);
+                out.print("data: " + msg + "\n\n");
+                out.flush();
+            } catch (Exception e) {
+            }
+            try {
+                Thread.sleep(200);
+            } catch (Exception ignored) {
+                logger.error("produce stream", ignored);
+            }
+        }
+        out.print("data: " + gson.toJson(chatCompletionResult) + "\n\n");
+        out.flush();
+        out.print("data: " + "[DONE]" + "\n\n");
+        out.flush();
+        out.close();
+    }
+
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");

@@ -327,12 +327,12 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         "temperature": 0.8,
         "max_tokens": 1024,
         // "stream": true,
-        "stream": false
+        "stream": true
     };
     if (agentId) {
         paras["worker"] = "appointedWorker";
         paras["agentId"] = agentId;
-        paras["stream"] = false;
+        paras["stream"] = true;
     }
 
     var queryUrl = "search/detectIntent";

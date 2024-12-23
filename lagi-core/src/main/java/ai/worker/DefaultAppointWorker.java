@@ -70,8 +70,12 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
             List<ChatCompletionResult> invoke = route.invoke(data, Lists.newArrayList(trAgent));
             if(invoke != null && !invoke.isEmpty()) {
                 ChatCompletionResult communicate = invoke.get(0);
-                SkillMap skillMap = new SkillMap();
-                skillMap.saveAgentScore(trAgent.getAgentConfig(), ChatCompletionUtil.getLastMessage(data), ChatCompletionUtil.getFirstAnswer(communicate));
+                try {
+                    SkillMap skillMap = new SkillMap();
+                    skillMap.saveAgentScore(trAgent.getAgentConfig(), ChatCompletionUtil.getLastMessage(data), ChatCompletionUtil.getFirstAnswer(communicate));
+                } catch (Exception e) {
+
+                }
                 return communicate;
             }
         }

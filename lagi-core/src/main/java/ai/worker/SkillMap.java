@@ -278,18 +278,23 @@ public class SkillMap {
 
     public void saveAgentScore(AgentConfig agentConfig, String question, String answer) {
         executorService.submit(()->{
-            List<String> keywords = intentDetect(question).getKeywords();
-            for (String keyword : keywords) {
-                List<AgentIntentScore> agentIntentScores = cachedSkillMap.get(keyword);
-                if(agentIntentScores == null || agentIntentScores.isEmpty()) {
-                    save(agentConfig, question, answer, keyword);
-                } else {
-                    boolean present = agentIntentScores.stream().anyMatch(a -> a.getAgentId().equals(agentConfig.getAppId()));
-                    if(!present) {
+            try {
+                List<String> keywords = intentDetect(question).getKeywords();
+                for (String keyword : keywords) {
+                    List<AgentIntentScore> agentIntentScores = cachedSkillMap.get(keyword);
+                    if(agentIntentScores == null || agentIntentScores.isEmpty()) {
                         save(agentConfig, question, answer, keyword);
+                    } else {
+                        boolean present = agentIntentScores.stream().anyMatch(a -> a.getAgentId().equals(agentConfig.getAppId()));
+                        if(!present) {
+                            save(agentConfig, question, answer, keyword);
+                        }
                     }
                 }
+            } catch (Exception e) {
+
             }
+
         });
     }
 
