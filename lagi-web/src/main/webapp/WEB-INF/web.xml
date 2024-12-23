@@ -289,4 +289,13 @@
         <servlet-name>sql</servlet-name>
         <url-pattern>/sql/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>agent</servlet-name>
+        <servlet-class>ai.servlet.AgentServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>agent</servlet-name>
+        <url-pattern>/agent/*</url-pattern>
+    </servlet-mapping>
 </web-app>
