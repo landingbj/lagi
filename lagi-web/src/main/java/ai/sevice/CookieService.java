@@ -16,7 +16,7 @@ public class CookieService {
     }
 
     public LoginRequest decodeUser(String value) {
-        String[] strs = decode(value).replace("\"", "").split(":", 3);
+        String[] strs = decode(value.replace("\"", "")).split(":", 3);
         LoginRequest loginRequest = new LoginRequest();
         if (strs.length != 3) {
             loginRequest.setUsername("");
