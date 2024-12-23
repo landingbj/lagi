@@ -1,6 +1,5 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
 <!DOCTYPE HTML>
-<!DOCTYPE HTML>
 <html class="light" style="color-scheme: light;">
 
 <head>
