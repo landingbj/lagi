@@ -14,19 +14,24 @@ $(document).ready(function () {
 
 document.addEventListener('click', function (event) {
     const userMenu = document.getElementById('userMenu');
+    const userMenu_sm = document.getElementById('userMenu-sm');
     const button = document.getElementById('headlessui-menu-button-:rc:');
     if (!button.contains(event.target)) {
-        userMenu.classList.add('hidden');
+        userMenu.classList.add('login-hidden');
+        userMenu_sm.classList.add('login-hidden');
     }
 });
 
 function toggleUserMenu() {
-    const auth = getCookie('lagi-auth');
+    let auth = getCookie('lagi-auth');
+    // auth = true;
     if (!auth) {
         openModal();
     } else {
         const userMenu = document.getElementById('userMenu');
-        userMenu.classList.toggle('hidden');
+        const userMenu_sm = document.getElementById('userMenu-sm');
+        userMenu.classList.toggle('login-hidden');
+        userMenu_sm.classList.toggle('login-hidden');
     }
 }
 
@@ -54,14 +59,14 @@ function resetForms() {
 
 function showRegisterPage() {
     updateCaptcha(document.querySelector('.register-captcha-image'));
-    document.getElementById('login-form').classList.add('hidden');
-    document.getElementById('register-form').classList.remove('hidden');
+    document.getElementById('login-form').classList.add('login-hidden');
+    document.getElementById('register-form').classList.remove('login-hidden');
 }
 
 function showLoginPage() {
     updateCaptcha(document.querySelector('.login-captcha-image'));
-    document.getElementById('register-form').classList.add('hidden');
-    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('register-form').classList.add('login-hidden');
+    document.getElementById('login-form').classList.remove('login-hidden');
 }
 
 function updateCaptcha(imageElement) {

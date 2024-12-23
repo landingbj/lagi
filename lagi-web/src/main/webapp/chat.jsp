@@ -1,5 +1,6 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
 <!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html class="light" style="color-scheme: light;">
 
 <head>
@@ -38,7 +39,7 @@
     <!-- 左边导航条 -->
     <!-- scrollbar-trigger flex h-full w-full flex-1 items-start border-white/20 -->
     <!-- dark hidden bg-gray-900 md:fixed md:inset-y-0 md:flex md:w-[260px] md:flex-col -->
-    <div id="navigation_bar" class="flex-shrink-0 overflow-x-hidden dark bg-gray-900 md:fixed md:inset-y-0 md:flex md:w-[260px]  md:flex-col" style="background-color: #023f63;">
+    <div id="navigation_bar" class="flex-shrink-0 overflow-x-hidden dark hidden bg-gray-900 md:fixed md:inset-y-0 md:flex md:w-[260px]  md:flex-col" style="background-color: #023f63;">
       <div class="h-full w-[260px]">
         <div class="flex h-full min-h-0 flex-col ">
           <div class="scrollbar-trigger relative h-full w-full flex-1 items-start border-white/20">
@@ -115,42 +116,43 @@
                         </div>
                       </span>
                 </a>
+
                 <div class="group relative" data-headlessui-state="">
-                  <div id="userMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white hidden border border-gray-200 rounded-md shadow-lg">
+                  <div id="userMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white login-hidden border border-gray-200 rounded-md shadow-lg">
                     <ul>
                       <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">问题反馈</li>
                       <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
                     </ul>
                   </div>
                   <button
-                    onclick="toggleUserMenu()"
-                    class="flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm transition-colors duration-200 hover:bg-gray-100 group-ui-open:bg-gray-100 dark:hover:bg-gray-800 dark:group-ui-open:bg-gray-800"
-                    type="button" aria-haspopup="true" aria-expanded="false" data-state="closed"
-                    id="headlessui-menu-button-:rc:" data-headlessui-state="">
+                          onclick="toggleUserMenu()"
+                          class="flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm transition-colors duration-200 hover:bg-gray-100 group-ui-open:bg-gray-100 dark:hover:bg-gray-800 dark:group-ui-open:bg-gray-800"
+                          type="button" aria-haspopup="true" aria-expanded="false" data-state="closed"
+                          id="headlessui-menu-button-:rc:" data-headlessui-state="">
                     <div class="flex-shrink-0">
                       <div class="flex items-center justify-center rounded">
                         <div class="relative flex">
                           <img alt="User" loading="lazy" width="36" height="36" decoding="async" data-nimg="1"
-                            class="rounded-sm" srcset="" src="images/rj.png" style="color: transparent;">
+                               class="rounded-sm" srcset="" src="images/rj.png" style="color: transparent;">
                         </div>
                       </div>
                     </div>
                     <div
-                      class="grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-gray-700 dark:text-white">
+                            class="grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-gray-700 dark:text-white">
                       <!-- <div class="font-semibold">游客</div> -->
                       <div id="user_box"class="font-semibold">
                         登录
                       </div>
                       <div class="text-xs text-gray-500"></div>
                     </div><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                      stroke-linecap="round" stroke-linejoin="round" class="icon-sm flex-shrink-0 text-gray-500"
-                      height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="1"></circle>
-                      <circle cx="19" cy="12" r="1"></circle>
-                      <circle cx="5" cy="12" r="1"></circle>
-                    </svg>
-                  </button>
-                </div>
+                               stroke-linecap="round" stroke-linejoin="round" class="icon-sm flex-shrink-0 text-gray-500"
+                               height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                  </button></div>
+              </div>
             </nav>
           </div>
         </div>
@@ -162,7 +164,7 @@
         <!-- 上部导航条 -->
         <div class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden " style="background-color: #023f63;">
           <div>
-            <button type="button" class="-ml-0.5 -mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white dark:hover:text-white">
+            <button type="button" onclick="toggleUserMenu()"  class="-ml-0.5 -mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white dark:hover:text-white">
               <span class="sr-only">Open sidebar</span>
               <svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -368,38 +370,38 @@
         class="pointer-events-none fixed inset-0 z-[60] mx-auto my-2 flex max-w-[560px] flex-col items-stretch justify-start md:pb-5"></span>
 </div>
 <div id="overlay" class="overlay">
-    <div class="modal" id="login-form">
-        <div class="close-modal-container">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
-        </div>
-        <h2>登录</h2>
-        <input type="text" placeholder="用户名" id="login-username">
-        <input type="password" placeholder="密码" id="login-password">
-        <div class="captcha-container">
-            <input type="text" placeholder="验证码" id="login-captcha">
-            <img alt="验证码" class="login-captcha-image" onclick="updateCaptcha(this)">
-        </div>
-        <div id="login-error" class="error-message">登录失败，请检查输入信息</div>
-        <button onclick="submitLogin()">登录</button>
-        <a href="#" onclick="showRegisterPage()">没有账号？前往注册</a>
+  <div class="modal" id="login-form">
+    <div class="close-modal-container">
+      <button class="close-modal" onclick="closeModal()">&times;</button>
     </div>
+    <h2>登录</h2>
+    <input type="text" placeholder="用户名" id="login-username">
+    <input type="password" placeholder="密码" id="login-password">
+    <div class="captcha-container">
+      <input type="text" placeholder="验证码" id="login-captcha">
+      <img alt="验证码" class="login-captcha-image" onclick="updateCaptcha(this)">
+    </div>
+    <div id="login-error" class="error-message">登录失败，请检查输入信息</div>
+    <button onclick="submitLogin()">登录</button>
+    <a href="#" onclick="showRegisterPage()">没有账号？前往注册</a>
+  </div>
 
-    <div class="modal hidden" id="register-form">
-        <div class="close-modal-container">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
-        </div>
-        <h2>注册</h2>
-        <input type="text" placeholder="用户名" id="register-username">
-        <input type="password" placeholder="密码" id="register-password">
-        <input type="password" placeholder="确认密码" id="register-confirm-password">
-        <div class="captcha-container">
-            <input type="text" placeholder="验证码" id="register-captcha">
-            <img alt="验证码" class="register-captcha-image" onclick="updateCaptcha(this)">
-        </div>
-        <div id="register-error" class="error-message">注册失败，请检查输入信息</div>
-        <button onclick="submitRegister()">注册</button>
-        <a href="#" onclick="showLoginPage()">已有账号？返回登录</a>
+  <div class="modal login-hidden" id="register-form">
+    <div class="close-modal-container">
+      <button class="close-modal" onclick="closeModal()">&times;</button>
     </div>
+    <h2>注册</h2>
+    <input type="text" placeholder="用户名" id="register-username">
+    <input type="password" placeholder="密码" id="register-password">
+    <input type="password" placeholder="确认密码" id="register-confirm-password">
+    <div class="captcha-container">
+      <input type="text" placeholder="验证码" id="register-captcha">
+      <img alt="验证码" class="register-captcha-image" onclick="updateCaptcha(this)">
+    </div>
+    <div id="register-error" class="error-message">注册失败，请检查输入信息</div>
+    <button onclick="submitRegister()">注册</button>
+    <a href="#" onclick="showLoginPage()">已有账号？返回登录</a>
+  </div>
 </div>
 <!-- mobile debug 插件 -->
 <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
@@ -414,7 +416,7 @@
 <script src="js/index.js?ver=${initParam.version}"></script>
 <script src="js/self.js?ver=${initParam.version}"></script>
 <script src="js/query.js?ver=${initParam.version}"></script>
-<script src="js/ball.js?ver=${initParam.version}"></script>
+<script src="js/ball.js"></script>
 <script src="js/login.js?ver=${initParam.version}"></script>
 </body>
 </html>
