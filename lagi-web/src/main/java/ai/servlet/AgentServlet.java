@@ -2,7 +2,11 @@ package ai.servlet;
 
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
+import ai.dto.AgentChargeDetail;
+import ai.dto.PrepayRequest;
+import ai.dto.PrepayResponse;
 import ai.migrate.service.AgentService;
+import ai.migrate.service.PayService;
 import ai.servlet.dto.*;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -20,6 +24,7 @@ public class AgentServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
     protected Gson gson = new Gson();
     private final AgentService agentService = new AgentService();
+    private final PayService payService = new PayService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -31,6 +36,8 @@ public class AgentServlet extends BaseServlet {
             this.getLagiAgentList(req, resp);
         } else if (method.equals("getLagiAgent")) {
             this.getLagiAgent(req, resp);
+        } else if (method.equals("getAgentChargeDetail")) {
+            this.getAgentChargeDetail(req, resp);
         }
     }
 
@@ -46,7 +53,23 @@ public class AgentServlet extends BaseServlet {
             this.updateLagiAgent(req, resp);
         } else if (method.equals("deleteLagiAgentById")) {
             this.deleteLagiAgentById(req, resp);
+        } else if (method.equals("prepay")) {
+            this.prepay(req, resp);
         }
+    }
+
+    private void prepay(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        PrepayRequest prepayRequest = reqBodyToObj(req, PrepayRequest.class);
+        PrepayResponse prepayResponse = payService.prepay(prepayRequest);
+        responsePrint(resp, gson.toJson(prepayResponse));
+    }
+
+    private void getAgentChargeDetail(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String outTradeNo = req.getParameter("outTradeNo");
+        AgentChargeDetail agentChargeDetail = payService.getAgentChargeDetail(outTradeNo);
+        responsePrint(resp, gson.toJson(agentChargeDetail));
     }
 
     private void getLagiAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
