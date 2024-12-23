@@ -14,17 +14,17 @@ $(document).ready(function () {
 
 document.addEventListener('click', function (event) {
     const userMenu = document.getElementById('userMenu');
-    const userMenu_sm = document.getElementById('userMenu-sm');
+    // const userMenu_sm = document.getElementById('userMenu-sm');
     const button = document.getElementById('headlessui-menu-button-:rc:');
     if (!button.contains(event.target)) {
         userMenu.classList.add('login-hidden');
-        userMenu_sm.classList.add('login-hidden');
+        // userMenu_sm.classList.toggle('login-hidden');
     }
 });
 
 function toggleUserMenu() {
     let auth = getCookie('lagi-auth');
-    // auth = true;
+    // let auth = true;
     if (!auth) {
         openModal();
     } else {

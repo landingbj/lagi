@@ -3,6 +3,8 @@ package ai.config.pojo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Builder
 @ToString
 @Data
@@ -20,4 +22,6 @@ public class AgentConfig {
     private String userId;
     private String wrongCase;
     private String endpoint;
+    private Boolean isFeeRequired;
+    private BigDecimal pricePerReq;
 }

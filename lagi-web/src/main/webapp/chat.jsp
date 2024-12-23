@@ -1,6 +1,5 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
 <!DOCTYPE HTML>
-<!DOCTYPE HTML>
 <html class="light" style="color-scheme: light;">
 
 <head>
@@ -178,6 +177,11 @@
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg></button>
+          <div id="userMenu-sm" class="absolute left-0 bottom-full login-hidden mb-2 w-48 top-11 border border-gray-200 rounded-md shadow-lg" >
+            <ul style="background-color: #023f63;">
+              <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
+            </ul>
+          </div>
         </div>
         <!-- 上部导航条 -->
         <!-- *************************************************主要结构********************************* -->
