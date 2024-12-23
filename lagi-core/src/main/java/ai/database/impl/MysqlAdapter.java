@@ -12,12 +12,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MysqlAdapter {
-    private static String driver;
-    private static String url;
-    private static String username;
-    private static String password;
-    public static String model;
-    public MysqlAdapter(String databaseName){
+    private  String name;
+    private  String driver;
+    private  String url;
+    private  String username;
+    private  String password;
+    public  String model;
+    public MysqlAdapter(String databaseName,String storageName){
+        init(storageName);
         if (databaseName!=null&&url!=null){
             String regex = "jdbc:mysql://([^/]+)";
 
@@ -33,28 +35,30 @@ public class MysqlAdapter {
         }
        }
 
-    public MysqlAdapter(){
-    }
-
-    static {
-        try {
-            List<Backend> list = ContextLoader.configuration.getFunctions().getText2sql();
-            Backend maxBackend = list.stream()
-                    .filter(Backend::getEnable)
-                    .max(Comparator.comparingInt(Backend::getPriority)) .orElseThrow(() -> new NoSuchElementException("No enabled backends found"));
-            SQLJdbc database = ContextLoader.configuration.getStores().getDatabase().stream()
-                    .filter(sqlJdbc -> sqlJdbc.getName().equals(maxBackend.getBackend()))
-                    .findFirst()
-                    .orElseThrow(() -> new NoSuchElementException("Database not found"));
-            driver = database.getDriverClassName();
-            url = database.getJdbcUrl();
-            username = database.getUsername();
-            password = database.getPassword();
-            model = maxBackend.getModel();
-        } catch (Exception e) {
-            e.printStackTrace();
+        public MysqlAdapter(String storageName){
+            init(storageName);
         }
-    }
+
+        private void init(String storageName){
+            this.name = storageName;
+            try {
+                List<Backend> list = ContextLoader.configuration.getFunctions().getText2sql();
+                Backend maxBackend = list.stream()
+                        .filter(Backend::getEnable)
+                        .max(Comparator.comparingInt(Backend::getPriority)) .orElseThrow(() -> new NoSuchElementException("No enabled backends found"));
+                SQLJdbc database = ContextLoader.configuration.getStores().getDatabase().stream()
+                        .filter(sqlJdbc -> sqlJdbc.getName().equals(this.name))
+                        .findFirst()
+                        .orElseThrow(() -> new NoSuchElementException("Database not found"));
+                driver = database.getDriverClassName();
+                url = database.getJdbcUrl();
+                username = database.getUsername();
+                password = database.getPassword();
+                model = maxBackend.getModel();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
     /**
      * 打开连接

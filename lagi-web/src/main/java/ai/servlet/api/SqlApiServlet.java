@@ -56,7 +56,7 @@ public class SqlApiServlet extends BaseServlet {
         TextToSqlRequest qaRequest = gson.fromJson(jsonString, TextToSqlRequest.class);
 
         String demand = qaRequest.getDemand();
-        String out = toSql(demand,qaRequest.getTableName(),qaRequest.getDatabaseName());
+        String out = toSql(demand,qaRequest.getTableName(),qaRequest.getDatabaseName(),qaRequest.getStorageName());
         //   System.out.println("out1的回答是："+out);
         String outcome =  extractContentWithinBraces(out);
         qaRequest.setText(out);
@@ -85,12 +85,12 @@ public class SqlApiServlet extends BaseServlet {
                 String sql = extractContentWithinBraces(outcome);
                 System.out.println("sql:" + sql);
                 try {
-                    list = new MysqlAdapter().sqlToValue(sql);
+                    list = new MysqlAdapter(qaRequest.getDatabaseName(),qaRequest.getStorageName()).sqlToValue(sql);
                 }catch (Exception e){
                     list = new ArrayList<>();
                 }
 
-                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTableName(),qaRequest.getDatabaseName());
+                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTableName(),qaRequest.getDatabaseName(),qaRequest.getStorageName());
 
                 result.put("status", "success");
                 result.put("data", msg);
@@ -105,8 +105,8 @@ public class SqlApiServlet extends BaseServlet {
 
 
 
-      public String toSql(String demand,String tableNeam,String databaseName) {
-        MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName);
+      public String toSql(String demand,String tableNeam,String databaseName,String storageName) {
+        MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName,storageName);
         List<TableColumnInfo> list = mysqlAdapter.getTableColumnInfo(tableNeam);
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
@@ -162,8 +162,8 @@ public class SqlApiServlet extends BaseServlet {
            return tableresult.toString();
     }
 
-     public String toText(String demand,String outMsg,String tableNeam,String databaseName) {
-         MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName);
+     public String toText(String demand,String outMsg,String tableNeam,String databaseName,String name) {
+         MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName,name);
          List<TableColumnInfo> list = mysqlAdapter.getTableColumnInfo(tableNeam);
         //mock request
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
@@ -212,7 +212,7 @@ public class SqlApiServlet extends BaseServlet {
 
     @Test
     public void mysql() {
-        List<Map<String, Object>> list = new MysqlAdapter().sqlToValue("SELECT * FROM hotel_agreement;");
+        List<Map<String, Object>> list = new MysqlAdapter("mysql").sqlToValue("SELECT * FROM hotel_agreement;");
         Gson gson = new Gson();
 
         for (Object o : list) {

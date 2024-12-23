@@ -212,8 +212,8 @@ functions:
       priority: 10
   # sql指令配置表
   text2sql:
-    - backend: mysql # 数据库配置的名称
-      model: qwen-turbo # 模型名
+    - backend: landing
+      model: qwen-turbo # 模型名称
       enable: true # 是否启用
       priority: 10
 ```

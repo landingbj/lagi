@@ -361,7 +361,7 @@ functions:
       priority: 10
 
   text2sql:
-    - backend: mysql
+    - backend: landing
       model: cascade
       enable: true
       priority: 10

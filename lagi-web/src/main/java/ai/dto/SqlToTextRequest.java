@@ -11,4 +11,5 @@ public class SqlToTextRequest {
     private String demand;
     private String tableName;
     private String databaseName;
+    private String storageName;
 }

@@ -716,18 +716,20 @@ POST `/sql/text2sql`
 {
   "demand":"帮我查一下京伦饭店的情况",
   "tableName":"hotel_agreement",
-  "databaseName": "ai"
+  "databaseName": "ai",
+  "storageName": "mysql"
 }
 ```
 
 ### 请求参数
 
-| 名称               | 位置  | 类型      | 必选    | 说明        |
-|------------------|------|---------|--------|-----------|
-| body             | body | object  | 否      | none      |
-| » demand         | body | string  | 是      | 用户需求      |
-| » tableName      | body | string  | 是      | 用户选定的表名   |
-| » databaseName   | body | string  | 否      | 用户选定的数据库名 |
+| 名称                | 位置  | 类型      | 必选 | 说明        |
+|-------------------|------|---------|----|-----------|
+| body              | body | object  | 否  | none      |
+| » demand          | body | string  | 是  | 用户需求      |
+| » tableName       | body | string  | 是  | 用户选定的表名   |
+| » databaseName    | body | string  | 否  | 用户选定的数据库名 |
+| » storageName     | body | string  | 是  | 数据库配置名称    |      
 
 ### 返回示例
 
@@ -739,7 +741,8 @@ POST `/sql/text2sql`
     "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
     "demand": "帮我查一下京伦饭店的情况",
     "tableName": "hotel_agreement",
-    "databaseName": "ai"
+    "databaseName": "ai",
+    "storageName": "mysql"
   },
   "status": "success"
 }
@@ -755,14 +758,15 @@ POST `/sql/text2sql`
 
 状态码 **200**
 
-| 名称               | 类型     | 必选    | 说明        |
-|------------------|--------|-------|-----------|
-| » status         | string | true  | 返回的结果状态   |
-| » data           | object | true  | 返回内容      |
-| »» sql           | string | true  | 生成的SQL语句  |
-| »» demand        | string | true  | 用户需求      |
-| »» tableName     | string | true  | 用户选定的表名   |
-| »» databaseName  | string | false | 用户选定的数据库名 |
+| 名称               | 类型       | 必选    | 说明        |
+|------------------|----------|-------|-----------|
+| » status         | string   | true  | 返回的结果状态   |
+| » data           | object   | true  | 返回内容      |
+| »» sql           | string   | true  | 生成的SQL语句  |
+| »» demand        | string   | true  | 用户需求      |
+| »» tableName     | string   | true  | 用户选定的表名   |
+| »» databaseName  | string   | false | 用户选定的数据库名 |
+| »» storageName   | string   | true  | 数据库配置名称   |   
 
 ## SQL生成文本
 
@@ -777,7 +781,8 @@ POST `/sql/sql2text`
   "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
   "demand": "帮我查一下京伦饭店的情况",
   "tableName": "hotel_agreement",
-  "databaseName": "ai"
+  "databaseName": "ai",
+  "storageName": "mysql"
 }
 ```
 
@@ -790,6 +795,7 @@ POST `/sql/sql2text`
 | » demand        | body | string  | 是  | 用户需求   |
 | » tableName     | body | string  | 是  | 用户选定的表名   |
 | » databaseName  | body | string  | 否  | 用户选定的数据库名 |
+| » storageName   | body | string  | 是  | 数据库配置名称 |
 
 ### 返回示例
 
