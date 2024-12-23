@@ -179,7 +179,6 @@
           </svg></button>
           <div id="userMenu-sm" class="absolute left-0 bottom-full login-hidden mb-2 w-48 top-11 border border-gray-200 rounded-md shadow-lg" >
             <ul style="background-color: #023f63;">
-              <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">问题反馈</li>
               <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
             </ul>
           </div>
