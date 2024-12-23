@@ -29,6 +29,8 @@ public class AgentServlet extends BaseServlet {
 
         if (method.equals("getLagiAgentList")) {
             this.getLagiAgentList(req, resp);
+        } else if (method.equals("getLagiAgent")) {
+            this.getLagiAgent(req, resp);
         }
     }
 
@@ -47,12 +49,20 @@ public class AgentServlet extends BaseServlet {
         }
     }
 
+    private void getLagiAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String lagiUserId = req.getParameter("lagiUserId");
+        String agentId = req.getParameter("agentId");
+        LagiAgentResponse lagiAgentResponse = agentService.getLagiAgent(lagiUserId, agentId);
+        responsePrint(resp, gson.toJson(lagiAgentResponse));
+    }
+
     private void getLagiAgentList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         int pageNumber = Integer.parseInt(req.getParameter("pageNumber"));
         int pageSize = Integer.parseInt(req.getParameter("pageSize"));
         String lagiUserId = req.getParameter("lagiUserId");
-        LagiAgentResponse lagiAgentResponse = agentService.getLagiAgentList(lagiUserId, pageNumber, pageSize);
+        LagiAgentListResponse lagiAgentResponse = agentService.getLagiAgentList(lagiUserId, pageNumber, pageSize);
         responsePrint(resp, gson.toJson(lagiAgentResponse));
     }
 

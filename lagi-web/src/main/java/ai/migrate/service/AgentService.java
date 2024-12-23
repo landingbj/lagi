@@ -2,8 +2,8 @@ package ai.migrate.service;
 
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
+import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
-import ai.servlet.dto.LoginResponse;
 import ai.utils.MigrateGlobal;
 import ai.utils.OkHttpUtil;
 import com.google.gson.Gson;
@@ -35,7 +35,7 @@ public class AgentService {
         return response;
     }
 
-    public LagiAgentResponse getLagiAgentList(String lagiUserId, int pageNumber, int pageSize) throws IOException {
+    public LagiAgentListResponse getLagiAgentList(String lagiUserId, int pageNumber, int pageSize) throws IOException {
         Map<String, String> params = new HashMap<>();
         if (lagiUserId != null) {
             params.put("lagiUserId", lagiUserId);
@@ -43,6 +43,18 @@ public class AgentService {
         params.put("pageNumber", String.valueOf(pageNumber));
         params.put("pageSize", String.valueOf(pageSize));
         String resultJson = OkHttpUtil.get(SAAS_BASE_URL + "/agent/getLagiAgentList", params);
+        LagiAgentListResponse lagiAgentResponse = gson.fromJson(resultJson, LagiAgentListResponse.class);
+        return lagiAgentResponse;
+    }
+
+    public LagiAgentResponse getLagiAgent(String lagiUserId, String agentId) throws IOException {
+        Map<String, String> params = new HashMap<>();
+        if (lagiUserId != null) {
+            params.put("lagiUserId", lagiUserId);
+        }
+        params.put("lagiUserId", lagiUserId);
+        params.put("agentId", agentId);
+        String resultJson = OkHttpUtil.get(SAAS_BASE_URL + "/agent/getLagiAgent", params);
         LagiAgentResponse lagiAgentResponse = gson.fromJson(resultJson, LagiAgentResponse.class);
         return lagiAgentResponse;
     }
