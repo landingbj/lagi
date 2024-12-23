@@ -56,8 +56,8 @@ public class SqlApiServlet extends BaseServlet {
         TextToSqlRequest qaRequest = gson.fromJson(jsonString, TextToSqlRequest.class);
 
         String demand = qaRequest.getDemand();
-        String out = toSql(demand,qaRequest.getTableName());
-           System.out.println("out1的回答是："+out);
+        String out = toSql(demand,qaRequest.getTableName(),qaRequest.getDatabaseName());
+        //   System.out.println("out1的回答是："+out);
         String outcome =  extractContentWithinBraces(out);
         qaRequest.setText(out);
         qaRequest.setSql(outcome);
@@ -90,7 +90,7 @@ public class SqlApiServlet extends BaseServlet {
                     list = new ArrayList<>();
                 }
 
-                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTableName());
+                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTableName(),qaRequest.getDatabaseName());
 
                 result.put("status", "success");
                 result.put("data", msg);
@@ -105,7 +105,9 @@ public class SqlApiServlet extends BaseServlet {
 
 
 
-      public String toSql(String demand,String tableNeam) {
+      public String toSql(String demand,String tableNeam,String databaseName) {
+        MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName);
+        List<TableColumnInfo> list = mysqlAdapter.getTableColumnInfo(tableNeam);
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
         chatCompletionRequest.setMax_tokens(1024);
@@ -115,7 +117,7 @@ public class SqlApiServlet extends BaseServlet {
         message.setContent("现在你是一个数据分析师,MYSQL大神,请根据用户提供的表的信息，以及用户的需求，写出效率最高的SQL," +
                 "当涉及到中文字段的时候你比较喜欢使用模糊查询." +
                 "表信息如下："+
-                tableParsing(tableNeam)+
+                tableParsing(list)+
                 "输并且要求输出的S0L以#开头,以#结尾，样例如下:" +
                 "{SELECT * FROM "+tableNeam+" ;}  " +
                  "{SELECT * FROM "+tableNeam+" WHERE city LIKE '%北京%' tier = '%档位一%';}" +
@@ -125,7 +127,9 @@ public class SqlApiServlet extends BaseServlet {
         );
         chatCompletionRequest.setMessages(Lists.newArrayList(message));
         chatCompletionRequest.setStream(false);
+        chatCompletionRequest.setModel(mysqlAdapter.model);
         CompletionsService completionsService = new CompletionsService();
+
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         String out = null;
           if (result != null) {
@@ -134,8 +138,8 @@ public class SqlApiServlet extends BaseServlet {
         return out;
     }
 
-    public String tableParsing(String tableNeam) {
-      List<TableColumnInfo> list = new MysqlAdapter().getTableColumnInfo(tableNeam);
+    public String tableParsing(List<TableColumnInfo> list) {
+
                StringBuilder tableresult = new StringBuilder();
                 Map<String, List<TableColumnInfo>> groupedByTable = list.stream()
                    .collect(Collectors.groupingBy(TableColumnInfo::getTableName));
@@ -158,8 +162,9 @@ public class SqlApiServlet extends BaseServlet {
            return tableresult.toString();
     }
 
-     public String toText(String demand,String outMsg,String tableNeam) {
-
+     public String toText(String demand,String outMsg,String tableNeam,String databaseName) {
+         MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName);
+         List<TableColumnInfo> list = mysqlAdapter.getTableColumnInfo(tableNeam);
         //mock request
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
@@ -169,12 +174,13 @@ public class SqlApiServlet extends BaseServlet {
         message.setRole("user");
         message.setContent("现在你是一个数据分析师,请根据用户提供的表的信息，用户的需求，以及你查询数据库返回的信息，给客户一个满意的回答." +
                 "表信息如下："+
-                tableParsing(tableNeam)+
+                tableParsing(list)+
                 "用户需求:“" + demand+"”。" +
                 "你结合需求查数据库返回的信息的信息是：“"+outMsg+
                 "”注意不需要分析过程。");
         chatCompletionRequest.setMessages(Lists.newArrayList(message));
         chatCompletionRequest.setStream(false);
+        chatCompletionRequest.setModel(mysqlAdapter.model);
         CompletionsService completionsService = new CompletionsService();
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         String out = null;

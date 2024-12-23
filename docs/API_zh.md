@@ -715,17 +715,19 @@ POST `/sql/text2sql`
 ```json
 {
   "demand":"帮我查一下京伦饭店的情况",
-  "tableName":"hotel_agreement"
+  "tableName":"hotel_agreement",
+  "databaseName": "ai"
 }
 ```
 
 ### 请求参数
 
-| 名称          | 位置  | 类型      | 必选    | 说明   |
-|-------------|------|---------|--------|------|
-| body        | body | object  | 否      | none |
-| » demand    | body | string  | 是      | 用户需求   |
-| » tableName | body | string  | 是      | 用户选定的表名   |
+| 名称               | 位置  | 类型      | 必选    | 说明        |
+|------------------|------|---------|--------|-----------|
+| body             | body | object  | 否      | none      |
+| » demand         | body | string  | 是      | 用户需求      |
+| » tableName      | body | string  | 是      | 用户选定的表名   |
+| » databaseName   | body | string  | 否      | 用户选定的数据库名 |
 
 ### 返回示例
 
@@ -736,7 +738,8 @@ POST `/sql/text2sql`
   "data": {
     "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
     "demand": "帮我查一下京伦饭店的情况",
-    "tableName": "hotel_agreement"
+    "tableName": "hotel_agreement",
+    "databaseName": "ai"
   },
   "status": "success"
 }
@@ -752,13 +755,14 @@ POST `/sql/text2sql`
 
 状态码 **200**
 
-| 名称           | 类型      | 必选   | 说明      |
-|--------------|---------|------|---------|
-| » status     | string  | true | 返回的结果状态 |
-| » data       | object  | true | 返回内容    |
-| »» sql       | string  | true | 生成的SQL语句 |
-| »» demand    | string  | true | 用户需求    |
-| »» tableName | string  | true | 用户选定的表名 |
+| 名称               | 类型     | 必选    | 说明        |
+|------------------|--------|-------|-----------|
+| » status         | string | true  | 返回的结果状态   |
+| » data           | object | true  | 返回内容      |
+| »» sql           | string | true  | 生成的SQL语句  |
+| »» demand        | string | true  | 用户需求      |
+| »» tableName     | string | true  | 用户选定的表名   |
+| »» databaseName  | string | false | 用户选定的数据库名 |
 
 ## SQL生成文本
 
@@ -772,18 +776,20 @@ POST `/sql/sql2text`
 {
   "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
   "demand": "帮我查一下京伦饭店的情况",
-  "tableName": "hotel_agreement"
+  "tableName": "hotel_agreement",
+  "databaseName": "ai"
 }
 ```
 
 ### 请求参数
 
-| 名称          | 位置  | 类型    | 必选     | 说明   |
-|-------------|------|---------|--------|------|
-| body        | body | object  | 否      | none |
-| » sql       | body | string  | true   | 生成的SQL语句 |
-| » demand    | body | string  | 是      | 用户需求   |
-| » tableName | body | string  | 是      | 用户选定的表名   |
+| 名称              | 位置  | 类型    | 必选 | 说明   |
+|-----------------|------|---------|----|------|
+| body            | body | object  | 否  | none |
+| » sql           | body | string  | 是  | 生成的SQL语句 |
+| » demand        | body | string  | 是  | 用户需求   |
+| » tableName     | body | string  | 是  | 用户选定的表名   |
+| » databaseName  | body | string  | 否  | 用户选定的数据库名 |
 
 ### 返回示例
 

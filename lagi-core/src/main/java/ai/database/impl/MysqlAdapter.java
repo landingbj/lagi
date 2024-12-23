@@ -1,29 +1,56 @@
 package ai.database.impl;
 
+import ai.common.pojo.Backend;
 import ai.config.ContextLoader;
 import ai.database.pojo.SQLJdbc;
 import ai.database.pojo.TableColumnInfo;
 
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MysqlAdapter {
     private static String driver;
     private static String url;
     private static String username;
     private static String password;
+    public static String model;
+    public MysqlAdapter(String databaseName){
+        if (databaseName!=null&&url!=null){
+            String regex = "jdbc:mysql://([^/]+)";
+
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(url);
+            String hostPort = "";
+            if (matcher.find()) {
+                hostPort = matcher.group(1);
+            } else {
+                System.out.println("No host and port found.");
+            }
+            url = "jdbc:mysql://" + hostPort + "/" + databaseName + "?useUnicode=true&characterEncoding=utf-8&useSSL=false";
+        }
+       }
+
+    public MysqlAdapter(){
+    }
 
     static {
-        SQLJdbc database = ContextLoader.configuration.getStores().getDatabase();
         try {
+            List<Backend> list = ContextLoader.configuration.getFunctions().getText2sql();
+            Backend maxBackend = list.stream()
+                    .filter(Backend::getEnable)
+                    .max(Comparator.comparingInt(Backend::getPriority)) .orElseThrow(() -> new NoSuchElementException("No enabled backends found"));
+            SQLJdbc database = ContextLoader.configuration.getStores().getDatabase().stream()
+                    .filter(sqlJdbc -> sqlJdbc.getName().equals(maxBackend.getBackend()))
+                    .findFirst()
+                    .orElseThrow(() -> new NoSuchElementException("Database not found"));
             driver = database.getDriverClassName();
             url = database.getJdbcUrl();
             username = database.getUsername();
             password = database.getPassword();
+            model = maxBackend.getModel();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -36,7 +63,7 @@ public class MysqlAdapter {
         Connection con = null;
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName(driver);
             con = DriverManager.getConnection(url,username,password);
         } catch (Exception e) {
             e.printStackTrace();

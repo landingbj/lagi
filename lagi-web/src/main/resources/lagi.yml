@@ -221,11 +221,11 @@ stores:
       enable: true
 
   database:
-    name: mysql
-    jdbcUrl: you-jdbc-url
-    driverClassName: com.mysql.cj.jdbc.Driver
-    username: your-username
-    password: your-password
+    - name: mysql
+      jdbcUrl: you-jdbc-url
+      driverClassName: com.mysql.cj.jdbc.Driver
+      username: your-username
+      password: your-password
 
   rag: # RAG enhances large language models by integrating external knowledge retrieval.
     vector: chroma
@@ -356,6 +356,12 @@ functions:
 
   doc2instruct:
     - backend: landing
+      model: cascade
+      enable: true
+      priority: 10
+
+  text2sql:
+    - backend: mysql
       model: cascade
       enable: true
       priority: 10

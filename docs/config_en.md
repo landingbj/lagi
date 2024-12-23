@@ -210,6 +210,12 @@ functions:
       model: cascade
       enable: true
       priority: 10
+  # SQL command configuration list
+  text2sql:
+    - backend: mysql # The name of the database configuration
+      model: qwen-turbo # Model name
+      enable: true 
+      priority: 10
 ```
 
 Routing policy configuration
