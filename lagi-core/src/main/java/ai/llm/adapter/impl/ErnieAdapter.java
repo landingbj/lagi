@@ -8,10 +8,12 @@ import ai.common.utils.MappingIterable;
 import ai.llm.utils.convert.ErnieConvert;
 import ai.openai.pojo.*;
 import ai.utils.qa.ChatCompletionUtil;
+import cn.hutool.core.bean.BeanUtil;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.core.auth.Auth;
 import com.baidubce.qianfan.model.chat.ChatRequest;
 import com.baidubce.qianfan.model.chat.ChatResponse;
+import com.baidubce.qianfan.model.chat.Function;
 import com.baidubce.qianfan.model.chat.Message;
 import io.reactivex.Observable;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +88,14 @@ public class ErnieAdapter extends ModelService implements ILlmAdapter {
         result.setMessages(messages);
         result.setTemperature(request.getTemperature() == 0.0 ? 0.7 : request.getTemperature());
         result.setMaxOutputTokens(request.getMax_tokens());
+        if(request.getTools() != null && (!request.getTools().isEmpty())) {
+            List<Function> functions = request.getTools().stream().map(tool -> {
+                Function function = new Function();
+                BeanUtil.copyProperties(tool, function);
+                return function;
+            }).collect(Collectors.toList());
+            result.setFunctions(functions);
+        }
         return result;
     }
 
