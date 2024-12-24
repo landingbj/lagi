@@ -115,16 +115,24 @@ function loadAgentList(pageNumber) {
                 const driverName = driverMap[agent.driver] || agent.driver; // 如果没有找到映射，则显示原值
 
                 let row = document.createElement('tr');
+
+                // 根据 publishStatus 决定按钮
+                let publishButton = agent.publishStatus
+                    ? `<button onclick="togglePublishStatus(${agent.id}, false)">取消发布</button>`
+                    : `<button onclick="togglePublishStatus(${agent.id}, true)">发布</button>`;
+
                 row.innerHTML = `
                     <td>${agent.name}</td>
-                    <td>${driverName}</td>  <!-- 显示翻译后的 driver -->
+                    <td>${driverName}</td>
                     <td>${agent.token}</td>
                     <td>${agent.appId}</td>
                     <td>${agent.isFeeRequired ? '是' : '否'}</td>
                     <td>${agent.isFeeRequired ? agent.pricePerReq : '0'}</td>
+                    <td>${agent.publishStatus ? '已发布' : '未发布'}</td> <!-- 发布状态 -->
                     <td>
                         <button onclick="editAgent(${agent.id})">编辑</button>
                         <button onclick="deleteAgent(${agent.id})">删除</button>
+                        ${publishButton} <!-- 根据发布状态显示按钮 -->
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -187,6 +195,46 @@ function editAgent(agentId) {
         });
 }
 
+// 切换发布状态（POST 请求）
+function togglePublishStatus(agentId, currentPublishStatus) {
+    // debugger
+    // 获取确认信息
+    const action = currentPublishStatus ? "发布" : "取消发布";
+    const confirmMessage = `确定要${action}该智能体吗？`;
+
+    // 弹出二次确认框
+    if (window.confirm(confirmMessage)) {
+        // 构造请求数据
+        const requestData = {
+            id: agentId,
+            publishStatus: currentPublishStatus  // 切换发布状态
+        };
+
+        // 发送 POST 请求到 /agent/updateLagiAgent 接口
+        fetch('/agent/updateLagiAgent', {
+            method: 'POST', // 使用 POST 请求
+            headers: {
+                'Content-Type': 'application/json' // 请求头设置为 JSON 格式
+            },
+            body: JSON.stringify(requestData) // 将请求数据转换为 JSON 字符串
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 如果更新成功，刷新智能体列表
+                    loadAgentList(1);  // 重新加载列表，传入当前页码 1 或者你想要的页码
+                } else {
+                    alert('发布状态更新失败');
+                }
+            })
+            .catch(error => {
+                console.error('发布状态更新失败', error);
+            });
+    } else {
+        console.log('操作已取消');
+    }
+}
+
 
 // 删除智能体
 function deleteAgent(agentId) {
@@ -211,7 +259,7 @@ const pageSize = 10;
 // 获取智能体列表并动态渲染到页面
 async function loadAgentMenu(pageNumber = 1) {
     try {
-        const response = await fetch(`/agent/getLagiAgentList?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+        const response = await fetch(`/agent/getLagiAgentList?pageNumber=${pageNumber}&pageSize=${pageSize}&publishStatus=true`);
         const data = await response.json();
 
         if (data.status === 'success' && data.data.length > 0) {
