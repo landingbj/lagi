@@ -231,7 +231,7 @@
                             <th>智能体Token</th>
                             <th>智能体App ID</th>
                             <th>是否收费</th>
-                            <th>每次请求收费</th>
+                            <th>每次请求收费(元)</th>
                             <th>操作</th>
                           </tr>
                           </thead>
@@ -284,14 +284,8 @@
                   <div class="flex w-full " id="queryBox">
                     <div id = "agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
                       <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 "  >
-                        <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center"></div>
-                        <ul id = "agent-tools" class="pb-2">
-                          <!-- <li class=" pl-5  " >社交圈</li>
-                          <li class=" pl-5  not-available" >视频流</li>
-                          <li class=" pl-5  not-available" >语音流</li>
-                          <li class=" pl-5  not-available">传感器</li>
-                          <li class=" pl-5  not-available">工控线</li> -->
-                          <!-- <li class=" pl-5 pb-2">工控线</li> -->
+                        <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center">选择智能体</div>
+                        <ul id = "agent-tools" class="pb-2" style="height: 200px; overflow: auto">
                         </ul>
                       </div>
                     </div>
@@ -329,7 +323,7 @@
                       <!-- bg-gray-900 -->
                       <button onclick="textQuery()" type="button" id="queryBtn"
                               class="absolute p-1 rounded-md text-gray-500 bottom-1.5 right-1 md:bottom-2.5 md:right-2 hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
-                        <img style="position: relative;height: 25px;top: 6px;" src="images/rj.png">
+                        <img style="position: relative;height: 25px;top: 1px;" src="images/rj.png">
                       </button>
                       <!-- ******************发送按钮关闭***************************** -->
                     </div>
@@ -461,7 +455,7 @@
         <input type="radio" id="isFeeRequiredNo" name="isFeeRequired" value="false" style="width: 1px; margin-bottom: -0.4em;" checked>
       </div>
       <div id="pricePerReqContainer" style="display: none;">
-        <label for="pricePerReq">每次请求收费：</label>
+        <label for="pricePerReq">每次请求收费(元)：</label>
         <input type="number" id="pricePerReq" step="0.01" min="0">
       </div>
       <button type="button" onclick="saveAgent()">保存</button>

@@ -10064,7 +10064,7 @@ a.active {
     padding: 10px;
     font-size: 16px;
     border: none;
-    background-color: #007bff;
+    background-color: #023f63;
     color: white;
     border-radius: 5px;
     cursor: pointer;
@@ -10099,7 +10099,7 @@ a.active {
 #agent-list-container button {
     font-size: 16px;
     border: none;
-    background-color: #007BFFFF;
+    background-color: #023f63;
     color: white;
     border-radius: 5px;
     cursor: pointer;
@@ -10171,7 +10171,7 @@ a.active {
 #agent-list-container button {
     font-size: 16px;
     border: none;
-    background-color: #007BFFFF;
+    background-color: #023f63;
     color: white;
     border-radius: 5px;
     cursor: pointer;
@@ -10233,7 +10233,7 @@ a.active {
 
 /* 设置表头的样式 */
 #agent-list thead {
-    background-color: #007BFFFF;  /* 设置表头背景色 */
+    background-color: #023f63;  /* 设置表头背景色 */
     color: white;  /* 设置表头文字颜色为白色 */
     text-align: center;  /* 表头文字居中 */
     font-weight: bold;  /* 表头文字加粗 */
@@ -10263,7 +10263,7 @@ a.active {
 
 /* 设置最后一列按钮的样式 */
 #agent-list .actions button {
-    background-color: #007BFFFF;  /* 按钮背景色 */
+    background-color: #023f63;  /* 按钮背景色 */
     color: white;  /* 按钮文字颜色 */
     border: none;  /* 去除按钮边框 */
     padding: 6px 12px;  /* 设置按钮内边距 */
@@ -10274,5 +10274,19 @@ a.active {
 
 /* 鼠标悬停在按钮上时的效果 */
 #agent-list .actions button:hover {
-    background-color: #007BFFFF;  /* 鼠标悬停时按钮颜色 */
+    background-color: #023f63;  /* 鼠标悬停时按钮颜色 */
+}
+
+/* CSS */
+.free-agent {
+    color: green; /* 免费的智能体使用绿色 */
+}
+
+.paid-agent {
+    color: red; /* 收费的智能体使用红色 */
+}
+
+/* CSS - 设置选中时的背景颜色 */
+.active-agent {
+    background-color: #c7e6f8; /* 可以根据需要修改为任何颜色 */
 }

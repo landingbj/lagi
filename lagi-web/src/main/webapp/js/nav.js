@@ -263,9 +263,7 @@ let promptNavs = [
     }
 ];
 
-if (!localStorage.getItem('userId')) {
-    promptNavs = promptNavs.filter(nav => nav.id !== 15);
-}
+
 
 function loadNavStatus() {
     $.ajax({
@@ -594,6 +592,10 @@ function getPromptDialog(id) {
     }
 
     if (id === 666) {
+        if (!getCookie('userId')) {
+            openModal();
+            return;
+        }
         $('#introduces').hide();
         $('#model-prefences').hide();
         $('#modelChoices').hide();

@@ -1,5 +1,13 @@
+// 页面加载时获取并渲染智能体列表
+document.addEventListener('DOMContentLoaded', () => {
+    loadAgentMenu(currentPage); // 初始加载第一页的智能体
+    const agentToolsElement = document.getElementById('agent-tools');
+    agentToolsElement.addEventListener('scroll', handleScroll); // 监听滚动事件
+});
+
+
 // 获取用户ID
-let globalUserId = localStorage.getItem('userId');
+let globalUserId = getCookie('userId');
 
 let currentAgentId = null; // 设定一个全局变量来标记当前的 agentId
 
@@ -11,11 +19,6 @@ const driverMap = {
     "ai.agent.chat.zhipu.ZhipuAgent": "智谱"
 };
 
-
-// 页面加载时加载智能体列表
-// window.onload = function () {
-//     loadAgentList(1);
-// }
 
 // 显示或隐藏收费输入框
 function handleFeeRequirementChange() {
@@ -183,7 +186,6 @@ function editAgent(agentId) {
 }
 
 
-
 // 删除智能体
 function deleteAgent(agentId) {
     if (confirm("确定要删除这个智能体吗？")) {
@@ -199,3 +201,106 @@ function deleteAgent(agentId) {
             });
     }
 }
+
+// 定义当前的页码和每页的大小
+let currentPage = 1;
+const pageSize = 10;
+
+// 获取智能体列表并动态渲染到页面
+async function loadAgentMenu(pageNumber = 1) {
+    try {
+        // 发起请求，获取智能体数据
+        const response = await fetch(`/agent/getLagiAgentList?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+        const data = await response.json();
+
+        if (data.status === 'success' && data.data.length > 0) {
+            const agentList = data.data;
+            const agentToolsElement = document.getElementById('agent-tools');
+
+            // 遍历智能体列表，生成菜单项
+            agentList.forEach(agent => {
+                const li = document.createElement('li');
+                li.classList.add('pl-5');
+                li.textContent = agent.name; // 显示智能体名称
+
+                // 使用 dataset 存储多个自定义属性
+                li.dataset.id = agent.id;
+                li.dataset.name = agent.name;
+                li.dataset.appId = agent.appId;
+                li.dataset.token = agent.token;
+                li.dataset.driver = agent.driver;
+                li.dataset.isFeeRequired = agent.isFeeRequired;
+                li.dataset.pricePerReq = agent.pricePerReq;
+                li.dataset.lagiUserId = agent.lagiUserId;  // 将 lagiUserId 存储在 dataset 中
+
+                // 根据 isFeeRequired 设置颜色（内联样式或类）
+                if (agent.isFeeRequired) {
+                    li.style.color = 'red';  // 收费的智能体使用红色
+                } else {
+                    li.style.color = 'green';  // 免费的智能体使用绿色
+                }
+
+                // 添加点击事件，激活背景色
+                li.addEventListener('click', function () {
+                    // 清除所有其他 li 元素的背景色
+                    const allLis = agentToolsElement.querySelectorAll('li');
+                    allLis.forEach(item => {
+                        item.classList.remove('active-agent'); // 移除其他 li 的激活背景
+                    });
+
+                    // 激活当前点击的 li 背景色
+                    li.classList.add('active-agent'); // 为当前点击的 li 添加激活样式
+
+                    // 检查是否为当前登录用户的智能体
+                    if (agent.lagiUserId !== globalUserId) {
+                        // 如果是收费的智能体，弹框提醒
+                        if (agent.isFeeRequired) {
+                            const price = agent.pricePerReq.toFixed(2); // 格式化为2位小数
+                            const userConfirmed = confirm(`该智能体是由其他用户发布的收费智能体，每次请求费用为 ¥${price} 元。是否继续使用？`);
+                            // 如果用户点击 "确认"，可以执行相关操作
+                            if (userConfirmed) {
+                                console.log("用户确认继续使用收费智能体");
+                                // 执行你的相关操作，比如向后台发送请求等
+                            } else {
+                                console.log("用户取消了收费智能体的使用");
+                            }
+                        }
+                    } else {
+                        // 如果是当前用户的智能体，可以直接处理
+                        console.log("这是当前用户的智能体，无需收费提示");
+                    }
+                });
+
+                // 将新的 <li> 添加到 <ul> 中
+                agentToolsElement.appendChild(li);
+            });
+        } else {
+            console.error('获取智能体列表失败或没有数据');
+        }
+    } catch (error) {
+        console.error('请求出错', error);
+    }
+}
+
+// 监听页面滚动事件，触发懒加载
+let isLoading = false;  // 控制是否正在加载数据
+function handleScroll() {
+    const agentToolsElement = document.getElementById('agent-tools');
+
+    // 如果已经在加载数据，直接返回
+    if (isLoading) return;
+
+    // 检查容器滚动是否到达底部
+    if (agentToolsElement.scrollHeight - agentToolsElement.scrollTop <= agentToolsElement.clientHeight) {
+        isLoading = true; // 标记为正在加载
+
+        // 加载下一页数据
+        currentPage++;
+        loadAgentMenu(currentPage).finally(() => {
+            isLoading = false; // 加载完成后恢复标记
+        });
+    }
+}
+
+
+

@@ -99,6 +99,8 @@ function authLoginCookie() {
 }
 
 
+
+
 function submitLogin() {
     const errorDiv = document.getElementById('login-error');
     const username = $('#login-username').val();
