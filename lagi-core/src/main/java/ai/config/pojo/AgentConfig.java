@@ -24,4 +24,5 @@ public class AgentConfig {
     private String endpoint;
     private Boolean isFeeRequired;
     private BigDecimal pricePerReq;
+    private Boolean publishStatus;
 }

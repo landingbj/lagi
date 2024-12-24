@@ -38,6 +38,8 @@ public class AgentServlet extends BaseServlet {
             this.getLagiAgent(req, resp);
         } else if (method.equals("getAgentChargeDetail")) {
             this.getAgentChargeDetail(req, resp);
+        } else if (method.equals("getPaidAgentByUser")) {
+            this.getPaidAgentByUser(req, resp);
         }
     }
 
@@ -87,6 +89,13 @@ public class AgentServlet extends BaseServlet {
         String lagiUserId = req.getParameter("lagiUserId");
         LagiAgentListResponse lagiAgentResponse = agentService.getLagiAgentList(lagiUserId, pageNumber, pageSize);
         responsePrint(resp, gson.toJson(lagiAgentResponse));
+    }
+
+    private void getPaidAgentByUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String lagiUserId = req.getParameter("lagiUserId");
+        LagiAgentExpenseListResponse response = agentService.getPaidAgentByUser(lagiUserId);
+        responsePrint(resp, gson.toJson(response));
     }
 
     private void addLagiAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
