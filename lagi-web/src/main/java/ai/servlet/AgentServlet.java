@@ -87,7 +87,8 @@ public class AgentServlet extends BaseServlet {
         int pageNumber = Integer.parseInt(req.getParameter("pageNumber"));
         int pageSize = Integer.parseInt(req.getParameter("pageSize"));
         String lagiUserId = req.getParameter("lagiUserId");
-        LagiAgentListResponse lagiAgentResponse = agentService.getLagiAgentList(lagiUserId, pageNumber, pageSize);
+        String publishStatus = req.getParameter("publishStatus");
+        LagiAgentListResponse lagiAgentResponse = agentService.getLagiAgentList(lagiUserId, pageNumber, pageSize, publishStatus);
         responsePrint(resp, gson.toJson(lagiAgentResponse));
     }
 

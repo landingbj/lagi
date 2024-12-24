@@ -36,10 +36,13 @@ public class AgentService {
         return response;
     }
 
-    public LagiAgentListResponse getLagiAgentList(String lagiUserId, int pageNumber, int pageSize) throws IOException {
+    public LagiAgentListResponse getLagiAgentList(String lagiUserId, int pageNumber, int pageSize, String publishStatus) throws IOException {
         Map<String, String> params = new HashMap<>();
         if (lagiUserId != null) {
             params.put("lagiUserId", lagiUserId);
+        }
+        if (publishStatus != null) {
+            params.put("publishStatus", publishStatus);
         }
         params.put("pageNumber", String.valueOf(pageNumber));
         params.put("pageSize", String.valueOf(pageSize));
