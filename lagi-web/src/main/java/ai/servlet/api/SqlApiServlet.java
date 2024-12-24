@@ -56,7 +56,7 @@ public class SqlApiServlet extends BaseServlet {
         TextToSqlRequest qaRequest = gson.fromJson(jsonString, TextToSqlRequest.class);
 
         String demand = qaRequest.getDemand();
-        String out = toSql(demand,qaRequest.getTable(),qaRequest.getDatabaseName(),qaRequest.getStorage());
+        String out = toSql(demand,qaRequest.getTables(),qaRequest.getDatabaseName(),qaRequest.getStorage());
         //   System.out.println("out1的回答是："+out);
         String outcome =  extractContentWithinBraces(out);
         qaRequest.setText(out);
@@ -90,7 +90,7 @@ public class SqlApiServlet extends BaseServlet {
                     list = new ArrayList<>();
                 }
 
-                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTable(),qaRequest.getDatabaseName(),qaRequest.getStorage());
+                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTables(),qaRequest.getDatabaseName(),qaRequest.getStorage());
 
                 result.put("status", "success");
                 result.put("data", msg);

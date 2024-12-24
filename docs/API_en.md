@@ -715,19 +715,19 @@ Select a table and enter the requirements to generate an executable SQL statemen
 ```json
 {
   "demand":"帮我查一下京伦饭店的情况",
-  "table":"ai.hotel_agreement",
+  "tables":"ai.hotel_agreement",
   "storage": "mysql"
 }
 ```
 
 ### Request Parameters
 
-| Name       | Position  | Type       | Required | Description                                                                                                                                                                 |
-|------------|-----------|------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| body       | body      | object     | true     | none                                                                                                                                                                        |
-| » demand   | body      | string     | true     | User needs                                                                                                                                                                  |
-| » table    | body      | string     | true     | The table(s) selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
-| » storage  | body      | string     | true     | The name of the storage selected by the user                                                                                                                                |
+| Name      | Position  | Type       | Required | Description                                                                                                                                                               |
+|-----------|-----------|------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| body      | body      | object     | true     | none                                                                                                                                                                      |
+| » demand  | body      | string     | true     | User needs                                                                                                                                                                |
+| » tables  | body      | string     | true     | The tables selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
+| » storage | body      | string     | true     | The name of the storage selected by the user                                                                                                                              |
 
 ### Return example
 
@@ -738,7 +738,7 @@ Select a table and enter the requirements to generate an executable SQL statemen
   "data": {
     "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
     "demand": "帮我查一下京伦饭店的情况",
-    "table": "ai.hotel_agreement",
+    "tables": "ai.hotel_agreement",
     "storage": "mysql"
   },
   "status": "success"
@@ -755,14 +755,14 @@ Select a table and enter the requirements to generate an executable SQL statemen
 
 Status Code **200**
 
-| Name        | Type    | Required | Description                                                                                                                                                                 |
-|-------------|---------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| » status    | string  | true     | Status of the result                                                                                                                                                        |
-| » data      | object  | true     | Return to content                                                                                                                                                           |
-| »» sql      | string  | true     | The generated SQL statement                                                                                                                                                 |
-| »» demand   | string  | true     | User needs                                                                                                                                                                  |
-| »» table    | string  | true     | The table(s) selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
-| »» storage  | string  | true     | The name of the storage selected by the user                                                                                                                                |
+| Name       | Type    | Required | Description                                                                                                                                                               |
+|------------|---------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| » status   | string  | true     | Status of the result                                                                                                                                                      |
+| » data     | object  | true     | Return to content                                                                                                                                                         |
+| »» sql     | string  | true     | The generated SQL statement                                                                                                                                               |
+| »» demand  | string  | true     | User needs                                                                                                                                                                |
+| »» tables  | string  | true     | The tables selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
+| »» storage | string  | true     | The name of the storage selected by the user                                                                                                                              |
 
 ## SQL to text
 
@@ -776,20 +776,20 @@ Enter the SQL query text information generated by entering the text.
 {
   "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
   "demand": "帮我查一下京伦饭店的情况",
-  "table": "ai.hotel_agreement",
+  "tables": "ai.hotel_agreement",
   "storage": "mysql"
 }
 ```
 
 ### Request parameters
 
-| Name       | Position   | Type       | Required | Description                                                                                                                                                                 |
-|------------|------------|------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| body       | body       | object     | false    | none                                                                                                                                                                        |
-| » sql      | body       | string     | ture     | The generated SQL statement                                                                                                                                                 |
-| » demand   | body       | string     | ture     | User needs                                                                                                                                                                  |
-| » table    | body       | string     | ture     | The table(s) selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
-| » storage  | body       | string     | ture     | The name of the storage selected by the user                                                                                                                                |
+| Name      | Position   | Type       | Required | Description                                                                                                                                                               |
+|-----------|------------|------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| body      | body       | object     | false    | none                                                                                                                                                                      |
+| » sql     | body       | string     | ture     | The generated SQL statement                                                                                                                                               |
+| » demand  | body       | string     | ture     | User needs                                                                                                                                                                |
+| » tables  | body       | string     | ture     | The tables selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
+| » storage | body       | string     | ture     | The name of the storage selected by the user                                                                                                                              |
 
 ### Return example
 

@@ -715,7 +715,7 @@ POST `/sql/text2sql`
 ```json
 {
   "demand":"帮我查一下京伦饭店的情况",
-  "table":"ai.hotel_agreement",
+  "tables":"ai.hotel_agreement",
   "storage": "mysql"
 }
 ```
@@ -723,11 +723,11 @@ POST `/sql/text2sql`
 ### 请求参数
 
 | 名称        | 位置  | 类型     | 必选 | 说明                                                                  |
-|------------|------|---------|----|---------------------------------------------------------------------|
-| body       | body | object  | 否  | none                                                                |
-| » demand   | body | string  | 是  | 用户需求                                                                |
-| » table    | body | string  | 是  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library)   |
-| » storage  | body | string  | 是  | 数据库配置名称                                                             |      
+|-----------|------|---------|----|---------------------------------------------------------------------|
+| body      | body | object  | 否  | none                                                                |
+| » demand  | body | string  | 是  | 用户需求                                                                |
+| » tables  | body | string  | 是  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library)   |
+| » storage | body | string  | 是  | 数据库配置名称                                                             |      
 
 ### 返回示例
 
@@ -738,7 +738,7 @@ POST `/sql/text2sql`
   "data": {
     "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
     "demand": "帮我查一下京伦饭店的情况",
-    "table": "ai.hotel_agreement",
+    "tables": "ai.hotel_agreement",
     "storage": "mysql"
   },
   "status": "success"
@@ -755,14 +755,14 @@ POST `/sql/text2sql`
 
 状态码 **200**
 
-| 名称          | 类型       | 必选    | 说明                                                      |
-|-------------|----------|-------|---------------------------------------------------------|
-| » status    | string   | true  | 返回的结果状态                                                 |
-| » data      | object   | true  | 返回内容                                                    |
-| »» sql      | string   | true  | 生成的SQL语句                                                |
-| »» demand   | string   | true  | 用户需求                                                    |
-| »» table    | string   | true  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library) |
-| »» storage  | string   | true  | 数据库配置名称                                                 |   
+| 名称         | 类型       | 必选    | 说明                                                      |
+|------------|----------|-------|---------------------------------------------------------|
+| » status   | string   | true  | 返回的结果状态                                                 |
+| » data     | object   | true  | 返回内容                                                    |
+| »» sql     | string   | true  | 生成的SQL语句                                                |
+| »» demand  | string   | true  | 用户需求                                                    |
+| »» tables  | string   | true  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library) |
+| »» storage | string   | true  | 数据库配置名称                                                 |   
 
 ## SQL生成文本
 
@@ -776,20 +776,20 @@ POST `/sql/sql2text`
 {
   "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
   "demand": "帮我查一下京伦饭店的情况",
-  "table": "ai.hotel_agreement",
+  "tables": "ai.hotel_agreement",
   "storage": "mysql"
 }
 ```
 
 ### 请求参数
 
-| 名称         | 位置  | 类型    | 必选 | 说明                                                                  |
-|------------|------|---------|----|---------------------------------------------------------------------|
-| body       | body | object  | 否  | none                                                                |
-| » sql      | body | string  | 是  | 生成的SQL语句                                                            |
-| » demand   | body | string  | 是  | 用户需求                                                                |
-| » table    | body | string  | 是  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library)   |
-| » storage  | body | string  | 是  | 数据库配置名称                                                             |
+| 名称        | 位置  | 类型    | 必选 | 说明                                                                  |
+|-----------|------|---------|----|---------------------------------------------------------------------|
+| body      | body | object  | 否  | none                                                                |
+| » sql     | body | string  | 是  | 生成的SQL语句                                                            |
+| » demand  | body | string  | 是  | 用户需求                                                                |
+| » tables  | body | string  | 是  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library)   |
+| » storage | body | string  | 是  | 数据库配置名称                                                             |
 
 ### 返回示例
 
