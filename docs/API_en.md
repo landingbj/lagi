@@ -1,67 +1,3 @@
-# API Documentation
-
-## Start Lag[i] (Landing AGI)
-
-### 1.Configure yml files
-
-Modify [`src/main/resources/lagi.yml`](../lagi-web/src/main/resources/lagi.yml) configuration file, select the model you like, will be one of the major language model your - API - key information such as the replacement for your own key, And set the 'enable' field of the enabled model to 'true' as needed. See the [configuration documentation](config_en.md) for details.
-
-***Take kimi：***
-
-Fill in the model information and enable the model, changing enable to true.
-
-```yaml
-  - name: kimi
-    type: Moonshot
-    enable: true
-    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
-    driver: ai.llm.adapter.impl.MoonshotAdapter
-    api_key: your-api-key 
-```
-
-Depending on your needs, set the mode stream and the priority of the model output, the higher the priority.
-
-```yaml
-  chat:
-    - backend: doubao
-      model: doubao-pro-4k
-      enable: true
-      stream: true
-      priority: 160
-
-    - backend: kimi
-      model: moonshot-v1-8k
-      enable: true
-      stream: true
-      priority: 150
-```
-
-### 2.import dependencies
-
-To call the lag[i] (Landing AGI) API, you need to import the dependencies, which you can import via maven or directly by importing the jar.
-
-***Take maven：***
-
-Use maven to download the dependency execution command.
-
-```shell
-mvn clean install
-```
-
-### 3.Starting the web service
-
-You can choose to use the maven command-line tool for wrapping, or run it through a popular integrated development environment (IDE) such as IntelliJ IDEA. Make sure your JDK version meets at least 8.
-
-***Take maven packaging：***
-
-Use the maven command to wrap the project, which will generate a war file in the 'target' directory.
-
-```shell
-mvn package
-```
-
-Deploy the generated war package to the Tomcat server. After starting Tomcat, you can view the Lag[i] (Landing AGI) page by visiting the corresponding port in your browser.
-
 ## Completions Interface
 
 POST `/chat/completions`
@@ -779,17 +715,19 @@ Select a table and enter the requirements to generate an executable SQL statemen
 ```json
 {
   "demand":"帮我查一下京伦饭店的情况",
-  "tableName":"hotel_agreement"
+  "tables":"ai.hotel_agreement",
+  "storage": "mysql"
 }
 ```
 
 ### Request Parameters
 
-| Name        | Position  | Type       | Required     | Description                                |
-|-------------|-----------|------------|--------------|--------------------------------------------|
-| body        | body      | object     | true         | none                                       |
-| » demand    | body      | string     | true         | User needs                                 |
-| » tableName | body      | string     | true         | The name of the table selected by the user |
+| Name      | Position  | Type       | Required | Description                                                                                                                                                               |
+|-----------|-----------|------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| body      | body      | object     | true     | none                                                                                                                                                                      |
+| » demand  | body      | string     | true     | User needs                                                                                                                                                                |
+| » tables  | body      | string     | true     | The tables selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
+| » storage | body      | string     | true     | The name of the storage selected by the user                                                                                                                              |
 
 ### Return example
 
@@ -800,7 +738,8 @@ Select a table and enter the requirements to generate an executable SQL statemen
   "data": {
     "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
     "demand": "帮我查一下京伦饭店的情况",
-    "tableName": "hotel_agreement"
+    "tables": "ai.hotel_agreement",
+    "storage": "mysql"
   },
   "status": "success"
 }
@@ -816,13 +755,14 @@ Select a table and enter the requirements to generate an executable SQL statemen
 
 Status Code **200**
 
-| Name         | Type    | Required  | Description                                |
-|--------------|---------|-----------|--------------------------------------------|
-| » status     | string  | true      | Status of the result                       |
-| » data       | object  | true      | Return to content                          |
-| »» sql       | string  | true      | The generated SQL statement                |
-| »» demand    | string  | true      | User needs                                 |
-| »» tableName | string  | true      | The name of the table selected by the user |
+| Name       | Type    | Required | Description                                                                                                                                                               |
+|------------|---------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| » status   | string  | true     | Status of the result                                                                                                                                                      |
+| » data     | object  | true     | Return to content                                                                                                                                                         |
+| »» sql     | string  | true     | The generated SQL statement                                                                                                                                               |
+| »» demand  | string  | true     | User needs                                                                                                                                                                |
+| »» tables  | string  | true     | The tables selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
+| »» storage | string  | true     | The name of the storage selected by the user                                                                                                                              |
 
 ## SQL to text
 
@@ -836,18 +776,20 @@ Enter the SQL query text information generated by entering the text.
 {
   "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
   "demand": "帮我查一下京伦饭店的情况",
-  "tableName": "hotel_agreement"
+  "tables": "ai.hotel_agreement",
+  "storage": "mysql"
 }
 ```
 
 ### Request parameters
 
-| Name        | Position   | Type       | Required   | Description                                 |
-|-------------|------------|------------|------------|---------------------------------------------|
-| body        | body       | object     | 否          | none                                        |
-| » sql       | body       | string     | 是          | The generated SQL statement                 |
-| » demand    | body       | string     | 是          | User needs                                  |
-| » tableName | body       | string     | 是          | The name of the table selected by the user  |
+| Name      | Position   | Type       | Required | Description                                                                                                                                                               |
+|-----------|------------|------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| body      | body       | object     | false    | none                                                                                                                                                                      |
+| » sql     | body       | string     | ture     | The generated SQL statement                                                                                                                                               |
+| » demand  | body       | string     | ture     | User needs                                                                                                                                                                |
+| » tables  | body       | string     | ture     | The tables selected by the user, multiple tables are concatenated with commas (naming convention: database name.table name, for example: ai.hotel_agreement, ai.library)  |
+| » storage | body       | string     | ture     | The name of the storage selected by the user                                                                                                                              |
 
 ### Return example
 

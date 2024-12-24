@@ -6,17 +6,17 @@ import ai.config.ContextLoader;
 import ai.image.pojo.ImageEnhanceRequest;
 import ai.image.service.AllImageService;
 import ai.llm.service.CompletionsService;
-import ai.openai.pojo.ChatCompletionChoice;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.openai.pojo.ChatMessage;
+import ai.openai.pojo.*;
 import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
+import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Demo {
@@ -279,9 +279,60 @@ public class Demo {
         System.out.println("outcome:" + videoGenerationResult.getData());
     }
 
+
+    public static void functionCall(){
+        //mock request
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.3);
+        chatCompletionRequest.setMax_tokens(1024);
+        ChatMessage message = new ChatMessage();
+        message.setRole("user");
+        message.setContent("编程判断 3214567 是否是素数。");
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+
+        Tool tool = new Tool();
+        tool.setType("function");
+        Function function = new Function();
+        tool.setFunction(function);
+
+        function.setName("CodeRunner");
+        function.setDescription("代码执行器，支持运行 python 和 javascript 代码");
+        Parameters parameters = new Parameters();
+        parameters.setType("object");
+        Map<String, Property> properties = new HashMap<>();
+        
+        Property property1 = new Property();
+        property1.setEnums(Lists.newArrayList("python", "javascript"));
+        property1.setType("string");
+        properties.put("language", property1);
+
+        Property property2 = new Property();
+        property2.setDescription("代码写在这里");
+        property2.setType("string");
+        properties.put("code", property2);
+
+        parameters.setProperties(properties);
+        function.setParameters(parameters);
+        chatCompletionRequest.setTools(Lists.newArrayList(tool));
+
+        // Set the stream parameter to false
+        chatCompletionRequest.setStream(false);
+
+        System.out.println("request:" + JSONUtil.toJsonStr(chatCompletionRequest));
+
+        // Create an instance of CompletionsService
+        CompletionsService completionsService = new CompletionsService();
+        // Call the completions method to process the chat completion request
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+
+        // Print the content of the first completion choice
+//        System.out.println("outcome:" + result.getChoices().get(0).getMessage().getContent());
+        System.out.println("outcome:" + JSONUtil.toJsonStr(result));
+    }
+
     public static void main(String[] args) {
          //completions example
-         chat();
+//         chat();
 
         //streamCompletions example
         //streamChat();
@@ -309,6 +360,8 @@ public class Demo {
 
         //Video enhance example
         //enhanceVideo();
+
+        functionCall();
 
     }
 

@@ -17,5 +17,5 @@ public class StoreConfig {
     @JsonProperty("text")
     private List<BigdataConfig> bigdata;
     private Medusa medusa;
-    private SQLJdbc database;
+    private List<SQLJdbc> database;
 }

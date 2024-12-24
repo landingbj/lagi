@@ -210,6 +210,12 @@ functions:
       model: cascade
       enable: true
       priority: 10
+  # SQL command configuration list
+  text2sql:
+    - backend: landing
+      model: cascade
+      enable: true 
+      priority: 10
 ```
 
 Routing policy configuration

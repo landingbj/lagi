@@ -36,8 +36,8 @@ public class RestfulServlet extends BaseServlet {
      */
     private static final long serialVersionUID = 1L;
 
-    private static Map<String, Method> registerGetMethod = new ConcurrentHashMap<>();
-    private static Map<String, Method> registerPostMethod = new ConcurrentHashMap<>();
+    private Map<String, Method> registerGetMethod = new ConcurrentHashMap<>();
+    private Map<String, Method> registerPostMethod = new ConcurrentHashMap<>();
 
     @Override
     public void init() throws ServletException {

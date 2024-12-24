@@ -204,11 +204,17 @@ functions:
       model: ocr
       enable: true
       priority: 10
-  # 文件指令配置表
+  # 文件指令配置列表
   doc2instruct:
     - backend: landing
       model: cascade
       enable: true
+      priority: 10
+  # sql指令配置表
+  text2sql:
+    - backend: landing
+      model: qwen-turbo # 模型名称
+      enable: true # 是否启用
       priority: 10
 ```
 

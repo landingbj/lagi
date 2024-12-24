@@ -1,67 +1,3 @@
-# API 接口文档
-
-## 启动 Lag[i] (联基)
-
-### 1.配置yml文件
-
-修改[`src/main/resources/lagi.yml`](../lagi-web/src/main/resources/lagi.yml)配置文件，选择您喜欢的模型，将其中的大语言模型your-api-key等信息替换为您自己的密钥，并根据需要将启用的模型的`enable`字段设置为`true`。详细的配置方法可参见[配置文档](config_zh.md)。
-
-***以配置kimi为列：***
-
-填入模型信息并开启模型,修改enable设置为true。
-
-```yaml
-  - name: kimi
-    type: Moonshot
-    enable: true
-    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
-    driver: ai.llm.adapter.impl.MoonshotAdapter
-    api_key: your-api-key  
-```
-
-根据您的需求，设置模型输出的方式stream和优先级priority，值越大优先级越高。
-
-```yaml
-  chat:
-    - backend: doubao
-      model: doubao-pro-4k
-      enable: true
-      stream: true
-      priority: 160
-
-    - backend: kimi
-      model: moonshot-v1-8k
-      enable: true
-      stream: true
-      priority: 150
-```
-
-### 2.引入依赖
-
-调用lag[i] (联基) 相关API接口需引入依赖，您可以通过maven引入或直接导入jar的方式。
-
-***以maven引入为例：***
-
-使用maven下载依赖执行命令。
-
-```shell
-mvn clean install
-```
-
-### 3.启动web服务。
-
-您可以选择使用maven命令行工具进行封包，或者通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。请确保您的JDK版本至少满足8的要求。
-
-***以maven命令行工具封包为例：***
-
-使用maven命令进行项目封包，封包完成后将会在`target`目录下生成一个war文件。
-
-```shell
-mvn package
-```
-
-将生成的war包部署到Tomcat服务器中。启动Tomcat后，通过浏览器访问对应的端口，即可查看Lag[i] (联基) 的具体页面。
-
 ## 问答接口
 
 POST `/chat/completions`
@@ -779,17 +715,19 @@ POST `/sql/text2sql`
 ```json
 {
   "demand":"帮我查一下京伦饭店的情况",
-  "tableName":"hotel_agreement"
+  "tables":"ai.hotel_agreement",
+  "storage": "mysql"
 }
 ```
 
 ### 请求参数
 
-| 名称          | 位置  | 类型      | 必选    | 说明   |
-|-------------|------|---------|--------|------|
-| body        | body | object  | 否      | none |
-| » demand    | body | string  | 是      | 用户需求   |
-| » tableName | body | string  | 是      | 用户选定的表名   |
+| 名称        | 位置  | 类型     | 必选 | 说明                                                                  |
+|-----------|------|---------|----|---------------------------------------------------------------------|
+| body      | body | object  | 否  | none                                                                |
+| » demand  | body | string  | 是  | 用户需求                                                                |
+| » tables  | body | string  | 是  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library)   |
+| » storage | body | string  | 是  | 数据库配置名称                                                             |      
 
 ### 返回示例
 
@@ -800,7 +738,8 @@ POST `/sql/text2sql`
   "data": {
     "sql": "SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%';",
     "demand": "帮我查一下京伦饭店的情况",
-    "tableName": "hotel_agreement"
+    "tables": "ai.hotel_agreement",
+    "storage": "mysql"
   },
   "status": "success"
 }
@@ -816,13 +755,14 @@ POST `/sql/text2sql`
 
 状态码 **200**
 
-| 名称           | 类型      | 必选   | 说明      |
-|--------------|---------|------|---------|
-| » status     | string  | true | 返回的结果状态 |
-| » data       | object  | true | 返回内容    |
-| »» sql       | string  | true | 生成的SQL语句 |
-| »» demand    | string  | true | 用户需求    |
-| »» tableName | string  | true | 用户选定的表名 |
+| 名称         | 类型       | 必选    | 说明                                                      |
+|------------|----------|-------|---------------------------------------------------------|
+| » status   | string   | true  | 返回的结果状态                                                 |
+| » data     | object   | true  | 返回内容                                                    |
+| »» sql     | string   | true  | 生成的SQL语句                                                |
+| »» demand  | string   | true  | 用户需求                                                    |
+| »» tables  | string   | true  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library) |
+| »» storage | string   | true  | 数据库配置名称                                                 |   
 
 ## SQL生成文本
 
@@ -836,18 +776,20 @@ POST `/sql/sql2text`
 {
   "sql": " SELECT * FROM hotel_agreement WHERE hotel_name LIKE '%京伦饭店%'; ",
   "demand": "帮我查一下京伦饭店的情况",
-  "tableName": "hotel_agreement"
+  "tables": "ai.hotel_agreement",
+  "storage": "mysql"
 }
 ```
 
 ### 请求参数
 
-| 名称          | 位置  | 类型    | 必选     | 说明   |
-|-------------|------|---------|--------|------|
-| body        | body | object  | 否      | none |
-| » sql       | body | string  | true   | 生成的SQL语句 |
-| » demand    | body | string  | 是      | 用户需求   |
-| » tableName | body | string  | 是      | 用户选定的表名   |
+| 名称        | 位置  | 类型    | 必选 | 说明                                                                  |
+|-----------|------|---------|----|---------------------------------------------------------------------|
+| body      | body | object  | 否  | none                                                                |
+| » sql     | body | string  | 是  | 生成的SQL语句                                                            |
+| » demand  | body | string  | 是  | 用户需求                                                                |
+| » tables  | body | string  | 是  | 用户选定的表,多表之间用逗号拼接(命名规则：数据库名.数据表名 例如：ai.hotel_agreement,ai.library)   |
+| » storage | body | string  | 是  | 数据库配置名称                                                             |
 
 ### 返回示例
 

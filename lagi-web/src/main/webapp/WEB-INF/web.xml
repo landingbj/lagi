@@ -290,6 +290,17 @@
         <url-pattern>/sql/*</url-pattern>
     </servlet-mapping>
 
+
+    <servlet>
+        <servlet-name>SkillMapApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.SkillMapApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SkillMapApiServlet</servlet-name>
+        <url-pattern>/skill/*</url-pattern>
+    </servlet-mapping>
+
+
     <servlet>
         <servlet-name>agent</servlet-name>
         <servlet-class>ai.servlet.AgentServlet</servlet-class>
