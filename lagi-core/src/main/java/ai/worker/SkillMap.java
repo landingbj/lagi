@@ -10,6 +10,8 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.qa.ChatCompletionUtil;
+import ai.worker.pojo.AgentIntentScore;
+import ai.worker.pojo.IntentResponse;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -112,18 +114,6 @@ public class SkillMap {
 
     private final Gson gson = new Gson();
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    @Builder
-    static class AgentIntentScore {
-        private String agentId;
-        private String agentName;
-        private String keyword;
-        private String question;
-        private Double score;
-    }
 
     private static String intent_prompt_template = "当用户向系统提问时，你需要首先对问题进行自然语言处理（NLP）。通过NLP技术，你的任务是理解用户的意图，识别问题中的关键词，并将问题进行分类。具体步骤如下：\n" +
             "\n" +
@@ -221,7 +211,7 @@ public class SkillMap {
         return res;
     }
 
-    private List<AgentIntentScore> getAgentIntentScoreByIntentKeyword(List<String> keywords) {
+    public List<AgentIntentScore> getAgentIntentScoreByIntentKeyword(List<String> keywords) {
         if(keywords == null || keywords.isEmpty()) {
             return Collections.emptyList();
         }
@@ -337,6 +327,11 @@ public class SkillMap {
         return similarity[0];
     }
 
+    public IntentResponse intentDetect(ChatCompletionRequest chatCompletionRequest) {
+        String question = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1).getContent();
+        return intentDetect(question);
+    }
+
     public IntentResponse intentDetect(String question) {
         for (int i = 0;i < maxTry; i++) {
             try {
@@ -357,17 +352,6 @@ public class SkillMap {
     static
     class ScoreResponse {
         private Double score;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    @Builder
-    static
-    class IntentResponse {
-        private String intent;
-        private List<String> keywords;
     }
 
     public Double scoring(String question, String answer) {
