@@ -221,7 +221,7 @@
                       <!-- 智能体列表开始 -->
                       <div class="agent-list-container" class="w-full" id="agent-list-container">
 
-                        <button onclick="openAgentModal()">发布智能体</button>
+                        <button onclick="openAgentModal()">新增智能体</button>
                         <%--                        <span class="close-btn" onclick="closeAgentList()">&times;</span>--%>
                         <table id="agent-list" border="1">
                           <thead>
@@ -464,6 +464,23 @@
 </div>
 <!-- 新增/编辑智能体弹窗结束 -->
 
+<!-- 微信支付弹窗开始 -->
+<div id="wechat_pay_qr" style="display: none;">
+  <div class="qrCodeDiv">
+    <div class="qrDiv">
+      <img id="qrCode" src="" />
+    </div>
+    <div id="wechatTitle">
+      <img class="wechat_logo" src="images/wechat_logo.png" />
+      <div class="wechat_label">
+        微信支付 <span id="payAmount" class="orangeFont"></span> 元
+      </div>
+    </div>
+    <!-- 添加取消支付按钮 -->
+    <button id="cancelPaymentBtn" onclick="cancelPayment()">取消支付</button>
+  </div>
+</div>
+<!-- 微信支付弹窗结束 -->
 
 
 <!-- mobile debug 插件 -->
