@@ -10290,3 +10290,77 @@ a.active {
 .active-agent {
     background-color: #c7e6f8; /* 可以根据需要修改为任何颜色 */
 }
+
+/* 弹框背景覆盖全屏 */
+#wechat_pay_qr {
+    display: none; /* 初始不显示 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    z-index: 9999;
+}
+
+/* 弹框内容 */
+.qrCodeDiv {
+    background: white;
+    padding: 20px;
+    width: auto;
+    max-width: 400px;  /* 最大宽度限制 */
+    min-width: 300px;  /* 最小宽度限制 */
+    text-align: center;
+    border-radius: 10px; /* 圆角 */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+}
+
+/* 二维码图片样式 */
+#qrCode {
+    width: 100%;
+    height: 100%;
+    max-width: 300px; /* 限制二维码最大宽度 */
+    margin-bottom: 20px;
+}
+
+/* 微信支付标题样式 */
+#wechatTitle {
+    text-align: center;
+    margin: 10px 0 0;
+}
+
+.wechat_logo {
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.wechat_label {
+    font-size: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#payAmount {
+    color: #FF8C00;
+}
+
+/* 取消支付按钮样式 */
+#cancelPaymentBtn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#cancelPaymentBtn:hover {
+    background-color: #e04343;
+}
+
+
