@@ -9,7 +9,7 @@ import lombok.*;
 public class SqlToTextRequest {
     private String sql;
     private String demand;
-    private String tableName;
-    private String databaseName;
-    private String storageName;
+    private String table;
+    private String databaseName;//弃用
+    private String storage;
 }

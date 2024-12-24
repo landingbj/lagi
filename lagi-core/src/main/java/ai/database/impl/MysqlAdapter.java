@@ -192,7 +192,11 @@ public class MysqlAdapter {
                 list.add(rowMap);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            Map<String, Object> rowMap = new HashMap<>();
+            rowMap.put("error", e.getMessage());
+            list.add(rowMap);
+            return list;
         } finally {
             close(con, pre, res);
         }
@@ -290,37 +294,40 @@ public class MysqlAdapter {
      * @param tableName
      */
     public List<TableColumnInfo> getTableColumnInfo(String tableName) {
+        String[] tableNames = tableName.split("[,，]");
         ResultSet resultSet = null;
         Connection con = null;
         List<TableColumnInfo> columnInfos = new ArrayList<>();
-        try {
-            con = getCon();
-            DatabaseMetaData metaData = con.getMetaData();
-            resultSet = metaData.getColumns(null, null, tableName, null);
+        for (String table : tableNames) {
+            try {
+                con = getCon();
+                DatabaseMetaData metaData = con.getMetaData();
+                String[] catalogs = table.split("[。.]");
+                resultSet = metaData.getColumns(catalogs[0], null, table, null);
 
-            while (resultSet.next()) {
-                String columnName = resultSet.getString("COLUMN_NAME");
-                String columnType = resultSet.getString("TYPE_NAME");
-                int columnSize = resultSet.getInt("COLUMN_SIZE");
-                String columnRemark = resultSet.getString("REMARKS");
-                String tableType = resultSet.getString("TABLE_NAME");
-                TableColumnInfo columnInfo = new TableColumnInfo(
-                        tableName,
-                        tableType,
-                        columnName,
-                        columnType,
-                        columnSize,
-                        columnRemark
-                );
+                while (resultSet.next()) {
+                    String columnName = resultSet.getString("COLUMN_NAME");
+                    String columnType = resultSet.getString("TYPE_NAME");
+                    int columnSize = resultSet.getInt("COLUMN_SIZE");
+                    String columnRemark = resultSet.getString("REMARKS");
+                    String tableType = resultSet.getString("TABLE_NAME");
+                    TableColumnInfo columnInfo = new TableColumnInfo(
+                            table,
+                            tableType,
+                            columnName,
+                            columnType,
+                            columnSize,
+                            columnRemark
+                    );
 
-                columnInfos.add(columnInfo);
+                    columnInfos.add(columnInfo);
+                }
+            }catch (Exception e){
+                return null;
+            } finally {
+                close(con, null,resultSet);// 关闭连接
             }
-        }catch (Exception e){
-            return null;
-        } finally {
-            close(con, null,resultSet);// 关闭连接
         }
-
         return columnInfos;
     }
 

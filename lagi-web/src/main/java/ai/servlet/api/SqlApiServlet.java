@@ -56,7 +56,7 @@ public class SqlApiServlet extends BaseServlet {
         TextToSqlRequest qaRequest = gson.fromJson(jsonString, TextToSqlRequest.class);
 
         String demand = qaRequest.getDemand();
-        String out = toSql(demand,qaRequest.getTableName(),qaRequest.getDatabaseName(),qaRequest.getStorageName());
+        String out = toSql(demand,qaRequest.getTable(),qaRequest.getDatabaseName(),qaRequest.getStorage());
         //   System.out.println("out1的回答是："+out);
         String outcome =  extractContentWithinBraces(out);
         qaRequest.setText(out);
@@ -85,12 +85,12 @@ public class SqlApiServlet extends BaseServlet {
                 String sql = extractContentWithinBraces(outcome);
                 System.out.println("sql:" + sql);
                 try {
-                    list = new MysqlAdapter(qaRequest.getDatabaseName(),qaRequest.getStorageName()).sqlToValue(sql);
+                    list = new MysqlAdapter(qaRequest.getDatabaseName(),qaRequest.getStorage()).sqlToValue(sql);
                 }catch (Exception e){
                     list = new ArrayList<>();
                 }
 
-                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTableName(),qaRequest.getDatabaseName(),qaRequest.getStorageName());
+                String msg = toText(qaRequest.getDemand(),gson.toJson(list),qaRequest.getTable(),qaRequest.getDatabaseName(),qaRequest.getStorage());
 
                 result.put("status", "success");
                 result.put("data", msg);
@@ -107,6 +107,8 @@ public class SqlApiServlet extends BaseServlet {
 
       public String toSql(String demand,String tableNeam,String databaseName,String storageName) {
         MysqlAdapter mysqlAdapter= new MysqlAdapter(databaseName,storageName);
+        String[] tableNames = tableNeam.split("[,，]");
+        String tableParsing = tableNames[0].isEmpty() ? "tableNeam" : tableNames[0];
         List<TableColumnInfo> list = mysqlAdapter.getTableColumnInfo(tableNeam);
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
@@ -119,9 +121,8 @@ public class SqlApiServlet extends BaseServlet {
                 "表信息如下："+
                 tableParsing(list)+
                 "输并且要求输出的S0L以#开头,以#结尾，样例如下:" +
-                "{SELECT * FROM "+tableNeam+" ;}  " +
-                 "{SELECT * FROM "+tableNeam+" WHERE city LIKE '%北京%' tier = '%档位一%';}" +
-                "{SELECT COUNT(*)FROM "+tableNeam+";}" +
+                "#SELECT * FROM "+tableParsing+" WHERE city LIKE '%北京%' name = '%全%';# 或" +
+                "#SELECT COUNT(*) FROM "+tableParsing+";#" +
                 "注意不需要分析过程，" +
                 "用户需求:" + demand
         );
@@ -139,27 +140,25 @@ public class SqlApiServlet extends BaseServlet {
     }
 
     public String tableParsing(List<TableColumnInfo> list) {
+       StringBuilder tableresult = new StringBuilder();
+       Map<String, List<TableColumnInfo>> groupedByTable = list.stream()
+         .collect(Collectors.groupingBy(TableColumnInfo::getTableName));
+        for (Map.Entry<String, List<TableColumnInfo>> tableEntry : groupedByTable.entrySet()) {
+            String tableKey = tableEntry.getKey();
+            List<TableColumnInfo> columns = tableEntry.getValue();
+            tableresult.append("表名为:").append(tableKey).append(";\n");
+            for (TableColumnInfo column : columns) {
+                tableresult.append(String.format("字段: %s %s",
+                        column.getColumnName(),
+                        column.getColumnType()));
 
-               StringBuilder tableresult = new StringBuilder();
-                Map<String, List<TableColumnInfo>> groupedByTable = list.stream()
-                   .collect(Collectors.groupingBy(TableColumnInfo::getTableName));
-
-            for (Map.Entry<String, List<TableColumnInfo>> entry : groupedByTable.entrySet()) {
-                String tableName = entry.getKey();
-                List<TableColumnInfo> columns = entry.getValue();
-                tableresult.append("表名为: ").append(tableName).append(";\n");
-               for (TableColumnInfo column : columns) {
-                    tableresult.append(String.format("字段: %s %s",
-                                                column.getColumnName(),
-                                                column.getColumnType()));
-                    if (!column.getColumnRemark().isEmpty()) {
-                        tableresult.append(" 备注为: ").append(column.getColumnRemark());
-                    }
-                    tableresult.append("；\n");
+                if (!column.getColumnRemark().isEmpty()) {
+                    tableresult.append(" 备注为: ").append(column.getColumnRemark());
                 }
-                tableresult.append("\n");
+                tableresult.append("；\n");
             }
-           return tableresult.toString();
+        }
+        return tableresult.toString();
     }
 
      public String toText(String demand,String outMsg,String tableNeam,String databaseName,String name) {
@@ -197,17 +196,22 @@ public class SqlApiServlet extends BaseServlet {
             return input;
         }
         input = input.replace("\n", " ");
-        if (input.matches(".*#.*#.*")) {
-            int startIndex = input.indexOf("#");
-            int endIndex = input.indexOf("#", startIndex + 1);
-
-             if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
-                return input.substring(startIndex + 1, endIndex);
-            } else {
-                System.out.println("只找到了一个 # 字符");
-            }
+        int firstHashIndex = input.indexOf("#");
+        int lastHashIndex = input.lastIndexOf("#");
+        if (firstHashIndex == lastHashIndex) {
+            return input;
         }
-        return input;
+
+        String betweenHashes = input.substring(firstHashIndex + 1, lastHashIndex);
+        betweenHashes = betweenHashes.replace("#", " ");
+        int semicolonIndex = betweenHashes.indexOf(";");
+
+        if (semicolonIndex != -1) {
+            betweenHashes = betweenHashes.substring(0, semicolonIndex);
+        }
+        //String res = input.substring(0, firstHashIndex + 1) + betweenHashes + input.substring(lastHashIndex);
+        //res.replace("#", "");
+        return betweenHashes.replace("#", "");
     }
 
     @Test
