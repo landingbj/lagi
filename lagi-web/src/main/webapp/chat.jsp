@@ -232,6 +232,7 @@
                             <th>智能体App ID</th>
                             <th>是否收费</th>
                             <th>每次请求收费(元)</th>
+                            <th>发布状态</th>
                             <th>操作</th>
                           </tr>
                           </thead>
@@ -285,7 +286,7 @@
                     <div id = "agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
                       <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 "  >
                         <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center">选择智能体</div>
-                        <ul id = "agent-tools" class="pb-2" style="height: 200px; overflow: auto">
+                        <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto">
                         </ul>
                       </div>
                     </div>
