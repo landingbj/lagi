@@ -752,3 +752,84 @@ pre .key {
     background-color: #e04343;
 }
 
+/* 默认隐藏 paid-agent-list-container */
+#paid-agent-list-container {
+    display: none;           /* 默认隐藏 */
+    width: 100%;             /* 宽度占满父容器 */
+    height: 100%;            /* 高度占满父容器 */
+    box-sizing: border-box;  /* 包括内边距和边框 */
+    background-color: white;  /* 背景颜色 */
+    padding: 20px;           /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的表格 */
+#paid-agent-list-container table {
+    width: 100%;               /* 表格宽度 100% */
+    border-collapse: collapse; /* 合并边框 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的 th 和 td */
+#paid-agent-list-container th,
+#paid-agent-list-container td {
+    padding: 10px;             /* 设置单元格内边距 */
+    text-align: center;        /* 文字居中对齐 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的 button */
+#paid-agent-list-container button {
+    padding: 5px 10px;         /* 按钮内边距 */
+    margin: 5px;               /* 按钮外边距 */
+    cursor: pointer;          /* 鼠标悬停时显示指针 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的分页容器 */
+#paid-agent-list-container .pagination {
+    display: flex;             /* 使用 flexbox 布局 */
+    justify-content: center;   /* 水平居中对齐分页按钮 */
+    margin-top: 20px;          /* 分页区域与表格之间的距离 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的分页按钮 */
+#paid-agent-list-container .pagination button {
+    margin: 0 5px;             /* 按钮之间的间距 */
+}
+
+/* 设置表格的整体样式 */
+#paid-agent-list {
+    width: 100%;  /* 设置表格宽度为100% */
+    border-collapse: collapse;  /* 合并表格的边框 */
+    margin-top: 20px;  /* 给表格顶部加一点间距 */
+}
+
+/* 设置表头的样式 */
+#paid-agent-list thead {
+    background-color: #023f63;  /* 设置表头背景色 */
+    color: white;  /* 设置表头文字颜色为白色 */
+    text-align: center;  /* 表头文字居中 */
+    font-weight: bold;  /* 表头文字加粗 */
+}
+
+/* 设置表格单元格的样式 */
+#paid-agent-list th, #paid-agent-list td {
+    border: 1px solid #ddd;  /* 设置单元格边框 */
+    padding: 12px;  /* 设置单元格的内边距 */
+    text-align: center;  /* 内容居中 */
+}
+
+/* 设置表格奇偶行的背景色 */
+#paid-agent-list tbody tr:nth-child(even) {
+    background-color: #f2f2f2;  /* 偶数行背景色 */
+}
+
+#paid-agent-list tbody tr:nth-child(odd) {
+    background-color: #fff;  /* 奇数行背景色 */
+}
+
+/* 鼠标悬停行时的效果 */
+#paid-agent-list tbody tr:hover {
+    background-color: #f1f1f1;  /* 鼠标悬停时背景色 */
+    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+}
