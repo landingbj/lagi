@@ -6,8 +6,8 @@ import ai.config.ContextLoader;
 import ai.qa.LLMConfig;
 
 public class MigrateGlobal {
-    public static final String SAAS_BASE_URL = "https://saas.landingbj.com";
-//    public static final String SAAS_BASE_URL = "http://localhost:8090";
+//    public static final String SAAS_BASE_URL = "https://saas.landingbj.com";
+    public static final String SAAS_BASE_URL = "http://localhost:8090";
     public static final String VICUNA_INDEX_URL;
     public static final String ADD_DOC_INDEX_URL;
     public static String FILE_PROCESS_URL;

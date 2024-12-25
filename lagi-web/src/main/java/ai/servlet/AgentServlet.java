@@ -98,7 +98,9 @@ public class AgentServlet extends BaseServlet {
     private void getPaidAgentByUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         String lagiUserId = req.getParameter("lagiUserId");
-        LagiAgentExpenseListResponse response = agentService.getPaidAgentByUser(lagiUserId);
+        String pageNumber = req.getParameter("pageNumber");
+        String pageSize = req.getParameter("pageSize");
+        LagiAgentExpenseListResponse response = agentService.getPaidAgentByUser(lagiUserId, pageNumber, pageSize);
         responsePrint(resp, gson.toJson(response));
     }
 

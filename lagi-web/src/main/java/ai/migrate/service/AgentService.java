@@ -61,9 +61,11 @@ public class AgentService {
         return lagiAgentResponse;
     }
 
-    public LagiAgentExpenseListResponse getPaidAgentByUser(String lagiUserId) throws IOException {
+    public LagiAgentExpenseListResponse getPaidAgentByUser(String lagiUserId, String pageNumber, String pageSize) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("lagiUserId", lagiUserId);
+        if (pageNumber != null) params.put("pageNumber", pageNumber);
+        if (pageSize != null) params.put("pageSize", pageSize);
         String resultJson = OkHttpUtil.get(SAAS_BASE_URL + "/agent/getPaidAgentByUser", params);
         LagiAgentExpenseListResponse lagiAgentResponse = gson.fromJson(resultJson, LagiAgentExpenseListResponse.class);
         return lagiAgentResponse;
