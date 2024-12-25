@@ -205,11 +205,11 @@
               <textarea class="w-full h-full"  id = "textareaCopy"></textarea>
             </div>
 
-            <div id="hello-page" class="flex-1 overflow-hidden" >
+            <div id="hello-page" class="flex-1 h-full overflow-hidden" >
               <div class="react-scroll-to-bottom--css-dlyqs-79elbk h-full dark:bg-gray-800">
-                <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu">
+                <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu h-full">
                   <div class="flex flex-col text-sm dark:bg-gray-800 h-full">
-                    <div class="flex h-full flex-col items-center justify-between pb-64">
+                    <div class="flex h-full flex-col items-center justify-between">
                       <div id="modelChoices" class="px-2 w-full flex flex-col py-2 md:py-6 sticky top-0">
                         <div class="relative flex flex-col items-stretch justify-center gap-2 sm:items-center">
                           <div class="relative flex rounded-xl bg-gray-100 p-1 text-gray-900 dark:bg-gray-900">
@@ -218,15 +218,15 @@
                           </div>
                         </div>
                       </div>
-                      <!-- 智能体列表开始 -->
+                      <!-- 我的发布列表开始 -->
                       <div class="agent-list-container" class="w-full" id="agent-list-container">
 
-                        <button onclick="openAgentModal()">新增智能体</button>
-                        <%--                        <span class="close-btn" onclick="closeAgentList()">&times;</span>--%>
+<%--                        <button onclick="openAgentModal()">新增智能体</button>--%>
+                        <%-- <span class="close-btn" onclick="closeAgentList()">&times;</span>--%>
                         <table id="agent-list" border="1">
                           <thead>
                           <tr>
-                            <th>智能体姓名</th>
+                            <th>智能体名称</th>
                             <th>智能体平台</th>
                             <th>智能体Token</th>
                             <th>智能体App ID</th>
@@ -244,9 +244,30 @@
                           <!-- 分页按钮将动态添加到这里 -->
                         </div>
                       </div>
-                      <!-- 智能体列表结束 -->
+                      <!-- 我的发布列表结束 -->
+                      <!-- 我的订阅列表开始 -->
+                      <div class="paid-agent-list-container w-full" id="paid-agent-list-container">
+                        <table id="paid-agent-list" border="1">
+                          <thead>
+                          <tr>
+                            <th>智能体名称</th>
+                            <th>智能体平台</th>
+                            <th>每次请求收费(元)</th>
+                            <th>余额</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                          <!-- 动态生成的智能体数据行 -->
+                          </tbody>
+                        </table>
+                        <div class="pagination" id="paid-agent-pagination">
+                          <!-- 分页按钮将动态添加到这里 -->
+                        </div>
+                      </div>
+                      <!-- 我的订阅列表结束 -->
+
                       <div id="item-content" class="w-full" style="overflow: auto;" >
-                        <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]" style="height: calc(8vh);">
+                        <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]">
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
                             仅限邀请内测
                           </div>
@@ -263,20 +284,19 @@
                           <div class="h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center">
                             <div class="grow">
                               <div class="absolute  left-0 mb-4 flex w-full grow gap-2 px-1 pb-1 sm:px-2 sm:pb-0 md:static md:mb-0 md:max-w-none">
-                                <div class="grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-3"></div>
+                                <div class="grid w-full grid-flow-row grid-cols-2 gap-3"></div>
                               </div>
                             </div>
                           </div>
                         </div>
                         <!-- ***********************输入框前form end******************************** -->
                       </div>
-
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div
+            <div id="not-content"
                     class="absolute bottom-0 left-0  border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2 md:pl-2 md:w-[calc(100%-.5rem)]">
               <form
                       class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
@@ -285,8 +305,11 @@
                   <div class="flex w-full " id="queryBox">
                     <div id = "agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
                       <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 "  >
-                        <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center">选择智能体</div>
-                        <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto">
+                        <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center">智能体</div>
+<%--                        <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto">--%>
+                        <ul id = "agent-tools" class="pb-2">
+                          <li class=" pl-5  not-available " onclick="openAgentModal()">发布智能体</li>
+                          <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li>
                         </ul>
                       </div>
                     </div>
@@ -395,38 +418,81 @@
 </div>
 <div id="overlay" class="overlay">
   <div class="modal" id="login-form">
-    <div class="close-modal-container">
-      <button class="close-modal" onclick="closeModal()">&times;</button>
+    <!-- 关闭按钮 -->
+    <div class="close-modal-container" style="position: absolute; right: 10px; z-index: 100;">
+      <button class="close-modal" onclick="closeModal()" style="padding: 10px 15px; font-size: 24px; background-color: transparent; border: none; color: #333; cursor: pointer; transition: color 0.3s;">
+        &times;
+      </button>
     </div>
-    <h2>登录</h2>
-    <input type="text" placeholder="用户名" id="login-username">
-    <input type="password" placeholder="密码" id="login-password">
-    <div class="captcha-container">
-      <input type="text" placeholder="验证码" id="login-captcha">
-      <img alt="验证码" class="login-captcha-image" onclick="updateCaptcha(this)">
+
+    <!-- logo 居中 -->
+    <h2 style="display: flex; align-items: center; position: relative; width: 100%; justify-content: center;">
+      <img src="images/Small_logo.png" alt="公司 Logo" class="modal-Small_logo" style="max-height: 50px;">
+    </h2>
+
+    <!-- 输入框容器，居中 -->
+    <div style="display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 350px; margin: 0 auto;">
+      <input type="text" placeholder="用户名" id="login-username" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+      <input type="password" placeholder="密码" id="login-password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+
+      <!-- 骑验证码输入框 -->
+      <div class="captcha-container" style="display: flex; align-items: center; width: 100%;">
+        <input type="text" placeholder="验证码" id="login-captcha" style="flex: 1; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+        <img alt="验证码" class="login-captcha-image" onclick="updateCaptcha(this)" style="width: 30%; margin-left: 10px; cursor: pointer;">
+      </div>
     </div>
+
     <div id="login-error" class="error-message">登录失败，请检查输入信息</div>
-    <button onclick="submitLogin()">登录</button>
-    <a href="#" onclick="showRegisterPage()">没有账号？前往注册</a>
+
+    <!-- 登录和注册按钮，居中且有间隔 -->
+    <div style="display: flex; justify-content: center; gap: 15px; width: 80%; max-width: 350px; margin: 0 auto; margin-top: 20px; align-items: center;">
+      <!-- 登录按钮 -->
+      <button onclick="submitLogin()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">登录</button>
+      <!-- 注册按钮 -->
+      <button onclick="showRegisterPage()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">注册</button>
+    </div>
   </div>
 
   <div class="modal login-hidden" id="register-form">
-    <div class="close-modal-container">
-      <button class="close-modal" onclick="closeModal()">&times;</button>
+    <!-- 关闭按钮 -->
+    <div class="close-modal-container" style="position: absolute; right: 10px; z-index: 100;">
+      <button class="close-modal" onclick="closeModal()" style="padding: 10px 15px; font-size: 24px; background-color: transparent; border: none; color: #333; cursor: pointer; transition: color 0.3s;">
+        &times;
+      </button>
     </div>
-    <h2>注册</h2>
-    <input type="text" placeholder="用户名" id="register-username">
-    <input type="password" placeholder="密码" id="register-password">
-    <input type="password" placeholder="确认密码" id="register-confirm-password">
-    <div class="captcha-container">
-      <input type="text" placeholder="验证码" id="register-captcha">
-      <img alt="验证码" class="register-captcha-image" onclick="updateCaptcha(this)">
+
+    <!-- logo 居中 -->
+    <h2 style="display: flex; align-items: center; position: relative; width: 100%; justify-content: center;">
+      <img src="images/Small_logo.png" alt="公司 Logo" class="modal-Small_logo" style="max-height: 50px;">
+    </h2>
+
+    <!-- 输入框容器，居中 -->
+    <div style="display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 350px; margin: 0 auto;">
+      <input type="text" placeholder="用户名" id="register-username" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+      <input type="password" placeholder="密码" id="register-password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+      <input type="password" placeholder="确认密码" id="register-confirm-password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+
+      <!-- 验证码输入框 -->
+      <div class="captcha-container" style="display: flex; align-items: center; width: 100%;">
+        <input type="text" placeholder="验证码" id="register-captcha" style="flex: 1; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+        <img alt="验证码" class="register-captcha-image" onclick="updateCaptcha(this)" style="width: 30%; margin-left: 10px; cursor: pointer;">
+      </div>
     </div>
+
     <div id="register-error" class="error-message">注册失败，请检查输入信息</div>
-    <button onclick="submitRegister()">注册</button>
-    <a href="#" onclick="showLoginPage()">已有账号？返回登录</a>
+
+    <!-- 注册和返回登录按钮，居中且有间隔 -->
+    <div style="display: flex; justify-content: center; gap: 15px; width: 80%; max-width: 350px; margin: 0 auto; margin-top: 20px; align-items: center;">
+      <!-- 注册按钮 -->
+      <button onclick="submitRegister()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">注册</button>
+      <!-- 返回登录按钮 -->
+      <button onclick="showLoginPage()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">返回登录</button>
+    </div>
   </div>
 </div>
+
+
+
 
 
 <!-- 新增/编辑智能体弹窗开始 -->
@@ -434,7 +500,7 @@
   <div class="modal-content">
     <span class="close-btn" onclick="closeAgentModal()">&times;</span>
     <form id="agent-form">
-      <label for="agent-name">智能体姓名：</label>
+      <label for="agent-name">智能体名称：</label>
       <input type="text" id="agent-name" required>
       <label for="platform">智能体平台：</label>
       <select id="platform" required>
@@ -468,6 +534,10 @@
 <!-- 微信支付弹窗开始 -->
 <div id="wechat_pay_qr" style="display: none;">
   <div class="qrCodeDiv">
+    <!-- 添加公司logo -->
+    <div class="companyLogoDiv">
+      <img class="company_logo" src="images/company_logo.png" alt="公司 Logo" />
+    </div>
     <div class="qrDiv">
       <img id="qrCode" src="" />
     </div>
@@ -481,6 +551,7 @@
     <button id="cancelPaymentBtn" onclick="cancelPayment()">取消支付</button>
   </div>
 </div>
+
 <!-- 微信支付弹窗结束 -->
 
 

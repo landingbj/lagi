@@ -1,6 +1,6 @@
 // 页面加载时获取并渲染智能体列表
 document.addEventListener('DOMContentLoaded', () => {
-    loadAgentMenu(currentPage); // 初始加载第一页的智能体
+    // loadAgentMenu(currentPage); // 初始加载第一页的智能体
     const agentToolsElement = document.getElementById('agent-tools');
     agentToolsElement.addEventListener('scroll', handleScroll); // 监听滚动事件
 });
@@ -75,6 +75,16 @@ function closeAgentList() {
     document.getElementById("agent-list-container").style.display = 'none';
 }
 
+// 打开智能体列表
+function openPaidAgentList() {
+    document.getElementById("paid-agent-list-container").style.display = 'block';
+}
+
+// 关闭智能体列表
+function closePaidAgentList() {
+    document.getElementById("paid-agent-list-container").style.display = 'none';
+}
+
 // 保存智能体信息
 function saveAgent() {
     let agentConfig = {
@@ -85,7 +95,8 @@ function saveAgent() {
         appId: document.getElementById("app-id").value,
         isFeeRequired: document.querySelector('input[name="isFeeRequired"]:checked').value === 'true',
         pricePerReq: document.getElementById("pricePerReq").value.trim() === "" ? 0 : parseFloat(document.getElementById("pricePerReq").value.trim()),
-        lagiUserId: globalUserId // 将 userId 添加到请求中
+        lagiUserId: globalUserId,
+        publishStatus: true
     };
 
     let url = currentAgentId ? '/updateLagiAgent' : '/addLagiAgent';
@@ -409,7 +420,7 @@ function cancelPayment() {
     // 清除支付查询的定时器
     clearInterval(interval);
 
-    // 清除当前激活的 li 背景色
+/*    // 清除当前激活的 li 背景色
     const agentToolsElement = document.getElementById('agent-tools');
 
     // 如果 lastActiveLi 有值，恢复上一次激活的 li 背景色
@@ -420,7 +431,7 @@ function cancelPayment() {
                 item.classList.add('active-agent');
             }
         });
-    }
+    }*/
 }
 
 
@@ -444,6 +455,50 @@ function handleScroll() {
     }
 }
 
+
+// 加载智能体列表
+function loadPaidAgentList(pageNumber) {
+    fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
+        .then(response => response.json())
+        .then(data => {
+            let tbody = document.querySelector("#paid-agent-list tbody");
+            tbody.innerHTML = ''; // 清空表格内容
+
+            data.data.forEach(agent => {
+                // 获取 driver 的翻译
+                const driverName = driverMap[agent.driver] || agent.driver; // 如果没有找到映射，则显示原值
+
+                let row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${agent.name}</td>
+                    <td>${driverName}</td>
+                    <td>${agent.isFeeRequired ? agent.pricePerReq : '0'}</td>
+                    <td>${agent.balance}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            console.log("data.totalPage:" + data.totalPage);
+            renderPaidPagination(data.totalPage, pageNumber);  // 渲染分页
+        });
+}
+
+// 渲染分页按钮
+function renderPaidPagination(totalPage, currentPage) {
+    let paginationContainer = document.querySelector("#paid-agent-pagination");
+    paginationContainer.innerHTML = '';  // 清空分页容器
+
+    for (let i = 1; i <= totalPage; i++) {
+        let button = document.createElement("button");
+        button.textContent = i;
+        button.onclick = () => loadPaidAgentList(i);
+        if (i === currentPage) {
+            button.disabled = true;  // 当前页不允许点击
+        }
+        paginationContainer.appendChild(button);
+    }
+}
 
 
 

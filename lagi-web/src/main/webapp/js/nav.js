@@ -257,7 +257,11 @@ let promptNavs = [
         subNavs: [
             {
                 id: 666,
-                title: '我的智能体',
+                title: '我的发布',
+            },
+            {
+                id: 667,
+                title: '我的订阅',
             }
         ]
     }
@@ -560,6 +564,7 @@ let currentNav = null;
 function getPromptDialog(id) {
 
     closeAgentList();
+    closePaidAgentList();
     $('#queryBox').show();
     $('#introduces').show();
     // $('#modelChoices').show();
@@ -605,6 +610,24 @@ function getPromptDialog(id) {
         hideBallDiv(); // 隐藏球形 div
         loadAgentList(1);
         openAgentList();
+        $('#queryBox').hide();
+        return;
+    }
+
+    if (id === 667) {
+        if (!getCookie('userId')) {
+            openModal();
+            return;
+        }
+        $('#introduces').hide();
+        $('#model-prefences').hide();
+        $('#modelChoices').hide();
+        $('#topTitle').hide();
+        // $('#item-content').empty();
+        $('#item-content').hide();
+        hideBallDiv(); // 隐藏球形 div
+        loadPaidAgentList(1);
+        openPaidAgentList();
         $('#queryBox').hide();
         return;
     }
