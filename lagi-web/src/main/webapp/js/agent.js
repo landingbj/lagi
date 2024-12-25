@@ -420,7 +420,7 @@ function cancelPayment() {
     // 清除支付查询的定时器
     clearInterval(interval);
 
-    // 清除当前激活的 li 背景色
+/*    // 清除当前激活的 li 背景色
     const agentToolsElement = document.getElementById('agent-tools');
 
     // 如果 lastActiveLi 有值，恢复上一次激活的 li 背景色
@@ -431,7 +431,7 @@ function cancelPayment() {
                 item.classList.add('active-agent');
             }
         });
-    }
+    }*/
 }
 
 

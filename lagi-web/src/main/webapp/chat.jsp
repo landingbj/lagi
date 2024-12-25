@@ -309,6 +309,7 @@
 <%--                        <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto">--%>
                         <ul id = "agent-tools" class="pb-2">
                           <li class=" pl-5  not-available " onclick="openAgentModal()">发布智能体</li>
+                          <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li>
                         </ul>
                       </div>
                     </div>
@@ -417,38 +418,81 @@
 </div>
 <div id="overlay" class="overlay">
   <div class="modal" id="login-form">
-    <div class="close-modal-container">
-      <button class="close-modal" onclick="closeModal()">&times;</button>
+    <!-- 关闭按钮 -->
+    <div class="close-modal-container" style="position: absolute; right: 10px; z-index: 100;">
+      <button class="close-modal" onclick="closeModal()" style="padding: 10px 15px; font-size: 24px; background-color: transparent; border: none; color: #333; cursor: pointer; transition: color 0.3s;">
+        &times;
+      </button>
     </div>
-    <h2>登录</h2>
-    <input type="text" placeholder="用户名" id="login-username">
-    <input type="password" placeholder="密码" id="login-password">
-    <div class="captcha-container">
-      <input type="text" placeholder="验证码" id="login-captcha">
-      <img alt="验证码" class="login-captcha-image" onclick="updateCaptcha(this)">
+
+    <!-- logo 居中 -->
+    <h2 style="display: flex; align-items: center; position: relative; width: 100%; justify-content: center;">
+      <img src="images/Small_logo.png" alt="公司 Logo" class="modal-Small_logo" style="max-height: 50px;">
+    </h2>
+
+    <!-- 输入框容器，居中 -->
+    <div style="display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 350px; margin: 0 auto;">
+      <input type="text" placeholder="用户名" id="login-username" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+      <input type="password" placeholder="密码" id="login-password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+
+      <!-- 骑验证码输入框 -->
+      <div class="captcha-container" style="display: flex; align-items: center; width: 100%;">
+        <input type="text" placeholder="验证码" id="login-captcha" style="flex: 1; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+        <img alt="验证码" class="login-captcha-image" onclick="updateCaptcha(this)" style="width: 30%; margin-left: 10px; cursor: pointer;">
+      </div>
     </div>
+
     <div id="login-error" class="error-message">登录失败，请检查输入信息</div>
-    <button onclick="submitLogin()">登录</button>
-    <a href="#" onclick="showRegisterPage()">没有账号？前往注册</a>
+
+    <!-- 登录和注册按钮，居中且有间隔 -->
+    <div style="display: flex; justify-content: center; gap: 15px; width: 80%; max-width: 350px; margin: 0 auto; margin-top: 20px; align-items: center;">
+      <!-- 登录按钮 -->
+      <button onclick="submitLogin()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">登录</button>
+      <!-- 注册按钮 -->
+      <button onclick="showRegisterPage()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">注册</button>
+    </div>
   </div>
 
   <div class="modal login-hidden" id="register-form">
-    <div class="close-modal-container">
-      <button class="close-modal" onclick="closeModal()">&times;</button>
+    <!-- 关闭按钮 -->
+    <div class="close-modal-container" style="position: absolute; right: 10px; z-index: 100;">
+      <button class="close-modal" onclick="closeModal()" style="padding: 10px 15px; font-size: 24px; background-color: transparent; border: none; color: #333; cursor: pointer; transition: color 0.3s;">
+        &times;
+      </button>
     </div>
-    <h2>注册</h2>
-    <input type="text" placeholder="用户名" id="register-username">
-    <input type="password" placeholder="密码" id="register-password">
-    <input type="password" placeholder="确认密码" id="register-confirm-password">
-    <div class="captcha-container">
-      <input type="text" placeholder="验证码" id="register-captcha">
-      <img alt="验证码" class="register-captcha-image" onclick="updateCaptcha(this)">
+
+    <!-- logo 居中 -->
+    <h2 style="display: flex; align-items: center; position: relative; width: 100%; justify-content: center;">
+      <img src="images/Small_logo.png" alt="公司 Logo" class="modal-Small_logo" style="max-height: 50px;">
+    </h2>
+
+    <!-- 输入框容器，居中 -->
+    <div style="display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 350px; margin: 0 auto;">
+      <input type="text" placeholder="用户名" id="register-username" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+      <input type="password" placeholder="密码" id="register-password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+      <input type="password" placeholder="确认密码" id="register-confirm-password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+
+      <!-- 验证码输入框 -->
+      <div class="captcha-container" style="display: flex; align-items: center; width: 100%;">
+        <input type="text" placeholder="验证码" id="register-captcha" style="flex: 1; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;">
+        <img alt="验证码" class="register-captcha-image" onclick="updateCaptcha(this)" style="width: 30%; margin-left: 10px; cursor: pointer;">
+      </div>
     </div>
+
     <div id="register-error" class="error-message">注册失败，请检查输入信息</div>
-    <button onclick="submitRegister()">注册</button>
-    <a href="#" onclick="showLoginPage()">已有账号？返回登录</a>
+
+    <!-- 注册和返回登录按钮，居中且有间隔 -->
+    <div style="display: flex; justify-content: center; gap: 15px; width: 80%; max-width: 350px; margin: 0 auto; margin-top: 20px; align-items: center;">
+      <!-- 注册按钮 -->
+      <button onclick="submitRegister()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">注册</button>
+      <!-- 返回登录按钮 -->
+      <button onclick="showLoginPage()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">返回登录</button>
+    </div>
   </div>
 </div>
+
+
+
 
 
 <!-- 新增/编辑智能体弹窗开始 -->
@@ -490,6 +534,10 @@
 <!-- 微信支付弹窗开始 -->
 <div id="wechat_pay_qr" style="display: none;">
   <div class="qrCodeDiv">
+    <!-- 添加公司logo -->
+    <div class="companyLogoDiv">
+      <img class="company_logo" src="images/company_logo.png" alt="公司 Logo" />
+    </div>
     <div class="qrDiv">
       <img id="qrCode" src="" />
     </div>
@@ -503,6 +551,7 @@
     <button id="cancelPaymentBtn" onclick="cancelPayment()">取消支付</button>
   </div>
 </div>
+
 <!-- 微信支付弹窗结束 -->
 
 
