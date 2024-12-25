@@ -21,20 +21,28 @@
 **/
 
 #topTitle {
-	margin: 3em 0 0 0;
+	/* margin: 3em 0 0 0; */
+	padding-top: 5em;
+	height: calc(var(--title-height));
 }
 
 
 
 #item-content {
-	--winow-height: 87vh;
-	height:  calc(var(--winow-height));
+	height:  var(--content-height);
 }
 
 @media (max-width: 768px) {
 	#item-content {
-		--winow-height: 75vh;
-		height:  calc(var(--winow-height));
+		height:  var(--content-height);
+	}
+}
+
+
+@media (max-height: 850px) {
+	#item-content {
+		--winow-height: 85vh;
+		height:  var(--content-height);
 	}
 }
 
@@ -110,9 +118,7 @@ pre .key {
 	color: red;
 }
 
-.tooltip{
-	/* visibility: visible; */
-}
+
 
 .tooltip:before {
     content: attr(data-tooltip);
@@ -275,3 +281,474 @@ pre .key {
 	background-color: #07a4ff;
 	color: rgb(14, 13, 13);
 }
+
+
+/* #introduces 设为相对宽度和高度 */
+#introduces {
+    width: var(--intro-with);  /* 宽度占视口宽度的40% */
+    height: var(--intro-height); /* 高度占视口高度的15% */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: var(--intro-margin-top); 
+    padding-bottom: 10vh;
+    position: relative;
+}
+
+/* #ball-div 使用相对单位 */
+#ball-div {
+    width: var(--ball-width);  /* 屏幕宽度的48% */
+    height: var(--ball-height); /* 屏幕高度的48% */
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+	margin-top: var(--ball-margin-top);
+    background-color: transparent;
+    user-select: none; /* 禁止选中文本 */
+    /*cursor: grab; !* 鼠标样式 *!*/
+}
+
+
+
+:root{
+	--top-nav-height: 4vh;
+	--not-content-height: calc(7rem);
+	--content-height: calc(100vh - var(--not-content-height) - var(--top-nav-height));
+	--intro-margin-top: 6vh;
+	--intro-height:calc(8rem);
+	--ball-margin-top: 5vh;
+	--ball-height:calc(var(--content-height) - var(--intro-height) - var(--title-height) - var(--ball-margin-top) - var(--intro-margin-top) - 1vh);
+	--title-height:calc(5rem);
+	--intro-with: 90%;
+	--ball-width: 76%;
+
+}
+
+
+
+@media screen and (min-width: 900px) {
+	:root{
+		--top-nav-height: 0vh;
+		--not-content-height: calc(6rem);
+		--content-height: calc(100vh - var(--not-content-height));
+		--intro-margin-top: 5vh;
+		/* --content-height: calc(100vh - var(--not-content-height)); */
+		/* --intro-height:calc(var(--content-height) - 4rem); */
+		--intro-height:8rem;
+		--title-height:5rem;
+		--ball-margin-top: 5vh;
+		--ball-height:calc(var(--content-height) - var(--intro-height) - var(--title-height) - var(--ball-margin-top) - var(--intro-margin-top));
+		--intro-with: 42rem;
+		--ball-width: 42rem;
+	}
+	
+}
+
+
+
+#top-nav{
+	height: var(--top-nav-height);
+}
+
+#not-content{
+	width: 100%;
+	height: var(--not-content-height);
+}
+
+
+#ball-div:active {
+    cursor: grabbing; /* 鼠标拖拽样式 */
+}
+
+#ball-div span {
+    position: absolute;
+    font-size: 2rem;  /* 使用 rem 单位，基于根字体大小 */
+    color: #838383;
+    text-decoration: none;
+    font-weight: bold;
+    user-select: none; /* 禁止选中文本 */
+    display: inline-block;
+    width: auto;
+    height: auto;
+    text-align: center; /* 确保文字在容器内居中 */
+}
+
+/* 当屏幕宽度小于 768px 时，调整字体大小 */
+@media (max-width: 768px) {
+    #ball-div span {
+        font-size: 1.5rem;  /* 在小屏幕下减小字体大小 */
+    }
+}
+
+/* 当屏幕宽度小于 480px 时，进一步减小字体 */
+@media (max-width: 480px) {
+    #ball-div span {
+        font-size: 1.2rem;  /* 在极小屏幕下减小字体大小 */
+    }
+}
+
+/*!* 添加 hover 效果 *!*/
+/*#ball-div a:hover {*/
+/*    border: 1px solid #eee;*/
+/*    background: #00bdfe;*/
+/*    color: white;*/
+/*    border-radius: 5px;*/
+/*    text-decoration: none;*/
+/*}*/
+
+/* 默认样式 */
+[data-projection-id="1"] {
+    /*height: auto;*/
+    /*padding: 20px;*/
+}
+
+/* 手机端样式 */
+@media (max-width: 768px) {
+    [data-projection-id="1"] {
+        /*height: 1vh; !* 缩小 div 高度 *!*/
+    }
+}
+
+
+
+/* 弹窗样式 */
+#agent-form-modal.modal {
+    display: none;           /* 默认隐藏 */
+    position: fixed;
+    z-index: 1;
+    left: 47%;
+    top: 14%;
+    justify-content: center;
+    align-items: center;
+}
+
+#agent-form-modal .modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    box-sizing: border-box;
+}
+
+#agent-form-modal .modal-content form {
+    display: flex;
+    flex-direction: column;
+}
+
+#agent-form-modal .modal-content label {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#agent-form-modal .modal-content input,
+#agent-form-modal .modal-content select {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#agent-form-modal .modal-content button {
+    margin-top: 15px;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    background-color: #023f63;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* agent-list-container 样式 */
+#agent-list-container {
+    display: none;           /* 默认隐藏 */
+    width: 100%;             /* 宽度占满父容器 */
+    height: 100%;            /* 高度占满父容器 */
+    box-sizing: border-box;  /* 包括内边距和边框 */
+    background-color: white;  /* 背景颜色，根据需要调整 */
+    padding: 20px;  /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+/* 禁止选中的样式 */
+#agent-list-container .no-select {
+    user-select: none;
+}
+
+/* 虚化效果 */
+#agent-list-container .blurred {
+    pointer-events: none;  /* 禁止与虚化区域的交互 */
+}
+
+/* 新增智能体按钮 */
+#agent-list-container button {
+    font-size: 16px;
+    border: none;
+    background-color: #023f63;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* 收费金额输入框容器 */
+#agent-list-container #pricePerReqContainer {
+    margin-top: 10px;
+}
+
+#agent-list-container #pricePerReq {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#agent-list-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#agent-list-container th, #agent-list-container td {
+    padding: 10px;
+    text-align: center;
+}
+
+#agent-list-container button {
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.agent-list-container {
+    display: none;           /* 默认隐藏 */
+    width: 100%;             /* 宽度占满父容器 */
+    height: 100%;            /* 高度占满父容器 */
+    box-sizing: border-box;  /* 包括内边距和边框 */
+    background-color: white;  /* 背景颜色，根据需要调整 */
+    padding: 20px;  /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 禁止选中的样式 */
+.no-select {
+    user-select: none;
+}
+
+/* 虚化效果 */
+.blurred {
+    pointer-events: none;  /* 禁止与虚化区域的交互 */
+}
+
+/* 新增智能体按钮 */
+#agent-list-container button {
+    font-size: 16px;
+    border: none;
+    background-color: #023f63;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* 收费金额输入框容器 */
+#pricePerReqContainer {
+    margin-top: 10px;
+}
+
+#pricePerReq {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 仅影响 id 为 agent-list-container 下的表格 */
+#agent-list-container table {
+    width: 100%;               /* 表格宽度 100% */
+    border-collapse: collapse; /* 合并边框 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的 th 和 td */
+#agent-list-container th,
+#agent-list-container td {
+    padding: 10px;             /* 设置单元格内边距 */
+    text-align: center;        /* 文字居中对齐 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的 button */
+#agent-list-container button {
+    padding: 5px 10px;         /* 按钮内边距 */
+    margin: 5px;               /* 按钮外边距 */
+    cursor: pointer;          /* 鼠标悬停时显示指针 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的分页容器 */
+#agent-list-container .pagination {
+    display: flex;             /* 使用 flexbox 布局 */
+    justify-content: center;   /* 水平居中对齐分页按钮 */
+    margin-top: 20px;          /* 分页区域与表格之间的距离 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的分页按钮 */
+#agent-list-container .pagination button {
+    margin: 0 5px;             /* 按钮之间的间距 */
+}
+
+
+/* 设置表格的整体样式 */
+#agent-list {
+    width: 100%;  /* 设置表格宽度为100% */
+    border-collapse: collapse;  /* 合并表格的边框 */
+    margin-top: 20px;  /* 给表格顶部加一点间距 */
+}
+
+/* 设置表头的样式 */
+#agent-list thead {
+    background-color: #023f63;  /* 设置表头背景色 */
+    color: white;  /* 设置表头文字颜色为白色 */
+    text-align: center;  /* 表头文字居中 */
+    font-weight: bold;  /* 表头文字加粗 */
+}
+
+/* 设置表格单元格的样式 */
+#agent-list th, #agent-list td {
+    border: 1px solid #ddd;  /* 设置单元格边框 */
+    padding: 12px;  /* 设置单元格的内边距 */
+    text-align: center;  /* 内容居中 */
+}
+
+/* 设置表格奇偶行的背景色 */
+#agent-list tbody tr:nth-child(even) {
+    background-color: #f2f2f2;  /* 偶数行背景色 */
+}
+
+#agent-list tbody tr:nth-child(odd) {
+    background-color: #fff;  /* 奇数行背景色 */
+}
+
+/* 鼠标悬停行时的效果 */
+#agent-list tbody tr:hover {
+    background-color: #f1f1f1;  /* 鼠标悬停时背景色 */
+    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+}
+
+/* 设置最后一列按钮的样式 */
+#agent-list .actions button {
+    background-color: #023f63;  /* 按钮背景色 */
+    color: white;  /* 按钮文字颜色 */
+    border: none;  /* 去除按钮边框 */
+    padding: 6px 12px;  /* 设置按钮内边距 */
+    border-radius: 4px;  /* 设置按钮圆角 */
+    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+    margin: 2px;  /* 按钮之间有一点间隔 */
+}
+
+/* 鼠标悬停在按钮上时的效果 */
+#agent-list .actions button:hover {
+    background-color: #023f63;  /* 鼠标悬停时按钮颜色 */
+}
+
+/* CSS */
+.free-agent {
+    color: green; /* 免费的智能体使用绿色 */
+}
+
+.paid-agent {
+    color: red; /* 收费的智能体使用红色 */
+}
+
+/* CSS - 设置选中时的背景颜色 */
+.active-agent {
+    background-color: #c7e6f8; /* 可以根据需要修改为任何颜色 */
+}
+
+/* 弹框背景覆盖全屏 */
+#wechat_pay_qr {
+    display: none; /* 初始不显示 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    z-index: 9999;
+}
+
+/* 弹框内容 */
+.qrCodeDiv {
+    background: white;
+    padding: 20px;
+    width: auto;
+    max-width: 400px;  /* 最大宽度限制 */
+    min-width: 300px;  /* 最小宽度限制 */
+    text-align: center;
+    border-radius: 10px; /* 圆角 */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+}
+
+/* 二维码图片样式 */
+#qrCode {
+    width: 100%;
+    height: 100%;
+    max-width: 300px; /* 限制二维码最大宽度 */
+    margin-bottom: 20px;
+}
+
+/* 微信支付标题样式 */
+#wechatTitle {
+    text-align: center;
+    margin: 10px 0 0;
+}
+
+.wechat_logo {
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.wechat_label {
+    font-size: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#payAmount {
+    color: #FF8C00;
+}
+
+/* 取消支付按钮样式 */
+#cancelPaymentBtn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#cancelPaymentBtn:hover {
+    background-color: #e04343;
+}
+

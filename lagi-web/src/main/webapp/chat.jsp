@@ -119,6 +119,7 @@
                 <div class="group relative" data-headlessui-state="">
                   <div id="userMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white login-hidden border border-gray-200 rounded-md shadow-lg">
                     <ul>
+                      <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">问题反馈</li>
                       <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
                     </ul>
                   </div>
@@ -160,7 +161,7 @@
     <div class="relative flex h-full max-w-full flex-1 overflow-hidden">
       <div class="flex h-full max-w-full flex-1 flex-col" >
         <!-- 上部导航条 -->
-        <div class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden " style="background-color: #023f63;">
+        <div id="top-nav" class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden " style="background-color: #023f63;">
           <div>
             <button type="button" onclick="toggleUserMenu()"  class="-ml-0.5 -mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white dark:hover:text-white">
               <span class="sr-only">Open sidebar</span>
@@ -178,6 +179,7 @@
           </svg></button>
           <div id="userMenu-sm" class="absolute left-0 bottom-full login-hidden mb-2 w-48 top-11 border border-gray-200 rounded-md shadow-lg" >
             <ul style="background-color: #023f63;">
+              <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">问题反馈</li>
               <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
             </ul>
           </div>
@@ -205,11 +207,11 @@
               <textarea class="w-full h-full"  id = "textareaCopy"></textarea>
             </div>
 
-            <div id="hello-page" class="flex-1 overflow-hidden" >
+            <div id="hello-page" class="flex-1 h-full overflow-hidden" >
               <div class="react-scroll-to-bottom--css-dlyqs-79elbk h-full dark:bg-gray-800">
-                <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu">
+                <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu h-full">
                   <div class="flex flex-col text-sm dark:bg-gray-800 h-full">
-                    <div class="flex h-full flex-col items-center justify-between pb-64">
+                    <div class="flex h-full flex-col items-center justify-between">
                       <div id="modelChoices" class="px-2 w-full flex flex-col py-2 md:py-6 sticky top-0">
                         <div class="relative flex flex-col items-stretch justify-center gap-2 sm:items-center">
                           <div class="relative flex rounded-xl bg-gray-100 p-1 text-gray-900 dark:bg-gray-900">
@@ -218,35 +220,9 @@
                           </div>
                         </div>
                       </div>
-                      <!-- 智能体列表开始 -->
-                      <div class="agent-list-container" class="w-full" id="agent-list-container">
 
-                        <button onclick="openAgentModal()">新增智能体</button>
-                        <%--                        <span class="close-btn" onclick="closeAgentList()">&times;</span>--%>
-                        <table id="agent-list" border="1">
-                          <thead>
-                          <tr>
-                            <th>智能体姓名</th>
-                            <th>智能体平台</th>
-                            <th>智能体Token</th>
-                            <th>智能体App ID</th>
-                            <th>是否收费</th>
-                            <th>每次请求收费(元)</th>
-                            <th>发布状态</th>
-                            <th>操作</th>
-                          </tr>
-                          </thead>
-                          <tbody>
-                          <%--    动态生成的智能体数据行--%>
-                          </tbody>
-                        </table>
-                        <div class="pagination" id="pagination">
-                          <!-- 分页按钮将动态添加到这里 -->
-                        </div>
-                      </div>
-                      <!-- 智能体列表结束 -->
                       <div id="item-content" class="w-full" style="overflow: auto;" >
-                        <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]" style="height: calc(8vh);">
+                        <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]">
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
                             仅限邀请内测
                           </div>
@@ -263,20 +239,19 @@
                           <div class="h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center">
                             <div class="grow">
                               <div class="absolute  left-0 mb-4 flex w-full grow gap-2 px-1 pb-1 sm:px-2 sm:pb-0 md:static md:mb-0 md:max-w-none">
-                                <div class="grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-3"></div>
+                                <div class="grid w-full grid-flow-row grid-cols-2 gap-3"></div>
                               </div>
                             </div>
                           </div>
                         </div>
                         <!-- ***********************输入框前form end******************************** -->
                       </div>
-
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div
+            <div id="not-content"
                     class="absolute bottom-0 left-0  border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2 md:pl-2 md:w-[calc(100%-.5rem)]">
               <form
                       class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
@@ -285,8 +260,14 @@
                   <div class="flex w-full " id="queryBox">
                     <div id = "agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
                       <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 "  >
-                        <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center">选择智能体</div>
-                        <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto">
+                        <div id = "agent-head" class="agent-head  pt-2 pb-1 text-center"></div>
+                        <ul id = "agent-tools" class="pb-2">
+                          <!-- <li class=" pl-5  " >社交圈</li>
+                          <li class=" pl-5  not-available" >视频流</li>
+                          <li class=" pl-5  not-available" >语音流</li>
+                          <li class=" pl-5  not-available">传感器</li>
+                          <li class=" pl-5  not-available">工控线</li> -->
+                          <!-- <li class=" pl-5 pb-2">工控线</li> -->
                         </ul>
                       </div>
                     </div>
@@ -324,7 +305,7 @@
                       <!-- bg-gray-900 -->
                       <button onclick="textQuery()" type="button" id="queryBtn"
                               class="absolute p-1 rounded-md text-gray-500 bottom-1.5 right-1 md:bottom-2.5 md:right-2 hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
-                        <img style="position: relative;height: 25px;top: 1px;" src="images/rj.png">
+                        <img style="height:24px" src="images/rj.png">
                       </button>
                       <!-- ******************发送按钮关闭***************************** -->
                     </div>
@@ -427,63 +408,6 @@
     <a href="#" onclick="showLoginPage()">已有账号？返回登录</a>
   </div>
 </div>
-
-
-<!-- 新增/编辑智能体弹窗开始 -->
-<div id="agent-form-modal" class="modal">
-  <div class="modal-content">
-    <span class="close-btn" onclick="closeAgentModal()">&times;</span>
-    <form id="agent-form">
-      <label for="agent-name">智能体姓名：</label>
-      <input type="text" id="agent-name" required>
-      <label for="platform">智能体平台：</label>
-      <select id="platform" required>
-        <option value="ai.agent.chat.qianfan.XiaoxinAgent">千帆</option>
-        <option value="ai.agent.chat.coze.CozeAgent">扣子</option>
-        <option value="ai.agent.chat.tencent.YuanQiAgent">元器</option>
-        <option value="ai.agent.chat.zhipu.ZhipuAgent">智谱</option>
-      </select>
-      <label for="token">智能体Token：</label>
-      <input type="text" id="token" required>
-      <label for="app-id">智能体App ID：</label>
-      <input type="text" id="app-id" required>
-      <div style="display: flex; align-items: center;">
-        <label>是否收费：</label>
-        <label for="isFeeRequiredYes" style="margin-right: 5px;">是</label>
-        <input type="radio" id="isFeeRequiredYes" name="isFeeRequired" value="true" style="width: 1px; margin-bottom: -0.4em;">
-
-        <label for="isFeeRequiredNo" style="margin-right: 5px; padding-left: 10px;">否</label>
-        <input type="radio" id="isFeeRequiredNo" name="isFeeRequired" value="false" style="width: 1px; margin-bottom: -0.4em;" checked>
-      </div>
-      <div id="pricePerReqContainer" style="display: none;">
-        <label for="pricePerReq">每次请求收费(元)：</label>
-        <input type="number" id="pricePerReq" step="0.01" min="0">
-      </div>
-      <button type="button" onclick="saveAgent()">保存</button>
-    </form>
-  </div>
-</div>
-<!-- 新增/编辑智能体弹窗结束 -->
-
-<!-- 微信支付弹窗开始 -->
-<div id="wechat_pay_qr" style="display: none;">
-  <div class="qrCodeDiv">
-    <div class="qrDiv">
-      <img id="qrCode" src="" />
-    </div>
-    <div id="wechatTitle">
-      <img class="wechat_logo" src="images/wechat_logo.png" />
-      <div class="wechat_label">
-        微信支付 <span id="payAmount" class="orangeFont"></span> 元
-      </div>
-    </div>
-    <!-- 添加取消支付按钮 -->
-    <button id="cancelPaymentBtn" onclick="cancelPayment()">取消支付</button>
-  </div>
-</div>
-<!-- 微信支付弹窗结束 -->
-
-
 <!-- mobile debug 插件 -->
 <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
 <script src="libs/jquery-3.1.1.min.js"></script>
@@ -498,7 +422,6 @@
 <script src="js/self.js?ver=${initParam.version}"></script>
 <script src="js/query.js?ver=${initParam.version}"></script>
 <script src="js/ball.js"></script>
-<script src="js/agent.js"></script>
 <script src="js/login.js?ver=${initParam.version}"></script>
 </body>
 </html>
