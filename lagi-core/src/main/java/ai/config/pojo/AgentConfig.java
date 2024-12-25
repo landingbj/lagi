@@ -25,4 +25,7 @@ public class AgentConfig {
     private Boolean isFeeRequired;
     private BigDecimal pricePerReq;
     private Boolean publishStatus;
+    private BigDecimal income;
+    private Integer reqNum;
+    private Integer subscriberNum;
 }
