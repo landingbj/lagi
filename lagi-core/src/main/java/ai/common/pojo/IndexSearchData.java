@@ -20,4 +20,5 @@ public class IndexSearchData {
     private List<String> imageList;
     private String level;
     private String parentId;
+    private String title;
 }

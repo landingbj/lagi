@@ -2,6 +2,8 @@
   "mask": "...",
   "level": 3,
   "rules": [
-
+    {"rule":"```", "level": 2, "mask": ""},
+    {"rule":"markdown", "level": 2, "mask": ""},
+    {"rule":"md", "level": 2, "mask": ""}
   ]
 }

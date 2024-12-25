@@ -2,15 +2,19 @@ package ai.vector.impl;
 
 import ai.embedding.Embeddings;
 import ai.common.pojo.VectorStoreConfig;
+import ai.utils.HttpUtil;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.google.gson.internal.LinkedTreeMap;
 import tech.amikos.chromadb.Client;
 import tech.amikos.chromadb.Collection;
 import tech.amikos.chromadb.EmbeddingFunction;
-import tech.amikos.chromadb.handler.ApiException;
+import tech.amikos.chromadb.handler.*;
+import tech.amikos.chromadb.model.QueryEmbedding;
 
 import java.util.*;
 
@@ -115,6 +119,79 @@ public class ChromaVectorStore extends BaseVectorStore {
             }
         }
         return result;
+    }
+
+    /**
+     * $in
+     * @param queryCondition
+     * @param category
+     * @return
+     */
+    public List<IndexRecord> query(QueryCondition queryCondition, String category,Map<String, Object> where) {
+        List<IndexRecord> result = new ArrayList<>();
+        Collection collection = getCollection(category);
+        Collection.GetResult gr;
+        if (queryCondition.getText() == null) {
+            try {
+                gr = collection.get(null, queryCondition.getWhere(), null);
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
+            return getIndexRecords(result, gr);
+        }
+        List<String> queryTexts = Collections.singletonList(queryCondition.getText());
+        Integer n = queryCondition.getN();
+        Collection.QueryResponse qr = null;
+        try {
+            qr = reconstitutionQuery(queryTexts, n, where,category);
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+        for (int i = 0; i < qr.getDocuments().size(); i++) {
+            for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
+                IndexRecord indexRecord = IndexRecord.newBuilder()
+                        .withDocument(qr.getDocuments().get(i).get(j))
+                        .withId(qr.getIds().get(i).get(j))
+                        .withMetadata(qr.getMetadatas().get(i).get(j))
+                        .withDistance(qr.getDistances().get(i).get(j))
+                        .build();
+                result.add(indexRecord);
+            }
+        }
+        return result;
+    }
+
+    private Collection.QueryResponse reconstitutionQuery(List<String> queryTexts, Integer nResults, Map<String, Object> where,String category) throws ApiException {
+        QueryEmbedding body = new QueryEmbedding();
+        body.queryEmbeddings((List)this.embeddingFunction.createEmbedding(queryTexts));
+        body.nResults(nResults);
+        body.include(null);
+        if (where != null) {
+            body.where(where);
+        }
+
+        String apiurl = config.getUrl()+"/api/v1/collections/"+category;
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        String jsonResult = null;
+        try {
+            jsonResult = HttpUtil.httpGet(apiurl, headers,10 * 1000);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        com.google.gson.JsonObject jsonObject = JsonParser.parseString(jsonResult).getAsJsonObject();
+        String id = jsonObject.get("id").getAsString();
+
+        String apiurl1 = config.getUrl()+"/api/v1/collections/"+id+"/query";
+        Map<String, String> headers1 = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        String jsonResult1 = null;
+        try {
+            jsonResult1 = HttpUtil.httpPost(apiurl1, headers1,body, 10 * 1000);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return (Collection.QueryResponse)(new Gson()).fromJson(jsonResult1, Collection.QueryResponse.class);
     }
 
     private List<IndexRecord> getIndexRecords(List<IndexRecord> result, Collection.GetResult gr) {

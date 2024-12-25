@@ -17,6 +17,8 @@ public interface VectorStore {
 
     List<IndexRecord> query(QueryCondition queryCondition, String category);
 
+    List<IndexRecord> query(QueryCondition queryCondition, String category,Map<String, Object> where);
+
     List<IndexRecord> fetch(List<String> ids);
 
     List<IndexRecord> fetch(List<String> ids, String category);

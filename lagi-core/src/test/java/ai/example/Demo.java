@@ -5,6 +5,7 @@ import ai.common.pojo.*;
 import ai.config.ContextLoader;
 import ai.database.impl.MysqlAdapter;
 import ai.database.pojo.MysqlObject;
+import ai.database.pojo.TableColumnInfo;
 import ai.embedding.Embeddings;
 import ai.embedding.impl.ErnieEmbeddings;
 import ai.embedding.impl.TelecomGteEmbeddings;
@@ -30,6 +31,8 @@ import org.apache.poi.ss.formula.functions.T;
 import org.junit.Test;
 
 import java.io.File;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -347,7 +350,7 @@ public class Demo {
             QueryCondition queryCondition = new QueryCondition();
             queryCondition.setN(n);
             queryCondition.setText(ttt);
-            queryCondition.setWhere(where);
+//            queryCondition.setWhere(where);
             list1 =  vectorStore.query(queryCondition, "bj-telecom");
             list1 = list1.stream()
                     //.filter(record -> record.getDistance() < 0.5)
@@ -385,6 +388,33 @@ public class Demo {
          System.out.println(query("计达到 4 个 A，且通过公司专业评审要求，岗位等级可晋升一等"));
     }
 
+    @Test
+    public void quanxinaneikong() {
+        String jsonDocument = "金额小于500万需业务部门审批、大于等于10万需预算归口部门及财务部会签，在OA系统中起草部门签报流程；\n大于等于500万需业务副总及财务副总双签，在OA系统中起草公司签报流程；\n备注：\n1、该事项所涉及的成本支出为“成本支出”大类中的未单独列式费用，为“一事一议”的特殊事项；已明确业务审批流程的事项对应成本支出按各业务流程执行；\n2、业务用品费、配合费、其他业务费、广宣费、低值易耗品购买等日常需要发生的小额支出<1万元可与支付审批合一";
+        String jsonId = "31675880e4864571bb2ce66c96b0ea58";
+        Map<String, String> jsonMetadata = new HashMap<>();
+        jsonMetadata.put("category", "bj-telecom");
+        jsonMetadata.put("filename", "");
+        jsonMetadata.put("level", "user");
+        jsonMetadata.put("parent_id", "1453d57a6ca94b9887dd01b5759a4c1d");
+        jsonMetadata.put("place", "内控权限列表");
+        jsonMetadata.put("seq", "1733387465074");
+        jsonMetadata.put("type", "permission");
+
+        UpsertRecord upsertRecord = new UpsertRecord();
+        upsertRecord.setId(jsonId);
+        upsertRecord.setDocument(jsonDocument);
+        upsertRecord.setMetadata(jsonMetadata);
+        List<UpsertRecord> upsertRecords = new ArrayList<>();
+        upsertRecords.add(upsertRecord);
+    }
+
+    @Test
+    public void tt(){
+        //String ttt ="### 会议一：\n- 会议编号：公司专题办公会纪要-2024-234\n- 类别：公司专题办公会纪要\n- 主题：关于北京电信综合网格建设建议方案汇报会的纪要\n- 会议时间：2024年7月9日\n- 会议内容：\n  1. 梳理综合网格现状，包括梳理综合网格中现有角色的情况。\n  2. 进一步推进全业务网格三责落实情况。\n  3. 持续跟进全业务网格试点的推进现状，关注成本效益情况。\n  4. 加快提升数字化能力，用数字化手段提升触客效能，加快推动线上线下一体化。\n\n### 会议二：\n- 会议编号：公司专题办公会纪要-2024-235\n- 类别：公司专题办公会纪要\n- 主题：关于数字化综合网格方案汇报的会议纪要\n- 会议时间：2024年11月13日\n- 会议内容：\n  1. 进一步落实巡视整改工作要求，加快非清单市场发展，提升基础能力，以建设支局为底座，基础和战新并重、存量和新增并举；进一步推进全业务网格三责落实情况。\n  2. 支局首先作为一线营销单元，做好市场空间洞察，全客户全业务全场景入格，营销活动落地，人员能力提升等工作。\n  3. 区分公司可结合实际情况成立支局，成熟一个建设一个。";
+        System.out.println(chat1("有多少协议酒店"));
+    }
+
 
     @Test
     public void tistco2i() {
@@ -399,7 +429,7 @@ public class Demo {
                  //System.out.println("outcome:" + outcome);
                 String sql = extractContentWithinBraces(outcome);
                 System.out.println("sql:" + sql);
-                list = new AiZindexUserDao().sqlToValue(sql);
+                list = new MysqlAdapter().sqlToValue(sql);
 
                 for (Object o : list) {
                     System.out.println(gson.toJson(o));
@@ -509,24 +539,38 @@ public class Demo {
 
     @Test
     public void mysql() {
-        List<Map<String, Object>> list = new AiZindexUserDao().sqlToValue("SELECT * FROM hotel_agreement WHERE agreement_price4 BETWEEN 300 AND 500;");
-        //System.out.println(list.toArray());
-        Gson gson = new Gson();
-        for (Object o : list) {
-            System.out.println(gson.toJson(o));
-        }
-    }
+//        List<Map<String, Object>> list = new MysqlAdapter().sqlToValue("SELECT * FROM hotel_agreement ;");
+//        //System.out.println(list.toArray());
+//        Gson gson = new Gson();
+//        for (Object o : list) {
+//            System.out.println(gson.toJson(o));
+//        }
+        List<TableColumnInfo> list = new MysqlAdapter().getTableColumnInfo("hotel_agreement");
+           StringBuilder result = new StringBuilder();
+            Map<String, List<TableColumnInfo>> groupedByTable = list.stream()
+               .collect(Collectors.groupingBy(TableColumnInfo::getTableName));
 
 
-    class AiZindexUserDao extends MysqlAdapter {
-        /**
-         * 查询
-         *
-         * @return
-         */
-            public List<Map<String,Object>> sqlToValue(String sql) {
-            List<Map<String,Object>> list = select(sql);
-            return list.size() > 0 && list != null ? list : new ArrayList<>();
+        for (Map.Entry<String, List<TableColumnInfo>> entry : groupedByTable.entrySet()) {
+            String tableName = entry.getKey();
+            List<TableColumnInfo> columns = entry.getValue();
+            result.append("表名为: ").append(tableName).append(";\n");
+           for (TableColumnInfo column : columns) {
+                result.append(String.format("字段: %s %s",
+                                            column.getColumnName(),
+                                            column.getColumnType()));
+                if (!column.getColumnRemark().isEmpty()) {
+                    result.append(" 备注为: ").append(column.getColumnRemark());
+                }
+                result.append("；\n");
+            }
+            result.append("\n");
         }
+        System.out.println(result);
+
+//        Gson gson = new Gson();
+//        for (Object o : list) {
+//            System.out.println(gson.toJson(o));
+//        }
     }
 }

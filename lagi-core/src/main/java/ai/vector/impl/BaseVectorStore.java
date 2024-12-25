@@ -8,6 +8,7 @@ import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
 import lombok.Getter;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,11 @@ public class BaseVectorStore implements VectorStore {
 
     @Override
     public List<IndexRecord> query(QueryCondition queryCondition, String category) {
+        return null;
+    }
+
+    @Override
+    public List<IndexRecord> query(QueryCondition queryCondition, String category, Map<String, Object> where) {
         return null;
     }
 

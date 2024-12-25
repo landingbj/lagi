@@ -15,11 +15,9 @@ import io.pinecone.PineconeConnection;
 import io.pinecone.PineconeConnectionConfig;
 import io.pinecone.exceptions.PineconeException;
 import io.pinecone.proto.*;
+import io.pinecone.proto.Vector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PineconeVectorStore implements VectorStore {
     private static final String DOCUMENT = "document";
@@ -120,6 +118,11 @@ public class PineconeVectorStore implements VectorStore {
             e.printStackTrace();
         }
         return result;
+    }
+
+    @Override
+    public List<IndexRecord> query(QueryCondition queryCondition, String category, Map<String, Object> where) {
+        return query(queryCondition, category);
     }
 
     public List<IndexRecord> fetch(List<String> ids) {

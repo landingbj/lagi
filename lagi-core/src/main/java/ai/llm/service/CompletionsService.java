@@ -252,14 +252,29 @@ public class CompletionsService implements ChatCompletion {
                             "请根据上下文信息和用户身份，回答以下问题，仅依据上下文信息，不要随意扩展，不要添加背景总结或扩展内容，不要重复身份或背景信息：\n%s";
                 }
 
-            }else if (meeting!=null&&meeting){
-                 prompt = "以下是上下文信息：\n--------------------\n%s\n--------------------\n" +
-                        "根据上下文信息而非先前知识，回答以下这个问题，回答只基于上下文信息，不要随意扩展和发散内容，不要出现上下文里没有的信息。"+
-                        "在描述会议时须包括：\n会议编号：,\n类别： ,\n主题： ,\n会议时间： ,\n会议内容: ,每一项结束要以md格式换行。"+
-                         "不用返回拟稿人，电话，份号，分送单位，出席人员。如果上下文中有多个会议与问题相关请分别返回。请以md格式回答以下问题:\n %s\n";
-                         // +"如果上下文中的会议内容和我的问题相差非常远，就只用告诉我：“对不起，没有找到相关的会议！”";
-                 //请在描述会议时请完整的描述出和问题相关的会议信息。
-                // 如果上下文中的会议内容和我的完全问题没有任何关系，就只用告诉我：“对不起，没有找到相关的会议纪要！”
+            }
+            //业务类问答接口
+            if (meeting!=null&&meeting){
+                    if (enhanceRequest.getBusiness()!=null&&enhanceRequest.getBusiness().equals("GSSW")){
+                        prompt = "以下是上下文信息：\n--------------------\n%s\n--------------------\n" +
+                                "根据上下文信息而非先前知识，回答以下这个问题，回答只基于上下文信息，不要随意扩展和发散内容，不要出现上下文里没有的信息。"+
+                                "在描述公司收文时须包括：\n标题: ,\n流水号： ,\n收文日期： ,\n来文字号： ,\n来文单位： ,\n收文内容:。"+
+                                "如果上下文中有多个收文与问题相关请分别返回。请以md格式回答以下问题:\n %s\n";
+                    } else if (enhanceRequest.getBusiness()!=null&&enhanceRequest.getBusiness().equals("HYJY")){
+                        prompt = "以下是上下文信息：\n--------------------\n%s\n--------------------\n" +
+                                "根据上下文信息而非先前知识，回答以下这个问题，回答只基于上下文信息，不要随意扩展和发散内容，不要出现上下文里没有的信息。"+
+                                "在描述会议时须包括：\n会议编号：,\n类别： ,\n主题： ,\n会议时间： ,\n会议内容: ,每一项结束要以md格式换行。"+
+                                "不用返回拟稿人，电话，份号，分送单位，出席人员。如果上下文中有多个会议与问题相关请分别返回。请以md格式回答以下问题:\n %s\n";
+                        // +"如果上下文中的会议内容和我的问题相差非常远，就只用告诉我：“对不起，没有找到相关的会议！”";
+                        //请在描述会议时请完整的描述出和问题相关的会议信息。
+                        // 如果上下文中的会议内容和我的完全问题没有任何关系，就只用告诉我：“对不起，没有找到相关的会议纪要！”
+                    }else {
+                        prompt = "以下是上下文信息：\n--------------------\n%s\n--------------------\n" +
+                                "根据上下文信息而非先前知识，回答以下这个问题，回答只基于上下文信息，不要随意扩展和发散内容，不要出现上下文里没有的信息。"+
+                                "在描述会议时须包括：\n会议编号：,\n类别： ,\n主题： ,\n会议时间： ,\n会议内容: ,每一项结束要以md格式换行。"+
+                                "不用返回拟稿人，电话，份号，分送单位，出席人员。如果上下文中有多个会议与问题相关请分别返回。请以md格式回答以下问题:\n %s\n";
+                    }
+
             }
         }
         prompt = String.format(prompt, context, lastMessage);
@@ -274,6 +289,7 @@ public class CompletionsService implements ChatCompletion {
         List<String> filenames = new ArrayList<>();
         List<String> chunkIds = new ArrayList<>();
         String context = indexSearchDataList.get(0).getText();
+        context+="\n"+indexSearchDataList.get(0).getTitle();
         if (indexSearchDataList.get(0).getFilepath() != null && indexSearchDataList.get(0).getFilename() != null) {
             filePaths.addAll(indexSearchDataList.get(0).getFilepath());
             filenames.addAll(indexSearchDataList.get(0).getFilename());
@@ -294,6 +310,7 @@ public class CompletionsService implements ChatCompletion {
                         chunkIds.add(data.getId());
                     }
                     context += "\n" + data.getText();
+                    context += "\n" + data.getTitle();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
                     if (context.length() > maxInput) {
@@ -312,6 +329,7 @@ public class CompletionsService implements ChatCompletion {
                         chunkIds.add(data.getId());
                     }
                     context += "\n" + data.getText();
+                    context += "\n" + data.getTitle();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
                     if (context.length() > maxInput) {
@@ -326,6 +344,7 @@ public class CompletionsService implements ChatCompletion {
                 double average = diffList.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
                 if (diff < average) {
                     context += "\n" + data.getText();
+                    context += "\n" + data.getTitle();
                     lastDistance = data.getDistance();
                     diffList.add(diff);
                     if (data.getFilepath() != null && data.getFilename() != null) {

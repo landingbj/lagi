@@ -37,13 +37,9 @@ public class MysqlAdapter {
         Connection con = null;
 
         try {
-            try {
-                Class.forName("com.mysql.jdbc.Driver");
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            Class.forName("com.mysql.jdbc.Driver");
             con = DriverManager.getConnection(url,username,password);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return con;}

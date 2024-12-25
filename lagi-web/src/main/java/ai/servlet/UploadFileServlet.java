@@ -64,7 +64,7 @@ public class UploadFileServlet extends HttpServlet {
     private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
     private static final String UPLOAD_HYJY = "/upload/HYJY";
-    private static final String MEETING_PATH = "HYJY/";
+    private static final String UPLOAD_GSSW = "/upload/GSSW";
 
     private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(1);
     private final Embeddings ef = new TelecomGteEmbeddings(ContextLoader.configuration.getFunctions().getEmbedding().get(0));
@@ -187,7 +187,7 @@ public class UploadFileServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
         upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
-        String uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+        String uploadDir = getServletContext().getRealPath(UPLOAD_GSSW);
         if (!new File(uploadDir).isDirectory()) {
             new File(uploadDir).mkdirs();
         }
@@ -707,8 +707,10 @@ public class UploadFileServlet extends HttpServlet {
         String uploadDir = "";
         if (type==null){
              uploadDir = getServletContext().getRealPath(UPLOAD_DIR);
-        }else {
+        }else if(type.equals("HYJY")) {
              uploadDir = getServletContext().getRealPath(UPLOAD_HYJY);
+        }else if(type.equals("GSSW")){
+            uploadDir = getServletContext().getRealPath(UPLOAD_GSSW);
         }
 
         // 读取文件并写入响应流

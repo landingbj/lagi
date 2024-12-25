@@ -28,6 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ObjectUtils;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class VectorStoreService {
     private static final ExecutorService executor;
 
     static {
-        ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 60, TimeUnit.SECONDS,
+        ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(80, 100, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(100),
                 (r, executor) -> {
                     log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
@@ -264,6 +265,10 @@ public class VectorStoreService {
         return this.vectorStore.query(queryCondition, category);
     }
 
+    public List<IndexRecord> query(QueryCondition queryCondition, String category, Map<String, Object> where) {
+        return this.vectorStore.query(queryCondition, category,where);
+    }
+
     public List<IndexRecord> fetch(List<String> ids) {
         return this.vectorStore.fetch(ids);
     }
@@ -354,14 +359,7 @@ public class VectorStoreService {
         }
         if (request instanceof EnhanceChatCompletionRequest) {
             EnhanceChatCompletionRequest enhanceRequest = (EnhanceChatCompletionRequest) request;
-            String userId = enhanceRequest.getUserId();
-            String identity = enhanceRequest.getIdentity();
-//            if ("leader".equals(identity)) {
-//                question = adjustQuestionForLeader(question);
-//            } else if ("personnel".equals(identity)) {
-//                question = adjustQuestionForPersonnel(question);
-//            }
-            if (enhanceRequest.getMeeting()){
+            if (enhanceRequest.getMeeting()!= null && enhanceRequest.getMeeting()){
                 return search(question, enhanceRequest);
             }
         }
@@ -438,33 +436,50 @@ public class VectorStoreService {
     }
 
     /**
-     * 会议纪要的向量查询
+     * 会议纪要的向量查询(原版)
      * @param question
      * @param request
      * @return
      */
-    public List<IndexSearchData> search(String question, EnhanceChatCompletionRequest request) {
+    public List<IndexSearchData> HYJYsearch(String question, EnhanceChatCompletionRequest request) {
         question = question.replace(" \n", "");
-        int  similarity_top_k = 100;
+        int  similarity_top_k = 1000;
         double similarity_cutoff = 0.5;
         String category = "HYJY";
         if (request.getBusiness()!= null){
              category = request.getBusiness();
         }
+
         Map<String, String> where = new HashMap<>();
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
-        Set<String> esIds = bigdataService.getIds(question, category);
-        if (esIds != null && !esIds.isEmpty()) {
-            Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
-            indexIds.retainAll(esIds);
-            indexSearchDataList = indexSearchDataList.stream()
-                    .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
-                    .collect(Collectors.toList());
+        String authorizer = request.getCategory();
+        //权限
+        Map<String, Object> entity = new HashMap<>();
+        List<String> ids = indexSearchDataList.stream()
+                .map(IndexSearchData::getFileId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        entity.put("docIds", ids);
+        entity.put("workNumber", authorizer);
+        entity.put("business", category);
+        String apiurl ="http://10.62.74.4:5001/oaInterface/sysAuth/getDocAuthForUser?type=0";//部分
+        List<String> permissions = getPermissions(entity,apiurl);
+        if (permissions==null || permissions.size() <=0){
+            return new ArrayList<>();
         }
+
+        Set<String> idSet = new HashSet<>(permissions);
+        indexSearchDataList =indexSearchDataList.stream()
+                .filter(data -> idSet.contains(data.getFileId()))
+                .collect(Collectors.toList());
+        int size = indexSearchDataList.size();
+        indexSearchDataList = indexSearchDataList.subList(0, Math.min(size, 30));
         String finalCategory = category;
         List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
                 .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
                 .collect(Collectors.toList());
+
         List<IndexSearchData> indexSearchDatas = futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
@@ -474,30 +489,67 @@ public class VectorStoreService {
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
 
-        Map<String, Object> entity = new HashMap<>();
-        List<String> ids = indexSearchDatas.stream()
-                .map(IndexSearchData::getFileId)
-                .distinct()
-                .collect(Collectors.toList());
-        String authorizer = request.getCategory();
-        entity.put("docIds", ids);
-        entity.put("workNumber", authorizer);
-        entity.put("business", "HYJY");
-        List<String> permissions = getPermissions(entity);
-        Set<String> idSet = new HashSet<>(permissions);
-        List<IndexSearchData> intersection =indexSearchDatas.stream()
-                .filter(data -> idSet.contains(data.getFileId()))
-                .collect(Collectors.toList());
-        return intersection;
+        return indexSearchDatas;
     }
 
-    private List<String> getPermissions(Map<String, Object> entity){
-        String apiurl = "http://10.62.74.4:5001/oaInterface/sysAuth/putDocUserAuth";
+    /**
+     * 业务类向量查询改版
+     */
+    public List<IndexSearchData> search(String question, EnhanceChatCompletionRequest request) {
+        question = question.replace(" \n", "");
+        int  similarity_top_k = 50;
+        double similarity_cutoff = 0.5;
+        String category = "HYJY";
+        if (request.getBusiness()!= null){
+            category = request.getBusiness();
+            if (category.equals("HYJY")){
+                return HYJYsearch(question, request);
+            }
+        }else {
+            request.setBusiness("HYJY");
+            return HYJYsearch(question, request);
+        }
+
+        Map<String, Object> where = new HashMap<>();
+
+        String authorizer = request.getCategory();
+        Map<String, Object> entity = new HashMap<>();
+        entity.put("workNumber", authorizer);
+        entity.put("business", category);
+        String apiurl ="http://10.62.74.4:5001/oaInterface/sysAuth/getDocAuthForUser?type=1";//全量
+        List<String> permissions = getPermissions(entity,apiurl);
+        if (permissions==null || permissions.size() <=0){
+            return new ArrayList<>();
+        }
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("$in", permissions);
+        where.put("file_id", map);
+        List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, null, category, where);
+        String finalCategory = category;
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
+                .collect(Collectors.toList());
+
+        List<IndexSearchData> indexSearchDatas = futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            } catch (Exception e) {
+                log.error("indexData get error", e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+
+        return indexSearchDatas;
+    }
+
+    private List<String> getPermissions(Map<String, Object> entity,String apiurl){
+        //String apiurl = "http://10.62.74.4:5001/oaInterface/sysAuth/putDocUserAuth";//部分
+
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         String jsonResult = null;
         try {
-            jsonResult = HttpUtil.httpPost(apiurl, headers, entity, 20 * 1000);
+            jsonResult = HttpUtil.httpPost(apiurl, headers, entity, 10 * 1000);
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -557,9 +609,21 @@ public class VectorStoreService {
         List<IndexSearchData> result = new ArrayList<>();
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setText(question);
-        queryCondition.setN(Math.max(similarity_top_k, 500));
+        queryCondition.setN(Math.max(similarity_top_k, 1000));
         queryCondition.setWhere(where);
         List<IndexRecord> indexRecords = this.query(queryCondition, category);
+        result = indexRecords.stream().filter(indexRecord -> indexRecord.getDistance() <= similarity_cutoff).limit(similarity_top_k).map(this::toIndexSearchData).collect(Collectors.toList());
+        return result;
+    }
+
+    public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
+                                        Map<String, String> where, String category,Map<String, Object> where1) {
+        List<IndexSearchData> result = new ArrayList<>();
+        QueryCondition queryCondition = new QueryCondition();
+        queryCondition.setText(question);
+        queryCondition.setN(Math.max(similarity_top_k, 1000));
+        queryCondition.setWhere(where);
+        List<IndexRecord> indexRecords = this.query(queryCondition, category, where1);
         result = indexRecords.stream().filter(indexRecord -> indexRecord.getDistance() <= similarity_cutoff).limit(similarity_top_k).map(this::toIndexSearchData).collect(Collectors.toList());
         return result;
     }
@@ -585,6 +649,10 @@ public class VectorStoreService {
         }
         indexSearchData.setImage((String) indexRecord.getMetadata().get("image"));
         indexSearchData.setDistance(indexRecord.getDistance());
+        if (indexRecord.getMetadata().get("title") != null) {
+            indexSearchData.setTitle(indexRecord.getMetadata().get("title").toString());
+        }
+
         indexSearchData.setParentId((String) indexRecord.getMetadata().get("parent_id"));
         return indexSearchData;
     }
