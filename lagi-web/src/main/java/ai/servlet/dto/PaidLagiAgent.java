@@ -1,13 +1,11 @@
 package ai.servlet.dto;
 
+import ai.config.pojo.AgentConfig;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class LagiAgentExpense {
-    private Integer id;
-    private String userId;
-    private Integer agentId;
+public class PaidLagiAgent extends AgentConfig {
     private BigDecimal balance;
 }

@@ -2,6 +2,7 @@ package ai.migrate.service;
 
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
+import ai.dto.DeductExpensesRequest;
 import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
@@ -65,6 +66,12 @@ public class AgentService {
         params.put("lagiUserId", lagiUserId);
         String resultJson = OkHttpUtil.get(SAAS_BASE_URL + "/agent/getPaidAgentByUser", params);
         LagiAgentExpenseListResponse lagiAgentResponse = gson.fromJson(resultJson, LagiAgentExpenseListResponse.class);
+        return lagiAgentResponse;
+    }
+
+    public Response deductExpenses(DeductExpensesRequest deductExpensesRequest) throws IOException {
+        String resultJson = OkHttpUtil.post(SAAS_BASE_URL + "/agent/deductExpenses", gson.toJson(deductExpensesRequest));
+        Response lagiAgentResponse = gson.fromJson(resultJson, Response.class);
         return lagiAgentResponse;
     }
 }

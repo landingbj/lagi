@@ -3,6 +3,7 @@ package ai.servlet;
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
 import ai.dto.AgentChargeDetail;
+import ai.dto.DeductExpensesRequest;
 import ai.dto.PrepayRequest;
 import ai.dto.PrepayResponse;
 import ai.migrate.service.AgentService;
@@ -57,6 +58,8 @@ public class AgentServlet extends BaseServlet {
             this.deleteLagiAgentById(req, resp);
         } else if (method.equals("prepay")) {
             this.prepay(req, resp);
+        } else if (method.equals("deductExpenses")) {
+            this.deductExpenses(req, resp);
         }
     }
 
@@ -119,6 +122,13 @@ public class AgentServlet extends BaseServlet {
         }.getType();
         List<Integer> ids = gson.fromJson(requestToJson(req), listType);
         Response response = agentService.deleteLagiAgentById(ids);
+        responsePrint(resp, gson.toJson(response));
+    }
+
+    private void deductExpenses(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        DeductExpensesRequest deductExpensesRequest = reqBodyToObj(req, DeductExpensesRequest.class);
+        Response response = agentService.deductExpenses(deductExpensesRequest);
         responsePrint(resp, gson.toJson(response));
     }
 }
