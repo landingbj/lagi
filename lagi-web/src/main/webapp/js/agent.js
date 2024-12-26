@@ -50,6 +50,10 @@ function resetAgentForm() {
 
 // 打开弹框的方法
 function openAgentModal() {
+    if (!getCookie('userId')) {
+        openModal();
+        return;
+    }
     var modal = document.getElementById('agent-form-modal');
     modal.style.display = 'block';
     document.getElementById("agent-list-container").classList.add("blurred");
