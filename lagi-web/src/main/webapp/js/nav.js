@@ -200,7 +200,44 @@ let promptNavs = [
                 "agentId": "image",
                 "title": "图像生成",
                 "templateIssues": "帮我生成一张海滩风景的图像"
-            }
+            },
+            {
+                "id": 115,
+                "agentId": "KFC_text_generate",
+                "title": "疯狂星期",
+                "templateIssues": "帮我生成一个疯狂星期四的文案"
+            },
+            {
+                "id": 116,
+                "agentId": "ip_address_lookup_agent",
+                "title": "ip查询",
+                "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
+            },
+            {
+                "id": 117,
+                "agentId": "anime_pictures",
+                "title": "动漫图片",
+                "templateIssues": "帮我生成一张动漫图片"
+            },
+            {
+                "id": 118,
+                "agentId": "constellation_luck",
+                "title": "今日运势",
+                "templateIssues": "帮我查查今天白羊座运势怎么样"
+            },
+            {
+                "id": 119,
+                "agentId": "sogou_search_pictures",
+                "title": "搜狗搜图",
+                "templateIssues": "帮我搜索一下刘亦菲的图片"
+            },
+            {
+                "id": 120,
+                "agentId": "belle_pictures",
+                "title": "头像生成",
+                "templateIssues": "帮我生成一张头像"
+            },
+
         ]
     },
     {

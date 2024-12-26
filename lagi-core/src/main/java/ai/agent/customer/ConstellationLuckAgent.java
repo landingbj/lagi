@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 
 public class ConstellationLuckAgent  extends CustomerAgent {
     public ConstellationLuckAgent(AgentConfig agentConfig) {
+        super(agentConfig);
         ConstellationLuckTool weatherSearchTool = new ConstellationLuckTool();
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),
