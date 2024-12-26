@@ -510,6 +510,11 @@ agents:
     driver: ai.agent.customer.AnimePicturesAgent
     app_id: belle_pictures
 
+  #This is a Baidu search tool that can help you search for some images online based on your keywords
+  - name: baidu_search_pictures
+    driver: ai.agent.customer.BaiduSearchPicturesAgent
+    app_id: baidu_search_pictures
+
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
 workers:

@@ -237,6 +237,12 @@ let promptNavs = [
                 "title": "头像生成",
                 "templateIssues": "帮我生成一张头像"
             },
+            {
+                "id": 121,
+                "agentId": "baidu_search_pictures",
+                "title": "百度搜图",
+                "templateIssues": "帮我搜索一下关于小米SU7的图片"
+            }
 
         ]
     },

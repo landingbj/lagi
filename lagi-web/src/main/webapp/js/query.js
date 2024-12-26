@@ -449,7 +449,7 @@ function generalOutput(paras, question, robootAnswerJq) {
             fullText = fullText.replaceAll("\n", "<br>");
             result = `
                         ${fullText} <br>
-                        ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div><br>` : ""}
                         ${res.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${res.source}</small></div></div><br>` : ""}
                         `
@@ -559,7 +559,7 @@ function streamOutput(paras, question, robootAnswerJq) {
                 fullText += t;
                 result = `
                         ${fullText} <br>
-                        ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
                         ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
                 // `;
