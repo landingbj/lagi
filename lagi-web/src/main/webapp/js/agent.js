@@ -110,8 +110,16 @@ function saveAgent() {
         .then(data => {
             closeAgentModal();
             loadAgentList(1);  // 刷新列表
+
+            // 在保存成功后弹出提示框
+            alert('发布成功！');
+        })
+        .catch(error => {
+            // 处理可能的错误情况
+            alert('发布失败，请重试！');
         });
 }
+
 
 // 加载智能体列表
 function loadAgentList(pageNumber) {

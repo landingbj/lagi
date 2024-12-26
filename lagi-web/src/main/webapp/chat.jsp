@@ -610,7 +610,7 @@
                 <label for="pricePerReq">每次请求收费(元)：</label>
                 <input type="number" id="pricePerReq" step="0.01" min="0">
             </div>
-            <button type="button" onclick="saveAgent()">保存</button>
+            <button type="button" onclick="saveAgent()">发布</button>
         </form>
     </div>
 </div>
