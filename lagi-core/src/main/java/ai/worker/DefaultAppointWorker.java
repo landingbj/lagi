@@ -5,27 +5,25 @@ import ai.config.pojo.WorkerConfig;
 import ai.manager.AgentManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
-import ai.router.Route;
 import ai.router.Routers;
 import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
+import ai.worker.skillMap.SkillMap;
 import cn.hutool.core.bean.BeanUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatCompletionResult> {
+public class DefaultAppointWorker extends RouteWorker {
 
     protected Map<String, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = new ConcurrentHashMap<>();
 
     protected WorkerConfig workerConfig;
-
-    private final Route route;
-
 
 
     public DefaultAppointWorker(WorkerConfig workerConfig) {
@@ -66,6 +64,9 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
     public ChatCompletionResult call(ChatCompletionRequest data) {
         String agentId = (String)BeanUtil.getFieldValue(data, "agentId");
         Agent<ChatCompletionRequest, ChatCompletionResult> trAgent = agentMap.get(agentId);
+        if(trAgent == null) {
+            trAgent =  additionalAgents.stream().filter(agent -> agent.getAgentConfig().getName().equals(agentId)).findFirst().orElse(null);
+        }
         if(trAgent != null) {
             List<ChatCompletionResult> invoke = route.invoke(data, Lists.newArrayList(trAgent));
             if(invoke != null && !invoke.isEmpty()) {
@@ -82,8 +83,15 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
         return null;
     }
 
-    @Override
-    public void notify(ChatCompletionRequest data) {
 
+    @Override
+    public DefaultAppointWorker clone() throws CloneNotSupportedException {
+        DefaultAppointWorker cloned = (DefaultAppointWorker) super.clone();
+        cloned.route = this.route;
+        cloned.agentMap = this.agentMap;
+        cloned.workerConfig = this.workerConfig;
+        cloned.additionalAgents = new ArrayList<>();
+        return cloned;
     }
+
 }

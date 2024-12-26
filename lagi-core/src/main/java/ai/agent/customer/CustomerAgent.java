@@ -82,7 +82,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         String fileUrl = null;
         String question = data.getMessages().get(data.getMessages().size() - 1).getContent();
         StringBuilder agent_scratch = new StringBuilder();
-        String user_msg = "决定用哪个工具若认为任务已完成或工具调用失败直接调用finish工具";
+        String user_msg = "决定用哪个工具若工具调用失败或全部调用成功直接调用finish工具";
         String assistant_msg = "";
         List<List<String>> history = new ArrayList<>();
         while (count-- > 0){

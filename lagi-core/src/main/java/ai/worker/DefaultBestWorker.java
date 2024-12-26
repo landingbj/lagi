@@ -9,20 +9,27 @@ import ai.router.Route;
 import ai.router.Routers;
 import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
+import ai.worker.skillMap.SkillMap;
+import lombok.Setter;
 
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatCompletionResult>{
+public class DefaultBestWorker extends RouteWorker{
 
     protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = new ArrayList<>();
 
     protected WorkerConfig workerConfig;
 
-    private final Route route;
+    private Route route;
+
+    @Setter
+    private List<Agent<ChatCompletionRequest, ChatCompletionResult>> additionalAgents = new ArrayList<>();
 
     public DefaultBestWorker(WorkerConfig workerConfig) {
+        if(workerConfig == null) {
+            return;
+        }
         this.workerConfig = workerConfig;
         String ruleName = RouterParser.getRuleName(workerConfig.getRoute());
         this.route = Routers.getInstance().getRoute(ruleName);
@@ -50,18 +57,6 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
         }
     }
 
-    private static String getRuleName(String route) {
-        int i = route.indexOf("(");
-        return route.substring(0, i);
-    }
-
-    private static List<String> getParams(String route) {
-        int s = route.indexOf("(");
-        int e = route.indexOf(")");
-        return Arrays.stream(route.substring(s + 1, e).split(","))
-                .map(String::trim)
-                .collect(Collectors.toList());
-    }
 
 
     protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentsBySkillMap(List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents, ChatCompletionRequest data) {
@@ -76,19 +71,24 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
         if(route == null) {
             return null;
         }
-        List<ChatCompletionResult> results = route.invoke(data, filterAgentsBySkillMap(agents, data));
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> all = new ArrayList<>();
+        all.addAll(agents);
+        all.addAll(additionalAgents);
+        List<ChatCompletionResult> results = route.invoke(data, filterAgentsBySkillMap(all, data));
         if(results != null && !results.isEmpty()) {
             result = results.get(0);
         }
         return result;
     }
 
-    @Override
-    public  ChatCompletionResult call(ChatCompletionRequest data){
-        return null;
-    }
 
     @Override
-    public void notify(ChatCompletionRequest data){
+    public DefaultBestWorker clone() throws CloneNotSupportedException {
+        DefaultBestWorker cloned = (DefaultBestWorker) super.clone();
+        cloned.route = this.route;
+        cloned.agents = this.agents;
+        cloned.workerConfig = this.workerConfig;
+        cloned.additionalAgents = new ArrayList<>();
+        return cloned;
     }
 }

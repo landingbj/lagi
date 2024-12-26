@@ -11,7 +11,9 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
 import ai.utils.WorkPriorityWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
-import ai.worker.SkillMap;
+import ai.worker.pojo.AgentIntentScore;
+import ai.worker.pojo.IntentResponse;
+import ai.worker.skillMap.SkillMap;
 import ai.worker.WorkerGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import lombok.Setter;
@@ -90,7 +92,17 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
             calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
             try {
                 SkillMap skillMap = new SkillMap();
-                skillMap.saveAgentScore(agent.getAgentConfig(), ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+                IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(chatCompletionRequest));
+                List<String> keywords = intentResponse.getKeywords();
+                AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
+                Double scoring = 0.0;
+                if(agentIntentScore == null) {
+                    scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+                    skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
+                } else {
+                    scoring = agentIntentScore.getScore();
+                }
+                calPriority = getPriority() + scoring;
             } catch (Exception e) {
                 log.error("saveAgentScore error", e);
             }

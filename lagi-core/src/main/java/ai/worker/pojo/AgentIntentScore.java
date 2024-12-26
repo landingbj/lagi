@@ -8,7 +8,7 @@ import lombok.*;
 @ToString
 @Builder
 public class AgentIntentScore {
-    private String agentId;
+    private Integer agentId;
     private String agentName;
     private String keyword;
     private String question;

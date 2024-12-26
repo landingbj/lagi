@@ -20,6 +20,7 @@ public class AgentManager {
     private static AgentManager instance = new AgentManager();
     private AgentManager(){}
     private final Map<String, Agent<?, ?>> agentsMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Agent<?, ?>> agentIdMap = new ConcurrentHashMap<>();
     public void register(List<AgentConfig> agentConfigs)
     {
         agentConfigs.forEach(conf -> {
@@ -30,6 +31,7 @@ public class AgentManager {
             Constructor<?> constructor = clazz.getConstructor(AgentConfig.class);
             Object o = constructor.newInstance(conf);
             agentsMap.put(name, (Agent<?, ?>) o);
+            agentIdMap.put(conf.getId(), (Agent<?, ?>) o);
         } catch (Exception ignored) {
             try {
                 Class<?> clazz = Class.forName(driver);
@@ -53,6 +55,11 @@ public class AgentManager {
     public  Agent<?, ?> get(String key)
     {
         return agentsMap.getOrDefault(key, null);
+    }
+
+    public  Agent<?, ?> get(Integer key)
+    {
+        return agentIdMap.getOrDefault(key, null);
     }
 
     public  List<Agent<?, ?>> agents()
