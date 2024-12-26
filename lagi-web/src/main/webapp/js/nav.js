@@ -611,6 +611,8 @@ function getPromptDialog(id) {
         loadAgentList(1);
         openAgentList();
         $('#queryBox').hide();
+        showFooterInfo();
+        showHelpButton();
         return;
     }
 
@@ -629,6 +631,8 @@ function getPromptDialog(id) {
         loadPaidAgentList(1);
         openPaidAgentList();
         $('#queryBox').hide();
+        showFooterInfo();
+        showHelpButton();
         return;
     }
 

@@ -463,13 +463,14 @@ pre .key {
 #agent-list-container {
     display: none;           /* 默认隐藏 */
     width: 100%;             /* 宽度占满父容器 */
-    height: 100%;            /* 高度占满父容器 */
+    height: 90%;            /* 高度占满父容器 */
     box-sizing: border-box;  /* 包括内边距和边框 */
     background-color: white;  /* 背景颜色，根据需要调整 */
     padding: 20px;  /* 内边距 */
     z-index: 1;
     justify-content: center;
     align-items: center;
+    position: relative; /* 设置为相对定位 */
 }
 
 
@@ -537,7 +538,7 @@ pre .key {
 .agent-list-container {
     display: none;           /* 默认隐藏 */
     width: 100%;             /* 宽度占满父容器 */
-    height: 100%;            /* 高度占满父容器 */
+    height: 90%;            /* 高度占满父容器 */
     box-sizing: border-box;  /* 包括内边距和边框 */
     background-color: white;  /* 背景颜色，根据需要调整 */
     padding: 20px;  /* 内边距 */
@@ -609,6 +610,8 @@ pre .key {
 
 /* 仅影响 id 为 agent-list-container 下的分页按钮 */
 #agent-list-container .pagination button {
+    /*position: absolute;*/
+    bottom: 50px;
     margin: 0 5px;             /* 按钮之间的间距 */
 }
 
@@ -769,13 +772,14 @@ pre .key {
 #paid-agent-list-container {
     display: none;           /* 默认隐藏 */
     width: 100%;             /* 宽度占满父容器 */
-    height: 100%;            /* 高度占满父容器 */
+    height: 90%;            /* 高度占满父容器 */
     box-sizing: border-box;  /* 包括内边距和边框 */
     background-color: white;  /* 背景颜色 */
     padding: 20px;           /* 内边距 */
     z-index: 1;
     justify-content: center;
     align-items: center;
+    position: relative; /* 设置为相对定位 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的表格 */
@@ -793,9 +797,15 @@ pre .key {
 
 /* 仅影响 id 为 paid-agent-list-container 下的 button */
 #paid-agent-list-container button {
-    padding: 5px 10px;         /* 按钮内边距 */
-    margin: 5px;               /* 按钮外边距 */
-    cursor: pointer;          /* 鼠标悬停时显示指针 */
+    font-size: 16px;
+    border: none;
+    background-color: #023f63;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    /*position: absolute;*/
+    bottom: 50px;
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的分页容器 */
@@ -808,7 +818,10 @@ pre .key {
 /* 仅影响 id 为 paid-agent-list-container 下的分页按钮 */
 #paid-agent-list-container .pagination button {
     margin: 0 5px;             /* 按钮之间的间距 */
+    padding: 5px 10px;
 }
+
+
 
 /* 设置表格的整体样式 */
 #paid-agent-list {

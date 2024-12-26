@@ -416,7 +416,9 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
 }
 
 function generalOutput(paras, question, robootAnswerJq) {
-    let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
+    // let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
+    // let url = 'v1/chat/completions';
+    let url = 'chat/go';
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
@@ -473,7 +475,9 @@ function streamOutput(paras, question, robootAnswerJq) {
     }
 
     async function generateStream(paras) {
-        let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
+        // let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
+        // let url = 'v1/chat/completions';
+        let url = 'chat/go';
         const response = await fetch(url, {
             method: "POST",
             cache: "no-cache",

@@ -139,7 +139,10 @@ function loadAgentList(pageNumber) {
                     <td>${agent.appId}</td>
                     <td>${agent.isFeeRequired ? '是' : '否'}</td>
                     <td>${agent.isFeeRequired ? agent.pricePerReq : '0'}</td>
-                    <td>${agent.publishStatus ? '已发布' : '未发布'}</td> <!-- 发布状态 -->
+                    <td>${agent.publishStatus ? '已发布' : '未发布'}</td>
+                    <td>${agent.income.toFixed(2)}</td> 
+                    <td>${agent.reqNum}</td> 
+                    <td>${agent.subscriberNum}</td> 
                     <td>
                         <button onclick="editAgent(${agent.id})">编辑</button>
                         <button onclick="deleteAgent(${agent.id})">删除</button>
@@ -153,6 +156,7 @@ function loadAgentList(pageNumber) {
             renderPagination(data.totalPage, pageNumber);  // 渲染分页
         });
 }
+
 
 
 // 渲染分页
@@ -458,7 +462,8 @@ function handleScroll() {
 
 // 加载智能体列表
 function loadPaidAgentList(pageNumber) {
-    fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
+    // fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
+    fetch(`/agent/getPaidAgentByUser?lagiUserId=${60}&pageNumber=${pageNumber}&pageSize=10`)
         .then(response => response.json())
         .then(data => {
             let tbody = document.querySelector("#paid-agent-list tbody");
@@ -486,7 +491,7 @@ function loadPaidAgentList(pageNumber) {
 
 // 渲染分页按钮
 function renderPaidPagination(totalPage, currentPage) {
-    let paginationContainer = document.querySelector("#paid-agent-pagination");
+    let paginationContainer = document.getElementById("paid-agent-pagination");
     paginationContainer.innerHTML = '';  // 清空分页容器
 
     for (let i = 1; i <= totalPage; i++) {
@@ -494,11 +499,28 @@ function renderPaidPagination(totalPage, currentPage) {
         button.textContent = i;
         button.onclick = () => loadPaidAgentList(i);
         if (i === currentPage) {
-            button.disabled = true;  // 当前页不允许点击
+            button.style.fontWeight = 'bold';
         }
         paginationContainer.appendChild(button);
     }
 }
 
+// 显示 div 的函数
+function showHelpButton() {
+    document.getElementById("help-button").style.display = "flex";
+}
 
+// 隐藏 div 的函数
+function hideHelpButton() {
+    document.getElementById("help-button").style.display = "none";
+}
 
+// 显示 div 的函数
+function showFooterInfo() {
+    document.getElementById("footer-info").style.display = "block";
+}
+
+// 隐藏 div 的函数
+function hideFooterInfo() {
+    document.getElementById("footer-info").style.display = "none";
+}
