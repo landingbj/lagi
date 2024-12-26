@@ -10,6 +10,7 @@ import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -78,8 +79,8 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
         int count = maxTryTimes;
         String finalAnswer = null;
-        String imageUrl = null;
-        String fileUrl = null;
+        List<String> imageUrl = null;
+        List<String> fileUrl = null;
         String question = data.getMessages().get(data.getMessages().size() - 1).getContent();
         StringBuilder agent_scratch = new StringBuilder();
         String user_msg = "决定用哪个工具若认为任务已完成或工具调用失败直接调用finish工具";
@@ -102,9 +103,9 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             }
             Action action = responseTemplate.getAction();
             if("finish".equals(action.getName())) {
-                finalAnswer = (String) action.getArgs().get("result");
-                imageUrl = (String) action.getArgs().get("imageUrl");
-                fileUrl = (String) action.getArgs().get("fileUrl");
+                finalAnswer = (String) action.getArgs().get("result").toString();
+                imageUrl = (List<String>) action.getArgs().get("imageUrl");
+                fileUrl = (List<String>) action.getArgs().get("fileUrl");
                 break;
             }
             String observation = responseTemplate.getThoughts().getSpeak();
@@ -128,11 +129,11 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", finalAnswer);
         ChatCompletionResult chatCompletionResult = gson.fromJson(format, ChatCompletionResult.class);
         ChatMessage message = chatCompletionResult.getChoices().get(0).getMessage();
-        if(StrUtil.isNotBlank(fileUrl)) {
-            message.setFilepath(Lists.newArrayList(fileUrl));
+        if(!CollectionUtil.isEmpty(fileUrl)) {
+            message.setFilepath(fileUrl);
         }
-        if(StrUtil.isNotBlank(imageUrl)) {
-            message.setImageList(Lists.newArrayList(imageUrl));
+        if(!CollectionUtil.isEmpty(imageUrl)) {
+            message.setImageList(imageUrl);
         }
         return chatCompletionResult;
     }

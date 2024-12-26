@@ -1,16 +1,16 @@
 package ai.agent.customer;
 
+import ai.agent.customer.tools.ConstellationLuckTool;
 import ai.agent.customer.tools.FinishTool;
-import ai.agent.customer.tools.RandomAnimePicturesTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
-public class RandomAnimePicturesAgent extends CustomerAgent {
-    public RandomAnimePicturesAgent(AgentConfig agentConfig) {
-        super(agentConfig);
-        RandomAnimePicturesTool weatherSearchTool = new RandomAnimePicturesTool();
+public class ConstellationLuckAgent  extends CustomerAgent {
+    public ConstellationLuckAgent(AgentConfig agentConfig) {
+        ConstellationLuckTool weatherSearchTool = new ConstellationLuckTool();
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),
                 finishTool.getToolInfo());
+
     }
 }

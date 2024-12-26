@@ -12,20 +12,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class RandomAnimePicturesTool extends AbstractTool{
+public class BellePicturesTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.52vmy.cn/api/img/tu/man?type=json";
+    private static final String API_ADDRESS = "https://api.52vmy.cn/api/img/tu/girl?type=json";
 
     private Gson gson = new Gson();
 
-    public RandomAnimePicturesTool() {
+    public BellePicturesTool() {
         init();
     }
 
     private void init() {
-        name = "random_anime_pictures";
-        toolInfo = ToolInfo.builder().name("random_anime_pictures")
-                .description("这是一个生成随机动漫图片的工具,调用这个工具可以随机生成动漫图片")
+        name = "belle_pictures";
+        toolInfo = ToolInfo.builder().name("belle_pictures")
+                .description("这是一个生成头像工具,调用这个工具可以生成一张头像")
                 .args(Lists.newArrayList()).build();
         register(this);
     }
@@ -49,10 +49,8 @@ public class RandomAnimePicturesTool extends AbstractTool{
     }
 
     public static void main(String[] args) {
-        RandomAnimePicturesTool tool = new RandomAnimePicturesTool();
+        BellePicturesTool tool = new BellePicturesTool();
         String result = tool.search();
         System.out.println(result);
     }
-
-
 }
