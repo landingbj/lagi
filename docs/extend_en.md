@@ -549,8 +549,6 @@ public void upsert(List<UpsertRecord> upsertRecords, String category) {
 }
 ```
 
-------
-
 ##### **Query Data (`query`)**
 
 ```java
@@ -594,8 +592,6 @@ public List<IndexRecord> query(QueryCondition queryCondition, String category) {
 }
 ```
 
-------
-
 ##### **Fetch Data (`fetch`)**
 
 ```java
@@ -616,8 +612,6 @@ public List<IndexRecord> fetch(List<String> ids, String category) {
 }
 ```
 
-------
-
 ##### **Delete Data by ID (`delete`)**
 
 ```java
@@ -634,8 +628,6 @@ public void delete(List<String> ids, String category) {
     }
 }
 ```
-
-------
 
 ##### **Delete Data by Conditions (`deleteWhere`)**
 
@@ -655,8 +647,6 @@ public void deleteWhere(List<Map<String, String>> whereList, String category) {
     }
 }
 ```
-
-------
 
 ##### **Delete a Collection (`deleteCollection`)**
 
