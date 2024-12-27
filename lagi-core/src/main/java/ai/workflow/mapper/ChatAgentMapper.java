@@ -1,6 +1,7 @@
 package ai.workflow.mapper;
 
 import ai.agent.Agent;
+import ai.common.utils.ThreadPoolManager;
 import ai.learn.questionAnswer.KShingle;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.medusa.utils.LCS;
@@ -20,6 +21,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 
 @Setter
@@ -28,6 +30,11 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
 
     protected Agent<ChatCompletionRequest, ChatCompletionResult> agent;
 
+    private static final ExecutorService executorService;
+    static {
+        ThreadPoolManager.registerExecutor("feeScoring");
+        executorService = ThreadPoolManager.getExecutor("feeScoring");
+    }
 
     public String getAgentName() {
         return agent.getAgentConfig().getName();
@@ -84,12 +91,26 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
                 WorkerGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
-        chatCompletionResult = agent.communicate(chatCompletionRequest);
-        if(chatCompletionRequest != null) {
+        Boolean isFeeRequired = Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired());
+        if(!isFeeRequired) {
+            // free
+            chatCompletionResult = agent.communicate(chatCompletionRequest);
+        } else {
+            // not free detect
+            SkillMap skillMap = new SkillMap();
+            IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(chatCompletionRequest));
+            List<String> keywords = intentResponse.getKeywords();
+            AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
+            // if not scoring
+            if(agentIntentScore == null) {
+                feeAgentScoring(chatCompletionRequest, skillMap, keywords);
+            }
+
+        }
+        if(chatCompletionResult != null) {
             ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
-            calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);
             try {
                 SkillMap skillMap = new SkillMap();
                 IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(chatCompletionRequest));
@@ -110,6 +131,15 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, chatCompletionResult);
         result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, calPriority);
         return result;
+    }
+
+    private void feeAgentScoring(ChatCompletionRequest chatCompletionRequest, SkillMap skillMap, List<String> keywords) {
+        executorService.submit(() -> {
+            ChatCompletionResult chatCompletionResult;
+            chatCompletionResult = agent.communicate(chatCompletionRequest);
+            double score = skillMap.scoring(ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+            skillMap.saveAgentScore(agent.getAgentConfig(), keywords, score);
+        });
     }
 
 }
