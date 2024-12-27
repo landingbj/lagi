@@ -157,7 +157,7 @@ public class AgentScoreDao {
                 sqlBuilder.append(", ");
             }
         }
-        sqlBuilder.append(")");
+        sqlBuilder.append(") GROUP BY agent_id having count(1) == ?");
 
         String sql = sqlBuilder.toString();
         Set<Integer> agentIds = new HashSet<>();
@@ -166,6 +166,7 @@ public class AgentScoreDao {
             for (int i = 0; i < keywords.size(); i++) {
                 pstmt.setString(i + 1, keywords.get(i));
             }
+            pstmt.setInt(keywords.size() + 1, keywords.size());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 agentIds.add(rs.getInt("agent_id"));

@@ -15,7 +15,6 @@ import ai.worker.pojo.ScoreResponse;
 import ai.worker.skillMap.db.AgentScoreDao;
 import ai.worker.skillMap.prompt.SkillMapPrompt;
 import cn.hutool.core.util.StrUtil;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,77 +56,101 @@ public class SkillMap {
         executorService= ThreadPoolManager.getExecutor("skill-map");
     }
 
-    public List<AgentIntentScore> getAgentScoreFromCache(List<String> keywords) {
+    public List<AgentIntentScore> getAgentScore(List<String> keywords) {
         List<AgentIntentScore> agentIntentScores = new ArrayList<>();
         for (String keyword : keywords) {
-            List<AgentIntentScore> agentIntentScoresByKeyword = cachedSkillMap.get(keyword);
-            if (agentIntentScoresByKeyword != null && !agentIntentScoresByKeyword.isEmpty()) {
-                agentIntentScores.addAll(agentIntentScoresByKeyword);
-            }
+            List<AgentIntentScore> agentScore = getAgentScore(keyword);
+            agentIntentScores.addAll(agentScore);
         }
         return agentIntentScores;
     }
 
+    private List<AgentIntentScore> getAgentScore(String keyword) {
+        List<AgentIntentScore> agentIntentScoresByKeyword = cachedSkillMap.get(keyword);
+        if (agentIntentScoresByKeyword != null && !agentIntentScoresByKeyword.isEmpty()) {
+            return agentIntentScoresByKeyword;
+        } else {
+            List<AgentIntentScore>  fromSQLite = Collections.emptyList();
+            synchronized (getLockObject(keyword)) {
+                try {
+                    fromSQLite = agentScoreDao.getAgentScore(keyword);
+                    cachedSkillMap.put(keyword, fromSQLite);
+                } catch (Exception ignored) {
+                }
+            }
+            removeLockObject(keyword);
+            return fromSQLite;
+        }
+    }
 
-    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentByIntentKeyword(List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
-                                                                                               String question, Double edge) {
-        IntentResponse intentResponse = intentDetect(question);
+
+    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentByIntentKeyword(
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
+            String question, Double edge) {
+        if (edge == null || edge < 0) {
+            throw new IllegalArgumentException("Edge must be a non-negative number");
+        }
+
+        IntentResponse intentResponse = getSafeIntentResponse(question);
+        if (intentResponse == null || intentResponse.getKeywords() == null || intentResponse.getKeywords().isEmpty()) {
+            return agentList;
+        }
+
         List<String> keywords = intentResponse.getKeywords();
         List<AgentIntentScore> agentScores = getAgentIntentScoreByIntentKeyword(keywords);
-        if(agentScores == null || agentScores.isEmpty()) {
-            return agentList;
+        Set<Integer> agentIdsByKeyword = getSafeAgentIdsByKeyword(keywords);
+
+        if (agentScores == null || agentScores.isEmpty()) {
+            return filterAgentsNotInSet(agentList, agentIdsByKeyword);
         }
-        Map<Integer, AgentIntentScore> map = agentScores.stream()
+
+        Map<Integer, AgentIntentScore> scoreMap = agentScores.stream()
                 .collect(Collectors.toMap(AgentIntentScore::getAgentId, a -> a));
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> res = agentList
-                .stream()
+
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> highScoreAgents = agentList.stream()
                 .filter(agent -> {
-            AgentIntentScore agentIntentScore = map.get(agent.getAgentConfig().getId());
-            if (agentIntentScore == null) {
-                return false;
-            }
-            return agentIntentScore.getScore() > edge;
-        }).sorted((o1, o2) -> {
-            AgentIntentScore s1 = map.get(o1.getAgentConfig().getId());
-            AgentIntentScore s2 = map.get(o2.getAgentConfig().getId());
-            return s2.getScore().compareTo(s1.getScore());
-        }).collect(Collectors.toList());
-        if(res.isEmpty()) {
-            return agentList;
+                    AgentIntentScore agentIntentScore = scoreMap.get(agent.getAgentConfig().getId());
+                    return agentIntentScore != null && agentIntentScore.getScore() > edge;
+                })
+                .collect(Collectors.toList());
+
+        if (highScoreAgents.isEmpty()) {
+            return filterAgentsNotInSet(agentList, agentIdsByKeyword);
         }
-        Set<Integer> agentIdsByKeyword = agentScoreDao.getAgentIdsByKeyword(keywords);
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> notTryAgent = agentList.stream()
+
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> notTryAgents = filterAgentsNotInSet(agentList, agentIdsByKeyword);
+        highScoreAgents.addAll(notTryAgents);
+        return highScoreAgents;
+    }
+
+    private IntentResponse getSafeIntentResponse(String question) {
+        try {
+            return intentDetect(question);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Set<Integer> getSafeAgentIdsByKeyword(List<String> keywords) {
+        try {
+            return agentScoreDao.getAgentIdsByKeyword(keywords);
+        } catch (Exception e) {
+            return Collections.emptySet();
+        }
+    }
+
+    private List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentsNotInSet(
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList, Set<Integer> agentIdsByKeyword) {
+        return agentList.stream()
                 .filter(agent -> !agentIdsByKeyword.contains(agent.getAgentConfig().getId()))
                 .collect(Collectors.toList());
-        res.addAll(notTryAgent);
-        return res;
     }
 
     public List<AgentIntentScore> getAgentIntentScoreByIntentKeyword(List<String> keywords) {
         if(keywords == null || keywords.isEmpty()) {
             return Collections.emptyList();
         }
-        List<AgentIntentScore> agentIntentScores = getAgentScoreFromCache(keywords);
-        agentIntentScores = combineAgentScore(agentIntentScores, keywords.size());
-        if(!agentIntentScores.isEmpty()) {
-            return agentIntentScores;
-        }
-
-        for(String keyword : keywords){
-            List<AgentIntentScore> fromSQLite = agentScoreDao.getAgentScore(keyword);
-            if (!fromSQLite.isEmpty()) {
-                synchronized (getLockObject(keyword)) {
-                    List<AgentIntentScore> temp = cachedSkillMap.get(keyword);
-                    if(temp == null || temp.isEmpty()) {
-                        cachedSkillMap.put(keyword, fromSQLite);
-                        agentIntentScores.addAll(fromSQLite);
-                    } else {
-                        agentIntentScores.addAll(temp);
-                    }
-                }
-                removeLockObject(keyword);
-            }
-        }
+        List<AgentIntentScore> agentIntentScores = getAgentScore(keywords);
         return combineAgentScore(agentIntentScores, keywords.size());
     }
 
@@ -171,7 +194,7 @@ public class SkillMap {
             try {
                 List<String> keywords = intentDetect(question).getKeywords();
                 for (String keyword : keywords) {
-                    List<AgentIntentScore> agentIntentScores = cachedSkillMap.get(keyword);
+                    List<AgentIntentScore> agentIntentScores = getAgentScore(keyword);
                     if(agentIntentScores == null || agentIntentScores.isEmpty()) {
                         save(agentConfig, question, answer, keyword);
                     } else {
@@ -190,31 +213,31 @@ public class SkillMap {
     }
 
     public void saveAgentScore(AgentConfig agentConfig, List<String> keywords, Double score) {
-        executorService.submit(()->{
-            try {
-                for (String keyword : keywords) {
-                    List<AgentIntentScore> agentIntentScores = cachedSkillMap.get(keyword);
-                    if(agentIntentScores == null || agentIntentScores.isEmpty()) {
+        try {
+            for (String keyword : keywords) {
+                List<AgentIntentScore> agentIntentScores = getAgentScore(keyword);
+                if(agentIntentScores == null || agentIntentScores.isEmpty()) {
+                    save(agentConfig, keyword, score);
+                } else {
+                    boolean present = agentIntentScores.stream().anyMatch(a -> a.getAgentId().equals(agentConfig.getId()));
+                    if(!present) {
                         save(agentConfig, keyword, score);
-                    } else {
-                        boolean present = agentIntentScores.stream().anyMatch(a -> a.getAgentId().equals(agentConfig.getId()));
-                        if(!present) {
-                            save(agentConfig, keyword, score);
-                        }
                     }
-                    agentScoreDao.insertAgentKeywordLog(agentConfig.getId(), keyword);
                 }
-            } catch (Exception e) {
-
+                agentScoreDao.insertAgentKeywordLog(agentConfig.getId(), keyword);
             }
-        });
+        } catch (Exception e) {
+
+        }
     }
 
     private void save(AgentConfig agentConfig, String keyword, double score) {
-        AgentIntentScore agentScore = AgentIntentScore.builder()
-                .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
-                .build();
-        saveAgentScore(agentScore);
+        if(score > 0.0) {
+            AgentIntentScore agentScore = AgentIntentScore.builder()
+                    .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
+                    .build();
+            saveAgentScore(agentScore);
+        }
     }
 
     private void save(AgentConfig agentConfig, String question, String answer, String keyword) {
@@ -223,31 +246,20 @@ public class SkillMap {
             double similarity = getSimilarity(question, answer);
             score = Math.min(10, score * 0.7  + (similarity * 0.3 * 10)) ;
         }
-        AgentIntentScore agentScore = AgentIntentScore.builder()
-                .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
-                .build();
-        saveAgentScore(agentScore);
+        save(agentConfig, keyword, score);
     }
 
     private void saveAgentScore(AgentIntentScore agentScore) {
         String keyword = agentScore.getKeyword();
-        synchronized (getLockObject(keyword)) {
-            try {
-                List<AgentIntentScore> agentScores = cachedSkillMap.get(keyword);
-                if(agentScores != null) {
-                    Set<Integer> set = agentScores.stream().map(AgentIntentScore::getAgentId).collect(Collectors.toSet());
-                    if(!set.contains(agentScore.getAgentId())) {
-                        agentScores.add(agentScore);
-                        agentScoreDao.saveScore(agentScore.getAgentId(), agentScore.getAgentName(), keyword, agentScore.getQuestion(), agentScore.getScore());
-                    }
-                } else {
-                    cachedSkillMap.put(keyword, Lists.newArrayList(agentScore));
-                    agentScoreDao.saveScore(agentScore.getAgentId(), agentScore.getAgentName(), keyword, agentScore.getQuestion(), agentScore.getScore());
-                }
-            } catch (Exception ignored) {
-            }
+        try {
+            agentScoreDao.saveScore(agentScore.getAgentId(), agentScore.getAgentName(), keyword, agentScore.getQuestion(), agentScore.getScore());
+        } catch (Exception ignored) {
         }
-        removeLockObject(keyword);
+        removeCached(keyword);
+    }
+
+    private static void removeCached(String keyword) {
+        cachedSkillMap.remove(keyword);
     }
 
     public double getSimilarity(String question, String answer) {
