@@ -24,7 +24,7 @@ const words = [
 
 // 绑定页面回车事件
 $('#queryContent').keydown(function (event) {
-    console.log("event:" + event)
+    // console.log("event:" + event)
     if (event.keyCode === 13) {
         event.preventDefault();
         textQuery();
@@ -329,12 +329,8 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         // "stream": true,
         "stream": true
     };
-    if (agentId) {
         paras["worker"] = "BestWorker";
-        // paras["agentId"] = agentId;
         paras["stream"] = true;
-    }
-
     var queryUrl = "search/detectIntent";
     $.ajax({
         type: "POST",
@@ -565,7 +561,8 @@ function streamOutput(paras, question, robootAnswerJq) {
                         ${fullText} <br>
                         ${chatMessage.imageList !== undefined && chatMessage.imageList.length > 0 ? `<img src='${chatMessage.imageList[0]}' alt='Image'>` : ""}
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
-                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
+                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>
+                        ${json.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${json.source}</small></div></div><br>` : ""}`
                 // `;
                 if (chatMessage.contextChunkIds) {
                     if (chatMessage.contextChunkIds instanceof Array) {

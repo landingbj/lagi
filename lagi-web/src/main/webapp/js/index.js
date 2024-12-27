@@ -24,9 +24,9 @@ window.onload = function () {
             return component.value
         })
         // 生成最终id murmur
-        console.log(values)  //使用的浏览器信息
+        // console.log(values)  //使用的浏览器信息
         const murmur = Fingerprint2.x64hash128(values.join(''), 31)
-        console.log(murmur) //生成的标识码
+        // console.log(murmur) //生成的标识码
         window.finger = murmur;
     })
 }

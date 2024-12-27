@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // 获取用户ID
 let globalUserId = getCookie('userId');
 
-let lastActiveLi = "";  // 用于保存上次激活的 li 元素
-
 let currentAgentId = null; // 设定一个全局变量来标记当前的 agentId
+
+let selectedAgentId = null;  // 全局变量，用来存储选择的 agentId
 
 // 创建 driver 映射关系
 const driverMap = {
@@ -164,7 +164,6 @@ function loadAgentList(pageNumber) {
                 tbody.appendChild(row);
             });
 
-            console.log("data.totalPage:" + data.totalPage);
             renderPagination(data.totalPage, pageNumber);  // 渲染分页
         });
 }
@@ -258,7 +257,6 @@ function togglePublishStatus(agentId, currentPublishStatus) {
                 console.error('发布状态更新失败', error);
             });
     } else {
-        console.log('操作已取消');
     }
 }
 
@@ -279,200 +277,7 @@ function deleteAgent(agentId) {
     }
 }
 
-// 定义当前的页码和每页的大小
-let currentPage = 1;
-const pageSize = 10;
-
-// 获取智能体列表并动态渲染到页面
-async function loadAgentMenu(pageNumber = 1) {
-    try {
-        const response = await fetch(`/agent/getLagiAgentList?pageNumber=${pageNumber}&pageSize=${pageSize}&publishStatus=true`);
-        const data = await response.json();
-
-        if (data.status === 'success' && data.data.length > 0) {
-            const agentList = data.data;
-            const agentToolsElement = document.getElementById('agent-tools');
-
-            // 遍历智能体列表，生成菜单项
-            agentList.forEach(agent => {
-                const li = document.createElement('li');
-                li.classList.add('pl-5');
-                li.textContent = agent.name;
-
-                // 判断是否收费，给不同颜色
-                if (agent.isFeeRequired) {
-                    li.style.color = 'red';  // 收费的智能体显示为红色
-                } else {
-                    li.style.color = 'green';  // 免费的智能体显示为绿色
-                }
-
-                // 使用 dataset 存储多个自定义属性
-                li.dataset.id = agent.id;
-                li.dataset.name = agent.name;
-                li.dataset.appId = agent.appId;
-                li.dataset.token = agent.token;
-                li.dataset.driver = agent.driver;
-                li.dataset.isFeeRequired = agent.isFeeRequired;
-                li.dataset.pricePerReq = agent.pricePerReq;
-
-                // 点击事件：如果是收费的，弹出支付提示
-                li.addEventListener('click', function () {
-                    const isFeeRequired = agent.isFeeRequired;
-                    const price = agent.pricePerReq;
-                    const agentId = agent.id;
-                    const lagiUserId = getCookie('userId');
-                    // 清除所有其他 li 元素的背景色
-                    const allLis = agentToolsElement.querySelectorAll('li');
-                    allLis.forEach(item => {
-                        item.classList.remove('active-agent'); // 移除其他 li 的激活背景
-                    });
-                    // 保存当前点击的 li 的 agent.id (不在点击时保存，只有确认支付后保存)
-                    // lastActiveLi = null; // 先清空上次激活的记录
-                    // 如果是收费的，弹框提示用户
-                    if (isFeeRequired) {
-                        if (!lagiUserId) {
-                            openModal();
-                            return;
-                        }
-                        // 判断是否是当前登录用户发布的智能体
-                        if (lagiUserId !== agent.lagiUserId) {
-                            const userConfirmed = confirm(`该智能体是由其他用户发布的，每次请求费用为 ¥${price} 元。是否继续？`);
-                            if (userConfirmed) {
-                                showQrCode(lagiUserId, agentId, price, li, agent.appId); // 传递 li 元素
-                            } else {
-                                // 取消支付时，恢复到上一次激活的 li
-                                restoreLastActiveLi(agentToolsElement);
-                            }
-                        } else {
-                            // 激活当前点击的 li 背景色
-                            li.classList.add('active-agent'); // 为当前点击的 li 添加激活样式
-                            currentAppId = agent.appId;
-                            lastActiveLi = agent.id;  // 保存最后激活的 agent.id
-                        }
-                    } else {
-                        // 激活当前点击的 li 背景色
-                        li.classList.add('active-agent'); // 为当前点击的 li 添加激活样式
-                        currentAppId = agent.appId;
-                        lastActiveLi = agent.id;  // 保存最后激活的 agent.id
-                    }
-                });
-
-                // 将新的 <li> 添加到 <ul> 中
-                agentToolsElement.appendChild(li);
-            });
-        } else {
-            console.error('获取智能体列表失败或没有数据');
-        }
-    } catch (error) {
-        console.error('请求出错', error);
-    }
-}
-
-function restoreLastActiveLi(agentToolsElement) {
-    // 如果 lastActiveLi 有值，恢复上一次激活的 li 背景色
-    if (lastActiveLi) {
-        const allLis = agentToolsElement.querySelectorAll('li');
-        allLis.forEach(item => {
-            if (Number(item.dataset.id) === lastActiveLi) {  // 将 item.dataset.id 转换为数字
-                item.classList.add('active-agent');
-            }
-        });
-    }
-}
-
-
-function showQrCode(lagiUserId, agentId, fee, li, appId) {
-    $.ajax({
-        url: "/agent/prepay",
-        contentType: "application/json;charset=utf-8",
-        type: "post",
-        data: JSON.stringify({
-            "lagiUserId": lagiUserId,
-            "agentId": agentId,
-            "fee": fee,
-        }),
-        success: function (res) {
-            if (res.result === '1') {
-                document.getElementById("qrCode").src = "data:image/png;base64," + res.qrCode;
-                $('#payAmount').text(res.totalFee);
-                $('#wechat_pay_qr').show();
-                interval = setInterval(function () {
-                    getAgentChargeDetail(res.outTradeNo);
-                }, 1000);
-                // 支付成功后，通知取消支付逻辑来处理激活背景色
-                currentAppId = appId;  // 支付成功后，保存当前 appId
-            } else {
-                alert(res.error);
-            }
-        }
-    });
-}
-
-
-// 查询支付状态
-function getAgentChargeDetail(outTradeNo) {
-    $.ajax({
-        url: "/agent/getAgentChargeDetail",
-        contentType: "application/json;charset=utf-8",
-        type: "get",
-        data: {'outTradeNo': outTradeNo},
-        success: function (res) {
-            if (res.status === 1) {
-                clearInterval(interval);
-                alert("支付成功");
-                $('#wechat_pay_qr').hide();
-            }
-        }
-    });
-}
-
-function cancelPayment() {
-    // 隐藏支付弹框
-    $('#wechat_pay_qr').hide();
-    // 清除二维码和支付信息
-    document.getElementById("qrCode").src = "";
-    $('#payAmount').text('');
-
-    // 清除支付查询的定时器
-    clearInterval(interval);
-
-/*    // 清除当前激活的 li 背景色
-    const agentToolsElement = document.getElementById('agent-tools');
-
-    // 如果 lastActiveLi 有值，恢复上一次激活的 li 背景色
-    if (lastActiveLi) {
-        const allLis = agentToolsElement.querySelectorAll('li');
-        allLis.forEach(item => {
-            if (Number(item.dataset.id) === lastActiveLi) {  // 将 item.dataset.id 转换为数字
-                item.classList.add('active-agent');
-            }
-        });
-    }*/
-}
-
-
-// 监听页面滚动事件，触发懒加载
-let isLoading = false;  // 控制是否正在加载数据
-function handleScroll() {
-    const agentToolsElement = document.getElementById('agent-tools');
-
-    // 如果已经在加载数据，直接返回
-    if (isLoading) return;
-
-    // 检查容器滚动是否到达底部
-    if (agentToolsElement.scrollHeight - agentToolsElement.scrollTop <= agentToolsElement.clientHeight) {
-        isLoading = true; // 标记为正在加载
-
-        // 加载下一页数据
-        currentPage++;
-        loadAgentMenu(currentPage).finally(() => {
-            isLoading = false; // 加载完成后恢复标记
-        });
-    }
-}
-
-
-// 加载智能体列表
+// 加载订阅智能体列表
 function loadPaidAgentList(pageNumber) {
     // fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
     fetch(`/agent/getPaidAgentByUser?lagiUserId=${60}&pageNumber=${pageNumber}&pageSize=10`)
@@ -496,7 +301,6 @@ function loadPaidAgentList(pageNumber) {
                 tbody.appendChild(row);
             });
 
-            console.log("data.totalPage:" + data.totalPage);
             renderPaidPagination(data.totalPage, pageNumber);  // 渲染分页
         });
 }
@@ -535,4 +339,148 @@ function showFooterInfo() {
 // 隐藏 div 的函数
 function hideFooterInfo() {
     document.getElementById("footer-info").style.display = "none";
+}
+
+//========= 查看收费智能体js=============
+
+function handleSelect(selectedItem) {
+    const selectedValue = selectedItem.value;
+    const selectedOption = selectedItem.options[selectedItem.selectedIndex];
+    const pricePerReq = selectedOption.getAttribute('data-priceperreq');
+    const agentName = selectedOption.textContent.trim();
+    
+    // 如果选择的是默认项，不做任何处理
+    if (selectedValue === 'default') {
+        return;
+    }
+
+    // 更新全局变量 selectedAgentId
+    selectedAgentId = selectedValue;
+
+    // 打开收费弹框
+    openRechargeModal(agentName, pricePerReq);
+}
+
+function openRechargeModal(agentName, pricePerReq) {
+    // 获取弹框元素
+    const overlay = document.getElementById('recharge-modal');
+    const agentNameElement = document.querySelector('.recharge-agent-name');
+    const priceElement = document.querySelector('.recharge-price');
+    
+    // 更新智能体名称和单次调用价格
+    agentNameElement.textContent = `智能体名称：${agentName}`;
+    priceElement.textContent = `¥ ${pricePerReq}`;
+
+    // 更新底部的总金额
+    const totalAmountFooterElement = document.getElementById('recharge-total-amount-footer');
+    totalAmountFooterElement.textContent = `¥ ${pricePerReq}`;
+
+    // 显示弹框
+    if (overlay) {
+        overlay.style.display = 'flex';  
+    }
+
+
+    // 更新单次调用价格
+    const callCountInput = document.getElementById('recharge-call-count');
+    callCountInput.addEventListener('input', function() {
+        updateTotalAmount(pricePerReq);
+    });
+
+    // 初始化金额
+    updateTotalAmount(pricePerReq);
+}
+
+// 计算充值金额的函数
+function updateTotalAmount(pricePerReq) {
+    const callCountInput = document.getElementById('recharge-call-count');
+    const totalAmountFooterElement = document.getElementById('recharge-total-amount-footer');
+    const callCount = parseInt(callCountInput.value, 10);
+    // 如果输入无效，设置默认值为 1
+    if (isNaN(callCount) || callCount < 1) {
+        callCountInput.value = 1;
+        return;
+    }
+    // 计算总金额
+    const totalAmount = pricePerReq * callCount;
+    // 使用 toFixed() 保留两位小数
+    const formattedTotalAmount = totalAmount.toFixed(2);
+    // 更新总金额显示
+    totalAmountFooterElement.textContent = `¥ ${formattedTotalAmount}`;
+}
+
+
+
+// 关闭弹框
+function closeRechargeModal() {
+    const overlay = document.getElementById('recharge-modal');
+    const callCountInput = document.getElementById('recharge-call-count');
+    callCountInput.value = 1;
+    overlay.style.display = 'none';
+}
+
+// 订阅按钮点击事件
+function subscription() {
+    const totalAmountFooterElement = document.getElementById('recharge-total-amount-footer');
+    const totalAmount = totalAmountFooterElement.textContent.trim().replace('¥', '').trim();
+    // 检查 agentId 是否存在
+    if (!selectedAgentId) {
+        alert('请选择一个智能体');
+        return;
+    }
+    // 调用 showQrCode 函数
+    showQrCode(globalUserId, selectedAgentId, totalAmount);
+    closeRechargeModal();
+}
+
+function showQrCode(lagiUserId, agentId, fee) {
+    $.ajax({
+        url: "/agent/prepay",
+        contentType: "application/json;charset=utf-8",
+        type: "post",
+        data: JSON.stringify({
+            "lagiUserId": lagiUserId,
+            "agentId": agentId,
+            "fee": fee,
+        }),
+        success: function (res) {
+            if (res.result === '1') {
+                document.getElementById("qrCode").src = "data:image/png;base64," + res.qrCode;
+                $('#payAmount').text(res.totalFee);
+                $('#wechat_pay_qr').show();
+                interval = setInterval(function () {
+                    getAgentChargeDetail(res.outTradeNo);
+                }, 1000);
+            } else {
+                alert(res.error);
+            }
+        }
+    });
+}
+
+// 查询支付状态
+function getAgentChargeDetail(outTradeNo) {
+    $.ajax({
+        url: "/agent/getAgentChargeDetail",
+        contentType: "application/json;charset=utf-8",
+        type: "get",
+        data: {'outTradeNo': outTradeNo},
+        success: function (res) {
+            if (res.status === 1) {
+                clearInterval(interval);
+                alert("支付成功");
+                $('#wechat_pay_qr').hide();
+            }
+        }
+    });
+}
+
+function cancelPayment() {
+    // 隐藏支付弹框
+    $('#wechat_pay_qr').hide();
+    // 清除二维码和支付信息
+    document.getElementById("qrCode").src = "";
+    $('#payAmount').text('');
+    // 清除支付查询的定时器
+    clearInterval(interval);
 }
