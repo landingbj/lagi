@@ -2,10 +2,7 @@ package ai.servlet;
 
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
-import ai.dto.AgentChargeDetail;
-import ai.dto.DeductExpensesRequest;
-import ai.dto.PrepayRequest;
-import ai.dto.PrepayResponse;
+import ai.dto.*;
 import ai.migrate.service.AgentService;
 import ai.migrate.service.PayService;
 import ai.servlet.dto.*;
@@ -60,7 +57,16 @@ public class AgentServlet extends BaseServlet {
             this.prepay(req, resp);
         } else if (method.equals("deductExpenses")) {
             this.deductExpenses(req, resp);
+        } else if (method.equals("getFeeRequiredAgent")) {
+            this.getFeeRequiredAgent(req, resp);
         }
+    }
+
+    private void getFeeRequiredAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        FeeRequiredAgentRequest feeRequiredAgentRequest = reqBodyToObj(req, FeeRequiredAgentRequest.class);
+        LagiAgentListResponse response = agentService.getFeeRequiredAgent(feeRequiredAgentRequest);
+        responsePrint(resp, gson.toJson(response));
     }
 
     private void prepay(HttpServletRequest req, HttpServletResponse resp) throws IOException {
