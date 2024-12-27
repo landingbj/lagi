@@ -165,6 +165,7 @@ public class LlmApiServlet extends BaseServlet {
                 logger.error("produce stream", ignored);
             }
         }
+        chatCompletionResult.getChoices().get(0).getMessage().setContent("");
         out.print("data: " + gson.toJson(chatCompletionResult) + "\n\n");
         out.flush();
         out.print("data: " + "[DONE]" + "\n\n");
