@@ -329,6 +329,8 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         // "stream": true,
         "stream": true
     };
+        // paras["worker"] = "appointedWorker";
+        // paras["agentId"] = agentId;
         paras["worker"] = "BestWorker";
         paras["stream"] = true;
     var queryUrl = "search/detectIntent";

@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class DefaultAppointWorker extends RouteWorker {
 
-    protected Map<String, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = new ConcurrentHashMap<>();
+    protected Map<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = new ConcurrentHashMap<>();
 
     protected WorkerConfig workerConfig;
 
@@ -36,8 +36,7 @@ public class DefaultAppointWorker extends RouteWorker {
             for (Agent<?, ?> agent : allAgents) {
                 if(agent.getAgentConfig() !=null && agent.getAgentConfig().getAppId() !=null) {
                     try {
-                        String appId = agent.getAgentConfig().getName();
-                        agentMap.put(appId, (Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
+                        agentMap.put(agent.getAgentConfig().getId(), (Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
                     } catch (Exception ignored) {
                     }
                 }
@@ -48,7 +47,7 @@ public class DefaultAppointWorker extends RouteWorker {
                 Agent<ChatCompletionRequest, ChatCompletionResult> agent =
                         (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(agentId);
                 if(agent != null) {
-                    agentMap.put(agent.getAgentConfig().getName(), agent);
+                    agentMap.put(agent.getAgentConfig().getId(), agent);
                 }
             }
         }
@@ -62,10 +61,10 @@ public class DefaultAppointWorker extends RouteWorker {
 
     @Override
     public ChatCompletionResult call(ChatCompletionRequest data) {
-        String agentId = (String)BeanUtil.getFieldValue(data, "agentId");
+        Integer agentId = (Integer)BeanUtil.getFieldValue(data, "agentId");
         Agent<ChatCompletionRequest, ChatCompletionResult> trAgent = agentMap.get(agentId);
         if(trAgent == null) {
-            trAgent =  additionalAgents.stream().filter(agent -> agent.getAgentConfig().getName().equals(agentId)).findFirst().orElse(null);
+            trAgent =  additionalAgents.stream().filter(agent -> agent.getAgentConfig().getId().equals(agentId)).findFirst().orElse(null);
         }
         if(trAgent != null) {
             List<ChatCompletionResult> invoke = route.invoke(data, Lists.newArrayList(trAgent));

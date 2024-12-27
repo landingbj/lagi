@@ -15,9 +15,11 @@ import ai.agent.Agent;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.pojo.Medusa;
+import ai.common.pojo.Response;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.RAGFunction;
+import ai.dto.DeductExpensesRequest;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
@@ -42,6 +44,7 @@ import ai.response.ChatMessageResponse;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.LagiAgentListResponse;
+import ai.servlet.dto.LagiAgentResponse;
 import ai.utils.ClientIpAddressUtil;
 import ai.vector.VectorDbService;
 import ai.openai.pojo.ChatCompletionChoice;
@@ -98,8 +101,25 @@ public class LlmApiServlet extends BaseServlet {
     private void go(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         resp.setContentType("application/json;charset=utf-8");
         LLmRequest lLmRequest = reqBodyToObj(req, LLmRequest.class);
-        LagiAgentListResponse lagiAgentList = agentService.getLagiAgentList(null, 1, 1000, "true");
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = convert2AgentList(lagiAgentList);
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = new ArrayList<>();
+        if(lLmRequest.getAgentId() == null) {
+            LagiAgentListResponse lagiAgentList = agentService.getLagiAgentList(null, 1, 1000, "true");
+             agents = convert2AgentList(lagiAgentList.getData());
+        } else {
+            LagiAgentResponse lagiAgent = agentService.getLagiAgent(null, String.valueOf(lLmRequest.getAgentId()));
+            agents = convert2AgentList(Lists.newArrayList(lagiAgent.getData()));
+            if(agents != null && agents.size() == 1) {
+                Agent<ChatCompletionRequest, ChatCompletionResult> agent = agents.get(0);
+                DeductExpensesRequest deductExpensesRequest = new DeductExpensesRequest();
+                deductExpensesRequest.setAgentId(lLmRequest.getAgentId());
+                deductExpensesRequest.setUserId(lLmRequest.getUserId());
+                Response response = agentService.deductExpenses(deductExpensesRequest);
+                if(!"success".equals(response.getStatus())) {
+                    String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", agent.getAgentConfig().getName(), agent.getAgentConfig().getName());
+                    responsePrint(resp, toJson(format));
+                }
+            }
+        }
         ChatCompletionResult work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
         if(Boolean.FALSE.equals(lLmRequest.getStream())) {
             responsePrint(resp, toJson(work));
@@ -109,9 +129,9 @@ public class LlmApiServlet extends BaseServlet {
         convert2streamAndOutput(firstAnswer, resp, work);
     }
 
-    private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(LagiAgentListResponse lagiAgentList) {
+    private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs) {
         Map<String, Constructor<?>> agentMap = new HashMap<>();
-        return lagiAgentList.getData().stream().map(agentConfig -> {
+        return agentConfigs.stream().map(agentConfig -> {
             String driver = agentConfig.getDriver();
             Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
             if(!agentMap.containsKey(driver)) {

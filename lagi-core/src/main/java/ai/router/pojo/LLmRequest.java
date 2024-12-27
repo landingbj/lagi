@@ -10,7 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class LLmRequest extends ChatCompletionRequest {
-    private String agentId;
+//    private String agentId;
+    private Integer agentId;
     private String worker;
-    private String userInfo;
+    private String userId;
 }

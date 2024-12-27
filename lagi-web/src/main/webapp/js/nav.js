@@ -118,85 +118,85 @@ let promptNavs = [
         title: '智能体',
         subNavs: [
             {
-                "id": 101,
+                "id": -2,
                 "agentId": "stock",
                 "title": "股票助手",
                 "templateIssues": "今天的股市行情如何?"
             },
             {
-                "id": 102,
+                "id": -3,
                 "agentId": "exchangeRate",
                 "title": "汇率助手",
                 "templateIssues": "当前美元对人民币汇率是多少?"
             },
             {
-                "id": 103,
+                "id": -5,
                 "agentId": "yiYan",
                 "title": "文心助手",
                 "templateIssues": "请帮我写一篇关于科技创新的文章"
             },
             {
-                "id": 104,
+                "id": -6,
                 "agentId": "yuanQi",
                 "title": "元器助手",
                 "templateIssues": "这款电子元器件的规格是什么?"
             },
             {
-                "id": 105,
+                "id": -7,
                 "agentId": "xiaohongshu",
                 "title": "红书优选",
                 "templateIssues": "推荐一些适合冬季穿的羽绒服"
             },
             {
-                "id": 106,
+                "id": -8,
                 "agentId": "weather",
                 "title": "天气助手",
                 "templateIssues": "今天北京天气如何?"
             },
             {
-                "id": 107,
+                "id": -9,
                 "agentId": "oil",
                 "title": "油价助手",
                 "templateIssues": "今天的国际油价是多少?"
             },
             {
-                "id": 108,
+                "id": -10,
                 "agentId": "bmi",
                 "title": "体重指数",
                 "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
             },
             {
-                "id": 109,
+                "id": -11,
                 "agentId": "calorie",
                 "title": "健康饮食",
                 "templateIssues": "一份鸡胸肉的卡路里是多少?"
             },
             {
-                "id": 110,
+                "id": -12,
                 "agentId": "dishonest",
                 "title": "失信查询",
                 "templateIssues": "请帮我查询一下这个人的失信记录"
             },
             {
-                "id": 111,
+                "id": -13,
                 "agentId": "ticket",
                 "title": "高铁助手",
                 "templateIssues": "从北京到上海的高铁票价是多少?"
             },
             {
-                "id": 112,
+                "id": -14,
                 "agentId": "history",
                 "title": "历史今日",
                 "templateIssues": "今天在历史上发生了哪些重大事件?"
             },
             {
-                "id": 113,
+                "id": -15,
                 "agentId": "youdao",
                 "title": "有道翻译",
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
             {
-                "id": 114,
+                "id": -16,
                 "agentId": "image",
                 "title": "图像生成",
                 "templateIssues": "帮我生成一张海滩风景的图像"
