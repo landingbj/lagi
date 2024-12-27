@@ -77,6 +77,7 @@ public class DefaultBestWorker extends RouteWorker{
         all.addAll(additionalAgents);
         ChatCompletionRequest request = new ChatCompletionRequest();
         BeanUtil.copyProperties(data, request);
+        request.setStream(false);
         List<ChatCompletionResult> results = route.invoke(request, filterAgentsBySkillMap(all, request));
         if(results != null && !results.isEmpty()) {
             result = results.get(0);
