@@ -99,6 +99,7 @@ public class LlmApiServlet extends BaseServlet {
         ChatCompletionResult work = defaultWorker.work(lLmRequest.getWorker(), lLmRequest);
         if(Boolean.FALSE.equals(lLmRequest.getStream())) {
             responsePrint(resp, toJson(work));
+            return;
         }
         String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
         convert2streamAndOutput(firstAnswer, resp, work);
@@ -132,6 +133,7 @@ public class LlmApiServlet extends BaseServlet {
                 logger.error("produce stream", ignored);
             }
         }
+        chatCompletionResult.getChoices().get(0).getMessage().setContent("");
         out.print("data: " + gson.toJson(chatCompletionResult) + "\n\n");
         out.flush();
         out.print("data: " + "[DONE]" + "\n\n");
