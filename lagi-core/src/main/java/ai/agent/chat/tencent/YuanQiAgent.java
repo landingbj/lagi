@@ -71,7 +71,7 @@ public class YuanQiAgent extends BaseChatAgent {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("X-Source", "openapi");
-        headers.put("Authorization", StrUtil.format("Bearer {}", agentConfig.getApiKey()));
+        headers.put("Authorization", StrUtil.format("Bearer {}", StrUtil.isBlank(agentConfig.getApiKey())? agentConfig.getToken() : agentConfig.getApiKey()));
         String post = ApiInvokeUtil.post("https://open.hunyuan.tencent.com/openapi/v1/agent/chat/completions", headers, json, 180, TimeUnit.SECONDS);
         log.info("yuan qi response: " + post);
         CompletionResponse completionResponse = gson.fromJson(post, CompletionResponse.class);

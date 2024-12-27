@@ -109,7 +109,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(LagiAgentListResponse lagiAgentList) {
-        Map<String, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = new HashMap<>();
+        Map<String, Constructor<?>> agentMap = new HashMap<>();
         return lagiAgentList.getData().stream().map(agentConfig -> {
             String driver = agentConfig.getDriver();
             Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
@@ -117,15 +117,14 @@ public class LlmApiServlet extends BaseServlet {
                 try {
                     Class<?> aClass = Class.forName(driver);
                     Constructor<?> constructor = aClass.getConstructor(AgentConfig.class);
+                    agentMap.put(driver, constructor);
                     agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
-                    agentMap.put(driver, agent);
                 } catch (Exception ignored) {
                 }
             } else {
-                agent = agentMap.get(driver);
+                Constructor<?> constructor = agentMap.get(driver);
                 try {
-                    agent = agent.clone();
-                    agent.setAgentConfig(agentConfig);
+                    agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
                 } catch (Exception ignored) {
                 }
             }

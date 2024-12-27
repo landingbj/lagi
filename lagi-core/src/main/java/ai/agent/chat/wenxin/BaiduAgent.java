@@ -58,7 +58,7 @@ public class BaiduAgent extends BaseChatAgent {
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("appId", agentConfig.getAppId());
-        queryParams.put("secretKey", agentConfig.getApiKey());
+        queryParams.put("secretKey", StrUtil.isBlank(agentConfig.getApiKey()) ? agentConfig.getToken() : agentConfig.getApiKey());
         String apiAddress = ApiInvokeUtil.buildUrlByQuery(url, queryParams);
         AnswerRequest answerRequest = convertRequest(data);
         String res = ApiInvokeUtil.post(apiAddress, null, gson.toJson(answerRequest), 30, TimeUnit.SECONDS);
