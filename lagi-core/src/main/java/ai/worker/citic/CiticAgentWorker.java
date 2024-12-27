@@ -3,6 +3,7 @@ package ai.worker.citic;
 import ai.agent.citic.CiticAgent;
 import ai.common.pojo.Configuration;
 import ai.config.pojo.AgentConfig;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -84,13 +85,16 @@ public class CiticAgentWorker {
             if (resultMatrix.get(0) != null) {
                 chatCompletionResult = resultMatrix.get(0);
                 System.out.println("CiticAgentWorker.process: chatCompletionResult = " + chatCompletionResult);
-                PromptFactory promptFactory = PromptFactory.getInstance();
-                if (promptFactory.getPromptConfig().getPrompt().getEnable()) {
-                    chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
-                    chatCompletionRequest = promptFactory.loadPrompt(chatCompletionResult);
-                    CompletionsService completionsService = new CompletionsService();
-                    ChatCompletionResult promptFormatResult = completionsService.completions(chatCompletionRequest);
-                    BeanUtil.copyProperties(promptFormatResult, chatCompletionResult);
+                if(chatCompletionRequest instanceof EnhanceChatCompletionRequest) {
+                    PromptFactory promptFactory = PromptFactory.getInstance();
+                    EnhanceChatCompletionRequest request =  (EnhanceChatCompletionRequest) chatCompletionRequest;
+                    if (Boolean.TRUE.equals(request.getEnablePromptFactory())) {
+                        chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
+                        chatCompletionRequest = promptFactory.loadPrompt(chatCompletionResult);
+                        CompletionsService completionsService = new CompletionsService();
+                        ChatCompletionResult promptFormatResult = completionsService.completions(chatCompletionRequest);
+                        BeanUtil.copyProperties(promptFormatResult, chatCompletionResult);
+                    }
                 }
             }
         }

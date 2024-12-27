@@ -1,6 +1,7 @@
 package ai.servlet.api;
 
 import ai.audio.pojo.AsrResponse;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.servlet.BaseServlet;
@@ -42,7 +43,7 @@ public class WorkerApiServlet extends BaseServlet {
     public void completions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=utf-8");
         String url = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
         ChatCompletionResult chatCompletionResult = citicAgentWorker.process(chatCompletionRequest, url);
         chatCompletionResult = SensitiveWordUtil.filter(chatCompletionResult);
         responsePrint(resp, gson.toJson(chatCompletionResult));

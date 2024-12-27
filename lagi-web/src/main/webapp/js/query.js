@@ -266,6 +266,53 @@ function getLoginStatus(appId, username) {
 
 const CONVERSATION_CONTEXT = [];
 
+const toggleSwitch = document.getElementById('toggle-switch');
+toggleSwitch.addEventListener('change', function() {
+    if (this.checked) {
+        console.log('Switch is ON');
+        // 在这里添加打开开关后的操作
+        enablePromptFactory = true;
+    } else {
+        console.log('Switch is OFF');
+        enablePromptFactory = false;
+        // 在这里添加关闭开关后的操作
+    }
+    // $.ajax({
+    //     type: "POST",
+    //     url: "/info/togglePromptSwitch",
+    //     data: JSON.stringify({
+    //         "enable": this.checked
+    //     }),
+    //     success: function (res) {
+    //         if (res.message == "success") {
+    //             console.log("更新成功");
+    //         }
+    //     },
+    //     error: function (res) {
+    //         console.log("更新失败");
+    //     }
+    // });
+});
+
+function initPromptSwitch() {
+    // 调用后台接口info/getPromptSwitchStatus获取当前开关状态。{"promptSwitch":true}
+    $.ajax({
+        type : "GET",
+        url : "info/getPromptSwitchStatus",
+        success : function(res) {
+            if(res.data.promptSwitch) {
+                $('#toggle-switch').prop('checked', true);
+                enablePromptFactory = true;
+            } else {
+                $('#toggle-switch').prop('checked', false);
+                enablePromptFactory = false;
+            }
+        }
+    });
+}
+
+initPromptSwitch();
+
 function getTextResult(question, robootAnswerJq, conversation) {
     var result = '';
     var paras = {
@@ -275,6 +322,7 @@ function getTextResult(question, robootAnswerJq, conversation) {
         ]),
         "temperature": 0.8,
         "max_tokens": 1024,
+        "enablePromptFactory": enablePromptFactory,
         "stream": false
     };
 
@@ -357,6 +405,8 @@ function getTextResult(question, robootAnswerJq, conversation) {
     });
     return result;
 }
+
+let enablePromptFactory = false;
 
 function generalOutput(paras, question, robootAnswerJq) {
     $.ajax({
