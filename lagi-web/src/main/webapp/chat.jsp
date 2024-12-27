@@ -651,7 +651,7 @@
         </div>
 
         <div class="recharge-right">
-          <label for="recharge-call-count">调用次数</label>
+          <label for="recharge-call-count">可用次数</label>
           <input type="number" id="recharge-call-count" value="1" min="1" step="1">
         </div>
       </div>
