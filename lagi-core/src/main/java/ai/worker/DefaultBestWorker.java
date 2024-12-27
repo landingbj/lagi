@@ -10,6 +10,7 @@ import ai.router.Routers;
 import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.skillMap.SkillMap;
+import cn.hutool.core.bean.BeanUtil;
 import lombok.Setter;
 
 
@@ -74,7 +75,9 @@ public class DefaultBestWorker extends RouteWorker{
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> all = new ArrayList<>();
         all.addAll(agents);
         all.addAll(additionalAgents);
-        List<ChatCompletionResult> results = route.invoke(data, filterAgentsBySkillMap(all, data));
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        BeanUtil.copyProperties(data, request);
+        List<ChatCompletionResult> results = route.invoke(request, filterAgentsBySkillMap(all, request));
         if(results != null && !results.isEmpty()) {
             result = results.get(0);
         }
