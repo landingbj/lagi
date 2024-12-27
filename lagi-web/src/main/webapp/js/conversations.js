@@ -1,7 +1,7 @@
 // import {isBlank} from './common'
 
 let curConversations = -1;
-let conversatonsList = [{title:"你好", dateTime:500}, {title:"还行", dateTime:100}, {title:"写诗", dateTime: 1500}]
+let conversatonsList = [{ title: "你好", dateTime: 500 }, { title: "还行", dateTime: 100 }, { title: "写诗", dateTime: 1500 }]
 
 
 
@@ -14,7 +14,7 @@ function setCurConvId(convId) {
 }
 
 
-function newConversation(conv, questionEnable=true, answerEnable=true) {
+function newConversation(conv, questionEnable = true, answerEnable = true) {
 
     let questionDiv = `
         <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group dark:bg-gray-800">
@@ -52,14 +52,20 @@ function newConversation(conv, questionEnable=true, answerEnable=true) {
             <div class="flex justify-between idx">
                 <div class=" appendVoice text-gray-400 flex self-end lg:self-center justify-center mt-2 gap-3 md:gap-4 lg:gap-1 lg:absolute lg:top-0 lg:translate-x-full lg:right-0 lg:mt-0 lg:pl-2 visible">
                     <button class="p-1 rounded-md hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 disabled:dark:hover:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3">
-                            </path></svg>
-                        </button>
+                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3">
+                            </path></svg></button>
                     <button class="p-1 rounded-md hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 disabled:dark:hover:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                             <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17">
                             </path>
-                        </svg>
-                    </button>
+                        </svg></button>
+                    <select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this)">
+                        <option value="default" data-priceperreq="0">智能推荐</option>
+                        <option value="1" data-priceperreq="0.01">收费智能体1</option>
+                        <option value="2" data-priceperreq="0.02">收费智能体2</option>
+                        <option value="3" data-priceperreq="0.03">收费智能体3</option>
+                        <option value="4" data-priceperreq="0.04">收费智能体4</option>
+                        <option value="5" data-priceperreq="0.05">收费智能体5</option>
+                    </select>                    
                     <audio class="myAudio1" controls="" preload="metadata" style="width:100px">
                     <source class="audioSource1" src="">
                     </audio>
@@ -100,7 +106,7 @@ function newRobotStartDialog(robotAnswer) {
 }
 
 function addUserDialog(userQuestion) {
-    let conversation = {user: {question: userQuestion}, robot: {answer: ''}}
+    let conversation = { user: { question: userQuestion }, robot: { answer: '' } }
     newConversation(conversation, true, false);
 }
 
@@ -139,7 +145,7 @@ function showConversationsNav(convsList) {
     let html = '';
     for (let i = 0; i < WConvsList.length; i++) {
         const wconvs = WConvsList[i];
-        if(!wconvs) {
+        if (!wconvs) {
             continue;
         }
         html += `
@@ -168,9 +174,9 @@ function loadConversation(convId) {
     conversatonsList = loadConvs();
     const convs = conversatonsList[convId].convs;
     // $('#item-content').empty();
-    if(convs.length == 0) {
+    if (convs.length == 0) {
         showHelloContent();
-    } else{
+    } else {
         hideHelloContent();
     }
     for (let index = 0; index < convs.length; index++) {
@@ -197,20 +203,20 @@ function addConv(conv) {
 // ]
 
 
-function saveOrUpdateConv(convId, title ,conv) {
+function saveOrUpdateConv(convId, title, conv) {
     let convs = loadConvs();
-    if(!convs) {
+    if (!convs) {
         convs = [];
     }
     // 大于插入否则更新
-    if(convId == undefined || convId == null  || convId >= convs.length) {
-        convs.push({title, dateTime:new Date().getTime(), convs:[]});
-        convId = convs.length - 1; 
+    if (convId == undefined || convId == null || convId >= convs.length) {
+        convs.push({ title, dateTime: new Date().getTime(), convs: [] });
+        convId = convs.length - 1;
     }
-    if(!isBlank(title)) {
+    if (!isBlank(title)) {
         convs[convId]["title"] = title;
     }
-    if(conv != null || conv != undefined ) {
+    if (conv != null || conv != undefined) {
         convs[convId].convs.push(conv);
     }
     localStorage.setItem("conversations", JSON.stringify(convs));
@@ -238,34 +244,34 @@ function convertByDate(convsList) {
     let month = new Date().getMonth() + 1;
     // 获取当年
     let year = new Date().getFullYear();
-    for(let i = 0; i < convsList.length; i++) {
+    for (let i = 0; i < convsList.length; i++) {
         const convs = convsList[i];
         let tD = new Date(convs.dateTime);
         let td = tD.getDate();
         let tm = tD.getMonth() + 1;
         let ty = tD.getFullYear();
-        if(td ==  days) {
-            if(res[0] == undefined) {
-                res[0] = {date:'今天', convs:[convs]};
+        if (td == days) {
+            if (res[0] == undefined) {
+                res[0] = { date: '今天', convs: [convs] };
             } else {
                 res[0].convs.push(convs);
             }
-        } else if(tm ==  month) {
-            if(res[1]  == undefined ) {
-                res[1] = {date:'本月', convs:[convs]};
+        } else if (tm == month) {
+            if (res[1] == undefined) {
+                res[1] = { date: '本月', convs: [convs] };
             } else {
                 res[1].convs.push(convs);
             }
         }
-        else if(ty ==  year) {
-            if(res[2]  == undefined) {
-                res[2] = {date:'今年', convs:[convs]};
+        else if (ty == year) {
+            if (res[2] == undefined) {
+                res[2] = { date: '今年', convs: [convs] };
             } else {
                 res[2].convs.push(convs);
             }
         } else {
-            if(res[3]  == undefined) {
-                res[3] = {date:'更早', convs:[convs]};
+            if (res[3] == undefined) {
+                res[3] = { date: '更早', convs: [convs] };
             } else {
                 res[3].convs.push(convs);
             }
@@ -304,8 +310,8 @@ function changeConversation(convId) {
     loadConversation(convId);
 }
 
-function newConversationWindow(convsId, title, convs){
-    if(convsId == null && isBlank(title) && convs != null && convs.length != 0) {
+function newConversationWindow(convsId, title, convs) {
+    if (convsId == null && isBlank(title) && convs != null && convs.length != 0) {
         convsId = saveOrUpdateConv(null, convs[0].user.question, null);
     } else {
         convsId = saveOrUpdateConv(null, '新的对话', null);
@@ -331,17 +337,17 @@ class Chart {
     }
 
     static listen_all_resize() {
-        if(Chart.is_listening) {
-            return ;
+        if (Chart.is_listening) {
+            return;
         }
         Chart.is_listening = true;
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             for (let index = 0; index < Chart.charts.length; index++) {
                 const chart = Chart.charts[index];
-                if(chart) {
+                if (chart) {
                     chart.resize();
                 }
-            }  
+            }
         });
     }
 
@@ -363,9 +369,9 @@ class Chart {
 
 // 不同数据格式重写
 function transformToCoordinateData(data, x_field, y_field) {
-    if(!(data instanceof Array)) {
+    if (!(data instanceof Array)) {
         // 数据不是数组
-        return {"x_data":[], "y_data":[]};
+        return { "x_data": [], "y_data": [] };
     }
     let t_data = data;
     let x_data = [], y_data = [];
@@ -374,25 +380,25 @@ function transformToCoordinateData(data, x_field, y_field) {
         x_data.push(t_tr[x_field]);
         y_data.push(t_tr[y_field]);
     }
-    return {"x_data":x_data, "y_data":y_data};
+    return { "x_data": x_data, "y_data": y_data };
 }
 
 function transformToPieData(data, name_field, value_filed) {
-    if(!(data instanceof Array)) {
+    if (!(data instanceof Array)) {
         // 数据不是数组
         return [];
     }
     let t_data = [];
     for (let index = 0; index < data.length; index++) {
         const row = data[index];
-        t_data.push({"name":row[name_field], "value":row[value_filed]});
+        t_data.push({ "name": row[name_field], "value": row[value_filed] });
     }
     return t_data;
 }
 
 
 function genCoordinateOption(data, y_name, type) {
-    let {x_data, y_data} = data;
+    let { x_data, y_data } = data;
     let option = {
         tooltip: {
             trigger: 'axis',
@@ -401,34 +407,34 @@ function genCoordinateOption(data, y_name, type) {
         legend: {},
         xAxis: [
             {
-            type: 'category',
-            axisTick: {
-                alignWithLabel: true
-            },
-            data: x_data,
+                type: 'category',
+                axisTick: {
+                    alignWithLabel: true
+                },
+                data: x_data,
             }
         ],
         yAxis: [
             {
-            type: 'value',
-            name: y_name,
-            min: (value) => { // 百位起最小值向下取整
-                return Math.floor(value.min / 100) * 100; 
-            },
-            max: (value) => {  // 百位起最大值向上取整
-                return Math.ceil(value.max / 100) * 100;
-            },
-            scale: true, //自适应
-            position: 'left',
+                type: 'value',
+                name: y_name,
+                min: (value) => { // 百位起最小值向下取整
+                    return Math.floor(value.min / 100) * 100;
+                },
+                max: (value) => {  // 百位起最大值向上取整
+                    return Math.ceil(value.max / 100) * 100;
+                },
+                scale: true, //自适应
+                position: 'left',
             }
         ],
         series: [
             {
-            name: y_name,
-            type: type,
-            smooth: true,
-            yAxisIndex: 0,
-            data: y_data,
+                name: y_name,
+                type: type,
+                smooth: true,
+                yAxisIndex: 0,
+                data: y_data,
             }
         ]
     };
@@ -439,34 +445,34 @@ function genCoordinateOption(data, y_name, type) {
 function genPieOption(t_data, type, name) {
     let option = {
         series: [
-          {
-            type: 'pie',
-            data: t_data,
-            
-          }
+            {
+                type: 'pie',
+                data: t_data,
+
+            }
         ]
-      };
-    if(type == 'circle') {
+    };
+    if (type == 'circle') {
         option.title = {
-                    text: name,
-                    left: 'center',
-                    top: 'center'
-                };
-        option.series[0].radius= ['40%', '70%'];
+            text: name,
+            left: 'center',
+            top: 'center'
+        };
+        option.series[0].radius = ['40%', '70%'];
     }
     return option;
 }
 
 
-function addChart(markdown_doc, data, name_field='statis_month', value_filed='zcj', t_name='zcj', type='line') {
+function addChart(markdown_doc, data, name_field = 'statis_month', value_filed = 'zcj', t_name = 'zcj', type = 'line') {
     let option;
-    if(type == 'line' || type == 'bar') {
+    if (type == 'line' || type == 'bar') {
         let t_data = transformToCoordinateData(data, name_field, value_filed);
         option = genCoordinateOption(t_data, t_name, type);
-    } else if(type == 'pie' || type == 'circle') {
+    } else if (type == 'pie' || type == 'circle') {
         let t_data = transformToPieData(data, name_field, value_filed);
         option = genPieOption(t_data, type, t_name);
-    }  else {
+    } else {
         let t_data = transformToCoordinateData(data, name_field, value_filed);
         option = genCoordinateOption(t_data, t_name, 'line');
     }

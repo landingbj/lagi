@@ -378,14 +378,11 @@
                                             <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 ">
                                                 <div id="agent-head" class="agent-head  pt-2 pb-1 text-center">智能体
                                                 </div>
-                                                <%--                        <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto">--%>
+                                                <!-- <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto"> -->
                                                 <ul id="agent-tools" class="pb-2">
-                                                    <li class=" pl-5  not-available " onclick="openAgentModal()">
-                                                        发布智能体
-                                                    </li>
-                                                    <li class=" pl-5  not-available "
-                                                        onclick="showQrCode(688841, 4, 0.01)">测试收款码
-                                                    </li>
+                                                    <li class=" pl-5  not-available " onclick="openAgentModal()">发布智能体</li>
+                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li>
+                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -637,6 +634,37 @@
     </div>
 </div>
 <!-- 微信支付弹窗结束 -->
+
+<!-- 查看收费智能体弹窗开始 -->
+<div class="recharge-overlay" id="recharge-modal">
+    <div class="recharge-modal">
+      <button class="recharge-close-btn" id="recharge-close-btn" onclick="closeRechargeModal()">&times;</button>
+
+      <div class="recharge-modal-header">
+        <h2 class="recharge-agent-name">智能体名称：智能体A</h2>
+      </div>
+
+      <div class="recharge-modal-body">
+        <div class="recharge-left">
+          <p>单次调用价格</p>
+          <span class="recharge-price">¥ 0.01</span>
+        </div>
+
+        <div class="recharge-right">
+          <label for="recharge-call-count">调用次数</label>
+          <input type="number" id="recharge-call-count" value="1" min="1" step="1">
+        </div>
+      </div>
+
+      <div class="recharge-footer">
+        <button class="recharge-subscribe-btn" id="recharge-subscribe-btn" onclick="subscription()">
+          <span id="recharge-total-amount-footer">¥ 0.01</span> 订阅
+        </button>
+      </div>
+    </div>
+  </div>
+<!-- 查看收费智能体弹窗结束 -->
+
 
 <!-- mobile debug 插件 -->
 <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->

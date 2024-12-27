@@ -326,7 +326,6 @@ function genNavItems(navs) {
     let g = 1;
     for (let index = 0; index < navs.length; index++) {
         const nav = navs[index];
-        console.log(nav);
 
         let group = nav.group == undefined ? 1 : nav.group;
         let style = group == g ? '' : 'style="margin-top:1em"';
@@ -415,7 +414,6 @@ function genSubNavItems(subNavs) {
     let subHtml = '<ul class="sub-nav hidden">';  // 初始时隐藏二级菜单
     for (let i = 0; i < subNavs.length; i++) {
         const subNav = subNavs[i];
-        console.log("subNav.id:" + subNav.id);
 
         // 如果子菜单项包含 agentId，我们将其存储在 data-app-id 中
         subHtml += `
@@ -681,7 +679,6 @@ function getPromptDialog(id) {
 
 function savePerference() {
     if (!window.finger) {
-        console.log("未识别到身份");
         return;
     }
     let params = {
