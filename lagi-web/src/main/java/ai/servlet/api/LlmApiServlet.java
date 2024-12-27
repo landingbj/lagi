@@ -103,6 +103,7 @@ public class LlmApiServlet extends BaseServlet {
         ChatCompletionResult work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
         if(Boolean.FALSE.equals(lLmRequest.getStream())) {
             responsePrint(resp, toJson(work));
+            return;
         }
         String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
         convert2streamAndOutput(firstAnswer, resp, work);
