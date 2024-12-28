@@ -58,6 +58,14 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
                         </svg></button>
 `;
     let part2 = await generateSelect(conv.user.question);
+    // let part2 = `<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this)">
+    //                     <option value="default" data-priceperreq="0">智能推荐</option>
+    //                     <option value="1" data-priceperreq="0.01">收费智能体1</option>
+    //                     <option value="2" data-priceperreq="0.02">收费智能体2</option>
+    //                     <option value="3" data-priceperreq="0.03">收费智能体3</option>
+    //                     <option value="4" data-priceperreq="0.04">收费智能体4</option>
+    //                     <option value="5" data-priceperreq="0.05">收费智能体5</option>
+    //                 </select> `;
 
     let part3 = `
                     <audio class="myAudio1" controls="" preload="metadata" style="width:100px">
@@ -97,7 +105,6 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
 
 // 请求接口并生成HTML字符串
 async function generateSelect(userQuestion) {
-    debugger
     const url = "/skill/relatedAgents";
     const requestData = {
         stream: false,
@@ -123,6 +130,7 @@ async function generateSelect(userQuestion) {
         });
 
         const result = await response.json();
+        console.log('result:'+result)
 
         // 检查接口返回的状态
         if (result.code === 0 && result.data && Array.isArray(result.data)) {
@@ -130,7 +138,7 @@ async function generateSelect(userQuestion) {
 
             // 初始化HTML字符串
             let part2 = `
-<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this)">
+<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this,'${userQuestion}')">
     <option value="default" data-priceperreq="0">智能推荐</option>
 `;
 
@@ -145,14 +153,13 @@ async function generateSelect(userQuestion) {
             part2 += `
 </select>
 `;
-            debugger
             // 返回生成的HTML字符串
             return part2;
         } else {
-            console.error("请求失败或数据格式错误", result);
+            return '';
         }
     } catch (error) {
-        console.error("请求异常", error);
+        return '';
     }
 }
 

@@ -381,8 +381,8 @@
                                                 <!-- <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto"> -->
                                                 <ul id="agent-tools" class="pb-2">
                                                     <li class=" pl-5  not-available " onclick="openAgentModal()">发布智能体</li>
-                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li>
-                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li>
+<%--                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li>--%>
+<%--                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li>--%>
                                                 </ul>
                                             </div>
                                         </div>

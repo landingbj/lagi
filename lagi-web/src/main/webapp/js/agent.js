@@ -279,8 +279,8 @@ function deleteAgent(agentId) {
 
 // 加载订阅智能体列表
 function loadPaidAgentList(pageNumber) {
-    // fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
-    fetch(`/agent/getPaidAgentByUser?lagiUserId=${60}&pageNumber=${pageNumber}&pageSize=10`)
+    fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
+    // fetch(`/agent/getPaidAgentByUser?lagiUserId=${60}&pageNumber=${pageNumber}&pageSize=10`)
         .then(response => response.json())
         .then(data => {
             let tbody = document.querySelector("#paid-agent-list tbody");
@@ -343,12 +343,12 @@ function hideFooterInfo() {
 
 //========= 查看收费智能体js=============
 
-function handleSelect(selectedItem) {
+async function handleSelect(selectedItem, userQuestion) {
     const selectedValue = selectedItem.value;
     const selectedOption = selectedItem.options[selectedItem.selectedIndex];
     const pricePerReq = selectedOption.getAttribute('data-priceperreq');
     const agentName = selectedOption.textContent.trim();
-    
+
     // 如果选择的是默认项，不做任何处理
     if (selectedValue === 'default') {
         return;
@@ -357,9 +357,52 @@ function handleSelect(selectedItem) {
     // 更新全局变量 selectedAgentId
     selectedAgentId = selectedValue;
 
-    // 打开收费弹框
-    openRechargeModal(agentName, pricePerReq);
+    // 调用接口判断是否订阅
+    try {
+        const agentData = await checkSubscription(selectedAgentId);
+
+        if (agentData) {
+            // 如果余额小于零，弹出提示并打开收费框
+            if (agentData.balance < 0) {
+                alert("余额不足，请充值！");
+                openRechargeModal(agentName, pricePerReq);
+            } else {
+                // 使用 await 等待 appointTextQuery 异步调用完成
+                await appointTextQuery(userQuestion, selectedAgentId);
+
+                // 扣钱接口请求
+                const response = await fetch('/agent/deductExpenses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: globalUserId,   // 假设 globalUserId 是已知的全局变量
+                        agentId: selectedAgentId
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    console.log('扣款成功');
+                    // 可以在这里执行一些后续操作，比如更新UI，通知用户等
+                } else {
+                    console.error('扣款失败:', data);
+                    alert('扣款失败，请稍后再试！');
+                }
+            }
+        } else {
+            // 如果没有订阅该智能体，弹出提示
+            alert(`该智能体 (${agentName}) 需要订阅才能使用！`);
+            openRechargeModal(agentName, pricePerReq);
+        }
+    } catch (error) {
+        console.error("检查订阅失败:", error);
+        alert("获取订阅信息失败，请稍后再试！");
+    }
 }
+
+
 
 function openRechargeModal(agentName, pricePerReq) {
     // 获取弹框元素
@@ -483,4 +526,22 @@ function cancelPayment() {
     $('#payAmount').text('');
     // 清除支付查询的定时器
     clearInterval(interval);
+}
+
+function checkSubscription(agentId) {
+    return new Promise((resolve, reject) => {
+        fetch(`/agent/getPaidAgentByUser?lagiUserId=${globalUserId}&pageNumber=1&pageSize=1000`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const agent = data.data.find(agent => agent.id === parseInt(agentId));
+                    resolve(agent || null);  // 如果找到该ID的智能体，返回数据，否则返回null
+                } else {
+                    reject(new Error("接口返回状态异常"));
+                }
+            })
+            .catch(err => {
+                reject(err);
+            });
+    });
 }

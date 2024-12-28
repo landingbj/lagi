@@ -79,16 +79,51 @@ async function textQuery() {
     hideHelloContent();
 
     $('#queryBox textarea').val('');
-    let conversation = {user: {question: question}, robot: {answer: ''}}
-    sleep(200).then(() => {
-        if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
-            socialAgentsConversation(question);
-        } else {
-            let robotAnswerJq = newConversation(conversation);
-            getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
-        }
-    })
+    let conversation = {user: {question: question}, robot: {answer: ''}};
+
+    await sleep(200);
+
+    if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
+        socialAgentsConversation(question);
+    } else {
+        let robotAnswerJq = await newConversation(conversation);
+        getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
+    }
 }
+
+async function appointTextQuery(question,selectedAgentId) {
+    if (queryLock) {
+        alert("有对话正在进行请耐心等待");
+        return;
+    }
+    queryLock = true;
+    disableQueryBtn();
+    if (isBlank(question)) {
+        alert("请输入有效字符串！！！");
+        $('#queryBox textarea').val('');
+        enableQueryBtn();
+        querying = false;
+        queryLock = false;
+        return;
+    }
+    let agentId = selectedAgentId;
+
+    // 隐藏非对话内容
+    hideHelloContent();
+
+    $('#queryBox textarea').val('');
+    let conversation = {user: {question: question}, robot: {answer: ''}};
+
+    await sleep(200);
+
+    if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
+        socialAgentsConversation(question);
+    } else {
+        let robotAnswerJq = await newConversation(conversation);
+        getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
+    }
+}
+
 
 const GET_QR_CODE = "GET_QR_CODE";
 const TIMER_WHO = "TIMER_WHO";
@@ -317,6 +352,7 @@ function getLoginStatus(appId, username) {
 const CONVERSATION_CONTEXT = [];
 
 function getTextResult(question, robootAnswerJq, conversation, agentId) {
+    debugger
     var result = '';
     var paras = {
         "category": window.category,
@@ -325,13 +361,15 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         ]),
         "temperature": 0.8,
         "max_tokens": 1024,
-        // "stream": true,
+        "worker": "BestWorker",
+        // "stream": false,
         "stream": true
     };
-        // paras["worker"] = "appointedWorker";
-        // paras["agentId"] = agentId;
-        paras["worker"] = "BestWorker";
-        paras["stream"] = true;
+    if (agentId) {
+        paras["worker"] = "appointedWorker";
+        paras["agentId"] = agentId;
+    }
+
     var queryUrl = "search/detectIntent";
     $.ajax({
         type: "POST",

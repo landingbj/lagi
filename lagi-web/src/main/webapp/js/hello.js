@@ -89,7 +89,7 @@ function fillQueryText(That) {
     let agent = $(That).data('agent');
     $('#queryContent').val(content);
     $('#queryContent').data("agent", agent);
-    currentAppId = agent;
+    // currentAppId = agent;
 }
 
 function addTr(ls) {
