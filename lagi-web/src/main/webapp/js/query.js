@@ -73,7 +73,6 @@ async function textQuery() {
         queryLock = false;
         return;
     }
-
     let agentId = currentAppId;
 
     // 隐藏非对话内容

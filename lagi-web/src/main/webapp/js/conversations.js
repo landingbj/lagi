@@ -14,8 +14,7 @@ function setCurConvId(convId) {
 }
 
 
-function newConversation(conv, questionEnable = true, answerEnable = true) {
-
+async function newConversation(conv, questionEnable = true, answerEnable = true) {
     let questionDiv = `
         <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group dark:bg-gray-800">
             <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
@@ -32,8 +31,7 @@ function newConversation(conv, questionEnable = true, answerEnable = true) {
             </div>
         </div>
         `;
-
-    let answerDiv = `
+    let part1 = `
 <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
     <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
         <div class="w-[30px] flex flex-col relative items-end">
@@ -58,14 +56,10 @@ function newConversation(conv, questionEnable = true, answerEnable = true) {
                             <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17">
                             </path>
                         </svg></button>
-                    <select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this)">
-                        <option value="default" data-priceperreq="0">智能推荐</option>
-                        <option value="1" data-priceperreq="0.01">收费智能体1</option>
-                        <option value="2" data-priceperreq="0.02">收费智能体2</option>
-                        <option value="3" data-priceperreq="0.03">收费智能体3</option>
-                        <option value="4" data-priceperreq="0.04">收费智能体4</option>
-                        <option value="5" data-priceperreq="0.05">收费智能体5</option>
-                    </select>                    
+`;
+    let part2 = await generateSelect(conv.user.question);
+
+    let part3 = `
                     <audio class="myAudio1" controls="" preload="metadata" style="width:100px">
                     <source class="audioSource1" src="">
                     </audio>
@@ -86,7 +80,9 @@ function newConversation(conv, questionEnable = true, answerEnable = true) {
             </div>
         </div>
     </div>
-    `;
+</div>
+`;
+    let answerDiv = part1 + part2 + part3;
     if (!questionEnable) {
         questionDiv = '';
     }
@@ -97,6 +93,67 @@ function newConversation(conv, questionEnable = true, answerEnable = true) {
     $('#item-content').append(chatHtml);
     $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
     return $($(' .markdown')[$('.markdown').length - 1]);
+}
+
+// 请求接口并生成HTML字符串
+async function generateSelect(userQuestion) {
+    debugger
+    const url = "/skill/relatedAgents";
+    const requestData = {
+        stream: false,
+        temperature: 0.8,
+        max_tokens: 1024,
+        category: "default",
+        messages: [
+            {
+                role: "user",
+                content: userQuestion
+            }
+        ]
+    };
+
+    try {
+        // 发送POST请求
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await response.json();
+
+        // 检查接口返回的状态
+        if (result.code === 0 && result.data && Array.isArray(result.data)) {
+            const agents = result.data;
+
+            // 初始化HTML字符串
+            let part2 = `
+<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this)">
+    <option value="default" data-priceperreq="0">智能推荐</option>
+`;
+
+            // 根据接口数据动态生成收费智能体的选项
+            agents.forEach(agent => {
+                part2 += `
+    <option value="${agent.id}" data-priceperreq="${agent.pricePerReq}">${agent.name}</option>
+`;
+            });
+
+            // 关闭<select>标签
+            part2 += `
+</select>
+`;
+            debugger
+            // 返回生成的HTML字符串
+            return part2;
+        } else {
+            console.error("请求失败或数据格式错误", result);
+        }
+    } catch (error) {
+        console.error("请求异常", error);
+    }
 }
 
 

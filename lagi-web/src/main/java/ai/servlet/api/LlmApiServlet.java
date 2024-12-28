@@ -1,19 +1,10 @@
 package ai.servlet.api;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import ai.agent.Agent;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.common.pojo.Response;
 import ai.config.ContextLoader;
@@ -28,33 +19,31 @@ import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.schedule.QueueSchedule;
+import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
-import ai.llm.service.CompletionsService;
-import ai.common.pojo.Configuration;
-import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.AgentService;
+import ai.openai.pojo.ChatCompletionChoice;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.pojo.ChatMessage;
 import ai.response.ChatMessageResponse;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
 import ai.utils.ClientIpAddressUtil;
-import ai.vector.VectorDbService;
-import ai.openai.pojo.ChatCompletionChoice;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.openai.pojo.ChatMessage;
 import ai.utils.MigrateGlobal;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
+import ai.vector.VectorDbService;
 import ai.worker.DefaultWorker;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
@@ -63,6 +52,16 @@ import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class LlmApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
@@ -125,8 +124,10 @@ public class LlmApiServlet extends BaseServlet {
             responsePrint(resp, toJson(work));
             return;
         }
-        String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
-        convert2streamAndOutput(firstAnswer, resp, work);
+        if(work != null) {
+            String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
+            convert2streamAndOutput(firstAnswer, resp, work);
+        }
     }
 
     private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs) {
