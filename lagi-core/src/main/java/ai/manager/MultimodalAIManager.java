@@ -10,7 +10,7 @@ import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
 import ai.llm.adapter.ILlmAdapter;
-import ai.llm.wrapper.IWrapper;
+import ai.wrapper.IWrapper;
 import ai.ocr.IOcr;
 import ai.oss.UniversalOSS;
 import ai.translate.adapter.TranslateAdapter;
