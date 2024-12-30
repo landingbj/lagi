@@ -6,7 +6,7 @@ Lag[i] (联基) 是由北京联动北方科技有限公司精心打造的一款�
 
 支持但不限于以下大模型：
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_1.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px;text-align: left;">Landing</span>
@@ -63,7 +63,7 @@ Lag[i] (联基) 是由北京联动北方科技有限公司精心打造的一款�
 
 支持但不限于以下智能体平台：
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/img_4.jpeg" alt="Model 2" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;" >混元智能体平台</span>

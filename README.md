@@ -6,7 +6,7 @@ Lag[i] (Landing AGI) is a solution designed by Beijing Landing Technologies Co.,
 
 Supports but is not limited to the following models:
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_1.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px;text-align: left;">Landing</span>
@@ -63,7 +63,7 @@ Supports but is not limited to the following models:
 
 Supports but is not limited to the following intelligent agent platforms:
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/img_4.jpeg" alt="Model 2" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;"> Hunyuan </span>
