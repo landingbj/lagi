@@ -1,154 +1,155 @@
-System homepage display name, this setting specifies the name that will be displayed on the system homepage, which is "Lagi".
+# Configuration Reference Guide
+
+System Homepage Display Name: This setting specifies the name displayed on the system homepage, which is "Lag[i]".
 
 ```yaml
-system_title: Lagi
+system_title: Lag[i]
 ```
 
-Model configuration
+Model Configuration
 
 ```yaml
 # This section defines the model configuration used by the middleware.
 models:
-  # Model configuration in the case of single driver model.
-  - name: chatgpt  # The name of the backend service.
-    type: OpenAI  # Type is the company, in this case OpenAI.
-    enable: false # This flag determines whether the backend service is enabled or not. true: indicates that the function is enabled.
-    model: gpt-3.5-turbo,gpt-4-turbo # list of models supported by the driver
-    driver: ai.llm.adapter.impl.GPTAdapter # model driver
-    api_key: your-api-key # API key
-  # The model supports multi-driver configuration
+  # Configuration for a single-driver model.
+  - name: chatgpt  # Name of the backend service.
+    type: OpenAI  # Associated company, e.g., OpenAI here.
+    enable: false # This flag determines whether the backend service is enabled. "true" means enabled.
+    model: gpt-3.5-turbo,gpt-4-turbo # List of models supported by the driver.
+    driver: ai.llm.adapter.impl.GPTAdapter # Model driver.
+    api_key: your-api-key # API key.
+  # Configuration for multi-driver models.
   - name: landing
     type: Landing
     enable: false
     drivers: # Multi-driver configuration.
-      - model: turing,qa,tree,proxy # List of driver support functions
-        driver: ai.llm.adapter.impl.LandingAdapter # driver address
-      - model: image # List of driver supported features
-        driver: ai.image.adapter.impl.LandingImageAdapter # driver address
-        oss: landing # Name of the storage object service
+      - model: turing,qa,tree,proxy # List of features supported by the driver.
+        driver: ai.llm.adapter.impl.LandingAdapter # Driver address.
+      - model: image # List of features supported by the driver.
+        driver: ai.image.adapter.impl.LandingImageAdapter # Driver address.
+        oss: landing # Name of the object storage service used.
       - model: landing-tts,landing-asr
-        driver: ai.audio.adapter.impl.LandingAudioAdapter
+        driver: ai.audio.adapter.impl.LandingAudioAdapter 
       - model: video
-        driver: ai.video.adapter.impl.LandingVideoAdapter
-        api_key: your-api-key # specifies api key for the driver
-    api_key:  your-api-key  # the public api key of drivers
-
+        driver: ai.video.adapter.impl.LandingVideoAdapter 
+        api_key: your-api-key # API key specified for the driver.
+    api_key: your-api-key # Shared API key for the drivers.
 ```
 
-Storage function configuration
+Storage Configuration
 
 ```yaml
 # This section defines the storage device configuration used by the middleware.
 stores:
-  # This part is the configuration of the vector database
-  vectors: # Vector database configuration list
-    - name: chroma # Vector database name
-      driver: ai.vector.impl.ChromaVectorStore # Vector database driver
-      default_category: default # Parameters used in vector database queries
-      similarity_top_k: 10
+  # Configuration for the vector database.
+  vectors: # List of vector database configurations.
+    - name: chroma # Name of the vector database.
+      driver: ai.vector.impl.ChromaVectorStore # Vector database driver.
+      default_category: default # Category for vector database storage.
+      similarity_top_k: 10 # Parameter used for vector database queries.
       similarity_cutoff: 0.5
       parent_depth: 1
       child_depth: 1
-      url: http://localhost:8000 # the url address of the Vector database
-  # This section describes how to configure the object storage service
+      url: http://localhost:8000 # Storage configuration of the vector database.
+  # Configuration for object storage services.
   oss:
-    - name: landing # Name of the storage object service
-      driver: ai.oss.impl.LandingOSS  # The driver class that stores the object service
-      bucket_name: lagi # The bucket name used to store the object
-      enable: true # Whether to enable the storage object service
+    - name: landing # Name of the object storage service.
+      driver: ai.oss.impl.LandingOSS  # Object storage service driver class.
+      bucket_name: lagi # Bucket name for object storage.
+      enable: true # Determines if the object storage service is enabled.
 
     - name: alibaba
       driver: ai.oss.impl.AlibabaOSS
-      access_key_id: your-access-key-id #  the access key id  used by the third-party storage object service
-      access_key_secret: your-access-key-secret # the access key secret  used by the third-party storage object service
+      access_key_id: your-access-key-id # Access key ID for third-party object storage services.
+      access_key_secret: your-access-key-secret # Access key secret for third-party object storage services.
       bucket_name: ai-service-oss
       enable: true
 
-  # This part is the configuration of Elasticsearch
+  # Configuration for Elasticsearch.
   text:
-    - name: elasticsearch # The name of the full-text search
+    - name: elasticsearch # Name of the full-text search.
       driver: ai.bigdata.impl.ElasticSearchAdapter
-      host: localhost # IP address
-      port: 9200 # Port number
-      enable: false # Whether it is turned on
-  database: # Relational database configuration
-    name: mysql # Database name
-    jdbcUrl: you-jdbc-url # Connection address
-    driverClassName: com.mysql.cj.jdbc.Driver # Driver class
-    username: your-username # Database username
-    password: your-password # Database password
-  # This section is the configuration of the retrieval enhancement build service
+      host: localhost # Address of Elasticsearch for full-text search.
+      port: 9200 # Port of Elasticsearch for full-text search.
+      enable: false # Determines if it is enabled.
+  database: # Relational database configuration.
+    name: mysql # Database name.
+    jdbcUrl: you-jdbc-url # Connection address.
+    driverClassName: com.mysql.cj.jdbc.Driver # Driver class.
+    username: your-username # Database username.
+    password: your-password # Database password.
+  # Configuration for Retrieval-Augmented Generation (RAG) service.
   rag:
-    vector: chroma # The name of the vector database used by the service
-    fulltext: elasticsearch # Full-text search (optional, if this configuration is filled in, this configuration will be enabled)
-    graph: landing # Graph retrieval (optional, if this configuration is filled in, this configuration will be enabled)
-    enable: true # Enable or not
-    priority: 10 # Priority for this function，When the priority is greater than the model, the prompt in default is returned if the context is not found
-    default: "Please give prompt more precisely" # If the context is not found, the cue is returned
-    track: true # enable document tracking
-  # This section is the configuration of Medusa's Accelerated Inference Service
+      vector: chroma # Name of the vector database used by the service.
+      fulltext: elasticsearch # Full-text search (optional; if configured, this service is enabled. To disable, simply comment out this line).
+      graph: landing # Graph search (optional; if configured, this service is enabled. To disable, simply comment out this line).
+      enable: true # Determines if it is enabled.
+      priority: 10 # Priority; if this priority exceeds the model's, it will return the default prompt if no context is matched.
+      default: "Please give prompt more precisely" # Default prompt returned when no context is matched.
+      track: true # Enables document tracking.
+  # Configuration for Medusa's accelerated inference service.
   medusa:
-    enable: true # Enable or not
-    algorithm: hash # Algorithm used
+    enable: true # Determines if it is enabled.
+    algorithm: hash # Algorithm used.
 ```
 
-Middleware function configuration
+Middleware Functionality Configuration
 
 ```yaml
-# Functional configuration used by large models
+# Functionality configuration for large models.
 functions:
-  # embedding service configuration
+  # Embedding service configuration.
   embedding:
     - backend: qwen
       type: Qwen
       api_key: your-api-key
   
-  # The configuration list of chat dialog and text generation functions
+  # Configuration list for chat and text generation functions.
   chat:
-    - backend: chatgpt # The name of the model configuration used by the backend
-      model: gpt-4-turbo # Model name
-      enable: true # Enable or not
-      stream: true # Whether to use stream
-      priority: 200 #  priority for this function
+    - backend: chatgpt # Name of the backend model configuration.
+      model: gpt-4-turbo # Model name.
+      enable: true # Determines if it is enabled.
+      stream: true # Determines if streaming is used.
+      priority: 200 # Priority.
 
-    - backend: chatglm # The name of the model configuration used by the backend
+    - backend: chatglm
       model: glm-3-turbo
       enable: false
       stream: false
       priority: 10
   
-  # Translation configuration list
+  # Configuration list for translation functions.
   translate:
-    - backend: ernie # The name of the model configuration used by the backend
-      model: translate
-      enable: false
-      priority: 10
+    - backend: ernie # Name of the backend model configuration.
+      model: translate # Model name.
+      enable: false # Determines if it is enabled.
+      priority: 10 # Priority.
   
-  # Voice to text configuration list
+  # Configuration list for speech-to-text functions.
   speech2text:
-    - backend: qwen # The name of the model configuration used by the backend
+    - backend: qwen  # Name of the backend model configuration.
       model: asr
       enable: true
       priority: 10
   
-  # Text-to-voice configuration list
+  # Configuration list for text-to-speech functions.
   text2speech:
-    - backend: landing # The name of the model configuration used by the backend
+    - backend: landing # Name of the backend model configuration.
       model: tts
       enable: true
       priority: 10
   
-  # Sound clone configuration list
+  # Configuration list for voice cloning functions.
   speech2clone:
-    - backend: doubao # The name of the model configuration used by the backend
+    - backend: doubao # Name of the backend model configuration.
       model: openspeech
       enable: true
       priority: 10
       others: your-speak-id
 
-  # Text image configuration list
+  # Configuration list for text-to-image functions.
   text2image:
-    - backend: spark # The name of the model configuration used by the backend
+    - backend: spark # Name of the backend model configuration.
       model: tti
       enable: true
       priority: 10
@@ -156,103 +157,102 @@ functions:
       model: Stable-Diffusion-XL
       enable: true
       priority: 5
-  # Configuration list of the image text generation
+  # Configuration list for image-to-text functions.
   image2text:
-    - backend: ernie # The name of the model configuration used by the backend
+    - backend: ernie # Name of the backend model configuration.
       model: Fuyu-8B
       enable: true
       priority: 10
-  # Image enhancement configuration list
+  # Configuration list for image enhancement functions.
   image2enhance:
-    - backend: ernie # The name of the model configuration used by the backend
+    - backend: ernie # Name of the backend model configuration.
       model: enhance
       enable: true
       priority: 10
-  # Image OCR configuration list
-  image2ocr:
-      - backend: qwen
-        model: ocr
-        enable: true
-        priority: 10
-  # Text generated video configuration list
+  # Configuration list for text-to-video functions.
   text2video:
-    - backend: landing # The name of the model configuration used by the backend
+    - backend: landing # Name of the backend model configuration.
       model: video
       enable: true
       priority: 10
-  # image generated video configuration list
+  # Configuration list for image-to-video functions.
   image2video:
-    - backend: qwen # The name of the model configuration used by the backend
+    - backend: qwen # Name of the backend model configuration.
       model: vision
       enable: true
       priority: 10
-  # Video tracking configuration list
+  # Configuration list for image OCR functions.
+  image2ocr:
+    - backend: qwen
+      model: ocr
+      enable: true
+      priority: 10
+  # Configuration list for video tracking functions.
   video2track:
-    - backend: landing # The name of the model configuration used by the backend
+    - backend: landing # Name of the backend model configuration.
       model: video
       enable: true
       priority: 10
-  # Video enhancement configuration list
+  # Configuration list for video enhancement functions.
   video2enhance:
-    - backend: qwen # The name of the model configuration used by the backend
+    - backend: qwen # Name of the backend model configuration.
       model: vision
       enable: true
       priority: 10
-  # document OCR configuration list
+  # Configuration list for document OCR functions.
   doc2ocr:
-      - backend: qwen
-        model: ocr
-        enable: true
-        priority: 10
-  # document instruction configuration list
+    - backend: qwen
+      model: ocr
+      enable: true
+      priority: 10
+  # Configuration list for document instruction functions.
   doc2instruct:
     - backend: landing
       model: cascade
       enable: true
       priority: 10
-  # SQL command configuration list
+  # Configuration list for SQL instruction functions.
   text2sql:
     - backend: landing
-      model: cascade
-      enable: true 
+      model: qwen-turbo # Model name.
+      enable: true # Determines if it is enabled.
       priority: 10
 ```
 
-Routing policy configuration
+Routing Policy Configuration
 
 ```yaml
 functions:
   policy:
-    #  handle Configuration: Currently, there are three values: parallel, failover, and failover. Parallel indicates concurrent invocation; failover indicates failover handling; failover indicates load balancing invocation. Scenario explanation：
-    # 1. When the model is not forcibly specified in the request or the specified model is invalid, the three strategies of parallel, failover, and failover take effect.
-    # 2. When the handle is set to parallel, the models configured for parallel execution will be invoked concurrently, returning the result of the fastest responding and highest-priority model call.
-    # 3. When the handle is set to failover, the models configured for serial execution will be executed in sequence according to priority. If any model returns successfully during the serial execution process, subsequent models will not be executed.
-    # 4. When the handle is set to failover, the models configured for round-robin execution will be invoked based on additional information such as the request IP and browser fingerprint, distributing requests evenly among the corresponding models.
-    # 5. When all models return failures, the HTTP request status code will be set to 600-608. The body will contain specific error messages. (The error code and message actually correspond to the failure information of the last model call.)
-    #  Error Codes： 
-    #     600 Invalid request parameters
-    #     601 Authorization error
-    #     602 Permission denied
-    #     603 Resource not found
-    #     604 Access frequency limit
-    #     605 Model internal error
-    #     606 Other errors
-    #     607 Timeout
-    #     608 No available models
-      handle: failover
-      grace_time: 20 # Retry interval after failure
-      maxgen: 3 # By default, the maximum number of retries after a fault occurs is Integer.MAX_VALUE
+    # Handle configuration currently supports parallel, failover, and polling:
+    #  1. If no model is explicitly specified in the request or the specified model is invalid, the three strategies apply.
+    #  2. "parallel" executes configured models concurrently, returning the fastest and highest-priority result.
+    #  3. "failover" executes models sequentially by priority, stopping when a successful result is obtained.
+    #  4. "polling" distributes requests evenly among models using parameters such as IP and browser fingerprints.
+    #  5. If all models fail, the HTTP status code is set to 600–608, with the body containing detailed error information.
+    #     Error codes:
+    #       600 Invalid request parameters.
+    #       601 Authorization error.
+    #       602 Permission denied.
+    #       603 Resource not found.
+    #       604 Rate limit exceeded.
+    #       605 Model internal error.
+    #       606 Other errors.
+    #       607 Timeout.
+    #       608 No available model.
+    handle: failover
+    grace_time: 20 # Retry interval after failure.
+    maxgen: 3 # Maximum retries after failure (default is Integer.MAX_VALUE).
 ```
 
-Agent configuration
+Agent Configuration
 
 ```yaml
-
-# This section represents the agent configuration supported by the model
+# This section represents agent configurations supported by the models.
 agents:
-  - name: qq # Name of the agent
-    api_key: your-api-key # api key used by the agent
-    driver: ai.agent.social.QQAgent # Agent driver
+  - name: qq # Agent name.
+    api_key: your-api-key # API key used by the agent.
+    driver: ai.agent.social.QQAgent # Agent driver.
 
   - name: wechat
     api_key: your-api-key
@@ -261,21 +261,7 @@ agents:
   - name: ding
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
-
-# This section represents the workers configuration supported by the model
-workers:
-  - name: qq-robot # worker name
-    agent: qq # Name of the agent
-    worker: ai.worker.social.RobotWorker # Worker driver
-
-  - name: wechat-robot
-    agent: wechat
-    worker: ai.worker.social.RobotWorker
-
-  - name: ding-robot
-    agent: ding
-    worker: ai.worker.social.RobotWorker
-
+    
   - name: weather_agent
     driver: ai.agent.customer.WeatherAgent
     token: your-token
@@ -319,19 +305,36 @@ workers:
     app_id: your-app-id
     endpoint: http://127.0.0.1:8080
     token: image_gen_agent
-# router configuration
+    
+# This section represents configurations for agent workers.
+workers:
+  - name: qq-robot # Worker name.
+    agent: qq # Name of the agent it works with.
+    worker: ai.worker.social.RobotWorker # Worker driver.
+
+  - name: wechat-robot
+    agent: wechat
+    worker: ai.worker.social.RobotWorker
+
+  - name: ding-robot
+    agent: ding
+    worker: ai.worker.social.RobotWorker
+
+# Routing configuration.
 routers:
   - name: best
-      #    rule: (weather_agent&food_calorie_agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
-      # A,B -> failover, first A, if A fail, then B;
-    # A&B -> parallel, call A and B concurrently, choose the proper only one result;
-    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
-    rule: (weather_agent&food_calorie_agent)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+    # Rule: (weather_agent&food_calorie_agent)
+    # A|B -> Polling, A or B indicates random polling between A and B.
+    # A,B -> Failover, starting with A; if A fails, then B.
+    # A&B -> Parallel execution, calling A and B simultaneously and selecting the most appropriate single result.
+    # This rule can combine into ((A&B&C),(E|F)), meaning first simultaneously call A, B, and C, and if they fail, randomly call E or F.
+    rule: (weather_agent&food_calorie_agent)
 
+    # % represents a wildcard.
+    # If specified, the call will use the given agent.
+    # If only "%" is given, the % will be determined by the parameters passed during the call.
   - name: pass
     rule: '%'
-    # % is a wildcard to represent agent name.
-    # if specified, invoke this agent.
-    # if just % is given, % would be decided by parameter at calling time.
 
 ```
+

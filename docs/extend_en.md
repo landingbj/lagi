@@ -1,89 +1,49 @@
-## Extension
+### **Extension Development Documentation**
 
-You are free to extend Lag[i] (Landing AGI) extension to your needs by referring to this document.
+You can refer to this documentation to freely extend Lag[i] to suit your business needs.
 
-## Model extension
+### **Model Extension**
 
-If you want to extend Lag[i] (Landing AGI) to fit other large models, you can follow these steps:
+If you wish to extend Lag[i] to support other large models, you can refer to the following sections.
 
-## 1. Adaptation yml
+#### **1. Add New Configuration**
 
-**1.Add new configuration under models**
+Add new configurations under the `models` and `functions` sections in the `lagi.yml` configuration file. Refer to the example below:
 
 ```yaml
 models:
     - name: your-model-name
       type: your-model-type
-      enable: true # This flag determines whether the backend service is enabled or not. "true" means enabled.
-      drivers: # This model is extended with drviers when multiple models are needed.
+      enable: true  # This flag determines whether the backend service is enabled. "true" means enabled.
+      drivers:  # Use "drivers" to extend the model when multiple models are required.
         - model: model-version
-          driver: ai.llm.adapter.impl.Yonr-Adapter # The corresponding implementation class.
-          oss: oos-name # Name of the corresponding OSS configuration.
+          driver: ai.llm.adapter.impl.Yonr-Adapter  # Corresponding implementation class.
+          oss: oos-name  # Corresponding OSS configuration name.
       api_key: your-api-key 
-      secret_key: your-secret-key  
-      access_key_secret: your-access-key-secret 
-      api_address: your-aip-address # If you are deploying a large model for private deployment, you need to specify the Api address of the model service.
+      secret_key: your-secret-key 
+      access_key_secret: your-access-key-secret
+      api_address: your-api-address  # Specify the API address for privatized deployed models.
 
 functions:
-  chat:
+   chat:
     - backend: your-model-name
       model: model-version
       enable: true
       stream: true
       priority: 0
-
 ```
 
-Example :
+#### **2. Interface Adaptation**
 
-```yaml
-models:
-  backends:
-    - name: ernie
-      type: Baidu
-      enable: true
-      drivers:
-        - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
-          driver: ai.llm.adapter.impl.ErnieAdapter
-        - model: Fuyu-8B,Stable-Diffusion-XL
-          driver: ai.image.adapter.impl.BaiduImageAdapter
-        - model: translate
-          driver: ai.translate.adapter.impl.BaiduTranslateAdapter
-          app_id: your-api-key
-          security_key: your-security-key
-        - model: enhance
-          driver: ai.image.adapter.impl.BaiduAiImageAdapter
-          api_key: your-api-key
-          secret_key: 9your-sercet-key
-        - model: aiVideo
-          driver: ai.video.adapter.impl.BaiduVideoAdapter
-          api_key: your-api-key
-          secret_key: your-sercet-key
-      app_id: your-app-id
-      api_key: your-api-key
-      secret_key: your-sercet-key
+##### **Extend the Inference Interface for Large Language Models**
 
-functions:
-  chat:
-    - backend: ernie
-      model: ERNIE-Speed-128K
-      enable: true
-      stream: true
-      priority: 10
-
-```
-
-**2.Adaptation method**
-
->1.Extension chat:
-
-Create YonrAdapter.java that extends ModelService and implements ILlmAdapter under ai>llm>adapter>impl in the lagi-core module.
+Create a new `YonrAdapter` class under the `ai>llm>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `ILlmAdapter` interface.
 
 ```java
 @LLM(modelName = { "Yonr-version"})
 public class YonrAdapter extends ModelService implements ILlmAdapter {
     /**
-     * API
+     * API Call
      * @param chatCompletionRequest
      * @return
      */
@@ -93,7 +53,7 @@ public class YonrAdapter extends ModelService implements ILlmAdapter {
     }
 
     /**
-     * stream
+     * Streaming Call
      * @param chatCompletionRequest
      * @return
      */
@@ -102,10 +62,9 @@ public class YonrAdapter extends ModelService implements ILlmAdapter {
         return null;
     }
 }
-
 ```
 
-Example :
+Example implementation:
 
 ```java
 @LLM(modelNames = {"your_model1,your_model2"})
@@ -114,7 +73,7 @@ public class DoubaoAdapter extends ModelService implements ILlmAdapter {
     public ChatCompletionResult completions(ChatCompletionRequest request) {
         ArkService service = ArkService.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3/").build();
         List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包人工智能助手").build();
+        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("You are Doubao AI assistant").build();
         ChatMessage userMessage = ChatMessage.builder().role(ChatMessageRole.USER).content(request.getMessages().get(0).getContent()).build();
         messages.add(systemMessage);
         messages.add(userMessage);
@@ -134,7 +93,7 @@ public class DoubaoAdapter extends ModelService implements ILlmAdapter {
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest request) {
         ArkService service = ArkService.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3/").build();
         List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包人工智能助手").build();
+        ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("You are Doubao AI assistant").build();
         ChatMessage userMessage = ChatMessage.builder().role(ChatMessageRole.USER).content(request.getMessages().get(0).getContent()).build();
         messages.add(systemMessage);
         messages.add(userMessage);
@@ -166,9 +125,9 @@ public class DoubaoAdapter extends ModelService implements ILlmAdapter {
 }
 ```
 
->2.Extension speech2text:
+### **Extend Speech-to-Text Interface**
 
-Create YonrAdapter.java in the ai>audio>adapter>impl directory under the lagi-core module and inherit from ModelService class and implement the IAudioAdapter interface.
+Create a new `YonrAdapter` class under the `ai>audio>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `IAudioAdapter` interface.
 
 ```java
 @ASR(company = "your-company-name", modelNames = "Yonr-modelNames")
@@ -177,10 +136,10 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
     public String asr(String audioFilePath) {
         return null;
     }
- }
+}
 ```
 
-Example :
+Example implementation:
 
 ```java
 @ASR(company = "alibaba", modelNames = "asr")
@@ -192,13 +151,14 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
                 getAccessKeyId(),
                 getAccessKeySecret()
         );
-        return gson.fromJson(asrService.asr(audio),AsrResult .class);
+        return gson.fromJson(asrService.asr(audio), AsrResult.class);
+    }
 }
 ```
 
->3.Extension text2speech:
+### **Extend Text-to-Speech Interface**
 
-Create YonrAdapter.java in the ai>audio>adapter>impl directory under the lagi-core module and inherit from ModelService class and implement the IAudioAdapter interface.
+Create a new `YonrAdapter` class under the `ai>audio>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `IAudioAdapter` interface.
 
 ```java
 @TTS(company = "your-company-name", modelNames = "Yonr-modelNames")
@@ -207,10 +167,10 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
     public String tts(String audioFilePath) {
         return null;
     }
- }
+}
 ```
 
-Example :
+Example implementation:
 
 ```java
 @TTS(company = "alibaba", modelNames = "tts")
@@ -251,12 +211,12 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
         }
         return result;
     }
- }
+}
 ```
 
->4.Extension text2image:
+### **Extend Text-to-Image Interface**
 
-Create YonrAdapter.java in the ai>image>adapter>impl directory of the lagi-core module and implement the IImageGenerationAdapter interface.
+Create a new `YonrAdapter` class under the `ai>image>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `IImageGenerationAdapter` interface.
 
 ```java
 @ImgGen(modelNames = "Yonr-modelNames")
@@ -268,7 +228,7 @@ public class SparkImageAdapter extends ModelService implements IImageGenerationA
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @ImgGen(modelNames = "tti")
@@ -280,7 +240,7 @@ public class SparkImageAdapter extends ModelService implements IImageGenerationA
             SparkGenImgRequest sparkGenImgRequest = convert2SparkGenImageRequest(request);
             String post = doPostJson(authUrl, null, JSONUtil.toJsonStr(sparkGenImgRequest));
             SparkGenImgResponse bean = JSONUtil.toBean(post, SparkGenImgResponse.class);
-            return  convert2ImageGenerationResult(bean);
+            return convert2ImageGenerationResult(bean);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -289,9 +249,9 @@ public class SparkImageAdapter extends ModelService implements IImageGenerationA
 }
 ```
 
->5.Extension image2text:
+### **Extend Image-to-Text Interface**
 
-Create YonrAdapter.java in the ai>image>adapter>impl directory of the lagi-core module and implement the IImage2TextAdapter interface.
+Create a new `YonrAdapter` class under the `ai>image>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `IImage2TextAdapter` interface.
 
 ```java
 @Img2Text(modelNames = "Yonr-modelNames")
@@ -303,7 +263,7 @@ public class YonrAdapter extends ModelService implements IImage2TextAdapter {
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @Img2Text(modelNames = "Fuyu-8B")
@@ -322,9 +282,9 @@ public class YonrAdapter extends ModelService implements IImage2TextAdapter {
 }
 ```
 
->6.Extension image2enhance:
+### **Extend Image Enhancement Interface**
 
-Create YonrAdapter.java in the ai>image>adapter>impl directory of the lagi-core module and implement the ImageEnhanceAdapter interface.
+Create a new `YonrAdapter` class under the `ai>image>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `ImageEnhanceAdapter` interface.
 
 ```java
 @ImgEnhance(modelNames = "Yonr-modelNames")
@@ -336,7 +296,7 @@ public class YonrAdapter extends ModelService implements ImageEnhanceAdapter {
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @ImgEnhance(modelNames = "enhance")
@@ -361,9 +321,9 @@ public class YonrAdapter extends ModelService implements ImageEnhanceAdapter {
 }
 ```
 
->7.Extension text2video:
+### **Extend Text-to-Video Interface**
 
-Create YonrAdapter.java in the ai>video>adapter>impl directory of the lagi-core module and implement the Text2VideoAdapter interface.
+Create a new `YonrAdapter` class under the `ai>video>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `Text2VideoAdapter` interface.
 
 ```java
 @Text2Video(modelNames = "Yonr-modelNames")
@@ -375,7 +335,7 @@ public class YonrAdapter extends ModelService implements Text2VideoAdapter {
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @Text2Video(modelNames = "video")
@@ -383,7 +343,7 @@ public class YonrAdapter extends ModelService implements Text2VideoAdapter {
     @Override
     public VideoJobResponse toVideo(ImageGenerationRequest request) {
         ImageGenerationResult generations = generations(request);
-        if(generations != null) {
+        if (generations != null) {
             String url = generations.getData().get(0).getUrl();
             return VideoJobResponse.builder().data(url).build();
         }
@@ -392,9 +352,9 @@ public class YonrAdapter extends ModelService implements Text2VideoAdapter {
 }
 ```
 
->8.Extension image2video:
+### **Extend Image-to-Video Interface**
 
-Create YonrAdapter.java under the ai>video>adapter>impl directory of the lagi-core module and implement the Image2VideoAdapter interface.
+Create a new `YonrAdapter` class under the `ai>video>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `Image2VideoAdapter` interface.
 
 ```java
 @Img2Video(modelNames = "Yonr-modelNames")
@@ -406,7 +366,7 @@ public class YonrAdapter extends ModelService implements Image2VideoAdapter {
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @Img2Video(modelNames = "video")
@@ -418,7 +378,7 @@ public class YonrAdapter extends ModelService implements Image2VideoAdapter {
         try {
             GenerateVideoResponse generateVideoResponse = client.generateVideo(generateVideoRequest);
             String requestId = generateVideoResponse.getBody().getRequestId();
-            if(requestId != null) {
+            if (requestId != null) {
                 return wait2Result(requestId);
             }
             return VideoJobResponse.builder().jobId(generateVideoResponse.getBody().getRequestId()).build();
@@ -433,9 +393,9 @@ public class YonrAdapter extends ModelService implements Image2VideoAdapter {
 }
 ```
 
->9.Extension video2track:
+### **Extend Video Tracking Interface**
 
-Create YonrAdapter.java in the ai>video>adapter>impl directory of the lagi-core module and implement the Video2trackAdapter interface.
+Create a new `YonrAdapter` class under the `ai>video>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `Video2trackAdapter` interface.
 
 ```java
 @VideoTrack(modelNames = "Yonr-modelNames")
@@ -447,7 +407,7 @@ public class YonrAdapter extends ModelService implements Video2trackAdapter {
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @VideoTrack(modelNames = "video")
@@ -461,7 +421,7 @@ public class YonrAdapter extends ModelService implements Video2trackAdapter {
         Object[] params = { gson.toJson(request) };
         String[] result = call.callWS(AiServiceInfo.WSVdoUrl, "motInference", params);
         Response response = gson.fromJson(result[0], Response.class);
-        if(response != null) {
+        if (response != null) {
             return VideoJobResponse.builder().data(response.getData()).build();
         }
         return null;
@@ -469,9 +429,9 @@ public class YonrAdapter extends ModelService implements Video2trackAdapter {
 }
 ```
 
->10.Extension video2enhance:
+### **Extend Video Enhancement Interface**
 
-Create YonrAdapter.java in the ai>video>adapter>impl directory of the lagi-core module and implement the Video2EnhanceAdapter interface.
+Create a new `YonrAdapter` class under the `ai>video>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `Video2EnhanceAdapter` interface.
 
 ```java
 @VideoEnhance(modelNames = "Yonr-modelNames")
@@ -483,7 +443,7 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 }
 ```
 
-Example :
+Example implementation:
 
 ```java
 @VideoEnhance(modelNames = "vision")
@@ -491,7 +451,7 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
     @Override
     public VideoJobResponse enhance(VideoEnhanceRequest videoEnhanceRequest) {
         Client client = createClient();
-        EnhanceVideoQualityRequest enhanceVideoQualityRequest =convert2EnhanceVideoQualityRequest(videoEnhanceRequest);
+        EnhanceVideoQualityRequest enhanceVideoQualityRequest = convert2EnhanceVideoQualityRequest(videoEnhanceRequest);
         try {
             EnhanceVideoQualityResponse enhanceVideoQualityResponse = client.enhanceVideoQuality(enhanceVideoQualityRequest);
             return wait2Result(enhanceVideoQualityResponse.getBody().getRequestId());
@@ -506,37 +466,13 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 }
 ```
 
-## Database Extension
+### **Vector Database Extension**
 
-If you want to adapt the Lag[i] (Landing AGI) extension to other vector databases, you can follow these steps:
+If you want to extend Lag[i] to support other vector databases, follow the steps below.
 
-### 1.Adaptation yml
+#### **1. Add New Configuration**
 
-**1.Add new configuration under stores**
-
-```yaml
-stores:
-  vectors:
-    - name: vector_name
-      driver: ai.vector.impl.Yonr_VectorStore 
-      default_category: default
-      similarity_top_k: 10
-      similarity_cutoff: 0.5
-      parent_depth: 1
-      child_depth: 1
-      url: yonr_url
-
-  rag:
-    vector: vector_name
-    fulltext: elasticsearch
-    graph: landing
-    enable: true
-    priority: 10
-    default: "Please give prompt more precisely"
-
-```
-
-Example :
+Add new configurations under the `stores` section in the `lagi.yml` configuration file. Refer to the example below:
 
 ```yaml
 stores:
@@ -557,17 +493,13 @@ stores:
     enable: true
     priority: 10
     default: "Please give prompt more precisely"
-
 ```
 
-### 2.Adaptation method
+#### **2. Interface Adaptation**
 
-Create `YonrVectorStore.java` in the `ai>vector>impl` directory of the `lagi-core` module and override all the methods of `VectorStore`.
-
-> Override the following methods separately
+Create a new `YonrVectorStore` class under the `ai>vector>impl` directory in the `lagi-core` module. Extend the `BaseVectorStore` class and override the following methods of the `VectorStore` interface:
 
 ```java
-
 void upsert(List<UpsertRecord> upsertRecords);
 
 void upsert(List<UpsertRecord> upsertRecords, String category);
@@ -589,146 +521,142 @@ void deleteWhere(List<Map<String, String>> where);
 void deleteWhere(List<Map<String, String>> whereList, String category);
 
 void deleteCollection(String category);
-
 ```
 
-Example :
-
-1.Override insert or update data methods: upsert()
+##### **Insert or Update Data (`upsert`)**
 
 ```java
- public void upsert(List<UpsertRecord> upsertRecords) {
-        upsert(upsertRecords, this.config.getDefaultCategory());
-    }
+public void upsert(List<UpsertRecord> upsertRecords) {
+    upsert(upsertRecords, this.config.getDefaultCategory());
+}
 
-    public void upsert(List<UpsertRecord> upsertRecords, String category) {
-        List<String> documents = new ArrayList<>();
-        List<Map<String, String>> metadatas = new ArrayList<>();
-        List<String> ids = new ArrayList<>();
-        for (UpsertRecord upsertRecord : upsertRecords) {
-            documents.add(upsertRecord.getDocument());
-            metadatas.add(upsertRecord.getMetadata());
-            ids.add(upsertRecord.getId());
-        }
-        List<List<Float>> embeddings = this.embeddingFunction.createEmbedding(documents);
-        Collection collection = getCollection(category);
-        try {
-            collection.upsert(embeddings, metadatas, documents, ids);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
+public void upsert(List<UpsertRecord> upsertRecords, String category) {
+    List<String> documents = new ArrayList<>();
+    List<Map<String, String>> metadatas = new ArrayList<>();
+    List<String> ids = new ArrayList<>();
+    for (UpsertRecord upsertRecord : upsertRecords) {
+        documents.add(upsertRecord.getDocument());
+        metadatas.add(upsertRecord.getMetadata());
+        ids.add(upsertRecord.getId());
     }
+    List<List<Float>> embeddings = this.embeddingFunction.createEmbedding(documents);
+    Collection collection = getCollection(category);
+    try {
+        collection.upsert(embeddings, metadatas, documents, ids);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
+    }
+}
 ```
 
-2.Override the query method: query();
+##### **Query Data (`query`)**
 
 ```java
 public List<IndexRecord> query(QueryCondition queryCondition) {
-        return query(queryCondition, this.config.getDefaultCategory());
-    }
+    return query(queryCondition, this.config.getDefaultCategory());
+}
 
-    public List<IndexRecord> query(QueryCondition queryCondition, String category) {
-        List<IndexRecord> result = new ArrayList<>();
-        Collection collection = getCollection(category);
-        Collection.GetResult gr;
-        if (queryCondition.getText() == null) {
-            try {
-                gr = collection.get(null, queryCondition.getWhere(), null);
-            } catch (ApiException e) {
-                throw new RuntimeException(e);
-            }
-            return getIndexRecords(result, gr);
-        }
-        List<String> queryTexts = Collections.singletonList(queryCondition.getText());
-        Integer n = queryCondition.getN();
-        Map<String, String> where = queryCondition.getWhere();
-        Collection.QueryResponse qr = null;
+public List<IndexRecord> query(QueryCondition queryCondition, String category) {
+    List<IndexRecord> result = new ArrayList<>();
+    Collection collection = getCollection(category);
+    Collection.GetResult gr;
+    if (queryCondition.getText() == null) {
         try {
-            qr = collection.query(queryTexts, n, where, null, null);
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        for (int i = 0; i < qr.getDocuments().size(); i++) {
-            for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
-                IndexRecord indexRecord = IndexRecord.newBuilder()
-                        .withDocument(qr.getDocuments().get(i).get(j))
-                        .withId(qr.getIds().get(i).get(j))
-                        .withMetadata(qr.getMetadatas().get(i).get(j))
-                        .withDistance(qr.getDistances().get(i).get(j))
-                        .build();
-                result.add(indexRecord);
-            }
-        }
-        return result;
-    }
-
-```
-
-3.Override the fetch method: fetch();
-
-```java
-    public List<IndexRecord> fetch(List<String> ids) {
-        return fetch(ids, this.config.getDefaultCategory());
-    }
-
-    public List<IndexRecord> fetch(List<String> ids, String category) {
-        List<IndexRecord> result = new ArrayList<>();
-        Collection.GetResult gr;
-        Collection collection = getCollection(category);
-        try {
-            gr = collection.get(ids, null, null);
+            gr = collection.get(null, queryCondition.getWhere(), null);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
         return getIndexRecords(result, gr);
     }
-``` 
-
-4.Override delete methods: delete()
-
-```java
-    public void delete(List<String> ids) {
-        this.delete(ids, this.config.getDefaultCategory());
+    List<String> queryTexts = Collections.singletonList(queryCondition.getText());
+    Integer n = queryCondition.getN();
+    Map<String, String> where = queryCondition.getWhere();
+    Collection.QueryResponse qr = null;
+    try {
+        qr = collection.query(queryTexts, n, where, null, null);
+    } catch (ApiException e) {
+        e.printStackTrace();
     }
-
-    public void delete(List<String> ids, String category) {
-        Collection collection = getCollection(category);
-        try {
-            collection.deleteWithIds(ids);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
+    for (int i = 0; i < qr.getDocuments().size(); i++) {
+        for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
+            IndexRecord indexRecord = IndexRecord.newBuilder()
+                    .withDocument(qr.getDocuments().get(i).get(j))
+                    .withId(qr.getIds().get(i).get(j))
+                    .withMetadata(qr.getMetadatas().get(i).get(j))
+                    .withDistance(qr.getDistances().get(i).get(j))
+                    .build();
+            result.add(indexRecord);
         }
     }
+    return result;
+}
 ```
 
-5.Override conditions to delete data: deleteWhere()
+##### **Fetch Data (`fetch`)**
 
 ```java
-    public void deleteWhere(List<Map<String, String>> whereList) {
-        deleteWhere(whereList, this.config.getDefaultCategory());
+public List<IndexRecord> fetch(List<String> ids) {
+    return fetch(ids, this.config.getDefaultCategory());
+}
+
+public List<IndexRecord> fetch(List<String> ids, String category) {
+    List<IndexRecord> result = new ArrayList<>();
+    Collection.GetResult gr;
+    Collection collection = getCollection(category);
+    try {
+        gr = collection.get(ids, null, null);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
     }
-    
-    public void deleteWhere(List<Map<String, String>> whereList, String category) {
-        Collection collection = getCollection(category);
-        try {
-            for (Map<String, String> where : whereList) {
-                collection.deleteWhere(where);
-            }
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    return getIndexRecords(result, gr);
+}
 ```
 
-
-6.Override the delete collection method: deleteCollection()
+##### **Delete Data by ID (`delete`)**
 
 ```java
-    public void deleteCollection(String category) {
-        try {
-            client.deleteCollection(category);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
+public void delete(List<String> ids) {
+    this.delete(ids, this.config.getDefaultCategory());
+}
+
+public void delete(List<String> ids, String category) {
+    Collection collection = getCollection(category);
+    try {
+        collection.deleteWithIds(ids);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
     }
+}
 ```
+
+##### **Delete Data by Conditions (`deleteWhere`)**
+
+```java
+public void deleteWhere(List<Map<String, String>> whereList) {
+    deleteWhere(whereList, this.config.getDefaultCategory());
+}
+
+public void deleteWhere(List<Map<String, String>> whereList, String category) {
+    Collection collection = getCollection(category);
+    try {
+        for (Map<String, String> where : whereList) {
+            collection.deleteWhere(where);
+        }
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+
+##### **Delete a Collection (`deleteCollection`)**
+
+```java
+public void deleteCollection(String category) {
+    try {
+        client.deleteCollection(category);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+

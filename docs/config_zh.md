@@ -1,7 +1,9 @@
-系统首页展示名称，这个设置指定了将在系统首页显示的名称，这里是“Lagi”。
+# 配置参考指南
+
+系统首页展示名称，这个设置指定了将在系统首页显示的名称，这里是“ Lag[i]”。
 
 ```yaml
-system_title: Lagi
+system_title: Lag[i]
 ```
 
 模型配置
@@ -224,11 +226,11 @@ functions:
 functions:
   policy:
     #  handle配置 目前有parallel、failover、failover 3种值， parallel表示并行调用，failover表示故障转移, polling表示负载轮询调用, 场景解释：
-    # 1. 当请求中未强制指定模型, 或指定的模型无效时 ，parallel、failover、failover 3种策略生效
-    # 2. 当指定handle为 parallel 配置的模型并行执行， 返回响应最快且优先级最高的模型调用结果
-    # 3. 当指定handle为 failover 配置的模型串行执行， 模型按优先级串行执行， 串行执行过程中任意模型返回成功， 后面的模型不再执行。
-    # 4. 当指定handle为 failover 配置的模型轮询执行， 请求会根据请求的ip、浏览器指纹 等额外信息， 均衡分配请求给对应的模型执行。
-    # 5. 当所有的模型都返回失败时, 会设置 http 请求的状态码为 600-608。 body里为具体的错误信息。 (错误码错误信息实际为最后一个模型调用失败的信息)
+    #  1. 当请求中未强制指定模型, 或指定的模型无效时 ，parallel、failover、failover 3种策略生效
+    #  2. 当指定handle为 parallel 配置的模型并行执行， 返回响应最快且优先级最高的模型调用结果
+    #  3. 当指定handle为 failover 配置的模型串行执行， 模型按优先级串行执行， 串行执行过程中任意模型返回成功， 后面的模型不再执行。
+    #  4. 当指定handle为 failover 配置的模型轮询执行， 请求会根据请求的ip、浏览器指纹 等额外信息， 均衡分配请求给对应的模型执行。
+    #  5. 当所有的模型都返回失败时, 会设置 http 请求的状态码为 600-608。 body里为具体的错误信息。 (错误码错误信息实际为最后一个模型调用失败的信息)
     #  错误码： 
     #     600 请求参数不合法
     #     601 授权错误
@@ -239,15 +241,14 @@ functions:
     #     606 其他错误
     #     607 超时
     #     608 没有可用的模型
-      handle: failover
-      grace_time: 20 # 故障后重试间隔时间
-      maxgen: 3 # 故障后最大重试次数 默认为 Integer.MAX_VALUE
+    handle: failover
+    grace_time: 20 # 故障后重试间隔时间
+    maxgen: 3 # 故障后最大重试次数 默认为 Integer.MAX_VALUE
 ```
 
 智能体配置
 
 ```yaml
-
 # 这部分表示模型支持的智能体配置
 agents:
   - name: qq # 智能体的名称
@@ -323,17 +324,17 @@ workers:
 # 路由配置
 routers:
   - name: best
-      #    rule: (weather_agent&food_calorie_agent)  # A|B ->轮询，A或B，表示在A和B之间随机轮询；
-      # A,B ->故障转移，首先A，如果A失败，然后B；
+    # rule: (weather_agent&food_calorie_agent)  # A|B ->轮询，A或B，表示在A和B之间随机轮询；
+    # A,B ->故障转移，首先A，如果A失败，然后B；
     # A&B ->并行，同时调用A和B，选择合适的结果只有一个
     # 该规则可以组合为((A&B&C),(E|F))，这意味着首先同时调用ABC，如果失败，则随机调用E或F
     rule: (weather_agent&food_calorie_agent)  # A|B ->轮询，A或B，表示在A和B内随机轮询；
 
-  - name: pass
-    rule: '%'
     # %是表示的通配符。
     # 如果指定，则调用该代理
     # 如果只给出%，则%将由调用时的参数决定。
+  - name: pass
+    rule: '%'
 ```
 
 

@@ -12,20 +12,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class RandomAnimePicturesTool extends AbstractTool{
+public class JokesGenerationTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.52vmy.cn/api/img/tu/man?type=json";
+    private static final String API_ADDRESS = "https://api.v1.jixs.cc/api/wenan-duanzi/index.php";
 
     private Gson gson = new Gson();
 
-    public RandomAnimePicturesTool() {
+    public JokesGenerationTool() {
         init();
     }
 
     private void init() {
-        name = "random_anime_pictures";
-        toolInfo = ToolInfo.builder().name("random_anime_pictures")
-                .description("这是一个生成随机动漫图片的工具,调用这个工具可以随机生成动漫图片")
+        name = "jokes_generation";
+        toolInfo = ToolInfo.builder().name("jokes_generation")
+                .description("这是一个段子的生成工具,可以生成一篇搞笑段子")
                 .args(Lists.newArrayList()).build();
         register(this);
     }
@@ -37,11 +37,22 @@ public class RandomAnimePicturesTool extends AbstractTool{
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> map = gson.fromJson(post, type);
-        if (map == null) {
-            return "图片生成失败！";
+        String formattedString = "段子生成失败!!!";
+        try {
+            if (map == null) {
+                return "段子生成失败！";
+            }
+
+            if (map.get("code") != null && map.get("code").equals("获取段子成功")) {
+                Map<String, Object> data  = (Map<String, Object>)map.get("data");
+                formattedString = StrUtil.format("{\"生成的段子\": \"{}\"",
+                        data.get("duanzi"));
+                return formattedString;
+            }
+        }catch (Exception e){
+            return "段子生成失败!!!!";
         }
-//        Map<String, Object> data = gson.fromJson(dataStr, type);
-        return StrUtil.format("{\"图片生成成功,地址为\": \"{}\"}",map.get("url"));
+        return formattedString;
     }
     @Override
     public String apply(Map<String, Object> stringObjectMap) {
@@ -49,7 +60,7 @@ public class RandomAnimePicturesTool extends AbstractTool{
     }
 
     public static void main(String[] args) {
-        RandomAnimePicturesTool tool = new RandomAnimePicturesTool();
+        JokesGenerationTool tool = new JokesGenerationTool();
         String result = tool.search();
         System.out.println(result);
     }

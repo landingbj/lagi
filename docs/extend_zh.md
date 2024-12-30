@@ -1,14 +1,14 @@
-# 自由扩展
+# 扩展开发文档
 
 您可以根据您的需求参考此文档，对Lag[i] (联基) 进行自由扩展，从而契合您的业务需求。
 
 ## 模型扩展
 
-如果您想扩展Lag[i] (联基) 适配其它大模型，您可以参考以下步骤：
+如果您想扩展Lag[i] (联基) 适配其它大模型，您可以参考以下内容。
 
-### 1. 适配yml
+### 1. 新增配置
 
-**1.在models下中新增配置**
+在lagi.yml配置文件中的models和functions下新增配置，具体配置可以参考如下示例。
 
 ```yaml
 models:
@@ -34,50 +34,11 @@ functions:
 
 ```
 
-示列：
+### 2. 适配接口
 
-```yaml
-models:
-  backends:
-    - name: ernie
-      type: Baidu
-      enable: true
-      drivers:
-        - model: ERNIE-Speed-128K,ERNIE-Bot-turbo,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222
-          driver: ai.llm.adapter.impl.ErnieAdapter
-        - model: Fuyu-8B,Stable-Diffusion-XL
-          driver: ai.image.adapter.impl.BaiduImageAdapter
-        - model: translate
-          driver: ai.translate.adapter.impl.BaiduTranslateAdapter
-          app_id: your-api-key
-          security_key: your-security-key
-        - model: enhance
-          driver: ai.image.adapter.impl.BaiduAiImageAdapter
-          api_key: your-api-key
-          secret_key: 9your-sercet-key
-        - model: aiVideo
-          driver: ai.video.adapter.impl.BaiduVideoAdapter
-          api_key: your-api-key
-          secret_key: your-sercet-key
-      app_id: your-app-id
-      api_key: your-api-key
-      secret_key: your-sercet-key
-      
-functions:
-  chat:
-    - backend: ernie
-      model: ERNIE-Speed-128K
-      enable: true
-      stream: true
-      priority: 10
+#### 扩展大语言模型的推理接口
 
-```
-
-### 2.适配方法
-
->1.扩展chat:   
-
-在lagi-core模块下的ai>llm>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现ILlmAdapter接口。
+在lagi-core模块下的ai>llm>adapter>impl目录下新建YonrAdapter类并继承ModelService，同时实现ILlmAdapter接口。
 
 ```java
 @LLM(modelName = { "Yonr-version"})
@@ -105,7 +66,7 @@ public class YonrAdapter extends ModelService implements ILlmAdapter {
 
 ```
 
-示列：
+实现示例：
 
 ```java
 @LLM(modelNames = {"your_model1,your_model2"})
@@ -166,9 +127,9 @@ public class DoubaoAdapter extends ModelService implements ILlmAdapter {
 }
 ```
 
->2.扩展speech2text:
+#### 扩展语音转文字的接口
 
-在lagi-core模块下的ai>audio>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现IAudioAdapter接口。
+在lagi-core模块下的ai>audio>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现IAudioAdapter接口。
 
 ```java
 @ASR(company = "your-company-name", modelNames = "Yonr-modelNames")
@@ -180,7 +141,7 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
  }
 ```
 
-示列：
+实现示例：
 
 ```java
 @ASR(company = "alibaba", modelNames = "asr")
@@ -196,9 +157,9 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
 }
 ```
 
->3.扩展text2speech:
+#### 扩展文字转语音的接口
 
-在lagi-core模块下的ai>audio>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现IAudioAdapter接口。
+在lagi-core模块下的ai>audio>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现IAudioAdapter接口。
 
 ```java
 @TTS(company = "your-company-name", modelNames = "Yonr-modelNames")
@@ -210,7 +171,7 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
  }
 ```
 
-示列：
+实现示例：
 
 ```java
 @TTS(company = "alibaba", modelNames = "tts")
@@ -254,9 +215,9 @@ public class YonrAdapter extends ModelService implements IAudioAdapter {
  }
 ```
 
->4.扩展text2image:
+#### 扩展文生图的接口
 
-在lagi-core模块下的ai>image>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现IImageGenerationAdapter接口。
+在lagi-core模块下的ai>image>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现IImageGenerationAdapter接口。
 
 ```java
 @ImgGen(modelNames = "Yonr-modelNames")
@@ -268,7 +229,7 @@ public class SparkImageAdapter extends ModelService implements IImageGenerationA
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @ImgGen(modelNames = "tti")
@@ -289,9 +250,9 @@ public class SparkImageAdapter extends ModelService implements IImageGenerationA
 }
 ```
 
->5.扩展image2text:
+#### 扩展图片转文字的接口
 
-在lagi-core模块下的ai>image>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现IImage2TextAdapter接口。
+在lagi-core模块下的ai>image>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现IImage2TextAdapter接口。
 
 ```java
 @Img2Text(modelNames = "Yonr-modelNames")
@@ -303,7 +264,7 @@ public class YonrAdapter extends ModelService implements IImage2TextAdapter {
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @Img2Text(modelNames = "Fuyu-8B")
@@ -322,9 +283,9 @@ public class YonrAdapter extends ModelService implements IImage2TextAdapter {
 }
 ```
 
->6.扩展image2enhance:
+#### 扩展图片增强的接口
 
-在lagi-core模块下的ai>image>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现ImageEnhanceAdapter接口。
+在lagi-core模块下的ai>image>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现ImageEnhanceAdapter接口。
 
 ```java
 @ImgEnhance(modelNames = "Yonr-modelNames")
@@ -336,7 +297,7 @@ public class YonrAdapter extends ModelService implements ImageEnhanceAdapter {
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @ImgEnhance(modelNames = "enhance")
@@ -361,9 +322,9 @@ public class YonrAdapter extends ModelService implements ImageEnhanceAdapter {
 }
 ```
 
->7.扩展text2video:
+#### 扩展文本生成视频的接口
 
-在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现Text2VideoAdapter接口。
+在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现Text2VideoAdapter接口。
 
 ```java
 @Text2Video(modelNames = "Yonr-modelNames")
@@ -375,7 +336,7 @@ public class YonrAdapter extends ModelService implements Text2VideoAdapter {
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @Text2Video(modelNames = "video")
@@ -392,9 +353,9 @@ public class YonrAdapter extends ModelService implements Text2VideoAdapter {
 }
 ```
 
->8.扩展image2video:
+#### 扩展图片生成视频的接口
 
-在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现Image2VideoAdapter接口。
+在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现Image2VideoAdapter接口。
 
 ```java
 @Img2Video(modelNames = "Yonr-modelNames")
@@ -406,7 +367,7 @@ public class YonrAdapter extends ModelService implements Image2VideoAdapter {
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @Img2Video(modelNames = "video")
@@ -433,9 +394,9 @@ public class YonrAdapter extends ModelService implements Image2VideoAdapter {
 }
 ```
 
->9.扩展video2track:
+#### 扩展视频追踪的接口
 
-在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现Video2trackAdapter接口。
+在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现Video2trackAdapter接口。
 
 ```java
 @VideoTrack(modelNames = "Yonr-modelNames")
@@ -447,7 +408,7 @@ public class YonrAdapter extends ModelService implements Video2trackAdapter {
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @VideoTrack(modelNames = "video")
@@ -469,9 +430,9 @@ public class YonrAdapter extends ModelService implements Video2trackAdapter {
 }
 ```
 
->10.扩展video2enhance:
+#### 扩展视频增强的接口
 
-在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter.java继承ModelService类并实现Video2EnhanceAdapter接口。
+在lagi-core模块下的ai>video>adapter>impl目录下新建YonrAdapter类，并继承ModelService类，同时实现Video2EnhanceAdapter接口。
 
 ```java
 @VideoEnhance(modelNames = "Yonr-modelNames")
@@ -483,7 +444,7 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 }
 ```
 
-示列：
+实现示例：
 
 ```java
 @VideoEnhance(modelNames = "vision")
@@ -506,37 +467,13 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 }
 ```
 
-## 数据库扩展
+## 向量数据库扩展
 
-如果您想将 Lag[i]（联基）扩展适配到其他向量数据库，可以按照以下步骤操作：
+如果您想将 Lag[i]（联基）扩展适配到其他向量数据库，可以按照以下步骤操作。
 
-### 1. 适配yml
+### 1. 新增配置
 
-**1.在stores下中新增配置**
-
-```yaml
-stores:
-  vectors:
-    - name: vector_name
-      driver: ai.vector.impl.Yonr_VectorStore 
-      default_category: default
-      similarity_top_k: 10
-      similarity_cutoff: 0.5
-      parent_depth: 1
-      child_depth: 1
-      url: yonr_url
-
-  rag:
-    vector: vector_name
-    fulltext: elasticsearch
-    graph: landing
-    enable: true
-    priority: 10
-    default: "Please give prompt more precisely"
-
-```
-
-示列：
+在lagi.yml配置文件中的stores下新增配置，具体配置可以参考如下示例。
 
 ```yaml
 stores:
@@ -560,11 +497,9 @@ stores:
 
 ```
 
-### 2.适配方法
+### 2. 适配接口
 
-在lagi-core模块下的ai>vector>impl目录下新建YonrVectorStore.java继承BaseVectorStore类并重写VectorStore的所有方法即可。
-
-> 分别重写以下方法
+在lagi-core模块下的ai>vector>impl目录下新建YonrVectorStore类，并继承BaseVectorStore类，并重写VectorStore的以下方法。
 
 ```java
 
@@ -592,143 +527,141 @@ void deleteCollection(String category);
 
 ```
 
-示列：
-
-1.重写插入或更新数据方法: upsert();
+重写插入或更新数据方法upsert，实现示例：
 
 ```java
- public void upsert(List<UpsertRecord> upsertRecords) {
-        upsert(upsertRecords, this.config.getDefaultCategory());
-    }
+public void upsert(List<UpsertRecord> upsertRecords) {
+	upsert(upsertRecords, this.config.getDefaultCategory());
+}
 
-    public void upsert(List<UpsertRecord> upsertRecords, String category) {
-        List<String> documents = new ArrayList<>();
-        List<Map<String, String>> metadatas = new ArrayList<>();
-        List<String> ids = new ArrayList<>();
-        for (UpsertRecord upsertRecord : upsertRecords) {
-            documents.add(upsertRecord.getDocument());
-            metadatas.add(upsertRecord.getMetadata());
-            ids.add(upsertRecord.getId());
-        }
-        List<List<Float>> embeddings = this.embeddingFunction.createEmbedding(documents);
-        Collection collection = getCollection(category);
-        try {
-            collection.upsert(embeddings, metadatas, documents, ids);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
+public void upsert(List<UpsertRecord> upsertRecords, String category) {
+    List<String> documents = new ArrayList<>();
+    List<Map<String, String>> metadatas = new ArrayList<>();
+    List<String> ids = new ArrayList<>();
+    for (UpsertRecord upsertRecord : upsertRecords) {
+        documents.add(upsertRecord.getDocument());
+        metadatas.add(upsertRecord.getMetadata());
+        ids.add(upsertRecord.getId());
     }
+    List<List<Float>> embeddings = this.embeddingFunction.createEmbedding(documents);
+    Collection collection = getCollection(category);
+    try {
+        collection.upsert(embeddings, metadatas, documents, ids);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
+    }
+}
 ```
 
-2.重写查询方法：query();
+重写查询方法query，实现示例：
 
 ```java
 public List<IndexRecord> query(QueryCondition queryCondition) {
-        return query(queryCondition, this.config.getDefaultCategory());
-    }
+    return query(queryCondition, this.config.getDefaultCategory());
+}
 
-    public List<IndexRecord> query(QueryCondition queryCondition, String category) {
-        List<IndexRecord> result = new ArrayList<>();
-        Collection collection = getCollection(category);
-        Collection.GetResult gr;
-        if (queryCondition.getText() == null) {
-            try {
-                gr = collection.get(null, queryCondition.getWhere(), null);
-            } catch (ApiException e) {
-                throw new RuntimeException(e);
-            }
-            return getIndexRecords(result, gr);
-        }
-        List<String> queryTexts = Collections.singletonList(queryCondition.getText());
-        Integer n = queryCondition.getN();
-        Map<String, String> where = queryCondition.getWhere();
-        Collection.QueryResponse qr = null;
+public List<IndexRecord> query(QueryCondition queryCondition, String category) {
+    List<IndexRecord> result = new ArrayList<>();
+    Collection collection = getCollection(category);
+    Collection.GetResult gr;
+    if (queryCondition.getText() == null) {
         try {
-            qr = collection.query(queryTexts, n, where, null, null);
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        for (int i = 0; i < qr.getDocuments().size(); i++) {
-            for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
-                IndexRecord indexRecord = IndexRecord.newBuilder()
-                        .withDocument(qr.getDocuments().get(i).get(j))
-                        .withId(qr.getIds().get(i).get(j))
-                        .withMetadata(qr.getMetadatas().get(i).get(j))
-                        .withDistance(qr.getDistances().get(i).get(j))
-                        .build();
-                result.add(indexRecord);
-            }
-        }
-        return result;
-    }
-
-```
-
-3.重写获取方法：fetch();
-
-```java
-    public List<IndexRecord> fetch(List<String> ids) {
-        return fetch(ids, this.config.getDefaultCategory());
-    }
-
-    public List<IndexRecord> fetch(List<String> ids, String category) {
-        List<IndexRecord> result = new ArrayList<>();
-        Collection.GetResult gr;
-        Collection collection = getCollection(category);
-        try {
-            gr = collection.get(ids, null, null);
+            gr = collection.get(null, queryCondition.getWhere(), null);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
         return getIndexRecords(result, gr);
     }
-``` 
-
-4.重写删除方法：delete();
-
-```java
-    public void delete(List<String> ids) {
-        this.delete(ids, this.config.getDefaultCategory());
+    List<String> queryTexts = Collections.singletonList(queryCondition.getText());
+    Integer n = queryCondition.getN();
+    Map<String, String> where = queryCondition.getWhere();
+    Collection.QueryResponse qr = null;
+    try {
+        qr = collection.query(queryTexts, n, where, null, null);
+    } catch (ApiException e) {
+        e.printStackTrace();
     }
-
-    public void delete(List<String> ids, String category) {
-        Collection collection = getCollection(category);
-        try {
-            collection.deleteWithIds(ids);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
+    for (int i = 0; i < qr.getDocuments().size(); i++) {
+        for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
+            IndexRecord indexRecord = IndexRecord.newBuilder()
+                    .withDocument(qr.getDocuments().get(i).get(j))
+                    .withId(qr.getIds().get(i).get(j))
+                    .withMetadata(qr.getMetadatas().get(i).get(j))
+                    .withDistance(qr.getDistances().get(i).get(j))
+                    .build();
+            result.add(indexRecord);
         }
     }
+    return result;
+}
+
 ```
 
-5.重写条件删除数据方法：deleteWhere();
+重写获取方法fetch，实现示例：
 
 ```java
-    public void deleteWhere(List<Map<String, String>> whereList) {
-        deleteWhere(whereList, this.config.getDefaultCategory());
+public List<IndexRecord> fetch(List<String> ids) {
+    return fetch(ids, this.config.getDefaultCategory());
+}
+
+public List<IndexRecord> fetch(List<String> ids, String category) {
+    List<IndexRecord> result = new ArrayList<>();
+    Collection.GetResult gr;
+    Collection collection = getCollection(category);
+    try {
+        gr = collection.get(ids, null, null);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
     }
-    
-    public void deleteWhere(List<Map<String, String>> whereList, String category) {
-        Collection collection = getCollection(category);
-        try {
-            for (Map<String, String> where : whereList) {
-                collection.deleteWhere(where);
-            }
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
+    return getIndexRecords(result, gr);
+}
+```
+
+重写删除方法delete，实现示例：
+
+```java
+public void delete(List<String> ids) {
+    this.delete(ids, this.config.getDefaultCategory());
+}
+
+public void delete(List<String> ids, String category) {
+    Collection collection = getCollection(category);
+    try {
+        collection.deleteWithIds(ids);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+
+重写条件删除数据方法deleteWhere，实现示例：
+
+```java
+public void deleteWhere(List<Map<String, String>> whereList) {
+    deleteWhere(whereList, this.config.getDefaultCategory());
+}
+
+public void deleteWhere(List<Map<String, String>> whereList, String category) {
+    Collection collection = getCollection(category);
+    try {
+        for (Map<String, String> where : whereList) {
+            collection.deleteWhere(where);
         }
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
     }
+}
 ```
 
 
-6.重写删除集合方法：deleteCollection();
+重写删除集合方法deleteCollection，实现示例：
 
 ```java
-    public void deleteCollection(String category) {
-        try {
-            client.deleteCollection(category);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
+public void deleteCollection(String category) {
+    try {
+        client.deleteCollection(category);
+    } catch (ApiException e) {
+        throw new RuntimeException(e);
     }
+}
 ```
