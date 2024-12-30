@@ -155,7 +155,7 @@ public class MultimodalAIManager {
                     }
                     //Single drive to multiple drive
                     if (model.getModel() != null && model.getDriver() != null) {
-                        if (doesImplementInterface(model.getDriver(), "ai.llm.wrapper.IWrapper")) {
+                        if (doesImplementInterface(model.getDriver(), "ai.wrapper.IWrapper")) {
                             IWrapper wrapper = createWrapper(model.getDriver());
                             model.setDrivers(wrapper.getDrivers(model.getModel()));
                         } else {
