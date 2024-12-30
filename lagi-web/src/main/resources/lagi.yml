@@ -11,7 +11,7 @@ models:
             landing-tts,landing-asr,
             video
     # Options for default, llm, image, voice and vision, line by line above.
-    driver: ai.wrapper.LandingAdapter
+    driver: ai.wrapper.impl.LandingAdapter
     api_key: your-api-key # http://saas.landingbj.com/
 
   # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
@@ -49,7 +49,7 @@ models:
             vision,
             ocr
     # Options for default, llm, voice, vision and ocr, line by line above.
-    driver: ai.wrapper.AlibabaAdapter
+    driver: ai.wrapper.impl.AlibabaAdapter
     # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
     api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
     access_key_id: your-access-key-id
@@ -66,7 +66,7 @@ models:
             enhance,
             aiVideo
     # Options for default, llm, image, translate, image enhance and vision line by line above.
-    driver: ai.wrapper.BaiduAdapter
+    driver: ai.wrapper.impl.BaiduAdapter
     # help document https://developer.baidu.com/article/detail.html?id=1089328
     # url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
     app_id: your-app-id
@@ -105,7 +105,7 @@ models:
             v1.1,v2.1,v3.1,v3.5,
             tti
     # Options for default, llm and image, line by line above.
-    driver: ai.wrapper.FlytekAdapter
+    driver: ai.wrapper.impl.FlytekAdapter
     app_id: your-app-id
     api_key: you-api-key  # https://console.xfyun.cn/
     secret_key: you-secret-key   # https://console.xfyun.cn/
@@ -135,7 +135,7 @@ models:
             doubao-pro-32k,
             openspeech
     # Options for default, llm and voice, line by line above.
-    driver: ai.wrapper.ByteDanceAdapter
+    driver: ai.wrapper.impl.ByteDanceAdapter
     api_key: your-api-key
     app_id: your-app-id
     access_token: your-access-token

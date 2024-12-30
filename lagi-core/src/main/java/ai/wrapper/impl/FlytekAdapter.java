@@ -1,5 +1,8 @@
-package ai.wrapper;
+package ai.wrapper.impl;
 
+
+import ai.wrapper.CommonAdapter;
+import ai.wrapper.IWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
