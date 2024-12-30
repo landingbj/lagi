@@ -348,59 +348,40 @@ async function handleSelect(selectedItem, userQuestion) {
     const selectedOption = selectedItem.options[selectedItem.selectedIndex];
     const pricePerReq = selectedOption.getAttribute('data-priceperreq');
     const agentName = selectedOption.textContent.trim();
-
-    // 如果选择的是默认项，不做任何处理
     if (selectedValue === 'default') {
         return;
     }
-
-    // 更新全局变量 selectedAgentId
     selectedAgentId = selectedValue;
-
-    // 调用接口判断是否订阅
+    // 判断是否是用户自己发布的智能体
     try {
-        const agentData = await checkSubscription(selectedAgentId);
-
-        if (agentData) {
-            // 如果余额小于零，弹出提示并打开收费框
-            if (agentData.balance < 0) {
-                alert("余额不足，请充值！");
-                openRechargeModal(agentName, pricePerReq);
-            } else {
-                // 使用 await 等待 appointTextQuery 异步调用完成
-                await appointTextQuery(userQuestion, selectedAgentId);
-
-                // 扣钱接口请求
-                const response = await fetch('/agent/deductExpenses', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userId: globalUserId,   // 假设 globalUserId 是已知的全局变量
-                        agentId: selectedAgentId
-                    })
-                });
-
-                const data = await response.json();
-                if (data.status === 'success') {
-                    console.log('扣款成功');
-                    // 可以在这里执行一些后续操作，比如更新UI，通知用户等
-                } else {
-                    console.error('扣款失败:', data);
-                    alert('扣款失败，请稍后再试！');
-                }
-            }
+        const isUserAgent = await isAgentBelongsToUser(lagiUserId, selectedAgentId);
+        if (isUserAgent) {
+            // 如果是用户发布的智能体，可以跳过订阅检查，直接进行下一步
+            await appointTextQuery(userQuestion, selectedAgentId);
         } else {
-            // 如果没有订阅该智能体，弹出提示
-            alert(`该智能体 (${agentName}) 需要订阅才能使用！`);
-            openRechargeModal(agentName, pricePerReq);
+            // 如果不是用户发布的智能体，继续判断是否订阅
+            const agentData = await checkSubscription(selectedAgentId);
+            if (agentData) {
+                // 如果余额小于零，弹出提示并打开收费框
+                if (agentData.balance < 0) {
+                    alert("余额不足，请充值！");
+                    openRechargeModal(agentName, pricePerReq);
+                } else {
+                    // 使用 await 等待 appointTextQuery 异步调用完成
+                    await appointTextQuery(userQuestion, selectedAgentId);
+                }
+            } else {
+                // 如果没有订阅该智能体，弹出提示
+                alert(`该智能体 (${agentName}) 需要订阅才能使用！`);
+                openRechargeModal(agentName, pricePerReq);
+            }
         }
     } catch (error) {
-        console.error("检查订阅失败:", error);
-        alert("获取订阅信息失败，请稍后再试！");
+        console.error("操作失败:", error);
+        alert("操作失败，请稍后再试！");
     }
 }
+
 
 
 
@@ -544,4 +525,26 @@ function checkSubscription(agentId) {
                 reject(err);
             });
     });
+}
+
+// 判断智能体是否是用户发布的
+async function isAgentBelongsToUser(lagiUserId, agentId) {
+    try {
+        const response = await fetch(`/agent/getLagiAgent?agentId=${agentId}`);
+        if (!response.ok) {
+            throw new Error('请求失败，无法获取数据');
+        }
+        const data = await response.json();
+        if (data.status === 'success' && data.data) {
+            const agent = data.data;
+
+            if (agent.lagiUserId === lagiUserId) {
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('请求数据时发生错误:', error);
+        return false;
+    }
 }

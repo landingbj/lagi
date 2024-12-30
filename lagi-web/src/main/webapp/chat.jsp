@@ -341,11 +341,17 @@
                                                     <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
                                                         仅限邀请内测
                                                     </div>
-                                                    <h1
-                                                            class="text-6xl font-semibold text-center t ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center flex-grow"
-                                                            style="color: #838383;">
+                                                    <h1 class="text-6xl font-semibold text-center t ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center flex-grow"
+                                                        style="color: #838383;">
+<%--                                                        <div class="above">问</div>--%>
                                                         <span></span>
+<%--                                                        <div class="below bu">不</div>--%>
+<%--                                                        <div class="below dao">倒</div>--%>
                                                     </h1>
+<%--                                                    <div class="bdw-image-container">--%>
+<%--                                                        <img src="../images/bdw.png" alt="图像">--%>
+<%--                                                        <div class="image-text">翁</div>--%>
+<%--                                                    </div>--%>
                                                 </div>
                                                 <div id="ball-div">
                                                 </div>

@@ -368,6 +368,7 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
     if (agentId) {
         paras["worker"] = "appointedWorker";
         paras["agentId"] = agentId;
+        paras["userId"] = globalUserId;
     }
 
     var queryUrl = "search/detectIntent";

@@ -118,9 +118,7 @@ async function generateSelect(userQuestion) {
             }
         ]
     };
-
     try {
-        // 发送POST请求
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -128,32 +126,14 @@ async function generateSelect(userQuestion) {
             },
             body: JSON.stringify(requestData)
         });
-
         const result = await response.json();
-        console.log('result:'+result)
-
-        // 检查接口返回的状态
-        if (result.code === 0 && result.data && Array.isArray(result.data)) {
+        if (result.code === 0 && result.data && Array.isArray(result.data) && result.data.length > 0) {
             const agents = result.data;
-
-            // 初始化HTML字符串
-            let part2 = `
-<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this,'${userQuestion}')">
-    <option value="default" data-priceperreq="0">智能推荐</option>
-`;
-
-            // 根据接口数据动态生成收费智能体的选项
+            let part2 = `<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this,'${userQuestion}')"><option value="default" data-priceperreq="0">智能推荐</option>`;
             agents.forEach(agent => {
-                part2 += `
-    <option value="${agent.id}" data-priceperreq="${agent.pricePerReq}">${agent.name}</option>
-`;
+            part2 += `<option value="${agent.id}" data-priceperreq="${agent.pricePerReq}">${agent.name}</option>`;
             });
-
-            // 关闭<select>标签
-            part2 += `
-</select>
-`;
-            // 返回生成的HTML字符串
+            part2 += `</select>`;
             return part2;
         } else {
             return '';
