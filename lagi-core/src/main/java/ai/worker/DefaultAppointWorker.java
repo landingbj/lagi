@@ -67,7 +67,10 @@ public class DefaultAppointWorker extends RouteWorker {
             trAgent =  additionalAgents.stream().filter(agent -> agent.getAgentConfig().getId().equals(agentId)).findFirst().orElse(null);
         }
         if(trAgent != null) {
-            List<ChatCompletionResult> invoke = route.invoke(data, Lists.newArrayList(trAgent));
+            ChatCompletionRequest request = new ChatCompletionRequest();
+            BeanUtil.copyProperties(request, data);
+            data.setStream(false);
+            List<ChatCompletionResult> invoke = route.invoke(request, Lists.newArrayList(trAgent));
             if(invoke != null && !invoke.isEmpty()) {
                 ChatCompletionResult communicate = invoke.get(0);
                 try {
