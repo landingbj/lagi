@@ -4,6 +4,84 @@
 
 Lag[i] (联基) 是由北京联动北方科技有限公司精心打造的一款针对于大模型开源社区的强大力量和企业应用部署之间存在的显著差距而设计的解决方案。它是一款企业级的复合多模态大模型中间件，旨在桥接这一鸿沟，通过提供一个既安全又专业的平台，使得企业能够以低成本、高效率地方式定制并部署大模型。
 
+支持但不限于以下大模型：
+
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_1.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Landing</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_2.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Vicuna</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_4.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">ChatGPT</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_3.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">GPTAzure</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_12.webp" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Gemini</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_5.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_6.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Baidu Ernie</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_7.jpg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">ChatGLM</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_8.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Moonshot AI</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_9.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Baichuan</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_10.jpeg"width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">iFLYTEK</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_11.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">SenseChat</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/model/img_13.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px;text-align: left;">Doubao</span>
+    </div>
+</div>
+
+支持但不限于以下智能体平台：
+
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/img_4.jpeg" alt="Model 2" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;" >混元智能体平台</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/img_1.png" alt="Platform 2" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">扣子智能体平台</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/img_2.png" alt="Framework 1" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">文心智能体平台</span>
+    </div>
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/img_3.png" alt="Framework 2" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">智谱智能体平台</span>
+    </div>
+</div>
+
 ## 在线Demo
 
 为了让用户能够直观感受到Lag[i] (联基) 的强大功能和便捷性，我们提供了一个在线Demo。您可以通过以下链接访问并体验：[https://lagi.landingbj.com](https://lagi.landingbj.com/)。
