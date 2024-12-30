@@ -2,7 +2,6 @@ package ai.worker;
 
 import ai.agent.Agent;
 import ai.config.pojo.WorkerConfig;
-import ai.manager.AgentManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.Route;
@@ -35,29 +34,8 @@ public class DefaultBestWorker extends RouteWorker{
         String ruleName = RouterParser.getRuleName(workerConfig.getRoute());
         this.route = Routers.getInstance().getRoute(ruleName);
         List<String> params = RouterParser.getParams(workerConfig.getRoute());
-        if(params.size() == 1 && RouterParser.WILDCARD_STRING.equals(params.get(0))) {
-            List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
-            for (Agent<?, ?> agent : allAgents) {
-                String appId = agent.getAgentConfig().getName();
-                if(appId != null) {
-                    try {
-                        agents.add((Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        }
-        if(params.size() > 1) {
-            for (String agentId : params) {
-                Agent<ChatCompletionRequest, ChatCompletionResult> agent =
-                        (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(agentId);
-                if(agent != null) {
-                    agents.add(agent);
-                }
-            }
-        }
+        this.agents = RouterParser.convert2Agents(params);
     }
-
 
 
     protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentsBySkillMap(List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents, ChatCompletionRequest data) {

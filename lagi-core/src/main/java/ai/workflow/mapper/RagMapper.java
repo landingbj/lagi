@@ -48,7 +48,7 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
                     && chatCompletionResult.getChoices().get(0).getMessage().getContext() == null) {
                 chatCompletionResultWithSource = new ChatCompletionResultWithSource();
             } else {
-                chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+                chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName, agent.getAgentConfig().getId());
             }
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
