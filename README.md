@@ -19,7 +19,9 @@ Supports but is not limited to the following models:
         <img src="docs/images/logo/model/img_12.webp" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">Gemini&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_5.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/model/img_14.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px; text-align: left;">deepseek&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
 	</br>
  <div style="display: flex; align-items: center; margin: 10px;">
@@ -35,12 +37,15 @@ Supports but is not limited to the following models:
         <span style="font-size: 12px;width: 70px; text-align: left;">iFLYTEK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_11.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">SenseChat&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/model/img_15.webp" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px; text-align: left;">claude&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
 		</br>
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_13.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">Doubao&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
     </div>
+	</br>
 </div>
 
 Supports but is not limited to the following intelligent agent platforms:
