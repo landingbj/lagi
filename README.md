@@ -9,55 +9,35 @@ Supports but is not limited to the following models:
 <div style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_1.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Landing</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Landing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_2.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Vicuna</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Vicuna&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_4.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">ChatGPT</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">ChatGPT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_3.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">GPTAzure</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">GPTAzure&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_12.webp" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Gemini</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Gemini&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_5.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_6.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Baidu Ernie</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Baidu&nbsp;Ernie&nbsp;&nbsp; </span>
         <img src="docs/images/logo/model/img_7.jpg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">ChatGLM</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">ChatGLM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_8.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Moonshot AI</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Moonshot&nbsp;AI</span>
         <img src="docs/images/logo/model/img_9.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Baichuan</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Baichuan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_10.jpeg"width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">iFLYTEK</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">iFLYTEK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_11.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">SenseChat</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">SenseChat&nbsp;&nbsp;&nbsp;</span>
     </div>
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_13.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Doubao</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Doubao&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
     </div>
 </div>
 
@@ -66,19 +46,13 @@ Supports but is not limited to the following intelligent agent platforms:
 <div style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/img_4.jpeg" alt="Model 2" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;"> Hunyuan </span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;"> Hunyuan&nbsp;&nbsp;&nbsp;&nbsp; </span>
         <img src="docs/images/logo/img_1.png" alt="Platform 2" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;"> Coze</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;"> Coze &nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/img_2.png" alt="Framework 1" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;">Wenxin</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;">Wenxin &nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/img_3.png" alt="Framework 2" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;">Zhipu </span>
+        <span style="font-size: 12px;">Zhipu &nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
 </div>
 
