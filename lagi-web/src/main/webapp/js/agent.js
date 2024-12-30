@@ -354,7 +354,7 @@ async function handleSelect(selectedItem, userQuestion) {
     selectedAgentId = selectedValue;
     // 判断是否是用户自己发布的智能体
     try {
-        const isUserAgent = await isAgentBelongsToUser(lagiUserId, selectedAgentId);
+        const isUserAgent = await isAgentBelongsToUser(globalUserId, selectedAgentId);
         if (isUserAgent) {
             // 如果是用户发布的智能体，可以跳过订阅检查，直接进行下一步
             await appointTextQuery(userQuestion, selectedAgentId);
