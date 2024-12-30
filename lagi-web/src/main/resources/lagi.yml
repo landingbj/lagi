@@ -404,11 +404,6 @@ agents:
     token: your-token
     app_id: your-app-id
 
-  # Agent for Retrieval-Augmented Generation (RAG) model, combining external knowledge for text generation.
-  - name: knowledge
-    driver: ai.agent.chat.rag.RagAgent
-    endpoint: http://127.0.0.1:8080
-
   # Agent for Baidu Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
   - name: yiYan
     driver: ai.agent.chat.wenxin.BaiduAgent
@@ -473,13 +468,6 @@ agents:
     app_id: your-app-id
     token: your-token
 
-  # Agent for image generation, producing high-quality images based on user input.
-  - name: image
-    driver: ai.agent.customer.ImageGenAgent
-    app_id: your-app-id
-    endpoint: http://127.0.0.1:8080
-    token: image_gen_agent
-
   # This is a Crazy Thursday (KFC) copywriting agent that can help you generate Crazy Thursday copy.
   - name: KFC_text_generate
     driver: ai.agent.customer.KFCTextGenerationAgent
@@ -514,6 +502,16 @@ agents:
   - name: baidu_search_pictures
     driver: ai.agent.customer.BaiduSearchPicturesAgent
     app_id: baidu_search_pictures
+
+  #This is a tool that can help you get the gold price today
+  - name: gold_today
+    driver: ai.agent.customer.GoldTodayAgent
+    app_id: gold_today
+
+  #This is a joke generation tool, and you can call this tool to generate jokes
+  - name: jokes_generation
+    driver: ai.agent.customer.JokesGenerationAgent
+    app_id: jokes_generation
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.

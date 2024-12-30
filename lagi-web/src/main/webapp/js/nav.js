@@ -242,8 +242,19 @@ let promptNavs = [
                 "agentId": "baidu_search_pictures",
                 "title": "百度搜图",
                 "templateIssues": "帮我搜索一下关于小米SU7的图片"
+            },
+            {
+                "id": 122,
+                "agentId": "gold_today",
+                "title": "今日金价",
+                "templateIssues": "今天国内金价是多少"
+            },
+            {
+                "id": 123,
+                "agentId": "jokes_generation",
+                "title": "段子生成",
+                "templateIssues": "帮我生成一篇段子"
             }
-
         ]
     },
     {
