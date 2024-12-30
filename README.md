@@ -17,24 +17,26 @@ Supports but is not limited to the following models:
         <img src="docs/images/logo/model/img_3.jpeg" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">GPTAzure&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_12.webp" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Gemini&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Gemini&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_5.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">Qwen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+	</br>
+ <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_6.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Baidu&nbsp;Ernie&nbsp;&nbsp; </span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Baidu&nbsp;Ernie &nbsp;&nbsp; </span>
         <img src="docs/images/logo/model/img_7.jpg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">ChatGLM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">ChatGLM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_8.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Moonshot&nbsp;AI</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Moonshot&nbsp;AI&nbsp;</span>
         <img src="docs/images/logo/model/img_9.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Baichuan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span style="font-size: 12px;width: 70px; text-align:   left;">Baichuan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_10.jpeg"width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">iFLYTEK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_11.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">SenseChat&nbsp;&nbsp;&nbsp;</span>
     </div>
+		</br>
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_13.png" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">Doubao&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
