@@ -515,6 +515,16 @@ agents:
     driver: ai.agent.customer.BaiduSearchPicturesAgent
     app_id: baidu_search_pictures
 
+  #This is a tool that can help you get the gold price today
+  - name: gold_today
+    driver: ai.agent.customer.GoldTodayAgent
+    app_id: gold_today
+
+  #This is a joke generation tool, and you can call this tool to generate jokes
+  - name: jokes_generation
+    driver: ai.agent.customer.JokesGenerationAgent
+    app_id: jokes_generation
+
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
 workers:
