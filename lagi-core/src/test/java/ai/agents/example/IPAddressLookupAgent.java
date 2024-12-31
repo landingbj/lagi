@@ -1,17 +1,17 @@
-package ai.agent.customer;
+package ai.agents.example;
 
+import ai.agent.customer.CustomerAgent;
 import ai.agent.customer.tools.FinishTool;
-import ai.agent.customer.tools.KFCTextGenerationTool;
+import ai.agents.example.tools.IPAddressLookupTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
-public class KFCTextGenerationAgent extends CustomerAgent{
-    public KFCTextGenerationAgent(AgentConfig agentConfig) {
+public class IPAddressLookupAgent extends CustomerAgent {
+    public IPAddressLookupAgent(AgentConfig agentConfig) {
         super(agentConfig);
-        KFCTextGenerationTool weatherSearchTool = new KFCTextGenerationTool();
+        IPAddressLookupTool weatherSearchTool = new IPAddressLookupTool();
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),
                 finishTool.getToolInfo());
-
     }
 }

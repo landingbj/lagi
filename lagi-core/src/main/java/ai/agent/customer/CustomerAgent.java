@@ -176,36 +176,4 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         return null;
     }
 
-    public static void main(String[] args) {
-        ContextLoader.loadContext();
-
-        String reqStr = "{\n" +
-                "  \"category\": \"default\",\n" +
-                "  \"messages\": [\n" +
-                "    {\n" +
-                "      \"role\": \"user\",\n" +
-                "      \"content\": \"武汉的天气如何油价是多少\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"temperature\": 0.8,\n" +
-                "  \"max_tokens\": 1024,\n" +
-                "  \"stream\": false\n" +
-                "}";
-        Gson gson = new Gson();
-        WeatherSearchTool weatherSearchTool = new WeatherSearchTool();
-        weatherSearchTool.setToken("xxx");
-        FinishTool finishTool = new FinishTool();
-        OilPriceSearchTool oilPriceSearchTool = new OilPriceSearchTool("xxx");
-        List<ToolInfo> toolInfos = new ArrayList<>();
-        toolInfos.add(weatherSearchTool.getToolInfo());
-        toolInfos.add(oilPriceSearchTool.getToolInfo());
-        toolInfos.add(finishTool.getToolInfo());
-        ChatCompletionRequest request = gson.fromJson(reqStr, ChatCompletionRequest.class);
-        CustomerAgent customerAgent = new CustomerAgent(toolInfos);
-        ChatCompletionResult communicate = customerAgent.communicate(request);
-        String jsonStr = JSONUtil.toJsonStr(communicate);
-        System.out.println("jsonStr = " + jsonStr);
-    }
-
-
 }

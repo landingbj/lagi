@@ -117,12 +117,12 @@ let promptNavs = [
         icon: 'intelligentAgent',
         title: '智能体',
         subNavs: [
-            {
-                "id": 101,
-                "agentId": "stock",
-                "title": "股票助手",
-                "templateIssues": "今天的股市行情如何?"
-            },
+            // {
+            //     "id": 101,
+            //     "agentId": "stock",
+            //     "title": "股票助手",
+            //     "templateIssues": "今天的股市行情如何?"
+            // },
             {
                 "id": 102,
                 "agentId": "exchangeRate",
@@ -153,24 +153,24 @@ let promptNavs = [
                 "title": "天气助手",
                 "templateIssues": "今天北京天气如何?"
             },
-            {
-                "id": 107,
-                "agentId": "oil",
-                "title": "油价助手",
-                "templateIssues": "今天的国际油价是多少?"
-            },
-            {
-                "id": 108,
-                "agentId": "bmi",
-                "title": "体重指数",
-                "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
-            },
-            {
-                "id": 109,
-                "agentId": "calorie",
-                "title": "健康饮食",
-                "templateIssues": "一份鸡胸肉的卡路里是多少?"
-            },
+            // {
+            //     "id": 107,
+            //     "agentId": "oil",
+            //     "title": "油价助手",
+            //     "templateIssues": "今天的国际油价是多少?"
+            // },
+            // {
+            //     "id": 108,
+            //     "agentId": "bmi",
+            //     "title": "体重指数",
+            //     "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
+            // },
+            // {
+            //     "id": 109,
+            //     "agentId": "calorie",
+            //     "title": "健康饮食",
+            //     "templateIssues": "一份鸡胸肉的卡路里是多少?"
+            // },
             {
                 "id": 110,
                 "agentId": "dishonest",
@@ -183,78 +183,78 @@ let promptNavs = [
                 "title": "高铁助手",
                 "templateIssues": "从北京到上海的高铁票价是多少?"
             },
-            {
-                "id": 112,
-                "agentId": "history",
-                "title": "历史今日",
-                "templateIssues": "今天在历史上发生了哪些重大事件?"
-            },
+            // {
+            //     "id": 112,
+            //     "agentId": "history",
+            //     "title": "历史今日",
+            //     "templateIssues": "今天在历史上发生了哪些重大事件?"
+            // },
             {
                 "id": 113,
                 "agentId": "youdao",
                 "title": "有道翻译",
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
-            {
-                "id": 114,
-                "agentId": "image",
-                "title": "图像生成",
-                "templateIssues": "帮我生成一张海滩风景的图像"
-            },
-            {
-                "id": 115,
-                "agentId": "KFC_text_generate",
-                "title": "疯狂星期",
-                "templateIssues": "帮我生成一个疯狂星期四的文案"
-            },
-            {
-                "id": 116,
-                "agentId": "ip_address_lookup_agent",
-                "title": "ip查询",
-                "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
-            },
-            {
-                "id": 117,
-                "agentId": "anime_pictures",
-                "title": "动漫图片",
-                "templateIssues": "帮我生成一张动漫图片"
-            },
-            {
-                "id": 118,
-                "agentId": "constellation_luck",
-                "title": "今日运势",
-                "templateIssues": "帮我查查今天白羊座运势怎么样"
-            },
+            // {
+            //     "id": 114,
+            //     "agentId": "image",
+            //     "title": "图像生成",
+            //     "templateIssues": "帮我生成一张海滩风景的图像"
+            // },
+            // {
+            //     "id": 115,
+            //     "agentId": "KFC_text_generate",
+            //     "title": "疯狂星期",
+            //     "templateIssues": "帮我生成一个疯狂星期四的文案"
+            // },
+            // {
+            //     "id": 116,
+            //     "agentId": "ip_address_lookup_agent",
+            //     "title": "ip查询",
+            //     "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
+            // },
+            // {
+            //     "id": 117,
+            //     "agentId": "anime_pictures",
+            //     "title": "动漫图片",
+            //     "templateIssues": "帮我生成一张动漫图片"
+            // },
+            // {
+            //     "id": 118,
+            //     "agentId": "constellation_luck",
+            //     "title": "今日运势",
+            //     "templateIssues": "帮我查查今天白羊座运势怎么样"
+            // },
             {
                 "id": 119,
                 "agentId": "sogou_search_pictures",
                 "title": "搜狗搜图",
                 "templateIssues": "帮我搜索一下刘亦菲的图片"
             },
-            {
-                "id": 120,
-                "agentId": "belle_pictures",
-                "title": "头像生成",
-                "templateIssues": "帮我生成一张头像"
-            },
+            // {
+            //     "id": 120,
+            //     "agentId": "belle_pictures",
+            //     "title": "头像生成",
+            //     "templateIssues": "帮我生成一张头像"
+            // },
             {
                 "id": 121,
                 "agentId": "baidu_search_pictures",
                 "title": "百度搜图",
                 "templateIssues": "帮我搜索一下关于小米SU7的图片"
             },
-            {
-                "id": 122,
-                "agentId": "gold_today",
-                "title": "今日金价",
-                "templateIssues": "今天国内金价是多少"
-            },
-            {
-                "id": 123,
-                "agentId": "jokes_generation",
-                "title": "段子生成",
-                "templateIssues": "帮我生成一篇段子"
-            }
+            // {
+            //     "id": 122,
+            //     "agentId": "gold_today",
+            //     "title": "今日金价",
+            //     "templateIssues": "今天国内金价是多少"
+            // },
+            // {
+            //     "id": 123,
+            //     "agentId": "jokes_generation",
+            //     "title": "段子生成",
+            //     "templateIssues": "帮我生成一篇段子"
+            // }
         ]
     },
     {

@@ -367,26 +367,6 @@ agents:
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
 
-  # Agent for CITIC Bank customer service, handling user queries and service requests.
-  - name: citic
-    wrong_case: /u5c0f/u4fe1/u6700/u8fd1/u5b66/u4e60/u4e86
-    driver: ai.agent.chat.qianfan.XiaoxinAgent
-    token: your-token
-
-  # Agent for stock queries, providing stock market information, analysis, and related services.
-  - name: stock
-    wrong_case: /u62b1/u6b49
-    driver: ai.agent.chat.coze.CozeAgent
-    token: your-token
-    app_id: your-app-id
-
-  # Agent for exchange rate queries, providing real-time exchange rates for major global currencies.
-  - name: exchangeRate
-    wrong_case: /u62b1/u6b49
-    driver: ai.agent.chat.coze.CozeAgent
-    token: your-token
-    app_id: your-app-id
-
   # Agent for Baidu Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
   - name: yiYan
     driver: ai.agent.chat.wenxin.BaiduAgent
@@ -398,6 +378,13 @@ agents:
     driver: ai.agent.chat.tencent.YuanQiAgent
     app_id: your-app-id
     api_key: your-api-key
+
+  # Agent for stock queries, providing stock market information, analysis, and related services.
+  - name: stock
+    wrong_case: /u62b1/u6b49
+    driver: ai.agent.chat.coze.CozeAgent
+    token: your-token
+    app_id: your-app-id
 
   # Agent for Xiaohongshu (Little Red Book) platform, providing user content recommendations, search, and interaction.
   - name: xiaohongshu
@@ -411,24 +398,6 @@ agents:
     token: your-token
     app_id: weather_agent
 
-  # Agent for oil price queries, providing real-time oil price information and helping users track price fluctuations.
-  - name: oil
-    driver: ai.agent.customer.OilPriceAgent
-    token: your-token
-    app_id: oil_price_agent
-
-  # Agent for Body Mass Index (BMI) calculations and health management, helping users assess their weight health status.
-  - name: bmi
-    driver: ai.agent.customer.BmiAgent
-    token: your-token
-    app_id: bmi_agent
-
-  # Agent for food calorie queries, helping users understand the calorie content of different foods.
-  - name: calorie
-    driver: ai.agent.customer.FoodCalorieAgent
-    token: your-token
-    app_id: food_calorie_agent
-
   # Agent for querying dishonest persons, helping users access information about people listed as untrustworthy.
   - name: dishonest
     driver: ai.agent.customer.DishonestPersonSearchAgent
@@ -440,61 +409,21 @@ agents:
     driver: ai.agent.customer.HighSpeedTicketAgent
     app_id: high_speed_ticket_agent
 
-  # Agent for querying "On This Day in History," providing users with important historical events that happened on each day.
-  - name: history
-    driver: ai.agent.customer.HistoryInToDayAgent
-    app_id: history_in_today_agent
-
   # Agent for Youdao translation services, supporting translation between multiple languages.
   - name: youdao
     driver: ai.agent.customer.YouDaoAgent
     app_id: your-app-id
     token: your-token
 
-  # This is a Crazy Thursday (KFC) copywriting agent that can help you generate Crazy Thursday copy.
-  - name: KFC_text_generate
-    driver: ai.agent.customer.KFCTextGenerationAgent
-    app_id: KFC_text_generate
-
-  # This is an agent that looks up the attribution of an IP address, you just need to tell me the IP address and I can tell you where it belongs.
-  - name: ip_address_lookup_agent
-    driver: ai.agent.customer.IPAddressLookupAgent
-    app_id: ip_address_lookup_agent
-
-  # This is a tool that generates anime pictures, and you can call this tool to generate anime pictures
-  - name: anime_pictures
-    driver: ai.agent.customer.AnimePicturesAgent
-    app_id: anime_pictures
-
-  # This is a tool to check today's horoscope according to your horoscope, you just need to tell me your horoscope and I can tell you today's horoscope.
-  - name: constellation_luck
-    driver: ai.agent.customer.ConstellationLuckAgent
-    app_id: constellation_luck
-
   # It's a Sogou image search tool that can help you search for an image online based on your keywords
   - name: sogou_search_pictures
     driver: ai.agent.customer.SogouSearchPicturesAgent
     app_id: sogou_search_pictures
 
-  # This is an avatar generation tool, and you can call this tool to generate an avatar
-  - name: belle_pictures
-    driver: ai.agent.customer.AnimePicturesAgent
-    app_id: belle_pictures
-
   # This is a Baidu search tool that can help you search for some images online based on your keywords
   - name: baidu_search_pictures
     driver: ai.agent.customer.BaiduSearchPicturesAgent
     app_id: baidu_search_pictures
-
-  # This is a tool that can help you get the gold price today
-  - name: gold_today
-    driver: ai.agent.customer.GoldTodayAgent
-    app_id: gold_today
-
-  # This is a joke generation tool, and you can call this tool to generate jokes
-  - name: jokes_generation
-    driver: ai.agent.customer.JokesGenerationAgent
-    app_id: jokes_generation
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.

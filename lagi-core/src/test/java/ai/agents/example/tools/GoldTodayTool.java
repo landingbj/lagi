@@ -1,6 +1,7 @@
-package ai.agent.customer.tools;
+package ai.agents.example.tools;
 
 import ai.agent.customer.pojo.ToolInfo;
+import ai.agent.customer.tools.AbstractTool;
 import ai.utils.ApiInvokeUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
