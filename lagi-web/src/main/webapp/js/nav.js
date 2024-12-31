@@ -196,109 +196,109 @@ let promptNavs = [
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
             {
-                "id": -17,
+                "id": 16,
                 "agentId": "image",
                 "title": "图像生成",
                 "templateIssues": "帮我生成一张海滩风景的图像"
             },
             {
-                "id": -18,
+                "id": 17,
                 "agentId": "KFC_text_generate",
                 "title": "疯狂星期",
                 "templateIssues": "帮我生成一个疯狂星期四的文案"
             },
             {
-                "id": -19,
+                "id": 18,
                 "agentId": "ip_address_lookup_agent",
                 "title": "ip查询",
                 "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
             },
             {
-                "id": -20,
+                "id": 19,
                 "agentId": "anime_pictures",
                 "title": "动漫图片",
                 "templateIssues": "帮我生成一张动漫图片"
             },
             {
-                "id": -21,
+                "id": 20,
                 "agentId": "constellation_luck",
                 "title": "今日运势",
                 "templateIssues": "帮我查查今天白羊座运势怎么样"
             },
             {
-                "id": -22,
+                "id": 21,
                 "agentId": "sogou_search_pictures",
                 "title": "搜狗搜图",
                 "templateIssues": "帮我搜索一下刘亦菲的图片"
             },
             {
-                "id": -23,
+                "id": 22,
                 "agentId": "belle_pictures",
                 "title": "头像生成",
                 "templateIssues": "帮我生成一张头像"
             },
             {
-                "id": -24,
+                "id": 23,
                 "agentId": "baidu_search_pictures",
                 "title": "百度搜图",
                 "templateIssues": "帮我搜索一下关于小米SU7的图片"
             },
             {
-                "id": -25,
+                "id": 24,
                 "agentId": "gold_today",
                 "title": "今日金价",
                 "templateIssues": "今天国内金价是多少"
             },
             {
-                "id": -26,
+                "id": 25,
                 "agentId": "jokes_generation",
                 "title": "段子生成",
                 "templateIssues": "帮我生成一篇段子"
             },
             {
-                "id": -27,
+                "id": 26,
                 "agentId": "meal_suggestion",
                 "title": "美食推荐",
                 "templateIssues": "帮我推荐今天的午餐是什么？"
             },
             {
-                "id": -28,
+                "id": 27,
                 "agentId": "countdown_day",
                 "title": "倒数计时",
                 "templateIssues": "帮我查询下最近的倒数日是什么？"
             },
             {
-                "id": -29,
+                "id": 28,
                 "agentId": "city_travel_route",
                 "title": "出行路线",
                 "templateIssues": "从武汉到北京的出行路线是什么？"
             },
             {
-                "id": -30,
+                "id": 29,
                 "agentId": "car_query",
                 "title": "查询车辆",
                 "templateIssues": "帮我查询小米SU7的车况信息"
             },
             {
-                "id": -31,
+                "id": 30,
                 "agentId": "surname_rank",
                 "title": "姓氏排名",
                 "templateIssues": "王姓在百家姓中的排名是多少？"
             },
             {
-                "id": -32,
+                "id": 31,
                 "agentId": "investment_income",
                 "title": "收益计算",
                 "templateIssues": "我投资了2432032元，年化收益率3.425%，投资期限5年，按天计算收益是多少？"
             },
             {
-                "id": -33,
+                "id": 32,
                 "agentId": "driving_license_search",
                 "title": "驾考题库",
                 "templateIssues": "驾驶员在高速公路上行驶时，车辆左前轮突然爆胎，须第一时间紧握转向盘，然后轻踏制动踏板进行减速，并将车停靠在紧急停车带上。这样做的原因是什么？"
             },
             {
-                "id": -34,
+                "id": 33,
                 "agentId": "blood_type_calculation",
                 "title": "血型预测",
                 "templateIssues": "父母血型是B和AB，子代可能是什么血型？"
