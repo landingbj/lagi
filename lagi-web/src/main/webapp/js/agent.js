@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // loadAgentMenu(currentPage); // 初始加载第一页的智能体
     const agentToolsElement = document.getElementById('agent-tools');
-    agentToolsElement.addEventListener('scroll', handleScroll); // 监听滚动事件
+    // agentToolsElement.addEventListener('scroll', handleScroll); // 监听滚动事件
 });
 
 
@@ -49,9 +49,9 @@ function resetAgentForm() {
 }
 
 // 打开弹框的方法
-function openAgentModal() {
+function openAgentModal(e) {
     if (!getCookie('userId')) {
-        openModal();
+        openModal(e);
         return;
     }
     var modal = document.getElementById('agent-form-modal');
