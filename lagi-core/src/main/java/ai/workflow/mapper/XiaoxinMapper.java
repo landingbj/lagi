@@ -32,7 +32,7 @@ public class XiaoxinMapper extends ChatAgentMapper implements IMapper {
         double calPriority = 0;
         chatCompletionResult = agent.communicate(chatCompletionRequest);
         if(chatCompletionRequest != null) {
-            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName, agent.getAgentConfig().getId());
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
             calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);

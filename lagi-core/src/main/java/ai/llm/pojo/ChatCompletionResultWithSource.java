@@ -11,4 +11,5 @@ import lombok.*;
 @ToString
 public class ChatCompletionResultWithSource extends ChatCompletionResult {
     private String source;
+    private Integer sourceId;
 }

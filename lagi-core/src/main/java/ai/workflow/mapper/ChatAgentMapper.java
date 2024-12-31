@@ -92,7 +92,8 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
         Boolean isFeeRequired = Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired());
-        if(!isFeeRequired) {
+        Boolean canOutPut = Boolean.TRUE.equals(agent.getAgentConfig().getCanOutPut());
+        if((!isFeeRequired) || canOutPut) {
             // free
             chatCompletionResult = agent.communicate(chatCompletionRequest);
         } else {
@@ -105,10 +106,9 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
             if(agentIntentScore == null) {
                 feeAgentScoring(chatCompletionRequest, skillMap, keywords);
             }
-
         }
         if(chatCompletionResult != null) {
-            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName());
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(getAgentName(), agent.getAgentConfig().getId());
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
             try {

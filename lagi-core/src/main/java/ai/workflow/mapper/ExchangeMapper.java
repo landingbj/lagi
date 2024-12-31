@@ -33,7 +33,7 @@ public class ExchangeMapper extends ChatAgentMapper implements IMapper {
         double calPriority = 0;
         chatCompletionResult = agent.communicate(chatCompletionRequest);
         if(chatCompletionResult != null) {
-            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agentName);
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(agent.getAgentConfig().getName(), agent.getAgentConfig().getId());
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
             calPriority = calculatePriority(chatCompletionRequest, chatCompletionResult);

@@ -28,4 +28,5 @@ public class AgentConfig {
     private BigDecimal income;
     private Integer reqNum;
     private Integer subscriberNum;
+    private Boolean canOutPut;
 }
