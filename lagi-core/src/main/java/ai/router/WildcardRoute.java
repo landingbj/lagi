@@ -1,8 +1,10 @@
 package ai.router;
 
 import ai.agent.Agent;
+import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import cn.hutool.core.bean.BeanUtil;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +21,14 @@ public class WildcardRoute extends Route {
         if (agents == null || agents.size() != 1) {
             return null;
         }
-        return Lists.newArrayList(agents.get(0).communicate(request));
+        ChatCompletionResult communicate = agents.get(0).communicate(request);
+        if(communicate != null) {
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource();
+            BeanUtil.copyProperties(communicate, chatCompletionResultWithSource);
+            chatCompletionResultWithSource.setSource(agents.get(0).getAgentConfig().getName());
+            chatCompletionResultWithSource.setSourceId(agents.get(0).getAgentConfig().getId());
+            communicate = chatCompletionResultWithSource;
+        }
+        return Lists.newArrayList(communicate);
     }
 }

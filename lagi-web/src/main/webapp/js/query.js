@@ -492,6 +492,7 @@ function generalOutput(paras, question, robootAnswerJq) {
                         ${res.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${res.source}</small></div></div><br>` : ""}
                         `
             robootAnswerJq.html(result);
+            $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
             enableQueryBtn();
             querying = false;
         }
@@ -612,6 +613,7 @@ function streamOutput(paras, question, robootAnswerJq) {
                     }
                 }
                 robootAnswerJq.html(result);
+                $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
             }
         }
     }

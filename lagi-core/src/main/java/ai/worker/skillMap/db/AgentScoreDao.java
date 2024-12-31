@@ -124,7 +124,7 @@ public class AgentScoreDao {
             pstmt.setInt(1, agentId);
             pstmt.setString(2, keyword);
             pstmt.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error("Error inserting into agent_keyword_log", e);
         }
     }

@@ -93,7 +93,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             ChatCompletionResult result = callLLm(prompt, history, user_msg);
             System.out.println("结束调用大模型, 耗时：" + (System.currentTimeMillis()  - start));
             String answer = result.getChoices().get(0).getMessage().getContent();
-            System.out.println("调用结果：" + answer);
+            System.out.println(agentConfig.getName() + "调用结果：" + answer);
             ResponseTemplate responseTemplate;
             try {
                 responseTemplate = gson.fromJson(answer, ResponseTemplate.class);

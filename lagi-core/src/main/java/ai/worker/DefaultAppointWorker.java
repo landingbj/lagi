@@ -68,8 +68,8 @@ public class DefaultAppointWorker extends RouteWorker {
         }
         if(trAgent != null) {
             ChatCompletionRequest request = new ChatCompletionRequest();
-            BeanUtil.copyProperties(request, data);
-            data.setStream(false);
+            BeanUtil.copyProperties(data, request);
+            request.setStream(false);
             List<ChatCompletionResult> invoke = route.invoke(request, Lists.newArrayList(trAgent));
             if(invoke != null && !invoke.isEmpty()) {
                 ChatCompletionResult communicate = invoke.get(0);

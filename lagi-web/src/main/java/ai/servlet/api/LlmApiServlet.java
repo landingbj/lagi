@@ -130,14 +130,15 @@ public class LlmApiServlet extends BaseServlet {
                 }
             }
         }
+        if(work == null) {
+            throw new RRException("调用接口失败,  未获取有效结果");
+        }
         if(Boolean.FALSE.equals(lLmRequest.getStream())) {
             responsePrint(resp, toJson(work));
             return;
         }
-        if(work != null) {
-            String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
-            convert2streamAndOutput(firstAnswer, resp, work);
-        }
+        String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
+        convert2streamAndOutput(firstAnswer, resp, work);
     }
 
     private boolean deductExpense(Integer agentId, String userId){
@@ -198,7 +199,7 @@ public class LlmApiServlet extends BaseServlet {
             int end = Math.min(i + length, firstAnswer.length());
             try {
                 String substring = firstAnswer.substring(i, end);
-
+                substring = substring.replaceAll("\n", "<br/>");
                 ChatCompletionResult result = convertResponse(source, substring);
                 ChatCompletionResult filter = SensitiveWordUtil.filter(result);
                 String msg = gson.toJson(filter);
@@ -207,7 +208,7 @@ public class LlmApiServlet extends BaseServlet {
             } catch (Exception e) {
             }
             try {
-                Thread.sleep(200);
+                Thread.sleep(20);
             } catch (Exception ignored) {
                 logger.error("produce stream", ignored);
             }

@@ -242,10 +242,6 @@ public class SkillMap {
 
     private void save(AgentConfig agentConfig, String question, String answer, String keyword) {
         Double score = scoring(question, answer);
-        if(score > 0) {
-            double similarity = getSimilarity(question, answer);
-            score = Math.min(10, score * 0.7  + (similarity * 0.3 * 10)) ;
-        }
         save(agentConfig, keyword, score);
     }
 
@@ -295,7 +291,12 @@ public class SkillMap {
                         SkillMapPrompt.SCORE_PROMPT_TEMPLATE);
                 String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
                 ScoreResponse scoreResponse = gson.fromJson(firstAnswer, ScoreResponse.class);
-                return scoreResponse.getScore();
+                Double score = scoreResponse.getScore();
+                if(score > 0) {
+                    double similarity = getSimilarity(question, answer);
+                    score = Math.min(10, score * 0.7  + (similarity * 0.3 * 10)) ;
+                }
+                return score;
             } catch (Exception e) {
             }
         }
