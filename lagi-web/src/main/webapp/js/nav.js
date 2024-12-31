@@ -196,64 +196,70 @@ let promptNavs = [
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
             {
-                "id": -16,
+                "id": -17,
                 "agentId": "image",
                 "title": "图像生成",
                 "templateIssues": "帮我生成一张海滩风景的图像"
             },
             {
-                "id": 115,
+                "id": -18,
                 "agentId": "KFC_text_generate",
                 "title": "疯狂星期",
                 "templateIssues": "帮我生成一个疯狂星期四的文案"
             },
             {
-                "id": 116,
+                "id": -19,
                 "agentId": "ip_address_lookup_agent",
                 "title": "ip查询",
                 "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
             },
             {
-                "id": 117,
+                "id": -20,
                 "agentId": "anime_pictures",
                 "title": "动漫图片",
                 "templateIssues": "帮我生成一张动漫图片"
             },
             {
-                "id": 118,
+                "id": -21,
                 "agentId": "constellation_luck",
                 "title": "今日运势",
                 "templateIssues": "帮我查查今天白羊座运势怎么样"
             },
             {
-                "id": 119,
+                "id": -22,
                 "agentId": "sogou_search_pictures",
                 "title": "搜狗搜图",
                 "templateIssues": "帮我搜索一下刘亦菲的图片"
             },
             {
-                "id": 120,
+                "id": -23,
                 "agentId": "belle_pictures",
                 "title": "头像生成",
                 "templateIssues": "帮我生成一张头像"
             },
             {
-                "id": 121,
+                "id": -24,
                 "agentId": "baidu_search_pictures",
                 "title": "百度搜图",
                 "templateIssues": "帮我搜索一下关于小米SU7的图片"
             },
             {
-                "id": 122,
+                "id": -25,
                 "agentId": "gold_today",
                 "title": "今日金价",
                 "templateIssues": "今天国内金价是多少"
             },
             {
-                "id": 123,
+                "id": -26,
                 "agentId": "jokes_generation",
                 "title": "段子生成",
                 "templateIssues": "帮我生成一篇段子"
+            },
+            {
+                "id": -27,
+                "agentId": "meal_suggestion",
+                "title": "美食推荐",
+                "templateIssues": "帮我推荐今天的午餐是什么？"
             }
         ]
     },
