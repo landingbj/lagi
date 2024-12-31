@@ -9,7 +9,7 @@ import java.util.*;
 @Slf4j
 public class AgentScoreDao {
 
-    private static final String DB_URL = "jdbc:sqlite:saas.db";
+    private static final String DB_URL = "jdbc:sqlite:skillMap.db";
 
     static {
         try {

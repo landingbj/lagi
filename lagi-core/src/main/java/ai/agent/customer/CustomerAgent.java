@@ -19,6 +19,8 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
     private final Integer maxTryTimes = 3;
@@ -68,7 +70,9 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         request.setTemperature(0);
         request.setMessages(chatMessages);
         System.out.println("request = " + gson.toJson(request));
-        return completionsService.completions(request);
+        synchronized (CustomerAgent.class) {
+            return completionsService.completions(request);
+        }
     }
 
     private String genPrompt(String question, String agent_scratch) {
@@ -86,6 +90,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         String user_msg = "决定用哪个工具若工具, 请确保工具对任务有帮助, 请不要进行没有必要的信息收集, 调用失败或全部调用成功直接调用finish工具";
         String assistant_msg = "";
         List<List<String>> history = new ArrayList<>();
+        Set<String> toolNames = toolInfoList.stream().map(ToolInfo::getName).collect(Collectors.toSet());
         while (count-- > 0){
             String prompt = genPrompt(question, agent_scratch.toString());
             long start = System.currentTimeMillis();
@@ -112,8 +117,10 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             Map<String, Object> args = action.getArgs();
             String call_result=null;
             try {
-                AbstractTool func = ToolManager.getInstance().getTool(action.getName());
-                call_result = func.apply(args);
+                if(toolNames.contains(action.getName())) {
+                    AbstractTool func = ToolManager.getInstance().getTool(action.getName());
+                    call_result = func.apply(args);
+                }
             } catch (Exception e) {
 
             }

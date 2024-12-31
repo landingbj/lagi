@@ -288,7 +288,7 @@ public class SkillMap {
             try {
                 ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.SCORE_PROMPT_TEMPLATE, question, answer),
                         Collections.emptyList(),
-                        SkillMapPrompt.SCORE_PROMPT_TEMPLATE);
+                        SkillMapPrompt.SCORE_USER_PROMPT);
                 String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
                 ScoreResponse scoreResponse = gson.fromJson(firstAnswer, ScoreResponse.class);
                 Double score = scoreResponse.getScore();

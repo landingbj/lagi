@@ -18,7 +18,7 @@ public class FinishTool extends AbstractTool {
     private void init() {
         name = "finish";
         toolInfo = ToolInfo.builder().name("finish")
-                .description("这是一个任务完成工具当任务完成时接受最终结果")
+                .description("这是一个任务完成工具当任务完成时接受最终结果，请结合其他工具查询出的信息回答,而不是只根据之前所学知识")
                 .args(Lists.newArrayList(
                         ToolArg.builder().name("result").type("string").description("任务最终的文本回答").build(),
                         ToolArg.builder().name("imageUrl").type("[string]").description("任务结果中的图片地址列表").build(),
