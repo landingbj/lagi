@@ -344,6 +344,10 @@ function hideFooterInfo() {
 //========= 查看收费智能体js=============
 
 async function handleSelect(selectedItem, userQuestion) {
+    if (!getCookie('userId')) {
+        openModal();
+        return;
+    }
     const selectedValue = selectedItem.value;
     const selectedOption = selectedItem.options[selectedItem.selectedIndex];
     const pricePerReq = selectedOption.getAttribute('data-priceperreq');
