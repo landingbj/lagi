@@ -299,8 +299,8 @@ pre .key {
     width: var(--ball-width);  /* 屏幕宽度的48% */
     height: var(--ball-height); /* 屏幕高度的48% */
     position: relative;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: calc((100% - var(--ball-width)) / 2 + 1.5rem);
+    /* margin-right: auto; */
 	margin-top: var(--ball-margin-top);
     background-color: transparent;
     user-select: none; /* 禁止选中文本 */
@@ -310,6 +310,7 @@ pre .key {
 
 
 :root{
+    --left-nav-width: 0px;
 	--top-nav-height: 4vh;
 	--not-content-height: calc(7rem);
 	--content-height: calc(100vh - var(--not-content-height) - var(--top-nav-height));
@@ -317,7 +318,7 @@ pre .key {
 	--intro-height:calc(8rem);
 	--ball-margin-top: 5vh;
 	--ball-height:calc(var(--content-height) - var(--intro-height) - var(--title-height) - var(--ball-margin-top) - var(--intro-margin-top) - 1vh);
-	--title-height:calc(5rem);
+	--title-height:calc(7rem);
 	--intro-with: 90%;
 	--ball-width: 76%;
 
@@ -327,6 +328,7 @@ pre .key {
 
 @media screen and (min-width: 900px) {
 	:root{
+        --left-nav-width: 260px;
 		--top-nav-height: 0vh;
 		--not-content-height: calc(6rem);
 		--content-height: calc(100vh - var(--not-content-height));
@@ -334,8 +336,8 @@ pre .key {
 		/* --content-height: calc(100vh - var(--not-content-height)); */
 		/* --intro-height:calc(var(--content-height) - 4rem); */
 		--intro-height:8rem;
-		--title-height:5rem;
-		--ball-margin-top: 5vh;
+		--title-height:7rem;
+		--ball-margin-top: 10vh;
 		--ball-height:calc(var(--content-height) - var(--intro-height) - var(--title-height) - var(--ball-margin-top) - var(--intro-margin-top));
 		--intro-with: 42rem;
 		--ball-width: 42rem;
@@ -415,7 +417,8 @@ pre .key {
     display: none;           /* 默认隐藏 */
     position: fixed;
     z-index: 1;
-    left: 47%;
+    width: 26rem;
+    left: calc(var(--left-nav-width) / 2 + (50% - 13rem));
     top: 14%;
     justify-content: center;
     align-items: center;
@@ -425,7 +428,7 @@ pre .key {
     background-color: #fff;
     padding: 30px;
     border-radius: 8px;
-    max-width: 500px;
+    max-width: 26rem;
     box-sizing: border-box;
 }
 
@@ -1016,3 +1019,61 @@ pre .key {
   .recharge-subscribe-btn span {
     margin-right: 8px;
   }
+
+@font-face {
+    font-family: 'fangsong'; /* 你给字体起的名字 */
+    src: url('../font/fangsong_GB2312.TTF') format('truetype');
+    font-weight: normal; /* 字体粗细 */
+    font-style: normal;  /* 字体样式（正常、斜体等） */
+}
+
+
+#msg{
+    --msg-width: 26rem;
+    --msg-height: 10rem;
+    width: var(--msg-width);
+    height: var(--msg-height);
+    position: fixed;
+    z-index:999;
+    top: calc(50% - (var(--msg-height) / 2));
+    /* margin-top:-80px; */
+    left: calc(var(--left-nav-width) / 2     +  (50% - var(--msg-width) / 2));
+    /* margin-left: calc(50% - var(--msg-width));; */
+    /* margin-left: auto; */
+    /* margin-right: auto; */
+    background:#fff;
+    box-shadow:5px 5px 8px #999;
+    font-size:17px;
+    color:#666;
+    border:1px solid #f8f8f8;
+    text-align: center;
+    line-height: 2rem;
+    display:inline-block;
+    padding-bottom:20px;
+    border-radius:2px;
+}
+
+#msg_top{
+    background:#f8f8f8;
+    padding:5px 15px 5px 20px;
+    text-align:left;
+}
+#msg_top span{
+    font-size:22px;
+    float:right;
+    cursor:pointer;
+}
+#msg_cont{
+    padding:15px 20px 20px;
+    text-align:left;
+}
+#msg_clear{
+    display:inline-block;
+    color:#fff;
+    padding:1px 15px;
+    background:#023f63;;
+    border-radius:2px;
+    float:right;
+    margin-right:15px;
+    cursor:pointer;
+}

@@ -46,7 +46,6 @@ public class AgentManager {
                 Object o = constructor.newInstance(param);
                 agentsMap.put(conf.getApiKey(), (Agent<?, ?>) o);
             }catch (Exception e) {
-                log.error("agent {} register error {}", name, e);
             }
         }
         });

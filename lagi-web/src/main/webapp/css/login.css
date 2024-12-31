@@ -92,7 +92,7 @@
 }
 
 #login-form, #register-form {
-    position: relative;
+    position: absolute;
 }
 
 

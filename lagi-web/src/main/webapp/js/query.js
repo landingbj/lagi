@@ -352,7 +352,7 @@ function getLoginStatus(appId, username) {
 const CONVERSATION_CONTEXT = [];
 
 function getTextResult(question, robootAnswerJq, conversation, agentId) {
-    debugger
+    // debugger
     var result = '';
     var paras = {
         "category": window.category,

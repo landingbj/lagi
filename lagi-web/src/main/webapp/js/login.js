@@ -22,11 +22,12 @@ document.addEventListener('click', function (event) {
     }
 });
 
-function toggleUserMenu() {
+function toggleUserMenu(e) {
+    // 获取相对于整个文档的坐标
     let auth = getCookie('lagi-auth');
     // let auth = true;
     if (!auth) {
-        openModal();
+        openModal(e);
     } else {
         const userMenu = document.getElementById('userMenu');
         const userMenu_sm = document.getElementById('userMenu-sm');
@@ -35,8 +36,34 @@ function toggleUserMenu() {
     }
 }
 
-function openModal() {
+function openModal(e) {
     document.getElementById('overlay').style.display = 'flex';
+    let login_form_jq = $('#login-form');
+    let register_form_jq = $('#register-form');
+    let window_width = $(window).width();
+    let login_width = login_form_jq.outerWidth(true);
+    let register_width = register_form_jq.outerWidth(true);
+    let max_width = Math.max(login_width, register_width);
+    if(e && (window_width * 0.8 > max_width)) {
+        const docX = e.pageX;
+        const docY = e.pageY;
+        let half_window_width = window_width / 2;
+        // let window_height = $(window).height();
+        let login_letft = docX > half_window_width ? docX - login_width  : docX;
+        let login_top = docY - 380 > 0 ? docY - 380 : docY;
+        let register_letft = docX > half_window_width ? docX - register_width : docX;
+        let register_top = docY - 450 > 0 ? docY - 450 : docY;
+
+        login_form_jq.css('left', login_letft + 'px');
+        login_form_jq.css('top', login_top + 'px');
+        register_form_jq.css('left', register_letft + 'px');
+        register_form_jq.css('top', register_top + 'px');
+    } else {
+        login_form_jq.css('left', '');
+        login_form_jq.css('top','');
+        register_form_jq.css('left','');
+        register_form_jq.css('top', '');
+    }
     showLoginPage();
 }
 
@@ -63,17 +90,20 @@ function showRegisterPage() {
     document.getElementById('register-form').classList.remove('login-hidden');
 }
 
-function showLoginPage() {
+function showLoginPage(e) {
     updateCaptcha(document.querySelector('.login-captcha-image'));
     document.getElementById('register-form').classList.add('login-hidden');
     document.getElementById('login-form').classList.remove('login-hidden');
 }
 
 function updateCaptcha(imageElement) {
-    let codeHeight = Math.floor($('#login-captcha').innerHeight());
-    if (codeHeight < 0) {
-        codeHeight = Math.floor($('#register-captcha').innerHeight());
-    }
+    let height1 = $('#login-captcha').innerHeight();
+    let height2 = $('#register-captcha').innerHeight();
+    let codeHeight =  Math.floor(Math.max(height1, height2))
+    // let codeHeight = Math.floor($('#login-captcha').innerHeight());
+    // if (codeHeight < 0) {
+    //     codeHeight = Math.floor($('#register-captcha').innerHeight());
+    // }
     imageElement.src = '/user/getCaptcha?height=' + codeHeight + '&width=' + codeHeight * 2 +
         '&fontSize=22&t=' + new Date().getTime();
 }

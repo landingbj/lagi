@@ -522,7 +522,7 @@ function genSubNavItems(subNavs) {
         // 如果子菜单项包含 agentId，我们将其存储在 data-app-id 中
         subHtml += `
         <li class="sub-nav-item">
-            <a onclick="getPromptDialog(${subNav.id})" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+            <a onclick="getPromptDialog(${subNav.id},event)" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
                 ${subNav.title}
             </a>
         </li>
@@ -663,7 +663,7 @@ function getModeList(type) {
 
 let currentNav = null;
 
-function getPromptDialog(id) {
+function getPromptDialog(id, e) {
 
     closeAgentList();
     closePaidAgentList();
@@ -700,7 +700,7 @@ function getPromptDialog(id) {
 
     if (id === 666) {
         if (!getCookie('userId')) {
-            openModal();
+            openModal(e);
             return;
         }
         $('#introduces').hide();
@@ -720,7 +720,7 @@ function getPromptDialog(id) {
 
     if (id === 667) {
         if (!getCookie('userId')) {
-            openModal();
+            openModal(e);
             return;
         }
         $('#introduces').hide();
