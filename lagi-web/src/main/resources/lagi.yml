@@ -201,7 +201,7 @@ stores:
       bucket_name: ai-service-oss
       enable: true
 
-  text:
+  search:
     # This  is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
     - name: elastic
       driver: ai.bigdata.impl.ElasticSearchAdapter
@@ -304,12 +304,6 @@ functions:
   image2enhance:
     - backend: ernie
       model: enhance
-      enable: true
-      priority: 10
-
-  image2ocr:
-    - backend: qwen
-      model: ocr
       enable: true
       priority: 10
 

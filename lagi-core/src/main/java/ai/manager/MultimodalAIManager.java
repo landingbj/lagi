@@ -67,7 +67,8 @@ public class MultimodalAIManager {
                 register(modelNameList, Image2VideoManager.getInstance(), (Image2VideoAdapter) modelService, modelFunctions.getImage2video());
             }
             if(modelService instanceof IOcr) {
-                register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getImage2ocr());
+//                register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getImage2ocr());
+                register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getDoc2orc());
                 register(modelNameList, DocOcrManager.getInstance(), (IOcr) modelService, modelFunctions.getDoc2orc());
             }
             if(modelService instanceof Video2trackAdapter) {

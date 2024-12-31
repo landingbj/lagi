@@ -14,7 +14,7 @@ public class StoreConfig {
     private List<VectorStoreConfig> vectors;
     private List<OSSConfig> oss;
     private RAGFunction rag;
-    @JsonProperty("text")
+    @JsonProperty("search")
     private List<BigdataConfig> bigdata;
     private Medusa medusa;
     private List<SQLJdbc> database;
