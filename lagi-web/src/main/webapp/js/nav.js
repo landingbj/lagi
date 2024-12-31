@@ -260,7 +260,51 @@ let promptNavs = [
                 "agentId": "meal_suggestion",
                 "title": "美食推荐",
                 "templateIssues": "帮我推荐今天的午餐是什么？"
+            },
+            {
+                "id": -28,
+                "agentId": "countdown_day",
+                "title": "倒数计时",
+                "templateIssues": "帮我查询下最近的倒数日是什么？"
+            },
+            {
+                "id": -29,
+                "agentId": "city_travel_route",
+                "title": "出行路线",
+                "templateIssues": "从武汉到北京的出行路线是什么？"
+            },
+            {
+                "id": -30,
+                "agentId": "car_query",
+                "title": "查询车辆",
+                "templateIssues": "帮我查询小米SU7的车况信息"
+            },
+            {
+                "id": -31,
+                "agentId": "surname_rank",
+                "title": "姓氏排名",
+                "templateIssues": "王姓在百家姓中的排名是多少？"
+            },
+            {
+                "id": -32,
+                "agentId": "investment_income",
+                "title": "收益计算",
+                "templateIssues": "我投资了2432032元，年化收益率3.425%，投资期限5年，按天计算收益是多少？"
+            },
+            {
+                "id": -33,
+                "agentId": "driving_license_search",
+                "title": "驾考题库",
+                "templateIssues": "驾驶员在高速公路上行驶时，车辆左前轮突然爆胎，须第一时间紧握转向盘，然后轻踏制动踏板进行减速，并将车停靠在紧急停车带上。这样做的原因是什么？"
+            },
+            {
+                "id": -34,
+                "agentId": "blood_type_calculation",
+                "title": "血型预测",
+                "templateIssues": "父母血型是B和AB，子代可能是什么血型？"
             }
+
+
         ]
     },
     {
