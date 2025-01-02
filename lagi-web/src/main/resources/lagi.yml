@@ -209,7 +209,7 @@ stores:
       bucket_name: ai-service-oss
       enable: true
 
-  search:
+  term:
     # This  is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
     - name: elastic
       driver: ai.bigdata.impl.ElasticSearchAdapter
