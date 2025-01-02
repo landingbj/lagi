@@ -581,6 +581,41 @@ agents:
     name: blood_type_calculation
     driver: ai.agent.customer.BloodTypeCalculationAgent
     app_id: blood_type_calculation
+  # Agent for Bing search, helping users search content via Bing.
+  - id: -34
+    name: bing_search
+    driver: ai.agent.customer.BingSearchAgent
+    app_id: bing_search
+  # Agent for lottery results, fetching lottery data based on type and number of days.
+  - id: -35
+    name: lottery_results
+    driver: ai.agent.customer.LotteryResultsAgent
+    app_id: lottery_results
+  # Agent for text correction, fixing spelling and grammar mistakes in the input text.
+  - id: -36
+    name: text_corrector
+    driver: ai.agent.customer.TextCorrectorAgent
+    app_id: text_corrector
+  # Agent for text difference comparison, detecting missing and added parts between two texts.
+  - id: -37
+    name: text_difference
+    driver: ai.agent.customer.TextDifferenceAgent
+    app_id: text_difference
+  # Agent for searching places based on location name, returning basic information about related places.
+  - id: -38
+    name: place_search
+    driver: ai.agent.customer.PlaceSearchAgent
+    app_id: place_search
+  # Agent for querying chip parameters, based on chip keyword or chip ID.
+  - id: -39
+    name: chip_query
+    driver: ai.agent.customer.ChipQueryAgent
+    app_id: chip_query
+  # Agent for Spark Lite 1.5 dialogue model, helping users with basic inquiries.
+  - id: -40
+    name: spark_dialog
+    driver: ai.agent.customer.SparkDialogAgent
+    app_id: spark_dialog
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
