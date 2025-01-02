@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import ai.common.pojo.FileChunkResponse;
+import ai.ocr.OcrService;
 import ai.utils.AiGlobal;
+import ai.utils.EasyExcelUtil;
 import ai.utils.HttpUtil;
 
 import ai.utils.LagiGlobal;
@@ -40,8 +42,39 @@ public class FileService {
     }
 
     public List<FileChunkResponse.Document> splitChunks(File file, int chunkSize) throws IOException {
-        String content = getFileContent(file);
         List<FileChunkResponse.Document> result = new ArrayList<>();
+        String extString = file.getName().substring(file.getName().lastIndexOf("."));
+        String fileType = extString.toLowerCase().toLowerCase();
+        if (fileType.equals(".xls")||fileType.equals(".xlsx")){
+            return EasyExcelUtil.getChunkDocumentXls(file);
+        }else if (fileType.equals(".csv")){
+            return EasyExcelUtil.getChunkDocumentCsv(file);
+        }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
+                  fileType.equals(".gif")||fileType.equals(".bmp")||
+                  fileType.equals(".webp")||fileType.equals(".jpg")){
+            List<String> langList = new ArrayList<>();
+            langList.add("chn,eng,tai");
+            OcrService ocrService = new OcrService();
+            String content = ocrService.image2Ocr((List<File>) file, langList).toString();
+            int start = 0;
+            while (start < content.length()) {
+                int end = Math.min(start + chunkSize, content.length());
+                String text = content.substring(start, end).replaceAll("\\s+", " ");
+                FileChunkResponse.Document doc = new FileChunkResponse.Document();
+                doc.setText(text);
+                List<String> images = new ArrayList<>();
+                images.add(file.getPath());
+               FileChunkResponse.Image image = new FileChunkResponse.Image();
+                image.setPath(file.getPath());
+                doc.setImage((List<FileChunkResponse.Image>) image);
+                result.add(doc);
+                start = end;
+            }
+
+            return result;
+        }
+        String content = getFileContent(file);
+
         int start = 0;
         while (start < content.length()) {
             int end = Math.min(start + chunkSize, content.length());
@@ -69,7 +102,26 @@ public class FileService {
             case ".pdf":
                 content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
                 break;
+            case ".xls":
+            case ".xlsx":
+                content = EasyExcelUtil.getExcelContent(file);
+                break;
+            case ".csv":
+                content = EasyExcelUtil.getCsvContent(file);
+                break;
+            case ".jpg":
+            case ".jpeg":
+            case ".png":
+            case ".gif":
+            case ".bmp":
+            case ".webp":
+                OcrService ocrService = new OcrService();
+                List<String> langList = new ArrayList<>();
+                langList.add("chn,eng,tai");
+                content = ocrService.image2Ocr((List<File>) file, langList).toString();
+                break;
             default:
+                System.out.println("无法识别该文件");
                 break;
         }
         in.close();

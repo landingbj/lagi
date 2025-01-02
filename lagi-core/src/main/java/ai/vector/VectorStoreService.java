@@ -69,13 +69,38 @@ public class VectorStoreService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         List<FileChunkResponse.Document> docs;
-        FileChunkResponse response = fileService.extractContent(file);
-        if (response != null && response.getStatus().equals("success")) {
-            docs = response.getData();
-        } else {
+        if (file.getName().endsWith(".xls")|| file.getName().endsWith(".xlsx")||
+            file.getName().endsWith(".csv")|| file.getName().endsWith(".txt")||
+            file.getName().endsWith(".jpeg")|| file.getName().endsWith(".png")||
+            file.getName().endsWith(".gif")|| file.getName().endsWith(".bmp")||
+            file.getName().endsWith(".webp")|| file.getName().endsWith(".jpg")){
             docs = fileService.splitChunks(file, 512);
+        }else {
+            FileChunkResponse response = fileService.extractContent(file);
+            if (response != null && response.getStatus().equals("success")) {
+                docs = response.getData();
+            } else {
+                docs = fileService.splitChunks(file, 512);
+            }
         }
         List<FileInfo> fileList = new ArrayList<>();
+
+        String fileName = metadatas.get("filename").toString();
+        if (fileName!=null){
+            int dotIndex = fileName.lastIndexOf(".");
+            if (dotIndex != -1) {
+                fileName = fileName.substring(0, dotIndex);
+            }
+            FileInfo fi1 = new FileInfo();
+            String e1 = UUID.randomUUID().toString().replace("-", "");
+            fi1.setEmbedding_id(e1);
+            fi1.setText(fileName);
+            Map<String, Object> t1 = new HashMap<>(metadatas);
+            t1.remove("parent_id");
+            fi1.setMetadatas(t1);
+            fileList.add(fi1);
+        }
+
         for (FileChunkResponse.Document doc : docs) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");

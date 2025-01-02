@@ -438,7 +438,7 @@ function generalOutput(paras, question, robootAnswerJq) {
                 let isFirst = true;
                 for (let i = 0; i < chatMessage.filename.length; i++) {
                     let marginLeft = isFirst ? '0' : '50px';
-                    a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a>`;
+                    a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a></br>`;
                     isFirst = false;
                 }
             }
@@ -539,7 +539,7 @@ function streamOutput(paras, question, robootAnswerJq) {
 
                     for (let i = 0; i < chatMessage.filename.length; i++) {
                         let marginLeft = isFirst ? '0' : '50px';
-                        a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a>`;
+                        a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a></br>`;
                         isFirst = false;
                         //console.log("这里的路径是："+chatMessage.filepath[i]);
                         //a+=`<a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a><br>`;

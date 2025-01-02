@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 public class PdfUtil {
 
     private static final Lock convertLock = new ReentrantLock();
-//    private static final String SOFFICE_PATH = "D:\\Tools\\LibreOffice\\program\\soffice.exe";
-    private static final String SOFFICE_PATH = "soffice";
+    private static final String SOFFICE_PATH = "D:\\Tools\\LibreOffice\\program\\soffice.exe";
+//    private static final String SOFFICE_PATH = "soffice";
     private static final int ZOOM_SIZE = 1;
     private static final float DPI = 300;
 

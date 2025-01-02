@@ -352,8 +352,9 @@ public class UploadFileServlet extends HttpServlet {
             String content = "";
             JsonArray fileList = new JsonArray();
             for (File file : files) {
-                content = fileService.getFileContent(file);
-                if (!StringUtils.isEmpty(content)) {
+                //content = fileService.getFileContent(file);
+                //if (!StringUtils.isEmpty(content)) {
+                if (file.exists() && file.isFile()) {
                     String filename = realNameMap.get(file.getName());
                     uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
                     JsonObject jsonObject = new JsonObject();
