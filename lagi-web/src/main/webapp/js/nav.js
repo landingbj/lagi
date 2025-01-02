@@ -302,8 +302,49 @@ let promptNavs = [
                 "agentId": "blood_type_calculation",
                 "title": "血型预测",
                 "templateIssues": "父母血型是B和AB，子代可能是什么血型？"
+            },
+            {
+                "id": -34,
+                "agentId": "bing_search",
+                "title": "Bing搜索",
+                "templateIssues": "帮我搜索关于'PearNo'的信息"
+            },
+            {
+                "id": -35,
+                "agentId": "lottery_results",
+                "title": "彩票查询",
+                "templateIssues": "查询双色球最近的开奖信息"
+            },
+            {
+                "id": -36,
+                "agentId": "text_corrector",
+                "title": "文本纠错",
+                "templateIssues": "帮我检查并纠正以下文本：我一经吃了很多药了，可是病还不好"
+            },
+            {
+                "id": -37,
+                "agentId": "text_difference",
+                "title": "文本对比",
+                "templateIssues": "帮我比较两个文本的差异：奔赴新的远征 vs 我愿意开启新的征程"
+            },
+            {
+                "id": -38,
+                "agentId": "place_search",
+                "title": "地点搜索",
+                "templateIssues": "帮我查找关于罗浮山的信息"
+            },
+            {
+                "id": -39,
+                "agentId": "chip_query",
+                "title": "芯片查询",
+                "templateIssues": "查询ESP8266的芯片参数有哪些？"
+            },
+            {
+                "id": -40,
+                "agentId": "spark_dialog",
+                "title": "星火助手",
+                "templateIssues": "你好，能帮我做些什么？"
             }
-
 
         ]
     },
