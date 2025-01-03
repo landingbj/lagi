@@ -616,6 +616,46 @@ agents:
     name: spark_dialog
     driver: ai.agent.customer.SparkDialogAgent
     app_id: spark_dialog
+  # Agent for fetching daily hot news, helping users retrieve trending news articles.
+  - id: -41
+    name: hot_news
+    driver: ai.agent.customer.HotNewsAgent
+    app_id: hot_news
+  # Article rewriting tool for generating similar paragraphs based on the input content
+  - id: -42
+    name: article_rewrite
+    driver: ai.agent.customer.ArticleRewriteAgent
+    app_id: article_rewrite
+  # Recipe query tool for fetching recipe details including description, ingredients, and instructions
+  - id: -43
+    name: recipe_query
+    driver: ai.agent.customer.RecipeQueryAgent
+    app_id: recipe_query
+  # Answer book tool for providing answers based on a given question.
+  - id: -44
+    name: answer_book
+    driver: ai.agent.customer.AnswerBookAgent
+    app_id: answer_book
+  # Website ping tool to measure the latency to a specific website.
+  - id: -45
+    name: website_ping
+    driver: ai.agent.customer.WebsitePingAgent
+    app_id: website_ping
+  # Conversion tool for simplified and traditional Chinese text conversion.
+  - id: -46
+    name: text_conversion
+    driver: ai.agent.customer.TextConversionAgent
+    app_id: text_conversion
+  # Human population data retrieval tool.
+  - id: -47
+    name: population_data
+    driver: ai.agent.customer.PopulationDataAgent
+    app_id: population_data
+  # Mean search tool to find quotes or famous sayings based on a given meaning.
+  - id: -48
+    name: meaning_search
+    driver: ai.agent.customer.MeaningSearchAgent
+    app_id: meaning_search
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
