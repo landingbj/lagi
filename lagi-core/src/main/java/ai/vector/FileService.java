@@ -53,41 +53,9 @@ public class FileService {
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
                   fileType.equals(".gif")||fileType.equals(".bmp")||
                   fileType.equals(".webp")||fileType.equals(".jpg")){
-            List<String> langList = new ArrayList<>();
-            langList.add("chn,eng,tai");
-            OcrService ocrService = new OcrService();
-            List<File> fileList = new ArrayList<>();
-            fileList.add(file);
-            File AbsoluteFile = new File("/upload/"+file.getName());
-            System.out.println("AbsolutePath-----"+AbsoluteFile.getPath());
-            String content = "";
-            try {
-                 content = ocrService.image2Ocr(fileList, langList).get(0).toString();
-            }catch (Exception e){
-                System.out.println("ocr 未启用");
-                content = "";
-            }
-            int start = 0;
-            while (start < content.length()) {
-                int end = Math.min(start + chunkSize, content.length());
-                String text = content.substring(start, end).replaceAll("\\s+", " ");
-                FileChunkResponse.Document doc = new FileChunkResponse.Document();
-                doc.setText(text);
-                List<String> images = new ArrayList<>();
-                images.add(file.getAbsolutePath());
-               FileChunkResponse.Image image = new FileChunkResponse.Image();
-                image.setPath(AbsoluteFile.getPath());
-                List<FileChunkResponse.Image> list = new ArrayList<>();
-                list.add(image);
-                doc.setImage(list);
-                result.add(doc);
-                start = end;
-            }
-
-            return result;
+            return getChunkDocumentImage(result, file, chunkSize);
         }
         String content = getFileContent(file);
-
         int start = 0;
         while (start < content.length()) {
             int end = Math.min(start + chunkSize, content.length());
@@ -97,6 +65,41 @@ public class FileService {
             result.add(doc);
             start = end;
         }
+        return result;
+    }
+
+    public static List<FileChunkResponse.Document> getChunkDocumentImage(List<FileChunkResponse.Document> result,File file,Integer chunkSize) {
+        List<String> langList = new ArrayList<>();
+        langList.add("chn,eng,tai");
+        OcrService ocrService = new OcrService();
+        List<File> fileList = new ArrayList<>();
+        fileList.add(file);
+        File AbsoluteFile = new File("/upload/"+file.getName());
+        System.out.println("AbsolutePath-----"+AbsoluteFile.getPath());
+        String content = "";
+        try {
+            content = ocrService.image2Ocr(fileList, langList).get(0).toString();
+        }catch (Exception e){
+            System.out.println("ocr 未启用");
+            content = "";
+        }
+        int start = 0;
+        while (start < content.length()) {
+            int end = Math.min(start + chunkSize, content.length());
+            String text = content.substring(start, end).replaceAll("\\s+", " ");
+            FileChunkResponse.Document doc = new FileChunkResponse.Document();
+            doc.setText(text);
+            List<String> images = new ArrayList<>();
+            images.add(file.getAbsolutePath());
+            FileChunkResponse.Image image = new FileChunkResponse.Image();
+            image.setPath(AbsoluteFile.getPath());
+            List<FileChunkResponse.Image> list = new ArrayList<>();
+            list.add(image);
+            doc.setImage(list);
+            result.add(doc);
+            start = end;
+        }
+
         return result;
     }
 
@@ -131,7 +134,10 @@ public class FileService {
                 OcrService ocrService = new OcrService();
                 List<String> langList = new ArrayList<>();
                 langList.add("chn,eng,tai");
-                content = ocrService.image2Ocr((List<File>) file, langList).toString();
+                content = "图片名为："+file.getName();
+                List<File> fileList = new ArrayList<>();
+                fileList.add(file);
+                content += "内容为："+ocrService.image2Ocr(fileList, langList).toString();
                 break;
             default:
                 System.out.println("无法识别该文件");
