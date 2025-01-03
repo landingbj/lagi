@@ -60,8 +60,11 @@ public class FileService {
             fileList.add(file);
             File AbsoluteFile = new File("/upload/"+file.getName());
             System.out.println("AbsolutePath-----"+AbsoluteFile.getPath());
-            String content = ocrService.image2Ocr(fileList, langList).get(0).toString();
-            if (content!=null){
+            String content = "";
+            try {
+                 content = ocrService.image2Ocr(fileList, langList).get(0).toString();
+            }catch (Exception e){
+                System.out.println("ocr 未启用");
                 content = "";
             }
             int start = 0;
