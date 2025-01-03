@@ -3,6 +3,7 @@ package ai.vector;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +56,14 @@ public class FileService {
             List<String> langList = new ArrayList<>();
             langList.add("chn,eng,tai");
             OcrService ocrService = new OcrService();
-            String content = ocrService.image2Ocr((List<File>) file, langList).toString();
+            List<File> fileList = new ArrayList<>();
+            fileList.add(file);
+            File AbsoluteFile = new File("/upload/"+file.getName());
+            System.out.println("AbsolutePath-----"+AbsoluteFile.getPath());
+            String content = ocrService.image2Ocr(fileList, langList).get(0).toString();
+            if (content!=null){
+                content = "";
+            }
             int start = 0;
             while (start < content.length()) {
                 int end = Math.min(start + chunkSize, content.length());
@@ -63,10 +71,12 @@ public class FileService {
                 FileChunkResponse.Document doc = new FileChunkResponse.Document();
                 doc.setText(text);
                 List<String> images = new ArrayList<>();
-                images.add(file.getPath());
+                images.add(file.getAbsolutePath());
                FileChunkResponse.Image image = new FileChunkResponse.Image();
-                image.setPath(file.getPath());
-                doc.setImage((List<FileChunkResponse.Image>) image);
+                image.setPath(AbsoluteFile.getPath());
+                List<FileChunkResponse.Image> list = new ArrayList<>();
+                list.add(image);
+                doc.setImage(list);
                 result.add(doc);
                 start = end;
             }

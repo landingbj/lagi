@@ -372,28 +372,32 @@ public class LlmApiServlet extends BaseServlet {
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()
                 && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-            IndexSearchData indexData = indexSearchDataList.get(0);
-            List<String> imageList = vectorDbService.getImageFiles(indexData);
+            List<String> imageList = new ArrayList<>();
+            for (IndexSearchData indexSearchData : indexSearchDataList) {
+                    List<String> strLsit = vectorDbService.getImageFiles(indexSearchData);
+                if (strLsit!=null){
+                    imageList.addAll(strLsit);
+                }
+            }
+            imageList = Optional.ofNullable(imageList).map(list -> list.stream().distinct().collect(Collectors.toList())).orElse(new ArrayList<>());
             List<String> filePaths = ragContext.getFilePaths().stream().distinct().collect(Collectors.toList());
             List<String> filenames = ragContext.getFilenames().stream().distinct().collect(Collectors.toList());
             List<String> chunkIds = ragContext.getChunkIds().stream().distinct().collect(Collectors.toList());
-            for (int i = 0; i < lastResult[0].getChoices().size(); i++) {
-//                ChatMessage message = lastResult[0].getChoices().get(0).getMessage();
-                ChatMessageResponse message = ChatMessageResponse.builder()
-                        .contextChunkIds(ragContext.getChunkIds())
-                        .build();
-//                message.setContext(ragContext.getContext());
-                IndexSearchData indexData1 = indexSearchDataList.get(i);
-                    if (!(indexData1.getFilename() != null && indexData1.getFilename().size() == 1
-                            && indexData1.getFilename().get(0).isEmpty())) {
-                    message.setFilename(filenames);
-                    message.setFilepath(filePaths);
-                    message.setContextChunkIds(chunkIds);
+
+            for (int j = 0; j < lastResult.length; j++) {
+                for (int i = 0; i < lastResult[j].getChoices().size(); i++) {
+                    ChatMessageResponse message = new ChatMessageResponse();
+                        message.setFilename(filenames);
+                        message.setFilepath(filePaths);
+                        message.setContext(ragContext.getContext());
+                        message.setContextChunkIds(chunkIds);
+                        message.setImageList(imageList);
+                        message.setContent("");
+                    lastResult[0].getChoices().get(i).setMessage(message);
+
                 }
-                message.setContent("");
-                message.setImageList(imageList);
-                lastResult[0].getChoices().get(i).setMessage(message);
             }
+
             out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");
         }
         out.print("data: " + "[DONE]" + "\n\n");
