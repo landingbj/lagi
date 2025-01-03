@@ -344,6 +344,54 @@ let promptNavs = [
                 "agentId": "spark_dialog",
                 "title": "星火助手",
                 "templateIssues": "你好，能帮我做些什么？"
+            },
+            {
+                "id": -41,
+                "agentId": "hot_news",
+                "title": "热点新闻",
+                "templateIssues": "今天的热点新闻有哪些？"
+            },
+            {
+                "id": -42,
+                "agentId": "article_rewrite",
+                "title": "文章续写",
+                "templateIssues": "帮我续写这段文字：我爱你"
+            },
+            {
+                "id": -43,
+                "agentId": "recipe_query",
+                "title": "菜谱查询",
+                "templateIssues": "帮我查询家常红烧鱼块的菜谱"
+            },
+            {
+                "id": -44,
+                "agentId": "answer_book",
+                "title": "答案之书",
+                "templateIssues": "我现在应该去钓鱼吗？"
+            },
+            {
+                "id": -45,
+                "agentId": "website_ping",
+                "title": "测速工具",
+                "templateIssues": "测试百度的Ping延迟"
+            },
+            {
+                "id": -46,
+                "agentId": "text_conversion",
+                "title": "文本转换",
+                "templateIssues": "将`随机繁体测试内容`转为繁体"
+            },
+            {
+                "id": -47,
+                "agentId": "population_data",
+                "title": "人口数据",
+                "templateIssues": "最新的世界人口数量是多少？"
+            },
+            {
+                "id": -48,
+                "agentId": "meaning_search",
+                "title": "诗词名言",
+                "templateIssues": "如何树立远大志向？"
             }
 
         ]
