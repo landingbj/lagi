@@ -173,11 +173,15 @@ Lag[i] (联基) 项目还提供了多个RESTful API接口，方便用户将AI服
 
 我们为用户提供了预打包的应用程序，方便直接下载和使用：
 
-- Jar 文件
+- **Jar 文件**：Lag[i] (联基)的核心依赖库。
   - 文件名：`lagi-core-1.0.2-jar-with-dependencies.jar`
   - 文件大小：250.5 MB
   - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)
 
+- **War 文件**：Lag[i] (联基)的Web应用，可直接部署到Web容器。
+  - 文件名：`lagi-web.war`
+  - 文件大小：279 MB
+  - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-web.war)
 
 
 感谢您对 Lag[i] (联基) 的关注与支持！如有任何问题或建议，请随时与我们联系。
