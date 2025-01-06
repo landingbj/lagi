@@ -1,9 +1,17 @@
 package ai.router.utils;
 
+import ai.agent.Agent;
+import ai.agent.proxy.LlmProxyAgent;
 import ai.common.exception.RRException;
+import ai.manager.AgentManager;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
 import ai.router.*;
+import ai.router.pojo.Parser;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class RouterParser {
@@ -55,7 +63,7 @@ public class RouterParser {
 
     public static List<String> getParams(String route) {
         int s = route.indexOf("(");
-        int e = route.indexOf(")");
+        int e = route.lastIndexOf(")");
         return Arrays.stream(route.substring(s + 1, e).split(","))
                 .map(String::trim)
                 .collect(Collectors.toList());
@@ -87,9 +95,57 @@ public class RouterParser {
     }
 
 
+    public static Parser toParser(String input) {
+        String regex = "^([a-zA-Z_][a-zA-Z0-9_]*)\\(([^)]*)\\)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+        if (matcher.find()) {
+            String functionName = matcher.group(1);
+            String parameters = matcher.group(2);
+            String[] argsArray = parameters.split("\\s*,\\s*");
+            return new Parser(functionName, Arrays.asList(argsArray));
+        }
+        return null;
+    }
+
+
+    public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2Agents(List<String> params) {
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = new ArrayList<>();
+        if(params.size() == 1 && RouterParser.WILDCARD_STRING.equals(params.get(0))) {
+            List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
+            for (Agent<?, ?> agent : allAgents) {
+                String appId = agent.getAgentConfig().getName();
+                if(appId != null) {
+                    try {
+                        agents.add((Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+        if(params.size() > 1) {
+            for (String param : params) {
+                Parser parser = RouterParser.toParser(param);
+                Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
+                if(parser == null) {
+                    agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(param);
+                } else {
+                    String name = parser.getName();
+                    List<String> args  = parser.getArgs();
+                    if("chat".equals(name)) {
+                        agent = new LlmProxyAgent(args.get(0));
+                    }
+                }
+                if(agent != null) {
+                    agents.add(agent);
+                }
+            }
+        }
+        return agents;
+    }
+
     public static void main(String[] args) {
-        System.out.println(parse("a", "(小信智能体,a)"));
-        System.out.println(parse("a", "((a&b&c),(c|d))"));
+        System.out.println(toParser("test"));
     }
 
 

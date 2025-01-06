@@ -2,10 +2,10 @@ package ai.agent;
 
 
 import ai.config.pojo.AgentConfig;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
-public abstract class Agent<T, R>{
+@Data
+public abstract class Agent<T, R> implements Cloneable{
 
     protected AgentConfig agentConfig;
 
@@ -22,4 +22,9 @@ public abstract class Agent<T, R>{
     public abstract R receive();
 
     public abstract R communicate(T data);
+
+    @Override
+    public Agent<T, R> clone() throws CloneNotSupportedException {
+        return (Agent<T, R>) super.clone();
+    }
 }
