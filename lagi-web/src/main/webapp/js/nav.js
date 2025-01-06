@@ -392,7 +392,14 @@ let promptNavs = [
                 "agentId": "meaning_search",
                 "title": "诗词名言",
                 "templateIssues": "如何树立远大志向？"
+            },
+            {
+                "id": -49,
+                "agentId": "deepseek_chat",
+                "title": "深度问答",
+                "templateIssues": "你好啊？"
             }
+
 
         ]
     },
