@@ -87,7 +87,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         List<String> fileUrl = null;
         String question = data.getMessages().get(data.getMessages().size() - 1).getContent();
         StringBuilder agent_scratch = new StringBuilder();
-        String user_msg = "决定用哪个工具。 当出现以下情况请直接调用完成工具并参考返回 {\"name\":\"finish\", \"args\":{\"result\":\"抱歉， 由于xx原因我无法回答相应问题\"}}: 1.如果所有工具直接完成目标没有帮助\n 2.如果工具调用失败\n ";
+        String user_msg = "你只能完成工具描述相关的目标,对于工具描述无关的目标,请直接认为任务完成且“不”给出任何解答建议。 如果工具调用失败也请直接完成告知调用失败。";
         String assistant_msg = "";
         List<List<String>> history = new ArrayList<>();
         Set<String> toolNames = toolInfoList.stream().map(ToolInfo::getName).collect(Collectors.toSet());
