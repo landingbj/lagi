@@ -398,9 +398,37 @@ let promptNavs = [
                 "agentId": "deepseek_chat",
                 "title": "深度问答",
                 "templateIssues": "你好啊？"
+            },
+            {
+                "id": -50,
+                "agentId": "trademark_info",
+                "title": "商标查询",
+                "templateIssues": "帮我查询商标 '哇哈哈' 的信息"
+            },
+            {
+                "id": -51,
+                "agentId": "movie_box_office",
+                "title": "票房榜单",
+                "templateIssues": "当前票房榜单如何？"
+            },
+            {
+                "id": -52,
+                "agentId": "historical_figure_info",
+                "title": "历史人物",
+                "templateIssues": "帮我查询曹操的详细信息"
+            },
+            {
+                "id": -53,
+                "agentId": "daily_rumor_refutation",
+                "title": "辟谣前线",
+                "templateIssues": "帮我查看今天的辟谣新闻"
+            },
+            {
+                "id": -54,
+                "agentId": "google_translate",
+                "title": "谷歌翻译",
+                "templateIssues": "帮我把HelloWorld翻译成中文"
             }
-
-
         ]
     },
     {
