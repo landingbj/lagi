@@ -41,11 +41,11 @@ function addOneChat(questionObj) {
     </div>
 </div>
 </div>
-<div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
-    <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
-        <div class="w-[30px] flex flex-col relative items-end">
-            <div class="relative h-[30px] w-[30px] p-1 rounded-sm text-white flex items-center justify-center" style="background-color: rgb(255, 255, 255);">
-                <img src ="../images/Small_logo.png" style = "width:30px;heigh:30px" alt = "logo"/>
+<div class="robot-return w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
+    <div class="text-area text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
+        <div class="w-[34px] flex flex-col relative items-end">
+            <div class="relative h-[34px] w-[34px] p-1 rounded-sm text-white flex items-center justify-center" style="">
+                <img src ="../images/Small_logo.png" style = "width:100;height:100% !important; object-fit: cover;" alt = "logo"/>
             </div>
         </div>
         <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
@@ -72,6 +72,7 @@ function addOneChat(questionObj) {
 </div>
     `;
     $('#chatFoot').before(chatHtml);
+    replaceConversationAttached();
     return  $($(' .markdown')[$('.markdown').length - 1]);
 }
 

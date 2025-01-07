@@ -1,6 +1,8 @@
 package ai.workflow.mapper;
 
 import ai.agent.Agent;
+import ai.agent.proxy.LlmProxyAgent;
+import ai.agent.proxy.ProxyAgent;
 import ai.common.utils.ThreadPoolManager;
 import ai.learn.questionAnswer.KShingle;
 import ai.llm.pojo.ChatCompletionResultWithSource;
@@ -119,6 +121,9 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
                 Double scoring = 0.0;
                 if(agentIntentScore == null) {
                     scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+                    if(agent instanceof LlmProxyAgent) {
+                        scoring = Math.max(scoring, 1.0);
+                    }
                     skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
                 } else {
                     scoring = agentIntentScore.getScore();

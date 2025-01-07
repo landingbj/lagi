@@ -32,11 +32,11 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
         </div>
         `;
     let part1 = `
-<div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
-    <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
-        <div class="w-[30px] flex flex-col relative items-end">
-            <div class="relative h-[30px] w-[30px] p-1 rounded-sm text-white flex items-center justify-center" style="background-color: rgb(255, 255, 255);">
-                <img src ="images/rj.png" style = "width:30px;heigh:30px" alt = "logo"/>
+<div class="robot-return w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
+    <div class="text-area  text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
+        <div class="w-[34px] flex flex-col relative items-end">
+            <div class="relative h-[34px] w-[34px] p-1 rounded-sm text-white flex items-center justify-center" style="">
+                <img src ="images/Small_logo.png" style = "width:100%;height:100% !important;object-fit: cover;" alt = "logo"/>
             </div>
         </div>
         <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
@@ -47,7 +47,7 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
                     </div>
                 </div>
             </div>
-            <div class="flex justify-between idx">
+            <div class="conv-attached flex justify-between idx">
                 <div class=" appendVoice text-gray-400 flex self-end lg:self-center justify-center mt-2 gap-3 md:gap-4 lg:gap-1 lg:absolute lg:top-0 lg:translate-x-full lg:right-0 lg:mt-0 lg:pl-2 visible">
                     <button class="p-1 rounded-md hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 disabled:dark:hover:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4">
                          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3">
@@ -99,6 +99,7 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
     }
     let chatHtml = questionDiv + answerDiv;
     $('#item-content').append(chatHtml);
+    replaceConversationAttached();
     $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
     return $($(' .markdown')[$('.markdown').length - 1]);
 }
@@ -156,11 +157,11 @@ function addUserDialog(userQuestion) {
 
 function addRobotDialog(robotAnswer) {
     let chatHtml = `
-    <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
-        <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
-            <div class="w-[30px] flex flex-col relative items-end">
-                <div class="relative h-[30px] w-[30px] p-1 rounded-sm text-white flex items-center justify-center" style="background-color: rgb(255, 255, 255);">
-                    <img src ="images/rj.png" style = "width:30px;heigh:30px" alt = "logo"/>
+    <div class="robot-return w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
+        <div class="text-area text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
+            <div class="w-[34px] flex flex-col relative items-end">
+                <div class="relative h-[34px] w-[34px] p-1 rounded-sm text-white flex items-center justify-center" style="">
+                    <img src ="images/Small_logo.png" style = "width:100%;height:100% !important;object-fit: cover;" alt = "logo"/>
                 </div>
             </div>
             <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
@@ -180,6 +181,7 @@ function addRobotDialog(robotAnswer) {
     `;
     $('#item-content').append(chatHtml);
     $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
+    replaceConversationAttached();
     return $($(' .markdown')[$('.markdown').length - 1]);
 }
 

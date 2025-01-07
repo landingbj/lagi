@@ -5,7 +5,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-  <title>chatai</title>
+  <title>不倒翁</title>
   <meta name="next-head-count" content="3">
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="icon" type="image/png" sizes="32x32" href="images/rj.png">
@@ -27,6 +27,7 @@
 
 
 <body class="antialiased">
+  
 <div id="pdfMask" class="pdf-mask">
   <div class="pdf-box">
     <img src="" style="width: 100%; height: auto"/>
@@ -55,6 +56,11 @@
     }
   }()</script>
   <div class="overflow-hidden w-full h-full relative flex z-0">
+
+    <div id="alert-box" class="absolute w-full h-full  left-0 top-0 z-50 hidden" style="background-color: rgba(0, 0, 0, 0.5);">
+    </div>
+    <div id="confirm-box" class="absolute w-full h-full  left-0 top-0 z-50 hidden" style="background-color: rgba(0, 0, 0, 0.5);">
+    </div>
     <!-- 左边导航条 -->
     <!-- scrollbar-trigger flex h-full w-full flex-1 items-start border-white/20 -->
     <!-- dark hidden bg-gray-900 md:fixed md:inset-y-0 md:flex md:w-[260px] md:flex-col -->
@@ -203,11 +209,12 @@
         </div>
       </div>
     </div>
+
     <!-- 左边导航条 -->
     <div class="relative flex h-full max-w-full flex-1 overflow-hidden">
       <div class="flex h-full max-w-full flex-1 flex-col">
         <!-- 上部导航条 -->
-        <div class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden "
+        <div id="top-nav" class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden "
              style="background-color: #023f63;">
           <div>
             <button type="button" onclick="toggleUserMenu()"
@@ -242,8 +249,6 @@
         <!-- *************************************************主要结构********************************* -->
         <main class="relative h-full w-full transition-width overflow-hidden flex-1">
           <div  class="w-full h-full absolute">
-            <div id="alert-box" class="w-full h-full relative left-0 top-0 z-50 hidden" style="background-color: rgba(0, 0, 0, 0.5);">
-            </div>
           </div>
           <div>
             <div id="model-prefences" class="w-full h-16 pl-10">
@@ -277,15 +282,7 @@
                 <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu h-full">
                   <div class="flex flex-col text-sm dark:bg-gray-800 h-full">
                     <div class="flex h-full flex-col items-center justify-between">
-                      <div id="modelChoices"
-                           class="px-2 w-full flex flex-col py-2 md:py-6 sticky top-0">
-                        <div class="relative flex flex-col items-stretch justify-center gap-2 sm:items-center">
-                          <div class="relative flex rounded-xl bg-gray-100 p-1 text-gray-900 dark:bg-gray-900">
-                            <ul class="flex w-full list-none gap-1 sm:w-auto">
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
+
                       <!-- 我的发布列表开始 -->
                       <div class="agent-list-container" class="w-full" id="agent-list-container">
 
@@ -340,43 +337,21 @@
                       <!-- 我的订阅列表结束 -->
 
                       <div id="item-content" class="w-full" style="overflow: auto;">
-                        <div id="topTitle" class="align-center flex w-full flex-col justify-center self-center px-2 pb-2 md:pb-[4vh]">
+                        <div id="topTitle" class="relative align-center flex w-full md:flex-col justify-center self-center ">
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
-                            仅限邀请内测
+                            内容由AI协助
                           </div>
-                          <div id="centerTitleBox" style="margin-top: 1rem; margin-left: auto; margin-right: auto; width: 18rem; height: 80rem; ">
-                            <div class="top-title-box" style="position: relative; height: 2rem;  width: 100%; font-size: 1rem;">
-                              <div style="color: black; width: 1rem; margin-left: calc(70% - 3rem); font-weight: bold; font-family: 'fangsong', SimSun, serif;">问</div>
-                            </div>
-                            <div class="mid-title-box" style="width: 80%;  height:  4rem;  margin-left: auto; margin-right: auto;">
-                              <div style="display: flex; height: 4rem;">
-                                <h1 id="systemName"
-                                    style="color: #838383; width: calc(100% - 4rem)">
-                                  <span></span>
-                                </h1>
-                                <img style="width: 4rem;  height: calc(100%-0.5rem);" src="images/bdw.png">
-                              </div>
-                            </div>
-                            <div class="foot-title-box" style="font-weight: bold; color: #838383;position: relative;display: flex; width: 80%; font-size: 1.0rem; margin-left: auto; margin-right: auto;">
-                              <!--                              不倒翁-->
-                              <div style="width: 70%; display: flex; ">
-                                <div style="width: 60%; padding-left: 5px">不</div>
-                                <div style="width: 40%;">倒</div>
-                              </div>
-                              <div style="width: 30%;height: 1rem;" class="text-center">
-                                翁
-                              </div>
-                            </div>
+                          <div id="centerTitleBox" class=""  style="margin-left: auto; margin-right: auto;">
+                            <canvas id = "title-canvas"  style="width: 300px; height: 120px; margin-top: 10px;"></canvas>
                           </div>
-
                         </div>
                         <div id="ball-div">
                         </div>
                         <!-- ***********************输入框前form******************************** -->
-                        <div id="introduces">
-                          <div class="h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center">
+                        <div id="introduces" class="relative">
+                          <div class="h-full flex ml-1  gap-0 md:gap-2 justify-center">
                             <div class="grow">
-                              <div class="absolute  left-0 mb-4 flex w-full grow gap-2 px-1 pb-1 sm:px-2 sm:pb-0 md:static md:mb-0 md:max-w-none">
+                              <div class="absolute left-0 mb-4 flex w-full grow gap-2 px-1 pb-1 sm:px-2 sm:pb-0 md:static md:mb-0 md:max-w-none">
                                 <div class="grid w-full grid-flow-row grid-cols-2 gap-3"></div>
                               </div>
                             </div>
@@ -404,8 +379,8 @@
                         <!-- <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto"> -->
                         <ul id="agent-tools" class="pb-2">
                           <li class=" pl-5  not-available " onclick="openAgentModal(event)">发布智能体</li>
-                          <%--                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li>--%>
-                          <%--                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li>--%>
+                          <!--                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li> -->
+                          <!--                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li> -->
                         </ul>
                       </div>
                     </div>
@@ -480,38 +455,40 @@
               </form>
 
               <!-- *********************** 底部******************************** -->
-              <div id="footer-info" class="relative pb-3 pt-2 text-center md:text-xs text-[10px] text-gray-600 dark:text-gray-300 md:px-[60px] md:pb-6 md:pt-3 ">
-                <div class="lg:mx-auto lg:max-w-2xl xl:max-w-3xl" style="max-width: 60rem;">
-                  <a href="http://beian.miit.gov.cn/" target="_blank" style="display:inline-block">京ICP备&nbsp;2020046697号</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                  <img style="width: 20px; height: 20px; display: inline-block;" src="images/beian.png" alt="">
-                  <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802033940" target="_blank" style="display:inline-block">京公网按备号&nbsp;11010802033940</a>
-                  &nbsp;&nbsp;&nbsp;&nbsp; 联系邮箱:
-                  <a href="mailto:service@landingbj.com" style="text-decoration: none;">service@landingbj.com</a>
-                  &nbsp;&nbsp;&nbsp;&nbsp;联系电话: 027-87659116
-                  &nbsp;&nbsp;&nbsp;&nbsp;<div>内容由AI生成&nbsp;一种通用人工智能的实现验证</div>
+              <div id="footer-info" class="relative">
+                <div class="relative pb-3 pt-2 text-center md:text-xs text-[10px] text-gray-600 dark:text-gray-300 md:px-[60px] md:pb-6 md:pt-3" style="max-height: 50px;">
+                  <div class="lg:mx-auto lg:max-w-2xl xl:max-w-3xl" style="max-width: 60rem; max-height: 50px;">
+                    <a href="http://beian.miit.gov.cn/" target="_blank" style="display:inline-block">京ICP备&nbsp;2020046697号</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <img style="width: 20px; height: 20px; display: inline-block;" src="images/beian.png" alt="">
+                    <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802033940" target="_blank" style="display:inline-block">京公网按备号&nbsp;11010802033940</a>
+                    &nbsp;&nbsp;&nbsp;&nbsp; 联系邮箱:
+                    <a href="mailto:service@landingbj.com" style="text-decoration: none;">service@landingbj.com</a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;联系电话: 027-87659116
+                    &nbsp;&nbsp;&nbsp;&nbsp;<div>Powered By <a style="color: rgb(35 142 252);" href="https://github.com/landingbj/lagi">Lag[i]</a>&nbsp;一种通用人工智能的实现验证</div>
+                  </div>
                 </div>
+                
+                <div id="help-button" class="group fixed bottom-5 right-4 z-10 flex flex-row items-center gap-3">
+                  <div class="hidden md:block">
+                    <div class="group relative" data-headlessui-state="">
+                      <button
+                              class="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
+                              id="headlessui-menu-button-:rh:" type="button" aria-haspopup="true"
+                              aria-expanded="false"
+                              data-headlessui-state="">
+                        <div class="h-6 w-6">?</div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+    
               </div>
-
               <!-- *********************** 底部end******************************** -->
             </div>
           </div>
 
-          <!-- ************************************底部 ？ == help *********************************** -->
-          <div id="help-button" class="group fixed bottom-5 right-4 z-10 flex flex-row items-center gap-3">
-            <div class="hidden md:block">
-              <div class="group relative" data-headlessui-state="">
-                <button
-                        class="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
-                        id="headlessui-menu-button-:rh:" type="button" aria-haspopup="true"
-                        aria-expanded="false"
-                        data-headlessui-state="">
-                  <div class="h-6 w-6">?</div>
-                </button>
-              </div>
-            </div>
-          </div>
-          <!-- ************************************底部 help end *********************************** -->
 
+          
         </main>
       </div>
     </div>

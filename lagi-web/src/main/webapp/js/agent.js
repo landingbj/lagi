@@ -222,14 +222,14 @@ function editAgent(agentId) {
 }
 
 // 切换发布状态（POST 请求）
-function togglePublishStatus(agentId, currentPublishStatus) {
+async function togglePublishStatus(agentId, currentPublishStatus) {
     // debugger
     // 获取确认信息
     const action = currentPublishStatus ? "发布" : "取消发布";
     const confirmMessage = `确定要${action}该智能体吗？`;
-
+    const flag = await confirm(confirmMessage);
     // 弹出二次确认框
-    if (window.confirm(confirmMessage)) {
+    if (flag) {
         // 构造请求数据
         const requestData = {
             id: agentId,
@@ -262,8 +262,9 @@ function togglePublishStatus(agentId, currentPublishStatus) {
 
 
 // 删除智能体
-function deleteAgent(agentId) {
-    if (confirm("确定要删除这个智能体吗？")) {
+async function deleteAgent(agentId) {
+    const flag = await confirm('确定要删除这个智能体吗？');
+    if (flag) {
         fetch(`/agent/deleteLagiAgentById`, {
             method: 'POST',
             headers: {
@@ -367,17 +368,21 @@ async function handleSelect(selectedItem, userQuestion) {
             const agentData = await checkSubscription(selectedAgentId);
             if (agentData) {
                 // 如果余额小于零，弹出提示并打开收费框
-                if (agentData.balance < 0) {
-                    alert("余额不足，请充值！");
-                    openRechargeModal(agentName, pricePerReq);
+                if (agentData.balance <= 0) {
+                    let flag =  await confirm('余额不足，请充值！');
+                    if(flag) {
+                        openRechargeModal(agentName, pricePerReq);
+                    }
                 } else {
                     // 使用 await 等待 appointTextQuery 异步调用完成
                     await appointTextQuery(userQuestion, selectedAgentId);
                 }
             } else {
                 // 如果没有订阅该智能体，弹出提示
-                alert(`该智能体 (${agentName}) 需要订阅才能使用！`);
-                openRechargeModal(agentName, pricePerReq);
+                let flag =  await confirm(`该智能体 (${agentName}) 需要订阅才能使用！`);
+                if(flag) {
+                    openRechargeModal(agentName, pricePerReq);
+                }
             }
         }
     } catch (error) {
@@ -480,7 +485,7 @@ function showQrCode(lagiUserId, agentId, fee) {
                     getAgentChargeDetail(res.outTradeNo);
                 }, 1000);
             } else {
-                alert(res.error);
+                alert("获取收款码失败");
             }
         }
     });

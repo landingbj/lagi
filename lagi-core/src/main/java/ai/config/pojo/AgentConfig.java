@@ -29,4 +29,5 @@ public class AgentConfig {
     private Integer reqNum;
     private Integer subscriberNum;
     private Boolean canOutPut;
+    private String describe;
 }

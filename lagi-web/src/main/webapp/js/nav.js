@@ -458,7 +458,7 @@ let promptNavs = [
                 exampleVedioSrc: '../video/twhp.mp4',
                 prompt: '该功能可根据用户提出的问题或需求，以图文并茂的方式为用户提供更加直观、形象和生动的信息和服务，在提高信息传达效果的同时，还能增加用户的阅读体验的，提高人们的工作效率和生活品质。',
                 operation: '在输入框内输入您的需求（如“知识图谱的概念”），并点击右侧Logo发送需求，Lagi将会对您作出响应。',
-                group: 2
+                // group: 2
             }
         ]
     },
@@ -473,7 +473,7 @@ let promptNavs = [
                 exampleVedioSrc: '../video/sjjr.mp4',
                 prompt: '该功能通过接入社交软件，通过RPA和大模型技术自动化社交软件的相关操作。',
                 operation: '在输入框内输入您的需求（机器人、定时器、烽火台、引流涨粉），然后按照提示完成相关操作。',
-                group: 2
+                // group: 2
             }
         ]
     },
@@ -899,7 +899,7 @@ function getPromptDialog(id, e) {
 
     // 更新当前的提示框
     currentPromptDialog = nav;
-
+    console.log("nav", nav)
     // 开始打字效果
     typing(0, answer, answerJq, addRobotDialog, vedioHtml);
 }

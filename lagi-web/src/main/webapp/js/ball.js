@@ -1,6 +1,9 @@
-document.addEventListener('DOMContentLoaded', function () {
+// document.addEventListener('DOMContentLoaded', loadBall);
+
+
+function loadBall() {
     // 检测设备类型：是否为手机
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = window.innerWidth <= 900;
 
     // 根据是否为手机端调整 words 数组的长度
     const words = isMobile ? ["股票助手", "汇率助手", "文心助手", "元器助手", "红书优选",
@@ -259,4 +262,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Expose the highlightWord function to the global scope
     window.highlightWord = highlightWord;
-});
+}

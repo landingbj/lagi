@@ -1,4 +1,4 @@
-let topTile = 'Lag<small>[</small>i<small>]</small>';
+let topTile = 'Lag[i]';
 
 let activeModel = 0;
 
@@ -21,7 +21,7 @@ let agent_tools = [
 ]
 
 function initHelloPage() {
-    initTopTile();
+    
     initModelSlide();
     initIntroduces();
     // initAgentTool();
@@ -195,12 +195,185 @@ function initTopTile() {
 		success : function(res) {
 			if (res.status === 'success') {
 				$('#topTitle h1 span').html(res.data);
+                const a = parseInt($('#title-canvas')[0].style.width);
+                const b = parseInt($('#title-canvas')[0].style.height);
+                drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
 			}
 		},
 		error: function(res) {
-			$('#topTitle h1 span').html(topTile);
+            $('#topTitle h1 span').html(topTile);
+            const a = parseInt($('#title-canvas')[0].style.width);
+            const b = parseInt($('#title-canvas')[0].style.height);
+            console.log(a, b)
+            drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
 		}
 	});
+}
+
+function setupCanvas(canvas) {
+    // 获取设备的像素比
+    const dpr = window.devicePixelRatio || 1;
+
+    // 获取 Canvas 的 CSS 尺寸
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    // 设置 Canvas 的实际尺寸为 CSS 尺寸乘以 DPR
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    // 缩放绘图上下文以适应高分辨率屏幕
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    return ctx;
+}
+
+function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1height = 16, line2height = 64, line3height = 16, text2='Lag[i]') {
+    // 获取 Canvas 元素和上下文
+    // 原始尺寸 = 样式尺寸 * 倍率
+    if(width == 300 && height == 120) {
+        line1height = 16;
+        line2height = 64;
+        line3height = 16;
+    }else if(width == 150 && height == 60) {
+        line1height = 8;
+        line2height = 32;
+        line3height = 8;
+    }
+    const dpr = window.devicePixelRatio || 1;
+
+    const canvas = document.getElementById(canvasId);
+    
+    const rect = canvas.getBoundingClientRect();
+    const rwidth = rect.width;
+    const rheight = rect.height;
+    
+    canvas.width = rwidth * dpr;
+    canvas.height = rheight * dpr;
+    
+    const ctx = canvas.getContext('2d');
+    // const line1height = 16;
+    // const line2height = 64;
+    // const line3height = 16;
+
+
+    // 定义文本内容
+    const text1 = '问';
+    // const text2 = 'Lag[i]';
+    const text3 = '不倒翁';
+
+    line1height = line1height * dpr;
+    line2height = line2height * dpr;
+    line3height = line3height * dpr;    
+
+    // 定义颜色和字体大小
+    const fontSize1 = line1height + 'px';
+    const fontSize2 = line2height + 'px';
+    const fontSize3 = line3height + 'px';
+
+    const row1Top = line1height;
+    const row2Top = line1height + line2height * 0.85;
+    const row3Top = row2Top + line3height * 2;
+
+    const color1 = '#000000'; // 黑色
+    const color2 = '#808080'; // 灰色
+    const color3 = '#808080'; // 灰色
+
+    // 设置基准字体，以便 rem 单位能够正确计算
+    // 这里假设基准字体大小为 16px
+    const baseFontSize = 16;
+    ctx.font = `italic ${fontSize1} sans-serif`;
+
+    // 测量第一行文本的宽度
+    const text1Width = ctx.measureText(text1).width;
+
+    // 设置第二行字体和颜色
+    ctx.font = `bold ${fontSize2} sans-serif`;
+    ctx.fillStyle = color2;
+
+    // 测量第二行文本的宽度
+    const text2Width = ctx.measureText(text2).width;
+
+    // 加载 Logo 图片
+    const logo = new Image();
+    logo.src = 'images/bdw.png'; // 请将此处替换为您的 Logo 图片路径
+
+    logo.onload = () => {
+        // 计算 Logo 图片的宽度与字体大小相同
+        const logoWidth = parseInt(fontSize2) * 3 / 5;
+        const logoHeight = parseInt(fontSize2) * 3 / 4; // 保持比例
+
+        // 计算第二行总宽度（文本 + Logo）
+        const totalWidth = text2Width + logoWidth;
+
+        // 计算起始 X 坐标，使内容居中
+        const startX = (canvas.width - totalWidth) / 2;
+
+        let startXLogo =  startX + text2Width;
+        // 绘制第二行文本
+        // ctx.fillText(text2, startX, row2Top); // 调整 Y 坐标以适应字体大小
+        startXLogo = startX + reduceSpecialSymbol(ctx, startX, row2Top, text2, line2height, color2);
+        // 绘制 Logo 图片
+        ctx.drawImage(logo, startXLogo, row1Top  + (logoHeight *2 / 7) , logoWidth, logoHeight); // 调整 Y 坐标以对齐
+
+        // 设置第三行字体和颜色
+        ctx.font = `${fontSize3} sans-serif`;
+        ctx.fillStyle = color3;
+
+        // 绘制第三行文本
+        // ctx.fillText(text3, text3StartX,  row3Top); // 调整 Y 坐标以适应字体大小
+        tiling(ctx, startX, row3Top,  text2Width + logoWidth, text3)
+        // 绘制第一行文本
+        ctx.font = `${fontSize1} sans-serif`;
+        ctx.fillStyle = color1;
+
+        const text1StartX = (canvas.width - text1Width) / 2;
+        ctx.font = `bold italic ${fontSize1} sans-serif`;
+        ctx.fillText(text1, startXLogo - line1height * 2.2, row1Top); // 调整 Y 坐标以适应字体大小
+        // const dpr = window.devicePixelRatio || 1;
+        // ctx.scale( 1, 1);
+    };
+
+    logo.onerror = () => {
+        console.error('无法加载 Logo 图片');
+    };
+}
+
+function reduceSpecialSymbol(ctx, startX, startY, text, fontSize, color) {
+    // let size = [];
+    let texts = [];
+    let start = 0;
+
+    for (let i = 0; i < text.length; i++) {
+        if(text[i] == '[' || text[i] == ']') {
+            let a = text.slice(start, i);
+            texts.push(a);
+            texts.push(text[i]);
+            start = i + 1;
+        }
+    }
+    let startXX = startX;
+    let width = 0;
+    ctx.fillStyle = color;
+    for (let i = 0; i < texts.length; i++) {
+        let size = texts[i] == '[' || texts[i] == ']' ? (fontSize * 3 / 4) : fontSize;
+        ctx.font = `bold ${size + 'px'} sans-serif`;
+        ctx.fillText(texts[i], startXX, startY);
+        startXX += ctx.measureText(texts[i]).width;
+        width += ctx.measureText(texts[i]).width;
+    }
+    return width;
+    // ctx.fillText(text, startX, startY); // 调整 Y 坐标以适应字体大小
+}
+
+function tiling(ctx, startX, startY, width, text) {
+    const textWidth = ctx.measureText(text).width / 2;
+    const remainingSpace = Math.floor(width / text.length);
+    for (let i = 0; i < text.length; i++) {
+        ctx.fillText(text[i], startX  + (i * remainingSpace) + textWidth, startY);
+    }
 }
 
 
@@ -234,3 +407,140 @@ function socialCircles() {
 function notifyAvailable() {
     // alert('功能不可用');
 }
+
+
+
+
+
+// 定义一个函数来设置 div 的大小
+function setDivSize() {
+    replaceConversationAttached();
+    // 获取 div 元素
+    const itemContent = document.getElementById('item-content');
+    const no_content = document.getElementById('not-content');
+    const intro = document.getElementById('introduces');
+    // todo margin-top + 1个字符大小
+    const title = document.getElementById('title-canvas');
+    const titleBox = document.getElementById('topTitle');
+    const ball = document.getElementById('ball-div');
+    const left_nav_bar = document.getElementById('navigation_bar');
+    // const top_nav_bar = document.getElementById('top-nav');
+    
+    // 获取当前窗口的宽度和高度
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+
+    const item_widht= windowWidth - left_nav_bar.offsetWidth;
+    // ball
+    // let ballRadius = Math.min(windowWidth * 0.8, 512); 
+    const intro_h =  intro.offsetHeight;
+    let title_h =  titleBox.offsetHeight;
+    const content_h =  itemContent.offsetHeight;
+    // let top_nav_h =  top_nav_bar.offsetHeight;
+
+    const computedStyle = window.getComputedStyle(ball);
+    const ball_m_t =  parseInt(computedStyle.marginTop);
+    let ball_m_b =  parseInt(computedStyle.marginBottom);
+    // console.log(top_nav_h, ball_m_b)
+    // radius 最大 512
+    // top_nav_h =  20;
+    let d1 =  Math.min(windowWidth * 0.8, 512) ;
+    let d2 = content_h - intro_h - title_h  - ball_m_t - ball_m_b;
+    
+    if(d2 < 100) {
+        // title / 2
+        title.style.height = '60px';
+        title.style.width = '150px';
+        title.width = 150;
+        title.height = 60;
+        titleBox.style.height = '70px';
+        title_h =  titleBox.offsetHeight;
+    } else {
+        title.style.height = '120px';
+        title.style.width = '300px';
+        title.width = 300;
+        title.height = 120;
+        titleBox.style.height = '130px';
+        title_h =  titleBox.offsetHeight;
+        // alert(title_h);
+    }
+    let temp = content_h - intro_h - title_h  - ball_m_t;
+    let margin = 20;
+    d2 = temp - margin;
+    if (d2 > d1) {
+        d2 = d1;
+        margin = temp - d2;
+    }
+    document.documentElement.style.setProperty('--ball-m-bottom', margin + 'px');
+    ball_m_b = parseInt(computedStyle.marginBottom);
+
+    // d2 = content_h - intro_h - title_h  - ball_m_t - ball_m_b;
+    let ball_d = 0;
+    // alert([d2, content_h , intro_h , title_h , ball_m_t , ball_m_b].join(","));
+    
+    if(d2 < 0) {
+        ball_d = 0;
+    } else {
+        ball_d = d2;
+    }
+
+    ball_d -= 10;
+    console.log("ball_d", ball_d);
+    ball.style.width = ball_d + 'px';
+    ball.style.height = ball_d + 'px';
+    ball.style.marginLeft = (item_widht - ball_d) / 2  + 12+ 'px';
+
+    // alert(content_h  - title_h - intro_h -ball_m_t - ball_m_b - ball_d);
+    initTopTile();
+
+}
+
+
+function replaceConversationAttached() {
+    if($('.robot-return').length > 0) {
+        console.log("replaceConversationAttached");
+        let text_width =  $('.text-area')[0].offsetWidth;
+        let robot_width =  $('.robot-return')[0].offsetWidth;
+        let convs_width = 0;
+        for(let i = 0; i < $('.conv-attached').length; i ++) {
+            let dom = $('.conv-attached')[i];
+            convs_width = $('.conv-attached')[i].offsetWidth;
+            if(robot_width >= text_width + convs_width) {
+                dom.classList.remove('justify-end');
+                dom.classList.add('justify-between');
+                $(dom).find('.appendVoice')[0].classList.add( "self-end", "lg:self-center", "justify-center", "mt-2", "gap-3", "md:gap-4", "lg:gap-1", "lg:absolute", "lg:top-0", "lg:translate-x-full", "lg:right-0", "lg:mt-0", "lg:pl-2", "visible");
+            } else {
+                dom.classList.remove('justify-between');
+                dom.classList.add('justify-end');
+                $(dom).find('.appendVoice')[0].classList.remove( "self-end", "lg:self-center", "justify-center", "mt-2", "gap-3", "md:gap-4", "lg:gap-1", "lg:absolute", "lg:top-0", "lg:translate-x-full", "lg:right-0", "lg:mt-0", "lg:pl-2", "visible");
+            }
+        }
+    }
+    
+    // let convs =  $('.conv-attached');
+}
+
+function debounce(func, delay) {
+    let timeout;
+    return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
+// 页面加载时设置一次大小
+window.addEventListener('load', function(){
+    setDivSize();
+    loadBall();
+});
+
+const debouncedHandleResize = function() {
+    // setDivSize();
+    debounce(setDivSize, 50)();
+};
+
+// 监听窗口大小变化事件，并重新设置 div 的大小
+window.addEventListener('resize', debouncedHandleResize);

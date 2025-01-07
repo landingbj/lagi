@@ -10,6 +10,7 @@ public class Prompt {
 
     private static final List<String> constraints = Lists.newArrayList(
             "仅使用下面列出的动作",
+            "仅完成动作能处理范围内的目标避免资源浪费",
             "你只能主动行动，在计划行动时需要考虑到这一点",
             "你无法与物理对象交互，如果对于完成任务或目标尼绝对必要的，则必须要求用户为你完成，如果用户拒绝，并且没有其他方法实现目标。则直接终止，避免浪费时问和精力。"
     );
@@ -17,7 +18,7 @@ public class Prompt {
     private static final List<String> resurces = Lists.newArrayList(
             "提供搜索和信息收集的互联网接入",
             "读取和写入文件的能力",
-            "你是一个大语言模型，接受了大最文本的训练。包括大最的事实知识。利用这些知识来避免不必要的信息收集"
+            "你是一个大语言模型，接受了大量文本的训练。包括大量的事实知识。利用这些知识来避免不必要的信息收集"
     );
 
     private static final List<String> best_practices = Lists.newArrayList(
@@ -75,11 +76,6 @@ public class Prompt {
                 "  }\n" +
                 "}";
         return StrUtil.format(template, query, con, tools, res, best, agent_scratch, json);
-    }
-
-    public static void main(String[] args) {
-        String s = genPrompt("", "我要去武汉",  "");
-        System.out.println(s);
     }
 
 }

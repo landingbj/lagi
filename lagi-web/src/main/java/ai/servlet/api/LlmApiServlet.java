@@ -109,25 +109,29 @@ public class LlmApiServlet extends BaseServlet {
             BigDecimal pricePerReq = agentConfig.getPricePerReq();
             return  balance.doubleValue() >= pricePerReq.doubleValue();
         }));
+        ChatCompletionResult work = null;
         if(lLmRequest.getAgentId() == null) {
             LagiAgentListResponse lagiAgentList = agentService.getLagiAgentList(null, 1, 1000, "true");
-            agents = convert2AgentList(lagiAgentList.getData(), haveABalance);
+            List<AgentConfig> agentConfigs = lagiAgentList.getData();
+            agents = convert2AgentList(agentConfigs, haveABalance);
+            work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
+            deductExpense(work, lLmRequest, agentConfigs);
         } else {
             LagiAgentResponse lagiAgent = agentService.getLagiAgent(null, String.valueOf(lLmRequest.getAgentId()));
-            agents = convert2AgentList(Lists.newArrayList(lagiAgent.getData()), haveABalance);
-        }
-        ChatCompletionResult work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
-        if(work instanceof ChatCompletionResultWithSource) {
-            Integer sourceId = ((ChatCompletionResultWithSource) work).getSourceId();
-            String source = ((ChatCompletionResultWithSource) work).getSource();
-            Boolean b = haveABalance.getOrDefault(sourceId, false);
-            if(b) {
-                boolean b1 = deductExpense(sourceId, lLmRequest.getUserId());
-                if(!b1 &&!Objects.equals(lLmRequest.getAgentId(), sourceId)) {
-                    String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", source, source);
-                    responsePrint(resp, toJson(format));
-                    return;
+            List<AgentConfig> agentConfigs = Lists.newArrayList(lagiAgent.getData());
+            agents = convert2AgentList(agentConfigs, haveABalance);
+            agents = agents.stream().filter(agent -> {
+                if(Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired())) {
+                    return haveABalance.get(agent.getAgentConfig().getId());
                 }
+                return true;
+            }).collect(Collectors.toList());
+            if(!agents.isEmpty()) {
+                work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
+                deductExpense(work, lLmRequest, agentConfigs);
+            } else {
+                String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", lagiAgent.getData().getName(), lagiAgent.getData().getName());
+                work = gson.fromJson(format, ChatCompletionResultWithSource.class);
             }
         }
         if(work == null) {
@@ -141,19 +145,31 @@ public class LlmApiServlet extends BaseServlet {
         convert2streamAndOutput(firstAnswer, resp, work);
     }
 
-    private boolean deductExpense(Integer agentId, String userId){
+    private void deductExpense(ChatCompletionResult work, LLmRequest lLmRequest, List<AgentConfig> agentConfigs) {
+        if(work == null) {
+            return;
+        }
+        if(work instanceof ChatCompletionResultWithSource) {
+            Map<Integer, Boolean> feedMap = agentConfigs.stream().collect(Collectors.toMap(AgentConfig::getId, AgentConfig::getIsFeeRequired));
+            Integer sourceId = ((ChatCompletionResultWithSource) work).getSourceId();
+            if(feedMap.containsKey(sourceId) && feedMap.get(sourceId)) {
+                deductExpense(sourceId, lLmRequest.getUserId());
+            }
+        }
+    }
+
+    private void deductExpense(Integer agentId, String userId){
         DeductExpensesRequest deductExpensesRequest = new DeductExpensesRequest();
         deductExpensesRequest.setAgentId(agentId);
         deductExpensesRequest.setUserId(userId);
         try {
             Response response = agentService.deductExpenses(deductExpensesRequest);
             if("success".equals(response.getStatus())) {
-                return true;
+                logger.info("user {} agent {} deductExpense success", userId, agentId);
             }
         } catch (Exception e) {
             logger.error("deductExpense error", e);
         }
-        return false;
     }
 
     private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs, Map<Integer, Boolean> haveABalance) {
