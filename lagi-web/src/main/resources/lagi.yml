@@ -656,6 +656,37 @@ agents:
     name: meaning_search
     driver: ai.agent.customer.MeaningSearchAgent
     app_id: meaning_search
+  # Agent for DeepSeekChat, providing intelligent Q&A through the DeepSeekChat API.
+  - id: -49
+    name: deepseek_chat
+    driver: ai.agent.customer.DeepSeekChatAgent
+    token: your-token
+    app_id: deepseek_chat_agent
+  # Agent for trademark keyword information query, including registration info, application date, agent, status, etc.
+  - id: -50
+    name: trademark_info
+    driver: ai.agent.customer.TrademarkInfoAgent
+    app_id: trademark_info
+  # Agent for movie box office, showing the real-time box office data.
+  - id: -51
+    name: movie_box_office
+    driver: ai.agent.customer.MovieBoxOfficeAgent
+    app_id: movie_box_office
+  # Agent for historical figure information retrieval, providing details of historical figures.
+  - id: -52
+    name: historical_figure_info
+    driver: ai.agent.customer.HistoricalFigureInfoAgent
+    app_id: historical_figure_info
+  # Agent for daily rumor refutation content, helping users access the latest rumors debunked.
+  - id: -53
+    name: daily_rumor_refutation
+    driver: ai.agent.customer.DailyRumorRefutationAgent
+    app_id: daily_rumor_refutation
+  # Agent for Google Translate, enabling users to translate text between English and Chinese.
+  - id: -54
+    name: google_translate
+    driver: ai.agent.customer.GoogleTranslateAgent
+    app_id: google_translate
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
