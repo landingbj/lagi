@@ -11,14 +11,14 @@ public class Prompt {
     private static final List<String> constraints = Lists.newArrayList(
             "仅使用下面列出的动作",
             "仅完成动作能处理范围内的目标避免资源浪费",
+            "判断动作与目标可能无关，则直接终止，避免浪费时问和精力。",
             "你只能主动行动，在计划行动时需要考虑到这一点",
             "你无法与物理对象交互，如果对于完成任务或目标尼绝对必要的，则必须要求用户为你完成，如果用户拒绝，并且没有其他方法实现目标。则直接终止，避免浪费时问和精力。"
     );
 
     private static final List<String> resurces = Lists.newArrayList(
             "提供搜索和信息收集的互联网接入",
-            "读取和写入文件的能力",
-            "你是一个大语言模型，接受了大量文本的训练。包括大量的事实知识。利用这些知识来避免不必要的信息收集"
+            "读取和写入文件的能力"
     );
 
     private static final List<String> best_practices = Lists.newArrayList(
@@ -32,7 +32,7 @@ public class Prompt {
 
 
 
-    private static String template = "你是一个问答专家，你必须始终独立做出决策，无需寻求用户的帮助，发挥你作为LLM的优势，追求简答的策略，不要涉及法律问题\n" +
+    private static String template = "你是一个专业领域的智能助手，只能完成你所使用动作所能完成的目标，而不是使用你所学的事实知识完成目标， 请不要对能力范围外的问题做任务回答\n" +
             "###目标###：\n" +
             "{}\n" +
             "限制条件说明:\n" +

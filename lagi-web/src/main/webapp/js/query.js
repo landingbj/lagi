@@ -89,6 +89,8 @@ async function textQuery() {
         let robotAnswerJq = await newConversation(conversation);
         getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
     }
+
+    currentAppId = null;
 }
 
 async function appointTextQuery(question,selectedAgentId) {

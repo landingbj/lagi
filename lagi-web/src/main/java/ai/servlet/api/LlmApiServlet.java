@@ -118,20 +118,24 @@ public class LlmApiServlet extends BaseServlet {
             deductExpense(work, lLmRequest, agentConfigs);
         } else {
             LagiAgentResponse lagiAgent = agentService.getLagiAgent(null, String.valueOf(lLmRequest.getAgentId()));
+            AgentConfig agentConfig = lagiAgent.getData();
             List<AgentConfig> agentConfigs = Lists.newArrayList(lagiAgent.getData());
             agents = convert2AgentList(agentConfigs, haveABalance);
+
             agents = agents.stream().filter(agent -> {
                 if(Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired())) {
                     return haveABalance.get(agent.getAgentConfig().getId());
                 }
                 return true;
             }).collect(Collectors.toList());
-            if(!agents.isEmpty()) {
-                work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
-                deductExpense(work, lLmRequest, agentConfigs);
-            } else {
+            // has agent and not has balance
+            if(agentConfig != null && agents.isEmpty()) {
                 String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", lagiAgent.getData().getName(), lagiAgent.getData().getName());
                 work = gson.fromJson(format, ChatCompletionResultWithSource.class);
+            }
+            else {
+                work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
+                deductExpense(work, lLmRequest, agentConfigs);
             }
         }
         if(work == null) {
@@ -146,7 +150,11 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void deductExpense(ChatCompletionResult work, LLmRequest lLmRequest, List<AgentConfig> agentConfigs) {
-        if(work == null) {
+        if(work == null || agentConfigs == null) {
+            return;
+        }
+        agentConfigs = agentConfigs.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if(agentConfigs.isEmpty()) {
             return;
         }
         if(work instanceof ChatCompletionResultWithSource) {
@@ -175,6 +183,9 @@ public class LlmApiServlet extends BaseServlet {
     private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs, Map<Integer, Boolean> haveABalance) {
         Map<String, Constructor<?>> agentMap = new HashMap<>();
         return agentConfigs.stream().map(agentConfig -> {
+            if(agentConfig == null) {
+                return null;
+            }
             String driver = agentConfig.getDriver();
             Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
             agentConfig.setCanOutPut(haveABalance.getOrDefault(agentConfig.getId(), false));

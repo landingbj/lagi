@@ -862,7 +862,7 @@ function getPromptDialog(id, e) {
         return;
     }
 
-    // currentAppId = nav.agentId;
+    currentAppId = nav.id;
 
 
     if (!(nav.prompt && nav.operation)) {

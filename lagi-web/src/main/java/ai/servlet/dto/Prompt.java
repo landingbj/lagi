@@ -20,7 +20,8 @@ public class Prompt implements Serializable{
 	
 	private String content;
 
-	private String agentId;
+	private String agentName;
 
+	private Integer agentId;
 	
 }
