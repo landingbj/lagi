@@ -225,16 +225,11 @@ public class EasyExcelUtil {
         List<FileChunkResponse.Document> result = new ArrayList<>();
         for (Page<T> page : pages) {
             String text = "";
-//            System.out.println("Page " + page.getPageIndex() + " (Size: " + page.getPageSize() + ")");
             List<Object> header1 = (List<Object>) header.get(0);
-            // 打印表头
-//            System.out.println("表头: " + header1.get(0));
             text = "表头: " + header1.get(0)+"/n";
             for (T item : page.getItems()) {
                 text+=item+"/n";
-//                System.out.println("["+item+"]");
             }
-//            System.out.println("-----");
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
             doc.setText(text);
             result.add(doc);
