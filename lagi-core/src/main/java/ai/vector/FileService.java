@@ -1,13 +1,15 @@
 package ai.vector;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ai.common.pojo.FileChunkResponse;
 import ai.ocr.OcrService;
@@ -19,9 +21,6 @@ import ai.utils.LagiGlobal;
 import ai.utils.pdf.PdfUtil;
 import ai.utils.word.WordUtils;
 import com.google.gson.Gson;
-import com.ibm.icu.text.CharsetDetector;
-import com.ibm.icu.text.CharsetMatch;
-import org.apache.commons.io.IOUtils;
 
 public class FileService {
     private static final String EXTRACT_CONTENT_URL = AiGlobal.SAAS_URL + "/saas/extractContentWithImage";
@@ -110,13 +109,15 @@ public class FileService {
         switch (extString.toLowerCase()) {
             case ".doc":
             case ".docx":
-                content = WordUtils.getContentsByWord(in, extString);
+                content = WordUtils.getContentsByWord(in, extString).replaceAll("[\r\n?|\n]", "");
+                content = content!=null?removeDirectory(content):content;
                 break;
             case ".txt":
-                content = getString(in);
+                content = getString(file.getPath());
                 break;
             case ".pdf":
                 content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
+                content = content!=null?removeDirectory(content):content;
                 break;
             case ".xls":
             case ".xlsx":
@@ -146,24 +147,33 @@ public class FileService {
         in.close();
         return content;
     }
+    public static String removeDirectory(String content) {
+        Pattern pattern = Pattern.compile("目\\s*录|目\\s*次");
+        Matcher matcher = pattern.matcher(content);
+        int startIdx = -1;
+        if (matcher.find()) {
+            startIdx = matcher.start();
+        }
+        Pattern pattern1 = Pattern.compile("前\\s*言");
+        Matcher matcher1 = pattern1.matcher(content);
+        int endIdx = -1;
+        while (matcher1.find()) {
+            endIdx = matcher1.end();
+        }
+        if (startIdx != -1 && endIdx != -1 && endIdx > startIdx) {
+            content = content.substring(0, startIdx) + content.substring(endIdx);
+        }
+        return content;
+    }
 
-    private String getString(InputStream in) {
-        String str = "";
+    public static String getString(String filePath) {
+        StringBuilder content = new StringBuilder();
         try {
-            BufferedInputStream bis = new BufferedInputStream(in);
-            CharsetDetector cd = new CharsetDetector();
-            cd.setText(bis);
-            CharsetMatch cm = cd.detect();
-            if (cm != null) {
-                Reader reader = cm.getReader();
-                str = IOUtils.toString(reader);
-            } else {
-                str = IOUtils.toString(in, StandardCharsets.UTF_8);
-            }
+            content.append(Files.lines(Paths.get(filePath))
+                    .collect(Collectors.joining("\n")));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return str;
+        return content.toString();
     }
 }
