@@ -87,12 +87,13 @@ public class VectorStoreService {
                     System.out.println("是小节类文档");
                     docs = SectionExtractorUtil.getChunkDocument(content, 512);
                 } else {
-
-                    FileChunkResponse response = fileService.extractContent(file);
-                    if (response != null && response.getStatus().equals("success")) {
-                        docs = response.getData();
-                    } else {
-                        docs = fileService.splitChunks(file, 512);
+                    if (WordDocxUtils.checkImagesInWord(file)){
+                        FileChunkResponse response = fileService.extractContent(file);
+                        if (response != null && response.getStatus().equals("success")) {
+                            docs = response.getData();
+                        } else {
+                            docs = fileService.splitChunks(file, 512);
+                        }
                     }
                 }
             }

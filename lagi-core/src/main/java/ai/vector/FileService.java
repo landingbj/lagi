@@ -13,11 +13,8 @@ import java.util.stream.Collectors;
 
 import ai.common.pojo.FileChunkResponse;
 import ai.ocr.OcrService;
-import ai.utils.AiGlobal;
-import ai.utils.EasyExcelUtil;
-import ai.utils.HttpUtil;
+import ai.utils.*;
 
-import ai.utils.LagiGlobal;
 import ai.utils.pdf.PdfUtil;
 import ai.utils.word.WordUtils;
 import com.google.gson.Gson;
@@ -109,14 +106,16 @@ public class FileService {
         switch (extString.toLowerCase()) {
             case ".doc":
             case ".docx":
-                content = WordUtils.getContentsByWord(in, extString).replaceAll("[\r\n?|\n]", "");
-                content = content!=null?removeDirectory(content):content;
+                System.out.println("正在解析word文档,是否包含图片"+WordDocxUtils.checkImagesInWord(file));
+                 content = WordUtils.getContentsByWord(in, extString).replaceAll("\\n+", "\n");;
+                 content = content!=null?removeDirectory(content):content;
                 break;
             case ".txt":
                 content = getString(file.getPath());
                 break;
             case ".pdf":
-                content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
+                //.replaceAll("[\r\n?|\n]", "")
+                content = PdfUtil.webPdfParse(in).replaceAll("\\n+", "\n");
                 content = content!=null?removeDirectory(content):content;
                 break;
             case ".xls":
@@ -147,23 +146,38 @@ public class FileService {
         in.close();
         return content;
     }
+
+
     public static String removeDirectory(String content) {
-        Pattern pattern = Pattern.compile("目\\s*录|目\\s*次");
-        Matcher matcher = pattern.matcher(content);
-        int startIdx = -1;
-        if (matcher.find()) {
-            startIdx = matcher.start();
+        Pattern directoryTitlePattern = Pattern.compile("目\\s*录|目\\s*次", Pattern.CASE_INSENSITIVE);
+        Matcher directoryTitleMatcher = directoryTitlePattern.matcher(content);
+        if (!directoryTitleMatcher.find()) {
+            return content;
         }
-        Pattern pattern1 = Pattern.compile("前\\s*言");
-        Matcher matcher1 = pattern1.matcher(content);
-        int endIdx = -1;
-        while (matcher1.find()) {
-            endIdx = matcher1.end();
+        Integer directoryEndIndex = directoryTitleMatcher.end();
+        Integer jei = directoryEndIndex;
+        Integer directoryStartIndex = directoryEndIndex;
+
+        while (content.length()>= jei) {
+            char ch = content.charAt(directoryStartIndex);
+            while ((content.length()> directoryStartIndex+1)&&ch == '\n'){
+                jei++;
+                directoryStartIndex++;
+                ch = content.charAt(directoryStartIndex);
+            }
+            int nextLineIndex = content.indexOf('\n', directoryStartIndex);
+            if (nextLineIndex == -1) {
+                break;
+            }
+            directoryStartIndex = nextLineIndex;
+            String nextLine = content.substring(jei, nextLineIndex).trim();
+            if (!nextLine.isEmpty()&&!nextLine.matches(".*([IVXLCDM]{1,4}|\\d+)$")){
+                break;
+            }
+            jei = nextLineIndex;
         }
-        if (startIdx != -1 && endIdx != -1 && endIdx > startIdx) {
-            content = content.substring(0, startIdx) + content.substring(endIdx);
-        }
-        return content;
+        String cleanedContent = content.substring(0, directoryEndIndex) + content.substring(jei);
+        return cleanedContent;
     }
 
     public static String getString(String filePath) {
