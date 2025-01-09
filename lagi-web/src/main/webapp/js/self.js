@@ -233,7 +233,7 @@ fileUploadButton.addEventListener("click", function () {
     fileInput.click();
 
     // 监听文件选择事件
-    fileInput.addEventListener("change", function () {
+    fileInput.addEventListener("change", async function () {
         disableQueryBtn();
 
         const selectedFile = fileInput.files[0];
@@ -296,7 +296,7 @@ fileUploadButton.addEventListener("click", function () {
             hideHelloContent();
 
             let conversation1 = {user: {question: question}, robot: {answer: ''}}
-            let robootAnswerJq1 = newConversation(conversation1);
+            let robootAnswerJq1 = await newConversation(conversation1);
 
 
             // 发送 AJAX 请求
@@ -394,31 +394,37 @@ function textQuery1(questionRel, answerRel, fileStatus) {
         return;
     }
     queryLock = true;
-    disableQueryBtn();
-    let question = questionRel;
-    if (isBlank(question)) {
-        alert("请输入有效字符串！！！");
+    try{
+        disableQueryBtn();
+        let question = questionRel;
+        if (isBlank(question)) {
+            alert("请输入有效字符串！！！");
+            $('#queryBox textarea').val('');
+            return;
+        }
+        
+        // 隐藏非对话内容
+        hideHelloContent();
+
+        const markdownElements = document.querySelectorAll(".markdown");
+        var len = markdownElements.length;
+        conversation1 = {user: {question: question}, robot: {answer: answerRel}};
+        $($(".markdown")[len - 1]).html(answerRel);
+
+        answerRel = answerRel.replace(/<[^>]*>/g, "")
+        answerRel = answerRel.replaceAll("分割后的图片：", "")
+        // 增加不需要音频文件的判断
+        if (fileStatus != 'video') {
+            txtTovoice(answerRel, "default");
+        }
+        addConv(conversation1);
         $('#queryBox textarea').val('');
-        return;
+    } catch(error) {
+        console.log("An error occurred: " + error);
+    } finally {
+            queryLock = false;
+            
     }
-
-    // 隐藏非对话内容
-    hideHelloContent();
-
-    const markdownElements = document.querySelectorAll(".markdown");
-    var len = markdownElements.length;
-    conversation1 = {user: {question: question}, robot: {answer: answerRel}};
-    $(".markdown")[len - 1].innerHTML = answerRel;
-
-    answerRel = answerRel.replace(/<[^>]*>/g, "")
-    answerRel = answerRel.replaceAll("分割后的图片：", "")
-    // 增加不需要音频文件的判断
-    if (fileStatus != 'video') {
-        txtTovoice(answerRel, "default");
-    }
-    addConv(conversation1);
-    $('#queryBox textarea').val('');
-    queryLock = false;
 }
 
 

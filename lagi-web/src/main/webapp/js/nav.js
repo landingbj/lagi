@@ -861,8 +861,9 @@ function getPromptDialog(id, e) {
         showHelpButton();
         return;
     }
-
-    currentAppId = nav.id;
+    if(id === 11) {
+        currentAppId = nav.id;
+    }
 
 
     if (!(nav.prompt && nav.operation)) {
@@ -985,12 +986,14 @@ function typing(i, str, jq, callback, ...args) {
             i += 6;
         } else {
             jq.html(str.slice(0, i++) + '<p style="display: inline-block"></p>');
+            $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
         }
         timer = setTimeout(() => {
             typing(i, str, jq, callback, args)
         }, 3)
     } else {
         jq.html(str);//结束打字,移除 _ 光标
+        $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
         clearTimeout(timer);
         callback(args);
 

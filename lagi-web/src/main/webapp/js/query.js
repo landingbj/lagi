@@ -73,6 +73,13 @@ async function textQuery() {
         queryLock = false;
         return;
     }
+
+    try{
+        let highword = getHighWord(question);
+        highlightWord(highword)
+    } catch(error) {
+
+    }
     let agentId = currentAppId;
 
     // 隐藏非对话内容

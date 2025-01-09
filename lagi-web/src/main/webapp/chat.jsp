@@ -251,14 +251,13 @@
           <div  class="w-full h-full absolute">
           </div>
           <div>
-            <div id="model-prefences" class="w-full h-16 pl-10">
-              <div id="model-selects" class="inline-block model-selects  float-left">
+            <div id="model-prefences" class="w-full h-16 pl-10 absolute left-0 top-0 ">
+              <div id="model-selects" class="inline-block model-selects float-left">
               </div>
               <div class="model-btns w-20 flex-1 inline-block">
                 <button id="modelClearBtn" class="inline-block" onclick="clearPreference()">重置所有
                 </button>
                 <button id="modelSaveBtn" class="inline-block" onclick="savePerference()">保存</button>
-                <%--                    <button id = "test" class="inline-block" onclick="matchingAgents()">匹配智能体</button>--%>
               </div>
             </div>
           </div>

@@ -1,5 +1,25 @@
 // document.addEventListener('DOMContentLoaded', loadBall);
 
+var longestCommonSubsequence = function(text1, text2) {
+    const m = text1.length, n = text2.length;
+    const dp = new Array(m + 1).fill(0).map(() => new Array(n + 1).fill(0));
+    for (let i = 1; i <= m; i++) {
+        const c1 = text1[i - 1];
+        for (let j = 1; j <= n; j++) {
+            const c2 = text2[j - 1];
+            if (c1 === c2) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+    return dp[m][n];
+};
+
+window.highlightWordIndex = -1;
+window.stopRotation = false;
+window.maxScale = -1;
 
 function loadBall() {
     // 检测设备类型：是否为手机
@@ -11,8 +31,9 @@ function loadBall() {
         "高铁助手", "历史今日", "有道翻译", "图像生成", "疯狂星期", "ip查询",
         "动漫图片", "今日运势", "搜狗搜图", "头像生成", "百度搜图", "今日金价",
         "段子生成", "美食推荐", "倒数计时", "出行路线", "查询车辆", "姓氏排名",
-        "收益计算", "驾考题库", "血型预测", "Bing搜索", "彩票查询", "文本纠错"] : [
-        "股票助手", "汇率助手", "文心助手", "元器助手", "红书优选",
+        "收益计算", "驾考题库", "血型预测", "Bing搜索", "彩票查询", "文本纠错"]
+         :
+        ["股票助手", "汇率助手", "文心助手", "元器助手", "红书优选",
         "天气助手", "油价助手", "体重指数", "健康饮食", "失信查询",
         "高铁助手", "历史今日", "有道翻译", "图像生成", "疯狂星期", "ip查询",
         "动漫图片", "今日运势", "搜狗搜图", "头像生成", "百度搜图", "今日金价",
@@ -32,6 +53,11 @@ function loadBall() {
         "环保数据", "气候变化", "星座运势", "心理测试", "名人信息"]
     ;
 
+    // const words = isMobile ? ["股票助手", "汇率助手", "文心助手", "元器助手"]
+    //      :
+    //     ["股票助手", "汇率助手", "文心助手", "元器助手"]
+    // ;
+
 
     let radius = 0;
     const dtr = Math.PI / 180;
@@ -47,8 +73,13 @@ function loadBall() {
     let lastMouseX = 0;
     let lastMouseY = 0;
     let shouldRotate = true;  // 控制是否需要自转
-    let stopRotation = false; // 控制是否完全停止旋转
+    // let stopRotation = false; // 控制是否完全停止旋转
     let previousHighlightedIndex = -1; // 记录上次高亮的词索引
+    let copyHighTag=null;
+    let xRotateFinish = false;
+    let yRotateFinish = false;
+
+    // let currentHighlightIndex = -1;
 
     oDiv = document.getElementById('ball-div');
 
@@ -78,19 +109,20 @@ function loadBall() {
     oDiv.addEventListener('mousedown', function (ev) {
         isDragging = true;
         shouldRotate = false;  // 拖动时停止自动旋转
+        window.stopRotation = false;
         lastMouseX = ev.clientX;
         lastMouseY = ev.clientY;
+
     });
 
     document.addEventListener('mousemove', function (ev) {
         if (isDragging) {
             const deltaX = ev.clientX - lastMouseX;
             const deltaY = ev.clientY - lastMouseY;
-
             // 通过拖拽动态调整旋转速度
             lasta += deltaY * 0.01; // Y 方向拖拽影响 X 轴旋转速度
             lastb -= deltaX * 0.01; // X 方向拖拽影响 Y 轴旋转速度
-
+            
             lastMouseX = ev.clientX;
             lastMouseY = ev.clientY;
         }
@@ -98,76 +130,58 @@ function loadBall() {
 
     document.addEventListener('mouseup', function () {
         isDragging = false;
-        if (!stopRotation) shouldRotate = true;  // 鼠标松开时恢复自动旋转
+        lasta = defaultSpeed; // 默认 X 方向旋转速度
+        lastb = defaultSpeed; // 默认 Y 方向旋转速度
+        if (!window.stopRotation) shouldRotate = true;  // 鼠标松开时恢复自动旋转
     });
 
-    function highlightWord(word) {
+    let highlightWord =  function (word) {
         const targetIndex = words.indexOf(word);
         if (targetIndex === -1) return;
 
-        const target = mcList[targetIndex];
 
-        // 如果目标词已经在圆心位置，不需要做任何旋转
-        if (target.cx === 0 && target.cy === 0 && target.cz === radius) {
-            // 高亮目标词，其他词恢复正常
-            mcList.forEach((tag, i) => {
-                if (i === targetIndex) {
-                    aA[i].style.color = '#00bdfe';  // 设置目标词的颜色为蓝色
-                    aA[i].style.fontWeight = 'bold';  // 加粗目标词
-                }
-            });
-            previousHighlightedIndex = targetIndex; // 更新上次高亮的词索引
-            return;
-        }
+        window.highlightWordIndex = targetIndex;
+        window.maxScale = -1;
 
-        // 计算目标词的方向角度，目的是使其对准屏幕圆心
-        const targetAngleX = Math.atan2(target.cy, target.cz);  // 计算目标词的X轴角度
-        const targetAngleY = Math.atan2(target.cx, target.cz);  // 计算目标词的Y轴角度
 
         // 停止自转
         shouldRotate = false;
-        stopRotation = false; // 启动加速旋转逻辑
+        window.stopRotation = false; // 启动加速旋转逻辑
 
-        // 如果有之前高亮的词，清除高亮
+        // 如果有之前高亮的词，清除高亮highlightWordIndex
         if (previousHighlightedIndex !== -1) {
             aA[previousHighlightedIndex].style.color = '';
             aA[previousHighlightedIndex].style.fontWeight = '';
         }
+        
+    }
 
-        // 启动加速旋转
-        const highlightInterval = setInterval(() => {
-            // 通过调整当前的旋转角度向目标角度过渡，使用一个平滑的比例系数 0.1
-            lasta += (targetAngleX - lasta) * 0.1;
-            lastb += (targetAngleY - lastb) * 0.1;
-        }, 30);
-
-        // 2秒后停止旋转并高亮目标词
-        setTimeout(() => {
-            clearInterval(highlightInterval); // 停止加速旋转
-            stopRotation = true; // 停止自转逻辑
-
-            // 高亮目标词，其他词恢复正常
-            mcList.forEach((tag, i) => {
-                if (i === targetIndex) {
-                    aA[i].style.color = '#00bdfe';  // 设置目标词的颜色为蓝色
-                    aA[i].style.fontWeight = 'bold';  // 加粗目标词
-                }
-            });
-
-            // 更新上次高亮的词索引
-            previousHighlightedIndex = targetIndex;
-        }, 3000);  // 延迟 2 秒，旋转完成后高亮词汇
+    let getHighWord =  function (word) {
+       let highWord = "";
+       let maxLenth = 0;
+        for(let i = 0; i < words.length ; i++) {
+            let con =  longestCommonSubsequence(word,  words[i]);
+            console.log(con);
+            if(con >= 2 && con > maxLenth) {
+                highWord = words[i];
+                maxLenth = con.length;
+            }
+        }
+       return highWord;
     }
 
 
     function update() {
-        if (stopRotation) {
+        if (window.stopRotation) {
             return; // 如果设置为完全停止旋转，不执行旋转逻辑
         }
 
         let a = lasta;
         let b = lastb;
 
+        let highTag = mcList[window.highlightWordIndex];
+        
+        let radio = 0.01;
         if (shouldRotate) {
             // 自动旋转逻辑
             if (Math.abs(lasta) < defaultSpeed) lasta = defaultSpeed;
@@ -176,10 +190,57 @@ function loadBall() {
             // 模拟缓慢衰减
             lasta *= 0.98;
             lastb *= 0.98;
+        } else {
+
+            if(highTag) {
+                let p =  1000 / 30;
+                let dstX  =  highTag.offsetWidth / 2 + highTag.cx;
+                let dstY = - highTag.offsetHeight/2 +  highTag.cy;
+                let flagX = false;
+                let flagY = false;
+                if(copyHighTag) {
+                    // is flag chage ?
+                    let midX1 =  highTag.cx + highTag.offsetWidth / 2;
+                    let midX2 =  copyHighTag.cx - copyHighTag.offsetWidth / 2;
+                    let midY1 =  highTag.cy - highTag.offsetHeight / 2;
+                    let midY2 =  copyHighTag.cy - copyHighTag.offsetHeight / 2;
+                    flagX = ((midX1 * midX2 < 0) || highTag.cx * (highTag.cx + highTag.offsetWidth*0.5) < 0) ? true : false;
+                    flagY = ((midY1 * midY2 < 0) || highTag.cy * (highTag.cy + highTag.offsetHeight*0.5) < 0) ? true : false;
+                    // console.log(midX1, midX2, midY1, midY2, flagX, flagY);
+                }
+                if(Math.abs(dstX) <= radius * radio || flagX) {
+                    // console.log(dstX, flagX, radius * radio);
+                    xRotateFinish = true;
+                }
+            
+                
+                
+                // 未超过区间 动 或者符号没变
+                if(!xRotateFinish) {
+                    let deltax = dstX  / p;
+                    lasta = 0 ;
+                    lastb = deltax ;
+                    
+                } else {
+                    let deltay = dstY / p;
+                    lasta = -deltay ;
+                    lastb = 0 ;
+                    if(Math.abs(dstY) <= radius * radio || flagY) {
+                        // console.log(dstY, radius * radio);
+                        yRotateFinish = true;
+                    }
+                    
+                }
+                // console.log(xRotateFinish, yRotateFinish);
+                copyHighTag = JSON.parse(JSON.stringify(highTag));
+            }
         }
 
+        
+
         sineCosine(a, b, 0);
-        mcList.forEach(tag => {
+        mcList.forEach((tag, i) => {
+            
             const rx1 = tag.cx;
             const ry1 = tag.cy * ca + tag.cz * -sa;
             const rz1 = tag.cy * sa + tag.cz * ca;
@@ -202,21 +263,38 @@ function loadBall() {
             tag.scale = per;
             tag.alpha = per;
 
+            
             tag.alpha = (tag.alpha - 0.6) * (10 / 6);
+            if(window.highlightWordIndex == i) {
+                aA[i].style.color = '#00bdfe';  // 设置目标词的颜色为蓝色
+                aA[i].style.fontWeight = 'bold';  // 加粗目标词
+            } else {
+                aA[i].style.color = '';
+                aA[i].style.fontWeight = '';
+            }
         });
-
         doPosition();
+        if (!shouldRotate) {
+            if(highTag) {
+                if(xRotateFinish && yRotateFinish) {
+                    window.stopRotation = true;
+                    xRotateFinish = false;
+                    yRotateFinish = false;
+                    copyHighTag = null;
+                    // console.log(stopRotation);
+                }
+            }
+        }
+        
     }
 
     function positionAll() {
         const containerWidth = oDiv.offsetWidth;
         const containerHeight = oDiv.offsetHeight;
         radius = Math.min(containerWidth, containerHeight) / 2;
-
         mcList.forEach((tag, i) => {
             const phi = Math.acos(-1 + (2 * (i + 1) - 1) / mcList.length);
             const theta = Math.sqrt(mcList.length * Math.PI) * phi;
-
             tag.cx = radius * Math.cos(theta) * Math.sin(phi);
             tag.cy = radius * Math.sin(theta) * Math.sin(phi);
             tag.cz = radius * Math.cos(phi);
@@ -229,12 +307,13 @@ function loadBall() {
     function doPosition() {
         const l = oDiv.offsetWidth / 2;
         const t = oDiv.offsetHeight / 2;
-        mcList.forEach((tag, i) => {
+        for(let i = 0; i < mcList.length; i++) {
+            let tag = mcList[i];
             aA[i].style.left = tag.cx + l - tag.offsetWidth / 2 + 'px';
             aA[i].style.top = tag.cy + t - tag.offsetHeight / 2 + 'px';
             aA[i].style.fontSize = Math.ceil(12 * tag.scale / 2) + 8 + 'px';
             aA[i].style.opacity = tag.alpha;
-        });
+        }
     }
 
     function sineCosine(a, b, c) {
@@ -262,4 +341,6 @@ function loadBall() {
 
     // Expose the highlightWord function to the global scope
     window.highlightWord = highlightWord;
+
+    window.getHighWord = getHighWord;
 }
