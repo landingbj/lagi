@@ -194,17 +194,16 @@ function initTopTile() {
 		url : "user/getDefaultTitle",
 		success : function(res) {
 			if (res.status === 'success') {
-				$('#topTitle h1 span').html(res.data);
+				// $('#topTitle h1 span').html(res.data);
                 const a = parseInt($('#title-canvas')[0].style.width);
                 const b = parseInt($('#title-canvas')[0].style.height);
-                drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+                drawTitle('title-canvas', a, b, 16, 64, 16, res.data);
 			}
 		},
 		error: function(res) {
             $('#topTitle h1 span').html(topTile);
             const a = parseInt($('#title-canvas')[0].style.width);
             const b = parseInt($('#title-canvas')[0].style.height);
-            console.log(a, b)
             drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
 		}
 	});
@@ -231,19 +230,8 @@ function setupCanvas(canvas) {
 }
 
 function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1height = 16, line2height = 64, line3height = 16, text2='Lag[i]') {
-    // 获取 Canvas 元素和上下文
-    // 原始尺寸 = 样式尺寸 * 倍率
-    if(width == 300 && height == 120) {
-        line1height = 16;
-        line2height = 64;
-        line3height = 16;
-    }else if(width == 150 && height == 60) {
-        line1height = 8;
-        line2height = 32;
-        line3height = 8;
-    }
     const dpr = window.devicePixelRatio || 1;
-
+    
     const canvas = document.getElementById(canvasId);
     
     const rect = canvas.getBoundingClientRect();
@@ -254,15 +242,28 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
     canvas.height = rheight * dpr;
     
     const ctx = canvas.getContext('2d');
-    // const line1height = 16;
-    // const line2height = 64;
-    // const line3height = 16;
 
+    if(width == 300 && height == 120) {
+        line1height = 16;
+        line2height = 64;
+        line3height = 16;
+    }else if(width == 150 && height == 60) {
+        line1height = 8;
+        line2height = 32;
+        line3height = 8;
+    }
+    
 
+    
     // 定义文本内容
     const text1 = '问';
     // const text2 = 'Lag[i]';
     const text3 = '不倒翁';
+
+    
+    const color1 = '#000000'; // 黑色
+    const color2 = '#808080'; // 灰色
+    const color3 = '#808080'; // 灰色
 
     line1height = line1height * dpr;
     line2height = line2height * dpr;
@@ -270,16 +271,33 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
 
     // 定义颜色和字体大小
     const fontSize1 = line1height + 'px';
-    const fontSize2 = line2height + 'px';
+    let fontSize2 = line2height + 'px';
     const fontSize3 = line3height + 'px';
+
+    // 设置第二行字体和颜色
+    ctx.font = `bold ${fontSize2} sans-serif`;
+    ctx.fillStyle = color2;
+
+    // 测量第二行文本的宽度
+    let text2Width = ctx.measureText(text2).width;
+    
+    console.log("text2Width", text2Width);
+    console.log(text2Width, width * dpr);
+    if(text2Width > width * dpr) {
+        line2height = width * dpr / (text2.length + 2);
+        fontSize2 = line2height + 'px';
+        ctx.font = `bold ${fontSize2} sans-serif`;
+        ctx.fillStyle = color2;
+        text2Width = ctx.measureText(text2).width;
+        console.log(line2height, fontSize2, text2Width);
+    }
+    console.log("text2Width", text2Width);
+
 
     const row1Top = line1height;
     const row2Top = line1height + line2height * 0.85;
     const row3Top = row2Top + line3height * 2;
 
-    const color1 = '#000000'; // 黑色
-    const color2 = '#808080'; // 灰色
-    const color3 = '#808080'; // 灰色
 
     // 设置基准字体，以便 rem 单位能够正确计算
     // 这里假设基准字体大小为 16px
@@ -288,13 +306,6 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
 
     // 测量第一行文本的宽度
     const text1Width = ctx.measureText(text1).width;
-
-    // 设置第二行字体和颜色
-    ctx.font = `bold ${fontSize2} sans-serif`;
-    ctx.fillStyle = color2;
-
-    // 测量第二行文本的宽度
-    const text2Width = ctx.measureText(text2).width;
 
     // 加载 Logo 图片
     const logo = new Image();
@@ -345,7 +356,6 @@ function reduceSpecialSymbol(ctx, startX, startY, text, fontSize, color) {
     // let size = [];
     let texts = [];
     let start = 0;
-
     for (let i = 0; i < text.length; i++) {
         if(text[i] == '[' || text[i] == ']') {
             let a = text.slice(start, i);
@@ -354,6 +364,13 @@ function reduceSpecialSymbol(ctx, startX, startY, text, fontSize, color) {
             start = i + 1;
         }
     }
+    
+    if(texts.length == 0) {
+        ctx.font = `bold ${fontSize + 'px'} sans-serif`;
+        ctx.fillText(text, startX, startY);
+        return ctx.measureText(text).width;
+    }
+    
     let startXX = startX;
     let width = 0;
     ctx.fillStyle = color;
@@ -486,7 +503,7 @@ function setDivSize() {
     }
 
     ball_d -= 10;
-    console.log("ball_d", ball_d);
+    // console.log("ball_d", ball_d);
     ball.style.width = ball_d + 'px';
     ball.style.height = ball_d + 'px';
     ball.style.marginLeft = (item_widht - ball_d) / 2  + 12+ 'px';
