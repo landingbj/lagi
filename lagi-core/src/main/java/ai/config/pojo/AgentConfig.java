@@ -30,4 +30,5 @@ public class AgentConfig {
     private Integer subscriberNum;
     private Boolean canOutPut;
     private String describe;
+    private String character;
 }

@@ -59,6 +59,8 @@ public class AgentServlet extends BaseServlet {
             this.deductExpenses(req, resp);
         } else if (method.equals("getFeeRequiredAgent")) {
             this.getFeeRequiredAgent(req, resp);
+        }else if (method.equals("createLagiAgent")) {
+            this.createLagiAgent(req, resp);
         }
     }
 
@@ -114,6 +116,13 @@ public class AgentServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         AgentConfig agentConfig = reqBodyToObj(req, AgentConfig.class);
         Response response = agentService.addLagiAgent(agentConfig);
+        responsePrint(resp, gson.toJson(response));
+    }
+
+    private void createLagiAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        AgentConfig agentConfig = reqBodyToObj(req, AgentConfig.class);
+        Response response = agentService.createLagiAgent(agentConfig);
         responsePrint(resp, gson.toJson(response));
     }
 

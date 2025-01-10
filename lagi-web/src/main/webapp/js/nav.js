@@ -459,6 +459,10 @@ let promptNavs = [
                 prompt: '该功能可根据用户提出的问题或需求，以图文并茂的方式为用户提供更加直观、形象和生动的信息和服务，在提高信息传达效果的同时，还能增加用户的阅读体验的，提高人们的工作效率和生活品质。',
                 operation: '在输入框内输入您的需求（如“知识图谱的概念”），并点击右侧Logo发送需求，Lagi将会对您作出响应。',
                 // group: 2
+            },
+            {
+                "id": -666,
+                "title": "智能生成",
             }
         ]
     },
@@ -819,6 +823,11 @@ function getPromptDialog(id, e) {
     // 如果未找到指定ID的导航项
     if (nav == null) {
         alert("找不到对应的信息");
+        return;
+    }
+
+    if (id === -666) {
+        openCreateAgent();
         return;
     }
 

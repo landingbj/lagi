@@ -16,6 +16,7 @@ let selectedAgentId = null;  // 全局变量，用来存储选择的 agentId
 // 创建 driver 映射关系
 const driverMap = {
     "ai.agent.chat.qianfan.XiaoxinAgent": "千帆",
+    "ai.agent.customer.GeneralAgent": "联动北方",
     "ai.agent.chat.coze.CozeAgent": "扣子",
     "ai.agent.chat.tencent.YuanQiAgent": "元器",
     "ai.agent.chat.zhipu.ZhipuAgent": "智谱"
@@ -557,3 +558,73 @@ async function isAgentBelongsToUser(lagiUserId, agentId) {
         return false;
     }
 }
+
+
+// ========= 创建智能体js=============
+
+function openCreateAgent() {
+    if (!getCookie('userId')) {
+        openModal();
+        return;
+    }
+    document.getElementById("createLagiAgent").style.visibility = 'visible';
+    
+    document.getElementById("LagiAgentName").value = '';
+    document.getElementById("LagiAgentDescribe").value = '';
+
+    document.getElementById("createLagiAgentButtons").disabled = true;
+}
+
+function closeCreateAgent() {
+    document.getElementById("createLagiAgent").style.visibility = 'hidden';
+    
+    document.getElementById("LagiAgentName").value = '';
+    document.getElementById("LagiAgentDescribe").value = '';
+
+    document.getElementById("createLagiAgentButtons").disabled = true;
+}
+
+
+function validateForm() {
+    const lagiagentName = document.getElementById("LagiAgentName").value.trim();
+    const describeValue = document.getElementById("LagiAgentDescribe").value.trim();
+    const createButton = document.getElementById("createLagiAgentButtons");
+
+    if (describeValue === ""||lagiagentName === "") {
+        createButton.disabled = true;
+    } else {
+        createButton.disabled = false;
+    }
+}
+
+function createLagiAgent() {
+    let agentConfig = {
+        id: currentAgentId,
+        name: document.getElementById("LagiAgentName").value,
+        describe: document.getElementById("LagiAgentDescribe").value,
+        lagiUserId: globalUserId,
+        isFeeRequired: false,
+        pricePerReq: 0,
+        publishStatus: true
+    };
+
+    fetch('/agent/createLagiAgent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agentConfig),
+    })
+    .then(response => response.json())
+    .then(data => {
+        closeCreateAgent();
+        alert('智能体创建成功！');
+    })
+    .catch(error => {
+        closeCreateAgent();
+        alert('创建失败，请重试！');
+    });
+}
+
+document.getElementById("LagiAgentDescribe").addEventListener("input", validateForm);
+document.getElementById("LagiAgentName").addEventListener("input", validateForm);

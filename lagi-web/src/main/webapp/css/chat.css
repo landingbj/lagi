@@ -1181,3 +1181,129 @@ pre .key {
     margin-left: 36%;
     color: white;
 }
+
+/* ==============创建智能体CSS开始===================== */
+
+.create_LagiAgent {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden; 
+    z-index: 1000; 
+}
+
+.createLagiAgent-content {
+    background: #ffffff; 
+    width: 90%; 
+    max-width: 600px;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #ff4d4d;
+}
+
+.createLagiAgent-content h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+#createLagiAgentForm label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+    color: #555;
+}
+
+#createLagiAgentForm textarea {
+    height: 200px; 
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    resize: none;
+}
+
+#createLagiAgentForm input[type="text"] {
+    height: auto; 
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+
+#createLagiAgentForm input[type="text"]:focus,
+#createLagiAgentForm textarea:focus {
+    border-color: #023f63;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.create_LagiAgentButtons button {
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 20px;
+    background-color: #023f63;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.create_LagiAgentButtons button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.create_LagiAgentButtons button:hover:not(:disabled) {
+    background-color: #023f63;
+    transform: scale(1.02);
+}
+
+@media (max-width: 480px) {
+    .createLagiAgent-content {
+        padding: 15px;
+    }
+
+    .createLagiAgent-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .create_LagiAgentButtons button {
+        font-size: 0.9rem;
+    }
+}
+
+  
+  /* ==============创建智能体CSS结束===================== */

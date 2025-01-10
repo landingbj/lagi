@@ -33,28 +33,28 @@ public class Demo {
      * and prints the content of the first completion result.
      */
 
-    public static void chat() {
-
-        //mock request
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
-        chatCompletionRequest.setTemperature(0.8);
-        chatCompletionRequest.setMax_tokens(1024);
-        chatCompletionRequest.setCategory("default");
-        ChatMessage message = new ChatMessage();
-        message.setRole("user");
-        message.setContent("你好");
-        chatCompletionRequest.setMessages(Lists.newArrayList(message));
-        // Set the stream parameter to false
-        chatCompletionRequest.setStream(false);
-        // Create an instance of CompletionsService
-        CompletionsService completionsService = new CompletionsService();
-        // Call the completions method to process the chat completion request
-        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-
-        // Print the content of the first completion choice
-        System.out.println("outcome:" + result.getChoices().get(0).getMessage().getContent());
-
-    }
+//    public static void chat() {
+//
+//        //mock request
+//        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+//        chatCompletionRequest.setTemperature(0.8);
+//        chatCompletionRequest.setMax_tokens(1024);
+//        chatCompletionRequest.setCategory("default");
+//        ChatMessage message = new ChatMessage();
+//        message.setRole("user");
+//        message.setContent("你好");
+//        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+//        // Set the stream parameter to false
+//        chatCompletionRequest.setStream(false);
+//        // Create an instance of CompletionsService
+//        CompletionsService completionsService = new CompletionsService();
+//        // Call the completions method to process the chat completion request
+//        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+//
+//        // Print the content of the first completion choice
+//        System.out.println("outcome:" + result.getChoices().get(0).getMessage().getContent());
+//
+//    }
 
     /**
      * streamCompletions Demo Method
@@ -330,40 +330,98 @@ public class Demo {
         System.out.println("outcome:" + JSONUtil.toJsonStr(result));
     }
 
-    public static void main(String[] args) {
-         //completions example
+//    public static void main(String[] args) {
+//         //completions example
 //         chat();
+//
+//        //streamCompletions example
+//        //streamChat();
+//
+//        //asr example
+//        //asrAudio();
+//
+//        //tts example
+//        //Text2Audio();
+//
+//        //generations example
+//        //generationsImage();
+//
+//        //toText example
+//        //Image2Text();
+//
+//        //track example
+//        //trackVideo();
+//
+//        //Image enhance example
+//        //enhanceImage();
+//
+//        //image2Video example
+//        //image2Video();
+//
+//        //Video enhance example
+//        //enhanceVideo();
+//
+////        functionCall();
+//
+//    }
 
-        //streamCompletions example
-        //streamChat();
-
-        //asr example
-        //asrAudio();
-
-        //tts example
-        //Text2Audio();
-
-        //generations example
-        //generationsImage();
-
-        //toText example
-        //Image2Text();
-
-        //track example
-        //trackVideo();
-
-        //Image enhance example
-        //enhanceImage();
-
-        //image2Video example
-        //image2Video();
-
-        //Video enhance example
-        //enhanceVideo();
-
-        functionCall();
+    public static void main(String[] args) {
+//        chat();
+//        String token = IdUtil.simpleUUID();
+//        System.out.println("token = " + token);
+//        String appId = IdUtil.simpleUUID();
+//        System.out.println("appId = " + appId);
 
     }
+
+    public static void chat() {
+        String agentName = "健身教练AI助手";
+        String agentDescribe = "你是一个健身教练，擅长根据用户的需求制定个性化的健身计划和饮食建议。你擅长科学的训练方法，并根据生理学和营养学为用户提供专业的健身指导。你总是以耐心、热情的态度与用户互动，帮助他们实现健身目标。";
+        String prompt = generatePrompt(agentDescribe, agentName);
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setMax_tokens(1024);
+        ChatMessage message = new ChatMessage();
+        message.setRole("system");
+        message.setContent(prompt);
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+        chatCompletionRequest.setStream(false);
+        CompletionsService completionsService = new CompletionsService();
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+        System.out.println(result.getChoices().get(0).getMessage().getContent());
+    }
+
+    public static String generatePrompt(String describe, String name) {
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append("智能体名称：").append(name).append("\n\n");
+        prompt.append("简介：").append(describe).append("\n\n");
+
+        prompt.append("根据上述简介，生成以下内容：\n\n");
+        prompt.append("#角色规范\n");
+        prompt.append("你是一个").append(name).append("，主要职责是").append(describe).append("。你需熟练掌握相关领域的知识，并根据用户需求提供准确、专业、权威的解答。\n\n");
+
+        prompt.append("#思考规范\n");
+        prompt.append("在回应用户问题时，你需遵循以下思考路径：\n");
+        prompt.append("1. **确认问题领域**：首先明确用户问题的领域，确保你拥有相关的专业知识。\n");
+        prompt.append("2. **综合解答**：结合法律条文、相关案例分析或其他专业资源，提供全面且精准的解答。\n");
+        prompt.append("3. **处理不确定问题**：若遇到不确定或无法直接解答的问题，应建议用户咨询相关领域的专家或提供权威资源链接。\n");
+        prompt.append("4. **确保信息权威性**：在提供任何建议时，务必确保信息准确无误且具备权威性。\n");
+        prompt.append("5. **引导用户**：对于偏离咨询范围的问题，温和地引导用户回到主题，例如：“我主要专注于提供法律咨询，关于您提到的非法律问题，我建议您直接咨询相关领域的专家。”\n\n");
+
+        prompt.append("#回复规范\n");
+        prompt.append("在与用户交流时，你应遵循以下规范：\n");
+        prompt.append("1. **语气**：使用专业且权威的语气，让用户感受到你的专业性和可靠性。\n");
+        prompt.append("2. **回复格式**：回复要清晰、有条理，最好使用列表、序号等形式，便于用户理解。\n");
+        prompt.append("3. **深入询问**：在解答问题时，主动询问用户更多背景信息，以便提供更加精确的解答。\n");
+        prompt.append("4. **结尾引导**：每次回答结束后，可以询问用户是否还有其他相关问题，例如：“请问您是否还有其他法律问题需要咨询？”\n");
+        prompt.append("5. **直接回应**：确保每个回复都直接针对用户的具体问题，避免偏离主题。\n");
+
+        prompt.append("\n根据上述结构，生成相应的角色规范、思考规范和回复规范。请确保输出内容详细、结构清晰，并且符合智能体的角色特征。\n");
+
+        return prompt.toString();
+    }
+
 
 
 }

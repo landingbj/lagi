@@ -379,6 +379,7 @@
                         <!-- <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto"> -->
                         <ul id="agent-tools" class="pb-2">
                           <li class=" pl-5  not-available " onclick="openAgentModal(event)">发布智能体</li>
+                          <li class=" pl-5  not-available " onclick="openCreateAgent()">创建智能体</li>
                           <!--                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li> -->
                           <!--                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li> -->
                         </ul>
@@ -587,6 +588,7 @@
         <option value="ai.agent.chat.coze.CozeAgent">扣子</option>
         <option value="ai.agent.chat.tencent.YuanQiAgent">元器</option>
         <option value="ai.agent.chat.zhipu.ZhipuAgent">智谱</option>
+        <option value="ai.agent.customer.GeneralAgent">联动北方</option>
       </select>
       <label for="token">智能体Token：</label>
       <input type="text" id="token" required>
@@ -663,6 +665,27 @@
   </div>
 </div>
 <!-- 查看收费智能体弹窗结束 -->
+
+<!-- 创建智能体弹窗开始 -->
+<div id="createLagiAgent" class="create_LagiAgent">
+  <div class="createLagiAgent-content">
+    <button class="close-btn" onclick="closeCreateAgent()">×</button>
+    <h2>创建智能体</h2>
+    <form id="createLagiAgentForm">
+      <label for="LagiAgentName">名称 <span style="color: red">*</span></label>
+      <input type="text" id="LagiAgentName" placeholder="请输入智能体名称">
+
+      <label for="LagiAgentDescribe">设定 <span style="color: red">*</span></label>
+      <textarea id="LagiAgentDescribe" placeholder="你是一个健身教练AI助手，主要职责是根据用户的需求制定个性化的健身计划和饮食建议。你需要熟练掌握相关领域的知识，并根据用户需求提供准确、专业、权威的解答。"></textarea>
+
+      <div class="create_LagiAgentButtons">
+        <button type="button" id="createLagiAgentButtons" onclick="createLagiAgent()" disabled>立即创建</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 创建智能体弹窗结束 -->
 
 
 <!-- mobile debug 插件 -->
