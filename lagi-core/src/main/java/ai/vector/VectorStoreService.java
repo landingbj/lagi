@@ -76,7 +76,7 @@ public class VectorStoreService {
             docs = fileService.splitChunks(file, 512);
         } else {
             String content = fileService.getFileContent(file);
-            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 1024)) {
+            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
                 //Is QA
                 return;
             } else if (content!=null){
