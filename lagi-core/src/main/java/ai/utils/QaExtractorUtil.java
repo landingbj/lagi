@@ -46,7 +46,7 @@ public class QaExtractorUtil {
         String fileContent = readFile(filePath);
         List<QaPair> qaPairs = extractQaPairs(fileContent);
 
-        if (IsSpecification(qaPairs)) {
+        if (IsSpecification(qaPairs,fileContent.length())) {
             List<InstructionData> instructionDataList = new ArrayList<>();
             for (QaPair qaPair : qaPairs) {
                 List<String> list = new ArrayList<>();
@@ -73,7 +73,7 @@ public class QaExtractorUtil {
     public static boolean extractQA(String content, String category, Map<String, Object> metadatas,Integer chunkSize) {
         List<QaPair> qaPairs = extractQaPairs(content);
 
-        if (qaPairs.size()>0&&IsSpecification(qaPairs)) {
+        if (qaPairs.size()>0&&IsSpecification(qaPairs,content.length())) {
             List<InstructionData> instructionDataList = new ArrayList<>();
             for (QaPair qaPair : qaPairs) {
                 List<String> list = new ArrayList<>();
@@ -170,8 +170,12 @@ public class QaExtractorUtil {
         }
     }
 
-    public static boolean IsSpecification(List<QaPair> qaPairs) {
+    public static boolean IsSpecification(List<QaPair> qaPairs,Integer length2) {
+        if (length2==null||length2<=0){
+            return false;
+        }
         boolean isValid = true;
+        Integer heji = 0;
         for (QaPair qaPair : qaPairs) {
             String question = qaPair.getQuestion();
             String answer = qaPair.getAnswer();
@@ -181,6 +185,14 @@ public class QaExtractorUtil {
             if (answer.isEmpty()) {
                 return false;
             }
+            heji += question.length()+answer.length();
+        }
+        if (heji>0&&length2>0){
+            int maxLength = Math.max(heji, length2);
+            int threshold = (int) (maxLength * 0.5);
+            isValid = Math.min(heji, length2) >= threshold;
+        }else {
+            isValid = false;
         }
         if (isValid) {
             System.out.println("文档格式验证通过，所有问题和答案对匹配正确。");
@@ -195,7 +207,7 @@ public class QaExtractorUtil {
         String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\测试用的文本.txt"; // 替换为你的文件路径
         String fileContent = readFile(filePath);
         List<QaPair> qaPairs = extractQaPairs(fileContent);
-        IsSpecification(qaPairs);
+        IsSpecification(qaPairs,10);
         for (QaPair qaPair : qaPairs) {
             System.out.println("问题: " + qaPair.getQuestion());
             System.out.println("答案: " + qaPair.getAnswer());
