@@ -76,7 +76,7 @@ public class VectorStoreService {
             docs = fileService.splitChunks(file, 512);
         } else {
             String content = fileService.getFileContent(file);
-            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
+            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 1024)) {
                 //Is QA
                 return;
             } else if (content!=null){
@@ -85,7 +85,7 @@ public class VectorStoreService {
                     docs = ChapterExtractorUtil.getChunkDocument(content, 512);
                 } else if (SectionExtractorUtil.isChapterDocument(content)) {
                     System.out.println("是小节类文档");
-                    docs = SectionExtractorUtil.getChunkDocument(content, 512);
+                    docs = SectionExtractorUtil.getChunkDocument(content, 1024);
                 } else {
                     if (WordDocxUtils.checkImagesInWord(file)){
                         FileChunkResponse response = fileService.extractContent(file);

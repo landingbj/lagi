@@ -43,7 +43,7 @@ public class FileService {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         String fileType = extString.toLowerCase().toLowerCase();
         if (fileType.equals(".xls")||fileType.equals(".xlsx")){
-            return EasyExcelUtil.getChunkDocumentXls(file);
+            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
         }else if (fileType.equals(".csv")){
             return EasyExcelUtil.getChunkDocumentCsv(file);
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
@@ -149,6 +149,7 @@ public class FileService {
 
 
     public static String removeDirectory(String content) {
+
         Pattern directoryTitlePattern = Pattern.compile("目\\s*录|目\\s*次", Pattern.CASE_INSENSITIVE);
         Matcher directoryTitleMatcher = directoryTitlePattern.matcher(content);
         if (!directoryTitleMatcher.find()) {
