@@ -24,6 +24,7 @@ function initHelloPage() {
     
     initModelSlide();
     initIntroduces();
+    loadCorners();
     // initAgentTool();
     $('#model-prefences').hide();
 }
@@ -561,3 +562,65 @@ const debouncedHandleResize = function() {
 
 // 监听窗口大小变化事件，并重新设置 div 的大小
 window.addEventListener('resize', debouncedHandleResize);
+
+
+
+function gentRankLi(el) {
+    return `<li class="ball-describe-item"> ${el.name}  <a class="hot-tag">${el.count}</a></li>`;
+}
+
+
+function freshRankDom(ulJq, list) {
+    ulJq.empty();
+    for(let i = 0; i < list.length; i++) {
+        let el = list[i];
+        let html =  gentRankLi(el);
+        ulJq.append(html);
+    }
+}
+
+function freshLeftRankDom(list) {
+    freshRankDom($('.ball-left-top ul'), list);
+}
+
+
+function freshRightRankDom(list) {
+    freshRankDom($('.ball-right-top ul'), list);
+}
+
+
+function loadLeftRank() {
+    fetch(`/rank/llm?pageSize=3`)
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        freshLeftRankDom(data.data);
+    })
+    .catch((error)=>{
+        freshLeftRankDom([{name:'通义千问', count: 99}, {name:'文心一言', count: 55}, {name:'智谱清言', count: 54}]);
+        console.log("loadLeftRank error:", error);
+    });
+}
+
+
+function loadRightRank() {
+    fetch(`/rank/agent?top=3`)
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        freshRightRankDom(data.data);
+    }).catch((error)=>{
+        freshRightRankDom([{name:'天气助手', count: 90}, {name:'油价助手', count: 72}, {name:'高铁助手', count: 11}]);
+        console.log("loadRightRank error:", error);
+    });;
+}
+
+
+
+function loadCorners() {
+    loadLeftRank();
+    loadRightRank();
+}
+

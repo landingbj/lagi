@@ -277,64 +277,85 @@
             </div>
 
             <div id="hello-page" class="flex-1 h-full overflow-hidden">
-              <div class="react-scroll-to-bottom--css-dlyqs-79elbk h-full dark:bg-gray-800">
+              <div id="mytab" class="hidden">
+                <!-- 我的发布列表开始 -->
+              <div class="agent-list-container tab" class="w-full" id="agent-list-container">
+
+              <!--                        <button onclick="openAgentModal()">新增智能体</button> -->
+              <!-- <span class="close-btn" onclick="closeAgentList()">&times;</span> -->
+              <table id="agent-list" border="1">
+                <thead>
+                <tr>
+                  <th>智能体名称</th>
+                  <th>智能体平台</th>
+                  <th>智能体Token</th>
+                  <th>智能体App ID</th>
+                  <th>是否收费</th>
+                  <th>每次请求收费(元)</th>
+                  <th>发布状态</th>
+                  <th>收益(元)</th>
+                  <th>调用次数</th>
+                  <th>订阅者人数</th>
+                  <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- 动态生成的智能体数据行 -->
+                </tbody>
+              </table>
+
+              <div class="pagination" id="pagination">
+                <!-- 分页按钮将动态添加到这里 -->
+              </div>
+              </div>
+              <!-- 我的发布列表结束 -->
+              <!-- 我的订阅列表开始 -->
+              <div class="paid-agent-list-container w-full tab"
+                id="paid-agent-list-container">
+                <table id="paid-agent-list" class="paid-agent-list " border="1">
+                  <thead>
+                  <tr>
+                    <th>智能体名称</th>
+                    <th>智能体平台</th>
+                    <th>每次请求收费(元)</th>
+                    <th>余额</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <!-- 动态生成的智能体数据行 -->
+                  </tbody>
+                </table>
+                <div class="pagination" id="paid-agent-pagination">
+                  <!-- 分页按钮将动态添加到这里 -->
+                </div>
+              </div>
+
+              <div class="paid-agent-list-container w-full tab"
+                id="user-upload-file-container">
+                <table id="upload-file-list"  class="paid-agent-list " border="1">
+                  <thead>
+                  <tr>
+                    <th>文件名称</th>
+                    <th>文件</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <!-- 动态生成的智能体数据行 -->
+                  </tbody>
+                </table>
+                <div class="pagination" id="file-upload-pagination">
+                  <!-- 分页按钮将动态添加到这里 -->
+                </div>
+              </div>
+              </div>
+              <div id="conTab" class="react-scroll-to-bottom--css-dlyqs-79elbk h-full dark:bg-gray-800">
                 <div class="react-scroll-to-bottom--css-dlyqs-1n7m0yu h-full">
                   <div class="flex flex-col text-sm dark:bg-gray-800 h-full">
                     <div class="flex h-full flex-col items-center justify-between">
-
-                      <!-- 我的发布列表开始 -->
-                      <div class="agent-list-container" class="w-full" id="agent-list-container">
-
-                        <%--                        <button onclick="openAgentModal()">新增智能体</button>--%>
-                        <%-- <span class="close-btn" onclick="closeAgentList()">&times;</span>--%>
-                        <table id="agent-list" border="1">
-                          <thead>
-                          <tr>
-                            <th>智能体名称</th>
-                            <th>智能体平台</th>
-                            <th>智能体Token</th>
-                            <th>智能体App ID</th>
-                            <th>是否收费</th>
-                            <th>每次请求收费(元)</th>
-                            <th>发布状态</th>
-                            <th>收益(元)</th>
-                            <th>调用次数</th>
-                            <th>订阅者人数</th>
-                            <th>操作</th>
-                          </tr>
-                          </thead>
-                          <tbody>
-                          <%-- 动态生成的智能体数据行 --%>
-                          </tbody>
-                        </table>
-
-                        <div class="pagination" id="pagination">
-                          <!-- 分页按钮将动态添加到这里 -->
-                        </div>
-                      </div>
-                      <!-- 我的发布列表结束 -->
-                      <!-- 我的订阅列表开始 -->
-                      <div class="paid-agent-list-container w-full"
-                           id="paid-agent-list-container">
-                        <table id="paid-agent-list" border="1">
-                          <thead>
-                          <tr>
-                            <th>智能体名称</th>
-                            <th>智能体平台</th>
-                            <th>每次请求收费(元)</th>
-                            <th>余额</th>
-                          </tr>
-                          </thead>
-                          <tbody>
-                          <!-- 动态生成的智能体数据行 -->
-                          </tbody>
-                        </table>
-                        <div class="pagination" id="paid-agent-pagination">
-                          <!-- 分页按钮将动态添加到这里 -->
-                        </div>
-                      </div>
+                       
                       <!-- 我的订阅列表结束 -->
-
                       <div id="item-content" class="w-full" style="overflow: auto;">
                         <div id="topTitle" class="relative align-center flex w-full md:flex-col justify-center self-center ">
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
@@ -344,8 +365,22 @@
                             <canvas id = "title-canvas"  style="width: 300px; height: 120px; margin-top: 10px;"></canvas>
                           </div>
                         </div>
-                        <div id="ball-div">
+                        <div class="relative">
+                          <div id="ball-div" >
+                            <div class="ball-left-top absolute ball-corner">
+                              <ul>
+
+                              </ul>
+                            </div>
+                            <div class="ball-right-top absolute ball-corner">
+                               <ul>
+                                
+                               </ul>
+                            </div>
+                          </div>
+                          <div class="ball-mask" ></div>
                         </div>
+                        
                         <!-- ***********************输入框前form******************************** -->
                         <div id="introduces" class="relative">
                           <div class="h-full flex ml-1  gap-0 md:gap-2 justify-center">
@@ -379,8 +414,6 @@
                         <ul id="agent-tools" class="pb-2">
                           <li class=" pl-5  not-available " onclick="openAgentModal(event)">发布智能体</li>
                           <li class=" pl-5  not-available " onclick="openCreateAgent()">创建智能体</li>
-                          <!--                                                    <li class=" pl-5  not-available " onclick="showQrCode(688841, 4, 0.01)">测试收款码</li> -->
-                          <!--                                                    <li class="pl-5 not-available" onclick="openRechargeModal('recharge-modal')">测试弹框</li> -->
                         </ul>
                       </div>
                     </div>
@@ -693,6 +726,7 @@
 <script src="js/fingerprint2.min.js"></script>
 <script src="libs/sse.js?ver=${initParam.version}"></script>
 <script src="js/common.js?ver=${initParam.version}"></script>
+<script src="js/file.js?ver=${initParam.version}"></script>
 <script src="js/hello.js?ver=${initParam.version}"></script>
 <script src="js/chat.js?ver=${initParam.version}"></script>
 <script src="js/conversations.js?ver=${initParam.version}"></script>

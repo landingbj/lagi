@@ -494,6 +494,10 @@ let promptNavs = [
             {
                 id: 667,
                 title: '我的订阅',
+            },
+            {
+                id:668,
+                title: '我的语料',
             }
         ]
     }
@@ -792,24 +796,14 @@ function getModeList(type) {
 let currentNav = null;
 
 function getPromptDialog(id, e) {
-
-    closeAgentList();
-    closePaidAgentList();
-    $('#queryBox').show();
-    $('#introduces').show();
-    // $('#modelChoices').show();
-    $('#topTitle').show();
-    $('#item-content').show();
-    showBallDiv();
-
     // debugger
     let nav = null;
-
+    let parentNav = null
     // 查找包含指定ID的一级导航项
     for (let index = 0; index < promptNavs.length; index++) {
-        const category = promptNavs[index];
-        for (let j = 0; j < category.subNavs.length; j++) {
-            const subNav = category.subNavs[j];
+        parentNav = promptNavs[index];
+        for (let j = 0; j < parentNav.subNavs.length; j++) {
+            const subNav = parentNav.subNavs[j];
             if (subNav.id == id) {
                 nav = subNav;
                 currentNav = nav;  // 更新当前导航为选中的子导航
@@ -818,8 +812,6 @@ function getPromptDialog(id, e) {
         }
         if (nav) break;  // 如果找到子导航，则跳出循环
     }
-
-
     // 如果未找到指定ID的导航项
     if (nav == null) {
         alert("找不到对应的信息");
@@ -831,46 +823,22 @@ function getPromptDialog(id, e) {
         return;
     }
 
-    if (id === 666) {
-        if (!getCookie('userId')) {
-            openModal(e);
-            return;
-        }
-        $('#introduces').hide();
-        $('#model-prefences').hide();
-        $('#modelChoices').hide();
-        $('#topTitle').hide();
-        // $('#item-content').empty();
-        $('#item-content').hide();
-        hideBallDiv(); // 隐藏球形 div
-        loadAgentList(1);
-        openAgentList();
-        $('#queryBox').hide();
-        showFooterInfo();
-        showHelpButton();
-        return;
-    }
+    if(parentNav.id == 15) {
+        return goToUserTab(id, e);
+    } else {
+        $('#conTab').show();
+        $('#mytab').hide();
+        $('#queryBox').show();
+        $('#introduces').show();
+        // $('#modelChoices').show();
+        $('#topTitle').show();
+        $('#item-content').show();
+        $('#not-content form').show();
+        showBallDiv();
+    } 
 
-    if (id === 667) {
-        if (!getCookie('userId')) {
-            openModal(e);
-            return;
-        }
-        $('#introduces').hide();
-        $('#model-prefences').hide();
-        $('#modelChoices').hide();
-        $('#topTitle').hide();
-        // $('#item-content').empty();
-        $('#item-content').hide();
-        hideBallDiv(); // 隐藏球形 div
-        loadPaidAgentList(1);
-        openPaidAgentList();
-        $('#queryBox').hide();
-        showFooterInfo();
-        showHelpButton();
-        return;
-    }
-    if(id === 11) {
+    
+    if(parentNav.id === 11) {
         currentAppId = nav.id;
     }
 
@@ -912,6 +880,43 @@ function getPromptDialog(id, e) {
     console.log("nav", nav)
     // 开始打字效果
     typing(0, answer, answerJq, addRobotDialog, vedioHtml);
+}
+
+
+function goToUserTab(id, e) {
+    if (id === 666 || id == 667) {
+        if (!getCookie('userId')) {
+            openModal(e);
+            return;
+        }
+    }
+    $('#conTab').hide();
+    $('#mytab').show();
+    $('#not-content form').hide();
+    let subNavs =  promptNavs[4].subNavs;
+    let tabs =  $('#mytab .tab');
+    for(let i = 0; i < subNavs.length ; i++) {
+        let tab = tabs[i];
+        if(id == subNavs[i].id) {
+            tab.style.display = 'block';
+        } else {
+            tab.style.display = 'none';
+        }
+    }
+    if (id === 666) {
+        loadAgentList(1);
+        return;
+    }
+
+    if (id === 667) {
+        loadPaidAgentList(1);
+        return;
+    }
+
+    if(id == 668) {
+        loadUploadFileList(1);
+        return;
+    }
 }
 
 
