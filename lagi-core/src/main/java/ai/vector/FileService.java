@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ai.common.pojo.FileChunkResponse;
+import ai.common.pojo.Response;
 import ai.ocr.OcrService;
 import ai.utils.*;
 
@@ -21,8 +22,16 @@ import com.google.gson.Gson;
 
 public class FileService {
     private static final String EXTRACT_CONTENT_URL = AiGlobal.SAAS_URL + "/saas/extractContentWithImage";
+    private static final String TO_MARKDOWN_URL = AiGlobal.SAAS_URL + "/saas/toMarkdown";
 
     private final Gson gson = new Gson();
+
+    public static void main(String[] args) {
+        FileService fileService = new FileService();
+        File file = new File("D:\\Test\\Datasets\\Document\\知识图谱.PDF");
+        Response response = fileService.toMarkdown(file);
+        System.out.println(response);
+    }
 
     public FileChunkResponse extractContent(File file) {
         String fileParmName = "file";
@@ -36,6 +45,20 @@ public class FileService {
         headers.put("Authorization", "Bearer " + LagiGlobal.getLandingApikey());
         String returnStr = HttpUtil.multipartUpload(EXTRACT_CONTENT_URL, fileParmName, fileList, formParmMap, headers);
         return gson.fromJson(returnStr, FileChunkResponse.class);
+    }
+
+    public Response toMarkdown(File file) {
+        String filePramName = "file";
+        Map<String, String> formParmMap = new HashMap<>();
+        List<File> fileList = new ArrayList<>();
+        fileList.add(file);
+        Map<String, String> headers = new HashMap<>();
+        if (LagiGlobal.getLandingApikey() == null) {
+            return null;
+        }
+        headers.put("Authorization", "Bearer " + LagiGlobal.getLandingApikey());
+        String returnStr = HttpUtil.multipartUpload(TO_MARKDOWN_URL, filePramName, fileList, formParmMap, headers);
+        return gson.fromJson(returnStr, Response.class);
     }
 
     public List<FileChunkResponse.Document> splitChunks(File file, int chunkSize) throws IOException {
