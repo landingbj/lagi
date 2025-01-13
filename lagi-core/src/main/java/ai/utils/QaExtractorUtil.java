@@ -140,15 +140,6 @@ public class QaExtractorUtil {
         return stringMap;
     }
 
-    public static void main(String[] args) {
-        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\测试用的文本.txt"; // 替换为你的文件路径
-        String category = "category";
-        Map<String, Object> metadatas = new HashMap<>();
-        metadatas.put("filename", "测试用的文本");
-
-        extractQA(filePath, category, metadatas,512);
-    }
-
     private static void addQA(List<InstructionData> instructionDataList, String category, Map<String, String> metadata) {
         Map<String, String> qaMap = new HashMap<>();
         for (InstructionData data : instructionDataList) {
@@ -202,20 +193,7 @@ public class QaExtractorUtil {
         return isValid;
     }
 
-    @Test
-    public void fangan2() {
-        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\测试用的文本.txt"; // 替换为你的文件路径
-        String fileContent = readFile(filePath);
-        List<QaPair> qaPairs = extractQaPairs(fileContent);
-        IsSpecification(qaPairs,10);
-        for (QaPair qaPair : qaPairs) {
-            System.out.println("问题: " + qaPair.getQuestion());
-            System.out.println("答案: " + qaPair.getAnswer());
-            System.out.println();
-        }
-    }
-
-    //gpt4 提取问答对的方法
+    //提取问答对的方法
     private static List<QaPair> extractQaPairs(String text) {
         List<QaPair> qaPairs = new ArrayList<>();
         String[] parts = text.split("(?<=问|问题)[：:](?:题|：)?");
@@ -228,10 +206,8 @@ public class QaExtractorUtil {
             int answerIndex = -1;
 
             if (matcher.find()) {
-                // 获取匹配的起始位置（匹配“答：”或“答案：”的起始位置）
                 answerIndex = matcher.start();
             }
-
             // 如果找到了匹配的“答：”或“答案：”
             if (answerIndex != -1) {
                 String question = part.substring(0, answerIndex).trim();
@@ -274,5 +250,13 @@ public class QaExtractorUtil {
         public String getAnswer() {
             return answer;
         }
+    }
+    public static void main(String[] args) {
+        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\测试用的文本.txt"; // 替换为你的文件路径
+        String category = "category";
+        Map<String, Object> metadatas = new HashMap<>();
+        metadatas.put("filename", "测试用的文本");
+
+        extractQA(filePath, category, metadatas,512);
     }
 }
