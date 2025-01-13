@@ -150,9 +150,10 @@ function newRobotStartDialog(robotAnswer) {
     return addRobotDialog(robotAnswer)
 }
 
-function addUserDialog(userQuestion) {
+async function addUserDialog(userQuestion) {
     let conversation = { user: { question: userQuestion }, robot: { answer: '' } }
-    newConversation(conversation, true, false);
+    let robot = await newConversation(conversation, true, false);
+    return robot;
 }
 
 function addRobotDialog(robotAnswer) {

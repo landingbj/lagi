@@ -253,13 +253,14 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
-        ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+        EnhanceChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
-        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
@@ -290,7 +291,7 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
@@ -316,11 +317,6 @@ public class LlmApiServlet extends BaseServlet {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
         }
-        EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
-                .ip(ClientIpAddressUtil.getClientIpAddress(req))
-                .build();
-        BeanUtil.copyProperties(chatCompletionRequest, enhance);
-        chatCompletionRequest = enhance;
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
                 Observable<ChatCompletionResult> result;
@@ -412,14 +408,16 @@ public class LlmApiServlet extends BaseServlet {
     }
 
 
-    private ChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
+    private EnhanceChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
         ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
         if(chatCompletionRequest.getModel() == null
                 && preference != null
                 && preference.getLlm() != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
+        String clientIpAddress = ClientIpAddressUtil.getClientIpAddress(req);
+        chatCompletionRequest.setIp(clientIpAddress);
         return chatCompletionRequest;
     }
 
