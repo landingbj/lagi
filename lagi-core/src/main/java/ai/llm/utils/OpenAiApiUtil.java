@@ -2,11 +2,9 @@ package ai.llm.utils;
 
 import ai.common.utils.ObservableList;
 import ai.llm.pojo.LlmApiResponse;
-import ai.llm.utils.convert.MoonshotConvert;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import cn.hutool.core.text.StrFormatter;
-import cn.hutool.json.JSONUtil;
 import com.google.gson.Gson;
 import io.reactivex.Observable;
 import okhttp3.*;
@@ -71,7 +69,7 @@ public class OpenAiApiUtil {
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType mediaType = MediaType.get("application/json");
-        String json = JSONUtil.toJsonStr(req);
+        String json = gson.toJson(req);
         RequestBody body = RequestBody.create(json, mediaType);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(apiUrl)
@@ -106,7 +104,7 @@ public class OpenAiApiUtil {
                                                    ChatCompletionRequest req,
                                                    Function<String, ChatCompletionResult> convertResponseFunc,
                                                    Function<Response, Integer> convertErrorFunc, Map<String, String> headers) {
-        return streamCompletions(apikey, apiUrl, timeout, JSONUtil.toJsonStr(req), convertResponseFunc, convertErrorFunc, headers);
+        return streamCompletions(apikey, apiUrl, timeout, gson.toJson(req), convertResponseFunc, convertErrorFunc, headers);
     }
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,
