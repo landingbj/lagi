@@ -725,6 +725,7 @@
 <script src="libs/jquery-3.1.1.min.js"></script>
 <script src="js/fingerprint2.min.js"></script>
 <script src="libs/sse.js?ver=${initParam.version}"></script>
+<script src="js/config.js?ver=${initParam.version}"></script>
 <script src="js/common.js?ver=${initParam.version}"></script>
 <script src="js/file.js?ver=${initParam.version}"></script>
 <script src="js/hello.js?ver=${initParam.version}"></script>

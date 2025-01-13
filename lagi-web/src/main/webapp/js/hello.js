@@ -20,6 +20,10 @@ let agent_tools = [
     {name:'工控线', bind_func: 'notifyAvailable', available:false},
 ]
 
+
+document.title = HTML_TITLE;
+
+
 function initHelloPage() {
     
     initModelSlide();
@@ -259,7 +263,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
     // 定义文本内容
     const text1 = '问';
     // const text2 = 'Lag[i]';
-    const text3 = '不倒翁';
+    const text3 = SUB_SYSTEM_TITLE;
 
     
     const color1 = '#000000'; // 黑色
