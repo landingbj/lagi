@@ -355,9 +355,7 @@ public class LlmApiServlet extends BaseServlet {
     private void addChunkIds(ChatCompletionResult result, GetRagContext context) {
         result.getChoices().forEach(choice -> {
             ChatMessage message = choice.getMessage();
-            ChatMessageResponse build = ChatMessageResponse.builder().contextChunkIds(context.getChunkIds()).build();
-            BeanUtil.copyProperties(message, build);
-            choice.setMessage(build);
+            message.setContextChunkIds(context.getChunkIds());
         });
     }
 
