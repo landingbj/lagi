@@ -16,7 +16,8 @@ create table if not exists lagi_upload_file
             unique,
     filename varchar(50)  not null,
     filepath varchar(250) not null,
-    category varchar(50)  not null
+    category varchar(50)  not null,
+    create_time int(20)    not null
 );
 
 

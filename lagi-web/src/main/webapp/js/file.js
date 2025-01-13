@@ -16,8 +16,8 @@ function loadUploadFileList(pageNumber) {
 
             row.innerHTML = `
                 <td>${uploadFile.filename}</td>
-                <td><a href="${uploadFile.filepath}">${uploadFile.filename}</a></td>
-                <td>2025/1/10 12:00</td>
+                <td><a href="/uploadFile/downloadFile?filePath=${uploadFile.filepath}&fileName=${uploadFile.filename}">${uploadFile.filename}</a></td>
+                <td>${formatDate(uploadFile.createTime)}</td>
                 <td><button onclick="deleteFile('${uploadFile.filename}', '${uploadFile.fileId}')">删除</button></td>
             `;
             tbody.appendChild(row);
@@ -25,6 +25,26 @@ function loadUploadFileList(pageNumber) {
 
         renderFileUploadPagination(data.totalPage, pageNumber);  // 渲染分页
     });
+}
+
+
+function formatDate(timestamp) {
+    // 创建一个 Date 对象
+    let date = new Date(timestamp);
+
+    // 获取年、月、日、小时、分钟、秒
+    let year = date.getFullYear();
+    let month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，需要加 1
+    let day = String(date.getDate()).padStart(2, '0');
+    let hours = String(date.getHours()).padStart(2, '0');
+    let minutes = String(date.getMinutes()).padStart(2, '0');
+    let seconds = String(date.getSeconds()).padStart(2, '0');
+
+    // 格式化日期字符串
+    let formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+    console.log(formattedDate); // 输出: 2023-01-01 00:00:00
+    return formattedDate;
 }
 
 
