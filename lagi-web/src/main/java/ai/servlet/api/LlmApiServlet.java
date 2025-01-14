@@ -39,14 +39,15 @@ import ai.servlet.BaseServlet;
 import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
+import ai.servlet.dto.PaidLagiAgent;
 import ai.utils.ClientIpAddressUtil;
 import ai.utils.MigrateGlobal;
+import ai.utils.SafeDeductionTool;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
 import ai.worker.DefaultWorker;
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -109,6 +110,8 @@ public class LlmApiServlet extends BaseServlet {
             BigDecimal pricePerReq = agentConfig.getPricePerReq();
             return  balance.doubleValue() >= pricePerReq.doubleValue();
         }));
+        Map<Integer, PaidLagiAgent> paidLagiAgentMap = paidAgentByUser.getData().stream().collect(Collectors.toMap(AgentConfig::getId, agentConfig -> agentConfig));
+
         ChatCompletionResult work = null;
         if(lLmRequest.getAgentId() == null) {
             LagiAgentListResponse lagiAgentList = agentService.getLagiAgentList(null, 1, 1000, "true");
@@ -134,8 +137,17 @@ public class LlmApiServlet extends BaseServlet {
                 work = gson.fromJson(format, ChatCompletionResultWithSource.class);
             }
             else {
-                work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
-                deductExpense(work, lLmRequest, agentConfigs);
+                boolean isPreDuctExpense = true;
+                if (agentConfig != null) {
+                    isPreDuctExpense = preDuctExpense(paidLagiAgentMap.get(agentConfig.getId()));
+                }
+                if(isPreDuctExpense) {
+                    work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
+                    deductExpense(work, lLmRequest, agentConfigs);
+                } else {
+                    String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", lagiAgent.getData().getName(), lagiAgent.getData().getName());
+                    work = gson.fromJson(format, ChatCompletionResultWithSource.class);
+                }
             }
         }
         if(work == null) {
@@ -147,6 +159,11 @@ public class LlmApiServlet extends BaseServlet {
         }
         String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
         convert2streamAndOutput(firstAnswer, resp, work);
+    }
+
+    private boolean preDuctExpense(PaidLagiAgent agentConfig) {
+        SafeDeductionTool.createAccount(agentConfig.getUserId() + agentConfig.getId(), agentConfig.getBalance().doubleValue());
+        return SafeDeductionTool.deduct(agentConfig.getUserId() + agentConfig.getId(), agentConfig.getPricePerReq().doubleValue());
     }
 
     private void deductExpense(ChatCompletionResult work, LLmRequest lLmRequest, List<AgentConfig> agentConfigs) {
@@ -162,6 +179,7 @@ public class LlmApiServlet extends BaseServlet {
             Integer sourceId = ((ChatCompletionResultWithSource) work).getSourceId();
             if(feedMap.containsKey(sourceId) && feedMap.get(sourceId)) {
                 deductExpense(sourceId, lLmRequest.getUserId());
+                SafeDeductionTool.removeAccount(lLmRequest.getUserId() + sourceId);
             }
         }
     }
