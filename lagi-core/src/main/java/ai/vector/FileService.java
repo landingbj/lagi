@@ -114,7 +114,7 @@ public class FileService {
             image.setPath(AbsoluteFile.getPath());
             List<FileChunkResponse.Image> list = new ArrayList<>();
             list.add(image);
-            doc.setImage(list);
+            doc.setImages(list);
             result.add(doc);
             start = end;
         }

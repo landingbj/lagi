@@ -300,4 +300,12 @@
         <url-pattern>/skill/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>DocumentApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.DocumentApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DocumentApiServlet</servlet-name>
+        <url-pattern>/doc/*</url-pattern>
+    </servlet-mapping>
 </web-app>
