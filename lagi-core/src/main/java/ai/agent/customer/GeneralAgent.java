@@ -2,16 +2,20 @@ package ai.agent.customer;
 
 import ai.agent.Agent;
 import ai.agent.customer.pojo.ToolInfo;
+import ai.common.pojo.ImageGenerationData;
+import ai.common.pojo.ImageGenerationRequest;
+import ai.common.pojo.ImageGenerationResult;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
+import ai.image.service.AllImageService;
 import ai.llm.service.CompletionsService;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.openai.pojo.ChatMessage;
+import ai.openai.pojo.*;
 import cn.hutool.json.JSONUtil;
-import com.google.gson.Gson;
+import com.google.common.collect.Lists;
+import com.google.gson.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
@@ -27,16 +31,133 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
         this.toolInfoList = new ArrayList<>();
     }
 
+    private String parsingQuestion(String question) {
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setMax_tokens(1024);
+        chatCompletionRequest.setCategory("default");
+
+        String prompt = "你是一个专业的智能助手，只能完成你所使用的动作所能完成的目标，而不是使用你所学的事实知识来完成目标。请遵循以下要求：\n" +
+                "1. **拆解问题**：\n" +
+                "   - 如果问题包含多个子任务（例如查询武汉天气和油价），请将问题拆解成多个子问题，并返回一个列表，其中包含所有拆解后的问题。例如：\n" +
+                "     {\n" +
+                "       \"action\": \"multi_part_question\",\n" +
+                "       \"questions\": [\n" +
+                "         \"查询武汉的天气\",\n" +
+                "         \"查询武汉的油价\"\n" +
+                "       ]\n" +
+                "     }\n" +
+                "   - 如果问题涉及图片生成（例如请求生成一张风景图），请返回：\n" +
+                "     {\n" +
+                "       \"action\": \"image_generation_needed\",\n" +
+                "       \"questions\": \"生成风景图\"\n" +
+                "     }\n" +
+                "   - 如果问题是简单的单一问题（如查询天气或油价），请返回：\n" +
+                "     {\n" +
+                "       \"action\": \"single_question\",\n" +
+                "       \"questions\": \"查询武汉的天气\"\n" +
+                "     }\n" +
+                "\n" +
+                "2. **返回值结构**：\n" +
+                "   - 如果问题是拆解后的多个子任务（例如查询天气和油价），返回一个包含子任务的列表，如上面的 \"multi_part_question\" 示例。\n" +
+                "   - 如果问题只包含一个任务，如查询天气或油价，返回一个字符串表示任务。\n" +
+                "   - 如果问题需要生成图片，返回包含问题的字符串。\n" +
+                "\n" +
+                "3. 请注意：\n" +
+                "   - **返回格式**必须严格遵循上述结构。\n" +
+                "   - 你只需返回一个 JSON 对象，指示当前问题的拆解方式或是否需要生成图片。\n" +
+                "   - 不要返回无关的内容，只需提供所需的操作指令。\n" +
+                "\n" +
+                "问题：" + question;
+
+        ChatMessage message = new ChatMessage();
+        message.setRole("user");
+        message.setContent(prompt);
+
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+        chatCompletionRequest.setStream(false);
+
+        CompletionsService completionsService = new CompletionsService();
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+
+        return result.getChoices().get(0).getMessage().getContent();
+    }
+
     @Override
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
+        String question = data.getMessages().get(data.getMessages().size() - 1).getContent();
+        String questionResult = parsingQuestion(question);
+
+        JsonObject jsonResponse = JsonParser.parseString(questionResult).getAsJsonObject();
+        String action = jsonResponse.get("action").getAsString();
         List<ChatMessage> messages = data.getMessages();
-        List<ChatMessage> temp  =  new ArrayList<>();
+        List<ChatMessage> temp = new ArrayList<>();
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setRole("system");
         chatMessage.setContent(agentConfig.getCharacter());
         temp.add(chatMessage);
+
+        if ("multi_part_question".equals(action)) {
+            JsonArray questionsArray = jsonResponse.getAsJsonArray("questions");
+            for (JsonElement questionElement : questionsArray) {
+                String subQuestion = questionElement.getAsString();
+                ChatMessage subQuestionMessage = new ChatMessage();
+                subQuestionMessage.setRole("user");
+                subQuestionMessage.setContent(subQuestion);
+                temp.add(subQuestionMessage);
+            }
+        } else if ("image_generation_needed".equals(action)) {
+            String imageGenerationPrompt = jsonResponse.get("questions").getAsString();
+
+            ImageGenerationRequest imageGenerationRequest = new ImageGenerationRequest();
+            imageGenerationRequest.setPrompt(imageGenerationPrompt);
+
+            AllImageService allImageService = new AllImageService();
+            ImageGenerationResult generations = allImageService.generations(imageGenerationRequest);
+
+            ChatMessage imageMessage = new ChatMessage();
+            imageMessage.setRole("system");
+
+            if (generations != null && generations.getData() != null && !generations.getData().isEmpty()) {
+                ImageGenerationData imageData = generations.getData().get(0);
+
+                if (imageData.getUrl() != null && !imageData.getUrl().isEmpty()) {
+                    imageMessage.setContent("Here is the generated image: " + imageData.getUrl());
+                } else if (imageData.getBase64Image() != null && !imageData.getBase64Image().isEmpty()) {
+                    imageMessage.setContent("Here is the generated image in Base64: " + imageData.getBase64Image());
+                } else {
+                    imageMessage.setContent("Image generated, but no valid URL or Base64 data found.");
+                }
+            } else {
+                imageMessage.setContent("Failed to generate the image.");
+            }
+
+            temp.add(imageMessage);
+
+            ChatCompletionChoice choice = new ChatCompletionChoice();
+            choice.setIndex(0);
+            choice.setMessage(imageMessage);
+            choice.setFinish_reason("stop");
+
+            ChatCompletionResult chatCompletionResult = new ChatCompletionResult();
+            chatCompletionResult.setId("image-generation-result-id");
+            chatCompletionResult.setObject("chat.completion");
+            chatCompletionResult.setCreated(System.currentTimeMillis());
+            chatCompletionResult.setChoices(Collections.singletonList(choice));
+            chatCompletionResult.setUsage(new Usage());
+
+            return chatCompletionResult;
+        } else if ("single_question".equals(action)) {
+            String singleQuestion = jsonResponse.get("questions").getAsString();
+            ChatMessage singleQuestionMessage = new ChatMessage();
+            singleQuestionMessage.setRole("user");
+            singleQuestionMessage.setContent(singleQuestion);
+            temp.add(singleQuestionMessage);
+        }
+
         temp.addAll(messages);
         data.setMessages(temp);
+
         return completionsService.completions(data, null);
 
     }
