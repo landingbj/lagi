@@ -286,17 +286,13 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
     // 测量第二行文本的宽度
     let text2Width = ctx.measureText(text2).width;
     
-    console.log("text2Width", text2Width);
-    console.log(text2Width, width * dpr);
     if(text2Width > width * dpr) {
         line2height = width * dpr / (text2.length + 2);
         fontSize2 = line2height + 'px';
         ctx.font = `bold ${fontSize2} sans-serif`;
         ctx.fillStyle = color2;
         text2Width = ctx.measureText(text2).width;
-        console.log(line2height, fontSize2, text2Width);
     }
-    console.log("text2Width", text2Width);
 
 
     const row1Top = line1height;
