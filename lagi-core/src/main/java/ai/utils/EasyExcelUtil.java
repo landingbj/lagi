@@ -9,12 +9,10 @@ import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.junit.Test;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @Author tsg
@@ -448,6 +446,7 @@ public class EasyExcelUtil {
         Workbook wb = null;
         try {
             wb = WorkbookFactory.create(new File(path));
+            FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
             Sheet sheet = wb.getSheetAt(sheetIndex);
             Row row = null;
             for (int i = startReadLine; i < sheet.getLastRowNum() - tailLine + 1; i++) {
@@ -464,7 +463,7 @@ public class EasyExcelUtil {
                         JSONObject rs = getMergedRegionJsonValue(sheet, row.getRowNum(), c.getColumnIndex());
                         values.putAll(rs);
                     } else {
-                        values.put("cellValue",getCellValue(c));
+                        values.put("cellValue",getCellValue(c,formulaEvaluator));
                     }
                     result.add(values);
                 }
@@ -521,6 +520,30 @@ public class EasyExcelUtil {
         return "";
     }
 
+    private static String getCellValue(Cell cell, FormulaEvaluator formulaEvaluator) {
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf(cell.getNumericCellValue());
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA:
+                switch (formulaEvaluator.evaluateInCell(cell).getCellType()) {
+                    case NUMERIC:
+                        return String.valueOf(cell.getNumericCellValue());
+                    case STRING:
+                        return cell.getStringCellValue();
+                    case BOOLEAN:
+                        return String.valueOf(cell.getBooleanCellValue());
+                    default:
+                        return "";
+                }
+            default:
+                return "";
+        }
+    }
+
     /**
      * 判断指定的单元格是否是合并单元格
      * @param row    行下标
@@ -558,13 +581,11 @@ public class EasyExcelUtil {
             return result.toString();
         }
     }
-@Test
-    public void t() throws IOException {
-    String f = getExcelContent(new File("C:\\Users\\ruiqing.luo\\Desktop\\当前适配智能体表列表.xls"));
-    System.out.println(f);
-    }
 
-
+    /**
+     * 方案1
+     * @param args
+     */
     public static void main1(String[] args) {
         try {
 //            String filePath = "C:\\Users\\25129\\Desktop\\公司会议纪要1202.csv";
@@ -588,7 +609,12 @@ public class EasyExcelUtil {
             e.printStackTrace();
         }
     }
-    public static void main(String[] args) {
+
+    /**
+     * 方案2
+     * @param args
+     */
+    public static void main2(String[] args) {
         try {
 //            String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\所有表格\\poc计划表1.0v.xlsx";
             String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\所有表格\\poc计划表.xlsx";
@@ -624,4 +650,5 @@ public class EasyExcelUtil {
             e.printStackTrace();
         }
     }
+
 }

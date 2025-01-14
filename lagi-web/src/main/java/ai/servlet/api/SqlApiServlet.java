@@ -121,7 +121,7 @@ public class SqlApiServlet extends BaseServlet {
                 "表信息如下："+
                 tableParsing(list)+
                 "输并且要求输出的S0L以#开头,以#结尾，样例如下:" +
-                "#SELECT * FROM "+tableParsing+" WHERE city LIKE '%北京%' name = '%全%';# 或" +
+                "#SELECT * FROM "+tableParsing+" WHERE city LIKE '%北京%' AND name LIKE '%全%';# 或" +
                 "#SELECT COUNT(*) FROM "+tableParsing+";#" +
                 "注意不需要分析过程，" +
                 "用户需求:" + demand
@@ -216,7 +216,7 @@ public class SqlApiServlet extends BaseServlet {
 
     @Test
     public void mysql() {
-        List<Map<String, Object>> list = new MysqlAdapter("mysql").sqlToValue("SELECT * FROM hotel_agreement;");
+        List<Map<String, Object>> list = new MysqlAdapter("mysql").sqlToValue("SELECT * FROM table_info;");
         Gson gson = new Gson();
 
         for (Object o : list) {

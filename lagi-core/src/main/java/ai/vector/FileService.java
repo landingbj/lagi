@@ -129,7 +129,6 @@ public class FileService {
         switch (extString.toLowerCase()) {
             case ".doc":
             case ".docx":
-                System.out.println("正在解析word文档,是否包含图片"+WordDocxUtils.checkImagesInWord(file));
                  content = WordUtils.getContentsByWord(in, extString).replaceAll("\\n+", "\n");;
                  content = content!=null?removeDirectory(content):content;
                 break;
@@ -138,8 +137,14 @@ public class FileService {
                 break;
             case ".pdf":
                 //.replaceAll("[\r\n?|\n]", "")
-                content = PdfUtil.webPdfParse(in).replaceAll("\\n+", "\n");
-                content = content!=null?removeDirectory(content):content;
+                Response response = toMarkdown(file);
+                if (response != null && response.getStatus().equals("success")){
+                    content = response.getData();
+                    content = content!=null?removeDirectory(content):content;
+                }else {
+                    content = PdfUtil.webPdfParse(in).replaceAll("\\n+", "\n");
+                    content = content!=null?removeDirectory(content):content;
+                }
                 break;
             case ".xls":
             case ".xlsx":
