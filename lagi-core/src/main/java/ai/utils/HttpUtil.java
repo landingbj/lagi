@@ -200,6 +200,9 @@ public class HttpUtil {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200) {
                 responseMessage = EntityUtils.toString(response.getEntity(), "UTF-8");
+            } else {
+                String message = EntityUtils.toString(response.getEntity(), "UTF-8");
+                logger.info("Http multipartUpload " + url + " statusCode = " + statusCode + " response: " + message);
             }
         } catch (IOException e) {
             logger.info("Http multipartUpload " + url + " Exception: ", e);
