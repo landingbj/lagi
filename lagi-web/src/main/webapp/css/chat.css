@@ -24,6 +24,7 @@
 	/* margin: 3em 0 0 0; */
 	/* padding-top: 16px; */
 	/* height: 180px; */
+    z-index:6;
 }
 
 
@@ -312,11 +313,15 @@ pre .key {
     margin-top: var(--ball-m-top);
     margin-bottom: var(--ball-m-bottom);
     display: var(--ball-display);
+
 }
 
 @media (max-width: 900px) {
     :root{
         --left-nav-width: 0px;
+    }
+    .ball-corner {
+        visibility: hidden
     }
 }
 
@@ -445,6 +450,7 @@ pre .key {
     width: auto;
     height: auto;
     text-align: center; /* 确保文字在容器内居中 */
+    z-index:6;
 }
 
 /* 当屏幕宽度小于 768px 时，调整字体大小 */
@@ -845,7 +851,7 @@ pre .key {
 
 
 /* 默认隐藏 paid-agent-list-container */
-#paid-agent-list-container {
+.paid-agent-list-container {
     display: none;           /* 默认隐藏 */
     width: 100%;             /* 宽度占满父容器 */
     height: 90%;            /* 高度占满父容器 */
@@ -859,20 +865,20 @@ pre .key {
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的表格 */
-#paid-agent-list-container table {
+.paid-agent-list-container table {
     width: 100%;               /* 表格宽度 100% */
     border-collapse: collapse; /* 合并边框 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的 th 和 td */
-#paid-agent-list-container th,
-#paid-agent-list-container td {
+.paid-agent-list-container th,
+.paid-agent-list-container td {
     padding: 10px;             /* 设置单元格内边距 */
     text-align: center;        /* 文字居中对齐 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的 button */
-#paid-agent-list-container button {
+.paid-agent-list-container button {
     font-size: 16px;
     border: none;
     background-color: #023f63;
@@ -882,17 +888,19 @@ pre .key {
     transition: background-color 0.3s;
     /*position: absolute;*/
     bottom: 50px;
+    padding-left:5px;
+    padding-right:5px;
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的分页容器 */
-#paid-agent-list-container .pagination {
+.paid-agent-list-container .pagination {
     display: flex;             /* 使用 flexbox 布局 */
     justify-content: center;   /* 水平居中对齐分页按钮 */
     margin-top: 20px;          /* 分页区域与表格之间的距离 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的分页按钮 */
-#paid-agent-list-container .pagination button {
+.paid-agent-list-container .pagination button {
     margin: 0 5px;             /* 按钮之间的间距 */
     padding: 5px 10px;
 }
@@ -900,14 +908,14 @@ pre .key {
 
 
 /* 设置表格的整体样式 */
-#paid-agent-list {
+.paid-agent-list {
     width: 100%;  /* 设置表格宽度为100% */
     border-collapse: collapse;  /* 合并表格的边框 */
     margin-top: 20px;  /* 给表格顶部加一点间距 */
 }
 
 /* 设置表头的样式 */
-#paid-agent-list thead {
+.paid-agent-list thead {
     background-color: #023f63;  /* 设置表头背景色 */
     color: white;  /* 设置表头文字颜色为白色 */
     text-align: center;  /* 表头文字居中 */
@@ -915,23 +923,23 @@ pre .key {
 }
 
 /* 设置表格单元格的样式 */
-#paid-agent-list th, #paid-agent-list td {
+.paid-agent-list th, .paid-agent-list td {
     border: 1px solid #ddd;  /* 设置单元格边框 */
     padding: 12px;  /* 设置单元格的内边距 */
     text-align: center;  /* 内容居中 */
 }
 
 /* 设置表格奇偶行的背景色 */
-#paid-agent-list tbody tr:nth-child(even) {
+.paid-agent-list tbody tr:nth-child(even) {
     background-color: #f2f2f2;  /* 偶数行背景色 */
 }
 
-#paid-agent-list tbody tr:nth-child(odd) {
+.paid-agent-list tbody tr:nth-child(odd) {
     background-color: #fff;  /* 奇数行背景色 */
 }
 
 /* 鼠标悬停行时的效果 */
-#paid-agent-list tbody tr:hover {
+.paid-agent-list tbody tr:hover {
     background-color: #f1f1f1;  /* 鼠标悬停时背景色 */
     cursor: pointer;  /* 鼠标悬停时显示为指针 */
 }
@@ -1180,6 +1188,110 @@ pre .key {
     background-color: #002f64;
     margin-left: 36%;
     color: white;
+}
+
+.ball-corner {
+    width: 60%;
+    height: 50%;
+}
+
+
+.ball-left-top{
+    top:0px;
+    left: -24%;
+}
+
+.ball-right-top{
+    top: 0px;
+    right: -12%;
+    display: block;
+}
+
+.ball-describe-item {
+    background:#023f63;
+    margin-bottom: 10px;
+    color: rgb(250, 250, 250);
+    height: 26px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top:5px;
+    padding-bottom: 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    z-index: -5;
+}
+
+.ball-right-top ul {
+    display: flex;
+    flex-direction: column; /* 设置主轴为垂直方向 */
+    align-items: flex-end;  /* 将所有项目沿交叉轴（水平方向）右对齐 */
+    padding: 0;             /* 移除默认内边距 */
+    margin: 0;  
+}
+
+.ball-right-top ul li {
+    text-align: right;      /* 让 <li> 内的内容右对齐 */
+    margin-bottom: 10px;    /* 维持列表项之间的间距 */
+}
+
+.ball-corner ul li:nth-child(1) {
+    width: 60%;
+} 
+
+.ball-corner ul li:nth-child(2) {
+    width: 50%;
+} 
+
+.ball-corner ul li:nth-child(3) {
+    width: 40%;
+} 
+
+
+.hot-tag {
+    text-decoration: none;
+    color: #ffffff;
+    padding: 0px 0px;
+    border-radius: 3px;
+    background-color: #006280;
+    width: 24px;
+    height: 20px;
+    transition: all 0.3s ease;
+    text-align: center;
+    display:inline-block;
+}
+
+
+#ball-div:before{
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(255, 255, 255); /* 匹配页面背景色 */
+    z-index: 1;
+    clip-path: circle(50% at 50% 50%); /* 创建圆形遮罩 */
+    pointer-events: none; /* 确保遮罩不会干扰鼠标事件 */
+    content:'';
+    overflow: visible; /* 确保内容超出容器时仍然可见 */
+}
+
+
+#ball-div:after{
+    position: absolute;
+    top: -10%;
+    left: -2%;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(253, 253, 253); /* 匹配页面背景色 */
+    z-index: -1;
+    clip-path: circle(50% at 50% 50%); /* 创建圆形遮罩 */
+    pointer-events: none; /* 确保遮罩不会干扰鼠标事件 */
+    content:'';
+    overflow: visible; /* 确保内容超出容器时仍然可见 */
 }
 
 /* ==============创建智能体CSS开始===================== */

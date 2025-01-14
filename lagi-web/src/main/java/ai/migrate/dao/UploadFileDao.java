@@ -35,12 +35,13 @@ public class UploadFileDao {
     public int addUploadFile(UploadFile entity) throws SQLException {
         IConn conn = new Conn();
         int result = -1;
-        String sql = "INSERT INTO lagi_upload_file (file_id, filename, filepath, category) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO lagi_upload_file (file_id, filename, filepath, category, create_time) VALUES (?, ?, ?, ?, ?)";
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setString(1, entity.getFileId());
         ps.setString(2, entity.getFilename());
         ps.setString(3, entity.getFilepath());
         ps.setString(4, entity.getCategory());
+        ps.setLong(5, entity.getCreateTime());
         result = ps.executeUpdate();
         BaseIndex.closeConnection(ps, conn);
         return result;
@@ -48,7 +49,7 @@ public class UploadFileDao {
     
     public UploadFile getUploadFileList(String fileId, Conn conn) throws SQLException {
         UploadFile result = null;
-        String sql = "select file_id, filename, filepath, category from lagi_upload_file where file_id = ?";
+        String sql = "select file_id, filename, filepath, category, create_time from lagi_upload_file where file_id = ?";
         PreparedStatement ps = null;
         ResultSet rs = null;
         ps = conn.prepareStatement(sql);
@@ -60,6 +61,7 @@ public class UploadFileDao {
             result.setFilename(rs.getString(2));
             result.setFilepath(rs.getString(3));
             result.setCategory(rs.getString(4));
+            result.setCreateTime(rs.getLong(5));
         }
         BaseIndex.closeConnection(rs, ps);
         return result;
@@ -68,7 +70,7 @@ public class UploadFileDao {
     public List<UploadFile> getUploadFileList(int pageNumber, int pageSize) throws SQLException {
         IConn conn = new Conn();
         List<UploadFile> result = new ArrayList<>();
-        String sql = "select file_id, filename, filepath, category from lagi_upload_file limit ?,?";
+        String sql = "select file_id, filename, filepath, category, create_time from lagi_upload_file limit ?,?";
         PreparedStatement ps = null;
         ResultSet rs = null;
         ps = conn.prepareStatement(sql);
@@ -81,6 +83,7 @@ public class UploadFileDao {
             entity.setFilename(rs.getString(2));
             entity.setFilepath(rs.getString(3));
             entity.setCategory(rs.getString(4));
+            entity.setCreateTime(rs.getLong(5));
             result.add(entity);
         }
         BaseIndex.closeConnection(rs, ps, conn);
@@ -90,7 +93,7 @@ public class UploadFileDao {
     public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category) throws SQLException {
         IConn conn = new Conn();
         List<UploadFile> result = new ArrayList<>();
-        String sql = "select file_id, filename, filepath, category from lagi_upload_file where category=? limit ?,?";
+        String sql = "select file_id, filename, filepath, category, create_time from lagi_upload_file where category=? limit ?,?";
         PreparedStatement ps = null;
         ResultSet rs = null;
         ps = conn.prepareStatement(sql);
@@ -104,6 +107,7 @@ public class UploadFileDao {
             entity.setFilename(rs.getString(2));
             entity.setFilepath(rs.getString(3));
             entity.setCategory(rs.getString(4));
+            entity.setCreateTime(rs.getLong(5));
             result.add(entity);
         }
         BaseIndex.closeConnection(rs, ps, conn);

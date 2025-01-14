@@ -91,7 +91,7 @@ async function textQuery() {
     await sleep(200);
 
     if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
-        socialAgentsConversation(question);
+        let robotAnswerJq = await socialAgentsConversation(question);
     } else {
         let robotAnswerJq = await newConversation(conversation);
         getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
@@ -173,9 +173,9 @@ function getNextSocialPromptStep() {
     return nextStep;
 }
 
-function socialAgentsConversation(question) {
+async function socialAgentsConversation(question) {
     let questionHtml = '<div>' + question + '</div>';
-    addUserDialog(questionHtml);
+    let jq = await addUserDialog(questionHtml);
     let nextStep = getNextSocialPromptStep();
     nextPrompt(nextStep, question);
 }
@@ -460,10 +460,10 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
     return result;
 }
 
-function generalOutput(paras, question, robootAnswerJq) {
+function generalOutput(paras, question, robootAnswerJq, url="chat/go") {
     // let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
     // let url = 'v1/chat/completions';
-    let url = 'chat/go';
+    // let url = 'chat/go';
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
@@ -508,7 +508,7 @@ function generalOutput(paras, question, robootAnswerJq) {
     });
 }
 
-function streamOutput(paras, question, robootAnswerJq) {
+function streamOutput(paras, question, robootAnswerJq, url="chat/go") {
     console.log("paras.agentId: " + paras.agentId)
 
     function isJsonString(str) {
@@ -523,7 +523,7 @@ function streamOutput(paras, question, robootAnswerJq) {
     async function generateStream(paras) {
         // let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
         // let url = 'v1/chat/completions';
-        let url = 'chat/go';
+        // let url = 'chat/go';
         const response = await fetch(url, {
             method: "POST",
             cache: "no-cache",
@@ -855,7 +855,7 @@ function showImageMask(url) {
     $('#pdfMask').show();
 }
 
-function retry(index) {
+async function retry(index) {
     console.log(CONVERSATION_CONTEXT)
     let preArr = CONVERSATION_CONTEXT.slice(0, index);
     var paras = {
@@ -867,12 +867,12 @@ function retry(index) {
         "stream": true
     };
     let question = preArr[preArr.length - 1]['content']
-    addUserDialog(question);
+    let a =  await addUserDialog(question);
     let robootAnswerJq = addRobotDialog('');
     if (paras["stream"]) {
-        streamOutput(paras, question, robootAnswerJq);
+        streamOutput(paras, question, robootAnswerJq, "v1/chat/completions");
     } else {
-        generalOutput(paras, question, robootAnswerJq);
+        generalOutput(paras, question, robootAnswerJq, "v1/chat/completions");
     }
 }
 

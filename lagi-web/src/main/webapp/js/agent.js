@@ -170,6 +170,36 @@ function loadAgentList(pageNumber) {
 }
 
 
+// 测试我的智能体
+function testMyAgent(agentId) {
+    let paras = {
+        "rag": false,
+        "category": window.category,
+        "temperature": 0.8,
+        "max_tokens": 1024,
+        "stream": false,
+        "worker":"appointedWorker",
+        "agentId": agentId,
+        "messages": [
+            {"role": "user", "content": '你好'}
+        ],
+    };
+    fetch('chat/go', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paras)
+    }).then(response => response.json())
+    .then(data => {
+        console.log(data);
+    })
+    .catch(error => {
+        // 处理可能的错误情况
+        alert('发布失败，请重试！');
+    });
+}
+
 
 // 渲染分页
 function renderPagination(totalPages, currentPage) {

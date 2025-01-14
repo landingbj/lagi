@@ -20,10 +20,15 @@ let agent_tools = [
     {name:'工控线', bind_func: 'notifyAvailable', available:false},
 ]
 
+
+document.title = HTML_TITLE;
+
+
 function initHelloPage() {
     
     initModelSlide();
     initIntroduces();
+    loadCorners();
     // initAgentTool();
     $('#model-prefences').hide();
 }
@@ -258,7 +263,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
     // 定义文本内容
     const text1 = '问';
     // const text2 = 'Lag[i]';
-    const text3 = '不倒翁';
+    const text3 = SUB_SYSTEM_TITLE;
 
     
     const color1 = '#000000'; // 黑色
@@ -281,17 +286,13 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
     // 测量第二行文本的宽度
     let text2Width = ctx.measureText(text2).width;
     
-    console.log("text2Width", text2Width);
-    console.log(text2Width, width * dpr);
     if(text2Width > width * dpr) {
         line2height = width * dpr / (text2.length + 2);
         fontSize2 = line2height + 'px';
         ctx.font = `bold ${fontSize2} sans-serif`;
         ctx.fillStyle = color2;
         text2Width = ctx.measureText(text2).width;
-        console.log(line2height, fontSize2, text2Width);
     }
-    console.log("text2Width", text2Width);
 
 
     const row1Top = line1height;
@@ -561,3 +562,65 @@ const debouncedHandleResize = function() {
 
 // 监听窗口大小变化事件，并重新设置 div 的大小
 window.addEventListener('resize', debouncedHandleResize);
+
+
+
+function gentRankLi(el) {
+    return `<li class="ball-describe-item"> ${el.name}  <a class="hot-tag">${el.count}</a></li>`;
+}
+
+
+function freshRankDom(ulJq, list) {
+    ulJq.empty();
+    for(let i = 0; i < list.length; i++) {
+        let el = list[i];
+        let html =  gentRankLi(el);
+        ulJq.append(html);
+    }
+}
+
+function freshLeftRankDom(list) {
+    freshRankDom($('.ball-left-top ul'), list);
+}
+
+
+function freshRightRankDom(list) {
+    freshRankDom($('.ball-right-top ul'), list);
+}
+
+
+function loadLeftRank() {
+    fetch(`/rank/llm?pageSize=3`)
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        freshLeftRankDom(data.data);
+    })
+    .catch((error)=>{
+        freshLeftRankDom([{name:'通义千问', count: 99}, {name:'文心一言', count: 55}, {name:'智谱清言', count: 54}]);
+        console.log("loadLeftRank error:", error);
+    });
+}
+
+
+function loadRightRank() {
+    fetch(`/rank/agent?top=3`)
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        freshRightRankDom(data.data);
+    }).catch((error)=>{
+        freshRightRankDom([{name:'天气助手', count: 90}, {name:'油价助手', count: 72}, {name:'高铁助手', count: 11}]);
+        console.log("loadRightRank error:", error);
+    });;
+}
+
+
+
+function loadCorners() {
+    loadLeftRank();
+    loadRightRank();
+}
+

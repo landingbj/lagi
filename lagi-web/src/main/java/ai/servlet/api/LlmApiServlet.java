@@ -39,14 +39,15 @@ import ai.servlet.BaseServlet;
 import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
+import ai.servlet.dto.PaidLagiAgent;
 import ai.utils.ClientIpAddressUtil;
 import ai.utils.MigrateGlobal;
+import ai.utils.SafeDeductionTool;
 import ai.utils.SensitiveWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
 import ai.worker.DefaultWorker;
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -109,6 +110,8 @@ public class LlmApiServlet extends BaseServlet {
             BigDecimal pricePerReq = agentConfig.getPricePerReq();
             return  balance.doubleValue() >= pricePerReq.doubleValue();
         }));
+        Map<Integer, PaidLagiAgent> paidLagiAgentMap = paidAgentByUser.getData().stream().collect(Collectors.toMap(AgentConfig::getId, agentConfig -> agentConfig));
+
         ChatCompletionResult work = null;
         if(lLmRequest.getAgentId() == null) {
             LagiAgentListResponse lagiAgentList = agentService.getLagiAgentList(null, 1, 1000, "true");
@@ -119,23 +122,28 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             LagiAgentResponse lagiAgent = agentService.getLagiAgent(null, String.valueOf(lLmRequest.getAgentId()));
             AgentConfig agentConfig = lagiAgent.getData();
-            List<AgentConfig> agentConfigs = Lists.newArrayList(lagiAgent.getData());
-            agents = convert2AgentList(agentConfigs, haveABalance);
-
-            agents = agents.stream().filter(agent -> {
-                if(Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired())) {
-                    return haveABalance.get(agent.getAgentConfig().getId());
-                }
-                return true;
-            }).collect(Collectors.toList());
-            // has agent and not has balance
-            if(agentConfig != null && agents.isEmpty()) {
-                String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", lagiAgent.getData().getName(), lagiAgent.getData().getName());
-                work = gson.fromJson(format, ChatCompletionResultWithSource.class);
+            // system agent
+            if(agentConfig == null)
+            {
+                work = defaultWorker.work(lLmRequest.getWorker(), Collections.emptyList(), lLmRequest);
             }
-            else {
-                work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
-                deductExpense(work, lLmRequest, agentConfigs);
+            else
+            // user  agents
+            {
+                Boolean isFeeRequired = agentConfig.getIsFeeRequired();
+                List<AgentConfig> agentConfigs = Lists.newArrayList(lagiAgent.getData());
+                agents = convert2AgentList(agentConfigs, haveABalance);
+                if(Boolean.TRUE.equals(isFeeRequired)) {
+                    boolean isPreDuctExpense = preDuctExpense(paidLagiAgentMap.get(agentConfig.getId()));
+                    if(isPreDuctExpense) {
+                        work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
+                        deductExpense(work, lLmRequest, agentConfigs);
+                    } else {
+                        work = noExpenseResult(lagiAgent);
+                    }
+                } else {
+                    work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
+                }
             }
         }
         if(work == null) {
@@ -147,6 +155,19 @@ public class LlmApiServlet extends BaseServlet {
         }
         String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
         convert2streamAndOutput(firstAnswer, resp, work);
+    }
+
+    private ChatCompletionResult noExpenseResult(LagiAgentResponse lagiAgent) {
+        String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"您在{}账户余额不足\"}}]}", lagiAgent.getData().getName(), lagiAgent.getData().getName());
+        return gson.fromJson(format, ChatCompletionResultWithSource.class);
+    }
+
+    private boolean preDuctExpense(PaidLagiAgent agentConfig) {
+        if(agentConfig == null) {
+            return false;
+        }
+        SafeDeductionTool.createAccount(agentConfig.getUserId() + agentConfig.getId(), agentConfig.getBalance().doubleValue());
+        return SafeDeductionTool.deduct(agentConfig.getUserId() + agentConfig.getId(), agentConfig.getPricePerReq().doubleValue());
     }
 
     private void deductExpense(ChatCompletionResult work, LLmRequest lLmRequest, List<AgentConfig> agentConfigs) {
@@ -162,6 +183,7 @@ public class LlmApiServlet extends BaseServlet {
             Integer sourceId = ((ChatCompletionResultWithSource) work).getSourceId();
             if(feedMap.containsKey(sourceId) && feedMap.get(sourceId)) {
                 deductExpense(sourceId, lLmRequest.getUserId());
+                SafeDeductionTool.removeAccount(lLmRequest.getUserId() + sourceId);
             }
         }
     }
@@ -253,13 +275,14 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
-        ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+        EnhanceChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
-        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
@@ -290,7 +313,7 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
@@ -316,11 +339,6 @@ public class LlmApiServlet extends BaseServlet {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
         }
-        EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
-                .ip(ClientIpAddressUtil.getClientIpAddress(req))
-                .build();
-        BeanUtil.copyProperties(chatCompletionRequest, enhance);
-        chatCompletionRequest = enhance;
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
                 Observable<ChatCompletionResult> result;
@@ -359,9 +377,7 @@ public class LlmApiServlet extends BaseServlet {
     private void addChunkIds(ChatCompletionResult result, GetRagContext context) {
         result.getChoices().forEach(choice -> {
             ChatMessage message = choice.getMessage();
-            ChatMessageResponse build = ChatMessageResponse.builder().contextChunkIds(context.getChunkIds()).build();
-            BeanUtil.copyProperties(message, build);
-            choice.setMessage(build);
+            message.setContextChunkIds(context.getChunkIds());
         });
     }
 
@@ -412,14 +428,16 @@ public class LlmApiServlet extends BaseServlet {
     }
 
 
-    private ChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
+    private EnhanceChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
         ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
         if(chatCompletionRequest.getModel() == null
                 && preference != null
                 && preference.getLlm() != null) {
             chatCompletionRequest.setModel(preference.getLlm());
         }
+        String clientIpAddress = ClientIpAddressUtil.getClientIpAddress(req);
+        chatCompletionRequest.setIp(clientIpAddress);
         return chatCompletionRequest;
     }
 
