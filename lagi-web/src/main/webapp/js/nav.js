@@ -428,6 +428,12 @@ let promptNavs = [
                 "agentId": "google_translate",
                 "title": "谷歌翻译",
                 "templateIssues": "帮我把HelloWorld翻译成中文"
+            },
+            {
+                "id": -55,
+                "agentId": "couplet_generation",
+                "title": "对联生成",
+                "templateIssues": "天增岁月人增寿,帮我生成下联"
             }
         ]
     },
