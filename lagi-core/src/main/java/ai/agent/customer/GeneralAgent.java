@@ -50,7 +50,8 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                 "   - 如果问题涉及图片生成（例如请求生成一张风景图），请返回：\n" +
                 "     {\n" +
                 "       \"action\": \"image_generation_needed\",\n" +
-                "       \"questions\": \"生成风景图\"\n" +
+                "       \"questions\": \"Generate landscape image\",\n" +
+                "       \"chinese_questions\": \"生成风景图\"\n" +
                 "     }\n" +
                 "   - 如果问题是简单的单一问题（如查询天气或油价），请返回：\n" +
                 "     {\n" +
@@ -61,7 +62,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                 "2. **返回值结构**：\n" +
                 "   - 如果问题是拆解后的多个子任务（例如查询天气和油价），返回一个包含子任务的列表，如上面的 \"multi_part_question\" 示例。\n" +
                 "   - 如果问题只包含一个任务，如查询天气或油价，返回一个字符串表示任务。\n" +
-                "   - 如果问题需要生成图片，返回包含问题的字符串。\n" +
+                "   - 如果问题需要生成图片，返回包含翻译后的问题的字符串，并且附加中文和英文的回答。\n" +
                 "\n" +
                 "3. 请注意：\n" +
                 "   - **返回格式**必须严格遵循上述结构。\n" +
@@ -69,6 +70,8 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                 "   - 不要返回无关的内容，只需提供所需的操作指令。\n" +
                 "\n" +
                 "问题：" + question;
+
+
 
         ChatMessage message = new ChatMessage();
         message.setRole("user");
@@ -102,7 +105,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
             for (JsonElement questionElement : questionsArray) {
                 String subQuestion = questionElement.getAsString();
 
-                if (subQuestion.contains("生成")) {
+                if (subQuestion.contains("生成")||subQuestion.contains("画")) {
                     ImageGenerationRequest imageGenerationRequest = new ImageGenerationRequest();
                     imageGenerationRequest.setPrompt(subQuestion);
 
@@ -145,7 +148,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
             }
         } else if ("image_generation_needed".equals(action)) {
             String imageGenerationPrompt = jsonResponse.get("questions").getAsString();
-
+            String chineseImageGenerationPrompt = jsonResponse.get("chinese_questions").getAsString();
             ImageGenerationRequest imageGenerationRequest = new ImageGenerationRequest();
             imageGenerationRequest.setPrompt(imageGenerationPrompt);
 
@@ -165,7 +168,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                     List<String> imageList = new ArrayList<>();
                     imageList.add(imageUrl);
                     chatMessage.setImageList(imageList);
-                    chatMessage.setContent("根据您的要求：\"" + imageGenerationPrompt + "\"，我们为您生成了以下图像。请查看，看看它是否符合您的期望！");
+                    chatMessage.setContent("根据您的要求：\"" + chineseImageGenerationPrompt + "\"，我们已经为您生成了以下图像。请查看并告诉我们，图像是否符合您的期望，或者是否有任何细节需要进一步调整。我们将根据您的反馈进行优化，确保最终效果更贴近您的需求。感谢您的支持与合作！");
                     choice.setMessage(chatMessage);
                     List<ChatCompletionChoice> choices = new ArrayList<>();
                     choices.add(choice);
