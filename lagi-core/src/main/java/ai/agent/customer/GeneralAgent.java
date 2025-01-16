@@ -101,10 +101,38 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
             JsonArray questionsArray = jsonResponse.getAsJsonArray("questions");
             for (JsonElement questionElement : questionsArray) {
                 String subQuestion = questionElement.getAsString();
-                ChatMessage subQuestionMessage = new ChatMessage();
-                subQuestionMessage.setRole("user");
-                subQuestionMessage.setContent(subQuestion);
-                temp.add(subQuestionMessage);
+
+                if (subQuestion.contains("生成")) {
+                    ImageGenerationRequest imageGenerationRequest = new ImageGenerationRequest();
+                    imageGenerationRequest.setPrompt(subQuestion);
+
+                    AllImageService allImageService = new AllImageService();
+                    ImageGenerationResult generations = allImageService.generations(imageGenerationRequest);
+
+                    ChatMessage imageMessage = new ChatMessage();
+                    imageMessage.setRole("system");
+
+                    if (generations != null && generations.getData() != null && !generations.getData().isEmpty()) {
+                        ImageGenerationData imageData = generations.getData().get(0);
+
+                        if (imageData.getUrl() != null && !imageData.getUrl().isEmpty()) {
+                            imageMessage.setContent("Here is the generated image: " + imageData.getUrl());
+                        } else if (imageData.getBase64Image() != null && !imageData.getBase64Image().isEmpty()) {
+                            imageMessage.setContent("Here is the generated image in Base64: " + imageData.getBase64Image());
+                        } else {
+                            imageMessage.setContent("Image generated, but no valid URL or Base64 data found.");
+                        }
+                    } else {
+                        imageMessage.setContent("Failed to generate the image.");
+                    }
+
+                    temp.add(imageMessage);
+                } else {
+                    ChatMessage subQuestionMessage = new ChatMessage();
+                    subQuestionMessage.setRole("user");
+                    subQuestionMessage.setContent(subQuestion);
+                    temp.add(subQuestionMessage);
+                }
             }
         } else if ("image_generation_needed".equals(action)) {
             String imageGenerationPrompt = jsonResponse.get("questions").getAsString();
@@ -159,8 +187,8 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
         data.setMessages(temp);
 
         return completionsService.completions(data, null);
-
     }
+
 
     @Override
     public void connect() {
