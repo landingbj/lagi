@@ -32,10 +32,14 @@ public class AlibabaLangOcrAdapter extends ModelService implements IOcr {
     }
 
     public com.aliyun.ocr_api20210707.Client createClient() throws Exception {
+        String endpoint = getEndpoint();
+        if (endpoint== null||endpoint.isEmpty()) {
+            endpoint= "ocr-api.cn-hangzhou.aliyuncs.com";
+        }
         Config config = new Config()
                 .setAccessKeyId(getAccessKeyId())
                 .setAccessKeySecret(getAccessKeySecret())
-                .setEndpoint(getEndpoint());
+                .setEndpoint(endpoint);
         return new com.aliyun.ocr_api20210707.Client(config);
     }
 

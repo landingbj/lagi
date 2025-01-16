@@ -103,6 +103,9 @@ public class ChromaVectorStore extends BaseVectorStore {
         } catch (ApiException e) {
             e.printStackTrace();
         }
+        if (qr == null) {
+            return result;
+        }
         for (int i = 0; i < qr.getDocuments().size(); i++) {
             for (int j = 0; j < qr.getDocuments().get(i).size(); j++) {
                 IndexRecord indexRecord = IndexRecord.newBuilder()

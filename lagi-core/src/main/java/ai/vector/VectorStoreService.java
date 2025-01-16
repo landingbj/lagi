@@ -11,8 +11,7 @@ import ai.intent.pojo.IntentResult;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.LagiGlobal;
-import ai.utils.StoppingWordUtil;
+import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
 import ai.vector.pojo.QueryCondition;
@@ -43,7 +42,7 @@ public class VectorStoreService {
     static {
         ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(100),
-                (r, executor)->{
+                (r, executor) -> {
                     log.error(StrUtil.format("线程池队({})任务过多请求被拒绝", "vector-service"));
                 }
         ));
@@ -68,14 +67,60 @@ public class VectorStoreService {
     }
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
-        List<FileChunkResponse.Document> docs;
-        FileChunkResponse response = fileService.extractContent(file);
-        if (response != null && response.getStatus().equals("success")) {
-            docs = response.getData();
-        } else {
+        List<FileChunkResponse.Document> docs = new ArrayList<>();
+        if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx")||file.getName().endsWith(".csv")){
+            if (ExcelSqlUtil.isConnect()&&ExcelSqlUtil.isSql(file.getPath())){
+                ExcelSqlUtil.uploadSql(file.getPath(),(String)metadatas.get("filename"),(String)metadatas.get("file_id"));
+                return;
+            }else {
+                docs = fileService.splitChunks(file, 512);
+            }
+        } else if (file.getName().endsWith(".jpg") ||file.getName().endsWith(".webp")||
+                file.getName().endsWith(".jpeg") || file.getName().endsWith(".png") ||
+                file.getName().endsWith(".gif") || file.getName().endsWith(".bmp")) {
             docs = fileService.splitChunks(file, 512);
+        } else {
+            String content = fileService.getFileContent(file);
+            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
+                //Is QA
+                return;
+            } else if (content!=null){
+                if (ChapterExtractorUtil.isChapterDocument(content)) {
+                    System.out.println("是章节类文档");
+                    docs = ChapterExtractorUtil.getChunkDocument(content, 512);
+                } else if (SectionExtractorUtil.isChapterDocument(content)) {
+                    System.out.println("是小节类文档");
+                    docs = SectionExtractorUtil.getChunkDocument(content, 1024);
+                } else {
+                    if (WordDocxUtils.checkImagesInWord(file)){
+                        FileChunkResponse response = fileService.extractContent(file);
+                        if (response != null && response.getStatus().equals("success")) {
+                            docs = response.getData();
+                        } else {
+                            docs = fileService.splitChunks(file, 512);
+                        }
+                    }
+                }
+            }
         }
         List<FileInfo> fileList = new ArrayList<>();
+
+        String fileName = metadatas.get("filename").toString();
+        if (fileName != null) {
+            int dotIndex = fileName.lastIndexOf(".");
+            if (dotIndex != -1) {
+                fileName = fileName.substring(0, dotIndex);
+            }
+            FileInfo fi1 = new FileInfo();
+            String e1 = UUID.randomUUID().toString().replace("-", "");
+            fi1.setEmbedding_id(e1);
+            fi1.setText(fileName);
+            Map<String, Object> t1 = new HashMap<>(metadatas);
+            t1.remove("parent_id");
+            fi1.setMetadatas(t1);
+            fileList.add(fi1);
+        }
+
         for (FileChunkResponse.Document doc : docs) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");
@@ -212,7 +257,7 @@ public class VectorStoreService {
 
     public List<IndexSearchData> searchByIds(List<String> ids, String category) {
         List<IndexRecord> fetch = fetch(ids, category);
-        if(fetch == null) {
+        if (fetch == null) {
             return Collections.emptyList();
         }
         List<IndexSearchData> indexSearchDataList = fetch.stream().map(this::toIndexSearchData).collect(Collectors.toList());
@@ -222,7 +267,7 @@ public class VectorStoreService {
         return futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("indexData get error", e);
             }
             return null;
@@ -281,17 +326,17 @@ public class VectorStoreService {
             Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
             indexIds.retainAll(esIds);
             indexSearchDataList = indexSearchDataList.stream()
-                    .filter(indexSearchData->indexIds.contains(indexSearchData.getId()))
+                    .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
                     .collect(Collectors.toList());
         }
         String finalCategory = category;
         List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
                 .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
                 .collect(Collectors.toList());
-        return  futureResultList.stream().map(indexSearchDataFuture -> {
+        return futureResultList.stream().map(indexSearchDataFuture -> {
             try {
                 return indexSearchDataFuture.get();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("indexData get error");
             }
             return null;

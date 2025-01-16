@@ -10,6 +10,7 @@ import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
 import ai.llm.adapter.ILlmAdapter;
+import ai.wrapper.IWrapper;
 import ai.ocr.IOcr;
 import ai.oss.UniversalOSS;
 import ai.translate.adapter.TranslateAdapter;
@@ -66,7 +67,8 @@ public class MultimodalAIManager {
                 register(modelNameList, Image2VideoManager.getInstance(), (Image2VideoAdapter) modelService, modelFunctions.getImage2video());
             }
             if(modelService instanceof IOcr) {
-                register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getImage2ocr());
+//                register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getImage2ocr());
+                register(modelNameList, OcrManager.getInstance(), (IOcr) modelService, modelFunctions.getDoc2orc());
                 register(modelNameList, DocOcrManager.getInstance(), (IOcr) modelService, modelFunctions.getDoc2orc());
             }
             if(modelService instanceof Video2trackAdapter) {
@@ -115,6 +117,36 @@ public class MultimodalAIManager {
         }
     }
 
+    private static boolean doesImplementInterface(String className, String interfaceName) {
+        try {
+            Class<?> targetClass = Class.forName(className);
+            Class<?> targetInterface = Class.forName(interfaceName);
+            Class<?>[] implementedInterfaces = targetClass.getInterfaces();
+            return Arrays.asList(implementedInterfaces).contains(targetInterface);
+        } catch (ClassNotFoundException e) {
+            log.error("Class not found", e);
+            return false;
+        }
+    }
+
+    private static IWrapper createWrapper(String driver) {
+        IWrapper wrapper = null;
+        Class<?> clazz = null;
+        try {
+            clazz = Class.forName(driver);
+        } catch (Exception e) {
+            log.error("Wrapper class {} not found {}", driver,  e.getMessage());
+        }
+        if(clazz != null) {
+            try {
+                wrapper = (IWrapper) clazz.newInstance();
+            } catch (Exception e) {
+                log.error("wrapper {} newinstance failed  {}", driver,  e.getMessage());
+            }
+        }
+        return wrapper;
+    }
+
     private static @NotNull List<ModelService> convertModels2Services(List<Backend> models) {
         return models.stream()
                 // flatmap by drivers
@@ -124,9 +156,15 @@ public class MultimodalAIManager {
                     }
                     //Single drive to multiple drive
                     if (model.getModel() != null && model.getDriver() != null) {
-                        Driver driver = Driver.builder().model(model.getModel()).driver(model.getDriver()).oss(model.getOss()).build();
-                        model.setDrivers(Lists.newArrayList(driver));
+                        if (doesImplementInterface(model.getDriver(), "ai.wrapper.IWrapper")) {
+                            IWrapper wrapper = createWrapper(model.getDriver());
+                            model.setDrivers(wrapper.getDrivers(model.getModel()));
+                        } else {
+                            Driver driver = Driver.builder().model(model.getModel()).driver(model.getDriver()).oss(model.getOss()).build();
+                            model.setDrivers(Lists.newArrayList(driver));
+                        }
                     }
+
                     // The properties of model are set to default
                     List<Backend> backends = Collections.emptyList();
                     if (model.getDrivers() != null) {

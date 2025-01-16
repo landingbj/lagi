@@ -9,76 +9,57 @@ Lag[i] (联基) 是由北京联动北方科技有限公司精心打造的一款�
 <div style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_1.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Landing</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Landing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_2.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Vicuna</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Vicuna&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_4.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">ChatGPT</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">ChatGPT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_3.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">GPTAzure</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">GPTAzure&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_12.webp" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Gemini</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Gemini&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_5.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Qwen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+	</br>
+ <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_6.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Baidu Ernie</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Baidu&nbsp;Ernie &nbsp;&nbsp; </span>
         <img src="docs/images/logo/model/img_7.jpg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">ChatGLM</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">ChatGLM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_8.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Moonshot AI</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Moonshot&nbsp;AI&nbsp;</span>
         <img src="docs/images/logo/model/img_9.jpeg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Baichuan</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align:   left;">Baichuan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_10.jpeg"width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">iFLYTEK</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
+        <span style="font-size: 12px;width: 70px; text-align: left;">IFLYTEK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_11.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">SenseChat</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">SenseChat&nbsp;&nbsp;&nbsp;</span>
     </div>
+		</br>
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/model/img_13.png" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px;text-align: left;">Doubao</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">Doubao&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
+        <img src="docs/images/logo/model/img_14.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Deepseek&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/model/img_15.webp" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Claude&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
+	</br>
 </div>
 
 支持但不限于以下智能体平台：
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
     <div style="display: flex; align-items: center; margin: 10px;">
-        <img src="docs/images/logo/img_4.jpeg" alt="Model 2" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;" >混元智能体平台</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
-        <img src="docs/images/logo/img_1.png" alt="Platform 2" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;">扣子智能体平台</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
-        <img src="docs/images/logo/img_2.png" alt="Framework 1" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;">文心智能体平台</span>
-    </div>
-    <div style="display: flex; align-items: center; margin: 10px;">
-        <img src="docs/images/logo/img_3.png" alt="Framework 2" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;">智谱智能体平台</span>
+        <img src="docs/images/logo/img_4.jpeg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;" >混元智能体平台&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_1.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">扣子智能体平台&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_2.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">文心智能体平台&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_3.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">智谱智能体平台&nbsp;&nbsp;&nbsp;</span>
     </div>
 </div>
 
@@ -192,11 +173,15 @@ Lag[i] (联基) 项目还提供了多个RESTful API接口，方便用户将AI服
 
 我们为用户提供了预打包的应用程序，方便直接下载和使用：
 
-- Jar 文件
+- **Jar 文件**：Lag[i] (联基)的核心依赖库。
   - 文件名：`lagi-core-1.0.2-jar-with-dependencies.jar`
   - 文件大小：250.5 MB
   - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)
 
+- **War 文件**：Lag[i] (联基)的Web应用，可直接部署到Web容器。
+  - 文件名：`lagi-web.war`
+  - 文件大小：279 MB
+  - 下载链接：[点击这里下载](https://downloads.saasai.top/lagi/lagi-web.war)
 
 
 感谢您对 Lag[i] (联基) 的关注与支持！如有任何问题或建议，请随时与我们联系。
