@@ -122,6 +122,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                             List<String> imageList = new ArrayList<>();
                             imageList.add(imageUrl);
                             chatMessage.setImageList(imageList);
+                            chatMessage.setContent("根据您的要求：\"" + subQuestion + "\"，我们为您生成了以下图像。请查看，看看它是否符合您的期望！");
                             choice.setMessage(chatMessage);
                             List<ChatCompletionChoice> choices = new ArrayList<>();
                             choices.add(choice);
@@ -164,10 +165,12 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                     List<String> imageList = new ArrayList<>();
                     imageList.add(imageUrl);
                     chatMessage.setImageList(imageList);
+                    chatMessage.setContent("根据您的要求：\"" + imageGenerationPrompt + "\"，我们为您生成了以下图像。请查看，看看它是否符合您的期望！");
                     choice.setMessage(chatMessage);
                     List<ChatCompletionChoice> choices = new ArrayList<>();
                     choices.add(choice);
                     chatCompletionResult.setChoices(choices);
+                    System.out.println("chatCompletionResult = " + chatCompletionResult);
                     return chatCompletionResult;
                 } else {
                     imageMessage.setContent("Image generated, but no valid URL or Base64 data found.");
