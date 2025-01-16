@@ -116,10 +116,18 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                         ImageGenerationData imageData = generations.getData().get(0);
 
                         if (imageData.getUrl() != null && !imageData.getUrl().isEmpty()) {
-                            imageMessage.setContent("Here is the generated image: " + imageData.getUrl());
-                        } else if (imageData.getBase64Image() != null && !imageData.getBase64Image().isEmpty()) {
-                            imageMessage.setContent("Here is the generated image in Base64: " + imageData.getBase64Image());
-                        } else {
+                            String imageUrl = imageData.getUrl();
+                            ChatCompletionResult chatCompletionResult = new ChatCompletionResult();
+                            ChatCompletionChoice choice = new ChatCompletionChoice();
+                            List<String> imageList = new ArrayList<>();
+                            imageList.add(imageUrl);
+                            chatMessage.setImageList(imageList);
+                            choice.setMessage(chatMessage);
+                            List<ChatCompletionChoice> choices = new ArrayList<>();
+                            choices.add(choice);
+                            chatCompletionResult.setChoices(choices);
+                            return chatCompletionResult;
+                        }else {
                             imageMessage.setContent("Image generated, but no valid URL or Base64 data found.");
                         }
                     } else {
@@ -150,9 +158,17 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                 ImageGenerationData imageData = generations.getData().get(0);
 
                 if (imageData.getUrl() != null && !imageData.getUrl().isEmpty()) {
-                    imageMessage.setContent("Here is the generated image: " + imageData.getUrl());
-                } else if (imageData.getBase64Image() != null && !imageData.getBase64Image().isEmpty()) {
-                    imageMessage.setContent("Here is the generated image in Base64: " + imageData.getBase64Image());
+                    String imageUrl = imageData.getUrl();
+                    ChatCompletionResult chatCompletionResult = new ChatCompletionResult();
+                    ChatCompletionChoice choice = new ChatCompletionChoice();
+                    List<String> imageList = new ArrayList<>();
+                    imageList.add(imageUrl);
+                    chatMessage.setImageList(imageList);
+                    choice.setMessage(chatMessage);
+                    List<ChatCompletionChoice> choices = new ArrayList<>();
+                    choices.add(choice);
+                    chatCompletionResult.setChoices(choices);
+                    return chatCompletionResult;
                 } else {
                     imageMessage.setContent("Image generated, but no valid URL or Base64 data found.");
                 }
