@@ -168,7 +168,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
                     List<String> imageList = new ArrayList<>();
                     imageList.add(imageUrl);
                     chatMessage.setImageList(imageList);
-                    chatMessage.setContent("根据您的要求：\"" + chineseImageGenerationPrompt + "\"，我们已经为您生成了以下图像。请仔细查看并确认它是否准确反映了您想要的平板哑铃卧推姿势。如果图像有任何细节需要调整，或者您有其他要求，请随时告诉我们，我们将根据您的反馈进一步优化。感谢您的耐心与支持！");
+                    chatMessage.setContent("根据您的要求：\"" + chineseImageGenerationPrompt + "\"，我们已经为您生成了以下图像。请查看并告诉我们，图像是否符合您的期望，或者是否有任何细节需要进一步调整。我们将根据您的反馈进行优化，确保最终效果更贴近您的需求。感谢您的支持与合作！");
                     choice.setMessage(chatMessage);
                     List<ChatCompletionChoice> choices = new ArrayList<>();
                     choices.add(choice);
