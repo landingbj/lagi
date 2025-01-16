@@ -20,6 +20,7 @@ import ai.medusa.MedusaService;
 import ai.medusa.pojo.InstructionData;
 import ai.medusa.pojo.InstructionPairRequest;
 import ai.migrate.service.UploadFileService;
+import ai.utils.ExcelSqlUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.lang3.StringUtils;
 
 import ai.vector.FileService;
 import ai.vector.VectorDbService;
@@ -134,6 +134,9 @@ public class UploadFileServlet extends HttpServlet {
         }.getType());
         vectorDbService.deleteDoc(idList);
         uploadFileService.deleteUploadFile(idList);
+        if (ExcelSqlUtil.isConnect()){
+            ExcelSqlUtil.deleteListSql(idList);
+        }
         Map<String, Object> map = new HashMap<>();
         map.put("status", "success");
         PrintWriter out = resp.getWriter();

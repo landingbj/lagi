@@ -373,7 +373,7 @@ public class EasyExcelUtil {
      * @return
      * @throws IOException
      */
-   public static List<FileChunkResponse.Document> getChunkDocumentExcel(File file,Integer pageSize) throws IOException {
+    public static List<FileChunkResponse.Document> getChunkDocumentExcel(File file,Integer pageSize) throws IOException {
        List<FileChunkResponse.Document> resultDocument = new ArrayList<>();
         try {
             ExcelReader reader = ExcelUtil.getReader(file);
@@ -381,6 +381,9 @@ public class EasyExcelUtil {
             for (int i = 0; i < sheetNames.size(); i++) {
                 List<List<JSONObject>> result =readMergeExcel(file.getPath(),i,0,0);
                 StringBuilder separator = new StringBuilder();
+                if (result.size() <= 0){
+                    break;
+                }
                 // 获取表头
                 List<JSONObject> headerRow = result.get(0);
                 List<String> headers = new ArrayList<>();
@@ -409,7 +412,6 @@ public class EasyExcelUtil {
         List<Page<List<Object>>> pages = paginate(rowData, pageSize);
         return mergePages(pages, header);
     }
-
     public static String getExcelContent(File file) throws IOException {
         StringBuilder result = new StringBuilder();
         FileInputStream fileInputStream = new FileInputStream(file);
@@ -503,7 +505,7 @@ public class EasyExcelUtil {
     /**
      * 获取单元格的值
      */
-    public static String getCellValue(Cell cell) {
+    private static String getCellValue(Cell cell) {
         if (cell == null) {return "";}
         if (cell.getCellType() == CellType.STRING) {
             return cell.getStringCellValue();
@@ -519,7 +521,6 @@ public class EasyExcelUtil {
         }
         return "";
     }
-
     private static String getCellValue(Cell cell, FormulaEvaluator formulaEvaluator) {
         switch (cell.getCellType()) {
             case STRING:
@@ -586,16 +587,13 @@ public class EasyExcelUtil {
      * 方案1
      * @param args
      */
-    public static void main1(String[] args) {
+    public static void main(String[] args) {
         try {
-//            String filePath = "C:\\Users\\25129\\Desktop\\公司会议纪要1202.csv";
-//            Map<String, List<List<Object>>> result = readCsv(filePath);
-//            String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\所有表格\\poc计划表1.0v.xlsx";
-//            String filePath = "C:\\Users\\25129\\Desktop\\公司会议纪要1202.xlsx";
-              String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\风力发电机组故障处理手册.xlsx";
+            String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\节点分类-测试用.csv";
 
             File file = new File(filePath);
             Map<String, List<List<Object>>> result = readExcel(file);
+//            Map<String, List<List<Object>>> result = readCsv(filePath);
             List<Object> header = Collections.singletonList(result.get("header"));
             List<List<Object>> rowData = result.get("data");
             int pageSize = 512;

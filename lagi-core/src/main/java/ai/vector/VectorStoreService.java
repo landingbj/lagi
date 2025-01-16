@@ -68,11 +68,16 @@ public class VectorStoreService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         List<FileChunkResponse.Document> docs = new ArrayList<>();
-        if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx") ||
-                file.getName().endsWith(".csv") || file.getName().endsWith(".jpg") ||
+        if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx")||file.getName().endsWith(".csv")){
+            if (ExcelSqlUtil.isConnect()&&ExcelSqlUtil.isSql(file.getPath())){
+                ExcelSqlUtil.uploadSql(file.getPath(),(String)metadatas.get("filename"),(String)metadatas.get("file_id"));
+                return;
+            }else {
+                docs = fileService.splitChunks(file, 512);
+            }
+        } else if (file.getName().endsWith(".jpg") ||file.getName().endsWith(".webp")||
                 file.getName().endsWith(".jpeg") || file.getName().endsWith(".png") ||
-                file.getName().endsWith(".gif") || file.getName().endsWith(".bmp") ||
-                file.getName().endsWith(".webp")) {
+                file.getName().endsWith(".gif") || file.getName().endsWith(".bmp")) {
             docs = fileService.splitChunks(file, 512);
         } else {
             String content = fileService.getFileContent(file);
