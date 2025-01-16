@@ -32,7 +32,7 @@ public class ExcelSqlUtil {
     private static MysqlAdapter mysqlAdapter;
 
     static {
-        ContextLoader.loadContext();
+//        ContextLoader.loadContext();
         sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
                 .findFirst()  // 获取流中的第一个元素
                 .orElseThrow(() -> new NoSuchElementException("No database found"));
