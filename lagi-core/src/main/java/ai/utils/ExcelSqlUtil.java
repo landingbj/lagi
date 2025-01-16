@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ExcelSqlUtil {
-    private static EasyExcelUtil easyExcelUtil = new EasyExcelUtil();
     private static SQLJdbc sqlJdbc ;
     private static MysqlAdapter mysqlAdapter;
     private static final Logger log = LoggerFactory.getLogger(ExcelSqlUtil.class);
@@ -164,7 +163,7 @@ public class ExcelSqlUtil {
             fileName = fileName.substring(0, dotIndex);
         }
         if (file.getName().endsWith(".csv")){
-                Map<String, List<List<Object>>> res = easyExcelUtil.readCsv(filePath);
+                Map<String, List<List<Object>>> res = EasyExcelUtil.readCsv(filePath);
                 List<List<Object>> result =  res.get("data");
                 List<Object> headers =  res.get("header").get(0);
                 StringBuilder description = new StringBuilder();
@@ -210,7 +209,7 @@ public class ExcelSqlUtil {
         List<String> sheetNames = reader.getSheetNames();
         Map<String, List<List<JSONObject>>> list = new HashMap<>();
         for (int i = 0; i < sheetNames.size(); i++) {
-            List<List<JSONObject>> result = easyExcelUtil.readMergeExcel(filePath, i, 0, 0);
+            List<List<JSONObject>> result = EasyExcelUtil.readMergeExcel(filePath, i, 0, 0);
             if (result.size() > 0){
                 list.put(fileName+"里的"+sheetNames.get(i)+"表", result);
             }
@@ -589,7 +588,7 @@ public class ExcelSqlUtil {
             String excelFilePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\节点分类-测试用.csv";
             System.out.println("是否走sql:"+isSql(excelFilePath));
             String tableName = "detailed_data";
-            List<List<Object>> result =  easyExcelUtil.readCsv(excelFilePath).get("data");
+            List<List<Object>> result =  EasyExcelUtil.readCsv(excelFilePath).get("data");
         }catch (Exception e){
             System.out.println(e);
         }

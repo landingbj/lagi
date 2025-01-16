@@ -36,12 +36,12 @@ public class TextToSqlSearchTool extends AbstractTool {
 
     @Override
     public String apply(Map<String, Object> args) {
-        return search(args.get("msg").toString());
+        return search(args.get("demand").toString());
     }
 
     public static void main(String[] args) {
         TextToSqlSearchTool tool = new TextToSqlSearchTool();
-        String result = tool.search("语文成绩大于80分的同学有那些");
+        String result = tool.search("所有学生语文成绩总分是多少");
         System.out.println(result);
     }
 }
