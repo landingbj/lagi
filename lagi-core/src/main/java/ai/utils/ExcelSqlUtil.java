@@ -3,7 +3,6 @@ package ai.utils;
 import ai.config.ContextLoader;
 import ai.database.impl.MysqlAdapter;
 import ai.database.pojo.SQLJdbc;
-import ai.database.pojo.TableColumnInfo;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -12,7 +11,6 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
@@ -36,7 +34,7 @@ public class ExcelSqlUtil {
     private static boolean isSwitch = false;
 
     static {
-        ContextLoader.loadContext();
+//        ContextLoader.loadContext();
         sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
                 .findFirst()  // 获取流中的第一个元素
                 .orElseThrow(() -> new NoSuchElementException("No database found"));
@@ -384,7 +382,6 @@ public class ExcelSqlUtil {
                 " \n ”。用户需求:“" + demand+"”。" );
         chatCompletionRequest.setMessages(Lists.newArrayList(message));
         chatCompletionRequest.setStream(false);
-        System.out.println(message.getContent());
         chatCompletionRequest.setModel(mysqlAdapter.model);
         CompletionsService completionsService = new CompletionsService();
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
@@ -575,7 +572,7 @@ public class ExcelSqlUtil {
 
     @Test
     public void text(){
-        String demand = "高三三班学生各科成绩都大于60分的人有那些，总分分别是多少。";
+        String demand = "各科成绩都大于60分的人有那些，总分分别是多少。";
         String sql1 = WorkflowsToSql(demand);
 //        System.out.println("生成的sql是:\n"+sql1);
         String sql = toSql(sql1,demand);

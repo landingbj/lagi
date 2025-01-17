@@ -250,7 +250,8 @@ fileUploadButton.addEventListener("click", function () {
             let serverEndpoint = "";
             var fileStatus = "";
             if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
-                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx") {
+                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx"||
+                fileType === "csv") {
                 question = "您所上传的文档文件名称为：" + selectedFile.name;
                 formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
                 serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;
