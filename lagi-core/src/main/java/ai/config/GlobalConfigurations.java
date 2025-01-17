@@ -27,9 +27,10 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private StoreConfig stores;
     private ModelFunctions functions;
     private List<AgentConfig> agents;
+
     private List<WorkerConfig> workers;
     private List<RouterConfig> routers;
-    private FilterConfig filters;
+    private List<FilterConfig> filters;
 
     @Override
     public void init() {
@@ -41,23 +42,27 @@ public class GlobalConfigurations extends AbstractConfiguration {
         PromptCacheConfig.init(stores.getVectors(), stores.getMedusa());
         OcrConfig.init(functions.getImage2ocr());
         AgentManager.getInstance().register(agents);
-        Routers.getInstance().register(routers);
+        Routers.getInstance().register(workers, routers);
+        Routers.getInstance().register(functions, routers);
         WorkerManager.getInstance().register(workers);
         registerFilter();
     }
 
     private void registerFilter() {
-        SensitiveWordUtil.pushWordRule(filters.getSensitive());
-        StoppingWordUtil.addWords(filters.getStopping());
-        PriorityWordUtil.addWords(filters.getPriority());
-        RetainWordUtil.addWords(filters.getRetain());
-        ContinueWordUtil.addWords(filters.getContinueWords());
+        if (filters != null) {
+            for (FilterConfig filter : filters) {
+                SensitiveWordUtil.pushWordRule(filter.getSensitive());
+                StoppingWordUtil.addWords(filter.getStopping());
+                PriorityWordUtil.addWords(filter.getPriority());
+                RetainWordUtil.addWords(filter.getRetain());
+                ContinueWordUtil.addWords(filter.getContinueWords());
+            }
+        }
     }
-
 
     @Override
     public Configuration transformToConfiguration() {
-        List<Backend> chatBackends = functions.getChat().stream().map(backendMatch -> {
+        List<Backend> chatBackends = functions.getChat().getBackends().stream().map(backendMatch -> {
             Optional<Backend> any = models.stream().filter(backend -> backend.getEnable() && backendMatch.getEnable() && backendMatch.getBackend().equals(backend.getName())).findAny();
             Backend backend = any.orElse(null);
             if(backend != null) {

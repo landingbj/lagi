@@ -16,7 +16,7 @@ public class DefaultWorker {
 
     public ChatCompletionResult  work(String workerName, ChatCompletionRequest request) {
         try {
-            Worker<ChatCompletionRequest,ChatCompletionResult> worker =  (Worker<ChatCompletionRequest, ChatCompletionResult>)workerManager.get(workerName);
+            Worker<ChatCompletionRequest,ChatCompletionResult> worker = workerManager.getRouterWorker(workerName);
             return worker.work(request);
         } catch (Exception e) {
             log.error("worker {} work error", workerName, e);

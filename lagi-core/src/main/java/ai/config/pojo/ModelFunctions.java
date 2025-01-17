@@ -12,12 +12,9 @@ import java.util.List;
 @ToString
 @Data
 public class ModelFunctions {
-    @JsonProperty("policy")
-    private Policy policy;
-
     private List<EmbeddingConfig> embedding;
     @JsonProperty("chat")
-    private List<Backend> chat;
+    private ModelFunction chat;
     @JsonProperty("speech2text")
     private List<Backend> speech2text;
     @JsonProperty("text2speech")
@@ -52,12 +49,13 @@ public class ModelFunctions {
     private List<Backend> doc2ext;
     @JsonProperty("doc2struct")
     private List<Backend> doc2struct;
+    @JsonProperty("filter")
+    private String filter;
 
     @JsonCreator
     public ModelFunctions(
-            @JsonProperty("policy") Policy policy,
             @JsonProperty("embedding") List<EmbeddingConfig> embedding,
-            @JsonProperty("chat") List<Backend> chat,
+            @JsonProperty("chat") ModelFunction chat,
             @JsonProperty("speech2text") List<Backend> speech2text,
             @JsonProperty("text2speech") List<Backend> text2speech,
             @JsonProperty("text2image") List<Backend> text2image,
@@ -74,9 +72,9 @@ public class ModelFunctions {
             @JsonProperty("doc2ocr") List<Backend> doc2orc,
             @JsonProperty("doc2instruct") List<Backend> doc2instruct,
             @JsonProperty("doc2ext") List<Backend> doc2ext,
-            @JsonProperty("doc2struct") List<Backend> doc2struct
+            @JsonProperty("doc2struct") List<Backend> doc2struct,
+            @JsonProperty("filter") String filter
     ) {
-        this.policy = policy == null ? new Policy(null, null, null, null, null) : policy;
         this.embedding = embedding;
         this.chat = chat;
         this.speech2text = speech2text;
@@ -96,5 +94,6 @@ public class ModelFunctions {
         this.doc2instruct = doc2instruct;
         this.doc2ext = doc2ext;
         this.doc2struct = doc2struct;
+        this.filter = filter;
     }
 }

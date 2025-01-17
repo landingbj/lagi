@@ -7,9 +7,6 @@ public class WorkerGlobal {
     public static boolean STREAM = false;
     public static int MAX_TOKENS = 400;
     public static int MAPPER_PRIORITY = 100;
-    public static String MAPPER_CHAT_REQUEST = "MAPPER_CHAT_REQUEST";
-    public static String MAPPER_RAG_URL = "MAPPER_RAG_URL";
-    public static String MAPPER_AGENT_CONFIG = "MAPPER_AGENT_CONFIG";
 
     public static String ROBOT_WORKER_CLASS = "ai.worker.social.RobotWorker";
     public static String ASR_FLIGHT_WORKER_CLASS = "ai.worker.audio.Asr4Flights";

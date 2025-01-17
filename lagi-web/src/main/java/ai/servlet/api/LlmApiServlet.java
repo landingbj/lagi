@@ -67,7 +67,7 @@ public class LlmApiServlet extends BaseServlet {
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
-    private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getPolicy().getEnableQueueHandle();
+    private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private static ExecutorService executorService;

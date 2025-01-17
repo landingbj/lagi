@@ -7,6 +7,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.Route;
 import ai.router.Routers;
+import ai.router.utils.RouteGlobal;
 import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
 
@@ -14,7 +15,7 @@ import ai.utils.qa.ChatCompletionUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatCompletionResult>{
+public class DefaultBestWorker extends RouteWorker {
 
     protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = new ArrayList<>();
 
@@ -24,10 +25,10 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
 
     public DefaultBestWorker(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
-        String ruleName = RouterParser.getRuleName(workerConfig.getRoute());
+        String ruleName = workerConfig.getRoute();
         this.route = Routers.getInstance().getRoute(ruleName);
         List<String> params = RouterParser.getParams(workerConfig.getRoute());
-        if(params.size() == 1 && RouterParser.WILDCARD_STRING.equals(params.get(0))) {
+        if(params.size() == 1 && RouteGlobal.WILDCARD_STRING.equals(params.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
                 String appId = agent.getAgentConfig().getName();
@@ -38,8 +39,7 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
                     }
                 }
             }
-        }
-        if(params.size() > 1) {
+        }else if(!params.isEmpty()) {
             for (String agentId : params) {
                 Agent<ChatCompletionRequest, ChatCompletionResult> agent =
                         (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(agentId);
@@ -47,6 +47,9 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
                     agents.add(agent);
                 }
             }
+        }
+        for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : agents) {
+            route.putAgentHandler(agent);
         }
     }
 
@@ -77,7 +80,7 @@ public class DefaultBestWorker extends Worker<ChatCompletionRequest, ChatComplet
             return null;
         }
         data.setStream(false);
-        List<ChatCompletionResult> results = route.invoke(data, filterAgentsBySkillMap(agents, data));
+        List<ChatCompletionResult> results = route.invokeAgent(data, filterAgentsBySkillMap(agents, data)).getResult();
         if(results != null && !results.isEmpty()) {
             result = results.get(0);
         }

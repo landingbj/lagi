@@ -38,4 +38,5 @@ public class Backend {
     private String cacheDir;
     private String router;
     private Boolean dependingOnTheContext;
+    private String filter;
 }

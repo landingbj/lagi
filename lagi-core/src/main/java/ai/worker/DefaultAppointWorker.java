@@ -7,6 +7,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.Route;
 import ai.router.Routers;
+import ai.router.utils.RouteGlobal;
 import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
 import cn.hutool.core.bean.BeanUtil;
@@ -18,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatCompletionResult> {
+public class DefaultAppointWorker extends RouteWorker {
 
     protected Map<String, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = new ConcurrentHashMap<>();
 
@@ -33,7 +34,7 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
         String routeName = RouterParser.getRuleName(workerConfig.getRoute());
         this.route = Routers.getInstance().getRoute(routeName);
         List<String> agents = RouterParser.getParams(workerConfig.getRoute());
-        if(agents.size() == 1 && RouterParser.WILDCARD_STRING.equals(agents.get(0))) {
+        if(agents.size() == 1 && RouteGlobal.WILDCARD_STRING.equals(agents.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
                 if(agent.getAgentConfig() !=null && agent.getAgentConfig().getAppId() !=null) {
@@ -67,7 +68,7 @@ public class DefaultAppointWorker extends Worker<ChatCompletionRequest, ChatComp
         String agentId = (String)BeanUtil.getFieldValue(data, "agentId");
         Agent<ChatCompletionRequest, ChatCompletionResult> trAgent = agentMap.get(agentId);
         if(trAgent != null) {
-            List<ChatCompletionResult> invoke = route.invoke(data, Lists.newArrayList(trAgent));
+            List<ChatCompletionResult> invoke = route.invokeAgent(data, Lists.newArrayList(trAgent)).getResult();
             if(invoke != null && !invoke.isEmpty()) {
                 ChatCompletionResult communicate = invoke.get(0);
                 try {

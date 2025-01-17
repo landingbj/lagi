@@ -9,6 +9,7 @@ import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
+import ai.router.utils.RouteGlobal;
 import ai.utils.WorkPriorityWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.SkillMap;
@@ -79,7 +80,7 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
-                WorkerGlobal.MAPPER_CHAT_REQUEST);
+                RouteGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
         chatCompletionResult = agent.communicate(chatCompletionRequest);
