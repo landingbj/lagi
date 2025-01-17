@@ -250,10 +250,14 @@ fileUploadButton.addEventListener("click", function () {
             let serverEndpoint = "";
             var fileStatus = "";
             if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
-                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx") {
+                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx" || fileType === "csv") {
                 question = "您所上传的文档文件名称为：" + selectedFile.name;
                 formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
-                serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;
+                if(globalUserId) {
+                    serverEndpoint = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}`;
+                } else {
+                    serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;
+                }
                 fileStatus = "doc";
             } else if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "heic") {
                 question = "您所上传的图片是：" + selectedFile.name;

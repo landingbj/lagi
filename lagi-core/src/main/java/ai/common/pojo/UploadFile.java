@@ -15,5 +15,6 @@ public class UploadFile {
     private String filepath;
     private String category;
     private Long createTime;
+    private String userId;
 
 }

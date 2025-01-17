@@ -890,7 +890,7 @@ function getPromptDialog(id, e) {
 
 
 function goToUserTab(id, e) {
-    if (id === 666 || id == 667) {
+    if (id === 666 || id == 667 || 668) {
         if (!getCookie('userId')) {
             openModal(e);
             return;

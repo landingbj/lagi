@@ -173,7 +173,8 @@ public class VectorStoreService {
 
         Map<String, String> metadata = new HashMap<>();
         for (Map.Entry<String, Object> entry : fileInfo.getMetadatas().entrySet()) {
-            metadata.put(entry.getKey(), entry.getValue().toString());
+            String value = entry.getValue() == null ? "" : entry.getValue().toString();
+            metadata.put(entry.getKey(), value);
         }
         upsertRecord.setMetadata(metadata);
 

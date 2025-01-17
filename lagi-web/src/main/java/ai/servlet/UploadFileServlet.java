@@ -151,6 +151,7 @@ public class UploadFileServlet extends HttpServlet {
         int pageNumber = 1;
 
         String category = req.getParameter("category");
+        String userId = req.getParameter("lagiUserId");
 
         if (req.getParameter("pageNumber") != null) {
             pageSize = Integer.parseInt(req.getParameter("pageSize"));
@@ -161,8 +162,8 @@ public class UploadFileServlet extends HttpServlet {
         List<UploadFile> result = null;
         int totalRow = 0;
         try {
-            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category);
-            totalRow = uploadFileService.getTotalRow(category);
+            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category, userId);
+            totalRow = uploadFileService.getTotalRow(category, userId);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -309,6 +310,7 @@ public class UploadFileServlet extends HttpServlet {
         HttpSession session = req.getSession();
         String category = req.getParameter("category");
         String level = req.getParameter("level");
+        String userId = req.getParameter("userId");
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "success");
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -355,7 +357,7 @@ public class UploadFileServlet extends HttpServlet {
             for (File file : files) {
                 if (file.exists() && file.isFile()) {
                     String filename = realNameMap.get(file.getName());
-                    Future<?> future =uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
+                    Future<?> future =uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, userId));
                     futures.add(future);
                     JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("filename", filename);
@@ -397,12 +399,15 @@ public class UploadFileServlet extends HttpServlet {
         private final String category;
         private final String filename;
         private final String level;
+        private final String userId;
 
-        public AddDocIndex(File file, String category, String filename, String level) {
+        public AddDocIndex(File file, String category, String filename, String level, String userId) {
             this.file = file;
             this.category = category;
             this.filename = filename;
             this.level = level;
+            this.userId = userId;
+
         }
 
         public void run() {
@@ -420,6 +425,7 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("category", category);
             metadatas.put("filepath", filepath);
             metadatas.put("file_id", fileId);
+            metadatas.put("userId", userId);
             if (level == null) {
                 metadatas.put("level", "user");
             } else {
@@ -433,6 +439,7 @@ public class UploadFileServlet extends HttpServlet {
                 entity.setFilename(filename);
                 entity.setFilepath(filepath);
                 entity.setFileId(fileId);
+                entity.setUserId(userId);
                 entity.setCreateTime(new Date().getTime());
                 uploadFileService.addUploadFile(entity);
             } catch (IOException | SQLException e) {

@@ -55,17 +55,17 @@ public class UploadFileService {
         return result;
     }
 
-    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category) throws SQLException {
-        if (category == null) {
+    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category, String userId) throws SQLException {
+        if (category == null && userId == null) {
             return uploadFileDao.getUploadFileList(pageNumber, pageSize);
         }
-        return uploadFileDao.getUploadFileList(pageNumber, pageSize, category);
+        return uploadFileDao.getUploadFileList(pageNumber, pageSize, category, userId);
     }
     
-    public int getTotalRow(String category) throws SQLException {
-        if (category == null) {
+    public int getTotalRow(String category, String userId) throws SQLException {
+        if (category == null && userId == null) {
             return uploadFileDao.getTotalRow();
         }
-        return uploadFileDao.getTotalRow(category);
+        return uploadFileDao.getTotalRow(category, userId);
     }
 }
