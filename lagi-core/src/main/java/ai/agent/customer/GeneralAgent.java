@@ -32,58 +32,65 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
     }
 
     private String parsingQuestion(String question) {
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
-        chatCompletionRequest.setTemperature(0.8);
-        chatCompletionRequest.setMax_tokens(1024);
-        chatCompletionRequest.setCategory("default");
+        boolean isValidJson = false;
+        String resultContent = "";
 
-        String prompt = "你是一个专业的智能助手，只能完成你所使用的动作所能完成的目标，而不是使用你所学的事实知识来完成目标。请遵循以下要求：\n" +
-                "1. **拆解问题**：\n" +
-                "   - 如果问题包含多个子任务（例如查询武汉天气和油价），请将问题拆解成多个子问题，并返回一个列表，其中包含所有拆解后的问题。例如：\n" +
-                "     {\n" +
-                "       \"action\": \"multi_part_question\",\n" +
-                "       \"questions\": [\n" +
-                "         \"查询武汉的天气\",\n" +
-                "         \"查询武汉的油价\"\n" +
-                "       ]\n" +
-                "     }\n" +
-                "   - 如果问题涉及图片生成（例如请求生成一张风景图），请返回：\n" +
-                "     {\n" +
-                "       \"action\": \"image_generation_needed\",\n" +
-                "       \"questions\": \"Generate landscape image\",\n" +
-                "       \"chinese_questions\": \"生成风景图\"\n" +
-                "     }\n" +
-                "   - 如果问题是简单的单一问题（如查询天气或油价），请返回：\n" +
-                "     {\n" +
-                "       \"action\": \"single_question\",\n" +
-                "       \"questions\": \"查询武汉的天气\"\n" +
-                "     }\n" +
-                "\n" +
-                "2. **返回值结构**：\n" +
-                "   - 如果问题是拆解后的多个子任务（例如查询天气和油价），返回一个包含子任务的列表，如上面的 \"multi_part_question\" 示例。\n" +
-                "   - 如果问题只包含一个任务，如查询天气或油价，返回一个字符串表示任务。\n" +
-                "   - 如果问题需要生成图片，返回包含翻译后的问题的字符串，并且附加中文和英文的回答。\n" +
-                "\n" +
-                "3. 请注意：\n" +
-                "   - **返回格式**必须严格遵循上述结构。\n" +
-                "   - 你只需返回一个 JSON 对象，指示当前问题的拆解方式或是否需要生成图片。\n" +
-                "   - 不要返回无关的内容，只需提供所需的操作指令。\n" +
-                "\n" +
-                "问题：" + question;
+        while (!isValidJson) {
+            ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+            chatCompletionRequest.setTemperature(0.8);
+            chatCompletionRequest.setMax_tokens(1024);
+            chatCompletionRequest.setCategory("default");
 
+            String prompt = "你是一个专业的智能助手，只能完成你所使用的动作所能完成的目标，而不是使用你所学的事实知识来完成目标。请遵循以下要求：\n" +
+                    "1. **拆解问题**：\n" +
+                    "   - 如果问题包含多个子任务（例如查询武汉天气和油价），请将问题拆解成多个子问题，并返回一个列表，其中包含所有拆解后的问题。例如：\n" +
+                    "     {\n" +
+                    "       \"action\": \"multi_part_question\",\n" +
+                    "       \"questions\": [\n" +
+                    "         \"查询武汉的天气\",\n" +
+                    "         \"查询武汉的油价\"\n" +
+                    "       ]\n" +
+                    "     }\n" +
+                    "   - 如果问题涉及图片生成（例如请求生成一张风景图），请返回：\n" +
+                    "     {\n" +
+                    "       \"action\": \"image_generation_needed\",\n" +
+                    "       \"questions\": \"Generate landscape image\",\n" +
+                    "       \"chinese_questions\": \"生成风景图\"\n" +
+                    "     }\n" +
+                    "   - 如果问题是简单的单一问题（如查询天气或油价），请返回：\n" +
+                    "     {\n" +
+                    "       \"action\": \"single_question\",\n" +
+                    "       \"questions\": \"查询武汉的天气\"\n" +
+                    "     }\n" +
+                    "\n" +
+                    "2. **返回值结构**：\n" +
+                    "   - 如果问题是拆解后的多个子任务（例如查询天气和油价），返回一个包含子任务的列表，如上面的 \"multi_part_question\" 示例。\n" +
+                    "   - 如果问题只包含一个任务，如查询天气或油价，返回一个字符串表示任务。\n" +
+                    "   - 如果问题需要生成图片，返回包含翻译后的问题的字符串，并且附加中文和英文的回答。\n" +
+                    "\n" +
+                    "3. 请注意：\n" +
+                    "   - **返回格式**必须严格遵循上述结构。\n" +
+                    "   - 你只需返回一个 JSON 对象，指示当前问题的拆解方式或是否需要生成图片。\n" +
+                    "   - 不要返回无关的内容，只需提供所需的操作指令。\n" +
+                    "\n" +
+                    "问题：" + question;
 
+            ChatMessage message = new ChatMessage();
+            message.setRole("user");
+            message.setContent(prompt);
 
-        ChatMessage message = new ChatMessage();
-        message.setRole("user");
-        message.setContent(prompt);
+            chatCompletionRequest.setMessages(Lists.newArrayList(message));
+            chatCompletionRequest.setStream(false);
 
-        chatCompletionRequest.setMessages(Lists.newArrayList(message));
-        chatCompletionRequest.setStream(false);
+            CompletionsService completionsService = new CompletionsService();
+            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
 
-        CompletionsService completionsService = new CompletionsService();
-        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+            resultContent = result.getChoices().get(0).getMessage().getContent();
 
-        return result.getChoices().get(0).getMessage().getContent();
+            isValidJson = JSONUtil.isJson(resultContent);
+        }
+
+        return resultContent;
     }
 
     @Override
