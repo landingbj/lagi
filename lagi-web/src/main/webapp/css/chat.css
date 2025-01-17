@@ -782,6 +782,7 @@ pre .key {
 
 /* 弹框内容 */
 .qrCodeDiv {
+    position: relative;
     background: white;
     padding: 20px;
     width: auto;
@@ -835,7 +836,7 @@ pre .key {
 }
 
 /* 取消支付按钮样式 */
-#cancelPaymentBtn {
+.paymentBtn {
     margin-top: 20px;
     padding: 10px 20px;
     background-color: var(--rechage-color);
@@ -845,10 +846,23 @@ pre .key {
     cursor: pointer;
 }
 
-#cancelPaymentBtn:hover {
+.paymentBtn:hover {
     background-color: var(--rechage-color2);
 }
 
+.closePayBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+}
+
+.closePayBtn:hover {
+    color: red;
+}
 
 /* 默认隐藏 paid-agent-list-container */
 .paid-agent-list-container {

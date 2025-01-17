@@ -53,6 +53,8 @@ public class AgentServlet extends BaseServlet {
             this.updateLagiAgent(req, resp);
         } else if (method.equals("deleteLagiAgentById")) {
             this.deleteLagiAgentById(req, resp);
+        } else if (method.equals("h5Prepay")) {
+            this.h5Prepay(req, resp);
         } else if (method.equals("prepay")) {
             this.prepay(req, resp);
         } else if (method.equals("deductExpenses")) {
@@ -69,6 +71,13 @@ public class AgentServlet extends BaseServlet {
         FeeRequiredAgentRequest feeRequiredAgentRequest = reqBodyToObj(req, FeeRequiredAgentRequest.class);
         LagiAgentListResponse response = agentService.getFeeRequiredAgent(feeRequiredAgentRequest);
         responsePrint(resp, gson.toJson(response));
+    }
+
+    private void h5Prepay(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        PrepayRequest prepayRequest = reqBodyToObj(req, PrepayRequest.class);
+        PrepayResponse prepayResponse = payService.h5Prepay(prepayRequest);
+        responsePrint(resp, gson.toJson(prepayResponse));
     }
 
     private void prepay(HttpServletRequest req, HttpServletResponse resp) throws IOException {

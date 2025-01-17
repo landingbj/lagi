@@ -498,6 +498,11 @@ function subscription() {
 }
 
 function showQrCode(lagiUserId, agentId, fee) {
+    if (isMobileDevice()) {
+        $('#h5PrepayBtn').show();
+    } else {
+        $('#h5PrepayBtn').hide();
+    }
     $.ajax({
         url: "/agent/prepay",
         contentType: "application/json;charset=utf-8",
@@ -547,6 +552,40 @@ function cancelPayment() {
     $('#payAmount').text('');
     // 清除支付查询的定时器
     clearInterval(interval);
+}
+
+function isMobileDevice() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    return mobileRegex.test(userAgent);
+}
+
+function h5Prepay() {
+    selectedAgentId = 27;
+    const totalAmountFooterElement = document.getElementById('recharge-total-amount-footer');
+    const totalAmount = totalAmountFooterElement.textContent.trim().replace('¥', '').trim();
+    if (!selectedAgentId) {
+        alert('请选择一个智能体');
+        return;
+    }
+    $.ajax({
+        url: "/agent/h5Prepay",
+        contentType: "application/json;charset=utf-8",
+        type: "post",
+        data: JSON.stringify({
+            "lagiUserId": globalUserId,
+            "agentId": selectedAgentId,
+            "fee": totalAmount,
+        }),
+        success: function (res) {
+            if (res.result === '1') {
+                window.location.href = res.mWebUrl;
+                $('#h5PrepayBtn').text('支付中...').css('disabled', true);
+            } else {
+                alert(res.error);
+            }
+        }
+    });
 }
 
 function checkSubscription(agentId) {
