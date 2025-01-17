@@ -36,7 +36,7 @@ public class TextToSqlSearchTool extends AbstractTool {
 
     @Override
     public String apply(Map<String, Object> args) {
-        return search(args.get("msg").toString());
+        return search(args.get("demand").toString());
     }
 
     public static void main(String[] args) {

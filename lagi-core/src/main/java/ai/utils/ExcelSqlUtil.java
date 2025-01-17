@@ -3,7 +3,6 @@ package ai.utils;
 import ai.config.ContextLoader;
 import ai.database.impl.MysqlAdapter;
 import ai.database.pojo.SQLJdbc;
-import ai.database.pojo.TableColumnInfo;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -12,41 +11,47 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ExcelSqlUtil {
-    private static EasyExcelUtil easyExcelUtil = new EasyExcelUtil();
     private static SQLJdbc sqlJdbc ;
     private static MysqlAdapter mysqlAdapter;
+    private static final Logger log = LoggerFactory.getLogger(ExcelSqlUtil.class);
+    private static boolean isSwitch = false;
 
     static {
-//        ContextLoader.loadContext();
         sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
                 .findFirst()  // 获取流中的第一个元素
                 .orElseThrow(() -> new NoSuchElementException("No database found"));
         try {
             if (new MysqlAdapter(sqlJdbc.getName()).selectCount("SELECT 1")>0){
                 mysqlAdapter = new MysqlAdapter(sqlJdbc.getName());
+                isSwitch =initTextToSqlSearch();
+                if (!isSwitch){
+                    log.info("mysql初始化失败！---智能问数模式已关闭！");
+                }
             }
         }catch (Exception e){
-            System.out.println("mysql连接失败！---智能问数模式已关闭！");
+            log.error("mysql连接失败！---智能问数模式已关闭！");
         }
     }
 
     public static boolean isConnect(){
-        if (mysqlAdapter!=null){
+        if (mysqlAdapter!=null&&isSwitch){
             return mysqlAdapter.selectCount("SELECT 1")>0;
         }
         return false;
@@ -155,45 +160,45 @@ public class ExcelSqlUtil {
             fileName = fileName.substring(0, dotIndex);
         }
         if (file.getName().endsWith(".csv")){
-                Map<String, List<List<Object>>> res = easyExcelUtil.readCsv(filePath);
-                List<List<Object>> result =  res.get("data");
-                List<Object> headers =  res.get("header").get(0);
-                StringBuilder description = new StringBuilder();
-                for (int i = 0; i < headers.size(); i++) {
-                    String fieldName = "字段field" + (i + 1);
-                    description.append(fieldName + " 代表 " + headers.get(i) + ",\n");
-                }
-                String insertSQL = "INSERT INTO table_info (table_name,file_id,description) VALUES ('%s','%s','%s');";
-                insertSQL = String.format(insertSQL, fileName,fileId, description);
-                Integer table_info_id = mysqlAdapter.executeUpdateGeneratedKeys(insertSQL);
+            Map<String, List<List<Object>>> res = EasyExcelUtil.readCsv(filePath);
+            List<List<Object>> result =  res.get("data");
+            List<Object> headers =  res.get("header").get(0);
+            StringBuilder description = new StringBuilder();
+            for (int i = 0; i < headers.size(); i++) {
+                String fieldName = "字段field" + (i + 1);
+                description.append(fieldName + " 代表 " + headers.get(i) + ",\n");
+            }
+            String insertSQL = "INSERT INTO table_info (table_name,file_id,description) VALUES ('%s','%s','%s');";
+            insertSQL = String.format(insertSQL, fileName,fileId, description);
+            Integer table_info_id = mysqlAdapter.executeUpdateGeneratedKeys(insertSQL);
 
-                Integer fieldSize = headers.size();
-                StringBuilder fields = new StringBuilder("table_info_id");
-                for (int i = 1; i <= fieldSize; i++) {
-                    fields.append(", field").append(i);
-                }
-                StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
-                for (int i = 0; i < result.size(); i++) {
-                    List<Object> dataRow = result.get(i);
-                    sql.append("(").append(table_info_id);
+            Integer fieldSize = headers.size();
+            StringBuilder fields = new StringBuilder("table_info_id");
+            for (int i = 1; i <= fieldSize; i++) {
+                fields.append(", field").append(i);
+            }
+            StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
+            for (int i = 0; i < result.size(); i++) {
+                List<Object> dataRow = result.get(i);
+                sql.append("(").append(table_info_id);
 
-                    for (Integer j = 0; j < fieldSize; j++) {
-                        String value = dataRow.size()>j ? dataRow.get(j).toString() : null;
-                        if (value == null) {
-                            sql.append(", NULL");
-                        } else {
-                            String cleanValue = value.replace("'", "''");
-                            sql.append(", '").append(cleanValue.trim()).append("'");
-                        }
-                    }
-
-                    if (i < result.size() - 1) {
-                        sql.append("), ");
+                for (Integer j = 0; j < fieldSize; j++) {
+                    String value = dataRow.size()>j ? dataRow.get(j).toString() : null;
+                    if (value == null) {
+                        sql.append(", NULL");
                     } else {
-                        sql.append(");");
+                        String cleanValue = value.replace("'", "''");
+                        sql.append(", '").append(cleanValue.trim()).append("'");
                     }
                 }
-                mysqlAdapter.executeUpdate(sql.toString());
+
+                if (i < result.size() - 1) {
+                    sql.append("), ");
+                } else {
+                    sql.append(");");
+                }
+            }
+            mysqlAdapter.executeUpdate(sql.toString());
             return;
         }
 
@@ -201,7 +206,7 @@ public class ExcelSqlUtil {
         List<String> sheetNames = reader.getSheetNames();
         Map<String, List<List<JSONObject>>> list = new HashMap<>();
         for (int i = 0; i < sheetNames.size(); i++) {
-            List<List<JSONObject>> result = easyExcelUtil.readMergeExcel(filePath, i, 0, 0);
+            List<List<JSONObject>> result = EasyExcelUtil.readMergeExcel(filePath, i, 0, 0);
             if (result.size() > 0){
                 list.put(fileName+"里的"+sheetNames.get(i)+"表", result);
             }
@@ -483,6 +488,88 @@ public class ExcelSqlUtil {
         return true;
     }
 
+    public static boolean initTextToSqlSearch(){
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(sqlJdbc.getDriverClassName());
+            conn = DriverManager.getConnection(sqlJdbc.getJdbcUrl(), sqlJdbc.getUsername(), sqlJdbc.getPassword());
+            stmt = conn.createStatement();
+            DatabaseMetaData dbm = conn.getMetaData();
+            ResultSet tables = dbm.getTables(null, null, "table_info", null);
+            if (!tables.next()) {
+                String createTableInfo = "CREATE TABLE table_info (" +
+                        " id INT AUTO_INCREMENT PRIMARY KEY COMMENT '唯一标识符，自动递增'," +
+                        " file_id VARCHAR(256) NOT NULL COMMENT '文件id'," +
+                        " table_name VARCHAR(512) NOT NULL COMMENT '表的名称'," +
+                        " description VARCHAR(512) COMMENT '表的详细介绍'" +
+                        ") COMMENT '存储表信息的通用表'";
+                stmt.executeUpdate(createTableInfo);
+            }
+
+            tables = dbm.getTables(null, null, "detailed_data", null);
+            if (!tables.next()) {
+                String createDetailedData = "CREATE TABLE detailed_data (" +
+                        " id INT AUTO_INCREMENT PRIMARY KEY COMMENT '唯一标识符，自动递增'," +
+                        " table_info_id INT NOT NULL COMMENT '关联table_info表的id'," +
+                        " field1 VARCHAR(512) COMMENT '字段1'," +
+                        " field2 VARCHAR(512) COMMENT '字段2'," +
+                        " field3 VARCHAR(512) COMMENT '字段3'," +
+                        " field4 VARCHAR(512) COMMENT '字段4'," +
+                        " field5 VARCHAR(512) COMMENT '字段5'," +
+                        " field6 VARCHAR(512) COMMENT '字段6'," +
+                        " field7 VARCHAR(512) COMMENT '字段7'," +
+                        " field8 VARCHAR(512) COMMENT '字段8'," +
+                        " field9 VARCHAR(512) COMMENT '字段9'," +
+                        " field10 VARCHAR(512) COMMENT '字段10'," +
+                        " field11 VARCHAR(512) COMMENT '字段11'," +
+                        " field12 VARCHAR(512) COMMENT '字段12'," +
+                        " field13 VARCHAR(512) COMMENT '字段13'," +
+                        " field14 VARCHAR(512) COMMENT '字段14'," +
+                        " field15 VARCHAR(512) COMMENT '字段15'," +
+                        " field16 VARCHAR(512) COMMENT '字段16'," +
+                        " field17 VARCHAR(512) COMMENT '字段17'," +
+                        " field18 VARCHAR(512) COMMENT '字段18'," +
+                        " field19 VARCHAR(512) COMMENT '字段19'," +
+                        " field20 VARCHAR(512) COMMENT '字段20'," +
+                        " field21 VARCHAR(512) COMMENT '字段21'," +
+                        " field22 VARCHAR(512) COMMENT '字段22'," +
+                        " field23 VARCHAR(512) COMMENT '字段23'," +
+                        " field24 VARCHAR(512) COMMENT '字段24'," +
+                        " field25 VARCHAR(512) COMMENT '字段25'," +
+                        " field26 VARCHAR(512) COMMENT '字段26'," +
+                        " field27 VARCHAR(512) COMMENT '字段27'," +
+                        " field28 VARCHAR(512) COMMENT '字段28'," +
+                        " field29 VARCHAR(512) COMMENT '字段29'," +
+                        " field30 VARCHAR(512) COMMENT '字段30'," +
+                        " field31 VARCHAR(512) COMMENT '字段31'," +
+                        " field32 VARCHAR(512) COMMENT '字段32'," +
+                        " field33 VARCHAR(512) COMMENT '字段33'," +
+                        " field34 VARCHAR(512) COMMENT '字段34'," +
+                        " field35 VARCHAR(512) COMMENT '字段35'," +
+                        " field36 VARCHAR(512) COMMENT '字段36'," +
+                        " FOREIGN KEY (table_info_id) REFERENCES table_info(id) ON DELETE CASCADE" +
+                        ") COMMENT='存储详细数据的表';";
+                stmt.executeUpdate(createDetailedData);
+            }
+            log.error("Tables created successfully or already exist.");
+            return true;
+        } catch (ClassNotFoundException e) {
+            log.error("JDBC Driver not found.");
+            return false;
+        } catch (SQLException e) {
+            log.error("An error occurred while checking or creating tables.");
+            return false;
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @Test
     public void text(){
         String demand = "高三三班学生各科成绩都大于60分的人有那些，总分分别是多少。";
@@ -498,7 +585,7 @@ public class ExcelSqlUtil {
             String excelFilePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\节点分类-测试用.csv";
             System.out.println("是否走sql:"+isSql(excelFilePath));
             String tableName = "detailed_data";
-            List<List<Object>> result =  easyExcelUtil.readCsv(excelFilePath).get("data");
+            List<List<Object>> result =  EasyExcelUtil.readCsv(excelFilePath).get("data");
         }catch (Exception e){
             System.out.println(e);
         }
