@@ -1,4 +1,5 @@
 let topTile = 'Lag[i]';
+let finishedLoadTitle = false;
 
 let activeModel = 0;
 
@@ -193,25 +194,35 @@ function chooseModel(index) {
     initModelSlide();
 }
 
+
 function initTopTile() {
-	$.ajax({
-		type : "GET",
-		url : "user/getDefaultTitle",
-		success : function(res) {
-			if (res.status === 'success') {
-				// $('#topTitle h1 span').html(res.data);
+    if(!finishedLoadTitle) {
+        $.ajax({
+            type : "GET",
+            url : "user/getDefaultTitle",
+            success : function(res) {
+                if (res.status === 'success') {
+                    // $('#topTitle h1 span').html(res.data);
+                    const a = parseInt($('#title-canvas')[0].style.width);
+                    const b = parseInt($('#title-canvas')[0].style.height);
+                    topTile = res.data;
+                    drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+                    finishedLoadTitle = true;
+                }
+            },
+            error: function(res) {
+                $('#topTitle h1 span').html(topTile);
                 const a = parseInt($('#title-canvas')[0].style.width);
                 const b = parseInt($('#title-canvas')[0].style.height);
-                drawTitle('title-canvas', a, b, 16, 64, 16, res.data);
-			}
-		},
-		error: function(res) {
-            $('#topTitle h1 span').html(topTile);
-            const a = parseInt($('#title-canvas')[0].style.width);
-            const b = parseInt($('#title-canvas')[0].style.height);
-            drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
-		}
-	});
+                drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+                finishedLoadTitle = true;
+            }
+        });
+    } else {
+        const a = parseInt($('#title-canvas')[0].style.width);
+        const b = parseInt($('#title-canvas')[0].style.height);
+        drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+    }
 }
 
 function setupCanvas(canvas) {
@@ -329,6 +340,23 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
         startXLogo = startX + reduceSpecialSymbol(ctx, startX, row2Top, text2, line2height, color2);
         // 绘制 Logo 图片
         ctx.drawImage(logo, startXLogo, row1Top  + (logoHeight *2 / 7) , logoWidth, logoHeight); // 调整 Y 坐标以对齐
+        
+        var imageData = ctx.getImageData(startXLogo, row1Top  + (logoHeight *2 / 7) , logoWidth, logoHeight);
+        var data = imageData.data;
+        for (var i = 0; i< data.length; i += 4) {
+            let red =  data[i];
+            let green =  data[i+1];
+            let blue =  data[i+2];
+            
+            if (blue > red) {
+                // console.log(data[i], data[i+1], data[i+2])
+                data[i] = 255;
+                // data[i+1] =  70;
+                data[i+1] = data[i+1] * 0.9;
+                data[i+2] =  0;
+            }
+        }
+        ctx.putImageData(imageData, startXLogo, row1Top  + (logoHeight *2 / 7));
 
         // 设置第三行字体和颜色
         ctx.font = `${fontSize3} sans-serif`;
@@ -463,7 +491,7 @@ function setDivSize() {
     // console.log(top_nav_h, ball_m_b)
     // radius 最大 512
     // top_nav_h =  20;
-    let d1 =  Math.min(windowWidth * 0.8, 512) ;
+    let d1 =  Math.min(windowWidth * 0.8, 400) ;
     let d2 = content_h - intro_h - title_h  - ball_m_t - ball_m_b;
     
     if(d2 < 100) {
@@ -507,7 +535,7 @@ function setDivSize() {
     // console.log("ball_d", ball_d);
     ball.style.width = ball_d + 'px';
     ball.style.height = ball_d + 'px';
-    ball.style.marginLeft = (item_widht - ball_d) / 2  + 12+ 'px';
+    ball.style.marginLeft = (item_widht - ball_d) / 2  + 39+ 'px';
 
     // alert(content_h  - title_h - intro_h -ball_m_t - ball_m_b - ball_d);
     initTopTile();
@@ -598,7 +626,7 @@ function loadLeftRank() {
         freshLeftRankDom(data.data);
     })
     .catch((error)=>{
-        freshLeftRankDom([{name:'通义千问', count: 99}, {name:'文心一言', count: 55}, {name:'智谱清言', count: 54}]);
+        freshLeftRankDom([{name:'通义千问', count: 99}, {name:'文心一言', count: 55}, {name:'智谱清言', count: 54}, {name:'Moonshot', count: 50}, {name:'星火', count: 31}, {name:'腾讯混元', count: 30}]);
         console.log("loadLeftRank error:", error);
     });
 }
@@ -612,7 +640,7 @@ function loadRightRank() {
     .then(data => {
         freshRightRankDom(data.data);
     }).catch((error)=>{
-        freshRightRankDom([{name:'天气助手', count: 90}, {name:'油价助手', count: 72}, {name:'高铁助手', count: 11}]);
+        freshRightRankDom([{name:'天气助手', count: 90}, {name:'油价助手', count: 72}, {name:'高铁助手', count: 11},{name:'翻译助手', count: 11}, {name:'历史今日', count: 9}, {name:'失信查询', count: 7}]);
         console.log("loadRightRank error:", error);
     });;
 }

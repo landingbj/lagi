@@ -366,19 +366,24 @@
                           </div>
                         </div>
                         <div class="relative">
-                          <div id="ball-div" >
-                            <div class="ball-left-top absolute ball-corner">
-                              <ul>
-
-                              </ul>
-                            </div>
-                            <div class="ball-right-top absolute ball-corner">
-                               <ul>
-                                
-                               </ul>
+                          <div class="ball-mask" style="width: 636px; height: 0px; position: relative; margin-left: auto; margin-right: auto;" >
+                            
+                            <div class="ball-corner-container" style=" z-index: 5; width: 636px; height: 400px; position: absolute; margin-left: auto; margin-right: auto;">
+                              <div class="ball-left-top absolute ball-corner">
+                                <ul>
+  
+                                </ul>
+                              </div>
+                              <div class="ball-right-top absolute ball-corner">
+                                 <ul>
+                                  
+                                 </ul>
+                              </div>
                             </div>
                           </div>
-                          <div class="ball-mask" ></div>
+                          <div id="ball-div" >
+                            
+                          </div>
                         </div>
                         
                         <!-- ***********************输入框前form******************************** -->

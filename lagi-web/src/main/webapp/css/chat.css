@@ -276,8 +276,9 @@ pre .key {
     position: relative;
     height: 130px;
     background-color: transparent;
-    width: min(672px, 90%);
+    width: min(650px, 90%);
     margin-bottom: 0px;
+    z-index: 5;
 }
 
 :root{
@@ -1212,12 +1213,12 @@ pre .key {
 
 .ball-left-top{
     top:0px;
-    left: -24%;
+    left: 0px;
 }
 
 .ball-right-top{
     top: 0px;
-    right: -12%;
+    right: 0px;
     display: block;
 }
 
@@ -1225,11 +1226,11 @@ pre .key {
     background:#023f63;
     margin-bottom: 10px;
     color: rgb(250, 250, 250);
-    height: 26px;
+    height: 20px;
     padding-left: 10px;
     padding-right: 10px;
-    padding-top:5px;
-    padding-bottom: 5px;
+    padding-top:1px;
+    padding-bottom: 1px;
     border-radius: 3px;
     font-size: 12px;
     z-index: -5;
@@ -1248,17 +1249,34 @@ pre .key {
     margin-bottom: 10px;    /* 维持列表项之间的间距 */
 }
 
+.ball-corner ul li {
+    width: 50%;
+}
 .ball-corner ul li:nth-child(1) {
-    width: 60%;
+    background-color: rgb(240, 0, 0);;
 } 
 
 .ball-corner ul li:nth-child(2) {
-    width: 50%;
+    background-color: rgb(230, 0, 0);
 } 
 
 .ball-corner ul li:nth-child(3) {
-    width: 40%;
+    background-color: rgb(220, 0, 0);
+}
+
+.ball-corner ul li:nth-child(4) {
+    background-color: rgb(210, 0, 0);
 } 
+
+
+.ball-corner ul li:nth-child(5) {
+    background-color: rgb(200, 0, 0);
+} 
+
+.ball-corner ul li:nth-child(6) {
+    background-color: rgb(190, 0, 0);
+} 
+
 
 
 .hot-tag {
@@ -1266,43 +1284,45 @@ pre .key {
     color: #ffffff;
     padding: 0px 0px;
     border-radius: 3px;
-    background-color: #006280;
+    /* background-color: red; */
     width: 24px;
-    height: 20px;
+    height: 18px;
     transition: all 0.3s ease;
+    border-radius: 24px;
+    border: 1px solid rgb(255, 255, 255);
     text-align: center;
     display:inline-block;
 }
 
 
-#ball-div:before{
+.ball-corner-container:before{
     position: absolute;
-    top: -10%;
-    left: -10%;
+    top: 0;
+    left: -40%;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(255, 255, 255); 
+    z-index: 1;
+    clip-path: circle(50% at 95% 50%);
+    pointer-events: none;
+    content:'';
+    overflow: visible; 
+}
+
+
+.ball-corner-container:after{
+    position: absolute;
+    top: 0px;
+    left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
     height: 100%;
     background-color: rgb(255, 255, 255); /* 匹配页面背景色 */
-    z-index: 1;
-    clip-path: circle(50% at 50% 50%); /* 创建圆形遮罩 */
-    pointer-events: none; /* 确保遮罩不会干扰鼠标事件 */
-    content:'';
-    overflow: visible; /* 确保内容超出容器时仍然可见 */
-}
-
-
-#ball-div:after{
-    position: absolute;
-    top: -10%;
-    left: -2%;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgb(253, 253, 253); /* 匹配页面背景色 */
     z-index: -1;
-    clip-path: circle(50% at 50% 50%); /* 创建圆形遮罩 */
+    clip-path: circle(50% at 45% 50%);
     pointer-events: none; /* 确保遮罩不会干扰鼠标事件 */
     content:'';
     overflow: visible; /* 确保内容超出容器时仍然可见 */

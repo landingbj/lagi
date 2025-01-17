@@ -35,7 +35,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
         boolean isValidJson = false;
         String resultContent = "";
 
-        while (!isValidJson) {
+//        while (!isValidJson) {
             ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
             chatCompletionRequest.setTemperature(0.8);
             chatCompletionRequest.setMax_tokens(1024);
@@ -88,7 +88,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
             resultContent = result.getChoices().get(0).getMessage().getContent();
 
             isValidJson = JSONUtil.isJson(resultContent);
-        }
+//        }
 
         return resultContent;
     }
