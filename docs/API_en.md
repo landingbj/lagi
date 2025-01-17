@@ -299,7 +299,7 @@ Status Code **200**
 
 POST `/training/upload`
 
-Upload custom training files in `txt`, `word`, or `pdf` formats.
+Upload custom training files in `txt`, `word`, or `pdf`  or `excel` or `csv` or `jpeg`、 or `png`、 or `jpg`、 or `webp` formats.
 
 ### Request Example
 

@@ -649,6 +649,7 @@
 <!-- 微信支付弹窗开始 -->
 <div id="wechat_pay_qr" style="display: none;">
   <div class="qrCodeDiv">
+    <button class="closePayBtn" onclick="cancelPayment()">&times;</button>
     <!-- 添加公司logo -->
     <div class="companyLogoDiv">
       <img class="company_logo" src="images/company_logo.png" alt="公司 Logo"/>
@@ -663,7 +664,7 @@
       </div>
     </div>
     <!-- 添加取消支付按钮 -->
-    <button id="cancelPaymentBtn" onclick="cancelPayment()">取消支付</button>
+    <button id="h5PrepayBtn" class="paymentBtn" onclick="h5Prepay()">微信支付</button>
   </div>
 </div>
 <!-- 微信支付弹窗结束 -->

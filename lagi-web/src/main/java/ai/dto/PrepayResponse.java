@@ -8,4 +8,5 @@ public class PrepayResponse {
     private String qrCode;
     private String result;
     private String totalFee;
+    private String mWebUrl;
 }

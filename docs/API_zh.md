@@ -301,7 +301,7 @@ POST `/image/text2image`
 
 POST `/training/upload`
 
-上传私训学习文件，支持txt、word、pdf格式
+上传私训学习文件，支持txt、word、pdf、excel、csv、jpeg、png、jpg、webp格式
 
 ### 请求示例
 

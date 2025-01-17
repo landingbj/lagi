@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ImageGenTool extends AbstractTool{
+public class ImageGenTool extends AbstractTool {
 
     private final String endpoint;
     private Gson gson = new Gson();

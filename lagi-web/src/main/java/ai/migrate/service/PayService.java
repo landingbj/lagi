@@ -15,6 +15,16 @@ public class PayService {
     private final Gson gson = new Gson();
     private static final String SAAS_BASE_URL = MigrateGlobal.SAAS_BASE_URL;
 
+    public PrepayResponse h5Prepay(PrepayRequest prepayRequest) throws IOException {
+        Map<String, String> params = new HashMap<>();
+        params.put("lagiUserId", prepayRequest.getLagiUserId());
+        params.put("agentId", prepayRequest.getAgentId().toString());
+        params.put("fee", prepayRequest.getFee());
+        String resultJson = OkHttpUtil.post(SAAS_BASE_URL + "/saas/api/weixin/h5AgentPrepay", params);
+        PrepayResponse response = gson.fromJson(resultJson, PrepayResponse.class);
+        return response;
+    }
+
     public PrepayResponse prepay(PrepayRequest prepayRequest) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("lagiUserId", prepayRequest.getLagiUserId());

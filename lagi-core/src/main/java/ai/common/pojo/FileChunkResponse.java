@@ -1,73 +1,25 @@
 package ai.common.pojo;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.List;
 
+@Data
+@Builder
 public class FileChunkResponse {
     private String status;
     private List<Document> data;
+    private String msg;
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public List<Document> getData() {
-        return data;
-    }
-
-    public void setData(List<Document> data) {
-        this.data = data;
-    }
-
-    @Override
-    public String toString() {
-        return "ExtractContentResponse [status=" + status + ", data=" + data + "]";
-    }
-
+    @Data
     public static class Document {
         private String text;
         private List<Image> images;
-
-        public String getText() {
-            return text;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-
-        public List<Image> getImages() {
-            return images;
-        }
-
-        public void setImage(List<Image> images) {
-            this.images = images;
-        }
-
-        @Override
-        public String toString() {
-            return "Document [text=" + text + ", image=" + images + "]";
-        }
-
     }
 
+    @Data
     public static class Image {
         private String path;
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        @Override
-        public String toString() {
-            return "Image [path=" + path + "]";
-        }
     }
 }

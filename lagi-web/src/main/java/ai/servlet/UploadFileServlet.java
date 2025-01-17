@@ -20,6 +20,7 @@ import ai.medusa.MedusaService;
 import ai.medusa.pojo.InstructionData;
 import ai.medusa.pojo.InstructionPairRequest;
 import ai.migrate.service.UploadFileService;
+import ai.utils.ExcelSqlUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.lang3.StringUtils;
 
 import ai.vector.FileService;
 import ai.vector.VectorDbService;
@@ -51,8 +51,7 @@ public class UploadFileServlet extends HttpServlet {
     private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
 
-    private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(1);
-
+    private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(5);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -135,6 +134,9 @@ public class UploadFileServlet extends HttpServlet {
         }.getType());
         vectorDbService.deleteDoc(idList);
         uploadFileService.deleteUploadFile(idList);
+        if (ExcelSqlUtil.isConnect()){
+            ExcelSqlUtil.deleteListSql(idList);
+        }
         Map<String, Object> map = new HashMap<>();
         map.put("status", "success");
         PrintWriter out = resp.getWriter();
@@ -347,15 +349,14 @@ public class UploadFileServlet extends HttpServlet {
             jsonResult.addProperty("msg", "解析文件出现错误");
             ex.printStackTrace();
         }
-
+        List<Future<?>> futures = new ArrayList<>();
         if (!files.isEmpty()) {
-            String content = "";
             JsonArray fileList = new JsonArray();
             for (File file : files) {
-                content = fileService.getFileContent(file);
-                if (!StringUtils.isEmpty(content)) {
+                if (file.exists() && file.isFile()) {
                     String filename = realNameMap.get(file.getName());
-                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
+                    Future<?> future =uploadExecutorService.submit(new AddDocIndex(file, category, filename, level));
+                    futures.add(future);
                     JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("filename", filename);
                     jsonObject.addProperty("filepath", file.getName());
@@ -364,13 +365,29 @@ public class UploadFileServlet extends HttpServlet {
             }
             jsonResult.addProperty("data", fileList.toString());
         }
-        if (!jsonResult.has("msg")) {
-            jsonResult.addProperty("status", "success");
-        }
-        PrintWriter out = resp.getWriter();
-        out.write(gson.toJson(jsonResult));
-        out.flush();
-        out.close();
+        String status ="success";
+        // 等待所有任务完成
+            for (Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (InterruptedException e) {
+                    //任务终断
+                    status = "failed";
+                    Thread.currentThread().interrupt();
+                } catch (ExecutionException e) {
+                    //执行中异常
+                    status = "failed";
+                    e.printStackTrace();
+                }
+            }
+            if (!jsonResult.has("msg")) {
+                jsonResult.addProperty("status", status);
+            }
+            PrintWriter out = resp.getWriter();
+            out.write(gson.toJson(jsonResult));
+            out.flush();
+            out.close();
+
     }
 
 

@@ -114,21 +114,25 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
             BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
             chatCompletionResult = chatCompletionResultWithSource;
             try {
-                SkillMap skillMap = new SkillMap();
-                IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(chatCompletionRequest));
-                List<String> keywords = intentResponse.getKeywords();
-                AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
-                Double scoring = 0.0;
-                if(agentIntentScore == null) {
-                    scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
-                    if(agent instanceof LlmProxyAgent) {
-                        scoring = Math.max(scoring, 1.0);
+                if(!(agent instanceof LlmProxyAgent)) {
+                    SkillMap skillMap = new SkillMap();
+                    IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(chatCompletionRequest));
+                    List<String> keywords = intentResponse.getKeywords();
+                    AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
+                    Double scoring = 0.0;
+                    if(agentIntentScore == null) {
+                        scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(chatCompletionRequest), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+                        if(agent instanceof LlmProxyAgent) {
+                            scoring = Math.max(scoring, 1.0);
+                        }
+                        skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
+                    } else {
+                        scoring = agentIntentScore.getScore();
                     }
-                    skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
+                    calPriority = getPriority() + scoring;
                 } else {
-                    scoring = agentIntentScore.getScore();
+                    calPriority = getPriority();
                 }
-                calPriority = getPriority() + scoring;
             } catch (Exception e) {
                 log.error("saveAgentScore error", e);
             }
