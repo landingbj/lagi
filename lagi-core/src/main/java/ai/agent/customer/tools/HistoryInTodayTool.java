@@ -1,7 +1,6 @@
-package ai.agents.example.tools;
+package ai.agent.customer.tools;
 
 import ai.agent.customer.pojo.ToolInfo;
-import ai.agent.customer.tools.AbstractTool;
 import ai.utils.ApiInvokeUtil;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;

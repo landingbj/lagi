@@ -1,17 +1,17 @@
-package ai.agents.example;
+package ai.agent.customer;
 
-import ai.agent.customer.CustomerAgent;
-import ai.agents.example.tools.AnimePicturesTool;
 import ai.agent.customer.tools.FinishTool;
+import ai.agent.customer.tools.KFCTextGenerationTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
-public class AnimePicturesAgent extends CustomerAgent {
-    public AnimePicturesAgent(AgentConfig agentConfig) {
+public class KFCTextGenerationAgent extends CustomerAgent {
+    public KFCTextGenerationAgent(AgentConfig agentConfig) {
         super(agentConfig);
-        AnimePicturesTool weatherSearchTool = new AnimePicturesTool();
+        KFCTextGenerationTool weatherSearchTool = new KFCTextGenerationTool();
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),
                 finishTool.getToolInfo());
+
     }
 }

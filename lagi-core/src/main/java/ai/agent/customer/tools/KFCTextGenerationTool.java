@@ -1,7 +1,6 @@
-package ai.agents.example.tools;
+package ai.agent.customer.tools;
 
 import ai.agent.customer.pojo.ToolInfo;
-import ai.agent.customer.tools.AbstractTool;
 import ai.utils.ApiInvokeUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
@@ -13,22 +12,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class BellePicturesTool extends AbstractTool {
+public class KFCTextGenerationTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.52vmy.cn/api/img/tu/girl?type=json";
+    private static final String API_ADDRESS = "https://api.ahfi.cn/api/kfcv50?type=json";
+    private String token = "";
 
-    private Gson gson = new Gson();
-
-    public BellePicturesTool() {
+    public KFCTextGenerationTool() {
         init();
     }
 
     private void init() {
-        name = "belle_pictures";
-        toolInfo = ToolInfo.builder().name("belle_pictures")
-                .description("这是一个生成头像工具,调用这个工具可以生成一张头像")
+        name = "kfc_text_generate";
+        toolInfo = ToolInfo.builder().name("kfc_text_generate")
+                .description("这是一个疯狂星期四（KFC）文案生成工具，可以帮助您生成疯狂星期四的文案")
                 .args(Lists.newArrayList()).build();
         register(this);
+    }
+
+    public KFCTextGenerationTool(String token) {
+        this.token = token;
+        init();
     }
 
     private String search() {
@@ -39,19 +42,23 @@ public class BellePicturesTool extends AbstractTool {
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> map = gson.fromJson(post, type);
         if (map == null) {
-            return "图片生成失败！";
+            return "查询失败";
         }
+        Map<String, Object> data  = (Map<String, Object>)map.get("data");
 //        Map<String, Object> data = gson.fromJson(dataStr, type);
-        return StrUtil.format("{\"图片生成成功,地址为\": \"{}\"}",map.get("url"));
+        return StrUtil.format("{\"疯狂星期四文案\": \"{}\"}", data.get("copywriting"));
     }
+
+
     @Override
-    public String apply(Map<String, Object> stringObjectMap) {
+    public String apply(Map<String, Object> args) {
         return search();
     }
 
     public static void main(String[] args) {
-        BellePicturesTool tool = new BellePicturesTool();
-        String result = tool.search();
+        KFCTextGenerationTool kfcTextGenerationTool = new KFCTextGenerationTool();
+        String result = kfcTextGenerationTool.search();
         System.out.println(result);
     }
+
 }

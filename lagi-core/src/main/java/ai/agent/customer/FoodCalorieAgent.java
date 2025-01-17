@@ -1,8 +1,7 @@
-package ai.agents.example;
+package ai.agent.customer;
 
-import ai.agent.customer.CustomerAgent;
 import ai.agent.customer.tools.FinishTool;
-import ai.agents.example.tools.FoodCalorieTool;
+import ai.agent.customer.tools.FoodCalorieTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
