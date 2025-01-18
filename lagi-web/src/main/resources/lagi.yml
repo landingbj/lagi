@@ -244,7 +244,7 @@ functions:
       api_key: you-api-key
 
   chat:
-    route: best((landing&chatgpt),(kimi | ernie))
+    route: best((landing&chatgpt),(kimi|ernie))
     backends:
       - backend: landing
         model: cascade
@@ -486,11 +486,12 @@ workers:
 
 routers:
   - name: best
+    rule: (|,&)
     # A|B -> polling,  A or B, means randomly round-robin within A and B;
     # A,B -> failover, first A, if A fail, then B;
     # A&B -> parallel, call A and B concurrently, choose the proper only one result;
-    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simutalously, if fail, then call E or F randomly.- name: best
-    rule: (|,&)  # A|B -> polling,  A or B, means randomly round-robin within A and B;
+    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simultaneously, if fail, then call E or F randomly.- name: best
+
 
   - name: pass
     rule: (%)
