@@ -404,11 +404,10 @@ public class EasyExcelUtil {
         return resultDocument;
     }
 
-    public static List<FileChunkResponse.Document> getChunkDocumentCsv(File file) throws IOException {
+    public static List<FileChunkResponse.Document> getChunkDocumentCsv(File file, Integer pageSize) throws IOException {
         Map<String, List<List<Object>>> result = readCsv(file.getPath());
         List<Object> header = Collections.singletonList(result.get("header"));
         List<List<Object>> rowData = result.get("data");
-        int pageSize = 512;
         List<Page<List<Object>>> pages = paginate(rowData, pageSize);
         return mergePages(pages, header);
     }

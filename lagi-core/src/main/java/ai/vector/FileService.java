@@ -68,16 +68,22 @@ public class FileService {
         if (fileType.equals(".xls")||fileType.equals(".xlsx")){
             return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
         }else if (fileType.equals(".csv")){
-            return EasyExcelUtil.getChunkDocumentCsv(file);
+            return EasyExcelUtil.getChunkDocumentCsv(file, chunkSize);
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
                   fileType.equals(".gif")||fileType.equals(".bmp")||
                   fileType.equals(".webp")||fileType.equals(".jpg")){
             return getChunkDocumentImage(result, file, chunkSize);
+        }else if (fileType.equals(".pptx")||fileType.equals(".ppt")){
+            return PptUtil.getChunkDocumentPpt(file, chunkSize);
         }
         String content = getFileContent(file);
         int start = 0;
         while (start < content.length()) {
             int end = Math.min(start + chunkSize, content.length());
+            int lastSentenceEnd = Math.max(content.lastIndexOf('.', end), content.lastIndexOf('\n', end));
+            if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
+                end = lastSentenceEnd + 1;
+            }
             String text = content.substring(start, end).replaceAll("\\s+", " ");
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
             doc.setText(text);
@@ -166,6 +172,10 @@ public class FileService {
                 List<File> fileList = new ArrayList<>();
                 fileList.add(file);
                 content += "内容为："+ocrService.image2Ocr(fileList, langList).toString();
+                break;
+            case ".pptx":
+            case ".ppt":
+                content = PptUtil.getPptContent(file);
                 break;
             default:
                 System.out.println("无法识别该文件");
