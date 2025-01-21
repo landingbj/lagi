@@ -9,8 +9,10 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import ai.servlet.dto.CompanyIncomingDocumentsRequest;
@@ -39,6 +41,7 @@ import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.UpsertRecord;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -218,30 +221,43 @@ public class UploadFileServlet extends HttpServlet {
             jsonResult.addProperty("msg", "There was an error parsing the file - Company incoming documents");
             ex.printStackTrace();
         }
+        List<Future<?>> futures = new ArrayList<>();
         if (!files.isEmpty()) {
-                String content = "";
                 for (File file : files) {
-                    content = fileService.getFileContent(file);
-                    if (!StringUtils.isEmpty(content)) {
+                    if (file.exists() && file.isFile()) {
                         String filename = realNameMap.get(file.getName());
                         Map<String, String> map = new HashMap<>();
                         map.put("filename", filename);
                         map.put("filepath", file.getName());
                         data.add(map);
-                        uploadExecutorService.submit(new AddMeetingIndex(file, "GSSW", filename, level, fileId,introduce));
+                        Future<?> future =uploadExecutorService.submit(new AddMeetingIndex(file, "GSSW", filename, level, fileId,introduce));
+                        futures.add(future);
                     }
                 }
         }
-
-
+        String status ="success";
+        // 等待所有任务完成
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException e) {
+                //任务终断
+                status = "failed";
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                //执行中异常
+                status = "failed";
+                e.printStackTrace();
+            }
+        }
         if (!jsonResult.has("msg")) {
-            jsonResult.addProperty("data", gson.toJson(data));
-            jsonResult.addProperty("status", "success");
+            jsonResult.addProperty("status", status);
         }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
         out.close();
+
     }
 
     private void getMeetingUploadFileList(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
@@ -962,27 +978,42 @@ public class UploadFileServlet extends HttpServlet {
                     jsonResult.addProperty("msg", "There was an error parsing the file - meeting minutes");
                     ex.printStackTrace();
                 }
+        List<Future<?>> futures = new ArrayList<>();
         for (String category : categorys) {
             if (!files.isEmpty()) {
-                String content = "";
                 for (File file : files) {
-                    content = fileService.getFileContent(file);
-                    if (!StringUtils.isEmpty(content)) {
+                    if (file.exists() && file.isFile()) {
                         String filename = realNameMap.get(file.getName());
                         Map<String, String> map = new HashMap<>();
                         map.put("filename", filename);
                         map.put("filepath", file.getName());
                         data.add(map);
-                        uploadExecutorService.submit(new AddMeetingIndex(file, category, filename, level, fileId,introduce));
+                        Future<?> future =uploadExecutorService.submit(new AddMeetingIndex(file, category, filename, level, fileId,introduce));
+                        futures.add(future);
                     }
                 }
             }
 
         }
-          if (!jsonResult.has("msg")) {
-                jsonResult.addProperty("data", gson.toJson(data));
-                jsonResult.addProperty("status", "success");
+
+        String status ="success";
+        // 等待所有任务完成
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException e) {
+                //任务终断
+                status = "failed";
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                //执行中异常
+                status = "failed";
+                e.printStackTrace();
             }
+        }
+        if (!jsonResult.has("msg")) {
+            jsonResult.addProperty("status", status);
+        }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
         out.flush();
@@ -1053,25 +1084,39 @@ public class UploadFileServlet extends HttpServlet {
             jsonResult.addProperty("msg", "解析文件出现错误");
             ex.printStackTrace();
         }
-
-        List<Map<String, String>> data = new ArrayList<>();
+        List<Future<?>> futures = new ArrayList<>();
         if (!files.isEmpty()) {
-            String content = "";
+            JsonArray fileList = new JsonArray();
             for (File file : files) {
-                content = fileService.getFileContent(file);
-                if (!StringUtils.isEmpty(content)) {
+                if (file.exists() && file.isFile()) {
                     String filename = realNameMap.get(file.getName());
-                    Map<String, String> map = new HashMap<>();
-                    map.put("filename", filename);
-                    map.put("filepath", file.getName());
-                    data.add(map);
-                    uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
+                    Future<?> future =uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, fileId));
+                    futures.add(future);
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("filename", filename);
+                    jsonObject.addProperty("filepath", file.getName());
+                    fileList.add(jsonObject);
                 }
+            }
+            jsonResult.addProperty("data", fileList.toString());
+        }
+        String status ="success";
+        // 等待所有任务完成
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException e) {
+                //任务终断
+                status = "failed";
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                //执行中异常
+                status = "failed";
+                e.printStackTrace();
             }
         }
         if (!jsonResult.has("msg")) {
-            jsonResult.addProperty("data", gson.toJson(data));
-            jsonResult.addProperty("status", "success");
+            jsonResult.addProperty("status", status);
         }
         PrintWriter out = resp.getWriter();
         out.write(gson.toJson(jsonResult));
