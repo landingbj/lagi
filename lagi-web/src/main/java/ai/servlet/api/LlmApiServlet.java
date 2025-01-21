@@ -29,6 +29,7 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.AgentService;
+import ai.migrate.service.TraceService;
 import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -79,7 +80,8 @@ public class LlmApiServlet extends BaseServlet {
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
-    private AgentService agentService = new AgentService();
+    private final AgentService agentService = new AgentService();
+    private final TraceService traceService = new TraceService();
 
     static {
         VectorCacheLoader.load();
@@ -155,6 +157,13 @@ public class LlmApiServlet extends BaseServlet {
         }
         String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
         convert2streamAndOutput(firstAnswer, resp, work);
+        if(work instanceof ChatCompletionResultWithSource) {
+            ChatCompletionResultWithSource resultWithSource = (ChatCompletionResultWithSource) work;
+            if(lLmRequest.getAgentId() != null) {
+                resultWithSource.setSourceId(lLmRequest.getAgentId());
+            }
+            traceService.syncAddAgentTrace(resultWithSource);
+        }
     }
 
     private ChatCompletionResult noExpenseResult(LagiAgentResponse lagiAgent) {

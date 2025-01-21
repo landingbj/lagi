@@ -39,3 +39,22 @@ create table if not exists lagi_user_preference
     videoEnhance varchar(64)  ,
     videoTrack varchar(64)
 );
+
+create table if not exists lagi_agent_trace
+(
+    id       INTEGER
+        primary key autoincrement,
+    name     varchar(100)      not null,
+    agent_id INTEGER           not null,
+    count    INTEGER default 0 not null,
+    unique (name, agent_id)
+);
+
+create table if not exists lagi_llm_trace
+(
+    id       INTEGER
+    primary key autoincrement,
+    name     varchar(100)      not null,
+    count    INTEGER default 0 not null,
+    unique (name)
+    );

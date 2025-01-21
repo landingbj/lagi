@@ -132,7 +132,7 @@ async function generateSelect(userQuestion) {
             const agents = result.data;
             let part2 = `<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this,'${userQuestion}')"><option value="default" data-priceperreq="0">智能推荐</option>`;
             agents.forEach(agent => {
-            part2 += `<option value="${agent.id}" data-priceperreq="${agent.pricePerReq}">${agent.name}</option>`;
+            part2 += `<option value="${agent.id}" data-priceperreq="${agent.pricePerReq}" title="使用这些智能体来获取更准确的回答！">${agent.name}</option>`;
             });
             part2 += `</select>`;
             return part2;

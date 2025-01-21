@@ -300,7 +300,6 @@
         <url-pattern>/skill/*</url-pattern>
     </servlet-mapping>
 
-
     <servlet>
         <servlet-name>agent</servlet-name>
         <servlet-class>ai.servlet.AgentServlet</servlet-class>
@@ -316,5 +315,13 @@
     <servlet-mapping>
         <servlet-name>DocumentApiServlet</servlet-name>
         <url-pattern>/doc/*</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>StatisticsApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.StatisticsApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StatisticsApiServlet</servlet-name>
+        <url-pattern>/rank/*</url-pattern>
     </servlet-mapping>
 </web-app>

@@ -75,25 +75,42 @@
               历史对话</h2>
             <nav class="flex h-full w-full flex-col p-2" aria-label="Chat history">
               <div class="mb-1 flex flex-row gap-2">
-                <a onclick="backToHello()"
-                   class="flex px-3 min-h-[44px] py-1 items-center gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm rounded-md border dark:border-white/20 hover:bg-gray-500/10 h-11 bg-white dark:bg-transparent flex-grow overflow-hidden">
-                  <!-- <svg
-                    stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
-                    stroke-linejoin="round" class="icon-sm shrink-0" height="1em" width="1em"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg> -->
-                  <svg t="1697600043545" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                       xmlns="http://www.w3.org/2000/svg" p-id="4283" width="20" height="20">
-                    <path d="M927.999436 531.028522a31.998984 31.998984 0 0 0-31.998984 31.998984c0 51.852948-10.147341 102.138098-30.163865 149.461048a385.47252 385.47252 0 0 1-204.377345 204.377345c-47.32295 20.016524-97.6081 30.163865-149.461048 30.163865s-102.138098-10.147341-149.461048-30.163865a385.47252 385.47252 0 0 1-204.377345-204.377345c-20.016524-47.32295-30.163865-97.6081-30.163865-149.461048s10.147341-102.138098 30.163865-149.461048a385.47252 385.47252 0 0 1 204.377345-204.377345c47.32295-20.016524 97.6081-30.163865 149.461048-30.163865a387.379888 387.379888 0 0 1 59.193424 4.533611l-56.538282 22.035878A31.998984 31.998984 0 1 0 537.892156 265.232491l137.041483-53.402685a31.998984 31.998984 0 0 0 18.195855-41.434674L639.723197 33.357261a31.998984 31.998984 0 1 0-59.630529 23.23882l26.695923 68.502679a449.969005 449.969005 0 0 0-94.786785-10.060642c-60.465003 0-119.138236 11.8488-174.390489 35.217667a449.214005 449.214005 0 0 0-238.388457 238.388457c-23.361643 55.252253-35.22128 113.925486-35.22128 174.390489s11.8488 119.138236 35.217668 174.390489a449.214005 449.214005 0 0 0 238.388457 238.388457c55.252253 23.368867 113.925486 35.217667 174.390489 35.217667s119.138236-11.8488 174.390489-35.217667A449.210393 449.210393 0 0 0 924.784365 737.42522c23.368867-55.270316 35.217667-113.925486 35.217667-174.390489a31.998984 31.998984 0 0 0-32.002596-32.006209z"
-                          fill="#e6e6e6" p-id="4284"></path>
-                  </svg>
-                  <span class="truncate">返回欢迎页</span>
-                </a>
-                <span class="" data-state="closed">
+                 <div class="mb-1 flex flex-row gap-2 rounded-md border dark:text-white dark:border-white/20 dark:bg-transparent">
+                    <a onclick="backToHello()"
+                       class="flex px-3 min-h-[44px] py-1 items-center gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm rounded-md dark:border-white/20 hover:bg-gray-500/10 h-11 bg-white dark:bg-transparent flex-grow overflow-hidden">
+                      <!-- <svg
+                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
+                        stroke-linejoin="round" class="icon-sm shrink-0" height="1em" width="1em"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg> -->
+                      <svg t="1697600043545" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                           xmlns="http://www.w3.org/2000/svg" p-id="4283" width="20" height="20">
+                        <path d="M927.999436 531.028522a31.998984 31.998984 0 0 0-31.998984 31.998984c0 51.852948-10.147341 102.138098-30.163865 149.461048a385.47252 385.47252 0 0 1-204.377345 204.377345c-47.32295 20.016524-97.6081 30.163865-149.461048 30.163865s-102.138098-10.147341-149.461048-30.163865a385.47252 385.47252 0 0 1-204.377345-204.377345c-20.016524-47.32295-30.163865-97.6081-30.163865-149.461048s10.147341-102.138098 30.163865-149.461048a385.47252 385.47252 0 0 1 204.377345-204.377345c47.32295-20.016524 97.6081-30.163865 149.461048-30.163865a387.379888 387.379888 0 0 1 59.193424 4.533611l-56.538282 22.035878A31.998984 31.998984 0 1 0 537.892156 265.232491l137.041483-53.402685a31.998984 31.998984 0 0 0 18.195855-41.434674L639.723197 33.357261a31.998984 31.998984 0 1 0-59.630529 23.23882l26.695923 68.502679a449.969005 449.969005 0 0 0-94.786785-10.060642c-60.465003 0-119.138236 11.8488-174.390489 35.217667a449.214005 449.214005 0 0 0-238.388457 238.388457c-23.361643 55.252253-35.22128 113.925486-35.22128 174.390489s11.8488 119.138236 35.217668 174.390489a449.214005 449.214005 0 0 0 238.388457 238.388457c55.252253 23.368867 113.925486 35.217667 174.390489 35.217667s119.138236-11.8488 174.390489-35.217667A449.210393 449.210393 0 0 0 924.784365 737.42522c23.368867-55.270316 35.217667-113.925486 35.217667-174.390489a31.998984 31.998984 0 0 0-32.002596-32.006209z"
+                              fill="#e6e6e6" p-id="4284"></path>
+                      </svg>
+                      <span class="truncate">返回欢迎页</span>
+                    </a>
+                    <a onclick="backToChat()"
+                        class="flex px-3 min-h-[44px] py-1 items-center gap-3 transition-colors duration-200 cursor-pointer text-sm rounded-md dark:text-white dark:border-white/20 dark:bg-transparent hover:bg-gray-500/10 h-11 bg-white  flex-grow overflow-hidden">
+                        <svg
+                                class="back-button"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="25"
+                                height="25"
+                                viewBox="0 0 100 100"
+                                style="cursor: pointer;"
+                        >
+                            <circle cx="50" cy="50" r="40" stroke="#FFFFFF" stroke-width="10" fill="none"/>
+                            <line x1="65" y1="50" x2="35" y2="50" stroke="#FFFFFF" stroke-width="10" class="line"/>
+                            <polyline points="45,35 35,50 45,65" stroke="#FFFFFF" stroke-width="10" fill="none" class="arrow"/>
+                        </svg>
+                    </a>
+                 </div>
+                <span class="mb-1 flex flex-row gap-2 rounded-md border dark:text-white dark:border-white/20 dark:bg-transparent" data-state="closed">
                       <a
-                              class="flex px-3 min-h-[44px] py-1 gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm rounded-md border dark:border-white/20 hover:bg-gray-500/10 h-11 w-11 flex-shrink-0 items-center justify-center bg-white dark:bg-transparent"><svg
+                              class="flex px-3 min-h-[44px] py-1 gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm rounded-md dark:border-white/20 hover:bg-gray-500/10 h-11 w-11 flex-shrink-0 items-center justify-center bg-white dark:bg-transparent"><svg
                               stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
                               stroke-linecap="round"
                               stroke-linejoin="round" class="icon-sm" height="1em" width="1em"
@@ -276,7 +293,7 @@
               <textarea class="w-full h-full" id="textareaCopy"></textarea>
             </div>
 
-            <div id="hello-page" class="flex-1 h-full overflow-hidden">
+            <div id="hello-page" class="flex-1 h-full">
               <div id="mytab" class="hidden">
                 <!-- 我的发布列表开始 -->
               <div class="agent-list-container tab" class="w-full" id="agent-list-container">
@@ -366,17 +383,14 @@
                           </div>
                         </div>
                         <div class="relative">
-                          <div class="ball-mask" style="width: 636px; height: 0px; position: relative; margin-left: auto; margin-right: auto;" >
-                            
-                            <div class="ball-corner-container" style=" z-index: 5; width: 636px; height: 400px; position: absolute; margin-left: auto; margin-right: auto;">
+                          <div class="ball-mask" style="width: 66em; height: 0px; position: relative; margin-left: auto; margin-right: auto;" >
+                            <div class="ball-corner-container" style=" z-index: 5; width: 100%; height: 400px; position: absolute; margin-left: auto; margin-right: auto;">
                               <div class="ball-left-top absolute ball-corner">
                                 <ul>
-  
                                 </ul>
                               </div>
                               <div class="ball-right-top absolute ball-corner">
                                  <ul>
-                                  
                                  </ul>
                               </div>
                             </div>

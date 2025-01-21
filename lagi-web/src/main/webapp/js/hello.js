@@ -277,7 +277,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
     const text3 = SUB_SYSTEM_TITLE;
 
     
-    const color1 = '#000000'; // 黑色
+    const color1 = '#808080'; // 黑色
     const color2 = '#808080'; // 灰色
     const color3 = '#808080'; // 灰色
 
@@ -345,16 +345,18 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
         var data = imageData.data;
         for (var i = 0; i< data.length; i += 4) {
             let red =  data[i];
-            let green =  data[i+1];
+            let green = data[i + 1];
             let blue =  data[i+2];
-            
-            if (blue > red) {
-                // console.log(data[i], data[i+1], data[i+2])
-                data[i] = 255;
-                // data[i+1] =  70;
-                data[i+1] = data[i+1] * 0.9;
-                data[i+2] =  0;
+            if ( red > 200 && green > 200 && blue > 200) {
+               continue;
             }
+            if (red > 139) {
+                data[i] = 139;
+            } else {
+                data[i] = 139 + red;
+            }
+            data[i+1] = 0;
+            data[i+2] =  0;
         }
         ctx.putImageData(imageData, startXLogo, row1Top  + (logoHeight *2 / 7));
 
@@ -371,7 +373,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
 
         const text1StartX = (canvas.width - text1Width) / 2;
         ctx.font = `bold italic ${fontSize1} sans-serif`;
-        ctx.fillText(text1, startXLogo - line1height * 2.2, row1Top); // 调整 Y 坐标以适应字体大小
+        ctx.fillText(text1, startXLogo - line1height * 2.1, row1Top + line1height + 1.2); // 调整 Y 坐标以适应字体大小
         // const dpr = window.devicePixelRatio || 1;
         // ctx.scale( 1, 1);
     };
@@ -592,39 +594,112 @@ const debouncedHandleResize = function() {
 // 监听窗口大小变化事件，并重新设置 div 的大小
 window.addEventListener('resize', debouncedHandleResize);
 
+function generateColorGradient(steps, count) {
+    if (steps < 2) {
+        throw new Error("Steps must be at least 2 to create a gradient.");
+    }
+    // Define the key colors in the gradient
+    const colors = [
+        {r: 35, g: 142, b: 252}, // Light blue
+        {r: 0, g: 0, b: 139},     // Dark blue
+        {r: 255, g: 198, b: 38}, // Light yellow
+        {r: 255, g: 165, b: 0},   // Orange
+        {r: 255, g: 30, b: 30}, // Light red
+        {r: 139, g: 0, b: 0}      // Dark red
+    ];
+    const gradient = [];
+    // Helper function to interpolate between two colors
+    function interpolateColor(color1, color2, factor) {
+        return {
+            r: Math.round(color1.r + (color2.r - color1.r) * factor),
+            g: Math.round(color1.g + (color2.g - color1.g) * factor),
+            b: Math.round(color1.b + (color2.b - color1.b) * factor)
+        };
+    }
+    // Generate the gradient
+    const segments = colors.length - 1;
+    const stepsPerSegment = Math.floor(steps / segments);
+    const remainder = steps % segments;
 
+    for (let i = 0; i < segments; i++) {
+        const startColor = colors[i];
+        const endColor = colors[i + 1];
+        const segmentSteps = stepsPerSegment + (i < remainder ? 1 : 0);
+        for (let step = 0; step < segmentSteps; step++) {
+            const factor = step / (segmentSteps - 1);
+            const interpolatedColor = interpolateColor(startColor, endColor, factor);
+            gradient.push(`rgb(${interpolatedColor.r}, ${interpolatedColor.g}, ${interpolatedColor.b})`);
+        }
+    }
+
+    // Ensure the first and last colors are preserved
+    gradient[0] = `rgb(${colors[0].r}, ${colors[0].g}, ${colors[0].b})`;
+    gradient[gradient.length - 1] = `rgb(${colors[colors.length - 1].r}, ${colors[colors.length - 1].g}, ${colors[colors.length - 1].b})`;
+
+    let result = gradient;
+
+    // Reduce gradient to the desired count
+    if (count && count < gradient.length) {
+        const reducedGradient = [];
+        const interval = (gradient.length - 1) / (count - 1);
+        for (let i = 0; i < count; i++) {
+            reducedGradient.push(gradient[Math.round(i * interval)]);
+        }
+        result = reducedGradient;
+    }
+
+    return result.reverse();
+}
 
 function gentRankLi(el) {
     return `<li class="ball-describe-item"> ${el.name}  <a class="hot-tag">${el.count}</a></li>`;
 }
 
 
-function freshRankDom(ulJq, list) {
+function freshRankDom(ulJq, list, colors) {
     ulJq.empty();
+    let lastHeight = 2.2;
+    let lastFontSize = 0.9;
+    let bottomMargin = 0.5;
     for(let i = 0; i < list.length; i++) {
         let el = list[i];
         let html =  gentRankLi(el);
         ulJq.append(html);
+        let li = ulJq.find('li').eq(i);
+        let hotTag = li.find('.hot-tag');
+        li.css('background-color', colors[i]);
+        if (i > 0) {
+            lastFontSize = lastFontSize * 0.85;
+            bottomMargin = bottomMargin * 0.8;
+        }
+        li.css('height', `${lastHeight}em`);
+        li.css('line-height', `${lastHeight}em`);
+        li.css('font-size', `${lastFontSize}em`);
+        li.css('margin-bottom', `${bottomMargin}em`);
     }
 }
 
 function freshLeftRankDom(list) {
-    freshRankDom($('.ball-left-top ul'), list);
+    const colors = generateColorGradient(100, list.length);
+    freshRankDom($('.ball-left-top ul'), list, colors);
 }
 
 
 function freshRightRankDom(list) {
-    freshRankDom($('.ball-right-top ul'), list);
+    const colors = generateColorGradient(100, list.length);
+    freshRankDom($('.ball-right-top ul'), list, colors);
 }
 
 
 function loadLeftRank() {
-    fetch(`/rank/llm?pageSize=3`)
+    fetch(`/rank/llmHotRanking?limit=5`)
     .then(response => {
         return response.json();
     })
     .then(data => {
-        freshLeftRankDom(data.data);
+        if (data.status === 'success') {
+            freshLeftRankDom(data.data);
+        }
     })
     .catch((error)=>{
         freshLeftRankDom([{name:'通义千问', count: 99}, {name:'文心一言', count: 55}, {name:'智谱清言', count: 54}, {name:'Moonshot', count: 50}, {name:'星火', count: 31}, {name:'腾讯混元', count: 30}]);
@@ -634,16 +709,18 @@ function loadLeftRank() {
 
 
 function loadRightRank() {
-    fetch(`/rank/agent?top=3`)
+    fetch(`/rank/agentHotRanking?limit=5`)
     .then(response => {
         return response.json();
     })
     .then(data => {
-        freshRightRankDom(data.data);
+        if (data.status === 'success') {
+            freshRightRankDom(data.data);
+        }
     }).catch((error)=>{
         freshRightRankDom([{name:'天气助手', count: 90}, {name:'油价助手', count: 72}, {name:'高铁助手', count: 11},{name:'翻译助手', count: 11}, {name:'历史今日', count: 9}, {name:'失信查询', count: 7}]);
         console.log("loadRightRank error:", error);
-    });;
+    });
 }
 
 

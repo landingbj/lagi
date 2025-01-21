@@ -39,6 +39,23 @@ function showBallDiv() {
     }
 }
 
+function backToChat() {
+    $('#conTab').show();
+    $('#mytab').hide();
+    $('#queryBox').show();
+    $('#introduces').show();
+    $('#topTitle').show();
+    $('#item-content').show();
+    $('#not-content form').show();
+    const activeListItems = document.querySelectorAll('#conversationsNav a.active');
+    console.log(activeListItems);
+    activeListItems.forEach(a => {
+        console.log(a);
+        a.classList.remove('active');
+    });
+    showBallDiv();
+}
+
 function hideBallDiv() {
     const ballDiv = document.getElementById("ball-div");
     if (ballDiv) {
