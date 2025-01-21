@@ -6,7 +6,6 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.Route;
 import ai.router.Routers;
-import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.skillMap.SkillMap;
 import cn.hutool.core.bean.BeanUtil;
@@ -27,14 +26,12 @@ public class DefaultBestWorker extends RouteWorker{
     private List<Agent<ChatCompletionRequest, ChatCompletionResult>> additionalAgents = new ArrayList<>();
 
     public DefaultBestWorker(WorkerConfig workerConfig) {
-        if(workerConfig == null) {
+        this.workerConfig = workerConfig;
+        String ruleName = workerConfig.getRoute();
+        this.route = Routers.getInstance().getRoute(ruleName);
+        if(this.route ==null) {
             return;
         }
-        this.workerConfig = workerConfig;
-        String ruleName = RouterParser.getRuleName(workerConfig.getRoute());
-        this.route = Routers.getInstance().getRoute(ruleName);
-        List<String> params = RouterParser.getParams(workerConfig.getRoute());
-        this.agents = RouterParser.convert2Agents(params);
     }
 
 
@@ -56,13 +53,12 @@ public class DefaultBestWorker extends RouteWorker{
         ChatCompletionRequest request = new ChatCompletionRequest();
         BeanUtil.copyProperties(data, request);
         request.setStream(false);
-        List<ChatCompletionResult> results = route.invoke(request, filterAgentsBySkillMap(all, request));
+        List<ChatCompletionResult> results = route.invokeAgent(request, all).getResult();
         if(results != null && !results.isEmpty()) {
             result = results.get(0);
         }
         return result;
     }
-
 
     @Override
     public DefaultBestWorker clone() throws CloneNotSupportedException {

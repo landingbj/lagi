@@ -18,7 +18,7 @@ public class CompletionUtil {
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
 
 
-    private static final int MAX_INPUT = ContextLoader.configuration.getFunctions().getPolicy().getContextLength();
+    private static final int MAX_INPUT = ContextLoader.configuration.getFunctions().getChat().getContextLength();
 //    private static final int MAX_INPUT = 1024;
 
     public static ChatCompletionResult getDummyCompletion() {

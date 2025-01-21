@@ -25,22 +25,22 @@ public class WorkerManager {
             return;
         }
         workerConfigs.forEach(conf -> {
-            String name = conf.getName();
-            String worker = conf.getWorker();
-            try {
-                Class<?> clazz = Class.forName(worker);
-                if(RouteWorker.class.isAssignableFrom(clazz)) {
-                    Constructor<?> constructor = clazz.getConstructor(WorkerConfig.class);
-                    Object o = constructor.newInstance(conf);
-                    workerMaps.put(name, (RouteWorker) o);
-                } else {
-                    Constructor<?> constructor = clazz.getConstructor(WorkerConfig.class);
-                    Object o = constructor.newInstance(conf);
-                    otherWorker.put(name, (Worker<?, ?>) o);
+                    String name = conf.getName();
+                    String worker = conf.getWorker();
+                    try {
+                        Class<?> clazz = Class.forName(worker);
+                        if(RouteWorker.class.isAssignableFrom(clazz)) {
+                            Constructor<?> constructor = clazz.getConstructor(WorkerConfig.class);
+                            Object o = constructor.newInstance(conf);
+                            workerMaps.put(name, (RouteWorker) o);
+                        } else {
+                            Constructor<?> constructor = clazz.getConstructor(WorkerConfig.class);
+                            Object o = constructor.newInstance(conf);
+                            otherWorker.put(name, (Worker<?, ?>) o);
+                        }
+                    } catch (Exception e) {
+                    }
                 }
-            } catch (Exception e) {
-            }
-            }
         );
     }
 

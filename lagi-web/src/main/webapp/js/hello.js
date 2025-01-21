@@ -494,6 +494,7 @@ function setDivSize() {
     let d1 =  Math.min(windowWidth * 0.8, 400) ;
     let d2 = content_h - intro_h - title_h  - ball_m_t - ball_m_b;
     
+    let marginDelta = left_nav_bar.offsetWidth > 0 ? 39 : 12;
     if(d2 < 100) {
         // title / 2
         title.style.height = '60px';
@@ -535,7 +536,7 @@ function setDivSize() {
     // console.log("ball_d", ball_d);
     ball.style.width = ball_d + 'px';
     ball.style.height = ball_d + 'px';
-    ball.style.marginLeft = (item_widht - ball_d) / 2  + 39+ 'px';
+    ball.style.marginLeft = (item_widht - ball_d) / 2  + marginDelta+ 'px';
 
     // alert(content_h  - title_h - intro_h -ball_m_t - ball_m_b - ball_d);
     initTopTile();

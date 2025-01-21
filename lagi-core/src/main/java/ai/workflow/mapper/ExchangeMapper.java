@@ -5,7 +5,7 @@ import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
-import ai.worker.WorkerGlobal;
+import ai.router.utils.RouteGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ public class ExchangeMapper extends ChatAgentMapper implements IMapper {
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
-                WorkerGlobal.MAPPER_CHAT_REQUEST);
+                RouteGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
         chatCompletionResult = agent.communicate(chatCompletionRequest);

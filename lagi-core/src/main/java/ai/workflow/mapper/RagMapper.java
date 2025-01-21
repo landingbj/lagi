@@ -7,7 +7,7 @@ import ai.mr.IMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
-import ai.worker.WorkerGlobal;
+import ai.router.utils.RouteGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
 import lombok.Getter;
@@ -37,7 +37,7 @@ public class RagMapper extends ChatAgentMapper implements IMapper {
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
-                WorkerGlobal.MAPPER_CHAT_REQUEST);
+                RouteGlobal.MAPPER_CHAT_REQUEST);
 
         ChatCompletionResult chatCompletionResult = agent.communicate(chatCompletionRequest);
         double calPriority = 0;

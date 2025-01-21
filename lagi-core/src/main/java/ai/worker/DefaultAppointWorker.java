@@ -6,6 +6,7 @@ import ai.manager.AgentManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.Routers;
+import ai.router.utils.RouteGlobal;
 import ai.router.utils.RouterParser;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.skillMap.SkillMap;
@@ -29,9 +30,9 @@ public class DefaultAppointWorker extends RouteWorker {
     public DefaultAppointWorker(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
         String routeName = RouterParser.getRuleName(workerConfig.getRoute());
-        this.route = Routers.getInstance().getRoute(routeName);
+        this.route = Routers.getInstance().getRoute(workerConfig.getRoute());
         List<String> agents = RouterParser.getParams(workerConfig.getRoute());
-        if(agents.size() == 1 && RouterParser.WILDCARD_STRING.equals(agents.get(0))) {
+        if(agents.size() == 1 && RouteGlobal.WILDCARD_STRING.equals(agents.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
                 if(agent.getAgentConfig() !=null && agent.getAgentConfig().getAppId() !=null) {
@@ -70,7 +71,7 @@ public class DefaultAppointWorker extends RouteWorker {
             ChatCompletionRequest request = new ChatCompletionRequest();
             BeanUtil.copyProperties(data, request);
             request.setStream(false);
-            List<ChatCompletionResult> invoke = route.invoke(request, Lists.newArrayList(trAgent));
+            List<ChatCompletionResult> invoke = route.invokeAgent(request, Lists.newArrayList(trAgent)).getResult();
             if(invoke != null && !invoke.isEmpty()) {
                 ChatCompletionResult communicate = invoke.get(0);
                 try {

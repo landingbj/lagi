@@ -34,19 +34,22 @@ public class ExcelSqlUtil {
     private static boolean isSwitch = false;
 
     static {
-        sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
-                .findFirst()  // 获取流中的第一个元素
-                .orElseThrow(() -> new NoSuchElementException("No database found"));
-        try {
-            if (new MysqlAdapter(sqlJdbc.getName()).selectCount("SELECT 1")>0){
-                mysqlAdapter = new MysqlAdapter(sqlJdbc.getName());
-                isSwitch =initTextToSqlSearch();
-                if (!isSwitch){
-                    log.info("mysql初始化失败！---智能问数模式已关闭！");
+        List<SQLJdbc> database = ContextLoader.configuration.getStores().getDatabase();
+        if(!(database== null || database.isEmpty())) {
+            sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
+                    .findFirst()  // 获取流中的第一个元素
+                    .orElseThrow(() -> new NoSuchElementException("No database found"));
+            try {
+                if (new MysqlAdapter(sqlJdbc.getName()).selectCount("SELECT 1")>0){
+                    mysqlAdapter = new MysqlAdapter(sqlJdbc.getName());
+                    isSwitch =initTextToSqlSearch();
+                    if (!isSwitch){
+                        log.info("mysql初始化失败！---智能问数模式已关闭！");
+                    }
                 }
+            }catch (Exception e){
+                log.error("mysql连接失败！---智能问数模式已关闭！");
             }
-        }catch (Exception e){
-            log.error("mysql连接失败！---智能问数模式已关闭！");
         }
     }
 

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class FilterConfig {
+    private String name;
     private WordRules sensitive;
     private List<String> stopping;
     private List<String> priority;

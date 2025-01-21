@@ -44,7 +44,7 @@ public class MultimodalAIManager {
             String modelListStr = modelService.getModel();
             List<String> modelNameList = Arrays.stream(modelListStr.split(",")).map(String::trim).collect(Collectors.toList());
             if(modelService instanceof ILlmAdapter) {
-                register(modelNameList, LlmManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getChat());
+                register(modelNameList, LlmManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getChat().getBackends());
                 register(modelNameList, LlmInstructionManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getDoc2instruct());
             }
             if(modelService instanceof IAudioAdapter) {

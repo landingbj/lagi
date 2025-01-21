@@ -2,7 +2,6 @@ package ai.workflow.mapper;
 
 import ai.agent.Agent;
 import ai.agent.proxy.LlmProxyAgent;
-import ai.agent.proxy.ProxyAgent;
 import ai.common.utils.ThreadPoolManager;
 import ai.learn.questionAnswer.KShingle;
 import ai.llm.pojo.ChatCompletionResultWithSource;
@@ -12,12 +11,12 @@ import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.qa.AiGlobalQA;
+import ai.router.utils.RouteGlobal;
 import ai.utils.WorkPriorityWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.pojo.AgentIntentScore;
 import ai.worker.pojo.IntentResponse;
 import ai.worker.skillMap.SkillMap;
-import ai.worker.WorkerGlobal;
 import cn.hutool.core.bean.BeanUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -90,7 +89,7 @@ public class ChatAgentMapper extends BaseMapper implements IMapper {
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         ChatCompletionRequest chatCompletionRequest = (ChatCompletionRequest) this.getParameters().get(
-                WorkerGlobal.MAPPER_CHAT_REQUEST);
+                RouteGlobal.MAPPER_CHAT_REQUEST);
         ChatCompletionResult chatCompletionResult = null;
         double calPriority = 0;
         Boolean isFeeRequired = Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired());

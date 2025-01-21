@@ -11,4 +11,5 @@ public class WorkerConfig {
     private String route;
     private String agent;
     private String agents;
+    private String filter;
 }

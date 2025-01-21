@@ -26,7 +26,7 @@ public class CacheManager {
     private static final Map<String, Integer> COUNT_KEY = new ConcurrentHashMap<>();
 
     private CacheManager() {
-        GUAVA_CACHE_SECONDS = ContextLoader.configuration.getFunctions().getPolicy().getGraceTime();
+        GUAVA_CACHE_SECONDS = ContextLoader.configuration.getFunctions().getChat().getGraceTime();
         try {
             GLOBAL_CACHE = loadCache(new CacheLoader <String, Boolean>() {
                 @Override
