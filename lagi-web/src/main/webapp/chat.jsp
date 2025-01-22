@@ -755,8 +755,8 @@
 <script src="js/index.js?ver=${initParam.version}"></script>
 <script src="js/self.js?ver=${initParam.version}"></script>
 <script src="js/query.js?ver=${initParam.version}"></script>
-<script src="js/ball.js"></script>
-<script src="js/agent.js"></script>
+<script src="js/ball.js?ver=${initParam.version}"></script>
+<script src="js/agent.js?ver=${initParam.version}"></script>
 <script src="js/login.js?ver=${initParam.version}"></script>
 </body>
 </html>
