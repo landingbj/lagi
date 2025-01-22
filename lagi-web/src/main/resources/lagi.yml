@@ -476,7 +476,7 @@ workers:
     worker: ai.worker.social.Asr4FlightsWorker
 
   - name: BestWorker
-    route: best(weather, oil)
+    route: best(weather&oil)
     worker: ai.worker.DefaultBestWorker
 
   - name: appointedWorker
@@ -490,7 +490,7 @@ routers:
     # A|B -> polling,  A or B, means randomly round-robin within A and B;
     # A,B -> failover, first A, if A fail, then B;
     # A&B -> parallel, call A and B concurrently, choose the proper only one result;
-    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simultaneously, if fail, then call E or F randomly.- name: best
+    # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simultaneously, if fail, then call E or F randomly.
 
 
   - name: pass
