@@ -676,7 +676,7 @@ function createLagiAgent() {
         pricePerReq: 0,
         publishStatus: true
     };
-
+    document.getElementById("createLagiAgentButtons").disabled = true;
     fetch('/agent/createLagiAgent', {
         method: 'POST',
         headers: {
@@ -688,10 +688,12 @@ function createLagiAgent() {
     .then(data => {
         closeCreateAgent();
         alert('智能体创建成功！');
+        document.getElementById("createLagiAgentButtons").disabled = false;
     })
     .catch(error => {
         closeCreateAgent();
         alert('创建失败，请重试！');
+        document.getElementById("createLagiAgentButtons").disabled = false;
     });
 }
 
