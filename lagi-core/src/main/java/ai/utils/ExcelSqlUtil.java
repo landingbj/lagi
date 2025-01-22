@@ -7,6 +7,7 @@ import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.vector.pojo.ExcelPage;
 import cn.hutool.json.JSONObject;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
@@ -207,7 +208,8 @@ public class ExcelSqlUtil {
         List<String> sheetNames = reader.getSheetNames();
         Map<String, List<List<JSONObject>>> list = new HashMap<>();
         for (int i = 0; i < sheetNames.size(); i++) {
-            List<List<JSONObject>> result = EasyExcelUtil.readMergeExcel(filePath, i, 0, 0);
+            ExcelPage excelPage = EasyExcelUtil.readMergeExcel(filePath, i, 0, 0);
+            List<List<JSONObject>> result = excelPage.getData();
             if (result.size() > 0){
                 list.put(fileName+"里的"+sheetNames.get(i)+"表", result);
             }
