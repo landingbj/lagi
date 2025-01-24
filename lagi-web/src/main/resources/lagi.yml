@@ -523,9 +523,6 @@ filters:
   - name: priority
     rules:  car,weather,
             社*保,
-            การเงิน,สภาพอากาศ,รถยนต์,การศึกษา,
-            くるま,てんき,きょういく,けいざい,
-            погода,автомобиль,образование,экономика
   # Keywords to mark the lifecycle end of a multiple round conversation
   # Or the beginning of a new conversation.
   - name: stopping
