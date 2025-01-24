@@ -1300,6 +1300,15 @@ pre .key {
 /*    overflow: visible; */
 /*}*/
 
+.ball-corner-container {
+    height: 450px;
+}
+
+@media (max-width: 768px) {
+    .ball-corner-container {
+        height: 0;
+    }
+}
 
 .ball-corner-container:after{
     position: absolute;
