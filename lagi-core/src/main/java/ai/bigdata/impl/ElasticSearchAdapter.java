@@ -12,6 +12,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -62,6 +63,19 @@ public class ElasticSearchAdapter implements IBigdata {
 
     @Override
     public List<TextIndexData> search(String keyword, String category) {
+        // 检查索引是否存在
+        BooleanResponse indexExistsResponse = null;
+        try {
+            indexExistsResponse = client.indices().exists(i -> i.index(category));
+        } catch (IOException e) {
+            logger.error("Error while checking index existence", e);
+            return new ArrayList<>();
+        }
+
+        if (!indexExistsResponse.value()) {
+            logger.warn("Index {} does not exist", category);
+            return new ArrayList<>();
+        }
         SearchResponse<TextIndexData> searchResponse = null;
         try {
             searchResponse = client.search(s -> s.index(category).
