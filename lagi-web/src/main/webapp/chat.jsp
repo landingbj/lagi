@@ -394,7 +394,7 @@
                           </div>
                         </div>
                         <div class="relative">
-                          <div class="ball-mask" style="width: 48rem; height: 0px; position: relative; margin-left: auto; margin-right: auto;" >
+                          <div class="ball-mask" style="width: min(47em, 90%); height: 0px; position: relative; margin-left: auto; margin-right: auto;" >
                             <div class="ball-corner-container" style=" z-index: 5; width: 100%; height: 400px; position: absolute; margin-left: auto; margin-right: auto;">
                               <div class="ball-left-top absolute ball-corner">
                                 <ul>
@@ -413,9 +413,9 @@
                         
                         <!-- ***********************输入框前form******************************** -->
                         <div id="introduces" class="relative">
-                          <div class="h-full flex ml-1  gap-0 md:gap-2 justify-center">
+                          <div class="h-full flex gap-0 md:gap-2 justify-center">
                             <div class="grow">
-                              <div class="absolute left-0 mb-4 flex w-full grow gap-2 px-1 pb-1 sm:px-2 sm:pb-0 md:static md:mb-0 md:max-w-none">
+                              <div class="absolute left-0 mb-4 flex w-full grow gap-2  sm:pb-0 md:static md:mb-0 md:max-w-none">
                                 <div class="grid w-full grid-flow-row grid-cols-2 gap-3"></div>
                               </div>
                             </div>

@@ -278,8 +278,8 @@ pre .key {
     position: relative;
     height: 130px;
     background-color: transparent;
-    width: min(650px, 90%);
-    margin-bottom: 0px;
+    width: min(47em, 90%);
+    margin-bottom: 0;
     z-index: 5;
 }
 
