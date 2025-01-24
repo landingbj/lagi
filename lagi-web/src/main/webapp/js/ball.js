@@ -291,7 +291,7 @@ function loadBall() {
     function positionAll() {
         const containerWidth = oDiv.offsetWidth;
         const containerHeight = oDiv.offsetHeight;
-        radius = Math.min(containerWidth, containerHeight) / 2;
+        radius = Math.min(containerWidth, containerHeight) * 0.4;
         mcList.forEach((tag, i) => {
             const phi = Math.acos(-1 + (2 * (i + 1) - 1) / mcList.length);
             const theta = Math.sqrt(mcList.length * Math.PI) * phi;
@@ -306,7 +306,7 @@ function loadBall() {
 
     function doPosition() {
         const l = oDiv.offsetWidth / 2;
-        const t = oDiv.offsetHeight / 2;
+        const t = oDiv.offsetHeight * 0.4;
         for(let i = 0; i < mcList.length; i++) {
             let tag = mcList[i];
             aA[i].style.left = tag.cx + l - tag.offsetWidth / 2 + 'px';

@@ -42,6 +42,10 @@
 	white-space: nowrap;
 }
 
+#conversationsNav a {
+    padding-right: 1em;
+}
+
 .flex-bottom{
 	display: flex;
 	align-items: flex-end;
@@ -425,11 +429,11 @@ pre .key {
 }
 
 #item-content {
+    z-index: 10;
     height:  calc(100% - 112px);
 }
 
 #not-content{
-	width: 100%;
 	height: 112px;
 }
 
@@ -554,7 +558,27 @@ pre .key {
     position: relative; /* 设置为相对定位 */
 }
 
+#agent-list th, #agent-list td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
 
+#agent-list th:nth-child(1),
+#agent-list td:nth-child(1) {
+    max-width: 8em;
+}
+
+#agent-list th:nth-child(3),
+#agent-list td:nth-child(3) {
+    max-width: 12em;
+}
+
+#agent-list th:nth-child(4),
+#agent-list td:nth-child(4) {
+    max-width: 10em;
+}
 
 /* 禁止选中的样式 */
 #agent-list-container .no-select {
@@ -617,15 +641,7 @@ pre .key {
 }
 
 .agent-list-container {
-    display: none;           /* 默认隐藏 */
-    width: 100%;             /* 宽度占满父容器 */
-    height: 90%;            /* 高度占满父容器 */
-    box-sizing: border-box;  /* 包括内边距和边框 */
-    background-color: white;  /* 背景颜色，根据需要调整 */
-    padding: 20px;  /* 内边距 */
-    z-index: 1;
-    justify-content: center;
-    align-items: center;
+
 }
 
 /* 禁止选中的样式 */
@@ -701,7 +717,7 @@ pre .key {
 #agent-list {
     width: 100%;  /* 设置表格宽度为100% */
     border-collapse: collapse;  /* 合并表格的边框 */
-    margin-top: 20px;  /* 给表格顶部加一点间距 */
+    margin-top: 0.5em;  /* 给表格顶部加一点间距 */
 }
 
 /* 设置表头的样式 */
@@ -918,13 +934,11 @@ pre .key {
     padding: 5px 10px;
 }
 
-
-
 /* 设置表格的整体样式 */
 .paid-agent-list {
     width: 100%;  /* 设置表格宽度为100% */
     border-collapse: collapse;  /* 合并表格的边框 */
-    margin-top: 20px;  /* 给表格顶部加一点间距 */
+    margin-top: 0.5em;  /* 给表格顶部加一点间距 */
 }
 
 /* 设置表头的样式 */
@@ -1121,12 +1135,25 @@ pre .key {
     font-style: normal;  /* 字体样式（正常、斜体等） */
 }
 
+@media (max-width: 768px) {
+    .msg{
+        --msg-width: 20rem;
+        --msg-height: 12rem;
+        width: var(--msg-width);
+        height: var(--msg-height);
+    }
+}
+
+@media (min-width: 768px) {
+    .msg{
+        --msg-width: 20rem;
+        --msg-height: 12rem;
+        width: var(--msg-width);
+        height: var(--msg-height);
+    }
+}
 
 .msg{
-    --msg-width: 26rem;
-    --msg-height: 10rem;
-    width: var(--msg-width);
-    height: var(--msg-height);
     position: fixed;
     z-index:999;
     top: calc(50% - (var(--msg-height) / 2));
@@ -1284,34 +1311,34 @@ pre .key {
     display: inline-block;
 }
 
-.ball-corner-container:before{
-    position: absolute;
-    top: 0;
-    left: -40%;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgb(255, 255, 255); 
-    z-index: 1;
-    clip-path: circle(50% at 95% 50%);
-    pointer-events: none;
-    content:'';
-    overflow: visible; 
-}
+/*.ball-corner-container:before{*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    left: -40%;*/
+/*    right: 0;*/
+/*    bottom: 0;*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    background-color: rgb(255, 255, 255); */
+/*    z-index: 1;*/
+/*    clip-path: circle(50% at 95% 50%);*/
+/*    pointer-events: none;*/
+/*    content:'';*/
+/*    overflow: visible; */
+/*}*/
 
 
 .ball-corner-container:after{
     position: absolute;
-    top: 0px;
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
     height: 100%;
     background-color: rgb(255, 255, 255); /* 匹配页面背景色 */
-    z-index: -1;
-    clip-path: circle(50% at 45% 50%);
+    z-index: 1;
+    clip-path: circle(53%);
     pointer-events: none; /* 确保遮罩不会干扰鼠标事件 */
     content:'';
     overflow: visible; /* 确保内容超出容器时仍然可见 */

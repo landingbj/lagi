@@ -16,6 +16,8 @@ import javax.servlet.http.Part;
 import ai.common.pojo.*;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
+import ai.llm.pojo.InstructionEntity;
+import ai.llm.service.InstructionService;
 import ai.vector.VectorDbService;
 import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Post;
@@ -66,6 +68,7 @@ public class SearchServlet extends RestfulServlet {
 
     private VectorDbService vectorDbService = new VectorDbService(config);
     private ai.intent.IntentService sampleIntentService = new SampleIntentServiceImpl();
+    private final InstructionService instructionService = new InstructionService();
 
 
     @Post("generateExam")
@@ -230,9 +233,8 @@ public class SearchServlet extends RestfulServlet {
                 // 获取内容
                 String fileContent = FileAndDocUtil.getContent(lastFilePath);
                 // 获取指令集
-                ArrayList<InstructionsResponse> instructionsResponseList = FileAndDocUtil
-                        .getInstructionsByContent(fileContent);
-                Map<String, Object> map = new HashMap<String, Object>();
+                List<InstructionEntity> instructionsResponseList = instructionService.getInstructionList(fileContent);
+                Map<String, Object> map = new HashMap<>();
                 map.put("status", "success");
                 map.put("instructions", instructionsResponseList);
                 result = objectMapper.writeValueAsString(map);

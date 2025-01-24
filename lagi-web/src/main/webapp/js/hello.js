@@ -343,21 +343,18 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
         
         var imageData = ctx.getImageData(startXLogo, row1Top  + (logoHeight *2 / 7) , logoWidth, logoHeight);
         var data = imageData.data;
-        for (var i = 0; i< data.length; i += 4) {
-            let red =  data[i];
-            let green = data[i + 1];
-            let blue =  data[i+2];
-            if ( red > 200 && green > 200 && blue > 200) {
-               continue;
-            }
-            if (red > 139) {
-                data[i] = 139;
-            } else {
-                data[i] = 139 + red;
-            }
-            data[i+1] = 0;
-            data[i+2] =  0;
-        }
+        // for (var i = 0; i< data.length; i += 4) {
+        //     let red =  data[i];
+        //     let green = data[i + 1];
+        //     let blue =  data[i+2];
+        //     if (blue > red) {
+        //         // console.log(data[i], data[i+1], data[i+2])
+        //         data[i] = 255;
+        //         // data[i+1] =  70;
+        //         data[i+1] = data[i+1] * 0.9;
+        //         data[i+2] =  0;
+        //     }
+        // }
         ctx.putImageData(imageData, startXLogo, row1Top  + (logoHeight *2 / 7));
 
         // 设置第三行字体和颜色
@@ -373,7 +370,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
 
         const text1StartX = (canvas.width - text1Width) / 2;
         ctx.font = `bold italic ${fontSize1} sans-serif`;
-        ctx.fillText(text1, startXLogo - line1height * 2.1, row1Top + line1height + 1.2); // 调整 Y 坐标以适应字体大小
+        ctx.fillText(text1, startXLogo - line1height * 2.1, row1Top); // 调整 Y 坐标以适应字体大小
         // const dpr = window.devicePixelRatio || 1;
         // ctx.scale( 1, 1);
     };

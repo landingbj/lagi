@@ -103,7 +103,6 @@ function createPageButton(pageNumber, currentPage, container) {
     button.onclick = () => loadUploadFileList(pageNumber);
     if (pageNumber === currentPage) {
         button.style.fontWeight = 'bold';
-        button.style.backgroundColor = '#238efc'
     }
     container.appendChild(button);
 }

@@ -117,7 +117,7 @@ public class FileAndDocUtil {
 		String fileType = split[split.length - 1];
 		String content = "";
 		InputStream in = new FileInputStream(file);
-		if ("pdf".equals(fileType)) {
+		if ("pdf".equalsIgnoreCase(fileType)) {
 			// 执行pdf
 
 			content = PdfUtil.webPdfParse(in).replaceAll("[\r\n?|\n]", "");
@@ -126,7 +126,7 @@ public class FileAndDocUtil {
 
 			content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 
-		} else if ("doc".equals(fileType) || "docx".equals(fileType)) {
+		} else if ("doc".equalsIgnoreCase(fileType) || "docx".equalsIgnoreCase(fileType)) {
 			// 执行docx
 			String extString = file.getName().substring(
 					file.getName().lastIndexOf("."));
@@ -146,25 +146,4 @@ public class FileAndDocUtil {
 		String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 		return fileName;
 	}
-
-	public static ArrayList<InstructionsResponse>  getInstructionsByContent(
-			String content) throws IOException {
-		Object[] params = { content, "temp", "ln_unicom" };
-		AiServiceCall wsCall = new AiServiceCall();
-		String returnStr = wsCall.callWS(AiServiceInfo.WSLrnUrl,
-				"getInstructions", params)[0];
-		ObjectMapper objectMapper = new ObjectMapper();
-		JsonNode jsonNode1 = objectMapper.readTree(returnStr);
-		ArrayList<InstructionsResponse> resposeList = new ArrayList<>();
-		for (JsonNode node : jsonNode1) {
-			String instruction = node.get("instruction").asText();
-			String input = node.get("input").asText();
-			String output = node.get("output").asText();
-			InstructionsResponse instructionsResponse = new InstructionsResponse(
-					instruction, input, output);
-			resposeList.add(instructionsResponse);
-		}
-		return resposeList;
-	}
-
 }
