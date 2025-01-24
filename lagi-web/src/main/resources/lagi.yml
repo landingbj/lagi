@@ -245,6 +245,7 @@ functions:
 
   chat:
     route: best((landing&chatgpt),(kimi|ernie))
+    filter: sensitive,priority,stopping,continue
     backends:
       - backend: landing
         model: cascade
@@ -269,7 +270,6 @@ functions:
         enable: false
         stream: true
         priority: 10
-    filter: default_filter
 
   translate:
     - backend: ernie
@@ -404,7 +404,7 @@ agents:
 
   # Agent for stock queries, providing stock market information, analysis, and related services.
   - name: stock
-    wrong_case: /u62b1/u6b49
+    wrong_case: 抱歉
     driver: ai.agent.chat.coze.CozeAgent
     token: your-token
     app_id: your-app-id
@@ -499,22 +499,39 @@ routers:
     # if specified, invoke this agent.
     # if just % is given, % would be decided by parameter at calling time.
 
-# Filter rule
+# Filter rules for sensitive words or sentence, with priority and etc.
 filters:
-  - name: default_filter
-    # Sensitive words filter
-    sensitive:
-      mask: "*"
-      level: 2
-      rules:
-        - rule: 'openai'
-    # Vector index words with high priority
-    priority:
-      - car
-      - weather
-    # Conversational stop word
-    stopping:
-      - bye
-    # Conversational continuation words
-    continue:
-      - about
+  # Sensitive words filter
+  - name: sensitive
+    groups:
+      # Mask sensitive words/sentences with stars "*"
+      - level: mask
+        rules: openai,FLG,
+                维尼熊,
+                เสรีภาพ,ประชาธิปไตย,กษัตริย์,รัฐประหาร,สื่อ,ม็อบ,อิสรภาพ,
+      # Erase sensitive words/sentences
+      - level: erase
+        rules: your context,
+                根据\w{0\\,6}上下文,依据您提供的上下文,
+                ぶんみゃくにもとづいて,せいじてき,いけん,しそう,
+      # Block the output of sensitive words/sentences
+      - level: block
+        rules:  shit,CNM,
+                六四,
+                цензура,протест,революция,права человека
+      # Index words with high priority
+  - name: priority
+    rules:  car,weather,
+            社*保,
+            การเงิน,สภาพอากาศ,รถยนต์,การศึกษา,
+            くるま,てんき,きょういく,けいざい,
+            погода,автомобиль,образование,экономика
+  # Keywords to mark the lifecycle end of a multiple round conversation
+  # Or the beginning of a new conversation.
+  - name: stopping
+    rules: bye,
+            开始*
+  # Keywords to mark the continuation of conversation, within multiple round.
+  - name: continue
+    rules: about,next,then,
+            资料,
