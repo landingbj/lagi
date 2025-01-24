@@ -506,29 +506,30 @@ filters:
     groups:
       # Mask sensitive words/sentences with stars "*"
       - level: mask
-        rules: openai,FLG,
+        rules: 'openai,FLG,
                 维尼熊,
-                เสรีภาพ,ประชาธิปไตย,กษัตริย์,รัฐประหาร,สื่อ,ม็อบ,อิสรภาพ,
+                เสรีภาพ,ประชาธิปไตย,กษัตริย์,รัฐประหาร,สื่อ,ม็อบ,อิสรภาพ'
       # Erase sensitive words/sentences
       - level: erase
-        rules: your context,
+        # Rule Explanation: A single rule supports regular expressions but requires using \\, to replace the original ,
+        rules: 'your context,
                 根据\w{0\\,6}上下文,依据您提供的上下文,
-                ぶんみゃくにもとづいて,せいじてき,いけん,しそう,
+                ぶんみゃくにもとづいて,せいじてき,いけん,しそう'
       # Block the output of sensitive words/sentences
       - level: block
-        rules:  shit,CNM,
+        rules:  'shit,CNM,
                 六四,
-                цензура,протест,революция,права человека
-      # Index words with high priority
+                цензура,протест,революция,права человека'
+  # Index words with high priority
   - name: priority
-    rules:  car,weather,
-            社*保,
+    rules:  'car,weather
+            社*保'
   # Keywords to mark the lifecycle end of a multiple round conversation
   # Or the beginning of a new conversation.
   - name: stopping
-    rules: bye,
-            开始*
+    rules: 'bye,
+            开始*'
   # Keywords to mark the continuation of conversation, within multiple round.
   - name: continue
-    rules: about,next,then,
-            资料,
+    rules: 'about,next,then,
+            资料'
