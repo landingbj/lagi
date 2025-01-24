@@ -1271,44 +1271,17 @@ pre .key {
 .ball-corner ul li {
     width: 50%;
 }
-/*.ball-corner ul li:nth-child(1) {*/
-/*    background-color: rgb(240, 0, 0);;*/
-/*} */
-
-/*.ball-corner ul li:nth-child(2) {*/
-/*    background-color: rgb(230, 0, 0);*/
-/*} */
-
-/*.ball-corner ul li:nth-child(3) {*/
-/*    background-color: rgb(220, 0, 0);*/
-/*}*/
-
-/*.ball-corner ul li:nth-child(4) {*/
-/*    background-color: rgb(210, 0, 0);*/
-/*} */
-
-
-/*.ball-corner ul li:nth-child(5) {*/
-/*    background-color: rgb(200, 0, 0);*/
-/*} */
-
-/*.ball-corner ul li:nth-child(6) {*/
-/*    background-color: rgb(190, 0, 0);*/
-/*} */
-
 
 .hot-tag {
     text-decoration: none;
-    line-height: 1.4em;
+    font-size: 0.9em;
     color: #ffffff;
     margin: 0.4em 0 0.4em 0;
     padding: 0 0.2em 0 0.2em;
-    height: 1.4em;
     transition: all 0.3s ease;
     border-radius: 1.5em;
     border: 1px solid rgb(255, 255, 255);
     text-align: center;
-    display: inline-block;
 }
 
 /*.ball-corner-container:before{*/

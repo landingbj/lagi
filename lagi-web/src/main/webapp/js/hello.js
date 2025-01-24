@@ -655,7 +655,7 @@ function gentRankLi(el) {
 
 function freshRankDom(ulJq, list, colors) {
     ulJq.empty();
-    let lastHeight = 2.2;
+    let lastHeight = 1.3;
     let lastFontSize = 0.9;
     let bottomMargin = 0.5;
     for(let i = 0; i < list.length; i++) {
