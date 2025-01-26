@@ -252,7 +252,7 @@ Use the instruction set generation API, as detailed in the [API documentation](A
 3. **Formatting:** Convert QA content into a specified JSON format for further training or analysis.
 4. **Logical Segmentation:** Generate well-defined questions and answers based on the document's paragraph topics (e.g., background introduction, application scenarios, specific advantages).
 
-## 11. Training File Upload Feature Description
+## 11. Upload Custom Training Files
 
 The detailed description of the private training file upload feature is as follows. For specific API calls, please refer to the [API documentation](API_en.md).
 
