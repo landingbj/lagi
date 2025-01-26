@@ -254,7 +254,7 @@ Use the instruction set generation API, as detailed in the [API documentation](A
 
 ## 11. Upload Custom Training Files
 
-The detailed description of the private training file upload feature is as follows. For specific API calls, please refer to the [API documentation](API_en.md).
+For different types of files, Lagi will adopt differentiated processing strategies to efficiently and automatically convert the file content into the ideal format for large model training, in order to improve the model's learning efficiency and performance, and help users train their own exclusive large models. The specific processing methods for each category are as follows:
 
 ### Supported File Formats
 
@@ -264,7 +264,7 @@ This feature supports the following file formats:
 - Image formats: jpeg, png, jpg, webp
 - Presentation formats: ppt, pptx
 
-### File Processing Categories
+### File processing methods
 
 For different types of files, Lagi will adopt differentiated processing strategies to efficiently and automatically convert the file content into the optimal format for large models. This is to enhance the learning efficiency and performance of the models, helping users train their own exclusive large models. The specific categories are as follows:
 
