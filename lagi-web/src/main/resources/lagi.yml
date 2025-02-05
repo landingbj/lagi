@@ -443,7 +443,7 @@ agents:
     driver: ai.agent.customer.HotNewsAgent
 
   # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
-  - name: route->travel
+  - name: travel
     driver: ai.agent.customer.CityTravelRouteAgent
 
 # The following is the configuration of workers, name is the name of the worker,
