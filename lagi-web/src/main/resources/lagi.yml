@@ -418,39 +418,32 @@ agents:
   # Agent for weather queries, helping users obtain real-time weather information and forecasts.
   - name: weather
     token: your-token
-    app_id: weather_agent
     driver: ai.agent.customer.WeatherAgent
 
   # Agent for querying dishonest persons, helping users access information about people listed as untrustworthy.
   - name: dishonest
     token: your-token
-    app_id: dishonest_person_search_agent
     driver: ai.agent.customer.DishonestPersonSearchAgent
 
   # Agent for high-speed train ticket queries, providing services to help users quickly find train ticket information.
   - name: ticket
-    app_id: high_speed_ticket_agent
     driver: ai.agent.customer.HighSpeedTicketAgent
 
   # Agent for Youdao translation services, supporting translation between multiple languages.
   - name: youdao
-    app_id: your-app-id
     token: your-token
     driver: ai.agent.customer.YouDaoAgent
 
   # Sogou image search tool that can help you search for an image online based on your keywords.
   - name: sogou
-    app_id: sogou_search_pictures
     driver: ai.agent.customer.SogouSearchPicturesAgent
 
   # Agent for fetching daily hot news, helping users retrieve trending news articles.
   - name: news
-    app_id: hot_news
     driver: ai.agent.customer.HotNewsAgent
 
   # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
-  - name: route
-    app_id: city_travel_route
+  - name: route->travel
     driver: ai.agent.customer.CityTravelRouteAgent
 
 # The following is the configuration of workers, name is the name of the worker,
