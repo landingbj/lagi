@@ -392,66 +392,66 @@ agents:
 
   # Agent for Baidu Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
   - name: yiYan
-    driver: ai.agent.chat.wenxin.BaiduAgent
     app_id: your-app-id
     api_key: your-api-key
+    driver: ai.agent.chat.wenxin.BaiduAgent
 
   # Agent for Tencent YuanQi, providing automated support for Tencent-related products and services.
   - name: yuanQi
-    driver: ai.agent.chat.tencent.YuanQiAgent
     app_id: your-app-id
     api_key: your-api-key
+    driver: ai.agent.chat.tencent.YuanQiAgent
 
   # Agent for stock queries, providing stock market information, analysis, and related services.
   - name: stock
     wrong_case: 抱歉
-    driver: ai.agent.chat.coze.CozeAgent
     token: your-token
     app_id: your-app-id
+    driver: ai.agent.chat.coze.CozeAgent
 
   # Agent for Xiaohongshu (Little Red Book) platform, providing user content recommendations, search, and interaction.
-  - name: xiaohongshu
-    driver: ai.agent.chat.zhipu.ZhipuAgent
+  - name: zhiPu
     token: your-token
     app_id: your-app-id
+    driver: ai.agent.chat.zhipu.ZhipuAgent
 
   # Agent for weather queries, helping users obtain real-time weather information and forecasts.
   - name: weather
-    driver: ai.agent.customer.WeatherAgent
     token: your-token
     app_id: weather_agent
+    driver: ai.agent.customer.WeatherAgent
 
   # Agent for querying dishonest persons, helping users access information about people listed as untrustworthy.
   - name: dishonest
-    driver: ai.agent.customer.DishonestPersonSearchAgent
     token: your-token
     app_id: dishonest_person_search_agent
+    driver: ai.agent.customer.DishonestPersonSearchAgent
 
   # Agent for high-speed train ticket queries, providing services to help users quickly find train ticket information.
   - name: ticket
-    driver: ai.agent.customer.HighSpeedTicketAgent
     app_id: high_speed_ticket_agent
+    driver: ai.agent.customer.HighSpeedTicketAgent
 
   # Agent for Youdao translation services, supporting translation between multiple languages.
   - name: youdao
-    driver: ai.agent.customer.YouDaoAgent
     app_id: your-app-id
     token: your-token
+    driver: ai.agent.customer.YouDaoAgent
 
-  # It's a Sogou image search tool that can help you search for an image online based on your keywords
-  - name: sogou_search_pictures
-    driver: ai.agent.customer.SogouSearchPicturesAgent
+  # Sogou image search tool that can help you search for an image online based on your keywords.
+  - name: sogou
     app_id: sogou_search_pictures
+    driver: ai.agent.customer.SogouSearchPicturesAgent
 
-  # This is a Baidu search tool that can help you search for some images online based on your keywords
-  - name: baidu_search_pictures
-    driver: ai.agent.customer.BaiduSearchPicturesAgent
-    app_id: baidu_search_pictures
+  # Agent for fetching daily hot news, helping users retrieve trending news articles.
+  - name: news
+    app_id: hot_news
+    driver: ai.agent.customer.HotNewsAgent
 
-  # This is a tool configuration class that queries through text_to_sql_search.
-  - name: text_to_sql_search
-    driver: ai.agent.customer.TextToSqlSearchAgent
-    app_id: text_to_sql_search
+  # Agent for Bing search, helping users search content via Bing.
+  - name: bing
+    app_id: bing_search
+    driver: ai.agent.customer.BingSearchAgent
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
