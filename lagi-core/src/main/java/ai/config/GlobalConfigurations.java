@@ -51,13 +51,59 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private void registerFilter() {
         if (filters != null) {
             for (FilterConfig filter : filters) {
-                SensitiveWordUtil.pushWordRule(filter.getSensitive());
-                StoppingWordUtil.addWords(filter.getStopping());
-                PriorityWordUtil.addWords(filter.getPriority());
-                RetainWordUtil.addWords(filter.getRetain());
-                ContinueWordUtil.addWords(filter.getContinueWords());
+                if(filter.getName().equals("sensitive")) {
+                    push2wordRule(filter);
+                } else if(filter.getName().equals("priority")) {
+                    PriorityWordUtil.addWords(convert2List(filter));
+                } else if (filter.getName().equals("continue")) {
+                    ContinueWordUtil.addWords(convert2List(filter));
+                } else if (filter.getName().equals("stopping")) {
+                    StoppingWordUtil.addWords(convert2List(filter));
+                } else if(filter.getName().equals("retain")) {
+                    StoppingWordUtil.addWords(convert2List(filter));
+                }
             }
         }
+    }
+
+
+    private List<String> convert2List(FilterConfig filterItem) {
+        return convert2ListRules(filterItem.getRules());
+    }
+
+
+    private static List<String> convert2ListRules(String rules){
+        String s = rules.replaceAll("\\\\\\\\,", "·regx-dot·");
+        List<String> collect = Arrays.stream(s.split(",")).map(String::trim).collect(Collectors.toList());
+        collect = collect.stream().map(temp -> temp.replaceAll("·regx-dot·", ",")).collect(Collectors.toList());
+        return collect;
+    }
+
+
+    private void push2wordRule(FilterConfig filter) {
+        List<WordRule> rules = filter.getGroups().stream()
+                                .flatMap(group->
+                                        convert2ListRules(group.getRules()).stream()
+                                                .map(rule -> {
+                                                        String level = group.getLevel();
+                                                        String mask = group.getMask();
+                                                        int levelInt = 0;
+                                                        if ("erase".equals(level)) {
+                                                            levelInt = 3;
+                                                        } else if ("block".equals(level)) {
+                                                            levelInt = 1;
+                                                        } else if ("mask".equals(level)) {
+                                                            levelInt = 2;
+                                                        }
+                                                        rule = rule.trim();
+                                                        return WordRule.builder().level(levelInt).mask(mask).rule(rule).build();
+                                                })
+                                .collect(Collectors.toList()).stream())
+                                .collect(Collectors.toList());
+        WordRules wordRules = WordRules.builder()
+                .rules(rules)
+                .build();
+        SensitiveWordUtil.pushWordRule(wordRules);
     }
 
     @Override

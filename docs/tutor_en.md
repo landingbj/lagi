@@ -252,6 +252,46 @@ Use the instruction set generation API, as detailed in the [API documentation](A
 3. **Formatting:** Convert QA content into a specified JSON format for further training or analysis.
 4. **Logical Segmentation:** Generate well-defined questions and answers based on the document's paragraph topics (e.g., background introduction, application scenarios, specific advantages).
 
+## 11. Upload Custom Training Files
+
+For different types of files, Lagi will adopt differentiated processing strategies to efficiently and automatically convert the file content into the ideal format for large model training, in order to improve the model's learning efficiency and performance, and help users train their own exclusive large models. The specific processing methods for each category are as follows:
+
+### Supported File Formats
+
+This feature supports the following file formats:
+- Text formats: txt, doc, docx, pdf
+- Spreadsheet formats: xls, xlsx, csv
+- Image formats: jpeg, png, jpg, webp
+- Presentation formats: ppt, pptx
+
+### File processing methods
+
+For different types of files, Lagi will adopt differentiated processing strategies to efficiently and automatically convert the file content into the optimal format for large models. This is to enhance the learning efficiency and performance of the models, helping users train their own exclusive large models. The specific categories are as follows:
+
+1. **Q&A File Processing**:
+    - For Q&A files, Lagi will use intelligent algorithms to analyze the content, precisely extract keywords, and effectively separate questions and answers to improve the model's learning efficiency and performance.
+
+2. **Chapter-based File Processing**:
+    - For files with a chapter structure, Lagi will prioritize removing non-content elements such as directories, then apply intelligent algorithms to analyze the content and accurately divide it into paragraphs, ensuring the completeness of the paragraphs for easy learning and processing by the model.
+
+3. **Spreadsheet File Processing**:
+    - When processing regular spreadsheet files, Lagi will identify the header's position and layout, converting the content into Markdown format to optimize the model's learning and processing.
+
+4. **Pure Numeric Spreadsheet File Processing**:
+    - For spreadsheet files containing pure numbers, Lagi will provide the optimal table slicing solution based on the types of numeric data in the table. It will use text2sql technology to convert the table content into structured data and import it into a MySQL database, where sql2text technology will enable intelligent querying. If MySQL is not configured, it will follow the "Spreadsheet File Processing" procedure.
+
+5. **Image and Text File Processing**:
+    - For files containing both text and images, Lagi will integrate image-text layout technology to accurately extract images and content from the document, assisting the large model in learning and processing the file. If image-text layout is not configured, the file will be processed using the standard file processing procedure.
+
+6. **Title File Processing**:
+    - Titles in files will be extracted separately as key information units for specialized processing. Accurate recognition of titles ensures they are effectively extracted as core elements of the content, providing high-quality learning data for the large model.
+
+7. **Presentation File Processing**:
+    - For presentation files, Lagi will read the content of each page, associating the page text with images to improve the large model's ability to learn and process the content.
+
+8. **Image File Processing**:
+    - When processing image files, Lagi will use OCR technology to perform text and image recognition, associating the recognized information with the image as key information units. If OCR is not configured, the default method will be to associate the image name with the image for processing.
+
 ## Conclusion
 
 By following this tutorial, you have successfully integrated Lag[i] into your project. You can now start leveraging Lag[i]'s powerful AI features to enhance user experience and improve efficiency.

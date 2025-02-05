@@ -322,7 +322,7 @@ public class EasyExcelUtil {
     public static <T>  List<FileChunkResponse.Document> mergePages1(List<Page<T>> pages, String sheet,String header) {
         List<FileChunkResponse.Document> result = new ArrayList<>();
         for (Page<T> page : pages) {
-            String text = "sheet工作表名："+sheet+"/n";
+            String text = "sheet工作表名："+sheet+"</br></br>";
             text +=header;
             for (T item : page.getItems()) {
                 text+=item;
@@ -339,9 +339,9 @@ public class EasyExcelUtil {
         for (Page<T> page : pages) {
             String text = "";
             List<Object> header1 = (List<Object>) header.get(0);
-            text = "表头: /n " + header1.get(0)+"/n";
+            text = "表头: </br> " + header1.get(0)+"</br>";
             for (T item : page.getItems()) {
-                text+=item+"/n";
+                text+=item+"</br>";
             }
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
             doc.setText(text);
@@ -391,7 +391,7 @@ public class EasyExcelUtil {
                         List<JSONObject> headerRow = result.get(headerIndex.get(0));
                         StringBuilder separator = new StringBuilder();
                         String title = headerRow.get(0).getStr("cellValue");
-                        separator.append(title+"/n");
+                        separator.append(title+"</br>");
                         List<String> headers = new ArrayList<>();
                         for (JSONObject cell : result.get(headerIndex.get(0)+1)) {
                             headers.add(cell.getStr("cellValue"));
@@ -411,7 +411,7 @@ public class EasyExcelUtil {
                         StringBuilder separator = new StringBuilder();
                         List<JSONObject> headerRow = result.get(headerIndex.get(msgindex));
                         String title = headerRow.get(0).getStr("cellValue");
-                        separator.append(title+"/n");
+                        separator.append(title+"</br>");
                         List<String> headers = new ArrayList<>();
                         for (JSONObject cell : result.get(headerIndex.get(msgindex)+1)) {
                             headers.add(cell.getStr("cellValue"));
@@ -429,7 +429,7 @@ public class EasyExcelUtil {
                         StringBuilder separator = new StringBuilder();
                         List<JSONObject> headerRow = result.get(headerIndex.get(headerIndex.size() - 1));
                         String title = headerRow.get(0).getStr("cellValue");
-                        separator.append(title+"/n");
+                        separator.append(title+"</br>");
                         List<String> headers = new ArrayList<>();
                         for (JSONObject cell : result.get(headerIndex.get(headerIndex.size() - 1)+1)) {
                             headers.add(cell.getStr("cellValue"));
@@ -776,7 +776,7 @@ public class EasyExcelUtil {
         String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\政务数据\\各厅布局（A3版）2023.xlsx";
 
         File file = new File(filePath);
-        Integer pageSize = 512;
+        Integer pageSize = 1024;
         List<FileChunkResponse.Document> chunkDocumentExcel = getChunkDocumentExcel(file, pageSize);
         for (FileChunkResponse.Document document : chunkDocumentExcel) {
             System.out.println(document);
