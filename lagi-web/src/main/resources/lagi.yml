@@ -449,7 +449,7 @@ agents:
     driver: ai.agent.customer.HotNewsAgent
 
   # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
-  - name: city_travel_route
+  - name: route
     app_id: city_travel_route
     driver: ai.agent.customer.CityTravelRouteAgent
 
