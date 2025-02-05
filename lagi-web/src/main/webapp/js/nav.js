@@ -237,11 +237,23 @@ let promptNavs = [
             //     "title": "头像生成",
             //     "templateIssues": "帮我生成一张头像"
             // },
+            // {
+            //     "id": 121,
+            //     "agentId": "baidu_search_pictures",
+            //     "title": "百度搜图",
+            //     "templateIssues": "帮我搜索一下关于小米SU7的图片"
+            // },
             {
-                "id": 121,
-                "agentId": "baidu_search_pictures",
-                "title": "百度搜图",
-                "templateIssues": "帮我搜索一下关于小米SU7的图片"
+                "id": 222,
+                "agentId": "hot_news",
+                "title": "热点新闻",
+                "templateIssues": "今天的热点新闻有哪些？"
+            },
+            {
+                "id": 333,
+                "agentId": "city_travel_route",
+                "title": "出行路线",
+                "templateIssues": "从武汉到北京的出行路线是什么？"
             },
             // {
             //     "id": 122,
