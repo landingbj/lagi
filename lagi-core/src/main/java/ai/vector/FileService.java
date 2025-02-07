@@ -66,7 +66,7 @@ public class FileService {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         String fileType = extString.toLowerCase().toLowerCase();
         if (fileType.equals(".xls")||fileType.equals(".xlsx")){
-            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
+            return EasyExcelUtil.getChunkDocumentExcel(file,1024);
         }else if (fileType.equals(".csv")){
             return EasyExcelUtil.getChunkDocumentCsv(file, chunkSize);
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
@@ -142,13 +142,15 @@ public class FileService {
                 content = getString(file.getPath());
                 break;
             case ".pdf":
-                //.replaceAll("[\r\n?|\n]", "")
                 Response response = toMarkdown(file);
                 if (response != null && response.getStatus().equals("success")){
                     content = response.getData();
                     content = content!=null?removeDirectory(content):content;
                 }else {
-                    content = PdfUtil.webPdfParse(in).replaceAll("\\n+", "\n");
+                    content = PdfUtil.webPdfParse(in)
+                            .replaceAll("(\r?\n){2,}", "\n")
+                            .replaceAll("(?<=\r?\n)\\s*", "")
+                            .replaceAll("(?<![.!?;:。！？；：\\s\\d])\r?\n", "");
                     content = content!=null?removeDirectory(content):content;
                 }
                 break;
