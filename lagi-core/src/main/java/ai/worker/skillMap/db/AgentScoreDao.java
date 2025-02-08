@@ -209,4 +209,22 @@ public class AgentScoreDao {
         return count;
     }
 
+    public List<AgentIntentScore> getAgentIdName() {
+        String sql = "SELECT distinct agent_id, agent_name FROM agent_scores";
+        List<AgentIntentScore> scores = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                AgentIntentScore score = AgentIntentScore.builder()
+                        .agentId(rs.getInt("agent_id"))
+                        .agentName(rs.getString("agent_name"))
+                        .build();
+                scores.add(score);
+            }
+        } catch (SQLException e) {
+            log.error("Error connecting to database", e);
+        }
+        return scores;
+    }
 }

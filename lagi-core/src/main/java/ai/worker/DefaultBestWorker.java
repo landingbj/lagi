@@ -6,8 +6,6 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.Route;
 import ai.router.Routers;
-import ai.utils.qa.ChatCompletionUtil;
-import ai.worker.skillMap.SkillMap;
 import cn.hutool.core.bean.BeanUtil;
 import lombok.Setter;
 
@@ -29,15 +27,6 @@ public class DefaultBestWorker extends RouteWorker{
         this.workerConfig = workerConfig;
         String ruleName = workerConfig.getRoute();
         this.route = Routers.getInstance().getRoute(ruleName);
-        if(this.route ==null) {
-            return;
-        }
-    }
-
-
-    protected List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentsBySkillMap(List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents, ChatCompletionRequest data) {
-        SkillMap skillMap = new SkillMap();
-        return skillMap.filterAgentByIntentKeyword(agents, ChatCompletionUtil.getLastMessage(data), 5.0);
     }
 
 

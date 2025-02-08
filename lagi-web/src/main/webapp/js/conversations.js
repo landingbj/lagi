@@ -24,7 +24,7 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
                 </div>
                 <div  class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
                     <div class="flex flex-grow flex-col gap-3">
-                        <div class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap">${conv.user.question} </div>
+                        <div class="chat-div min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap">${conv.user.question} </div>
                     </div>
                     <div class="flex justify-between"></div>
                 </div>
@@ -41,9 +41,11 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
         </div>
         <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
             <div class="flex flex-grow flex-col gap-3">
-                <div class="min-h-[20px] flex flex-col items-start gap-4">
+                <div class="chat-div min-h-[20px] flex flex-col items-start">
                     <div class="markdown prose-r w-full break-words dark:prose-invert light result-streaming">
                         ${conv.robot.answer === '' ? '<p></p>' : conv.robot.answer} 
+                    </div>
+                    <div class="better-result prose-r w-full break-words dark:prose-invert light result-streaming">
                     </div>
                 </div>
             </div>

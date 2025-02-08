@@ -22,6 +22,7 @@ import ai.worker.WorkerGlobal;
 import ai.worker.pojo.AgentIntentScore;
 import ai.worker.pojo.IntentResponse;
 import ai.worker.skillMap.SkillMap;
+import ai.worker.skillMap.SkillMapUtil;
 import cn.hutool.core.bean.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -135,19 +136,8 @@ public class BasicRoute extends Route {
         return null;
     }
 
-    private Double getOrInsertScore(ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
-        SkillMap skillMap = new SkillMap();
-        IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(request));
-        List<String> keywords = intentResponse.getKeywords();
-        AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
-        Double scoring = 0.0;
-        if (agentIntentScore == null) {
-            scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(request), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
-            skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
-        } else {
-            scoring = agentIntentScore.getScore();
-        }
-        return scoring;
+    private double getOrInsertScore(ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
+        return SkillMapUtil.getOrInsertScore(request, agent, chatCompletionResult);
     }
 
     private void feeAgentScoring(Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionRequest chatCompletionRequest, SkillMap skillMap, List<String> keywords) {

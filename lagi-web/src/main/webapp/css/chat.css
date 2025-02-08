@@ -270,6 +270,25 @@ pre .key {
 	color: rgb(14, 13, 13);
 }
 
+.chat-div {
+    line-height: 2em;
+}
+
+.chat-div br {
+    display: none;
+}
+
+.better-result {
+    display: none;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.section-title {
+    margin: 1em 0 0 0;
+    font-size: 1em;
+    font-weight: bold;
+}
 
 /* #introduces 设为相对宽度和高度 */
 #introduces {

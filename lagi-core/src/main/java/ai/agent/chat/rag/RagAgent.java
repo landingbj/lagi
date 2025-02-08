@@ -25,8 +25,7 @@ public class RagAgent extends BaseChatAgent {
 
     @Override
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
-
-        String responseJson = null;
+        String responseJson;
         try {
             responseJson = OkHttpUtil.post(agentConfig.getEndpoint() + "/v1/chat/completions", gson.toJson(data));
         } catch (IOException e) {
@@ -34,9 +33,6 @@ public class RagAgent extends BaseChatAgent {
             responseJson = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
             log.error("RagMapper.myMapping: OkHttpUtil.post error", e);
         }
-        if(responseJson != null) {
-            return  gson.fromJson(responseJson, ChatCompletionResult.class);
-        }
-        return null;
+        return gson.fromJson(responseJson, ChatCompletionResult.class);
     }
 }

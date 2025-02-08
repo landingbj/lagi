@@ -1,6 +1,7 @@
 package ai.servlet.api;
 
 import ai.agent.Agent;
+import ai.agent.chat.rag.LocalRagAgent;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.pojo.Configuration;
@@ -49,6 +50,8 @@ import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
 import ai.worker.DefaultWorker;
+import ai.worker.skillMap.SkillMapUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -62,7 +65,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -99,6 +101,12 @@ public class LlmApiServlet extends BaseServlet {
             this.embeddings(req, resp);
         } else if(method.equals("go")) {
             this.go(req, resp);
+        } else if(method.equals("stream")) {
+            this.goStream(req, resp);
+        } else if(method.equals("solid")) {
+            this.goSolid(req, resp);
+        } else {
+            responsePrint(resp, "method not found");
         }
     }
 
@@ -212,31 +220,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs, Map<Integer, Boolean> haveABalance) {
-        Map<String, Constructor<?>> agentMap = new HashMap<>();
-        return agentConfigs.stream().map(agentConfig -> {
-            if(agentConfig == null) {
-                return null;
-            }
-            String driver = agentConfig.getDriver();
-            Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
-            agentConfig.setCanOutPut(haveABalance.getOrDefault(agentConfig.getId(), false));
-            if(!agentMap.containsKey(driver)) {
-                try {
-                    Class<?> aClass = Class.forName(driver);
-                    Constructor<?> constructor = aClass.getConstructor(AgentConfig.class);
-                    agentMap.put(driver, constructor);
-                    agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
-                } catch (Exception ignored) {
-                }
-            } else {
-                Constructor<?> constructor = agentMap.get(driver);
-                try {
-                    agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
-                } catch (Exception ignored) {
-                }
-            }
-            return agent;
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        return SkillMapUtil.convert2AgentList(agentConfigs, haveABalance);
     }
 
 
@@ -279,13 +263,162 @@ public class LlmApiServlet extends BaseServlet {
         out.close();
     }
 
+    private List<Agent<ChatCompletionRequest, ChatCompletionResult>> getAllAgents(LLmRequest llmRequest, String uri) throws IOException {
+        LagiAgentExpenseListResponse paidAgentByUser = agentService.getPaidAgentByUser(llmRequest.getUserId(), "1", "1000");
+        Map<Integer, Boolean> haveABalance = paidAgentByUser.getData().stream().collect(Collectors.toMap(AgentConfig::getId, agentConfig -> {
+            BigDecimal balance = agentConfig.getBalance();
+            BigDecimal pricePerReq = agentConfig.getPricePerReq();
+            return balance.doubleValue() >= pricePerReq.doubleValue();
+        }));
+
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.getLlmAndAgentList();
+        LagiAgentListResponse lagiAgentList = agentService.getLagiAgentList(null, 1, 1000, "true");
+        List<AgentConfig> agentConfigs = lagiAgentList.getData();
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = convert2AgentList(agentConfigs, haveABalance);
+        agents.addAll(llmAndAgentList);
+        for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : agents) {
+            if (agent instanceof LocalRagAgent) {
+                LocalRagAgent ragAgent = (LocalRagAgent) agent;
+                ragAgent.getAgentConfig().setEndpoint(uri);
+            }
+        }
+        return agents;
+    }
+
+    private void goStream(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        LLmRequest llmRequest = reqBodyToObj(req, LLmRequest.class);
+        PrintWriter out = resp.getWriter();
+        String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList = SkillMapUtil.rankAgentByIntentKeyword(allAgents, ChatCompletionUtil.getLastMessage(llmRequest));
+        skillMapAgentList.forEach(
+                agent -> logger.info("Matched agent in skill map: {}", agent.getAgentConfig().getName())
+        );
+        Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
+        if (skillMapAgentList.isEmpty()) {
+            outputAgent = SkillMapUtil.getHighestPriorityLlm();
+        } else {
+            outputAgent = getFirstStreamAgent(skillMapAgentList);
+            if (outputAgent == null) {
+                outputAgent = skillMapAgentList.get(0);
+            }
+        }
+
+        if (outputAgent == null) {
+            throw new RRException("未找到可stream的agent");
+        }
+
+        if (outputAgent instanceof LocalRagAgent) {
+            LocalRagAgent ragAgent = (LocalRagAgent) outputAgent;
+            ragAgent.getAgentConfig().setEndpoint(uri);
+            llmRequest.setModel(ragAgent.getAgentConfig().getName());
+        }
+
+        final ChatCompletionResultWithSource[] resultWithSource = {null};
+        if (!outputAgent.canStream()) {
+            llmRequest.setStream(false);
+            ChatCompletionResult result = outputAgent.communicate(llmRequest);
+            ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(outputAgent.getAgentConfig().getName(), outputAgent.getAgentConfig().getId());
+            BeanUtil.copyProperties(result, chatCompletionResultWithSource);
+            String answer = ChatCompletionUtil.getFirstAnswer(result);
+            convert2streamAndOutput(answer, resp, chatCompletionResultWithSource);
+            resultWithSource[0] = chatCompletionResultWithSource;
+        } else {
+            llmRequest.setStream(true);
+            Observable<ChatCompletionResult> result = outputAgent.stream(llmRequest);
+            if(result == null) {
+                throw new RRException("调用接口失败, 未获取有效结果");
+            }
+            Agent<ChatCompletionRequest, ChatCompletionResult> finalOutputAgent = outputAgent;
+            result.subscribe(
+                    data -> {
+                        ChatCompletionResult chatCompletionResult = SensitiveWordUtil.filter(data);
+                        ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
+                        BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
+                        String msg = gson.toJson(chatCompletionResultWithSource);
+                        out.print("data: " + msg + "\n\n");
+                        out.flush();
+                        if (resultWithSource[0] == null) {
+                            resultWithSource[0] = chatCompletionResultWithSource;
+                        }
+                    },
+                    e -> {
+                        logger.error("", e);
+                    },
+                    () -> {
+                        out.print("data: " + "[DONE]" + "\n\n");
+                        out.flush();
+                        out.close();
+                    }
+            );
+        }
+        deductExpense(resultWithSource[0], llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
+        if (resultWithSource[0] != null) {
+            if (outputAgent instanceof LocalRagAgent) {
+                traceService.syncAddLlmTrace(resultWithSource[0]);
+            } else {
+                traceService.syncAddAgentTrace(resultWithSource[0]);
+            }
+        }
+        SkillMapUtil.scoreAgents(llmRequest, allAgents);
+    }
+
+    private static Agent<ChatCompletionRequest, ChatCompletionResult> getFirstStreamAgent(
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList) {
+        Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
+        for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : skillMapAgentList) {
+            if (agent.canStream()) {
+                outputAgent = agent;
+                break;
+            }
+        }
+        return outputAgent;
+    }
+
+    private boolean isAllCanNotStream(List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents) {
+        return allAgents.stream().noneMatch(Agent::canStream);
+    }
+
+    private void goSolid(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setContentType("application/json;charset=utf-8");
+        String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
+
+        LLmRequest llmRequest = reqBodyToObj(req, LLmRequest.class);
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList = SkillMapUtil.rankAgentByIntentKeyword(allAgents, ChatCompletionUtil.getLastMessage(llmRequest));
+        Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent;
+        if (skillMapAgentList.isEmpty() || isAllCanNotStream(skillMapAgentList)) {
+            return;
+        }
+        outputAgent = skillMapAgentList.get(0);
+
+        if (outputAgent == null || outputAgent.canStream()) {
+            throw new RRException("agent not found");
+        }
+        llmRequest.setStream(false);
+        ChatCompletionResult result = outputAgent.communicate(llmRequest);
+        if(result == null) {
+            throw new RRException("调用接口失败, 未获取有效结果");
+        }
+        ChatCompletionResultWithSource resultWithSource = new ChatCompletionResultWithSource(outputAgent.getAgentConfig().getName(), outputAgent.getAgentConfig().getId());
+        BeanUtil.copyProperties(result, resultWithSource);
+        responsePrint(resp, toJson(resultWithSource));
+
+        if (outputAgent instanceof LocalRagAgent) {
+            traceService.syncAddLlmTrace(resultWithSource);
+        } else {
+            traceService.syncAddAgentTrace(resultWithSource);
+        }
+
+        deductExpense(resultWithSource, llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
+    }
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
         EnhanceChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
-
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;

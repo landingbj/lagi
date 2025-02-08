@@ -452,6 +452,7 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
                 } else {
                     if (paras["stream"]) {
                         streamOutput(paras, question, robootAnswerJq);
+                        solidGeneralOutput(paras, question, robootAnswerJq);
                     } else {
                         generalOutput(paras, question, robootAnswerJq);
                     }
@@ -525,9 +526,46 @@ function generalOutput(paras, question, robootAnswerJq, url="chat/go") {
     });
 }
 
-function streamOutput(paras, question, robootAnswerJq, url="chat/go") {
-    console.log("paras.agentId: " + paras.agentId)
+function solidGeneralOutput(paras, question, robootAnswerJq, url="chat/go/solid") {
+    let betterResult = robootAnswerJq.parent().children('.better-result')
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: url,
+        data: JSON.stringify(paras),
+        success: function (res) {
+            if (res.choices === undefined || res.choices.length === 0) {
+                return;
+            }
+            var chatMessage = res.choices[0].message;
+            if (chatMessage.content === undefined) {
+                return;
+            }
+            if (chatMessage.filename !== undefined) {
+                var a = '';
+                let isFirst = true;
+                for (let i = 0; i < chatMessage.filename.length; i++) {
+                    let marginLeft = isFirst ? '0' : '50px';
+                    a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a></br>`;
+                    isFirst = false;
+                }
+            }
+            var fullText = chatMessage.content;
+            fullText = fullText.replaceAll("\n", "<br>");
+            result = `<h2 class="section-title">更多参考</h2>
+                        ${fullText}
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
+                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}
+                        ${res.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${res.source}</small></div></div><br>` : ""}
+                        `
+            betterResult.html(result);
+            $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
+        }
+    });
+}
 
+
+function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
     function isJsonString(str) {
         try {
             JSON.parse(str);
@@ -625,10 +663,10 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go") {
                 t = t.replaceAll("\n", "<br>");
                 fullText += t;
                 result = `
-                        ${fullText} <br>
+                        ${fullText}
                         ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
-                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
-                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>
+                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}
+                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}
                         ${json.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${json.source}</small></div></div><br>` : ""}`
                 // `;
                 if (chatMessage.contextChunkIds) {
@@ -649,14 +687,14 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go") {
         txtTovoice(lastAnswer, "default");
         enableQueryBtn();
         querying = false;
+        let betterResult = robootAnswerJq.parent().children('.better-result')
+        betterResult.show();
     }).catch((err) => {
         console.error(err);
         enableQueryBtn();
         querying = false;
         queryLock = false;
-        if (!robootAnswerJq.text) {
-            robootAnswerJq.html("调用失败！");
-        }
+        robootAnswerJq.html("系统繁忙，请稍后再试！");
     });
 }
 

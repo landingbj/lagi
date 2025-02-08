@@ -14,18 +14,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@LLM(modelNames = {"Baichuan2-Turbo","Baichuan2-Turbo-192k","Baichuan2-53B"})
+@LLM(modelNames = {"Baichuan4-Turbo", "Baichuan4-Air", "Baichuan4"})
 public class BaichuanAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BaichuanAdapter.class);
-    private static final int HTTP_TIMEOUT = 5 * 1000;
+    private static final int HTTP_TIMEOUT = 15 * 1000;
     private static final String COMPLETIONS_URL = "https://api.baichuan-ai.com/v1/chat/completions";
 
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
         LlmApiResponse llmApiResponse = llmCompletions(chatCompletionRequest);
-        if(llmApiResponse.getCode() != 200) {
-            logger.error("baichuan2 api code:{}  error:{} ", llmApiResponse.getCode(),  llmApiResponse.getMsg());
+        if (llmApiResponse.getCode() != 200) {
+            logger.error("baichuan api code:{}  error:{} ", llmApiResponse.getCode(), llmApiResponse.getMsg());
             throw new RRException(llmApiResponse.getCode(), llmApiResponse.getMsg());
         }
         return llmApiResponse.getData();
@@ -35,8 +35,8 @@ public class BaichuanAdapter extends ModelService implements ILlmAdapter {
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         LlmApiResponse llmApiResponse = llmCompletions(chatCompletionRequest);
-        if(llmApiResponse.getCode() != 200) {
-            logger.error("baichuan2 stream  api code:{}  error:{} ", llmApiResponse.getCode(),  llmApiResponse.getMsg());
+        if (llmApiResponse.getCode() != 200) {
+            logger.error("baichuan stream  api code:{}  error:{} ", llmApiResponse.getCode(), llmApiResponse.getMsg());
             throw new RRException(llmApiResponse.getCode(), llmApiResponse.getMsg());
         }
         return llmApiResponse.getStreamData();
@@ -45,19 +45,19 @@ public class BaichuanAdapter extends ModelService implements ILlmAdapter {
     public LlmApiResponse llmCompletions(ChatCompletionRequest chatCompletionRequest) {
         setDefaultModel(chatCompletionRequest);
         LlmApiResponse completions;
-        if(chatCompletionRequest.getStream()) {
+        if (chatCompletionRequest.getStream()) {
             completions = OpenAiApiUtil.streamCompletions(getApiKey(),
                     COMPLETIONS_URL,
                     HTTP_TIMEOUT,
                     chatCompletionRequest,
-                    BaiChuanConvert::convert2ChatCompletionResult,
+                    BaiChuanConvert::convertStreamLine2ChatCompletionResult,
                     BaiChuanConvert::convertByResponse);
         } else {
             completions = OpenAiApiUtil.completions(getApiKey(),
                     COMPLETIONS_URL,
                     HTTP_TIMEOUT,
                     chatCompletionRequest,
-                    BaiChuanConvert::convertStreamLine2ChatCompletionResult,
+                    BaiChuanConvert::convert2ChatCompletionResult,
                     BaiChuanConvert::convertByResponse);
         }
         return completions;

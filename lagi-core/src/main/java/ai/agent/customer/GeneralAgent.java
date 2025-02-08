@@ -13,6 +13,7 @@ import ai.openai.pojo.*;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import io.reactivex.Observable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -242,6 +243,16 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
     @Override
     public ChatCompletionResult receive() {
         return null;
+    }
+
+    @Override
+    public Observable<ChatCompletionResult> stream(ChatCompletionRequest data) {
+        throw new UnsupportedOperationException("streaming is not supported");
+    }
+
+    @Override
+    public boolean canStream() {
+        return false;
     }
 
     public static void main(String[] args) {

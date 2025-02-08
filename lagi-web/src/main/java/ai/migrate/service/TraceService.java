@@ -75,6 +75,18 @@ public class TraceService {
         }
     }
 
+    public void syncAddLlmTrace(ChatCompletionResultWithSource resultWithSource) {
+        String llmBackend = modelNameMap.get(resultWithSource.getSource());
+        TraceLlmEntity entity = TraceLlmEntity.builder()
+                .name(llmBackend)
+                .build();
+        try {
+            traceDao.addLlmTrace(entity);
+        } catch (SQLException e) {
+            logger.error("add agent trace error", e);
+        }
+    }
+
     public List<TraceAgentEntity> agentHotRanking(int limit) throws SQLException {
         return traceDao.getAgentTraceList(limit);
     }

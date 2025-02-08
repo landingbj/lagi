@@ -15,6 +15,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+import io.reactivex.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
     private final Integer maxTryTimes = 3;
-    private final CompletionsService  completionsService= new CompletionsService();
+    private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
     protected List<ToolInfo> toolInfoList;
 
@@ -39,10 +40,8 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
 
     public CustomerAgent(List<ToolInfo> toolInfoList) {
         this.toolInfoList = toolInfoList;
-        if(toolInfoList == null) {
-            return;
-        }
     }
+
     private ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
         ChatCompletionRequest request = new ChatCompletionRequest();
         List<ChatMessage> chatMessages = new ArrayList<>();
@@ -70,9 +69,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         request.setTemperature(0);
         request.setMessages(chatMessages);
         System.out.println("request = " + gson.toJson(request));
-        synchronized (CustomerAgent.class) {
-            return completionsService.completions(request);
-        }
+        return completionsService.completions(request);
     }
 
     private String genPrompt(String question, String agent_scratch) {
@@ -92,14 +89,14 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         String assistant_msg = "";
         List<List<String>> history = new ArrayList<>();
         Set<String> toolNames = toolInfoList.stream().map(ToolInfo::getName).collect(Collectors.toSet());
-        while (count-- > 0){
+        while (count-- > 0) {
             String prompt = genPrompt(question, agent_scratch.toString());
             long start = System.currentTimeMillis();
             System.out.println("开始调用大模型");
             ChatCompletionResult result = callLLm(prompt, history, user_msg);
-            System.out.println("结束调用大模型, 耗时：" + (System.currentTimeMillis()  - start));
+            System.out.println("结束调用大模型, 耗时：" + (System.currentTimeMillis() - start));
             String answer = result.getChoices().get(0).getMessage().getContent();
-            System.out.println(agentConfig.getName() + "调用结果：" + answer);
+//            System.out.println(agentConfig.getName() + "调用结果：" + answer);
             ResponseTemplate responseTemplate;
             try {
                 responseTemplate = gson.fromJson(answer, ResponseTemplate.class);
@@ -108,7 +105,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
                 continue;
             }
             Action action = responseTemplate.getAction();
-            if("finish".equals(action.getName())) {
+            if ("finish".equals(action.getName())) {
                 finalAnswer = (String) action.getArgs().get("result").toString();
                 imageUrl = (List<String>) action.getArgs().get("imageUrl");
                 fileUrl = (List<String>) action.getArgs().get("fileUrl");
@@ -116,9 +113,9 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             }
             String observation = responseTemplate.getThoughts().getSpeak();
             Map<String, Object> args = action.getArgs();
-            String call_result=null;
+            String call_result = null;
             try {
-                if(toolNames.contains(action.getName())) {
+                if (toolNames.contains(action.getName())) {
                     AbstractTool func = ToolManager.getInstance().getTool(action.getName());
                     call_result = func.apply(args);
                 }
@@ -126,24 +123,34 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
 
             }
             assistant_msg = parseThoughts(responseTemplate.getThoughts());
-            agent_scratch.append(StrUtil.format("\nobservation: {} \nexecute action results: {}",observation, call_result == null ? "查询失败": "查询成功"));
-            call_result = call_result == null? "查询失败": "查询成功结果如下:"+call_result;
+            agent_scratch.append(StrUtil.format("\nobservation: {} \nexecute action results: {}", observation, call_result == null ? "查询失败" : "查询成功"));
+            call_result = call_result == null ? "查询失败" : "查询成功结果如下:" + call_result;
             user_msg = call_result + "\n" + user_msg;
             history.add(Lists.newArrayList(user_msg, assistant_msg));
         }
-        if(finalAnswer == null) {
+        if (finalAnswer == null) {
             return null;
         }
         String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", finalAnswer);
         ChatCompletionResult chatCompletionResult = gson.fromJson(format, ChatCompletionResult.class);
         ChatMessage message = chatCompletionResult.getChoices().get(0).getMessage();
-        if(!CollectionUtil.isEmpty(fileUrl)) {
+        if (!CollectionUtil.isEmpty(fileUrl)) {
             message.setFilepath(fileUrl);
         }
-        if(!CollectionUtil.isEmpty(imageUrl)) {
+        if (!CollectionUtil.isEmpty(imageUrl)) {
             message.setImageList(imageUrl);
         }
         return chatCompletionResult;
+    }
+
+    @Override
+    public Observable<ChatCompletionResult> stream(ChatCompletionRequest data) {
+        throw new UnsupportedOperationException("streaming is not supported");
+    }
+
+    @Override
+    public boolean canStream() {
+        return false;
     }
 
     private String parseThoughts(Thoughts thoughts) {

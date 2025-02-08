@@ -34,6 +34,8 @@ public class SkillMap {
 
     private static final ConcurrentHashMap<String, ThreadLocal<Object>> lockMap = new ConcurrentHashMap<>();
 
+    private static final int MAX_RAG_AGENT_ID = -10000;
+    private static final int MIN_RAG_AGENT_ID = -20000;
 
     private static final int maxTry = 3;
 
@@ -83,6 +85,38 @@ public class SkillMap {
         }
     }
 
+    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
+            String question, double edge) {
+        IntentResponse intentResponse = getSafeIntentResponse(question);
+        if (intentResponse == null || intentResponse.getKeywords() == null || intentResponse.getKeywords().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> keywords = intentResponse.getKeywords();
+        List<AgentIntentScore> agentScores = getAgentIntentScoreByIntentKeyword(keywords);
+
+        if (agentScores == null || agentScores.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Integer, AgentIntentScore> scoreMap = agentScores.stream()
+                .collect(Collectors.toMap(AgentIntentScore::getAgentId, a -> a));
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> highScoreAgents = agentList.stream()
+                .filter(agent -> {
+                    if (!agent.getAgentConfig().getCanOutPut()) {
+                        return false;
+                    }
+                    AgentIntentScore agentIntentScore = scoreMap.get(agent.getAgentConfig().getId());
+                    return agentIntentScore != null && agentIntentScore.getScore() > edge;
+                })
+                .sorted(Comparator
+                        .comparing((Agent<ChatCompletionRequest, ChatCompletionResult> agent) ->
+                                scoreMap.get(agent.getAgentConfig().getId()).getScore())
+                        .reversed())
+                .collect(Collectors.toList());
+        return highScoreAgents;
+    }
 
     public List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentByIntentKeyword(
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
@@ -232,12 +266,10 @@ public class SkillMap {
     }
 
     private void save(AgentConfig agentConfig, String keyword, double score) {
-        if(score > 0.0) {
-            AgentIntentScore agentScore = AgentIntentScore.builder()
-                    .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
-                    .build();
-            saveAgentScore(agentScore);
-        }
+        AgentIntentScore agentScore = AgentIntentScore.builder()
+                .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
+                .build();
+        saveAgentScore(agentScore);
     }
 
     private void save(AgentConfig agentConfig, String question, String answer, String keyword) {
@@ -304,5 +336,19 @@ public class SkillMap {
     }
 
 
+    public Map<String, Integer> getRagAgentIdName() {
+        Map<String, Integer> agentMap = new HashMap<>();
+        List<AgentIntentScore> agentList = agentScoreDao.getAgentIdName();
+        for (AgentIntentScore agent : agentList) {
+            if (agent.getAgentId() < MAX_RAG_AGENT_ID && agent.getAgentId() > MIN_RAG_AGENT_ID) {
+                agentMap.put(agent.getAgentName(), agent.getAgentId());
+            }
+        }
+        return agentMap;
+    }
 
+    public int getRandomRagAgentId() {
+        Random random = new Random();
+        return random.nextInt(MAX_RAG_AGENT_ID - MIN_RAG_AGENT_ID) + MIN_RAG_AGENT_ID;
+    }
 }

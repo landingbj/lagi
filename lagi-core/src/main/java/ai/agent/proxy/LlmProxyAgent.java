@@ -5,6 +5,7 @@ import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.router.utils.RouteGlobal;
+import io.reactivex.Observable;
 
 public class LlmProxyAgent extends ProxyAgent{
 
@@ -31,4 +32,13 @@ public class LlmProxyAgent extends ProxyAgent{
         return completionsService.completions(data);
     }
 
+    @Override
+    public Observable<ChatCompletionResult> stream(ChatCompletionRequest data) {
+        throw new UnsupportedOperationException("streaming is not supported");
+    }
+
+    @Override
+    public boolean canStream() {
+        return false;
+    }
 }

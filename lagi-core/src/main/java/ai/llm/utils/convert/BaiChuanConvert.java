@@ -37,7 +37,7 @@ public class BaiChuanConvert {
     }
 
     public static int convertByResponse(Response response) {
-        return convert(response.code());
+        return convertByInt(response.code());
     }
 
     public static RRException convert2RResponse(Response response) {

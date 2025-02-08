@@ -85,7 +85,7 @@ public class CompletionsService implements ChatCompletion {
                     return result;
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(appointAdapter, e.getCode());
-                    r = e;
+                    throw e;
                 }
             }
         }
@@ -125,7 +125,7 @@ public class CompletionsService implements ChatCompletion {
                     return result;
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(adapter, e.getCode());
-                    r = e;
+                    throw e;
                 }
             }
         }

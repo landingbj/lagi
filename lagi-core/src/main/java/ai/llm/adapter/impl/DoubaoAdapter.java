@@ -93,7 +93,7 @@ public class DoubaoAdapter  extends ModelService implements ILlmAdapter {
         ChatMessage systemMessage = ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包人工智能助手").build();
         List<ChatMessage> chatMessages = request.getMessages().stream()
                 .map(chatMessage -> ChatMessage.builder()
-                        .role(ChatMessageRole.valueOf(chatMessage.getRole()))
+                        .role(ChatMessageRole.valueOf(chatMessage.getRole().toUpperCase()))
                         .content(chatMessage.getContent())
                         .build())
                 .collect(Collectors.toList());

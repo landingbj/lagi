@@ -9,6 +9,7 @@ import ai.utils.OkHttpUtil;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.reactivex.Observable;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -136,6 +137,16 @@ public abstract class SocialAgent extends Agent<AgentData, AgentData> {
             throw new RuntimeException(e);
         }
         return gson.fromJson(json, SocialReceiveData.class);
+    }
+
+    @Override
+    public Observable<AgentData> stream(AgentData data) {
+        throw new UnsupportedOperationException("streaming is not supported");
+    }
+
+    @Override
+    public boolean canStream() {
+        return false;
     }
 
     public GetLoginQrCodeResponse getLoginQrCode() {

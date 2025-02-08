@@ -67,6 +67,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
             Backend backend = any.orElse(null);
             if(backend != null) {
                 backend.setPriority(backendMatch.getPriority());
+                backend.setDefaultModel(backendMatch.getModel());
             }
             return backend;
         }).filter(Objects::nonNull).collect(Collectors.toList());
