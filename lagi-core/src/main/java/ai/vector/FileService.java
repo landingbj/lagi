@@ -92,6 +92,23 @@ public class FileService {
         }
         return result;
     }
+    public List<FileChunkResponse.Document> splitContentChunks(String content, int chunkSize) throws IOException {
+        List<FileChunkResponse.Document> result = new ArrayList<>();
+        int start = 0;
+        while (start < content.length()) {
+            int end = Math.min(start + chunkSize, content.length());
+            int lastSentenceEnd = Math.max(content.lastIndexOf('.', end), content.lastIndexOf('\n', end));
+            if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
+                end = lastSentenceEnd + 1;
+            }
+            String text = content.substring(start, end).replaceAll("\\s+", " ");
+            FileChunkResponse.Document doc = new FileChunkResponse.Document();
+            doc.setText(text);
+            result.add(doc);
+            start = end;
+        }
+        return result;
+    }
 
     public static List<FileChunkResponse.Document> getChunkDocumentImage(List<FileChunkResponse.Document> result,File file,Integer chunkSize) {
         List<String> langList = new ArrayList<>();

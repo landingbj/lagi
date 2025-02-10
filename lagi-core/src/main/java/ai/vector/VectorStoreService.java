@@ -98,8 +98,11 @@ public class VectorStoreService {
                         if (response != null && response.getStatus().equals("success")) {
                             docs = response.getData();
                         } else {
-                            docs = fileService.splitChunks(file, 512);
+                            docs = fileService.splitContentChunks(content, 512);
                         }
+                    }else {
+                        System.out.println("不包含图片类文档");
+                        docs = fileService.splitContentChunks(content, 512);
                     }
                 }
             }
