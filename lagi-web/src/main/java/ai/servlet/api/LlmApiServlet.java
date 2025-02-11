@@ -35,7 +35,6 @@ import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.response.ChatMessageResponse;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.servlet.dto.LagiAgentExpenseListResponse;
@@ -653,15 +652,14 @@ public class LlmApiServlet extends BaseServlet {
 
             for (int j = 0; j < lastResult.length; j++) {
                 for (int i = 0; i < lastResult[j].getChoices().size(); i++) {
-                    ChatMessageResponse message = new ChatMessageResponse();
+                    ChatMessage message = new ChatMessage();
                         message.setFilename(filenames);
                         message.setFilepath(filePaths);
                         message.setContext(ragContext.getContext());
                         message.setContextChunkIds(chunkIds);
                         message.setImageList(imageList);
                         message.setContent("");
-                    lastResult[0].getChoices().get(i).setMessage(message);
-
+                    lastResult[j].getChoices().get(i).setMessage(message);
                 }
             }
 
