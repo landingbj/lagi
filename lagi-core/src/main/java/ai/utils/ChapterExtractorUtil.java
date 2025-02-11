@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 public class ChapterExtractorUtil {
     // 正则表达式，匹配常见的章节标题模式
-    private static final String CHAPTER_TITLE_PATTERN = "(第[一二三四五六七八九十百千万零0-9]+章)";
+    private static final String CHAPTER_TITLE_PATTERN = "(?<=\\s|^)第[一二三四五六七八九十百千万零0-9]+章(?=\\s|$)";
     private static final FileService fileService = new FileService();
 
     public static boolean isChapterDocument(String documentContent) {

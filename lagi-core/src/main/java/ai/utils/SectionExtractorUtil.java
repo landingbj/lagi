@@ -53,11 +53,23 @@ public class SectionExtractorUtil {
                         result.add(section1.toString().trim());
                         section1.setLength(0);
                     }
-                    while (section.length() > maxLength) {
-                        result.add( section.substring(0, maxLength));
-                        section.delete(0, maxLength);
+
+                    int start = 0;
+                    while (start < section.length()) {
+                        int end = Math.min(start + maxLength, section.length());
+                        int lastSentenceEnd = Math.max(section.toString().lastIndexOf('.', end), section.toString().lastIndexOf('\n', end));
+                        if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
+                            end = lastSentenceEnd + 1;
+                        }
+                        String text = section.substring(start, end).replaceAll("\\s+", " ").trim();
+                        result.add(text);
+                        start = end;
                     }
-                    result.add( section.toString().trim());
+//                    while (section.length() > maxLength) {
+//                        result.add( section.substring(0, maxLength));
+//                        section.delete(0, maxLength);
+//                    }
+//                    result.add( section.toString().trim());
                     section.setLength(0);
                 }
                 if (section.length()>0 && (section.length()+section1.length()) <= maxLength){

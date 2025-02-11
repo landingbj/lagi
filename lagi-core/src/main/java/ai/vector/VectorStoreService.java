@@ -91,14 +91,20 @@ public class VectorStoreService {
                 } else if (SectionExtractorUtil.isChapterDocument(content)) {
                     System.out.println("是小节类文档");
                     docs = SectionExtractorUtil.getChunkDocument(content, 1024);
+                } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
+                    System.out.println("是条列类文档");
+                    docs = OrdinanceExtractorUtil.getChunkDocument(content, 1024);
                 } else {
                     if (WordDocxUtils.checkImagesInWord(file)){
                         FileChunkResponse response = fileService.extractContent(file);
                         if (response != null && response.getStatus().equals("success")) {
                             docs = response.getData();
                         } else {
-                            docs = fileService.splitChunks(file, 512);
+                            docs = fileService.splitContentChunks(content, 512);
                         }
+                    }else {
+                        System.out.println("不包含图片类文档");
+                        docs = fileService.splitContentChunks(content, 512);
                     }
                 }
             }

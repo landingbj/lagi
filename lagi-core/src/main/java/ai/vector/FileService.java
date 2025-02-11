@@ -87,6 +87,24 @@ public class FileService {
         return result;
     }
 
+    public List<FileChunkResponse.Document> splitContentChunks(String content, int chunkSize) throws IOException {
+        List<FileChunkResponse.Document> result = new ArrayList<>();
+        int start = 0;
+        while (start < content.length()) {
+            int end = Math.min(start + chunkSize, content.length());
+            int lastSentenceEnd = Math.max(content.lastIndexOf('.', end), content.lastIndexOf('\n', end));
+            if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
+                end = lastSentenceEnd + 1;
+            }
+            String text = content.substring(start, end).replaceAll("\\s+", " ");
+            FileChunkResponse.Document doc = new FileChunkResponse.Document();
+            doc.setText(text);
+            result.add(doc);
+            start = end;
+        }
+        return result;
+    }
+
     public static List<FileChunkResponse.Document> getChunkDocumentImage(List<FileChunkResponse.Document> result,File file,Integer chunkSize) {
         List<String> langList = new ArrayList<>();
         langList.add("chn,eng,tai");
@@ -142,7 +160,10 @@ public class FileService {
                     content = response.getData();
                     content = content!=null?removeDirectory(content):content;
                 }else {
-                    content = PdfUtil.webPdfParse(in).replaceAll("\\n+", "\n");
+                    content = PdfUtil.webPdfParse(in)
+                            .replaceAll("(\r?\n){2,}", "\n")
+                            .replaceAll("(?<=\r?\n)\\s*", "")
+                            .replaceAll("(?<![.!?;:。！？；：\\s\\d])\r?\n", "");
                     content = content!=null?removeDirectory(content):content;
                 }
                 break;
