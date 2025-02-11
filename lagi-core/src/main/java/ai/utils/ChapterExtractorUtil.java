@@ -2,6 +2,7 @@ package ai.utils;
 
 import ai.common.pojo.FileChunkResponse;
 import ai.vector.FileService;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class ChapterExtractorUtil {
     // 正则表达式，匹配常见的章节标题模式
-    private static final String CHAPTER_TITLE_PATTERN = "(第[一二三四五六七八九十百千万零0-9]+章)";
+    private static final String CHAPTER_TITLE_PATTERN = "(?<=\\s|^)第[一二三四五六七八九十百千万零0-9]+章(?=\\s|$)";
     private static final FileService fileService = new FileService();
 
     public static boolean isChapterDocument(String documentContent) {
@@ -90,7 +91,7 @@ public class ChapterExtractorUtil {
     }
 
     public static void main(String[] args) throws IOException {
-        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\130.1、XW2019152FJ.pdf"; // 替换为你的文件路径
+        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\130.1、XW2019152FJ.pdf";
 //        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\2023年高速公路水毁修复工程（沈抚分公司）对比表.pdf"; // 替换为你的文件路径
 //        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\察右中恩德风机故障处理手册.doc";
 //        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\【最新版】DL∕T596-2021电力设备预防性试验规程.pdf";

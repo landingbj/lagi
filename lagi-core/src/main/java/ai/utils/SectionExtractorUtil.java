@@ -53,11 +53,23 @@ public class SectionExtractorUtil {
                         result.add(section1.toString().trim());
                         section1.setLength(0);
                     }
-                    while (section.length() > maxLength) {
-                        result.add( section.substring(0, maxLength));
-                        section.delete(0, maxLength);
+
+                    int start = 0;
+                    while (start < section.length()) {
+                        int end = Math.min(start + maxLength, section.length());
+                        int lastSentenceEnd = Math.max(section.toString().lastIndexOf('.', end), section.toString().lastIndexOf('\n', end));
+                        if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
+                            end = lastSentenceEnd + 1;
+                        }
+                        String text = section.substring(start, end).replaceAll("\\s+", " ").trim();
+                        result.add(text);
+                        start = end;
                     }
-                    result.add( section.toString().trim());
+//                    while (section.length() > maxLength) {
+//                        result.add( section.substring(0, maxLength));
+//                        section.delete(0, maxLength);
+//                    }
+//                    result.add( section.toString().trim());
                     section.setLength(0);
                 }
                 if (section.length()>0 && (section.length()+section1.length()) <= maxLength){
@@ -87,10 +99,18 @@ public class SectionExtractorUtil {
     }
 
     public static void main(String[] args) throws IOException {
-        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\察右中恩德风机故障处理手册.doc";
+//        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\原始语料\\POC产品功能介绍手册20241108.pdf";
+//        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\06-员工培训管理办法.pdf";
+        String filePath ="C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\材料\\北京地铁\\提供的资料-脱敏\\公司供电分公司电力安全工作规程\\公司电力安全工作规程.pdf";
+//        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\原始语料\\关于印发《2025年第九届亚洲冬季运动会赛事指挥对讲终端领取使用指导意见》的通知.pdf";
         String documentContent = fileService.getFileContent(new File(filePath));
         boolean isChapterDocument = isChapterDocument(documentContent);
-        System.out.println("是否是章节类文档" + isChapterDocument);
-        getChunkDocument(documentContent, 512);
+        System.out.println("是否是小节类文档" + isChapterDocument);
+        List<FileChunkResponse.Document> result = getChunkDocument(documentContent, 512);
+
+        for (FileChunkResponse.Document doc : result) {
+            System.out.println(doc.getText());
+            System.out.println();
+        }
     }
 }
