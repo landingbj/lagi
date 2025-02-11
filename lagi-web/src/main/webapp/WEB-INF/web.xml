@@ -271,6 +271,15 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>modelManagerServlet</servlet-name>
+        <servlet-class>ai.servlet.ModelManagerServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>modelManagerServlet</servlet-name>
+        <url-pattern>/model/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>instruction</servlet-name>
         <servlet-class>ai.servlet.api.InstructionApiServlet</servlet-class>
         <load-on-startup>1</load-on-startup>

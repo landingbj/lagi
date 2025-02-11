@@ -11,11 +11,14 @@ import ai.common.pojo.Response;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.RAGFunction;
+import ai.dao.ManagerDao;
 import ai.dto.DeductExpensesRequest;
+import ai.dto.ManagerModel;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
@@ -23,6 +26,7 @@ import ai.llm.schedule.QueueSchedule;
 import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
+import ai.llm.utils.LlmAdapterFactory;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -83,6 +87,7 @@ public class LlmApiServlet extends BaseServlet {
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private final AgentService agentService = new AgentService();
     private final TraceService traceService = new TraceService();
+//    private final ManagerDao managerDao = new ManagerDao();
 
     static {
         VectorCacheLoader.load();
@@ -311,6 +316,7 @@ public class LlmApiServlet extends BaseServlet {
         if (outputAgent instanceof LocalRagAgent) {
             LocalRagAgent ragAgent = (LocalRagAgent) outputAgent;
             ragAgent.getAgentConfig().setEndpoint(uri);
+            // TODO 2025/2/11 to support local chat model
             llmRequest.setModel(ragAgent.getAgentConfig().getName());
         }
 
@@ -480,13 +486,15 @@ public class LlmApiServlet extends BaseServlet {
             List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
             chatCompletionRequest.setMessages(chatMessages);
         }
+
+        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest);
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
                 Observable<ChatCompletionResult> result;
                 if(enableQueueHandle) {
                     result = queueSchedule.streamSchedule(chatCompletionRequest, indexSearchDataList);
                 } else {
-                    result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
+                    result = completionsService.streamCompletions(chatCompletionRequest, userLlmAdapters, indexSearchDataList);
                 }
                 resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
                 streamOutPrint(result, context, indexSearchDataList, out);
@@ -501,7 +509,7 @@ public class LlmApiServlet extends BaseServlet {
                 if(enableQueueHandle) {
                     result = queueSchedule.schedule(chatCompletionRequest, indexSearchDataList);
                 } else {
-                    result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+                    result = completionsService.completions(chatCompletionRequest, userLlmAdapters, indexSearchDataList);
                 }
                 if (context != null) {
                     CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
@@ -513,6 +521,14 @@ public class LlmApiServlet extends BaseServlet {
                 responsePrint(resp, e.getMsg());
             }
         }
+    }
+
+    private List<ILlmAdapter> getUserLlmAdapters(EnhanceChatCompletionRequest chatCompletionRequest) {
+        ManagerDao managerDao = new ManagerDao();
+        List<ManagerModel> managerModels = managerDao.getManagerModels(chatCompletionRequest.getUserId(), 1);
+        return managerModels.stream().map(m -> {
+            return LlmAdapterFactory.getLlmAdapter(m.getModelType(), m.getModelName(), 999, m.getApiKey(), m.getEndpoint());
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     private void addChunkIds(ChatCompletionResult result, GetRagContext context) {
@@ -614,9 +630,11 @@ public class LlmApiServlet extends BaseServlet {
                         for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
                             ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
                             ChatCompletionChoice chunkChoice = data.getChoices().get(i);
-                            String chunkContent = chunkChoice.getMessage().getContent();
-                            String content = choice.getMessage().getContent();
-                            choice.getMessage().setContent(content + chunkContent);
+                            if(chunkChoice.getMessage() != null) {
+                                String chunkContent = chunkChoice.getMessage().getContent();
+                                String content = choice.getMessage().getContent();
+                                choice.getMessage().setContent(content + chunkContent);
+                            }
                         }
                     }
                 },

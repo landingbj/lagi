@@ -1,0 +1,29 @@
+{
+  "models":[
+    {
+      "name":"Qwen1.5-7B",
+      "path":"models/qwen/Qwen1.5-7B",
+      "template":"qwen"
+    },
+    {
+      "name":"DeepSeek-R1-Distill-Qwen-1.5B",
+      "path":"models/deepseek/DeepSeek-R1-Distill-Qwen-1.5B",
+      "template":"deepseek3"
+    },
+    {
+      "name":"DeepSeek-R1-Distill-Qwen-7B",
+      "path":"models/deepseek/DeepSeek-R1-Distill-Qwen-7B",
+      "template":"deepseek3"
+    },
+    {
+      "name":"DeepSeek-R1-Distill-Llama-8B",
+      "path":"models/deepseek/DeepSeek-R1-Distill-Llama-8B",
+      "template":"deepseek3"
+    },
+    {
+      "name":"DeepSeek-R1-Distill-Qwen-32B",
+      "path":"models/deepseek/DeepSeek-R1-Distill-Qwen-32B",
+      "template":"deepseek3"
+    }
+  ]
+}

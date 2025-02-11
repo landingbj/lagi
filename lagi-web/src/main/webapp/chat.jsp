@@ -248,8 +248,8 @@
         <!-- 上部导航条 -->
         <!-- *************************************************主要结构********************************* -->
         <main class="relative h-full w-full transition-width overflow-hidden flex-1">
-          <div  class="w-full h-full absolute">
-          </div>
+          <!-- <div  class="w-full h-full absolute">
+          </div> -->
           <div>
             <div id="model-prefences" class="w-full h-16 pl-10 absolute left-0 top-0 ">
               <div id="model-selects" class="inline-block model-selects float-left">
@@ -278,7 +278,6 @@
 
             <div id="hello-page" class="flex-1 h-full">
               <div id="mytab" class="hidden">
-
                 <!-- 我的发布列表开始 -->
               <div class="agent-list-container tab" class="w-full" id="agent-list-container">
 
@@ -375,6 +374,207 @@
                 </table>
                 <div class="pagination" id="file-upload-pagination">
                   <!-- 分页按钮将动态添加到这里 -->
+                </div>
+              </div>
+
+              <div class="user-model tab w-full model-modules-box" id="user-model">
+                <div>
+                  <a onclick="backToChat()">
+                      <svg class="back-button" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 100 100" style="cursor: pointer;">
+                          <circle cx="50" cy="50" r="40" stroke="#000" stroke-width="10" fill="none"/>
+                          <line x1="65" y1="50" x2="35" y2="50" stroke="#000" stroke-width="10" class="line"/>
+                          <polyline points="45,35 35,50 45,65" stroke="#000" stroke-width="10" fill="none" class="arrow"/>
+                      </svg>
+                  </a>
+                </div>
+                <div class="model-modules-nav w-full p-1">
+                  <button class="model-modules-title" onclick="loadUserModule('user-finetune', 'loadFinetuneData')" >
+                    模型微调
+                  </button>
+                  <button class="model-modules-title" onclick="loadUserModule('user-develop', 'loadDevelopData')">
+                      模型部署
+                  </button>
+                  <button class="model-modules-title" onclick="loadUserModule('user-manager', 'loadDevelopManagerData')">
+                      模型管理
+                  </button>
+                </div>
+                <div class="model-modules w-full p-1">
+                  <div class="model-module finetune w-full hidden" id="user-finetune">
+                    <div class="train-form" id="train-form">
+                      <div>
+                        <label for="sel-model">选择模型</label>
+                        <select name="sel-model" id="sel-model">
+                          <option value="Qwen1.5-7B">Qwen1.5-7B</option>
+                          <option value="DeepSeek-R1-Distill-Qwen-1.5B">DeepSeek-R1-Distill-Qwen-1.5B</option>
+                        </select>
+                        <label for="up-datasets">上传数据集</label>
+                        <input name="up-datasets" type="file" id="up-datasets">
+                        <button onclick="uploadUserDatasets()">
+                          上传
+                          </button> 
+                        <span id="up-datasets-status" ></span>
+                        <div>
+                          <label for="sel-datasets">选择数据集</label>
+                          <sapn id="sel-datasets">
+                          </sapn>
+                          <button onclick="deleteUserDatasets()">删除</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label for="quantization-bit">量化等级</label>
+                        <select name="quantization-bit"> 
+                          <option value="none" selected>none</option>
+                          <option value="8">8</option>
+                          <option value="4">4</option>
+                        </select>
+                        <label for="quantization-method">量化方法</label>
+                        <select name="quantization-method">
+                          <option value="none" selected>bitsandbytes</option>
+                          <option value="hqq">hqq</option>
+                          <option value="eetq">eetq</option>
+                        </select>
+                        <label for="template">对话模板</label>
+                        <input name="template" id="template" value="" type="text">
+                        <label for="RoPE-scaling">RoPE 插值方法</label>
+                        <select name="RoPE-scaling">
+                          <option value="none" selected>none</option>
+                          <option value="linear">linear</option>
+                          <option value="dynamic">dynamic</option>
+                          <option value="yarn">yarn</option>
+                          <option value="llama3">llama3</option>
+                        </select>
+                        <label for="booster">加速方式</label>
+                        <select name="booster" type="text">
+                          <option value="auto">auto</option>
+                          <option value="flashattn2">flashattn2</option>
+                          <option value="unsloth">unsloth</option>
+                          <option value="liger_kernel">liger_kernel</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label for="learning-rate">学习率</label>
+                        <input name="learning-rate" type="text" value="0.0001">
+                        <label for="epochs">训练轮数</label>
+                        <input name="epochs" type="text" value="3">
+                        <label for="maximum-gradient-norm">最大梯度范数</label>
+                        <input name="maximum-gradient-norm" type="text" value="1">
+                        <label for="max-samples">最大样本数</label>
+                        <input name="max-samples" type="text" value="100000">
+                        <label for="compute-type">计算类型</label>
+                        <select name="compute-type" >
+                          <option value="bf16">bf16</option>
+                          <option value="fp16">fp16</option>
+                          <option value="fp32">fp32</option>
+                          <option value="pure_bf16">pure_bf16</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label for="cutoff-length">截断长度</label>
+                        <input name="cutoff-length" type="text" value="1024">
+                        <label for="batch-size">批处理大小</label>
+                        <input name="batch-size" type="text" value="1">
+                        <label for="gradient-accumulation">梯度累积</label>
+                        <input name="gradient-accumulation" type="text" value="2">
+                        <label for="val-size">验证集比例</label>
+                        <input name="val-size" type="text" value="0.1">
+                        <label for="LR-scheduler">学习率调节器</label>
+                        <select name="LR-scheduler" type="text">
+                          <option value="linear">linear</option>
+                          <option value="cosine" selected>cosine</option>
+                          <option value="cosine_with_restarts">cosine_with_restarts</option>
+                          <option value="polynomial">polynomial</option>
+                          <option value="constant">constant</option>
+                          <option value="constant_with_warmup">constant_with_warmup</option>
+                          <option value="inverse_sqrt">inverse_sqrt</option>
+                          <option value="reduce_lr_on_plateau">reduce_lr_on_plateau</option>
+                          <option value="cosine_with_min_lr">cosine_with_min_lr</option>
+                          <option value="warmup_stable_decay">warmup_stable_decay</option>
+                        </select>
+                      </div>
+                      <!-- <div>
+                        <label for="datasets">检查点路径</label>
+                        <input name="model" type="text">
+                      </div> -->
+                      <div class="train-btn-box">
+                        <label for="output-dir">保存地址</label>
+                        <input name="output-dir" type="text" value="">
+                        <button onclick="doTrain()">训练</button>
+                      </div>
+                    </div>
+                    <div class="train-view" id="train-view">
+                      <div class="train-view-title">训练日志</div>
+                      <div class="train-view-content" id="train-view-content"></div>
+                    </div>
+                  </div>
+                  <div class="model-module user-develop hidden" id="user-develop">
+                    <div class="develop-model-container">
+                      <button id="addModeldevelop-btn" class="develop-btn">部署模型</button>
+                      <hr>
+                      <div id="modelList" class="model-list"></div>
+                    </div>
+
+                    <!-- 模态框 -->
+                    <div id="myDevelop" class="develop">
+                      <div class="develop-content">
+                          <span class="close">&times;</span>
+                          <h2>部署模型</h2>
+                          <form id="modelForm">
+                              <label for="modelPath">模型路径:</label>
+                              <input type="text" id="modelPath" name="modelPath" required>
+                              <label for="adapterPath">Adapter路径:</label>
+                              <input type="text" id="adapterPath" name="adapterPath">
+                              <button type="submit" class="develop-btn">发布模型</button>
+                          </form>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="model-module manager hidden" id="user-manager">
+                    <div class="modal-container">
+                      <button id="addModelBtn">添加模型</button>
+                      <hr>
+                      <table id="modelTable">
+                          <thead>
+                              <tr>
+                                  <th>模型名</th>
+                                  <th>是否线上模型</th>
+                                  <th>API Key</th>
+                                  <th>模型类型</th>
+                                  <th>模型终端地址</th>
+                                  <th>状态</th>
+                                  <th>操作</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <!-- 模型行将在这里动态添加 -->
+                          </tbody>
+                      </table>
+                    </div>
+              
+                    <div id="modelModal" class="modal-manager">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <h2 id="modalTitle">添加模型</h2>
+                            <form id="modeManagerlForm">
+                                <label for="modelName">模型名:</label>
+                                <input type="text" id="modelName" name="modelName" required>
+                                <label for="isOnline">是否线上模型:</label>
+                                <input type="checkbox" id="isOnline" name="isOnline">
+                                <div id="onlineFields" style="display: none;">
+                                    <label for="apiKey">API Key:</label>
+                                    <input type="text" id="apiKey" name="apiKey">
+                                    <label for="modelType">模型类型:</label>
+                                    <select id="modelType" name="modelType">
+                                    </select>
+                                </div>
+                                <div id="offlineFields">
+                                    <label for="modelEndpoint">模型终端地址:</label>
+                                    <input type="text" id="modelEndpoint" name="modelEndpoint">
+                                </div>
+                                <button type="submit">保存</button>
+                            </form>
+                        </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               </div>
@@ -769,5 +969,6 @@
 <script src="js/ball.js?ver=${initParam.version}"></script>
 <script src="js/agent.js?ver=${initParam.version}"></script>
 <script src="js/login.js?ver=${initParam.version}"></script>
+<script src="js/model.js?ver=${initParam.version}"></script>
 </body>
 </html>

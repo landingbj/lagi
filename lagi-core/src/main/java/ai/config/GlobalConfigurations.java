@@ -7,6 +7,7 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.ocr.OcrConfig;
 import ai.router.Routers;
 import ai.utils.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -30,6 +31,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private List<WorkerConfig> workers;
     private List<RouterConfig> routers;
     private List<FilterConfig> filters;
+    @JsonProperty("fine_tune")
+    private FineTuneConfig fineTune;
 
     @Override
     public void init() {

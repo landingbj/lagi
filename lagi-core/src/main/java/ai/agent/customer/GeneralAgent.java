@@ -216,7 +216,7 @@ public class GeneralAgent extends Agent<ChatCompletionRequest, ChatCompletionRes
         temp.addAll(messages);
         data.setMessages(temp);
 
-        return completionsService.completions(data, null);
+        return completionsService.completions(data, Collections.emptyList(), null);
     }
 
 

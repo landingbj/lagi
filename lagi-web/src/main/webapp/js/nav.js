@@ -504,6 +504,10 @@ let promptNavs = [
             {
                 id:668,
                 title: '我的语料',
+            },
+            {
+                id:669,
+                title: '我的模型',
             }
         ]
     }
@@ -890,7 +894,7 @@ function getPromptDialog(id, e) {
 
 
 function goToUserTab(id, e) {
-    if (id === 666 || id == 667 || 668) {
+    if (id === 666 || id == 667 ||  id == 668 || id == 669) {
         if (!getCookie('userId')) {
             openModal(e);
             return;
@@ -921,6 +925,11 @@ function goToUserTab(id, e) {
 
     if(id == 668) {
         loadUploadFileList(1);
+        return;
+    }
+
+    if(id == 669) {
+        loadUserModule('user-finetune', 'loadFinetuneData')
         return;
     }
 }

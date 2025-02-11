@@ -389,12 +389,12 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         "max_tokens": 1024,
         "worker": "BestWorker",
         // "stream": false,
-        "stream": true
+        "stream": true,
+        "userId": globalUserId
     };
     if (agentId) {
         paras["worker"] = "appointedWorker";
         paras["agentId"] = agentId;
-        paras["userId"] = globalUserId;
     }
 
     var queryUrl = "search/detectIntent";

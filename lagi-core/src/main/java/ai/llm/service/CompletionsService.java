@@ -73,11 +73,15 @@ public class CompletionsService implements ChatCompletion {
         return ContextLoader.configuration.getFunctions().getChat().getRoute();
     }
 
-    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
+    public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest, List<ILlmAdapter> userAdapters, List<IndexSearchData> indexSearchDataList) {
         // The execution model is specified
         RRException r = new RRException(LLMErrorConstants.OTHER_ERROR, "{\"error\":\"backend is not enabled.\"}");
         if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter appointAdapter = llmAdapterAIManager.getAdapter(chatCompletionRequest.getModel());
+            if(appointAdapter == null) {
+                Map<String, ILlmAdapter> userAdapterMap = userAdapters.stream().collect(Collectors.toMap(a -> ((ModelService) a).getModel(), a -> a));
+                appointAdapter = userAdapterMap.get(chatCompletionRequest.getModel());
+            }
             if (appointAdapter != null && notFreezingAdapter(appointAdapter)) {
                 try {
                     ChatCompletionResult result = SensitiveWordUtil.filter(appointAdapter.completions(chatCompletionRequest));
@@ -106,18 +110,22 @@ public class CompletionsService implements ChatCompletion {
     }
 
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        return completions(chatCompletionRequest, null);
+        return completions(chatCompletionRequest, Collections.emptyList(), null);
     }
 
 
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        return streamCompletions(chatCompletionRequest, null);
+        return streamCompletions(chatCompletionRequest, Collections.emptyList(), null);
     }
 
-    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest, List<IndexSearchData> indexSearchDataList) {
+    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest,  List<ILlmAdapter> userAdapters, List<IndexSearchData> indexSearchDataList) {
         RRException r = new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL, "{\"error\":\"Stream backend is not enabled.\"}");
         if (chatCompletionRequest.getModel() != null) {
             ILlmAdapter adapter = llmAdapterAIManager.getAdapter(chatCompletionRequest.getModel());
+            if(adapter == null) {
+                Map<String, ILlmAdapter> userAdapterMap = userAdapters.stream().collect(Collectors.toMap(a -> ((ModelService) a).getModel(), a -> a));
+                adapter = userAdapterMap.get(chatCompletionRequest.getModel());
+            }
             if (adapter != null && notFreezingAdapter(adapter)) {
                 try {
                     Observable<ChatCompletionResult> result = adapter.streamCompletions(chatCompletionRequest);
@@ -131,7 +139,7 @@ public class CompletionsService implements ChatCompletion {
         }
 
         chatCompletionRequest.setModel(null);
-        List<ILlmAdapter> adapters = getLlmAdapters(indexSearchDataList);
+        List<ILlmAdapter> adapters = getLlmAdapters(userAdapters, indexSearchDataList);
         String handle = getPolicy().getHandle();
         if (!PolicyConstants.POLLING.equals(handle)) {
             for (ILlmAdapter adapter : adapters) {
@@ -205,13 +213,13 @@ public class CompletionsService implements ChatCompletion {
         throw r;
     }
 
-    public List<ILlmAdapter> getLlmAdapters(List<IndexSearchData> indexSearchDataList) {
+    public List<ILlmAdapter> getLlmAdapters(List<ILlmAdapter> userAdapters, List<IndexSearchData> indexSearchDataList) {
         // no effect backend
-        List<ILlmAdapter> adapters;
+        List<ILlmAdapter> adapters = new ArrayList<>(userAdapters);
         if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-            adapters = LlmRouterDispatcher.getRagAdapter(llmAdapterAIManager, indexSearchDataList.get(0).getText());
+            adapters.addAll(LlmRouterDispatcher.getRagAdapter(llmAdapterAIManager, indexSearchDataList.get(0).getText()));
         } else {
-            adapters = llmAdapterAIManager.getAdapters();
+            adapters.addAll( llmAdapterAIManager.getAdapters());
         }
         List<ILlmAdapter> notFreezingAdapters =
                 adapters.stream().filter(adapter -> adapter != null && notFreezingAdapter(adapter)).collect(Collectors.toList());

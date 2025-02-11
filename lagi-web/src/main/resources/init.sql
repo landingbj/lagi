@@ -57,4 +57,26 @@ create table if not exists lagi_llm_trace
     name     varchar(100)      not null,
     count    INTEGER default 0 not null,
     unique (name)
-    );
+);
+
+CREATE TABLE IF NOT EXISTS model_develop_info (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id varchar(64),
+  model_path varchar(200),
+  template varchar(64),
+  adapter_path varchar(200),
+  finetuning_type varchar(64),
+  port varchar(20),
+  running INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS model_manager (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id varchar(64),
+    model_name varchar(64),
+    online INTEGER,
+    api_key varchar(64),
+    model_type varchar(64),
+    endpoint varchar(200),
+    status INTEGER
+);
