@@ -388,13 +388,13 @@
                   </a>
                 </div>
                 <div class="model-modules-nav w-full p-1">
-                  <button class="model-modules-title" onclick="loadUserModule('user-finetune', 'loadFinetuneData')" >
+                  <button class="model-modules-title" onclick="loadUserModule(this, 'user-finetune', 'loadFinetuneData')" >
                     模型微调
                   </button>
-                  <button class="model-modules-title" onclick="loadUserModule('user-develop', 'loadDevelopData')">
+                  <button class="model-modules-title" onclick="loadUserModule(this, 'user-develop', 'loadDevelopData')">
                       模型部署
                   </button>
-                  <button class="model-modules-title" onclick="loadUserModule('user-manager', 'loadDevelopManagerData')">
+                  <button class="model-modules-title" onclick="loadUserModule(this, 'user-manager', 'loadDevelopManagerData')">
                       模型管理
                   </button>
                 </div>
@@ -498,7 +498,7 @@
                       <div class="train-btn-box">
                         <label for="output-dir">保存地址</label>
                         <input name="output-dir" type="text" value="">
-                        <button onclick="doTrain()">训练</button>
+                        <button onclick="doTrain(this)">训练</button>
                       </div>
                     </div>
                     <div class="train-view" id="train-view">

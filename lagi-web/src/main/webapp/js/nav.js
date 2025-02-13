@@ -929,7 +929,7 @@ function goToUserTab(id, e) {
     }
 
     if(id == 669) {
-        loadUserModule('user-finetune', 'loadFinetuneData')
+        loadUserModule($('.model-modules-title')[0], 'user-finetune', 'loadFinetuneData')
         return;
     }
 }

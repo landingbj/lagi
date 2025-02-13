@@ -174,8 +174,19 @@ $(document).ready(function(){
 });
 
 
-function loadUserModule(model, callback) {
+function loadUserModule(el, model, callback) {
+    // console.log("loadUserModule", this);
     let modules =  $('.model-module');
+
+    let titles = $('.model-modules-title');
+    for (let index = 0; index < titles.length; index++) {
+        const title = titles[index];
+        if(title == el) {
+            $(title).css("color", '#fff');
+        } else {
+            $(title).css("color", 'rgb(179, 179, 179)');
+        }
+    }
     showSelectModuleById();
     window[callback]();
     function showSelectModuleById() {
@@ -305,13 +316,14 @@ function deleteUserDatasets() {
     });
 }
 
-let isTraining = false;
 
-async function doTrain() {
-    if(isTraining) {
-        alert("训练正在进行");
-    }
-    isTraining = true;
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function doTrain(el) {
+    disabledTrain(el);
+    // await sleep(6000);
     let userId = getCookie('userId');
     const inputValues = {};
     $('#train-form input').each(function(){
@@ -320,20 +332,17 @@ async function doTrain() {
     let datasets = $('#sel-datasets input[type="checkbox"]:checked').map(function() {
         return this.value;
     }).get();
-    console.log(inputValues);
-
     const selectValues = {};
     $('#train-form select').each(function(){
         selectValues[$(this).attr('name')] = $(this).val();
     });
-    console.log(selectValues);
     let params = {
         "userId":userId,
         "fineTuneArgs" : {
             "stage" :"sft",
-            "model_name" : "Qwen1.5-7B",
+            "model_name" : selectValues["sel-model"],
             "finetuning_type" : "lora",
-            "template" : model_templte_map[inputValues["sel-model"]], //"qwen",
+            "template" : inputValues["template"], //"qwen",
             "lora_target":"q_proj,v_proj",
             "dataset" : datasets,
             "cutoff_len" : inputValues["cutoff-length"], //1024,
@@ -360,6 +369,22 @@ async function doTrain() {
             "output_dir": inputValues["output-dir"]
         }
     }
+    try {
+        checkTrainParams(params);
+    } catch(error) {
+        alert(error);
+        enableTrain(el);
+        return ;
+    }
+
+    function disabledTrain(el) {
+        $(el).prop('disabled', true).css("opacity", 0.5);
+    }
+
+    function enableTrain(el) {
+        $(el).prop('disabled', false).css("opacity", 1);
+    }
+
     $('#train-view-content').empty();
     try {
         const response = await fetch('model/train', {
@@ -401,8 +426,57 @@ async function doTrain() {
     } catch (error) {
         console.error('Fetch error:', error);
     }
-    isTraining = false;
+    enableTrain(el);
 }
+
+function isNumeric(str) {
+    return !isNaN(parseFloat(str)) && isFinite(str);
+}
+
+
+function checkTrainParams(params) {
+    let fineTuneArgs =  params["fineTuneArgs"];
+    if( !(fineTuneArgs["dataset"]) || fineTuneArgs["dataset"].length == 0) {
+        throw new Error(`请选择一个训练的数据集`);
+    }
+    if(!(fineTuneArgs["template"])) {
+        throw new Error(`template 不可为空`);
+    }
+    if(!isNumeric(fineTuneArgs["cutoff_len"])) {
+        throw new Error(`cutoff_len 不可为空或非数字`);
+    }
+    if(!isNumeric(fineTuneArgs["max_samples"])) {
+        throw new Error(`cutoff_len 不可为空或非数字`);
+    }
+    if(!isNumeric(fineTuneArgs["batch_size"])) {
+        throw new Error(`batch-size 不可为空或非数字`);
+    }
+    if(!isNumeric(fineTuneArgs["gradient_accumulation_steps"] )) {
+        throw new Error(`gradient_accumulation_steps 不可为空或非数字`);
+    }
+    if(!isNumeric(fineTuneArgs["learning_rate"])) {
+        throw new Error(`learning_rate 不可为空或非数字`);
+    }
+    if(!isNumeric(fineTuneArgs["num_train_epochs"])) {
+        throw new Error(`num_train_epochs 不可为空或非数字`);
+    }
+    if(!(fineTuneArgs["lr_scheduler_type"])) {
+        throw new Error(`lr_scheduler_type 不可为空或数字`);
+    }
+    if(!isNumeric(fineTuneArgs["maximum_gradient_norm"])) {
+        throw new Error(`maximum_gradient_norm 不可为空或非数字`);
+    }
+    if(!(fineTuneArgs["compute_type"])) {
+        throw new Error(`compute_type 不可为空或数字`);
+    }
+    if(!isNumeric(fineTuneArgs["val_size"])) {
+        throw new Error(`val_size 不可为空或非数字`);
+    }
+    if(!(fineTuneArgs["output_dir"])) {
+        throw new Error(`output_dir 不可为空或数字`);
+    }
+}
+
 
 function scrollToButton() {
     var div = $('#train-view-content');
@@ -722,7 +796,7 @@ function getManagerModels() {
         }
     })
     .catch(error => {
-        alert('更新模型失败');
+        console.log('获取管理模型失败');
     });
 }
 
@@ -758,7 +832,7 @@ function renderTable() {
     manager_models.forEach((model, index) => {
         const row = $('<tr>');
         row.append(`<td>${model.modelName}</td>`);
-        row.append(`<td>${model.isOnline ? '是' : '否'}</td>`);
+        row.append(`<td>${model.online == 1 ? '是' : '否'}</td>`);
         row.append(`<td>${model.apiKey || '-'}</td>`);
         row.append(`<td>${model.modelType || '-'}</td>`);
         row.append(`<td>${model.endpoint || '-'}</td>`);

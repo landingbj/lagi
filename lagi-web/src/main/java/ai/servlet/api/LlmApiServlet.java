@@ -300,9 +300,16 @@ public class LlmApiServlet extends BaseServlet {
                 agent -> logger.info("Matched agent in skill map: {}", agent.getAgentConfig().getName())
         );
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
+        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(llmRequest.getUserId());
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);
         if (skillMapAgentList.isEmpty()) {
-            outputAgent = SkillMapUtil.getHighestPriorityLlm();
+            if(llmAndAgentList.isEmpty()) {
+                outputAgent = SkillMapUtil.getHighestPriorityLlm();
+            } else {
+                outputAgent = llmAndAgentList.get(0);
+            }
         } else {
+            skillMapAgentList.addAll(0, llmAndAgentList);
             outputAgent = getFirstStreamAgent(skillMapAgentList);
             if (outputAgent == null) {
                 outputAgent = skillMapAgentList.get(0);
@@ -316,7 +323,6 @@ public class LlmApiServlet extends BaseServlet {
         if (outputAgent instanceof LocalRagAgent) {
             LocalRagAgent ragAgent = (LocalRagAgent) outputAgent;
             ragAgent.getAgentConfig().setEndpoint(uri);
-            // TODO 2025/2/11 to support local chat model
             llmRequest.setModel(ragAgent.getAgentConfig().getName());
         }
 
@@ -487,7 +493,7 @@ public class LlmApiServlet extends BaseServlet {
             chatCompletionRequest.setMessages(chatMessages);
         }
 
-        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest);
+        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest.getUserId());
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
                 Observable<ChatCompletionResult> result;
@@ -523,9 +529,9 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
-    private List<ILlmAdapter> getUserLlmAdapters(EnhanceChatCompletionRequest chatCompletionRequest) {
+    private List<ILlmAdapter> getUserLlmAdapters(String userId) {
         ManagerDao managerDao = new ManagerDao();
-        List<ManagerModel> managerModels = managerDao.getManagerModels(chatCompletionRequest.getUserId(), 1);
+        List<ManagerModel> managerModels = managerDao.getManagerModels(userId, 1);
         return managerModels.stream().map(m -> {
             return LlmAdapterFactory.getLlmAdapter(m.getModelType(), m.getModelName(), 999, m.getApiKey(), m.getEndpoint());
         }).filter(Objects::nonNull).collect(Collectors.toList());

@@ -48,7 +48,7 @@ export ASCEND_RT_VISIBLE_DEVICES=$devices
 export API_PORT=$port
 
 
-cmd="llamafactory-cli api --model_name_or_path $model_path --template $template"
+cmd="llamafactory-cli api --model_name_or_path $model_path --template $template --trust_remote_code True"
 
 
 

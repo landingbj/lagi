@@ -2,9 +2,11 @@ package ai.worker.skillMap;
 
 import ai.agent.Agent;
 import ai.agent.chat.rag.LocalRagAgent;
+import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.pojo.AgentConfig;
+import ai.llm.adapter.ILlmAdapter;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
@@ -12,7 +14,6 @@ import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.pojo.AgentIntentScore;
 import ai.worker.pojo.IntentResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -79,6 +80,17 @@ public class SkillMapUtil {
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> getLlmAndAgentList() {
         return llmAndAgentList;
+    }
+
+    public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<ILlmAdapter> adapters) {
+        List<AgentConfig> collect = adapters.stream().map(adapter -> {
+            AgentConfig agentConfig = new AgentConfig();
+            ModelService modelService = (ModelService) adapter;
+            agentConfig.setDriver(RAG_AGENT);
+            agentConfig.setName(modelService.getModel());
+            return agentConfig;
+        }).collect(Collectors.toList());
+        return convert2AgentList(collect, new HashMap<>());
     }
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(

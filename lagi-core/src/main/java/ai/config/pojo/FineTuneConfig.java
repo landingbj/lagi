@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 @ToString
 public class FineTuneConfig {
-    private Integer isLocal;
+    private Boolean remote;
     private String env;
     private String envPath;
     private String datasetDir;
@@ -21,4 +21,5 @@ public class FineTuneConfig {
     private String trainDir;
     private String saveDir;
     private List<String> ports;
+    private String remoteServiceUrl;
 }

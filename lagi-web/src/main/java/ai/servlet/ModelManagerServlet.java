@@ -15,6 +15,7 @@ import ai.servlet.annotation.Param;
 import ai.servlet.annotation.Post;
 import ai.servlet.exceptions.RRException;
 import ai.utils.JsonFileLoadUtil;
+import ai.utils.ValidationUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -28,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.*;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,6 +48,45 @@ public class ModelManagerServlet extends RestfulServlet{
     private final LocalLlamaFactoryService localLlamaFactoryService = new LocalLlamaFactoryService();
     private final ModelDevelopInfoDao modelDevelopInfoDao = new ModelDevelopInfoDao();
     private final ManagerDao managerDao = new ManagerDao();
+
+    protected boolean needForward() {
+        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
+        return Boolean.TRUE.equals(fineTuneConfig.getRemote());
+    }
+
+    protected void forwardRequest(HttpServletRequest request, HttpServletResponse response, String method) throws IOException {
+        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
+        String remoteServiceUrl = fineTuneConfig.getRemoteServiceUrl();
+        if(StrUtil.isBlank(remoteServiceUrl)) {
+           throw new RRException("Remote service url is not set");
+        }
+        URL url = new URL(remoteServiceUrl + request.getRequestURI());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod(method);
+        connection.setRequestProperty("Content-Type", request.getContentType());
+        connection.setRequestProperty("Accept", request.getHeader("Accept"));
+
+        if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+            connection.setDoOutput(true);
+            byte[] input = readAllBytes(request.getInputStream());
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(input, 0, input.length);
+            }
+        }
+        int responseCode = connection.getResponseCode();
+        response.setStatus(responseCode);
+
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            String inputLine;
+            StringBuilder content = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            response.getWriter().write(content.toString());
+        }
+        connection.disconnect();
+    }
+
 
     @Post("uploadDataSet")
     public void uploadDataSet(@Param("userId") String userId,  HttpServletRequest request, HttpServletResponse resp) throws IOException, ServletException {
@@ -188,6 +230,12 @@ public class ModelManagerServlet extends RestfulServlet{
         FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
         String userId = trainConfig.getUserId();
         FineTuneArgs fineTuneArgs = trainConfig.getFineTuneArgs();
+//        //  Validate  fineTuneArgs
+//        String s = ValidationUtil.validateOne(fineTuneArgs);
+//        if(!StrUtil.isBlank(s)) {
+//            resp.getWriter().write("{\"error\": \"" + s + "\"}");
+//            return;
+//        }
         Map<String, SupportModel> nameMap = getModelSupportMap();
         SupportModel supportModel = nameMap.get(fineTuneArgs.getModel_name());
         fineTuneArgs.setModel_path(fineTuneConfig.getLlamaFactoryDir() + File.separator + supportModel.getPath());
@@ -199,12 +247,6 @@ public class ModelManagerServlet extends RestfulServlet{
         fineTuneArgs.setDataset_dir(dateSetDir);
         fineTuneArgs.setOutput_dir(savePath + File.separator + fineTuneArgs.getOutput_dir());
 
-//        //  Validate  fineTuneArgs
-//        String s = ValidationUtil.validateOne(fineTuneArgs);
-//        if(!StringUtils.isBlank(s)) {
-//            resp.getWriter().write("{\"error\": \"" + s + "\"}");
-//            return;
-//        }
 
         // parser args
         TrainArgsParser trainArgsParser = new TrainArgsParser(fineTuneArgs);
@@ -292,6 +334,11 @@ public class ModelManagerServlet extends RestfulServlet{
 
     @Post("delDevelop")
     public Boolean delDevelop(@Body ModelDevelopInfo modelDevelopInfo) {
+        ModelDevelopInfo developInfo = modelDevelopInfoDao.findById(modelDevelopInfo.getId());
+        try {
+            stop(developInfo);
+        } catch (Exception e) {
+        }
         int delete = modelDevelopInfoDao.delete(modelDevelopInfo.getId());
         return delete  > 0;
     }
@@ -395,6 +442,7 @@ public class ModelManagerServlet extends RestfulServlet{
 
     @Post("updateManagerModel")
     public Boolean updateManagerModel(@Body ManagerModel managerModel) {
+        // TODO 2025/2/13 更新状态时 检查模型是否运行
         int i = managerDao.updateManagerModel(managerModel);
         return i > 0;
     }

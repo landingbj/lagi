@@ -1,6 +1,6 @@
 package ai.servlet;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -168,15 +168,42 @@ public class RestfulServlet extends BaseServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        doRequest(req, resp, registerGetMethod);
+        if(needForward()) {
+            forwardRequest(req, resp, req.getMethod());
+        } else {
+            doRequest(req, resp, registerGetMethod);
+        }
     }
 
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        doRequest(req, resp, registerPostMethod);
+        if(needForward()) {
+            forwardRequest(req, resp, req.getMethod());
+        } else {
+            doRequest(req, resp, registerPostMethod);
+        }
     }
 
+
+    protected boolean needForward() {
+        return false;
+    }
+
+    protected void forwardRequest(HttpServletRequest request, HttpServletResponse response, String method) throws IOException {
+
+    }
+
+    protected byte[] readAllBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        buffer.flush();
+        return buffer.toByteArray();
+    }
 
 }
