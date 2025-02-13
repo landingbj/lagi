@@ -80,3 +80,12 @@ CREATE TABLE IF NOT EXISTS model_manager (
     endpoint varchar(200),
     status INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS user_rag_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id varchar(64),
+    file_type varchar(64),
+    category varchar(64),
+    chunk_size Integer,
+    temperature REAL
+    );

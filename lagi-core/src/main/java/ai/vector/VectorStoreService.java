@@ -68,43 +68,63 @@ public class VectorStoreService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         List<FileChunkResponse.Document> docs = new ArrayList<>();
+        List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
+        Integer wenben_type = 512;
+        Integer biaoge_type = 512;
+        Integer tuwen_type = 512;
+        if (userList!=null){
+            for (UserRagSetting user : userList) {
+                if ("wenben_type".equals(user.getFileType())) {
+                    wenben_type = user.getChunkSize();
+                    break;  // 找到后直接退出循环
+                }
+                if ("biaoge_type".equals(user.getFileType())) {
+                    biaoge_type = user.getChunkSize();
+                    break;  // 找到后直接退出循环
+                }
+                if ("tuwen_type".equals(user.getFileType())) {
+                    tuwen_type = user.getChunkSize();
+                    break;  // 找到后直接退出循环
+                }
+            }
+        }
         if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx")||file.getName().endsWith(".csv")){
             if (ExcelSqlUtil.isConnect()&&ExcelSqlUtil.isSql(file.getPath())){
                 ExcelSqlUtil.uploadSql(file.getPath(),(String)metadatas.get("filename"),(String)metadatas.get("file_id"));
                 return;
             }else {
-                docs = fileService.splitChunks(file, 512);
+                docs = fileService.splitChunks(file, biaoge_type);
             }
         } else if (file.getName().endsWith(".jpg") ||file.getName().endsWith(".webp")||
                 file.getName().endsWith(".jpeg") || file.getName().endsWith(".png") ||
                 file.getName().endsWith(".gif") || file.getName().endsWith(".bmp")) {
-            docs = fileService.splitChunks(file, 512);
+            docs = fileService.splitChunks(file, tuwen_type);
         } else {
             String content = fileService.getFileContent(file);
-            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
+            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, wenben_type)) {
                 //Is QA
                 return;
             } else if (content!=null){
                 if (ChapterExtractorUtil.isChapterDocument(content)) {
                     System.out.println("是章节类文档");
-                    docs = ChapterExtractorUtil.getChunkDocument(content, 512);
+                    docs = ChapterExtractorUtil.getChunkDocument(content, wenben_type);
                 } else if (SectionExtractorUtil.isChapterDocument(content)) {
                     System.out.println("是小节类文档");
-                    docs = SectionExtractorUtil.getChunkDocument(content, 1024);
+                    docs = SectionExtractorUtil.getChunkDocument(content, wenben_type);
                 } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
                     System.out.println("是条列类文档");
-                    docs = OrdinanceExtractorUtil.getChunkDocument(content, 1024);
+                    docs = OrdinanceExtractorUtil.getChunkDocument(content, wenben_type);
                 } else {
                     if (WordDocxUtils.checkImagesInWord(file)){
                         FileChunkResponse response = fileService.extractContent(file);
                         if (response != null && response.getStatus().equals("success")) {
                             docs = response.getData();
                         } else {
-                            docs = fileService.splitContentChunks(content, 512);
+                            docs = fileService.splitContentChunks(content, wenben_type);
                         }
                     }else {
                         System.out.println("不包含图片类文档");
-                        docs = fileService.splitContentChunks(content, 512);
+                        docs = fileService.splitContentChunks(content, wenben_type);
                     }
                 }
             }

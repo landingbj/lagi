@@ -25,6 +25,30 @@ function loadUploadFileList(pageNumber) {
 
         renderFileUploadPagination(data.totalPage, pageNumber);  // 渲染分页
     });
+        // 初始化接口调用
+        $.ajax({
+            url: `/v1/vector/getTextBlockSize?lagiUserId=${globalUserId}&category=${window.category}`,
+            method: 'GET',
+            success: function(response) {
+                if (response.status === 'success') {
+                    // 遍历返回的数据，根据 fileType 回填相应的值
+                    response.data.forEach(function(item) {
+                        if (item.fileType === 'wenben_type') {
+                            $('#wenben_type').val(item.chunkSize);
+                        } else if (item.fileType === 'biaoge_type') {
+                            $('#biaoge_type').val(item.chunkSize);
+                        } else if (item.fileType === 'tuwen_type') {
+                            $('#tuwen_type').val(item.chunkSize);
+                        } else if (item.fileType === 'wendu_type') {
+                            $('#wendu_type').val(item.temperature);
+                        }
+                    });
+                }
+            },
+            error: function() {
+                alert('初始化失败，请重试');
+            }
+        });
 }
 
 
@@ -141,4 +165,130 @@ async function deleteFile(filename, fileId) {
         console.error('Error:', error);
     })
     ;
+}
+
+$(document).ready(function() {
+    // 设置默认选中的链接并显示 wdy1，隐藏 wdy2
+    $('#link1').css('background-color', '#055a7a').css('font-weight', 'bold');
+    $('#my-corpus').show();
+    $('#chat-settings').hide();
+
+    // 点击事件处理
+    $('.navbar a').click(function() {
+        // 恢复所有链接的样式
+        $('.navbar a').css('background-color', '').css('font-weight', '');
+
+        // 设置点击的链接的样式
+        $(this).css('background-color', '#055a7a').css('font-weight', 'bold');
+
+        // 根据点击的链接显示对应的内容
+        if ($(this).attr('id') === 'link1') {
+            $('#my-corpus').show();
+            $('#chat-settings').hide();
+        } else if ($(this).attr('id') === 'link2') {
+            $('#my-corpus').hide();
+            $('#chat-settings').show();
+        }
+    });
+});
+$(document).ready(function() {
+    // 默认选择聊天按钮
+    $('#chatButton').css('background-color', '#333');
+    $('#queryButton').css('background-color', '#055a7a');
+
+    // 监听聊天按钮点击事件
+    $('#chatButton').click(function() {
+        $(this).css('background-color', '#333');
+        $('#queryButton').css('background-color', '#055a7a');
+        $('#contentText').text("当前模式为： 聊天 将提供 LLM 的一般知识 和 找到的文档上下文的答案。");
+    });
+
+    // 监听查询按钮点击事件
+    $('#queryButton').click(function() {
+        $(this).css('background-color', '#333');
+        $('#chatButton').css('background-color', '#055a7a');
+        $('#contentText').text("当前模式为： 查询 将 仅 提供找到的文档上下文的答案。");
+    });
+});
+
+function submitSettings(type) {
+    let chunkSizeValue;
+    let temperature;
+
+    // 获取相应输入框中的值
+    if (type === 'wenben_type') {
+        chunkSizeValue = $('#wenben_type').val();
+    } else if (type === 'biaoge_type') {
+        chunkSizeValue = $('#biaoge_type').val();
+    } else if (type === 'tuwen_type') {
+        chunkSizeValue = $('#tuwen_type').val();
+    } else if (type === 'wendu_type') {
+        temperature = $('#wendu_type').val();
+    }
+
+    $.ajax({
+        url: '/v1/vector/updateTextBlockSize',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "userId": String(globalUserId),
+            "fileType": type,  // 传递相应的type
+            "category": window.category,
+            "chunkSize": chunkSizeValue,  // 传递相应的chunkSize
+            "temperature": temperature
+        }),
+        success: function(response) {
+            if (response.status === 'success') {
+                alert('请求成功');
+            } else {
+                alert('请求失败，返回状态不正确');
+            }
+        },
+        error: function() {
+            alert('请求失败，请重试');
+        }
+    });
+
+}
+
+function resetSlice(type) {
+    let chunkSizeValue;
+    let temperature;
+
+    // 获取相应输入框中的值
+    if (type === 'wenben_type') {
+        chunkSizeValue = $('#wenben_type').val();
+    } else if (type === 'biaoge_type') {
+        chunkSizeValue = $('#biaoge_type').val();
+    } else if (type === 'tuwen_type') {
+        chunkSizeValue = $('#tuwen_type').val();
+    } else if (type === 'wendu_type') {
+        temperature = $('#wendu_type').val();
+    }
+
+    $.ajax({
+        url: 'v1/vector/resetBlockSize',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "userId": String(globalUserId),
+            "fileType": type,  // 传递相应的type
+            "category": window.category,
+            "chunkSize": chunkSizeValue,  // 传递相应的chunkSize
+            "temperature": temperature
+        }),
+        success: function(response) {
+            if (response.status === 'success') {
+                alert('请求成功');
+            } else {
+                alert('请求失败，返回状态不正确');
+            }
+        },
+        error: function() {
+            alert('请求失败，请重试');
+        }
+    });
+    // 为刷新按钮添加点击事件
+        location.reload();  // 刷新页面
+
 }

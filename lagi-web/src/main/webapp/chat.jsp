@@ -350,30 +350,94 @@
 
               <div class="paid-agent-list-container w-full tab"
                 id="user-upload-file-container">
-                <div>
-                    <a onclick="backToChat()">
+                  <div id="upload-file-list">
+                    <div class="navbar" style="display: flex; justify-content: center; background-color: #023f63; padding: 10px 0;">
+                      <a onclick="backToChat()" style="position: absolute; left: 25px;">
                         <svg class="back-button" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 100 100" style="cursor: pointer;">
-                            <circle cx="50" cy="50" r="40" stroke="#000" stroke-width="10" fill="none"/>
-                            <line x1="65" y1="50" x2="35" y2="50" stroke="#000" stroke-width="10" class="line"/>
-                            <polyline points="45,35 35,50 45,65" stroke="#000" stroke-width="10" fill="none" class="arrow"/>
+                          <circle cx="50" cy="50" r="40" stroke="#000" stroke-width="10" fill="none"/>
+                          <line x1="65" y1="50" x2="35" y2="50" stroke="#000" stroke-width="10" class="line"/>
+                          <polyline points="45,35 35,50 45,65" stroke="#000" stroke-width="10" fill="none" class="arrow"/>
                         </svg>
-                    </a>
-                </div>
-                <table id="upload-file-list"  class="paid-agent-list " border="1">
-                  <thead>
-                  <tr>
-                    <th>文件名称</th>
-                    <th>文件</th>
-                    <th>更新时间</th>
-                    <th>操作</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  <!-- 动态生成的智能体数据行 -->
-                  </tbody>
-                </table>
-                <div class="pagination" id="file-upload-pagination">
-                  <!-- 分页按钮将动态添加到这里 -->
+                      </a>
+                      <a href="#" id="link1" style="color: white; text-decoration: none; padding: 5px 10px; margin: 0 15px; border-radius: 5px; transition: background-color 0.3s;">
+                        我的语料
+                      </a>
+                      <a href="#"  id="link2" style="color: white; text-decoration: none; padding: 5px 10px; margin: 0 15px; border-radius: 5px; transition: background-color 0.3s;">
+                        文本切片
+                      </a>
+                    </div>
+
+                    <div id = "chat-settings">
+                      <div style="padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); width: 100%;  height: auto; box-sizing: border-box;">
+                        <!-- LLM 温度 -->
+                        <h2 style="font-size: 1.8em; margin-bottom: 20px; color: #023f63;">LLM 温度</h2>
+                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">此设置控制您的 LLM 回答的“创意”程度。</p>
+                        </br>
+                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">数字越高越有创意。对于某些模型，如果设置得太高，可能会导致响应不一致。</p>
+                        </br>
+                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">模型不同，此 LLM 的有效值范围也不同。</p>
+                        <hr style="margin: 30px 0; border: 1px solid #eee;" />
+                        <div style="margin-top: 20px; display: flex; align-items: center;">
+                          <label for="textBlockSize" style="font-size: 1.1em; margin-right: 10px; width: 180px;">温度(temperature)：</label>
+                          <input type="number" id="wendu_type" value="0.8" style="width: 80px; padding: 8px; font-size: 1.1em; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+                          <button onclick="submitSettings('wendu_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">提交</button>
+                          &nbsp;&nbsp;
+                          <button onclick="resetSlice('wendu_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">重置</button>
+                        </div>
+                        <!-- 文本切片设置 -->
+                        </br>
+                        <h2 style="font-size: 1.8em; margin-bottom: 20px; color: #023f63;">文本切片设置</h2>
+                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">在这里，您可以针对不同语料文件，调整文本分段的理想长度。</p>
+                        </br>
+                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">温馨提示：修改此设置前，请确保您熟悉文本分割的逻辑及其可能带来的影响。若您对此不太确定，建议保持默认设置或咨询专业人员。</p>
+
+                        <hr style="margin: 30px 0; border: 1px solid #eee;" />
+
+                        <div style="margin-top: 20px; display: flex; align-items: center;">
+                          <label for="textBlockSize" style="font-size: 1.1em; margin-right: 10px; width: 180px;">文本类-文本块大小：</label>
+                          <input type="number" id="wenben_type" value="512" style="width: 80px; padding: 8px; font-size: 1.1em; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+                          <button onclick="submitSettings('wenben_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">提交</button>
+                          &nbsp;&nbsp;
+                          <button onclick="resetSlice('wenben_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">重置</button>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; align-items: center;">
+                          <label for="textBlockOverlap" style="font-size: 1.1em; margin-right: 10px; width: 180px;">表格类-文本块大小：</label>
+                          <input type="number" id="biaoge_type" value="512" style="width: 80px; padding: 8px; font-size: 1.1em; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+                          <button onclick="submitSettings('biaoge_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">提交</button>
+                          &nbsp;&nbsp;
+                          <button onclick="resetSlice('biaoge_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">重置</button>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; align-items: center;">
+                          <label for="textBlockOverlap" style="font-size: 1.1em; margin-right: 10px; width: 180px;">图文类-文本块大小：</label>
+                          <input type="number" id="tuwen_type" value="512" style="width: 80px; padding: 8px; font-size: 1.1em; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+                          <button onclick="submitSettings('tuwen_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">提交</button>
+                          &nbsp;&nbsp;
+                          <button onclick="resetSlice('tuwen_type')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">重置</button>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div id = "my-corpus">
+                      <table id="upload-file-list1"  class="paid-agent-list " border="1">
+                        <thead>
+                        <tr>
+                          <th>文件名称</th>
+                          <th>文件</th>
+                          <th>更新时间</th>
+                          <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- 动态生成已上传文件数据 -->
+                        </tbody>
+                      </table>
+                      <div class="pagination" id="file-upload-pagination">
+                        <!-- 分页按钮将动态添加到这里 -->
+                      </div>
+                  </div>
                 </div>
               </div>
 

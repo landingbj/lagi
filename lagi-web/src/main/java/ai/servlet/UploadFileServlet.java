@@ -426,6 +426,13 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("filepath", filepath);
             metadatas.put("file_id", fileId);
             metadatas.put("userId", userId);
+            List<UserRagSetting> settingList = null;
+            try {
+                settingList = uploadFileService.getTextBlockSize(category, userId);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            metadatas.put("settingList", settingList);
             if (level == null) {
                 metadatas.put("level", "user");
             } else {

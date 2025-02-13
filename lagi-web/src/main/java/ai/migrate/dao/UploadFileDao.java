@@ -5,6 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import ai.common.pojo.UserRagSetting;
 import ai.dao.IConn;
 import ai.index.BaseIndex;
 import ai.migrate.db.Conn;
@@ -201,4 +203,137 @@ public class UploadFileDao {
         BaseIndex.closeConnection(rs, ps, conn);
         return result;
     }
+
+    public List<UserRagSetting> getTextBlockSize(String category, String userId) throws SQLException {
+        List<UserRagSetting> result = new ArrayList<>();
+        IConn conn = new Conn();
+        String sql = "select id, user_id, file_type, category, chunk_size, temperature from user_rag_settings where category = ? and user_id = ?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, category);
+        ps.setString(2, userId);
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            UserRagSetting userRagSetting = new UserRagSetting();
+            userRagSetting.setId(rs.getInt(1));
+            userRagSetting.setUserId(rs.getString(2));
+            userRagSetting.setFileType(rs.getString(3));
+            userRagSetting.setCategory(rs.getString(4));
+            userRagSetting.setChunkSize(rs.getInt(5));
+            userRagSetting.setTemperature(rs.getDouble(6));
+            result.add(userRagSetting);
+        }
+        BaseIndex.closeConnection(rs, ps, conn);
+        return result;
+    }
+
+    public int addTextBlockSize(UserRagSetting entity) throws SQLException {
+        IConn conn = new Conn();
+        int result = -1;
+        String sql = "INSERT INTO user_rag_settings (user_id, file_type, category, chunk_size, temperature) VALUES (?, ?, ?, ?, ?)";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, entity.getFileType());
+        ps.setString(2, entity.getCategory());
+        ps.setInt(3, entity.getChunkSize());
+        ps.setDouble(4, entity.getTemperature());
+        result = ps.executeUpdate();
+        BaseIndex.closeConnection(ps, conn);
+        return result;
+    }
+
+    public int updateTextBlockSize(UserRagSetting entity) throws SQLException {
+        int result = -1;
+        IConn conn = new Conn();
+        if (exists(entity)) {
+            // 记录存在，执行更新操作
+            String sqlUpdate = "UPDATE user_rag_settings SET chunk_size = ?, temperature = ? WHERE user_id = ? AND file_type = ? AND category = ?";
+            PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
+            if (entity.getChunkSize() != null){
+                psUpdate.setInt(1, entity.getChunkSize());
+            }else {
+                psUpdate.setInt(1, 512);
+            }
+            if (entity.getTemperature() != null){
+                psUpdate.setDouble(2, entity.getTemperature());
+            }else {
+                psUpdate.setDouble(2, 0.8);
+            }
+            psUpdate.setString(3, entity.getUserId());
+            psUpdate.setString(4, entity.getFileType());
+            psUpdate.setString(5, entity.getCategory());
+
+            result = psUpdate.executeUpdate();
+            BaseIndex.closeConnection(psUpdate, conn);
+            return result;
+        } else {
+            String sql = "INSERT INTO user_rag_settings (user_id, file_type, category, chunk_size, temperature) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, entity.getUserId());
+            ps.setString(2, entity.getFileType());
+            ps.setString(3, entity.getCategory());
+            if (entity.getChunkSize() != null){
+                ps.setInt(4, entity.getChunkSize());
+            }else {
+                ps.setInt(4, 512);
+            }
+            if (entity.getTemperature() != null){
+                ps.setDouble(5, entity.getTemperature());
+            }else {
+                ps.setDouble(5, 0.8);
+            }
+
+            result = ps.executeUpdate();
+            BaseIndex.closeConnection(ps, conn);
+            return result;
+        }
+
+    }
+
+    public int deleteTextBlockSize(UserRagSetting entity) throws SQLException {
+        int result = -1;
+        IConn conn = new Conn();
+        StringBuilder sql = new StringBuilder();
+        sql.append("DELETE FROM user_rag_settings WHERE user_id = ?  AND category = ?  ");
+        boolean hasFileType = false;
+        if(entity.getFileType() != null) {
+            sql.append("AND file_type = ? ");
+            hasFileType = true;
+        }
+        PreparedStatement ps = conn.prepareStatement(sql.toString());
+        ps.setString(1, entity.getUserId());
+        ps.setString(2, entity.getCategory());
+        if (hasFileType){
+            ps.setString(3, entity.getFileType());
+        }
+        result = ps.executeUpdate();
+        BaseIndex.closeConnection(ps, conn);
+        return result;
+    }
+
+    private boolean exists(UserRagSetting entity) throws SQLException {
+        IConn conn = new Conn();
+        String sql = "SELECT COUNT(*) FROM user_rag_settings WHERE category = ? AND user_id = ? AND file_type = ?";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean result = false;
+
+        try {
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, entity.getCategory());
+            ps.setString(2, entity.getUserId());
+            ps.setString(3, entity.getFileType());
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                result = count > 0;
+            }
+        } finally {
+            BaseIndex.closeConnection(rs, ps, conn);
+        }
+
+        return result;
+    }
+
 }

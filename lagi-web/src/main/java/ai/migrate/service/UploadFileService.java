@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 
+import ai.common.pojo.UserRagSetting;
 import ai.migrate.dao.UploadFileDao;
 import ai.migrate.db.Conn;
 import ai.common.pojo.UploadFile;
@@ -67,5 +68,15 @@ public class UploadFileService {
             return uploadFileDao.getTotalRow();
         }
         return uploadFileDao.getTotalRow(category, userId);
+    }
+    public List<UserRagSetting> getTextBlockSize(String category, String userId) throws SQLException {
+        return uploadFileDao.getTextBlockSize(category, userId);
+    }
+
+    public boolean updateTextBlockSize(UserRagSetting userRagSetting) throws SQLException {
+        return uploadFileDao.updateTextBlockSize(userRagSetting) >0;
+    }
+    public boolean deleteTextBlockSize(UserRagSetting userRagSetting) throws SQLException {
+        return uploadFileDao.deleteTextBlockSize(userRagSetting) >0;
     }
 }

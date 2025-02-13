@@ -2,6 +2,7 @@ package ai.servlet.api;
 
 import ai.bigdata.BigdataService;
 import ai.common.pojo.IndexSearchData;
+import ai.common.pojo.UserRagSetting;
 import ai.migrate.service.UploadFileService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.servlet.BaseServlet;
@@ -19,6 +20,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +50,10 @@ public class VectorApiServlet extends BaseServlet {
             this.deleteByMetadata(req, resp);
         } else if (method.equals("deleteCollection")) {
             this.deleteCollection(req, resp);
+        }else if (method.equals("updateTextBlockSize")) {
+            this.updateTextBlockSize(req, resp);
+        }else if (method.equals("resetBlockSize")) {
+            this.resetBlockSize(req, resp);
         }
     }
 
@@ -58,7 +65,59 @@ public class VectorApiServlet extends BaseServlet {
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("listCollections")) {
             this.listCollections(req, resp);
+        } else if (method.equals("getTextBlockSize")) {
+            this.getTextBlockSize(req, resp);
         }
+    }
+
+    private void resetBlockSize(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        UserRagSetting userRagSetting = reqBodyToObj(req, UserRagSetting.class);
+        Map<String, Object> result = new HashMap<>();
+        try {
+            uploadFileService.deleteTextBlockSize(userRagSetting);
+            result.put("status", "success");
+        }catch (SQLException e){
+            result.put("status", "failed");
+        }
+        responsePrint(resp, toJson(result));
+    }
+
+    private void updateTextBlockSize(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        UserRagSetting userRagSetting = reqBodyToObj(req, UserRagSetting.class);
+        Map<String, Object> result = new HashMap<>();
+        try {
+            uploadFileService.updateTextBlockSize(userRagSetting);
+            result.put("status", "success");
+        }catch (SQLException e){
+            result.put("status", "failed");
+        }
+        responsePrint(resp, toJson(result));
+    }
+
+    private void getTextBlockSize(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String category = req.getParameter("category");
+        String userId = req.getParameter("lagiUserId");
+
+        Map<String, Object> map = new HashMap<>();
+        List<UserRagSetting> result = null;
+        try {
+            result = uploadFileService.getTextBlockSize(category, userId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (result != null) {
+            map.put("status", "success");
+            map.put("data", result);
+        } else {
+            map.put("status", "failed");
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
     }
 
     private void search(HttpServletRequest req, HttpServletResponse resp) throws IOException {
