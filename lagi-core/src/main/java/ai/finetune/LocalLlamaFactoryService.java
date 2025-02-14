@@ -42,9 +42,7 @@ public class LocalLlamaFactoryService {
             "            --export_device auto \\\n" +
             "            --export_legacy_format False";
 
-    private String runEnv = " USE_MODELSCOPE_HUB=1 ASCEND_RT_VISIBLE_DEVICES=1";
-    private String runModelCmd = "";
-    private String stopModelCmd;
+    private String runEnv = " USE_MODELSCOPE_HUB=1 ASCEND_RT_VISIBLE_DEVICES={}";
     private String llamaFactoryDir;
     private static final ExecutorService executor;
 
@@ -54,6 +52,9 @@ public class LocalLlamaFactoryService {
             this.condaPath = fineTune.getEnvPath();
             this.condaEnv = fineTune.getEnv();
             this.llamaFactoryDir = fineTune.getLlamaFactoryDir();
+            String devices = StrUtil.isBlank(fineTune.getDevices()) ? "0" : fineTune.getDevices();
+            this.runEnv = StrUtil.format(runEnv, devices);
+            this.masterPort = fineTune.getMasterPort() == null ? "7007" : fineTune.getMasterPort();
         }
     }
 

@@ -14,8 +14,8 @@ import ai.servlet.annotation.Get;
 import ai.servlet.annotation.Param;
 import ai.servlet.annotation.Post;
 import ai.servlet.exceptions.RRException;
+import ai.utils.ImageUtil;
 import ai.utils.JsonFileLoadUtil;
-import ai.utils.ValidationUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -281,6 +281,24 @@ public class ModelManagerServlet extends RestfulServlet{
         } catch (Exception e) {
 
         }
+    }
+
+
+    @Post("getLastTrainLossPng")
+    public String getLastTrainLossPng(@Body TrainConfig trainConfig)  {
+        String savePath = buildUsersSaveDir(trainConfig.getUserId());
+        FineTuneArgs fineTuneArgs = trainConfig.getFineTuneArgs();
+        String outputDir = fineTuneArgs.getOutput_dir();
+        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
+        File file = Paths.get(fineTuneConfig.getLlamaFactoryDir(), savePath, outputDir, "training_loss.png").toFile();
+        System.out.println(file.getAbsolutePath());
+        if(file.exists()) {
+            try {
+                return ImageUtil.getFileContentAsBase64(file.getAbsolutePath());
+            } catch (IOException ignored) {
+            }
+        }
+        return null;
     }
 
     @Post("abort")

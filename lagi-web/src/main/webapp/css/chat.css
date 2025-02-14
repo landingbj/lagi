@@ -1808,15 +1808,33 @@ pre .key {
 
 .modal-manager form button {
     margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
     padding: 10px 15px;
-    background-color: #4CAF50;
+    background-color: var(--rechage-color2);
     color: white;
     border: none;
     cursor: pointer;
 }
 
 .modal-manager form button:hover {
-    background-color: #45a049;
+    background-color: var(--rechage-color);
 }
 
+.hide-eyes, 
+.show-eyes{
+    width: 24px;
+    height: 24px;
+    background-size: 24px 24px;
+    float: right;
+}
+
+
+.hide-eyes {
+    background-image: url('../images/hide.png');
+}
+
+.show-eyes {
+    background-image: url('../images/show.png');
+}
 /* ==============modal manager end===================== */

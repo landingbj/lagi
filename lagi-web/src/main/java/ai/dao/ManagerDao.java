@@ -45,23 +45,112 @@ public class ManagerDao {
     }
 
     // Update ManagerModel
+//    public int updateManagerModel(ManagerModel managerModel) {
+//        String sql = "UPDATE model_manager SET user_id = ?,  model_name = ?, online = ?, api_key = ?, model_type = ?, endpoint = ?, status = ? WHERE id = ?";
+//        try (Connection conn = new Conn();
+//             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+//            pstmt.setString(1, managerModel.getUserId());
+//            pstmt.setString(2, managerModel.getModelName());
+//            pstmt.setInt(3, managerModel.getOnline());
+//            pstmt.setString(4, managerModel.getApiKey());
+//            pstmt.setString(5, managerModel.getModelType());
+//            pstmt.setString(6, managerModel.getEndpoint());
+//            pstmt.setInt(7, managerModel.getStatus());
+//            pstmt.setInt(8, managerModel.getId());
+//            return pstmt.executeUpdate();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//        return 0;
+//    }
+
     public int updateManagerModel(ManagerModel managerModel) {
-        String sql = "UPDATE model_manager SET user_id = ?,  model_name = ?, online = ?, api_key = ?, model_type = ?, endpoint = ?, status = ? WHERE id = ?";
+        String sql = getUpdateSql(managerModel);
         try (Connection conn = new Conn();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, managerModel.getUserId());
-            pstmt.setString(2, managerModel.getModelName());
-            pstmt.setInt(3, managerModel.getOnline());
-            pstmt.setString(4, managerModel.getApiKey());
-            pstmt.setString(5, managerModel.getModelType());
-            pstmt.setString(6, managerModel.getEndpoint());
-            pstmt.setInt(7, managerModel.getStatus());
-            pstmt.setInt(8, managerModel.getId());
+            int index = 1;
+            if(managerModel.getUserId() != null) {
+                pstmt.setString(index++, managerModel.getUserId());
+            }
+            if(managerModel.getModelName() != null) {
+                pstmt.setString(index++, managerModel.getModelName());
+            }
+            if(managerModel.getOnline() != null) {
+                pstmt.setInt(index++, managerModel.getOnline());
+            }
+            if(managerModel.getApiKey() != null) {
+                pstmt.setString(index++, managerModel.getApiKey());
+            }
+            if(managerModel.getModelType() != null) {
+                pstmt.setString(index++, managerModel.getModelType());
+            }
+            if(managerModel.getEndpoint() != null) {
+                pstmt.setString(index++, managerModel.getEndpoint());
+            }
+            if(managerModel.getStatus() != null) {
+                pstmt.setInt(index++, managerModel.getStatus());
+            }
+            if(managerModel.getId() != null) {
+                pstmt.setInt(index, managerModel.getId());
+            }
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    private String getUpdateSql(ManagerModel managerModel) {
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append("UPDATE model_manager SET ");
+        boolean hasLast = false;
+        if(managerModel.getUserId() != null) {
+            sqlBuilder.append(" user_id = ?");
+            hasLast = true;
+        }
+        if(managerModel.getModelName() != null) {
+            if(hasLast) {
+                sqlBuilder.append(", ");
+            }
+            sqlBuilder.append(" model_name = ?");
+            hasLast = true;
+        }
+        if (managerModel.getOnline() != null) {
+            if(hasLast) {
+                sqlBuilder.append(", ");
+            }
+            sqlBuilder.append(" online = ? ");
+            hasLast = true;
+        }
+        if(managerModel.getApiKey() != null) {
+            if(hasLast) {
+                sqlBuilder.append(", ");
+            }
+            sqlBuilder.append(" api_key = ? ");
+            hasLast = true;
+        }
+        if (managerModel.getModelType() != null) {
+            if(hasLast) {
+                sqlBuilder.append(", ");
+            }
+            sqlBuilder.append(" model_type = ? ");
+            hasLast = true;
+        }
+        if(managerModel.getEndpoint() != null) {
+            if(hasLast) {
+                sqlBuilder.append(", ");
+            }
+            sqlBuilder.append(" endpoint = ? ");
+            hasLast = true;
+        }
+        if(managerModel.getStatus() != null) {
+            if(hasLast) {
+                sqlBuilder.append(", ");
+            }
+            sqlBuilder.append(" status = ? ");
+        }
+        sqlBuilder.append(" WHERE id = ?");
+        return sqlBuilder.toString();
     }
 
     // Get all ManagerModels

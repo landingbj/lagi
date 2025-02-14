@@ -11,6 +11,7 @@ import java.util.List;
 @ToString
 public class FineTuneConfig {
     private Boolean remote;
+    private String remoteServiceUrl;
     private String env;
     private String envPath;
     private String datasetDir;
@@ -21,5 +22,6 @@ public class FineTuneConfig {
     private String trainDir;
     private String saveDir;
     private List<String> ports;
-    private String remoteServiceUrl;
+    private String masterPort;
+    private String devices;
 }

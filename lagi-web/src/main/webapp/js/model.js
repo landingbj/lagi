@@ -405,9 +405,10 @@ async function doTrain(el) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
 
-        function readStream() {
+        function readStream(params) {
             return reader.read().then(({ done, value }) => {
                 if (done) {
+                    getLastTrainLossPng(params, $('#train-view-content'));
                     console.log('Connection closed by server');
                     return;
                 }
@@ -416,17 +417,44 @@ async function doTrain(el) {
                 console.log('Received data:', msg);
                 $('#train-view-content').append(`<p>${msg}</p>`);
                 scrollToButton();
-                return readStream();
+                return readStream(params);
             }).catch(error => {
                 console.error('Connection error:', error);
             });
         }
 
-        readStream();
+        readStream(params);
     } catch (error) {
         console.error('Fetch error:', error);
     }
     enableTrain(el);
+}
+
+
+function getLastTrainLossPng(trainParam , el) {
+    let params = {
+        "userId":trainParam["userId"],
+        "fineTuneArgs" : {
+            "output_dir": trainParam["fineTuneArgs"]["output_dir"]
+        }
+    }
+    fetch('model/getLastTrainLossPng', {
+        method: "POST",
+        body: JSON.stringify(params),
+    })
+    .then(response => response.json())
+    .then(data => {
+        let res = data.data;
+        if(res) {
+            el.append(`<image src="data:image/png;base64,${res}"></image>`);
+            scrollToButton();
+        } else {
+            console.log('获取损失图片失败.');
+        }
+    })
+    .catch(error => {
+        console.log('获取损失图片失败');
+    });
 }
 
 function isNumeric(str) {
@@ -656,7 +684,7 @@ function copyDevelopedAddress(el) {
         let address = data.data;
         if(address) {
             navigator.clipboard.writeText(address).then(function() {
-                alert('模型地址已复制: ' + address);
+                alert('模型地址已复制');
             }, function(err) {
                 console.error('无法复制文本: ', err);
             });
@@ -833,7 +861,7 @@ function renderTable() {
         const row = $('<tr>');
         row.append(`<td>${model.modelName}</td>`);
         row.append(`<td>${model.online == 1 ? '是' : '否'}</td>`);
-        row.append(`<td>${model.apiKey || '-'}</td>`);
+        row.append(`<td><span>${model.apiKey ? "*************************" : '-'}</span> ${model.apiKey ? `<button class="show-eyes" onclick="toggleApiKey(this, ${index})"  data-show="0" ></button>`: ''}</td>`);
         row.append(`<td>${model.modelType || '-'}</td>`);
         row.append(`<td>${model.endpoint || '-'}</td>`);
         row.append(`<td><button class="toggleBtn" data-index="${index}" data-id="${model.id}" >${model.status ? '开启' : '关闭'}</button></td>`);
@@ -843,6 +871,21 @@ function renderTable() {
         </td>`);
         tbody.append(row);
     });
+}
+
+function toggleApiKey(el, index) {
+    let apiKeyEl = $(el).parent().find('span');
+    let toggleBtn = $(el);
+    let show =  toggleBtn.data("show");
+    if(show == "0") {
+        toggleBtn.data("show", 1);
+        toggleBtn.removeClass("show-eyes").addClass("hide-eyes");
+        apiKeyEl.text(manager_models[index].apiKey);
+    } else {
+        toggleBtn.data("show", 0);
+        toggleBtn.removeClass("hide-eyes").addClass("show-eyes");
+        apiKeyEl.text("*************************");
+    }
 }
 
  // 隐藏模态框
