@@ -147,7 +147,7 @@ public class PdfUtil {
         }).collect(Collectors.toList());
     }
 
-    public static List<List<TextBlock>> searchFromCache(String path, String searchWord, boolean isAll) {
+    public static List<List<TextBlock>> searchFromCache1(String path, String searchWord, boolean isAll) {
         List<List<TextBlock>> res = new ArrayList<>();
         List<TextBlock> textBlockFromCache = getTextBlockFromCache(path);
         StringBuilder read = new StringBuilder();
@@ -179,7 +179,76 @@ public class PdfUtil {
         return res;
     }
 
-    public static List<TextBlock> getTextBlockFromCache(String pdfPath){
+        public static List<List<TextBlock>> searchFromCache(String path, String searchWord, boolean isAll) {
+            List<List<TextBlock>> res = new ArrayList<>();
+            List<TextBlock> textBlockFromCache = getTextBlockFromCache(path);
+            StringBuilder read = new StringBuilder();
+            List<Integer> counts = new ArrayList<>();
+            StringBuilder read1 = new StringBuilder();
+            for (int i = 0; i < textBlockFromCache.size(); i++) {
+                String text = textBlockFromCache.get(i).getText();
+                read1.append(text);
+            }
+            String gonggong = findMaxCommonSubstring(read1.toString(), searchWord);
+
+            if (gonggong != null && gonggong.length() >= searchWord.length() * 0.6) {
+                return searchFromCache1(path, gonggong, isAll);
+            } else {
+                return res;
+            }
+        }
+
+    // 找到最长的公共子串
+    private static String findMaxCommonSubstring(String text, String searchWord) {
+        // 截取前60%与后60%的部分
+        int frontLength = (int) (searchWord.length() * 0.3);
+        String frontSubstring = searchWord.substring(0, frontLength);
+        String backSubstring = searchWord.substring(searchWord.length() - frontLength);
+
+        int[] frontPosition = findMaxCommonSubstringPosition(text, frontSubstring);
+        int[] backPosition = findMaxCommonSubstringPosition(text, backSubstring);
+
+        // 如果任何一个部分没有找到匹配的子串，则直接返回空字符串
+        if (frontPosition[0] == -1 || backPosition[0] == -1) {
+            return "";
+        }
+
+        int minStart = Math.min(frontPosition[0], backPosition[0]);
+        int maxEnd = Math.max(frontPosition[1], backPosition[1]);
+
+        return text.substring(minStart, maxEnd + 1);
+    }
+
+    // 找到最大公共子串以及它在text中的位置
+    private static int[] findMaxCommonSubstringPosition(String text, String searchWord) {
+        int textLength = text.length();
+        int searchWordLength = searchWord.length();
+
+        // dp[i][j] 表示 text[0..i-1] 与 searchWord[0..j-1] 的公共子串的长度
+        int[][] dp = new int[textLength + 1][searchWordLength + 1];
+        int maxLength = 0;
+        int endIndexInText = -1;
+
+        // 填充 dp 表格，找到最大公共子串
+        for (int i = 1; i <= textLength; i++) {
+            for (int j = 1; j <= searchWordLength; j++) {
+                if (text.charAt(i - 1) == searchWord.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    if (dp[i][j] > maxLength) {
+                        maxLength = dp[i][j];
+                        endIndexInText = i - 1;  // 记录最大公共子串的结束位置
+                    }
+                }
+            }
+        }
+        if (maxLength > 0) {
+            int startIndexInText = endIndexInText - maxLength + 1;
+            return new int[] {startIndexInText, endIndexInText};
+        }
+        return new int[] {-1, -1};
+    }
+
+        public static List<TextBlock> getTextBlockFromCache(String pdfPath){
         List<TextBlock>  textBlocks = new ArrayList<>();
         if(pdfTextBlockCache.containsKey(pdfPath)) {
             return pdfTextBlockCache.get(pdfPath);

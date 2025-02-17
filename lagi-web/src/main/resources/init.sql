@@ -88,4 +88,14 @@ CREATE TABLE IF NOT EXISTS user_rag_settings (
     category varchar(64),
     chunk_size Integer,
     temperature REAL
-    );
+);
+
+CREATE TABLE IF NOT EXISTS user_rag_vector (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id VARCHAR(64),
+    default_category VARCHAR(255),
+    similarity_top_k INT,
+    similarity_cutoff DOUBLE,
+    parent_depth INT,
+    child_depth INT
+);

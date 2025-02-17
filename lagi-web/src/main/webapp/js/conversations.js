@@ -111,7 +111,7 @@ async function generateSelect(userQuestion) {
     const url = "/skill/relatedAgents";
     const requestData = {
         stream: false,
-        temperature: 0.8,
+        temperature: window.myTemperature || 0.8,
         max_tokens: 1024,
         category: "default",
         messages: [

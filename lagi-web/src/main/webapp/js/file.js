@@ -41,6 +41,7 @@ function loadUploadFileList(pageNumber) {
                             $('#tuwen_type').val(item.chunkSize);
                         } else if (item.fileType === 'wendu_type') {
                             $('#wendu_type').val(item.temperature);
+                            window.myTemperature = item.temperature;
                         }
                     });
                 }
@@ -185,9 +186,15 @@ $(document).ready(function() {
         if ($(this).attr('id') === 'link1') {
             $('#my-corpus').show();
             $('#chat-settings').hide();
+            $('#vector-database').hide();
         } else if ($(this).attr('id') === 'link2') {
             $('#my-corpus').hide();
+            $('#vector-database').hide();
             $('#chat-settings').show();
+        } else if ($(this).attr('id') === 'link3') {
+            $('#my-corpus').hide();
+            $('#chat-settings').hide();
+            $('#vector-database').show();
         }
     });
 });
@@ -264,6 +271,7 @@ function resetSlice(type) {
         chunkSizeValue = $('#tuwen_type').val();
     } else if (type === 'wendu_type') {
         temperature = $('#wendu_type').val();
+        window.myTemperature = temperature;
     }
 
     $.ajax({
@@ -292,3 +300,10 @@ function resetSlice(type) {
         location.reload();  // 刷新页面
 
 }
+
+// 使用 jQuery 监听滑动条变化，更新显示的值
+$(document).ready(function() {
+    $('#distance').on('input', function() {
+        $('#distance_value').text($(this).val());
+    });
+});

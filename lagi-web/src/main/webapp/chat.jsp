@@ -365,6 +365,9 @@
                       <a href="#"  id="link2" style="color: white; text-decoration: none; padding: 5px 10px; margin: 0 15px; border-radius: 5px; transition: background-color 0.3s;">
                         文本切片
                       </a>
+                      <a href="#"  id="link3" style="color: white; text-decoration: none; padding: 5px 10px; margin: 0 15px; border-radius: 5px; transition: background-color 0.3s;">
+                        向量数据库
+                      </a>
                     </div>
 
                     <div id = "chat-settings">
@@ -375,7 +378,7 @@
                         </br>
                         <p style="font-size: 1.1em; line-height: 1.5; color: #555;">数字越高越有创意。对于某些模型，如果设置得太高，可能会导致响应不一致。</p>
                         </br>
-                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">模型不同，此 LLM 的有效值范围也不同。</p>
+                        <p style="font-size: 1.1em; line-height: 1.5; color: #555;">模型不同，此 LLM温度 的有效值范围也不同。</p>
                         <hr style="margin: 30px 0; border: 1px solid #eee;" />
                         <div style="margin-top: 20px; display: flex; align-items: center;">
                           <label for="textBlockSize" style="font-size: 1.1em; margin-right: 10px; width: 180px;">温度(temperature)：</label>
@@ -438,7 +441,67 @@
                         <!-- 分页按钮将动态添加到这里 -->
                       </div>
                   </div>
+
+                    <div id="vector-database" style="display: none;">
+                    <!-- 文档相似度阈值 -->
+                    </br>
+                    <h2 style="font-size: 1.8em; margin-bottom: 20px; color: #023f63;">文档相似度阈值</h2>
+
+                    <p style="font-size: 1.1em; line-height: 1.5; color: #555;">此设置控制您的向量数据库的搜索精度。</p>
+                    </br>
+                    <p style="font-size: 1.1em; line-height: 1.5; color: #555;">它定义了文档与聊天内容相关联所设定的最大距离。数值越高，来源范围越广。</p>
+                    </br>
+                    <hr style="margin: 30px 0; border: 1px solid #eee;" />
+                    <div style="margin-top: 20px; display: flex; align-items: center;">
+                      <label for="vector-distance" style="font-size: 1.1em; margin-right: 10px; width: 200px;">相似度阈值(范围：0-1)：</label>
+                      <input type="range" id="distance" min="0" max="1" step="0.01" value="0.8" style="width: 200px; margin-right: 10px;" />
+                      <span id="distance_value" style="font-size: 1.1em; width: 60px;">0.8</span>
+
+                      <button onclick="submitSettings('distance')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">提交</button>
+                      &nbsp;&nbsp;
+                      <button onclick="resetSlice('distance')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">重置</button>
+                    </div>
+
+                      <!-- 文档相似度阈值 -->
+                      </br></br>
+                      <h2 style="font-size: 1.8em; margin-bottom: 20px; color: #023f63;">向量上下文最大条数</h2>
+
+                      <p style="font-size: 1.1em; line-height: 1.5; color: #555;">此设置控制您在召回时的上下文条数。</p>
+
+                      <hr style="margin: 30px 0; border: 1px solid #eee;" />
+                      <div style="margin-top: 20px; display: flex; align-items: center;">
+                        <label for="vector-max-top" style="font-size: 1.1em; margin-right: 10px; width: 100px;">最大条数</label>
+                        <input type="number" id="vector-max-top" value="30" style="width: 80px; padding: 8px; font-size: 1.1em; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+                        <button onclick="submitSettings('vector-max-top')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">提交</button>
+                        &nbsp;&nbsp;
+                        <button onclick="resetSlice('vector-max-top')" style="background-color: #023f63; color: white; border: none; padding: 8px 16px; font-size: 1.1em; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">重置</button>
+                      </div>
+                      </br></br>
+                      <div>
+                       <h2 style="font-size: 1.8em; margin-bottom: 20px; color: #023f63;">向量相似度搜索</h2>
+                        <input type="text" id="searchText" placeholder="请输入查询内容..." style="width: 80%; max-width: 800px; padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc;">
+                        <button onclick="search()" style="padding: 12px 24px; font-size: 16px; border: none; background-color: #007bff; color: white; border-radius: 8px; cursor: pointer;">搜索</button>
+                      </div>
+                    <div id="results" style="margin-top: 40px; padding: 20px;">
+                      <!-- 结果项将动态加载到这里 -->
+                    </div>
+                    <!-- Modal -->
+                    <div id="myModal" style="display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); padding-top: 60px;">
+                      <div style="background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 800px; border-radius: 8px;">
+                        <span id="close" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                        <h3 id="modalTitle_x" style="color: #004f99;"></h3>
+                        <p><strong>文件ID:</strong> <span id="modalId"></span></p>
+                        <p><strong>文件名:</strong> <span id="modalFilename"></span></p>
+                        <p><strong>文件路径:</strong> <span id="modalFilepath"></span></p>
+                        <p><strong>类别:</strong> <span id="modalCategory"></span></p>
+                        <p><strong>距离:</strong> <span id="modalDistance"></span></p>
+                        <p> <strong>内容:</strong></p>
+                        <p id="modalDocument" style="font-size: 14px; color: #555;"></p>
+                      </div>
+
+                  </div>
                 </div>
+                    </div>
               </div>
 
               <div class="user-model tab w-full model-modules-box" id="user-model">
@@ -1034,5 +1097,6 @@
 <script src="js/agent.js?ver=${initParam.version}"></script>
 <script src="js/login.js?ver=${initParam.version}"></script>
 <script src="js/model.js?ver=${initParam.version}"></script>
+<script src="js/vector_settings.js?ver=${initParam.version}"></script>
 </body>
 </html>

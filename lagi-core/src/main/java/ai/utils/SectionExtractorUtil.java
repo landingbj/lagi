@@ -13,10 +13,11 @@ public class SectionExtractorUtil {
     //小节类文档-
     private static final String CHAPTER_TITLE_PATTERN = "^(?<level>\\d+)(?:\\.(?<sublevel>\\d+(?:\\.\\d+)*))?\\s*(?<title>[^\\n]+)\\n(?:[^\\n]+\\n)*?(?<content>.*?)$";
     private static final FileService fileService = new FileService();
-    public static boolean isChapterDocument(String documentContent) {
+    public static boolean isChapterDocument(String documentContent,Integer maxLength) {
         Pattern pattern = Pattern.compile(CHAPTER_TITLE_PATTERN, Pattern.MULTILINE);
         Matcher matcher = pattern.matcher(documentContent);
-        return matcher.find();
+        List<String> list = sliceBySection(documentContent, maxLength);
+        return matcher.find()&&list.size()>0;
     }
 
     public static List<String> sliceBySection(String document, Integer maxLength) {
@@ -101,7 +102,7 @@ public class SectionExtractorUtil {
     public static void main(String[] args) throws IOException {
         String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\察右中恩德风机故障处理手册.doc";
         String documentContent = fileService.getFileContent(new File(filePath));
-        boolean isChapterDocument = isChapterDocument(documentContent);
+        boolean isChapterDocument = isChapterDocument(documentContent,1024);
         System.out.println("是否是章节类文档" + isChapterDocument);
         getChunkDocument(documentContent, 512);
     }

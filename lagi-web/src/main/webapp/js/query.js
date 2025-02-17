@@ -385,7 +385,7 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         "messages": CONVERSATION_CONTEXT.concat([
             {"role": "user", "content": question}
         ]),
-        "temperature": 0.8,
+        "temperature": window.myTemperature || 0.8,
         "max_tokens": 1024,
         "worker": "BestWorker",
         // "stream": false,
@@ -917,7 +917,7 @@ async function retry(index) {
         "rag": false,
         "category": window.category,
         "messages": preArr,
-        "temperature": 0.8,
+        "temperature": window.myTemperature || 0.8,
         "max_tokens": 1024,
         "stream": true
     };

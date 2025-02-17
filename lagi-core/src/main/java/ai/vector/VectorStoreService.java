@@ -108,7 +108,7 @@ public class VectorStoreService {
                 if (ChapterExtractorUtil.isChapterDocument(content)) {
                     System.out.println("是章节类文档");
                     docs = ChapterExtractorUtil.getChunkDocument(content, wenben_type);
-                } else if (SectionExtractorUtil.isChapterDocument(content)) {
+                } else if (SectionExtractorUtil.isChapterDocument(content, wenben_type)) {
                     System.out.println("是小节类文档");
                     docs = SectionExtractorUtil.getChunkDocument(content, wenben_type);
                 } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
