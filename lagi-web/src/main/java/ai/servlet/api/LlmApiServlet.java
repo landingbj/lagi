@@ -348,9 +348,11 @@ public class LlmApiServlet extends BaseServlet {
                         for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
                             ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
                             ChatCompletionChoice chunkChoice = data.getChoices().get(i);
-                            String chunkContent = chunkChoice.getMessage().getContent();
-                            String content = choice.getMessage().getContent();
-                            choice.getMessage().setContent(content + chunkContent);
+                            if(chunkChoice.getMessage() != null) {
+                                String chunkContent = chunkChoice.getMessage().getContent();
+                                String content = choice.getMessage().getContent();
+                                choice.getMessage().setContent(content + chunkContent);
+                            }
                         }
                     }
                 },

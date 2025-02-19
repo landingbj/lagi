@@ -7,6 +7,7 @@ import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.LlmApiResponse;
 import ai.llm.utils.OpenAiApiUtil;
 import ai.llm.utils.convert.GptConvert;
+import ai.llm.utils.convert.LandingConvert;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import com.google.gson.Gson;
@@ -58,8 +59,8 @@ public class LandingAdapter extends ModelService implements ILlmAdapter {
             url = "https://lagi.saasai.top/v1/chat/completions";
         }
         LlmApiResponse completions = OpenAiApiUtil.streamCompletions(getApiKey(), url, HTTP_TIMEOUT, chatCompletionRequest,
-                GptConvert::convertSteamLine2ChatCompletionResult,
-                GptConvert::convertByResponse);
+                LandingConvert::convertSteamLine2ChatCompletionResult,
+                LandingConvert::convertByResponse);
         if(completions.getCode() != 200) {
             logger.error("landing stream api error {}", completions.getMsg());
             throw new RRException(completions.getCode(), completions.getMsg());

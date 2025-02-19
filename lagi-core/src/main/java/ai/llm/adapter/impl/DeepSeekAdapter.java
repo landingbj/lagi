@@ -10,6 +10,9 @@ public class DeepSeekAdapter extends OpenAIStandardAdapter {
 
     @Override
     public String getApiAddress() {
-        return "https://api.deepseek.com/chat/completions";
+        if (apiAddress == null) {
+            apiAddress = "https://api.deepseek.com/chat/completions";
+        }
+        return apiAddress;
     }
 }

@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 public class OkHttpUtil {
     private static final OkHttpClient client = new OkHttpClient.Builder()
 //            .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", 7890)))
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(300, TimeUnit.SECONDS)
             .build();

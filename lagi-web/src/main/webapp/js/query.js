@@ -329,11 +329,11 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         // "stream": true,
         "stream": true
     };
-    if (agentId) {
-        paras["worker"] = "appointedWorker";
-        paras["agentId"] = agentId;
-        paras["stream"] = true;
-    }
+    // if (agentId) {
+    //     paras["worker"] = "appointedWorker";
+    //     paras["agentId"] = agentId;
+    //     paras["stream"] = true;
+    // }
 
     var queryUrl = "search/detectIntent";
     $.ajax({

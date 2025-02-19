@@ -25,10 +25,6 @@ public class CompletionUtil {
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
         String currentDatetime = dateFormat.format(new Date());
         String message = currentDatetime + " " + UUID.randomUUID();
-        return getDummyCompletion(message);
-    }
-
-    public static ChatCompletionResult getDummyCompletion(String message) {
         String json = "{\"created\":1719495617,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\"," +
                 "\"content\":\"" + message + "\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":38," +
                 "\"completion_tokens\":8,\"total_tokens\":46}}\n";
@@ -58,10 +54,10 @@ public class CompletionUtil {
     }
 
     public static String truncate(String context, int maxLength) {
-        if (context == null) {
+        if(context == null) {
             return "";
         }
-        if (context.length() <= maxLength) {
+        if(context.length() <= maxLength) {
             return context;
         }
         return context.substring(0, maxLength);
@@ -72,7 +68,7 @@ public class CompletionUtil {
     }
 
     public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages, int maxLength) {
-        if (chatMessages != null && !chatMessages.isEmpty()) {
+        if(chatMessages != null && !chatMessages.isEmpty()) {
             ChatMessage systemChatMessage = null;
             if (chatMessages.get(0).getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
                 systemChatMessage = chatMessages.get(0);
@@ -85,13 +81,13 @@ public class CompletionUtil {
             lastQuestion.setContent(truncate(lastQuestion.getContent(), userMaxLength));
             int length = lastQuestion.getContent().length();
             int lastIndex = chatMessages.size() - 1;
-            for (int i = chatMessages.size() - 2; i >= 0; i--) {
+            for(int i = chatMessages.size() - 2; i >= 0; i--) {
                 ChatMessage chatMessage = chatMessages.get(i);
                 length += chatMessage.getContent().length();
-                if (length > userMaxLength) {
+                if(length > userMaxLength) {
                     break;
                 }
-                if (chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
+                if(chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
                     lastIndex = i;
                 }
             }

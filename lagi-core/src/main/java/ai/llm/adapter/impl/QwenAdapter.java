@@ -6,10 +6,7 @@ import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
 import ai.common.utils.MappingIterable;
 import ai.llm.utils.convert.QwenConvert;
-import ai.openai.pojo.ChatCompletionChoice;
-import ai.openai.pojo.ChatCompletionRequest;
-import ai.openai.pojo.ChatCompletionResult;
-import ai.openai.pojo.ChatMessage;
+import ai.openai.pojo.*;
 import ai.utils.qa.ChatCompletionUtil;
 import com.alibaba.dashscope.aigc.generation.Generation;
 import com.alibaba.dashscope.aigc.generation.GenerationParam;
@@ -18,6 +15,10 @@ import com.alibaba.dashscope.common.Message;
 import com.alibaba.dashscope.exception.ApiException;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
+import com.alibaba.dashscope.tools.ToolBase;
+import com.alibaba.dashscope.tools.ToolCallBase;
+import com.alibaba.dashscope.tools.ToolFunction;
+import com.google.gson.Gson;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @LLM(modelNames = {"qwen-turbo","qwen-plus","qwen-max","qwen-max-1201","qwen-max-longcontext"})
@@ -86,6 +88,14 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
             maxTokens = 2000;
         }
 
+        List<Tool> tools = request.getTools();
+        List<ToolBase> toolFunctions = null;
+        if(tools != null) {
+            toolFunctions = tools.stream().map(tool -> {
+                String json = new Gson().toJson(tool);
+                return new Gson().fromJson(json, ToolFunction.class);
+            }).collect(Collectors.toList());
+        }
         return GenerationParam.builder()
                 .apiKey(getApiKey())
                 .model(model)
@@ -95,6 +105,7 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
                 .temperature((float) request.getTemperature())
                 .enableSearch(stream)
                 .incrementalOutput(stream)
+                .tools(toolFunctions)
                 .build();
     }
 
@@ -105,8 +116,18 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
         ChatCompletionChoice choice = new ChatCompletionChoice();
         choice.setIndex(0);
         ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setContent(response.getOutput().getChoices().get(0).getMessage().getContent());
+        Message message = response.getOutput().getChoices().get(0).getMessage();
+        chatMessage.setContent(message.getContent());
         chatMessage.setRole("assistant");
+        List<ToolCallBase> toolCalls = message.getToolCalls();
+        List<ToolCall> toolCallList = new ArrayList<>();
+        if(toolCalls != null) {
+            toolCallList = toolCalls.stream().map(toolCall -> {
+                String json = new Gson().toJson(toolCall);
+                return new Gson().fromJson(json, ToolCall.class);
+            }).collect(Collectors.toList());
+        }
+        chatMessage.setTool_calls(toolCallList);
         choice.setMessage(chatMessage);
         choice.setFinish_reason(response.getOutput().getFinishReason());
         List<ChatCompletionChoice> choices = new ArrayList<>();

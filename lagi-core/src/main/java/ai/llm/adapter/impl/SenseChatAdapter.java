@@ -18,56 +18,72 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-@LLM(modelNames = {"SenseChat-Turbo","SenseChat-FunctionCall","SenseChat-5","SenseChat-128K","SenseChat-32K"})
+@LLM(modelNames = {"SenseChat-Turbo", "SenseChat-FunctionCall", "SenseChat-5", "SenseChat-128K", "SenseChat-32K"})
 public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SenseChatAdapter.class);
-    private static final String COMPLETIONS_URL = "https://api.sensenova.cn/v1/llm/chat-completions";
+    private static final String COMPLETIONS_URL = "https://api.sensenova.cn/compatible-mode/v1/chat/completions";
     private static final int HTTP_TIMEOUT = 15 * 1000;
 
     @Override
     public boolean verify() {
-        if(getApiKey() == null || getApiKey().startsWith("you")) {
+        if (getAccessKeySecret() == null || getAccessKeySecret().startsWith("you")) {
             return false;
         }
-        if(getSecretKey() == null || getSecretKey().startsWith("you")) {
-            return false;
-        }
-        return true;
+        return getAccessKeyId() != null && !getAccessKeyId().startsWith("you");
     }
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
-        String token = sign(getApiKey(),  getSecretKey());
-        chatCompletionRequest.setModel(getModel());
-        chatCompletionRequest.setStream(false);
-        LlmApiResponse completions = OpenAiApiUtil.completions(token, COMPLETIONS_URL, HTTP_TIMEOUT, chatCompletionRequest,
-                SenseConvert::convert2ChatCompletionResult, SenseConvert::convertByResponse);
-        if(completions.getCode() != 200) {
-            logger.error("SenseChat api code {},  error {}",completions.getCode(),  completions.getMsg());
-            throw new RRException(completions.getCode(), completions.getMsg());
+        LlmApiResponse llmApiResponse = llmCompletions(chatCompletionRequest);
+        if (llmApiResponse.getCode() != 200) {
+            logger.error("SenseChatAdapter api code:{}  error:{} ", llmApiResponse.getCode(), llmApiResponse.getMsg());
+            throw new RRException(llmApiResponse.getCode(), llmApiResponse.getMsg());
         }
-        return completions.getData();
-    }
-    @Override
-    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        ChatCompletionResult chatCompletionResult = completions(chatCompletionRequest);
-        List<ChatCompletionResult> list =  new ArrayList<>();
-        list.add(chatCompletionResult);
-        Iterable<ChatCompletionResult> iterable = list;
-        return Observable.fromIterable(iterable);
+        return llmApiResponse.getData();
     }
 
+    @Override
+    public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
+        LlmApiResponse llmApiResponse = llmCompletions(chatCompletionRequest);
+        if (llmApiResponse.getCode() != 200) {
+            logger.error("SenseChatAdapter stream  api code:{}  error:{} ", llmApiResponse.getCode(), llmApiResponse.getMsg());
+            throw new RRException(llmApiResponse.getCode(), llmApiResponse.getMsg());
+        }
+        return llmApiResponse.getStreamData();
+    }
+
+    public LlmApiResponse llmCompletions(ChatCompletionRequest chatCompletionRequest) {
+        setDefaultModel(chatCompletionRequest);
+        String token = sign(getAccessKeyId(), getAccessKeySecret());
+        LlmApiResponse completions;
+        if (chatCompletionRequest.getStream()) {
+            completions = OpenAiApiUtil.streamCompletions(token,
+                    COMPLETIONS_URL,
+                    HTTP_TIMEOUT,
+                    chatCompletionRequest,
+                    SenseConvert::convertStreamLine2ChatCompletionResult,
+                    SenseConvert::convertByResponse);
+        } else {
+            completions = OpenAiApiUtil.completions(token,
+                    COMPLETIONS_URL,
+                    HTTP_TIMEOUT,
+                    chatCompletionRequest,
+                    SenseConvert::convert2ChatCompletionResult,
+                    SenseConvert::convertByResponse);
+        }
+        return completions;
+    }
 
     private void setDefaultModel(ChatCompletionRequest request) {
         if (request.getModel() == null) {
             request.setModel(getModel());
         }
     }
-    static String sign(String ak,String sk) {
+
+    private String sign(String ak, String sk) {
         try {
-            Date expiredAt = new Date(System.currentTimeMillis() + 1800*1000);
-            Date notBefore = new Date(System.currentTimeMillis() - 5*1000);
+            Date expiredAt = new Date(System.currentTimeMillis() + 1800 * 1000);
+            Date notBefore = new Date(System.currentTimeMillis() - 5 * 1000);
             Algorithm algo = Algorithm.HMAC256(sk);
             Map<String, Object> header = new HashMap<String, Object>();
             header.put("alg", "HS256");
@@ -80,7 +96,7 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
         } catch (Exception e) {
             String msg = StrFormatter.format("{\"error\":\"{}\"}", e.getMessage());
             Integer code = LLMErrorConstants.INVALID_AUTHENTICATION_ERROR;
-            logger.error("SenseChat api code {},  error {}",code, msg);
+            logger.error("SenseChat api code {},  error {}", code, msg);
             throw new RRException(code, msg);
         }
     }
