@@ -678,7 +678,7 @@
                     </div>
               
                     <div id="modelModal" class="modal-manager">
-                        <div class="modal-content">
+                        <div class="modal-manager-content">
                             <span class="close">&times;</span>
                             <h2 id="modalTitle">添加模型</h2>
                             <form id="modeManagerlForm">
