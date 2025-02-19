@@ -343,7 +343,7 @@ async function doTrain(el) {
             "model_name" : selectValues["sel-model"],
             "finetuning_type" : "lora",
             "template" : inputValues["template"], //"qwen",
-            "lora_target":"q_proj,v_proj",
+            "lora_target":"all",
             "dataset" : datasets,
             "cutoff_len" : inputValues["cutoff-length"], //1024,
             "max_samples": inputValues["max-samples"], //1000,
