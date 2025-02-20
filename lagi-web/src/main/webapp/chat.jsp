@@ -18,6 +18,9 @@
   <link rel="stylesheet" href="css/pagev2.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/chat.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/login.css?ver=${initParam.version}">
+  <link rel="stylesheet" href="css/agent.css?ver=${initParam.version}">
+  <link rel="stylesheet" href="css/material.css?ver=${initParam.version}">
+  <link rel="stylesheet" href="css/model.css?ver=${initParam.version}">
 </head>
 <noscript>
   <strong>We're sorry but chatai doesn't work properly without JavaScript enabled. Please enable it to
