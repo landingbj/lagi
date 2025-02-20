@@ -8,6 +8,7 @@ import ai.dao.ModelDevelopInfoDao;
 import ai.dto.*;
 import ai.finetune.TrainArgsParser;
 import ai.finetune.LocalLlamaFactoryService;
+import ai.finetune.pojo.ExportArgs;
 import ai.finetune.pojo.FineTuneArgs;
 import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Get;
@@ -254,33 +255,7 @@ public class ModelManagerServlet extends RestfulServlet{
 
         // run train
         ObservableList<String> train = localLlamaFactoryService.train(trainYamlPath);
-        PrintWriter out = resp.getWriter();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        train.getObservable()
-                .subscribe(
-                data -> {
-                    out.print("data: " + data + "\n\n");
-                    // 成功记录
-                    out.flush();
-                },
-                error -> {
-                    out.print("data: " + error.getMessage() + "\n\n");
-                    out.flush();
-                    out.close();
-                    countDownLatch.countDown();
-                },
-                () -> {
-                    out.print("data: " + "[DONE]" + "\n\n");
-                    out.flush();
-                    out.close();
-                    countDownLatch.countDown();
-                }
-        );
-        try {
-            countDownLatch.await();
-        } catch (Exception e) {
-
-        }
+        streamOutput(resp, train);
     }
 
 
@@ -291,7 +266,6 @@ public class ModelManagerServlet extends RestfulServlet{
         String outputDir = fineTuneArgs.getOutput_dir();
         FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
         File file = Paths.get(fineTuneConfig.getLlamaFactoryDir(), savePath, outputDir, "training_loss.png").toFile();
-        System.out.println(file.getAbsolutePath());
         if(file.exists()) {
             try {
                 return ImageUtil.getFileContentAsBase64(file.getAbsolutePath());
@@ -325,11 +299,43 @@ public class ModelManagerServlet extends RestfulServlet{
     }
 
     @Post("export")
-    public void export() throws IOException {
-
+    public void export(@Body ExportConfig exportConfig, HttpServletResponse resp) throws IOException {
+        String userId = exportConfig.getUserId();
+        String savePath = buildUsersSaveDir(userId);
+        ExportArgs exportArgs = exportConfig.getExportArgs();
+        exportArgs.setExportDir(Paths.get(savePath, exportArgs.getExportDir()).toFile().getAbsolutePath());
+        ObservableList<String> export = localLlamaFactoryService.export(exportArgs.getModelPath(), exportArgs.getAdapterPath(), exportArgs.getTemplate(), exportArgs.getFinetuningType(), exportArgs.getExportDir(), exportArgs.getExportSize());
+        streamOutput(resp, export);
     }
 
+    private void streamOutput(HttpServletResponse resp, ObservableList<String> export) throws IOException {
+        PrintWriter out = resp.getWriter();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        export.getObservable()
+                .subscribe(
+                        data -> {
+                            out.print("data: " + data + "\n\n");
+                            out.flush();
+                        },
+                        error -> {
+                            out.print("data: " + error.getMessage() + "\n\n");
+                            out.flush();
+                            out.close();
+                            countDownLatch.countDown();
+                        },
+                        () -> {
+                            out.print("data: " + "[DONE]" + "\n\n");
+                            out.flush();
+                            out.close();
+                            countDownLatch.countDown();
+                        }
+                );
+        try {
+            countDownLatch.await();
+        } catch (Exception e) {
 
+        }
+    }
 
 
     @Get("getDevelop")

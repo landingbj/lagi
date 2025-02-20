@@ -32,13 +32,13 @@ public class LocalLlamaFactoryService {
             "    --master_port {} \\\n" +
             "    {}/src/train.py {}";
 
-    private String exportCmd = "{}llamafactory-cli export \\\n" +
+    private String exportCmd = "{} llamafactory-cli export \\\n" +
             "            --model_name_or_path {} \\\n" +
             "            --adapter_name_or_path {}  \\\n" +
             "            --template {} \\\n" +
             "            --finetuning_type {} \\\n" +
             "            --export_dir {} \\\n" +
-            "            --export_size 2 \\\n" +
+            "            --export_size {} \\\n" +
             "            --export_device auto \\\n" +
             "            --export_legacy_format False";
 
@@ -76,8 +76,8 @@ public class LocalLlamaFactoryService {
     }
 
 
-    private String exportCmd( String modelPath, String adapterPath, String template, String finetuningType, String exportDir) {
-        return StrUtil.format(exportCmd,  runEnv , modelPath, adapterPath, template, finetuningType, exportDir);
+    private String exportCmd( String modelPath, String adapterPath, String template, String finetuningType, String exportDir, String exportSize ) {
+        return StrUtil.format(exportCmd,  runEnv , modelPath, adapterPath, template, finetuningType, exportDir, exportSize);
     }
 
 
@@ -123,9 +123,9 @@ public class LocalLlamaFactoryService {
     }
 
 
-    public ObservableList<String> export(String modelPath, String adapterPath, String template, String finetuningType, String exportDir) {
+    public ObservableList<String> export(String modelPath, String adapterPath, String template, String finetuningType, String exportDir, String exportSize) {
         String osName = System.getProperty("os.name").toLowerCase();
-        String exportCmd = exportCmd(modelPath, adapterPath, template, finetuningType, exportDir);
+        String exportCmd = exportCmd(modelPath, adapterPath, template, finetuningType, exportDir, exportSize);
         List<String> cmd = buildCmd(osName, exportCmd);
         return  runCmd(cmd);
     }
