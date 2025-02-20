@@ -2,6 +2,7 @@ package ai.vector;
 
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;
 
@@ -49,6 +50,11 @@ public class VectorDbService {
     }
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
+        List<IndexSearchData> search = vectorStoreService.searchByContext(request);
+        return PriorityWordUtil.sortByPriorityWord(search);
+    }
+
+    public List<IndexSearchData> searchByContext(EnhanceChatCompletionRequest request) {
         List<IndexSearchData> search = vectorStoreService.searchByContext(request);
         return PriorityWordUtil.sortByPriorityWord(search);
     }

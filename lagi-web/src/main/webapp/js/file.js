@@ -42,7 +42,13 @@ function loadUploadFileList(pageNumber) {
                         } else if (item.fileType === 'wendu_type') {
                             $('#wendu_type').val(item.temperature);
                             window.myTemperature = item.temperature;
+                        }  else if (item.fileType === 'vector-max-top') {
+                            $('#vector-max-top').val(item.chunkSize);
+                        } else if (item.fileType === 'distance'){
+                            $('#distance').val(item.temperature);
+                            $('#distance_value').text(item.temperature);
                         }
+
                     });
                 }
             },
@@ -231,6 +237,10 @@ function submitSettings(type) {
         chunkSizeValue = $('#tuwen_type').val();
     } else if (type === 'wendu_type') {
         temperature = $('#wendu_type').val();
+    } else if (type === 'vector-max-top') {
+        chunkSizeValue = $('#vector-max-top').val();
+    } else if (type === 'distance'){
+        temperature = $('#distance').val();
     }
 
     $.ajax({
@@ -272,6 +282,10 @@ function resetSlice(type) {
     } else if (type === 'wendu_type') {
         temperature = $('#wendu_type').val();
         window.myTemperature = temperature;
+    } else if (type === 'vector-max-top') {
+        chunkSizeValue = $('#vector-max-top').val();
+    } else if (type === 'distance'){
+        temperature = $('#distance').val();
     }
 
     $.ajax({
