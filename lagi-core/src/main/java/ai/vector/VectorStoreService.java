@@ -8,6 +8,7 @@ import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
@@ -18,6 +19,7 @@ import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
+import ai.worker.skillMap.db.VectorSettingsDao;
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -307,6 +309,38 @@ public class VectorStoreService {
         return indexSearchDataList;
     }
 
+    public List<IndexSearchData> searchByContext(EnhanceChatCompletionRequest request) {
+        List<ChatMessage> messages = request.getMessages();
+        IntentResult intentResult = intentService.detectIntent(request);
+        if (intentResult.getIndexSearchDataList() != null) {
+            return intentResult.getIndexSearchDataList();
+        }
+        String question = null;
+        if (intentResult.getStatus() != null && intentResult.getStatus().equals(IntentStatusEnum.CONTINUE.getName())) {
+            if (intentResult.getContinuedIndex() != null) {
+                ChatMessage chatMessage = messages.get(intentResult.getContinuedIndex());
+                String content = chatMessage.getContent();
+                String[] split = content.split("[， ,.。！!?？]");
+                String source = Arrays.stream(split).filter(StoppingWordUtil::containsStoppingWorlds).findAny().orElse("");
+                if (StrUtil.isBlank(source)) {
+                    source = content;
+                }
+                if (chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
+                    source = "";
+                }
+                question = source + ChatCompletionUtil.getLastMessage(request);
+            } else {
+                List<ChatMessage> userMessages = messages.stream().filter(m -> m.getRole().equals("user")).collect(Collectors.toList());
+                if (userMessages.size() > 1) {
+                    question = userMessages.get(userMessages.size() - 2).getContent().trim();
+                }
+            }
+        }
+        if (question == null) {
+            question = ChatCompletionUtil.getLastMessage(request);
+        }
+        return search(question, request.getCategory(),request.getUserId());
+    }
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
@@ -339,8 +373,53 @@ public class VectorStoreService {
         }
         return search(question, request.getCategory());
     }
+    public List<IndexSearchData> search(String question, String category,String usr) {
+        int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
+        double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
+        if (usr!=null){
+            VectorSettingsDao dao = new VectorSettingsDao();
+            try {
+                List<UserRagSetting> userRagVector = dao.getUserRagVector(category, usr);
+                for (UserRagSetting userRagSetting : userRagVector) {
+                    if(userRagSetting.getFileType().equals("vector-max-top")){
+                        similarity_top_k = userRagSetting.getChunkSize();
+                        continue;
+                    }
+                    if (userRagSetting.getFileType().equals("distance")){
+                        similarity_cutoff = userRagSetting.getTemperature();
+                        continue;
+                    }
+                }
 
+            }catch (Exception e){
+                e.printStackTrace();
+            }
 
+        }
+        Map<String, String> where = new HashMap<>();
+        category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
+        List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+        Set<String> esIds = bigdataService.getIds(question, category);
+        if (esIds != null && !esIds.isEmpty()) {
+            Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
+            indexIds.retainAll(esIds);
+            indexSearchDataList = indexSearchDataList.stream()
+                    .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
+                    .collect(Collectors.toList());
+        }
+        String finalCategory = category;
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
+                .collect(Collectors.toList());
+        return futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            } catch (Exception e) {
+                log.error("indexData get error");
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
     public List<IndexSearchData> search(String question, String category) {
 
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();

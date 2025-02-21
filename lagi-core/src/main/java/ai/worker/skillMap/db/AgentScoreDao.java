@@ -231,32 +231,4 @@ public class AgentScoreDao {
         }
         return scores;
     }
-
-    public List<UserRagVector> getUserRagVector(String category, String userId) throws SQLException {
-        List<UserRagVector> result = new ArrayList<>();
-        IConn conn = new Conn();
-        String sql = "SELECT id, user_id, default_category, similarity_top_k, similarity_cutoff, parent_depth, child_depth FROM user_rag_vector WHERE user_id = ?";
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-
-        ps = conn.prepareStatement(sql);
-        ps.setString(1, userId);  // 设置查询条件
-        rs = ps.executeQuery();
-
-        while (rs.next()) {
-            UserRagVector userRagVector = new UserRagVector();
-            userRagVector.setId(rs.getInt(1));
-            userRagVector.setUserId(rs.getString(2));
-            userRagVector.setDefaultCategory(rs.getString(3));
-            userRagVector.setSimilarityTopK(rs.getInt(4));
-            userRagVector.setSimilarityCutoff(rs.getDouble(5));
-            userRagVector.setParentDepth(rs.getInt(6));
-            userRagVector.setChildDepth(rs.getInt(7));
-            result.add(userRagVector);
-        }
-
-        BaseIndex.closeConnection(rs, ps, conn);
-        return result;
-    }
-
 }
