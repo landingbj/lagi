@@ -11,13 +11,15 @@ import ai.openai.pojo.ChatMessage;
 import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
+import ai.servlet.dto.OrchestrationItem;
 import ai.utils.MigrateGlobal;
 import ai.utils.OkHttpUtil;
 import cn.hutool.core.util.IdUtil;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
+import com.google.gson.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,116 @@ public class AgentService {
         String resultJson = OkHttpUtil.post(SAAS_BASE_URL + "/agent/updateLagiAgent", gson.toJson(agentConfig));
         Response response = gson.fromJson(resultJson, Response.class);
         return response;
+    }
+
+    public Response orchestrationAgent(String lagiUserId, String agentId, List<OrchestrationItem> orchestrationData) throws IOException {
+        Map<String, String> params = new HashMap<>();
+        params.put("lagiUserId", lagiUserId);
+        params.put("agentId", agentId);
+        String resultJson = OkHttpUtil.get(SAAS_BASE_URL + "/agent/getLagiAgent", params);
+        LagiAgentResponse lagiAgentResponse = gson.fromJson(resultJson, LagiAgentResponse.class);
+        AgentConfig agentConfig = lagiAgentResponse.getData();
+        String updatedCharacter = updateCharacter(agentConfig.getCharacter(), orchestrationData);
+        agentConfig.setCharacter(updatedCharacter);
+        String newResultJson = OkHttpUtil.post(SAAS_BASE_URL + "/agent/updateLagiAgent", gson.toJson(agentConfig));
+        Response response = gson.fromJson(newResultJson, Response.class);
+        return response;
+    }
+
+    private String updateCharacter(String currentCharacter, List<OrchestrationItem> orchestrationData) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("角色描述：\n");
+        prompt.append(currentCharacter).append("\n\n");
+
+        prompt.append("任务和逻辑更新：\n");
+
+        for (OrchestrationItem item : orchestrationData) {
+            prompt.append("任务: ").append(item.getTask()).append("\n");
+            prompt.append("逻辑: ").append(item.getLogic()).append("\n\n");
+        }
+
+        prompt.append("根据以上任务和逻辑更新，生成以下内容：\n");
+        prompt.append("1. 更新智能体的角色规范，确保任务范围包含所有新的任务。\n");
+        prompt.append("2. 确保思考规范和回复规范与任务和逻辑相匹配。\n");
+        prompt.append("3. 根据任务的性质，智能体应该如何反应，如何处理与任务相关的请求。\n");
+        prompt.append("4. 考虑到任务和逻辑，如何引导用户并维持专业性和一致性。");
+
+        return callAIModel(prompt.toString());
+    }
+
+    private String callAIModel(String prompt) {
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setMax_tokens(1024);
+
+        ChatMessage message = new ChatMessage();
+        message.setRole("system");
+        message.setContent(prompt);
+
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+        chatCompletionRequest.setStream(false);
+
+        CompletionsService completionsService = new CompletionsService();
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+
+        return result.getChoices().get(0).getMessage().getContent();
+    }
+
+
+    public List<OrchestrationItem> generateTasksAndLogics(AgentConfig agentConfig) throws IOException {
+        String currentCharacter = agentConfig.getCharacter();
+        String prompt = generatePromptForTasksAndLogics(currentCharacter);
+        String response = callAIModelForTasksAndLogics(prompt);
+        return parseTasksAndLogicsResponse(response);
+    }
+
+    private String generatePromptForTasksAndLogics(String currentCharacter) {
+        String template =
+                "你是一个专业领域的智能助手，专门处理以下目标：\n" +
+                        "###目标###：\n" +
+                        "{}\n" + // 插入 currentCharacter，角色的目标和职责
+                        "\n" +
+                        "根据角色的职责和任务范围，请生成以下内容：\n" +
+                        "1. 任务（task）和对应的逻辑（logic）。\n" +
+                        "2. 请确保每个任务都是在角色任务范围内的，并且每个逻辑都是合理且与任务相关的。\n" +
+                        "请按以下格式生成任务和逻辑：\n" +
+                        "{\n" +
+                        "  \"task\": \"任务描述\",\n" +
+                        "  \"logic\": \"任务完成的具体逻辑描述\"\n" +
+                        "}\n" +
+                        "你应该只以 JSON 格式响应，响应格式如下：\n" +
+                        "[\n" +
+                        "  { \"task\": \"任务1\", \"logic\": \"逻辑1\" },\n" +
+                        "  { \"task\": \"任务2\", \"logic\": \"逻辑2\" }\n" +
+                        "]\n" +
+                        "请确保返回的 JSON 是合法的，且每个任务和逻辑都有明确的描述。";
+        String prompt = template.replace("{}", currentCharacter);
+        return prompt;
+    }
+    private String callAIModelForTasksAndLogics(String prompt) {
+        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        chatCompletionRequest.setTemperature(0.8);
+        chatCompletionRequest.setMax_tokens(1024);
+        ChatMessage message = new ChatMessage();
+        message.setRole("system");
+        message.setContent(prompt);
+        chatCompletionRequest.setMessages(Lists.newArrayList(message));
+        chatCompletionRequest.setStream(false);
+        CompletionsService completionsService = new CompletionsService();
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+        return result.getChoices().get(0).getMessage().getContent();
+    }
+
+    private List<OrchestrationItem> parseTasksAndLogicsResponse(String response) {
+        JsonArray jsonArray = JsonParser.parseString(response).getAsJsonArray();
+        List<OrchestrationItem> orchestrationItems = new ArrayList<>();
+        for (JsonElement element : jsonArray) {
+            JsonObject jsonObject = element.getAsJsonObject();
+            String task = jsonObject.get("task").getAsString();
+            String logic = jsonObject.get("logic").getAsString();
+            orchestrationItems.add(new OrchestrationItem(task, logic));
+        }
+        return orchestrationItems;
     }
 
     public Response deleteLagiAgentById(List<Integer> ids) throws IOException {
@@ -68,6 +180,7 @@ public class AgentService {
         return lagiAgentResponse;
     }
 
+
     public LagiAgentExpenseListResponse getPaidAgentByUser(String lagiUserId, String pageNumber, String pageSize) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("lagiUserId", lagiUserId);
@@ -91,7 +204,7 @@ public class AgentService {
     }
 
     public Response createLagiAgent(AgentConfig agentConfig) throws IOException {
-        String prompt = generatePrompt(agentConfig.getDescribe(),agentConfig.getName());
+        String prompt = generatePrompt(agentConfig.getDescribe(), agentConfig.getName());
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
         chatCompletionRequest.setMax_tokens(1024);
@@ -147,7 +260,6 @@ public class AgentService {
 
         return prompt.toString();
     }
-
 
 
 }

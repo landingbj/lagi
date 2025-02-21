@@ -63,6 +63,8 @@ public class AgentServlet extends BaseServlet {
             this.getFeeRequiredAgent(req, resp);
         }else if (method.equals("createLagiAgent")) {
             this.createLagiAgent(req, resp);
+        }else if (method.equals("orchestrationAgent")) {
+            this.orchestrationAgent(req, resp);
         }
     }
 
@@ -101,6 +103,8 @@ public class AgentServlet extends BaseServlet {
         LagiAgentResponse lagiAgentResponse = agentService.getLagiAgent(lagiUserId, agentId);
         responsePrint(resp, gson.toJson(lagiAgentResponse));
     }
+
+
 
     private void getLagiAgentList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
@@ -141,6 +145,22 @@ public class AgentServlet extends BaseServlet {
         Response response = agentService.updateLagiAgent(agentConfig);
         responsePrint(resp, gson.toJson(response));
     }
+
+    private void orchestrationAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String lagiUserId = req.getParameter("lagiUserId");
+        String agentId = req.getParameter("agentId");
+        List<OrchestrationItem> orchestrationData = gson.fromJson(req.getParameter("orchestrationData"), new TypeToken<List<OrchestrationItem>>(){}.getType());
+        Response response = agentService.orchestrationAgent(lagiUserId, agentId,orchestrationData);
+        responsePrint(resp, gson.toJson(response));
+    }
+
+/*    private void generateTasksAndLogics(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        AgentConfig agentConfig = reqBodyToObj(req, AgentConfig.class);
+        Response response = agentService.generateTasksAndLogics(agentConfig);
+        responsePrint(resp, gson.toJson(response));
+    }*/
 
     private void deleteLagiAgentById(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
