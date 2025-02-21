@@ -173,6 +173,14 @@ $(document).ready(function(){
     });
 });
 
+function showActivateModule(el) {
+    el.removeClass('model-modules-nav-not-active').addClass('model-modules-nav-active');
+}
+
+function showNotActivateModule(el) {
+    el.removeClass('model-modules-nav-active').addClass('model-modules-nav-not-active');
+}
+
 
 function loadUserModule(el, model, callback) {
     // console.log("loadUserModule", this);
@@ -182,9 +190,9 @@ function loadUserModule(el, model, callback) {
     for (let index = 0; index < titles.length; index++) {
         const title = titles[index];
         if(title == el) {
-            $(title).css("color", '#fff');
+            showActivateModule($(title));
         } else {
-            $(title).css("color", 'rgb(179, 179, 179)');
+            showNotActivateModule($(title));
         }
     }
     showSelectModuleById();
@@ -280,11 +288,11 @@ function uploadUserDatasets() {
         return response.json();
     })
     .then(data => {
-        document.getElementById('up-datasets-status').innerText = `上传成功: ${data.message}`;
+        document.getElementById('up-datasets-status').innerText = `上传成功`;
     })
     .catch(error => {
         console.error('上传失败:', error);
-        document.getElementById('up-datasets-status').innerText = `上传失败: ${error.message}`;
+        document.getElementById('up-datasets-status').innerText = `上传失败}`;
     });
 }
 
@@ -543,8 +551,33 @@ function addDevelop() {
         }
     })
     .catch(error => {
+        testAddDevelop();
         alert('创建启动失败');
     });
+}
+
+
+function testAddDevelop() {
+    let modelPath = "deeepseek";
+    let text1 = "停止";
+    let statusClass = "pulished";
+    let id = '-1';
+    let text2 = '启动';
+    let newModelCard = `
+            <div class="model-card">
+                <div class="model-card-info">
+                    <div></div>
+                    <div class="model-name">模型名: ${modelPath}</div>
+                </div>
+                <div class="model-status-container"><div class="model-status">是否启动: ${text1}</div> <div class="status-indicator ${statusClass}"></div></div>
+                <div class="model-actions">
+                    <button class="copy-develop-btn" data-id="${id}">复制模型地址</button>
+                    <button class="toggle-develop-btn ${statusClass}" data-id="${id}">${text2}</button>
+                    <button class="delete-develop-btn" data-id="${id}" >删除</button>
+                </div>
+            </div>
+        `;
+    $('#modelList').append(newModelCard);
 }
 
 
@@ -570,6 +603,74 @@ function delDevelop(el) {
 }
 
 
+const runningToggleMap = {
+    "0": "启动",
+    "1": "停止",
+    "2": "启动"
+}
+
+const runningMap = {
+    "0": "停止",
+    "1": "启动",
+    "2": "启动中"
+}
+
+const runningToggleImg = {
+    "0": "images/stop.png",
+    "1": "images/start.png",
+    "2": "images/loading.png",
+}
+
+const runningStyleClass = {
+    "0": "published",
+    "1": "unpublished",
+    "2": "publishing",
+}
+
+function loadDevelopPageEle(cardInfo) {
+    let id = cardInfo["id"];
+    let modelPath = cardInfo["modelPath"];
+    let status = cardInfo["running"];
+    let statusClass = runningStyleClass[status];
+    let text1 = runningMap[status];
+    let text2 = runningToggleMap[status];
+    let img =  runningToggleImg[status];
+    return [id, modelPath, statusClass, img, text1, text2]
+}
+
+
+function loadDevelopCard(cardInfo) {
+    
+    // let id = cardInfo["id"];
+    // let modelPath = cardInfo["modelPath"];
+    // let status = cardInfo["running"];
+    // let statusClass = runningStyleClass[status];
+    // let text1 = runningToggleMap[status];
+    // let text2 = runningMap[status];
+    let [id,  modelPath,  statusClass, img, text1,  text2]   = loadDevelopPageEle(cardInfo);
+    let html = `
+        <div class="model-card">
+        <div class="model-card-info">
+            <div class="model-card-icon">
+            <img src="images/deepseek.png" alt="">
+            </div>
+            <div class="model-card-detail">
+            <div class="model-name">模型名: ${modelPath}</div>
+            <div><span>大语言模型</span></div>
+            </div>
+        </div>
+        <div class="model-status-container"><div class="model-status">是否启动: ${text1}</div> <div class="status-indicator ${statusClass}"></div></div>
+        <div class="model-actions">
+            <button class="copy-develop-btn" data-id="${id}"><img src="images/copy.png" alt=""> 复制模型地址</button> 
+            <button class="toggle-develop-btn ${statusClass}" data-id="${id}"><img src="${img}" alt=""><span>${text2}</span></button>
+            <button class="delete-develop-btn" data-id="${id}" ><img src="images/delete.png" alt=""> 删除</button>
+        </div>
+        </div>
+    `
+    $('#modelList').append(html);
+}
+
+
 function getDevelop() {
     let userId = getCookie("userId");
     let url = `/model/getDevelop?userId=${userId}`;
@@ -579,25 +680,26 @@ function getDevelop() {
         let develops = data.data;
         $('#modelList').empty();
         for (let index = 0; index < develops.length; index++) {
-            let modal_develop = develops[index];
-            let modelPath = modal_develop["modelPath"];
-            let statusClass = modal_develop["running"] == 1 ? "unpublished" : "published";
-            let port = modal_develop["port"];
-            let id = modal_develop["id"];
-            let text1 = modal_develop["running"] == 1? "启动": "停止"; 
-            let text2 = modal_develop["running"] == 1? "停止": "开启"; 
-            let newModelCard = `
-                <div class="model-card">
-                    <div class="model-name">模型名: ${modelPath}</div>
-                    <div class="model-status-container"><div class="model-status">是否启动: ${text1}</div> <div class="status-indicator ${statusClass}"></div></div>
-                    <div class="model-actions">
-                        <button class="copy-develop-btn" data-id="${id}">复制模型地址</button>
-                        <button class="toggle-develop-btn ${statusClass}" data-id="${id}">${text2}</button>
-                        <button class="delete-develop-btn" data-id="${id}" >删除</button>
-                    </div>
-                </div>
-            `;
-            $('#modelList').append(newModelCard);
+            loadDevelopCard(develops[index]);
+        //     let modal_develop = develops[index];
+        //     let modelPath = modal_develop["modelPath"];
+        //     let statusClass = modal_develop["running"] == 1 ? "unpublished" : "published";
+        //     let port = modal_develop["port"];
+        //     let id = modal_develop["id"];
+        //     let text1 = modal_develop["running"] == 1? "启动": "停止"; 
+        //     let text2 = modal_develop["running"] == 1? "停止": "开启"; 
+        //     let newModelCard = `
+        //         <div class="model-card">
+        //             <div class="model-name">模型名: ${modelPath}</div>
+        //             <div class="model-status-container"><div class="model-status">是否启动: ${text1}</div> <div class="status-indicator ${statusClass}"></div></div>
+        //             <div class="model-actions">
+        //                 <button class="copy-develop-btn" data-id="${id}">复制模型地址</button>
+        //                 <button class="toggle-develop-btn ${statusClass}" data-id="${id}">${text2}</button>
+        //                 <button class="delete-develop-btn" data-id="${id}" >删除</button>
+        //             </div>
+        //         </div>
+        //     `;
+        //     $('#modelList').append(newModelCard);
         }
     })
     .catch(error => {
@@ -606,17 +708,37 @@ function getDevelop() {
 }
 
 
+function updateRenderDevelop(el, info) {
+    let [xId,  modelPath,  statusClass,  img,  text1,  text2]   = loadDevelopPageEle(info);
+    $(el).closest('.model-card').find('.model-status').text(`是否启动: ${text1}`);
+    $(el).children("img")[0].src = img;
+    $($(el).children("span")[0]).text(text2);
+    let keys = Object.keys(runningStyleClass);
+    for(let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const clazz = runningStyleClass[key];
+        if(clazz == statusClass) {
+            $(el).addClass(clazz);
+            $(el).closest('.model-card').find('.status-indicator').addClass(clazz);
+        } else  {
+            $(el).removeClass(clazz);
+            $(el).closest('.model-card').find('.status-indicator').removeClass(clazz);
+        }
+    }
+}
+
 function runningDevelop(el) {
     let id =  $(el).data('id');
     let params = {
         "id":id,
     }
 
-    $(el).closest('.model-card').find('.model-status').text('是否启动: 正在启动');
-    $(el).text('启动中');
-    $(el).removeClass('published').addClass('publishing');
-    $(el).closest('.model-card').find('.status-indicator').removeClass('published').addClass('publishing');
-
+    let info = {
+        id : "id",
+        running: "2",
+        modelPath: ""
+    }
+    updateRenderDevelop(el, info);
     fetch('model/start', {
         method: "POST",
         body: JSON.stringify(params),
@@ -625,23 +747,16 @@ function runningDevelop(el) {
     .then(data => {
         let status = data.data;
         if(status) {
-            $(el).closest('.model-card').find('.model-status').text('是否启动: 已启动');
-            $(el).text('停止');
-            $(el).removeClass('publishing').addClass('unpublished');
-            $(el).closest('.model-card').find('.status-indicator').removeClass('publishing').addClass('unpublished');
+            info.running = 1;
         } else {
-            $(el).closest('.model-card').find('.model-status').text('是否启动: 停止');
-            $(el).text('启动');
-            $(el).removeClass('publishing').addClass('published');
-            $(el).closest('.model-card').find('.status-indicator').removeClass('publishing').addClass('published');
+            info.running = 0;
             alert('启动模型失败');
         }
+        updateRenderDevelop(el, info);
     })
     .catch(error => {
-        $(el).closest('.model-card').find('.model-status').text('是否启动: 停止');
-        $(el).text('启动');
-        $(el).removeClass('publishing').addClass('published');
-        $(el).closest('.model-card').find('.status-indicator').removeClass('publishing').addClass('published');
+        info.running = 0;
+        updateRenderDevelop(el, info);
         alert('启动模型失败');
     });
 }

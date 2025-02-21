@@ -1,12 +1,21 @@
 /* ==============model train start===================== */
+:root {
+    --user-model-title-height: 18px;
+    --error-color: #f94d4d;
+    --copy-color:#8a965f;
+    --starting-color: #ff9500;
+    --start-color: #2fbc52;
+    --stop-color: #ff8282;
+    --edit-color: rgb(24 144 255);
 
+}
 .user-model {
     display: none;           /* 默认隐藏 */
     width: 100%;             /* 宽度占满父容器 */
     height: 90%;            /* 高度占满父容器 */
     box-sizing: border-box;  /* 包括内边距和边框 */
     background-color: white;  /* 背景颜色 */
-    padding: 20px;           /* 内边距 */
+    padding: 52px 20px 20px 42px;
     z-index: 1;
     justify-content: center;
     align-items: center;
@@ -14,16 +23,73 @@
     font-size: 12px;
 }
 
+
+.user-model-head {
+    width: 100%;
+    height: 44px;
+    /* margin-top: 32px; */
+    padding-top: 32px;
+    /* background-color: red; */
+    padding-top: 6px;
+    padding-left: 20px;
+    position: relative;
+
+}
+
+.user-model-head span {
+    font-size: var(--user-model-title-height);
+    font-weight: 600;
+}
+
+.user-model-head span::before{
+    content: ''; /* 生成空内容 */
+    position: absolute;
+    left: 0;
+    top: 18px;
+    transform: translateY(-50%);
+    width: 5px; /* 竖线宽度 */
+    height: var(--user-model-title-height); /* 竖线高度，可根据需要调整 */
+    background-color: rgb(0, 0, 0); /* 竖线颜色 */
+}
+
 .model-modules-nav{
     margin-top: 0.5rem;
-    font-size: 1.5rem;
-    background-color: var(--rechage-color2);
+    
+    /* background-color: var(--rechage-color2); */
     color: rgb(179, 179, 179);
-    height: 3rem;
+    height: 64px;
+    border-bottom: #aaa 1px solid;
+    margin-bottom: 2rem;
 }
 
 .model-modules-nav button {
+    width: 150px;
+    height: 48px;
     margin-right: 1rem;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    border: #888 1px solid;
+}
+
+.model-modules-nav-not-active {
+    color: rgb(33, 33, 33) !important;
+    background-color: white;
+}
+
+/* .model-modules-nav button:hover {
+    background-color: var(--rechage-color2);
+    color: rgb(255, 255, 255) !important;
+} */
+
+
+.model-modules-nav-active {
+    background-color: var(--rechage-color2);
+    color: rgb(255, 255, 255) !important;
+}
+
+.model-modules-nav a {
+    margin-top: 10px;
+    float: right;
 }
 
 .model-module {
@@ -31,42 +97,187 @@
 }
 
 .train-form {
-    
     height: 820px;
+    margin-right: 16px;
 }
 
 .train-view {
     flex: 1; /* 左侧占据剩余空间 */
-    height: 80%;
+    height: 484px;
+    border: 1px solid #ccc;     /* 可选：添加边框以便观察 */
+    border-radius: 5px;
 }
 
 .train-view-title {
-    background-color: var(--rechage-color);
-    color: rgb(250, 250, 250);
+    background-color: hsl(221.25deg 32% 90.2%);
+    color: rgb(0, 0, 0);
     font-size: 14px;
     height: 32px;
-    padding: 5px;
+    padding: 5px 20px;
+    border-radius: 5px;
 }
 
 
 .train-view-content {
-    height: 480px;
+    height: 450px;
     overflow-y: scroll;
-    border: 1px solid #ccc;     /* 可选：添加边框以便观察 */
     padding: 10px;              /* 可选：内边距 */
-    border-radius: 5px;
-    box-shadow: 1px 5px 7px rgba(0, 0, 0, 0.1);
+}
+
+.train-datasets {
+    border-radius: 10px;
+    border: 1px solid gray;
+    width: 100%;
+    height: 160px;
+    padding-left: 24px;
+    padding-right: 24px;
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
 
-.train-form div {
+.train-dataset-upload {
+    width: 100%;
+    height: 100px;
+    /* background-color: #67c23a; */
+    padding-top: 12px;
+}
+
+
+
+.train-dataset-upload select {
+    margin-left: 12px;
+    margin-right: 12px;
+    width: 180px !important;
+    height: 28px !important;
+}
+
+
+
+
+.train-dataset-upload input {
+    margin-left: 12px;
+    margin-right: 12px;
+    width: 320px;
+}
+
+.train-dataset-upload input[type="file"]::file-selector-button {
+    background-color: white;
+    color: black;
+    border: 1px #888 solid;
+    width: 180px !important;
+    height: 24px !important;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+.train-dataset-upload-btn{
+    width: 72px !important;
+    height: 24px !important;
+    background-color: #539c2e !important;
+    color: white !important;
+    float: right;
+}
+
+
+.train-dataset-sel {
+    width: 100%;
+    padding-top: 10px;
+    height: 160px;
+}
+
+.train-dataset-sel button {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 10px;
+    background-color: var(--error-color) !important;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.train-dataset-sel button img {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+#sel-datasets label {
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+
+.train-args {
+    width: 100%;
+    height: 300px;
+    /* background-color: #67c23a; */
+    padding: 20px 0px;
+}
+
+.train-args-tile {
+    font-size: 16px;
+}
+
+.train-args-list {
+    width: 100%;
+    height: 240px;
+    border: 1px rgb(184, 184, 184) solid;
+    margin-top: 20px;
+}
+
+.train-args-list div {
+    padding: 12px 10px;
+    height: 60px;
+}
+
+.train-args-list div:nth-child(odd) {
+    background-color: hsl(0deg 0% 94.9%);
+}
+
+.train-args-list div:nth-child(even) {
+    /* background-color: white; */
+}
+
+.train-btn-box-mid {
+    width: 400px;
+    height: 100%;
+    margin-left: calc(50% - 200px);
+}
+
+.train-btn-box-mid button {
+    background-color: hsl(269.79deg 70.44% 60.2%) !important;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 10px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    height: 36px !important;
+}
+
+.train-btn-box-mid button img {
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
+    margin-right: 5px;
+}
+
+/* 暂时屏蔽 */
+/* .train-form div {
     padding: 10px;
     margin-top: 20px;
     border: 1px solid gray;
     margin-right: 10px;
     border-radius: 5px;
     box-shadow: 1px 5px 7px rgba(0, 0, 0, 0.1);
-}
+} */
 
 .train-form input[type="text"], .train-form select{
     height: 32px;
@@ -98,22 +309,33 @@
 }
 
 .develop-model-container {
-    padding: 20px;
+    padding: 0px;
     width: 100%;
 }
 
 .develop-btn {
-    padding: 10px 20px;
-    background-color: var(--rechage-color2);
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 10px;
+    background-color: rgb(255 149 0);
     color: white;
     border: none;
     cursor: pointer;
     margin-bottom: 20px;
     border-radius: 5px;
+    width: 130px;
+    font-size: 14px;
+    height: 26px;
+}
+
+.develop-btn img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
 }
 
 .develop-btn:hover {
-    background-color: var(--rechage-color);
+    background-color: rgb(255, 81, 0);
 }
 
 .model-list {
@@ -123,8 +345,8 @@
     width: 100%;
     height: 500px;
     border-radius: 5px;
-    border: 1px solid gray;
-    padding: 14px;
+    /* border: 1px solid gray; */
+    padding: 14px 0px;
     overflow-y: scroll;
 }
 
@@ -132,14 +354,57 @@
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 15px;
-    width: 250px;
-    height: 140px;
+    width: 300px;
+    height: 180px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.model-card-info {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    /* background-color: #67c23a; */
+}
+
+.model-card-icon {
+    width: 48px;
+    height: 48px;
+    /* background-color: #f56c6c; */
+}
+
+.model-card-icon img {
+    width: 100%;
+    height: 100%;
+    border: gray 1px solid;
+    border-radius: 5px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.model-card-detail {
+    flex: 1;
+    /* background-color: #f7f5f5; */
+    padding: 3px 15px;
+}
+
+.model-card-detail span {
+    width: 100px;
+    height: 20px;
+    display: block;
+    background-color: hsl(0deg 0% 90.2%);
+    color: hsl(0deg 0% 50.59%);
+    text-align: center;
+    padding: 2px 0px;
+    border-radius: 3px;
 }
 
 .model-card .model-name {
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+.model-status{
+    font-weight: 600;
 }
 
 .model-card .model-status {
@@ -148,11 +413,17 @@
 
 .model-status-container {
     display: flex;
+    margin-top: 20px;
+    padding: 5px;
+}
+
+.model-actions {
+    margin-top: 15px;
 }
 
 .model-card .model-actions button {
-    margin-right: 5px;
-    padding: 5px 10px;
+    margin-right: 0px;
+    padding: 5px 5px;
     cursor: pointer;
 }
 
@@ -171,16 +442,25 @@
 .develop-content {
     background-color: #fefefe;
     margin: 15% auto;
-    padding: 20px;
+    padding: 0px;
     border: 1px solid #888;
-    width: 30%;
+    width: 36%;
+}
+
+.develop-content-title {
+    width: 100%;
+    height: 40px;
+    padding: 10px 5px;
+    background-color: rgb(236 236 236);
 }
 
 .develop-content .close {
     color: #aaa;
     float: right;
-    font-size: 28px;
+    font-size: 16px;
     font-weight: bold;
+    height: 100%;
+    width: 24px;
 }
 
 .develop-content .close:hover,
@@ -190,42 +470,125 @@
     cursor: pointer;
 }
 
+.develop-content form {
+    width: 100%;
+    padding: 32px 32px 0px 32px;
+    font-size: 14px;
+}
+
 .develop-content form label {
-    display: block;
     margin-bottom: 5px;
+    margin-right: 10px;
+    width: 100px;
 }
 
 .develop-content form input {
-    width: 100%;
     padding: 8px;
+    width: calc(100% - 120px);
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
+.develop-content form button {
+    background-color: rgb(0 87 255);
+    color: white;
+    width: 120px;
+    height: 32px;
+    margin-left: calc(50% - 60px);
+}
+
+.develop-content form button:hover {
+    background-color: rgb(87, 143, 255);
+}
 
 .status-indicator {
     width: 12px;
     height: 12px;
     border-radius: 50%;
     margin-left: 10px;
-    margin-top: 5px;
+    margin-top: 3px;
     /* margin-bottom: auto; */
 }
 
 
+.copy-develop-btn {
+    display: inline-flex;
+    align-items: center;
+    /* padding: 10px 10px; */
+    background-color: #8a965f;
+    color: white;
+    border-radius: 5px;
+    font-size: 10px;
+    height: 24px;
+    
+}
+
+.copy-develop-btn img {
+    margin-right: 8px;
+    width: 14px;
+    height: 14px;
+}
+
+.toggle-develop-btn .delete-develop-btn {
+    height: 24px !important;
+    border-radius: 5px;
+    font-size: 10px;
+    /* padding: 10px 10px; */
+}
+
+.delete-develop-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 10px;
+    /* padding: 10px 10px; */
+    background-color: var(--error-color);
+    color: white;
+    border-radius: 5px;
+    height: 24px !important;
+    margin-top: 2px !important;
+    font-size: 10px;
+    width: 64px;
+    margin-left: 10px;
+}
+
+.toggle-develop-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 10px;
+    width: 64px;
+    height: 24px !important;
+    border-radius: 5px;
+    font-size: 10px;
+    margin-left: 10px;
+    margin-right: 15px;
+}
+
+
+.toggle-develop-btn img{
+    width: 14px;
+    height: 14px;
+    margin-right: 5px;
+}
+
+.delete-develop-btn img {
+    width: 14px;
+    height: 14px;
+    margin-right: 5px;
+}
+
 .published {
-    background: #f56c6c;
+    background: var(--stop-color);
     color: white;
 }
 
 .unpublished {
-    background: #67c23a;
+    background: var(--start-color);
     color: white;
 }
 
 .publishing {
-    background: #4e4e4e;
+    background: var(--starting-color);
     color: white;
 }
 
@@ -234,7 +597,7 @@
 
 
 /* ==============modal manager start===================== */
-
+/* 
 #addModelBtn {
     margin-top: 16px;
     width: 80px;
@@ -242,7 +605,7 @@
     border-radius: 5px;
     background: var(--rechage-color2);
     color: white;
-}
+} */
 
 .modal-container {
     width: 100%;
@@ -280,16 +643,26 @@
 .modal-manager-content {
     background-color: #fefefe;
     margin: 15% auto;
-    padding: 20px;
+    padding: 0px;
     border: 1px solid #888;
-    width: 50%;
+    width: 30%;
+}
+
+.modal-content-title {
+    width: 100%;
+    height: 40px;
+    padding: 10px 5px;
+    font-size: 16px;
+    background-color: rgb(236 236 236);
 }
 
 .modal-manager .close {
     color: #aaa;
     float: right;
-    font-size: 28px;
+    font-size: 16px;
     font-weight: bold;
+    height: 100%;
+    width: 24px;
 }
 
 .modal-manager .close:hover,
@@ -303,21 +676,49 @@
     color: var(--rechage-color2);
 }
 
-.modal-manager form label {
-    margin-top: 16px;
-}
 
-.modal-manager form input[type="text"] {
+
+.modal-manager form {
     width: 100%;
-    padding: 8px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    box-sizing: border-box;
+    padding: 32px 32px 0px 32px;
+    font-size: 14px;
 }
 
-.modal-manager form input[type="checkbox"] {
-    padding: 8px;
+.modal-manager-row {
+    width: 100%;
+    height:  32px;
+    display: flex;
+    margin-bottom: 16px;
+}
+
+.modal-manager-row label {
+    width: 100px;
+    display: block;
+    text-align: center;
+    height: 32px;
+    line-height: 32px;
+}
+
+.modal-manager-row input[type="text"] {
+    width: calc(100% - 160px);
+    /* padding: 8px; */
+    /* margin-top: 10px; */
+    /* margin-bottom: 10px; */
+    /* box-sizing: border-box; */
+    /* display: inline-block; */
+    border-radius: 5px;
+    flex: 1;
+}
+
+
+.modal-manager-row input[type="checkbox"] {
+    /* padding: 8px; */
+    /* margin-left: 16px; */
+    margin-top: 8px;
     margin-left: 16px;
+    border-radius: 8px;
+    height: 16px;
+    width: 16px;
 }
 
 
@@ -325,22 +726,24 @@
 
 
 
-.modal-manager form select {
+.modal-manager-row select {
     width: 120px;
-    padding: 8px;
-    margin-top: 12px;
-    margin-left: 16px;
+    /* padding: 8px; */
+    border-radius: 5px;
+    height: 24px;
+    font-size: 12px;
+    /* margin-top: 12px; */
+    /* margin-left: 16px; */
 }
 
-.modal-manager form button {
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 10px 15px;
-    background-color: var(--rechage-color2);
+.modal-manager-row button {
+    margin-left: calc(50% - 50px);
+    width: 100px;
+    background-color: var(--edit-color);
     color: white;
     border: none;
     cursor: pointer;
+    border-radius: 5px;
 }
 
 .modal-manager form button:hover {
@@ -362,5 +765,14 @@
 
 .show-eyes {
     background-image: url('../images/show.png');
+}
+
+.editBtn {
+    color: var(--edit-color);
+}
+
+
+.deleteBtn {
+    color: var(--error-color);
 }
 /* ==============modal manager end===================== */
