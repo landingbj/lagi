@@ -353,7 +353,12 @@
 
               <div class="paid-agent-list-container w-full tab"
                 id="user-upload-file-container">
+                </br>
+                <div class="user-model-head">
+                  <span>我的语料</span>
+                </div>
                   <div id="upload-file-list">
+
                     <div class="navbar" style="display: flex; justify-content: center; background-color: #023f63; padding: 10px 0;">
                       <a onclick="backToChat()" style="position: absolute; left: 25px;">
                         <svg class="back-button" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 100 100" style="cursor: pointer;">
@@ -439,6 +444,7 @@
                         <tbody>
                         <!-- 动态生成已上传文件数据 -->
                         </tbody>
+
                       </table>
                       <div class="pagination" id="file-upload-pagination">
                         <!-- 分页按钮将动态添加到这里 -->

@@ -79,3 +79,60 @@ $(window).click(function(event) {
         closeModal();
     }
 });
+
+
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('fileInput');
+const fileTableBody = document.getElementById('file-table').getElementsByTagName('tbody')[0];
+
+// 监听拖拽事件
+dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.classList.add('dragover');
+});
+
+dropArea.addEventListener('dragleave', () => {
+    dropArea.classList.remove('dragover');
+});
+
+dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+});
+
+// 点击上传按钮，模拟文件选择框
+dropArea.addEventListener('click', () => {
+    fileInput.click();
+});
+
+// 监听文件选择
+fileInput.addEventListener('change', () => {
+    const files = fileInput.files;
+    handleFiles(files);
+});
+
+// 处理文件上传的逻辑
+function handleFiles(files) {
+    const fileList = Array.from(files);
+    fileList.forEach((file) => {
+        // 将文件信息插入表格
+        const row = fileTableBody.insertRow();
+        const fileNameCell = row.insertCell(0);
+        const fileSizeCell = row.insertCell(1);
+        const fileTypeCell = row.insertCell(2);
+
+        fileNameCell.textContent = file.name;
+        fileSizeCell.textContent = formatFileSize(file.size);
+        fileTypeCell.textContent = file.type;
+    });
+}
+
+// 格式化文件大小
+function formatFileSize(size) {
+    if (size < 1024) return size + ' B';
+    else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB';
+    else return (size / (1024 * 1024)).toFixed(2) + ' MB';
+}
