@@ -657,26 +657,7 @@
                         <strong>部署模型</strong>
                       </button>
                       <div id="modelList" class="model-list">
-                        <div class="model-card">
-                          <div class="model-card-info">
-                              <div class="model-card-icon">
-                                <img src="images/deepseek.png" alt="">
-                              </div>
-                              <div class="model-card-detail">
-                                <div class="model-name">模型名: ${modelPath}</div>
-                                <div><span>大语言模型</span></div>
-                              </div>
-                          </div>
-                          <div class="model-status-container"><div class="model-status">是否启动: ${text1}</div> <div class="status-indicator ${statusClass}"></div></div>
-                          <div class="model-actions">
-                              <button class="copy-develop-btn" data-id="${id}"><img src="images/copy.png" alt=""> 复制模型地址</button> 
-                              <!-- <button class="toggle-develop-btn ${statusClass}" data-id="${id}">${text2}</button> -->
-                              <!-- <button class="toggle-develop-btn published" data-id="${id}"><img src="images/stop.png" alt=""> 停止</button> -->
-                              <!-- <button class="toggle-develop-btn unpublished" data-id="${id}"><img src="images/start.png" alt=""> 开启</button> -->
-                              <button class="toggle-develop-btn publishing" data-id="${id}"><img src="images/loading.png" alt="">启动中</button>
-                              <button class="delete-develop-btn" data-id="${id}" ><img src="images/delete.png" alt=""> 删除</button>
-                          </div>
-                        </div>
+                        
                       </div>
                     </div>
 
