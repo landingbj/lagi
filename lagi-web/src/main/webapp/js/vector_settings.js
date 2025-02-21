@@ -6,7 +6,7 @@ function renderResults(results) {
     const resultsContainer = $('#results');
     resultsContainer.empty(); // 清空现有结果
     results.forEach(result => {
-        const resultItem = $('<div class="result-item" style="background-color: #ffffff; border: 1px solid #e1e1e1; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);"></div>');
+        const resultItem = $('<div class="result-item"></div>');
         resultItem.html(`
                     <h3 style="font-size: 18px; margin-bottom: 10px; color: #004f99;">${result.metadata.filename}</h3>
                     <p style="font-size: 14px; line-height: 1.6; color: #555; margin-bottom: 10px;">${result.document.slice(0, 200)}...</p>
@@ -33,7 +33,7 @@ function showDetails(id) {
 }
 
 // 关闭模态框
-function closeModal() {
+function closeVectorDetailModal() {
     $('#myModal').fadeOut();
 }
 
@@ -71,68 +71,68 @@ function search() {
 }
 
 // 关闭模态框点击事件
-$('#close').click(closeModal);
+$('#close_vector_detail').click(closeVectorDetailModal);
 
 // 点击窗口外部区域关闭模态框
 $(window).click(function(event) {
-    if ($(event.target).is('#myModal')) {
-        closeModal();
-    }
+    // if (!$(event.target).is('#myModal')) {
+    //     closeVectorDetailModal();
+    // }
 });
 
 
-const dropArea = document.getElementById('drop-area');
-const fileInput = document.getElementById('fileInput');
-const fileTableBody = document.getElementById('file-table').getElementsByTagName('tbody')[0];
+// const fileInput = document.getElementById('fileInput');
+// const fileTableBody = document.getElementById('file-table').getElementsByTagName('tbody')[0];
 
-// 监听拖拽事件
-dropArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropArea.classList.add('dragover');
-});
+// const dropArea = document.getElementById('drop-area');
+// // 监听拖拽事件
+// dropArea.addEventListener('dragover', (e) => {
+//     e.preventDefault();
+//     dropArea.classList.add('dragover');
+// });
 
-dropArea.addEventListener('dragleave', () => {
-    dropArea.classList.remove('dragover');
-});
+// dropArea.addEventListener('dragleave', () => {
+//     dropArea.classList.remove('dragover');
+// });
 
-dropArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropArea.classList.remove('dragover');
+// dropArea.addEventListener('drop', (e) => {
+//     e.preventDefault();
+//     dropArea.classList.remove('dragover');
 
-    const files = e.dataTransfer.files;
-    handleFiles(files);
-});
+//     const files = e.dataTransfer.files;
+//     handleFiles(files);
+// });
 
-// 点击上传按钮，模拟文件选择框
-dropArea.addEventListener('click', () => {
-    fileInput.click();
-});
+// // 点击上传按钮，模拟文件选择框
+// dropArea.addEventListener('click', () => {
+//     fileInput.click();
+// });
 
-// 监听文件选择
-fileInput.addEventListener('change', () => {
-    const files = fileInput.files;
-    handleFiles(files);
-});
+// // 监听文件选择
+// fileInput.addEventListener('change', () => {
+//     const files = fileInput.files;
+//     handleFiles(files);
+// });
 
-// 处理文件上传的逻辑
-function handleFiles(files) {
-    const fileList = Array.from(files);
-    fileList.forEach((file) => {
-        // 将文件信息插入表格
-        const row = fileTableBody.insertRow();
-        const fileNameCell = row.insertCell(0);
-        const fileSizeCell = row.insertCell(1);
-        const fileTypeCell = row.insertCell(2);
+// // 处理文件上传的逻辑
+// function handleFiles(files) {
+//     const fileList = Array.from(files);
+//     fileList.forEach((file) => {
+//         // 将文件信息插入表格
+//         const row = fileTableBody.insertRow();
+//         const fileNameCell = row.insertCell(0);
+//         const fileSizeCell = row.insertCell(1);
+//         const fileTypeCell = row.insertCell(2);
 
-        fileNameCell.textContent = file.name;
-        fileSizeCell.textContent = formatFileSize(file.size);
-        fileTypeCell.textContent = file.type;
-    });
-}
+//         fileNameCell.textContent = file.name;
+//         fileSizeCell.textContent = formatFileSize(file.size);
+//         fileTypeCell.textContent = file.type;
+//     });
+// }
 
-// 格式化文件大小
-function formatFileSize(size) {
-    if (size < 1024) return size + ' B';
-    else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB';
-    else return (size / (1024 * 1024)).toFixed(2) + ' MB';
-}
+// // 格式化文件大小
+// function formatFileSize(size) {
+//     if (size < 1024) return size + ' B';
+//     else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB';
+//     else return (size / (1024 * 1024)).toFixed(2) + ' MB';
+// }

@@ -1093,44 +1093,47 @@ function enableCanvasDrag() {
     let canvasContainer = document.getElementById("orchestration-canvas-container");
     let isDragging = false;
     let startX, startY;
-
-    canvasContainer.addEventListener("mousedown", (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-    });
-
-    canvasContainer.addEventListener("mousemove", (e) => {
-        if (isDragging) {
-            let offsetX = e.clientX - startX;
-            let offsetY = e.clientY - startY;
-            canvasContainer.scrollLeft -= offsetX;
-            canvasContainer.scrollTop -= offsetY;
+    if(canvasContainer) {
+        canvasContainer.addEventListener("mousedown", (e) => {
+            isDragging = true;
             startX = e.clientX;
             startY = e.clientY;
-        }
-    });
-
-    canvasContainer.addEventListener("mouseup", () => {
-        isDragging = false;
-    });
+        });
+    
+        canvasContainer.addEventListener("mousemove", (e) => {
+            if (isDragging) {
+                let offsetX = e.clientX - startX;
+                let offsetY = e.clientY - startY;
+                canvasContainer.scrollLeft -= offsetX;
+                canvasContainer.scrollTop -= offsetY;
+                startX = e.clientX;
+                startY = e.clientY;
+            }
+        });
+    
+        canvasContainer.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+    }
 }
 
 // Enable Canvas Zoom
 function enableCanvasZoom() {
     let canvasContainer = document.getElementById("orchestration-canvas-container");
-    canvasContainer.addEventListener("wheel", (e) => {
-        e.preventDefault();
-        let zoom = e.deltaY > 0 ? 0.9 : 1.1;
-        scaleFactor *= zoom;
-        scaleFactor = Math.max(0.5, Math.min(scaleFactor, 3));
-        canvas.style.transform = `scale(${scaleFactor})`;
-        const rect = canvasContainer.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const offsetY = e.clientY - rect.top;
-        canvasContainer.scrollLeft = (canvasContainer.scrollLeft + offsetX) * zoom - offsetX;
-        canvasContainer.scrollTop = (canvasContainer.scrollTop + offsetY) * zoom - offsetY;
-    });
+    if(canvasContainer) {
+        canvasContainer.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let zoom = e.deltaY > 0 ? 0.9 : 1.1;
+            scaleFactor *= zoom;
+            scaleFactor = Math.max(0.5, Math.min(scaleFactor, 3));
+            canvas.style.transform = `scale(${scaleFactor})`;
+            const rect = canvasContainer.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+            canvasContainer.scrollLeft = (canvasContainer.scrollLeft + offsetX) * zoom - offsetX;
+            canvasContainer.scrollTop = (canvasContainer.scrollTop + offsetY) * zoom - offsetY;
+        });
+    } 
 }
 
 enableCanvasDrag();
