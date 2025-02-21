@@ -519,7 +519,7 @@
     background-color: #8a965f;
     color: white;
     border-radius: 5px;
-    font-size: 10px;
+    font-size: 12px;
     height: 24px;
     
 }
@@ -533,7 +533,7 @@
 .toggle-develop-btn .delete-develop-btn {
     height: 24px !important;
     border-radius: 5px;
-    font-size: 10px;
+    font-size: 12px;
     /* padding: 10px 10px; */
 }
 
@@ -547,7 +547,7 @@
     border-radius: 5px;
     height: 24px !important;
     margin-top: 2px !important;
-    font-size: 10px;
+    font-size: 12px;
     width: 64px;
     margin-left: 10px;
 }
@@ -559,7 +559,7 @@
     width: 64px;
     height: 24px !important;
     border-radius: 5px;
-    font-size: 10px;
+    font-size: 12px;
     margin-left: 10px;
     margin-right: 15px;
 }
