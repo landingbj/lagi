@@ -1138,6 +1138,34 @@ enableCanvasZoom();
 
 // Placeholder Save Function
 function saveOrchestration() {
-    console.log("Saving orchestration:", { nodes, connections });
+    let agentId = document.getElementById("orchestration-modal").getAttribute("data-agent-id");
+    let rows = document.querySelectorAll("#orchestration-table tbody tr");
+    let orchestrationData = [];
+
+    rows.forEach(row => {
+        let task = row.children[0].children[0].value.trim();
+        let logic = row.children[1].children[0].value.trim();
+        if (task && logic) {
+            orchestrationData.push({ task, logic });
+        }
+    });
+
+    fetch('/agent/orchestration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            lagiUserId: globalUserId,
+            agentId: agentId,
+            orchestrationData: orchestrationData
+        })
+    }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("修改成功");
+                closeOrchestrationAgent();
+            } else {
+                alert("修改失败");
+            }
+        });
 }
 // ========= 编排智能体js结束=============
