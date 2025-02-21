@@ -147,15 +147,11 @@ models:
     enable: true
     model: deepseek-chat
     driver: ai.llm.adapter.impl.DeepSeekAdapter
-    # Volcengine DeepSeek API Address
-    # https://ark.cn-beijing.volces.com/api/v3/chat/completions
-    # Aliyun DeepSeek API Address
-    # https://dashscope.aliyuncs.com/compatible-mode/v1
-    # Baidu Cloud DeepSeek API Address
-    # https://qianfan.baidubce.com/v2/chat/completions
-    # Tencent Cloud DeepSeek API Address
-    # https://api.lkeap.cloud.tencent.com/v1
     api_address: https://api.deepseek.com/chat/completions
+               # https://ark.cn-beijing.volces.com/api/v3/chat/completions
+               # https://dashscope.aliyuncs.com/compatible-mode/v1
+               # https://qianfan.baidubce.com/v2/chat/completions
+               # https://api.lkeap.cloud.tencent.com/v1
     api_key: your-api-key # url address https://platform.deepseek.com/api_keys
 
   # Claude is a next generation AI assistant built by Anthropic and trained to be safe, accurate, and secure to help you do your best work.
