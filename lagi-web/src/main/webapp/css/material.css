@@ -1,0 +1,194 @@
+
+
+.material-item {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.material-item table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+
+.material-item th, .material-item td {
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 8px;
+}
+
+.material-item th {
+    background-color: #f2f2f2;
+    font-size: 16px;
+}
+
+
+
+.drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 20px;
+    width: 96%;
+    padding: 20px;
+    text-align: center;
+    color: #555;
+    transition: all 0.3s ease;
+    margin-left: auto;
+    margin-right: auto;
+}
+.drop-area.highlight {
+    border-color: #2e7d32;
+}
+.drop-area p {
+    margin: 0;
+    font-size: 1em;
+}
+.drop-area input[type="file"] {
+    display: none;
+}
+.drop-area .button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 10px;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+.drop-area .button:hover {
+    background-color: #2c682d;
+}
+
+.chat-settings {
+    width: 100%;
+    display: flex;
+}
+
+.chat-setting-item {
+    width: 46%;
+    height:330px;
+    background-color: rgb(237 237 237);
+    padding: 20px 40px;
+    border-radius: 15px;
+    display: inline-block;
+    margin-right: 20px;
+    font-size: 14px;
+    color: rgb(21 21 21);
+}
+
+.chat-setting-item h2 {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.temperature-intro {
+    font-size: 14px;
+    color: black;
+}
+
+.temperature-control{
+    width: 100%;
+    height: 100px;
+    margin-top: 20px; 
+    display: flex; 
+    align-items: center;
+}
+
+.temperature-control label {
+    font-size: 14px; 
+    margin-right: 10px; 
+    width: 200px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.temperature-control label img {
+    width: 48px;
+    height: 48px;
+}
+
+
+.chat-setting-item input{
+    border: 2px solid rgb(250 173 20) !important;
+    border-radius: 10px !important;
+}
+
+.setting-btn {
+    border: none; 
+    padding: 8px 16px;
+    font-size: 1.1em; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    flex: 1;
+    color: white;
+    height: 40px;
+    margin-left: 10px;
+}
+
+.setting-submit-btn {
+    background-color: rgb(45 89 255);
+}
+
+.setting-reset-btn {
+    background-color: rgb(249 77 77)
+}
+
+.split-arg-item {
+    margin-top: 10px; 
+    display: flex; 
+    align-items: center;
+    height: 40px;
+}
+
+.split-arg-item label {
+    font-size: 1.2em;
+    margin-right: 10px; 
+    width: 180px;
+}
+
+.split-bottom{
+    font-size: 10px;
+    margin-top: 32px;
+}
+
+.chat-setting-item-control {
+    width: 100%;
+    /* height: 100px; */
+    margin-top: 20px; 
+    display: flex; 
+    align-items: center;
+}
+
+.vector-search {
+    position: absolute;
+    right: 0px;
+    width: 51px;
+    height: 51px;
+    background: rgb(45 89 255);
+    background-image: url('../images/search.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    /* background-size: cover; */
+}
+
+#searchText{
+    border: 1px solid gray;
+}
+
+#results{
+    width: 100%;
+    height: 500px;
+    overflow-y: scroll;
+}
+
+.result-item {
+    width: 100%;
+    background-color: rgb(237 237 237);
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}

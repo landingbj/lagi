@@ -718,17 +718,23 @@ pre .key {
 }
 
 /* 仅影响 id 为 agent-list-container 下的分页容器 */
-#agent-list-container .pagination {
+.pagination {
     display: flex;             /* 使用 flexbox 布局 */
     justify-content: center;   /* 水平居中对齐分页按钮 */
     margin-top: 20px;          /* 分页区域与表格之间的距离 */
 }
 
 /* 仅影响 id 为 agent-list-container 下的分页按钮 */
-#agent-list-container .pagination button {
+.pagination button {
     /*position: absolute;*/
     bottom: 50px;
     margin: 0 5px;             /* 按钮之间的间距 */
+    width: 26px;
+    height: 26px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    border: 1px solid gray;
+    color: gray;
 }
 
 

@@ -9,7 +9,7 @@
     --edit-color: rgb(24 144 255);
 
 }
-.user-model {
+.user-model, .user-material {
     display: none;           /* 默认隐藏 */
     width: 100%;             /* 宽度占满父容器 */
     height: 90%;            /* 高度占满父容器 */
@@ -24,7 +24,7 @@
 }
 
 
-.user-model-head {
+.user-model-head, .user-material-head {
     width: 100%;
     height: 44px;
     /* margin-top: 32px; */
@@ -36,12 +36,12 @@
 
 }
 
-.user-model-head span {
+.user-model-head span, .user-material-head span {
     font-size: var(--user-model-title-height);
     font-weight: 600;
 }
 
-.user-model-head span::before{
+.user-model-head span::before, .user-material-head span::before{
     content: ''; /* 生成空内容 */
     position: absolute;
     left: 0;
@@ -52,7 +52,7 @@
     background-color: rgb(0, 0, 0); /* 竖线颜色 */
 }
 
-.model-modules-nav{
+.model-modules-nav, .material-nav{
     margin-top: 0.5rem;
     
     /* background-color: var(--rechage-color2); */
@@ -62,7 +62,7 @@
     margin-bottom: 2rem;
 }
 
-.model-modules-nav button {
+.model-modules-nav button, .material-nav button {
     width: 150px;
     height: 48px;
     margin-right: 1rem;
@@ -71,7 +71,7 @@
     border: #888 1px solid;
 }
 
-.model-modules-nav-not-active {
+.model-modules-nav-not-active, .material-nav-not-active {
     color: rgb(33, 33, 33) !important;
     background-color: white;
 }
@@ -82,17 +82,17 @@
 } */
 
 
-.model-modules-nav-active {
+.model-modules-nav-active,  .material-nav-active{
     background-color: var(--rechage-color2);
     color: rgb(255, 255, 255) !important;
 }
 
-.model-modules-nav a {
+.model-modules-nav a, .material-nav a {
     margin-top: 10px;
     float: right;
 }
 
-.model-module {
+.model-module, .material {
     display: flex; /* 启用 Flexbox */
 }
 
@@ -343,7 +343,7 @@
     flex-wrap: wrap;
     gap: 20px;
     width: 100%;
-    height: 500px;
+    height: 400px;
     border-radius: 5px;
     /* border: 1px solid gray; */
     padding: 14px 0px;
@@ -618,7 +618,7 @@
     margin-top: 20px;
 }
 
-.modal-container th, td {
+.modal-container th, .modal-container td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;

@@ -133,7 +133,11 @@ function createPageButton(pageNumber, currentPage, container) {
     button.textContent = pageNumber;
     button.onclick = () => loadUploadFileList(pageNumber);
     if (pageNumber === currentPage) {
-        button.style.fontWeight = 'bold';
+        button.style.backgroundColor = '#238efc';
+        button.style.color = '#fff';
+    } else {
+        button.style.backgroundColor = '#fff';
+        button.style.color = 'gray';
     }
     container.appendChild(button);
 }
@@ -176,34 +180,61 @@ async function deleteFile(filename, fileId) {
 
 $(document).ready(function() {
     // 设置默认选中的链接并显示 wdy1，隐藏 wdy2
-    $('#link1').css('background-color', '#055a7a').css('font-weight', 'bold');
-    $('#my-corpus').show();
-    $('#chat-settings').hide();
+    // $('#link1').css('background-color', '#055a7a').css('font-weight', 'bold');
+    // $('#my-corpus').show();
+    // $('#chat-settings').hide();
 
-    // 点击事件处理
-    $('.navbar a').click(function() {
-        // 恢复所有链接的样式
-        $('.navbar a').css('background-color', '').css('font-weight', '');
+    // // 点击事件处理
+    // $('.navbar a').click(function() {
+    //     // 恢复所有链接的样式
+    //     $('.navbar a').css('background-color', '').css('font-weight', '');
 
-        // 设置点击的链接的样式
-        $(this).css('background-color', '#055a7a').css('font-weight', 'bold');
+    //     // 设置点击的链接的样式
+    //     $(this).css('background-color', '#055a7a').css('font-weight', 'bold');
 
-        // 根据点击的链接显示对应的内容
-        if ($(this).attr('id') === 'link1') {
-            $('#my-corpus').show();
-            $('#chat-settings').hide();
-            $('#vector-database').hide();
-        } else if ($(this).attr('id') === 'link2') {
-            $('#my-corpus').hide();
-            $('#vector-database').hide();
-            $('#chat-settings').show();
-        } else if ($(this).attr('id') === 'link3') {
-            $('#my-corpus').hide();
-            $('#chat-settings').hide();
-            $('#vector-database').show();
-        }
-    });
+    //     // 根据点击的链接显示对应的内容
+    //     if ($(this).attr('id') === 'link1') {
+    //         $('#my-corpus').show();
+    //         $('#chat-settings').hide();
+    //         $('#vector-database').hide();
+    //     } else if ($(this).attr('id') === 'link2') {
+    //         $('#my-corpus').hide();
+    //         $('#vector-database').hide();
+    //         $('#chat-settings').show();
+    //     } else if ($(this).attr('id') === 'link3') {
+    //         $('#my-corpus').hide();
+    //         $('#chat-settings').hide();
+    //         $('#vector-database').show();
+    //     }
+    // });
 });
+
+
+function changeMaterialPage(el) {
+    let i = -1;
+    let titles =  $('.material-title');
+    for (let index = 0; index < titles.length; index++) {
+        const title = titles[index];
+        if(el == title) {
+            $(el).removeClass('material-nav-not-active');
+            $(el).addClass('material-nav-active');
+            i = index;
+        } else {
+            $(title).removeClass('material-nav-active');
+            $(title).addClass('material-nav-not-active');
+        }
+    }    
+    let materials =  $('.material-item');
+    for (let index = 0; index < materials.length; index++) {
+        const material = $(materials[index]);
+        if(index == i) {
+            material.show();
+        } else {
+            material.hide();
+        }
+    }
+}
+
 $(document).ready(function() {
     // 默认选择聊天按钮
     $('#chatButton').css('background-color', '#333');
@@ -321,3 +352,72 @@ $(document).ready(function() {
         $('#distance_value').text($(this).val());
     });
 });
+
+
+/*******************drop js*************************/ 
+
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlight(e) {
+    preventDefaults(e);
+    dropArea.classList.add('highlight');
+}
+
+function unhighlight(e) {
+    preventDefaults(e);
+    dropArea.classList.remove('highlight');
+}
+
+dropArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    let dt = e.dataTransfer;
+    let files = dt.files;
+
+    handleFiles(files);
+}
+
+fileInput.addEventListener('change', () => {
+    handleFiles(fileInput.files);
+}, false);
+
+function handleFiles(files) {
+    ([...files]).forEach(uploadFile);
+}
+
+function uploadFile(file) {
+    console.log(file.name);
+    let url = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}`
+    const formData = new FormData();
+    formData.append('file', file);
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    }).then(
+        response => {
+            return response.json();
+        }
+    ).then(data=>{
+        let res = data.status;
+        if(res.data) {
+            console.log("上传成功");
+            loadUploadFileList(1);
+        }
+    }).catch(error=>{
+        alert("上传失败");
+    });
+}
