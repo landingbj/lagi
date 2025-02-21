@@ -616,8 +616,8 @@ const runningMap = {
 }
 
 const runningToggleImg = {
-    "0": "images/stop.png",
-    "1": "images/start.png",
+    "0": "images/start.png",
+    "1": "images/stop.png",
     "2": "images/loading.png",
 }
 

@@ -61,7 +61,13 @@ public class ModelManagerServlet extends RestfulServlet{
         if(StrUtil.isBlank(remoteServiceUrl)) {
            throw new RRException("Remote service url is not set");
         }
-        URL url = new URL(remoteServiceUrl + request.getRequestURI());
+        String queryString = request.getQueryString();
+        URL url;
+        if(StrUtil.isNotBlank(queryString)) {
+            url = new URL(remoteServiceUrl + request.getRequestURI() + "?" + queryString);
+        } else {
+            url = new URL(remoteServiceUrl + request.getRequestURI());
+        }
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
         connection.setRequestProperty("Content-Type", request.getContentType());
@@ -76,15 +82,24 @@ public class ModelManagerServlet extends RestfulServlet{
         }
         int responseCode = connection.getResponseCode();
         response.setStatus(responseCode);
-
+        String contentType = connection.getContentType();
+        response.setContentType(contentType);
+        PrintWriter out = response.getWriter();
         try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
             String inputLine;
             StringBuilder content = new StringBuilder();
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
+                if(("text/event-stream;charset=utf-8".equals(contentType))) {
+                    out.println(inputLine);
+                    out.flush();
+                }
             }
-            response.getWriter().write(content.toString());
+            if(!("text/event-stream;charset=utf-8".equals(contentType))) {
+                out.write(content.toString());
+            }
         }
+        out.close();
         connection.disconnect();
     }
 
