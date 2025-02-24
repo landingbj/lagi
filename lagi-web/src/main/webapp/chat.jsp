@@ -1132,6 +1132,47 @@
 </div>
 
 <!-- 创建智能体弹窗结束 -->
+<!-- 编排智能体弹窗结束 -->
+<div id="orchestration-modal-container" class="orchestration-modal-container">
+  <!-- 模态框区域 -->
+  <div id="orchestration-modal" class="orchestration-modal">
+    <div class="orchestration-modal-header">
+      <span>编排</span>
+      <button class="orchestration-add-btn" onclick="addRow()">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+        </svg>
+        添加
+      </button>
+    </div>
+    <div class="orchestration-modal-body">
+      <table id="orchestration-table" class="orchestration-table">
+        <thead>
+        <tr>
+          <th class="orchestration-task">任务</th>
+          <th class="orchestration-logic">逻辑</th>
+          <th>节点类型</th>
+          <th>结构类型</th>
+          <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 动态添加的行 -->
+        </tbody>
+      </table>
+    </div>
+    <div class="orchestration-modal-footer">
+      <button class="orchestration-save-btn" onclick="saveOrchestration()">保存更改</button>
+      <button class="orchestration-cancel-btn" onclick="closeOrchestrationAgent()">取消</button>
+    </div>
+  </div>
+
+  <!-- 画布区域 -->
+  <div id="orchestration-canvas-container" class="orchestration-canvas-container">
+    <svg id="orchestration-canvas" class="orchestration-canvas"></svg>
+  </div>
+</div>
+<!-- 编排智能体弹窗结束 -->
 
 
 <!-- mobile debug 插件 -->
