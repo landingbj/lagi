@@ -40,4 +40,6 @@ public class Backend {
     private Boolean dependingOnTheContext;
     private String filter;
     private String defaultModel;
+    private String publisher;
+    private String serverName;
 }
