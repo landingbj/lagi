@@ -768,6 +768,11 @@ function stopDevelop(el) {
         "id":id,
         "userId": userId
     }
+    let info = {
+        id : "id",
+        running: "2",
+        modelPath: ""
+    }
     fetch('model/stop', {
         method: "POST",
         body: JSON.stringify(params),
@@ -776,15 +781,15 @@ function stopDevelop(el) {
     .then(data => {
         let status = data.data;
         if(status) {
-            $(el).closest('.model-card').find('.model-status').text('是否启动: 停止');
-            $(el).text('开启');
-            $(el).removeClass('unpublished').addClass('published');
-            $(el).closest('.model-card').find('.status-indicator').removeClass('unpublished').addClass('published');
+            info.running = 0;
         } else {
-            alert('停止模型失败');
+            info.running = 1;
         }
+        updateRenderDevelop(el, info);
     })
     .catch(error => {
+        info.running = 1;
+        updateRenderDevelop(el, info);
         alert('停止模型失败');
     });
 }

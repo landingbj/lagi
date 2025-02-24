@@ -21,7 +21,7 @@ import java.io.IOException;
 public class LocalRagAgent extends BaseChatAgent {
     private final Gson gson = new Gson();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
-    private static final int HTTP_TIMEOUT = 30;
+    private static final int HTTP_TIMEOUT = 60;
 
     public LocalRagAgent(AgentConfig agentConfig) {
         super(agentConfig);
