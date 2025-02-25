@@ -303,6 +303,10 @@ function deleteUserDatasets() {
     let checkedValues = $('#sel-datasets input[type="checkbox"]:checked').map(function() {
         return this.value;
     }).get();
+    if(checkedValues.length == 0) {
+        alert('请选择要删除的数据集');
+        return;
+    }
     let params = {
         "userId" : userId,
         "datasetNames": checkedValues
@@ -393,7 +397,9 @@ async function doTrain(el) {
         $(el).prop('disabled', false).css("opacity", 1);
     }
 
+    lossChart.clean();
     $('#train-view-content').empty();
+    $('#train-view-content').append(`<div class="loading-box">正在启动训练...<span><span></div>`);
     try {
         const response = await fetch('model/train', {
             method: "POST",
@@ -405,38 +411,109 @@ async function doTrain(el) {
             },
             body: JSON.stringify(params),
         });
-
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        $('#train-view-content').empty();
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
 
-        function readStream(params) {
+        function readStream(params, el) {
             return reader.read().then(({ done, value }) => {
                 if (done) {
-                    getLastTrainLossPng(params, $('#train-view-content'));
+                    // getLastTrainLossPng(params, $('#train-view-content'));
                     console.log('Connection closed by server');
+                    enableTrain(el);
                     return;
                 }
                 let msg = decoder.decode(value, { stream: true });
                 msg =  msg.slice(5);
-                console.log('Received data:', msg);
+                try {
+                    let json =  JSON.parse(msg.replaceAll("'", "\""));
+                    let loss = json["loss"];
+                    let epoch = json["epoch"];
+                    if(loss && epoch) {
+                        lossChart.drawPoint(loss, epoch);
+                    }
+                } catch (e) {
+                }
                 $('#train-view-content').append(`<p>${msg}</p>`);
                 scrollToButton();
                 return readStream(params);
             }).catch(error => {
                 console.error('Connection error:', error);
+                enableTrain(el);
             });
         }
 
-        readStream(params);
+        readStream(params, el);
     } catch (error) {
         console.error('Fetch error:', error);
+        enableTrain(el);
     }
-    enableTrain(el);
 }
+
+
+
+
+
+class LossChart{
+    constructor(id) {
+        this.chart = echarts.init(document.getElementById(id));
+        this.lossValues = [];
+        this.epochs = [];
+        this.option = {
+            title: {
+                text: 'training loss',
+                left: 'center', // 标题水平居中
+                textStyle: {
+                    fontSize: 10 // 设置标题文字大小，可根据需要调整
+                }
+            },
+            grid: {
+                left: '15%', // 调整图表左侧边距，为 y 轴标签留出更多空间
+                right: '0',
+                top: '0',
+                bottom: '10%'
+            },
+            xAxis: {
+                name: 'epoch',
+                type: 'category',
+                data: this.epochs
+            },
+            yAxis: {
+                name: 'loss',
+                type: 'value'
+            },
+            series: [{
+                name: 'loss',
+                type: 'line',
+                data: this.lossValues
+            }]
+        };
+        this.chart.setOption(this.option);
+    }
+
+    drawPoint(loss, epoch) {
+        this.epochs.push(epoch);
+        this.lossValues.push(loss);
+        this.option.xAxis.data = this.epochs;
+        this.option.series[0].data = this.lossValues;
+        this.chart.setOption(this.option);
+    }
+
+    clean() {
+        this.epochs = [];
+        this.lossValues = [];
+        this.option.xAxis.data = this.epochs;
+        this.option.series[0].data = this.lossValues;
+        this.chart.setOption(this.option);
+    }
+}
+
+
+const lossChart =  new LossChart('loss-canvas');
 
 
 function getLastTrainLossPng(trainParam , el) {

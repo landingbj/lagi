@@ -73,7 +73,8 @@
     padding: 20px 40px;
     border-radius: 15px;
     display: inline-block;
-    margin-right: 20px;
+    margin-right: 2%;
+    margin-left: 2%;
     font-size: 14px;
     color: rgb(21 21 21);
 }
@@ -179,10 +180,12 @@
 }
 
 #results{
-    width: 92%;
+    width: 96%;
     height: 500px;
-    padding: 20px 0px;
     overflow-y: scroll;
+    margin-top: 20px;
+    margin-left: 2%;
+    margin-right: 2%;
 }
 
 .result-item {

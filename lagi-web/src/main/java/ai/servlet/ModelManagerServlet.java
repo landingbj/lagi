@@ -32,6 +32,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,8 +85,9 @@ public class ModelManagerServlet extends RestfulServlet{
         response.setStatus(responseCode);
         String contentType = connection.getContentType();
         response.setContentType(contentType);
+        response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
             String inputLine;
             StringBuilder content = new StringBuilder();
             while ((inputLine = in.readLine()) != null) {

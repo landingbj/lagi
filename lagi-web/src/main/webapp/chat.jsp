@@ -559,7 +559,8 @@
                           <input name="up-datasets" type="file" id="up-datasets">
                           <button class="train-dataset-upload-btn" onclick="uploadUserDatasets()">
                             上传
-                            </button> 
+                          </button>
+                          <br>
                           <span id="up-datasets-status" ></span>
                         </div>
                         <div class="train-dataset-sel">
@@ -666,6 +667,9 @@
                     </div>
                     <div class="train-view" id="train-view">
                       <div class="train-view-title"><strong>训练日志</strong> </div>
+                      <div class="train-loss w-full">
+                          <canvas id="loss-canvas" width="200", height="200"></canvas>
+                      </div>
                       <div class="train-view-content" id="train-view-content"></div>
                     </div>
                   </div>
@@ -1183,6 +1187,7 @@
 <script src="libs/jquery-3.1.1.min.js"></script>
 <script src="js/fingerprint2.min.js"></script>
 <script src="libs/marked.min.js"></script>
+<script src="libs/echart.min.js"></script>
 <script src="libs/sse.js?ver=${initParam.version}"></script>
 <script src="js/config.js?ver=${initParam.version}"></script>
 <script src="js/common.js?ver=${initParam.version}"></script>
