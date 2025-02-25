@@ -22,7 +22,12 @@ function renderResults(results) {
 function showDetails(id) {
     const result = searchResults.find(r => r.id === id);
     $('#modalTitle').text(result.metadata.filename);
-    $('#modalDocument').text(result.document);
+
+    let htmlContent = result.document;
+    htmlContent = htmlContent.replace(/\\n/g, '</br>');
+    let content = marked.parse(htmlContent);
+    $('#modalDocument').html(content);
+    
     $('#modalId').text(result.id);
     $('#modalFilename').text(result.metadata.filename);
     $('#modalFilepath').text(result.metadata.filepath);
@@ -80,59 +85,21 @@ $(window).click(function(event) {
     // }
 });
 
+$(document).ready(function () {
+    const $dropArea = $('#dropArea');
+    // 阻止浏览器默认的拖拽行为
+    $dropArea.on('dragenter dragover dragleave drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
 
-// const fileInput = document.getElementById('fileInput');
-// const fileTableBody = document.getElementById('file-table').getElementsByTagName('tbody')[0];
+    // 当文件被拖入时添加高亮样式
+    $dropArea.on('dragenter dragover', function () {
+        $dropArea.addClass('highlight');
+    });
 
-// const dropArea = document.getElementById('drop-area');
-// // 监听拖拽事件
-// dropArea.addEventListener('dragover', (e) => {
-//     e.preventDefault();
-//     dropArea.classList.add('dragover');
-// });
-
-// dropArea.addEventListener('dragleave', () => {
-//     dropArea.classList.remove('dragover');
-// });
-
-// dropArea.addEventListener('drop', (e) => {
-//     e.preventDefault();
-//     dropArea.classList.remove('dragover');
-
-//     const files = e.dataTransfer.files;
-//     handleFiles(files);
-// });
-
-// // 点击上传按钮，模拟文件选择框
-// dropArea.addEventListener('click', () => {
-//     fileInput.click();
-// });
-
-// // 监听文件选择
-// fileInput.addEventListener('change', () => {
-//     const files = fileInput.files;
-//     handleFiles(files);
-// });
-
-// // 处理文件上传的逻辑
-// function handleFiles(files) {
-//     const fileList = Array.from(files);
-//     fileList.forEach((file) => {
-//         // 将文件信息插入表格
-//         const row = fileTableBody.insertRow();
-//         const fileNameCell = row.insertCell(0);
-//         const fileSizeCell = row.insertCell(1);
-//         const fileTypeCell = row.insertCell(2);
-
-//         fileNameCell.textContent = file.name;
-//         fileSizeCell.textContent = formatFileSize(file.size);
-//         fileTypeCell.textContent = file.type;
-//     });
-// }
-
-// // 格式化文件大小
-// function formatFileSize(size) {
-//     if (size < 1024) return size + ' B';
-//     else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB';
-//     else return (size / (1024 * 1024)).toFixed(2) + ' MB';
-// }
+    // 当文件离开拖拽区域时移除高亮样式
+    $dropArea.on('dragleave drop', function () {
+        $dropArea.removeClass('highlight');
+    });
+});

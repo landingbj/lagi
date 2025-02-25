@@ -400,24 +400,31 @@ function handleFiles(files) {
 }
 
 function uploadFile(file) {
+    $('#loadingSpinner').removeClass('hidden');
     console.log(file.name);
-    let url = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}`
+    let url = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}`;
     const formData = new FormData();
     formData.append('file', file);
+
     fetch(url, {
         method: 'POST',
         body: formData
-    }).then(
-        response => {
-            return response.json();
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`上传失败，状态码: ${response.status}`);
         }
-    ).then(data=>{
-        let res = data.status;
-        if(res.data) {
-            console.log("上传成功");
+        return response.json();
+    }).then(data => {
+        if (data.status && data.status === 'success') { // 假设接口返回数据中有 success 字段标记成功
+            alert(`上传成功！`);
             loadUploadFileList(1);
+        } else {
+            throw new Error("上传失败");
         }
-    }).catch(error=>{
-        alert("上传失败");
+    }).catch(error => {
+        alert(`上传失败: ${error.message}`);
+        $('#loadingSpinner').addClass('hidden');
+    }).finally(() => {
+        $('#loadingSpinner').addClass('hidden');
     });
 }

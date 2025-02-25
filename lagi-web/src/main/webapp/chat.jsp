@@ -378,6 +378,8 @@
                       <input type="file" id="fileInput" />
                       <button class="button" onclick="document.getElementById('fileInput').click()">选择文件</button>
                     </div>
+                    <div id="loadingSpinner" class="hidden"></div> <!-- 加载圈圈 -->
+                    <div id="results_file">
                     <table id="upload-file-list1"  class="" border="1">
                       <thead>
                       <tr>
@@ -391,6 +393,7 @@
                       <!-- 动态生成已上传文件数据 -->
                       </tbody>
                     </table>
+                    </div>
                     <div class="pagination" id="file-upload-pagination">
                       <!-- 分页按钮将动态添加到这里 -->
                     </div>
@@ -1179,6 +1182,7 @@
 <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
 <script src="libs/jquery-3.1.1.min.js"></script>
 <script src="js/fingerprint2.min.js"></script>
+<script src="libs/marked.min.js"></script>
 <script src="libs/sse.js?ver=${initParam.version}"></script>
 <script src="js/config.js?ver=${initParam.version}"></script>
 <script src="js/common.js?ver=${initParam.version}"></script>
