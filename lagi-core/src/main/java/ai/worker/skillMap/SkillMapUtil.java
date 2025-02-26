@@ -173,8 +173,10 @@ public class SkillMapUtil {
         AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
         if (agentIntentScore == null) {
             ChatCompletionResult chatCompletionResult = agent.communicate(request);
-            double scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(request), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
-            skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
+            if(chatCompletionResult != null) {
+                double scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(request), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+                skillMap.saveAgentScore(agent.getAgentConfig(), keywords, scoring);
+            }
         }
     }
 }

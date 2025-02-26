@@ -3,6 +3,7 @@ package ai.medusa.utils;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.QaPair;
 import ai.common.utils.ThreadPoolManager;
+import ai.llm.pojo.GetRagContext;
 import ai.llm.service.CompletionsService;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.impl.CompletionCache;
@@ -13,6 +14,7 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
+import ai.vector.VectorDbService;
 import ai.vector.VectorStoreService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +30,7 @@ public class PromptCacheTrigger {
     private static final double LCS_RATIO_QUESTION = PromptCacheConfig.LCS_RATIO_QUESTION;
     private final CompletionCache completionCache;
     private static final ExecutorService executorService;
-    private final VectorStoreService vectorStoreService = new VectorStoreService();
+    private final VectorDbService vectorStoreService = new VectorDbService();
     private final LRUCache<PromptInput, List<ChatCompletionResult>> promptCache;
     private final QaCache qaCache;
 
@@ -320,10 +322,14 @@ public class PromptCacheTrigger {
             text  = firstPrompt + "," +text;
         }
 //        String text = String.join(";", promptInput.getPromptList());
-        List<IndexSearchData> indexSearchDataList = vectorStoreService.search(text, promptInput.getParameter().getCategory());
-        String context = completionsService.getRagContext(indexSearchDataList).getContext();
         ChatCompletionRequest request = completionsService.getCompletionsRequest(
                 promptInput.getParameter().getSystemPrompt(), lastPrompt, promptInput.getParameter().getCategory());
+        List<IndexSearchData> indexSearchDataList = vectorStoreService.searchByContext(request);
+        GetRagContext ragContext = completionsService.getRagContext(indexSearchDataList);
+        String context = null;
+        if(ragContext != null) {
+            context = ragContext.getContext();
+        }
         if (context != null) {
             completionsService.addVectorDBContext(request, context);
         }

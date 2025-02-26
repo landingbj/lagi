@@ -2,13 +2,15 @@ package ai.vector;
 
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
-import ai.llm.pojo.EnhanceChatCompletionRequest;
+import ai.medusa.utils.LCS;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;
+import ai.utils.qa.ChatCompletionUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class VectorDbService {
     private VectorStoreService vectorStoreService;
@@ -51,11 +53,13 @@ public class VectorDbService {
 
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<IndexSearchData> search = vectorStoreService.searchByContext(request);
-        return PriorityWordUtil.sortByPriorityWord(search);
-    }
-
-    public List<IndexSearchData> searchByContext(EnhanceChatCompletionRequest request) {
-        List<IndexSearchData> search = vectorStoreService.searchByContext(request);
+        String lastMessage = ChatCompletionUtil.getLastMessage(request);
+        search = search.stream().filter(indexSearchData -> {
+            String text = indexSearchData.getText();
+            Set<String> longestCommonSubstrings = LCS.findLongestCommonSubstrings(lastMessage, text, 2);
+            double ratio = LCS.getLcsRatio(lastMessage, longestCommonSubstrings);
+            return ratio > 0.1;
+        }).collect(Collectors.toList());
         return PriorityWordUtil.sortByPriorityWord(search);
     }
 
