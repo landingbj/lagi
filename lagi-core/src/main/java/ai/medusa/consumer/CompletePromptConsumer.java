@@ -1,6 +1,7 @@
 package ai.medusa.consumer;
 
 import ai.common.pojo.IndexSearchData;
+import ai.llm.pojo.GetRagContext;
 import ai.llm.service.CompletionsService;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.impl.CompletionCache;
@@ -80,8 +81,11 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
         PromptInput promptInput = item.getPromptInput();
         String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
         ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
-        String context = completionsService.getRagContext(indexSearchDataList).getContext();
-        completionsService.addVectorDBContext(chatCompletionRequest, context);
+        GetRagContext ragContext = completionsService.getRagContext(indexSearchDataList);
+        if(ragContext != null) {
+            String context = ragContext.getContext();
+            completionsService.addVectorDBContext(chatCompletionRequest, context);
+        }
         return chatCompletionRequest;
     }
 
