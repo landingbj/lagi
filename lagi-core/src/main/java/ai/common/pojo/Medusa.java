@@ -20,4 +20,6 @@ public class Medusa {
     private Long preDelay;
     private Double lcsRatioPromptInput;
     private Double similarityCutoff;
+    @JsonProperty("llm_assist")
+    private Boolean llmAssist;
 }

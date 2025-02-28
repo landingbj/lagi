@@ -225,22 +225,23 @@ stores:
   database:
     - name: mysql
       jdbcUrl: you-jdbc-url
-      driverClassName: com.mysql.cj.jdbc.Driver
+      driver: com.mysql.cj.jdbc.Driver
       username: your-username
       password: your-password
 
   rag: # RAG enhances large language models by integrating external knowledge retrieval.
     vector: chroma
-    fulltext: elastic
+    term: elastic
     graph: landing
     enable: false
     priority: 10
-    default: "Please give prompt more precisely"
     track: true
+    default: "Please give prompt more precisely"
 
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
     enable: false
     algorithm: hash
+    llm_assist: false
 
 functions:
   embedding:
