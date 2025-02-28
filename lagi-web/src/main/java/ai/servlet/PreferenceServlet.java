@@ -130,7 +130,14 @@ public class PreferenceServlet extends RestfulServlet {
         if("videoTrack".equals(type)) {
             setActivate(orDefault, getModelName(preferenceRequest.getVideoTrack(), getModelService(Video2TrackManager.getInstance())));
         }
-        return orDefault;
+        return orDefault.stream()
+                .filter(distinctByKey(ModelInfo::getModel))
+                .collect(Collectors.toList());
+    }
+
+    public static <T> java.util.function.Predicate<T> distinctByKey(java.util.function.Function<? super T, ?> keyExtractor) {
+        Map<Object, Boolean> seen = new HashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     private ModelPreferenceDto loadUserPreference(String fingerId, HttpServletRequest request) {
