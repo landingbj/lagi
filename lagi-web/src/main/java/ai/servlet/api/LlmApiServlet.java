@@ -146,7 +146,17 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
+
         ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+        Integer max_tokens =1024;
+        Object maxTokens = BeanUtil.getProperty(chatCompletionRequest, "max_tokens");
+        if(maxTokens == null) {
+            chatCompletionRequest.setMax_tokens(max_tokens);
+        }
+        if(chatCompletionRequest!=null&&chatCompletionRequest.getMax_tokens()==0){
+            max_tokens = chatCompletionRequest.getMax_tokens();
+            chatCompletionRequest.setMax_tokens(max_tokens);
+        }
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
@@ -339,6 +349,11 @@ public class LlmApiServlet extends BaseServlet {
                 data -> {
                     lastResult[0] = data;
                     ChatCompletionResult filter = SensitiveWordUtil.filter(data);
+                    filter.setObject("chat.completion.chunk");
+                    for (ChatCompletionChoice choice : filter.getChoices()) {
+                        choice.setDelta(choice.getMessage());
+                        choice.setMessage(null);
+                    }
                     String msg = gson.toJson(filter);
                     out.print("data: " + msg + "\n\n");
                     out.flush();
@@ -348,10 +363,10 @@ public class LlmApiServlet extends BaseServlet {
                         for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
                             ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
                             ChatCompletionChoice chunkChoice = data.getChoices().get(i);
-                            if(chunkChoice.getMessage() != null) {
-                                String chunkContent = chunkChoice.getMessage().getContent();
-                                String content = choice.getMessage().getContent();
-                                choice.getMessage().setContent(content + chunkContent);
+                            if(chunkChoice.getDelta() != null) {
+                                String chunkContent = chunkChoice.getDelta().getContent();
+                                String content = choice.getDelta().getContent();
+                                choice.getDelta().setContent(content + chunkContent);
                             }
                         }
                     }
@@ -395,7 +410,8 @@ public class LlmApiServlet extends BaseServlet {
                         message.setContextChunkIds(chunkIds);
                         message.setImageList(imageList);
                         message.setContent("");
-                    lastResult[0].getChoices().get(i).setMessage(message);
+//                        message.setContent(lastResult[1].getChoices().get(0).getDelta().getContent());
+                    lastResult[0].getChoices().get(i).setDelta(message);
 
                 }
             }
