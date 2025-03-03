@@ -209,3 +209,117 @@
 .orchestration-cancel-btn:hover {
     background: #e5e7eb;
 }
+
+.my-issue {
+    border-bottom: #aaa 1px solid;
+}
+
+.my-issue a {
+    margin-top: -25px;
+    float: right;
+}
+
+/* =======新样式========*/
+/* 按钮和图标样式（操作栏中的图标+按钮组合） */
+.operation-button {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    border: none;
+    padding: 5px 10px;
+    margin: 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    gap: 5px;
+    /* 图标和文字之间的间距 */
+}
+
+.operation-button svg {
+    width: 16px;
+    height: 16px;
+    fill: white;
+    /* 确保图标颜色与按钮文字一致 */
+}
+
+/* 发布按钮 */
+.operation-button.publish {
+    color: #3bc05c;
+}
+
+/* 取消发布按钮 */
+.operation-button.unpublish {
+    color: #363636;
+}
+
+/* 编辑按钮 */
+.operation-button.edit {
+    color: #1890ff;
+}
+
+/* 编排按钮 */
+.operation-button.orchestrate {
+    color: #666666;
+}
+
+/* 删除按钮 */
+.operation-button.delete {
+    color: #f74f4f;
+}
+
+.operation-button:hover {
+    opacity: 0.8;
+    /* 鼠标悬停时稍微变淡 */
+}
+
+/* 分页样式 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 70px;
+}
+
+.pagination button {
+    font-size: 14px;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: black;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.pagination button:hover {
+    background-color: #1890ff;
+    color: white;
+    border-color: #1890ff;
+}
+
+.pagination button.active {
+    background-color: #1890ff;
+    color: white;
+    font-weight: bold;
+    border-color: #1890ff;
+}
+
+/* 确保表格和整体布局与图片保持一致 */
+#agent-list {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#agent-list th,
+#agent-list td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+#agent-list th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}

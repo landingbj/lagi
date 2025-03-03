@@ -1,10 +1,9 @@
 #queryBox {
-	border: 3px solid #51B4EF;
-	border-top: none;
-	border-bottom: none;
-	border-radius: 24px;
-	box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em
-		rgba(0, 0, 0, 0.3);
+    border: 3px solid #51B4EF;
+    border-top: none;
+    border-bottom: none;
+    border-radius: 24px;
+    box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);
 }
 
 /**
@@ -21,10 +20,10 @@
 **/
 
 #topTitle {
-	/* margin: 3em 0 0 0; */
-	/* padding-top: 16px; */
-	/* height: 180px; */
-    z-index:6;
+    /* margin: 3em 0 0 0; */
+    /* padding-top: 16px; */
+    /* height: 180px; */
+    z-index: 6;
 }
 
 #hello-page {
@@ -32,91 +31,99 @@
 }
 
 .item-column {
-	/* height: 200px;
+    /* height: 200px;
 	width: 300px; */
-	overflow:hidden;
+    overflow: hidden;
 }
 
 /* 设置不换行 */
 .item-column>p {
-	white-space: nowrap;
+    white-space: nowrap;
 }
 
 #conversationsNav a {
     padding-right: 1em;
 }
 
-.flex-bottom{
-	display: flex;
-	align-items: flex-end;
+.flex-bottom {
+    display: flex;
+    align-items: flex-end;
 }
 
-.flex-top{
-	display: flex;
-	align-items: flex-start;
+.flex-top {
+    display: flex;
+    align-items: flex-start;
 }
 
 /* 滚动速度，值越大越慢 */
 .scrollDiv {
-	position: relative;
-	animation: scroll 15s infinite linear;
+    position: relative;
+    animation: scroll 15s infinite linear;
 }
 
 /* 滚动范围 */
 @keyframes scroll {
-	0% { left: 5%; }
-	100% { left: -100%; }
+    0% {
+        left: 5%;
+    }
+
+    100% {
+        left: -100%;
+    }
 }
 
 #queryContent::-webkit-scrollbar {
-	display: none; /* Chrome Safari */
-  }
+    display: none;
+    /* Chrome Safari */
+}
 
 #demo {
-	scrollbar-width: none; /* firefox */
-	-ms-overflow-style: none; /* IE 10+ */
-	overflow-x: hidden;
-	overflow-y: auto;
+    scrollbar-width: none;
+    /* firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 
 pre {
-	padding: 5px;
-	margin: 5px;
-	text-wrap: wrap;
+    padding: 5px;
+    margin: 5px;
+    text-wrap: wrap;
 }
 
 pre .string {
-	color: green;
+    color: green;
 }
 
 pre .number {
-	color: darkorange;
+    color: darkorange;
 }
 
 pre .boolean {
-	color: blue;
+    color: blue;
 }
 
 pre .null {
-	color: magenta;
+    color: magenta;
 }
 
 pre .key {
-	color: red;
+    color: red;
 }
 
 
 
 .tooltip:before {
     content: attr(data-tooltip);
-	position: absolute;
+    position: absolute;
     left: 50%;
-	top: 0em;
+    top: 0em;
     display: block;
     /* font-size: 10px; */
-	color: #f7e9e9;
-	background-color: rgb(0, 0, 0);
+    color: #f7e9e9;
+    background-color: rgb(0, 0, 0);
     margin-top: 0.5em;
     width: 120px;
     border-radius: 6px;
@@ -133,141 +140,146 @@ pre .key {
 
 .tooltip:hover:before {
     opacity: 1;
-  }
+}
 
-.agent-pannel{
-	background-color: white;
+.agent-pannel {
+    background-color: white;
     bottom: 0.5em;
-	border: 1px solid #51B4EF;
-	border-top: none;
-	border-bottom: none;
-	border-radius: 5px;
-	box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em
-		rgba(0, 0, 0, 0.3);
+    border: 1px solid #51B4EF;
+    border-top: none;
+    border-bottom: none;
+    border-radius: 5px;
+    box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);
 }
 
 .agent-pannel ul {
-	color: #292727;
+    color: #292727;
 }
 
 .agent-pannel ul li {
-	cursor: pointer;
-	font-size: 1em;
+    cursor: pointer;
+    font-size: 1em;
 
 }
 
 .agent-pannel ul li:hover {
-	background-color: #c7e6f8;
-	color: rgb(14, 13, 13);
+    background-color: #c7e6f8;
+    color: rgb(14, 13, 13);
 }
 
 
 .agent-head {
-	background-color: #023f63;
-	color: rgb(248, 248, 248);
-	border-bottom: 1px solid #4d4d4d;
+    background-color: #023f63;
+    color: rgb(248, 248, 248);
+    border-bottom: 1px solid #4d4d4d;
 }
 
 @media (max-width:900px) {
-	.agent-pannel{
-		bottom: 0.5em;
-	}
+    .agent-pannel {
+        bottom: 0.5em;
+    }
 }
 
-.not-available{
-	color: #888181;
+.not-available {
+    color: #888181;
 }
 
 .appType {
-	display: inline-block;
-	margin: 0.5em 0.5em 0 0;
+    display: inline-block;
+    margin: 0.5em 0.5em 0 0;
 }
 
 .appType img {
-	width: 3.5em;
+    width: 3.5em;
 }
 
 .appTypeName {
-	text-align: center;
-	font-size: 0.8em;
+    text-align: center;
+    font-size: 0.8em;
 }
 
 
 #model-prefences {
-	font-size: 1em;
+    font-size: 1em;
 }
 
-.model-selects{
-	width: 80%;
-	padding-left: 50px;
-	padding-top: 5px;
+.model-selects {
+    width: 80%;
+    padding-left: 50px;
+    padding-top: 5px;
 }
 
 .model-selects select {
-	/* height: 2em; */
+    /* height: 2em; */
 }
 
 .model-btns {
-	padding-top: 15px;
-	line-height: 1em;
+    padding-top: 15px;
+    line-height: 1em;
 }
 
-.model-btns button{
-	background-color: #348cbe;
-	width: 5em;
-	height: 1.5em;
-	border-radius: 5px;
-	color: white;
+.model-btns button {
+    background-color: #348cbe;
+    width: 5em;
+    height: 1.5em;
+    border-radius: 5px;
+    color: white;
 }
 
-.pdf-mask{
+.pdf-mask {
     width: 100%;
     height: 100%;
     position: fixed;
-    top:0;
+    top: 0;
     left: 0;
-	z-index: 9999;
+    z-index: 9999;
     display: none;
     background-color: rgba(0, 0, 0, 0.6);
 }
 
-.pdf-mask .pdf-box{
+.pdf-mask .pdf-box {
     width: 600px;
     height: 86%;
     background-color: #fff;
-    margin:80px auto;
+    margin: 80px auto;
 }
 
 
 
 .loading-box {
-	display: inline-block;
-	text-align: center;
-	font-size: 12px;
-	width: 120px;
-	height: 16px;
-	margin: 0px auto;
+    display: inline-block;
+    text-align: center;
+    font-size: 12px;
+    width: 120px;
+    height: 16px;
+    margin: 0px auto;
 }
 
 .loading-box>span {
-	animation: loader 1000ms infinite linear;
-	border-radius: 100%;
-	border: 3px solid #2dbb55;
-	border-left-color: transparent;
-	color: transparent;
-	display: inline-block;
-	line-height: 1.2;
-	width: 16px;
-	height: 16px;
-}
-@keyframes loader {
-	0% {  transform: rotate(0deg);  }
-	100% {transform: rotate(360deg);}
+    animation: loader 1000ms infinite linear;
+    border-radius: 100%;
+    border: 3px solid #2dbb55;
+    border-left-color: transparent;
+    color: transparent;
+    display: inline-block;
+    line-height: 1.2;
+    width: 16px;
+    height: 16px;
 }
 
-.agent-pannel .activate{
-	background-color: #07a4ff;
-	color: rgb(14, 13, 13);
+@keyframes loader {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.agent-pannel .activate {
+    background-color: #07a4ff;
+    color: rgb(14, 13, 13);
 }
 
 .chat-div {
@@ -302,12 +314,12 @@ pre .key {
     z-index: 5;
 }
 
-:root{
+:root {
     /* --dynamic-height: calc(100% - 130px - 112px - 120px - 40px);
     --zero: max(0,  var(--dynamic-height));
     --dynamic-with: min(512px,  var(var(--dynamic-height))); */
     --left-nav-width: 260px;
-    --radius:  max(min(512px, calc(100% - 130px - 112px - 120px)), 100px);
+    --radius: max(min(512px, calc(100% - 130px - 112px - 120px)), 100px);
     --ball-m-top: 10px;
     --ball-m-bottom: 70px;
     --ball-display: block;
@@ -327,7 +339,8 @@ pre .key {
     /* position: absolute; */
     /* margin-right: auto; */
     background-color: transparent;
-    user-select: none; /* 禁止选中文本 */
+    user-select: none;
+    /* 禁止选中文本 */
     width: calc(var(--radius));
     height: var(--radius);
     margin-left: calc((100% - var(--radius)) / 2 + 16px);
@@ -339,71 +352,72 @@ pre .key {
 }
 
 @media (max-width: 900px) {
-    :root{
+    :root {
         --left-nav-width: 0px;
     }
+
     .ball-corner {
         visibility: hidden
     }
 }
 
 
-@media (min-height: 901px) and (min-width: 901px){
-    :root{
+@media (min-height: 901px) and (min-width: 901px) {
+    :root {
         --radius: min(512px, calc(100% - 130px - 112px - 120px));
     }
-    
+
 }
 
 
-@media (min-height: 800px) and (max-height: 900px) and (min-width:901px){
-    :root{
+@media (min-height: 800px) and (max-height: 900px) and (min-width:901px) {
+    :root {
         --radius: 300px;
     }
 }
-  
 
-@media (min-height: 751px) and (max-height: 800px) and (min-width:901px){
-    :root{
+
+@media (min-height: 751px) and (max-height: 800px) and (min-width:901px) {
+    :root {
         --radius: 250px;
     }
 }
 
 
-@media (min-height: 700px) and (max-height: 750px) and (min-width:901px){
-    :root{
+@media (min-height: 700px) and (max-height: 750px) and (min-width:901px) {
+    :root {
         --radius: 198px;
     }
 }
 
-@media (min-height: 701px) and (max-height: 750px) and (min-width:901px){
-    :root{
+@media (min-height: 701px) and (max-height: 750px) and (min-width:901px) {
+    :root {
         --radius: 198px;
     }
 }
 
-@media (min-height: 650px) and (max-height: 700px) and (min-width:901px){
-    :root{
+@media (min-height: 650px) and (max-height: 700px) and (min-width:901px) {
+    :root {
         --radius: 130px;
     }
 }
 
-@media (min-height: 601px) and (max-height: 650px) and (min-width:901px){
-    :root{
+@media (min-height: 601px) and (max-height: 650px) and (min-width:901px) {
+    :root {
         --radius: 100px;
     }
 }
 
-@media (min-height: 500px) and (max-height: 600px) and (min-width:901px){
-    :root{
+@media (min-height: 500px) and (max-height: 600px) and (min-width:901px) {
+    :root {
         --radius: 0px;
         --ball-m-top: 50px;
-        --ball-m-bottom: 70px; 
+        --ball-m-bottom: 70px;
     }
 }
 
-@media (min-height: 0px) and (max-height: 501px) and (min-width:901px){
-    :root{
+@media (min-height: 0px) and (max-height: 501px) and (min-width:901px) {
+    :root {
         --radius: 0px;
         /* --ball-m-top: 0px;
         --ball-m-bottom: 0px; */
@@ -413,21 +427,21 @@ pre .key {
 
 
 
-@media (min-width: 400px) and (max-width:900px) and (min-height:901px){
-    :root{
+@media (min-width: 400px) and (max-width:900px) and (min-height:901px) {
+    :root {
         --radius: 300px;
     }
 }
 
-@media (min-width: 400px) and (max-width:900px) and (max-height:900px){
-    :root{
+@media (min-width: 400px) and (max-width:900px) and (max-height:900px) {
+    :root {
         --radius: 500px;
     }
 }
 
 
 
-.system-title{
+.system-title {
     /* border: 1px solid #ccc; */
     display: flex;
     justify-content: space-between;
@@ -443,49 +457,55 @@ pre .key {
 }
 
 
-#top-nav{
-	height: 3rem;
+#top-nav {
+    height: 3rem;
 }
 
 #item-content {
     z-index: 10;
-    height:  calc(100% - 112px);
+    height: calc(100% - 112px);
 }
 
-#not-content{
-	height: 112px;
+#not-content {
+    height: 112px;
 }
 
 
 #ball-div:active {
-    cursor: grabbing; /* 鼠标拖拽样式 */
+    cursor: grabbing;
+    /* 鼠标拖拽样式 */
 }
 
 #ball-div span {
     position: absolute;
-    font-size: 2rem;  /* 使用 rem 单位，基于根字体大小 */
+    font-size: 2rem;
+    /* 使用 rem 单位，基于根字体大小 */
     color: #838383;
     text-decoration: none;
     font-weight: bold;
-    user-select: none; /* 禁止选中文本 */
+    user-select: none;
+    /* 禁止选中文本 */
     display: inline-block;
     width: auto;
     height: auto;
-    text-align: center; /* 确保文字在容器内居中 */
-    z-index:6;
+    text-align: center;
+    /* 确保文字在容器内居中 */
+    z-index: 6;
 }
 
 /* 当屏幕宽度小于 768px 时，调整字体大小 */
 @media (max-width: 768px) {
     #ball-div span {
-        font-size: 1.5rem;  /* 在小屏幕下减小字体大小 */
+        font-size: 1.5rem;
+        /* 在小屏幕下减小字体大小 */
     }
 }
 
 /* 当屏幕宽度小于 480px 时，进一步减小字体 */
 @media (max-width: 480px) {
     #ball-div span {
-        font-size: 1.2rem;  /* 在极小屏幕下减小字体大小 */
+        font-size: 1.2rem;
+        /* 在极小屏幕下减小字体大小 */
     }
 }
 
@@ -515,7 +535,8 @@ pre .key {
 
 /* 弹窗样式 */
 #agent-form-modal.modal {
-    display: none;           /* 默认隐藏 */
+    display: none;
+    /* 默认隐藏 */
     position: fixed;
     z-index: 1;
     width: 26rem;
@@ -565,19 +586,27 @@ pre .key {
 
 /* agent-list-container 样式 */
 #agent-list-container {
-    display: none;           /* 默认隐藏 */
-    width: 100%;             /* 宽度占满父容器 */
-    height: 90%;            /* 高度占满父容器 */
-    box-sizing: border-box;  /* 包括内边距和边框 */
-    background-color: white;  /* 背景颜色，根据需要调整 */
-    padding: 20px;  /* 内边距 */
+    display: none;
+    /* 默认隐藏 */
+    width: 100%;
+    /* 宽度占满父容器 */
+    height: 90%;
+    /* 高度占满父容器 */
+    box-sizing: border-box;
+    /* 包括内边距和边框 */
+    background-color: white;
+    /* 背景颜色，根据需要调整 */
+    padding: 20px;
+    /* 内边距 */
     z-index: 1;
     justify-content: center;
     align-items: center;
-    position: relative; /* 设置为相对定位 */
+    position: relative;
+    /* 设置为相对定位 */
 }
 
-#agent-list th, #agent-list td {
+#agent-list th,
+#agent-list td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -606,15 +635,16 @@ pre .key {
 
 /* 虚化效果 */
 #agent-list-container .blurred {
-    pointer-events: none;  /* 禁止与虚化区域的交互 */
+    pointer-events: none;
+    /* 禁止与虚化区域的交互 */
 }
 
 /* 新增智能体按钮 */
 #agent-list-container button {
-    font-size: 16px;
+    font-size: 12px;
     border: none;
-    background-color: #023f63;
-    color: white;
+    /* background-color: #1890ff; */
+    /* color: white; */
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -638,7 +668,8 @@ pre .key {
     border-collapse: collapse;
 }
 
-#agent-list-container th, #agent-list-container td {
+#agent-list-container th,
+#agent-list-container td {
     padding: 10px;
     text-align: center;
 }
@@ -659,9 +690,7 @@ pre .key {
     cursor: pointer;
 }
 
-.agent-list-container {
-
-}
+.agent-list-container {}
 
 /* 禁止选中的样式 */
 .no-select {
@@ -670,18 +699,25 @@ pre .key {
 
 /* 虚化效果 */
 .blurred {
-    pointer-events: none;  /* 禁止与虚化区域的交互 */
+    pointer-events: none;
+    /* 禁止与虚化区域的交互 */
 }
 
 /* 新增智能体按钮 */
 #agent-list-container button {
     font-size: 16px;
     border: none;
-    background-color: #023f63;
-    color: white;
+    /* background-color: #ffffff; */
+    /* color: black; */
     border-radius: 5px;
     cursor: pointer;
+    /* border: 1px solid #cccccc; */
     transition: background-color 0.3s;
+}
+
+#agent-list-container button:hover {
+    /* background-color: #1890ff; */
+    /* color: #ffffff; */
 }
 
 /* 收费金额输入框容器 */
@@ -699,36 +735,47 @@ pre .key {
 
 /* 仅影响 id 为 agent-list-container 下的表格 */
 #agent-list-container table {
-    width: 100%;               /* 表格宽度 100% */
-    border-collapse: collapse; /* 合并边框 */
+    width: 100%;
+    /* 表格宽度 100% */
+    border-collapse: collapse;
+    /* 合并边框 */
 }
 
 /* 仅影响 id 为 agent-list-container 下的 th 和 td */
 #agent-list-container th,
 #agent-list-container td {
-    padding: 10px;             /* 设置单元格内边距 */
-    text-align: center;        /* 文字居中对齐 */
+    padding: 10px;
+    /* 设置单元格内边距 */
+    text-align: center;
+    /* 文字居中对齐 */
 }
 
 /* 仅影响 id 为 agent-list-container 下的 button */
 #agent-list-container button {
-    padding: 5px 10px;         /* 按钮内边距 */
-    margin: 5px;               /* 按钮外边距 */
-    cursor: pointer;          /* 鼠标悬停时显示指针 */
+    padding: 5px 10px;
+    /* 按钮内边距 */
+    margin: 0px;
+    /* 按钮外边距 */
+    cursor: pointer;
+    /* 鼠标悬停时显示指针 */
 }
 
 /* 仅影响 id 为 agent-list-container 下的分页容器 */
 .pagination {
-    display: flex;             /* 使用 flexbox 布局 */
-    justify-content: center;   /* 水平居中对齐分页按钮 */
-    margin-top: 20px;          /* 分页区域与表格之间的距离 */
+    display: flex;
+    /* 使用 flexbox 布局 */
+    justify-content: center;
+    /* 水平居中对齐分页按钮 */
+    margin-top: 50px;
+    /* 分页区域与表格之间的距离 */
 }
 
 /* 仅影响 id 为 agent-list-container 下的分页按钮 */
 .pagination button {
     /*position: absolute;*/
     bottom: 50px;
-    margin: 0 5px;             /* 按钮之间的间距 */
+    margin: 0 5px;
+    /* 按钮之间的间距 */
     width: 26px;
     height: 26px;
     background-color: #ffffff;
@@ -740,83 +787,114 @@ pre .key {
 
 /* 设置表格的整体样式 */
 #agent-list {
-    width: 100%;  /* 设置表格宽度为100% */
-    border-collapse: collapse;  /* 合并表格的边框 */
-    margin-top: 0.5em;  /* 给表格顶部加一点间距 */
+    width: 100%;
+    /* 设置表格宽度为100% */
+    border-collapse: collapse;
+    /* 合并表格的边框 */
+    margin-top: 0.5em;
+    /* 给表格顶部加一点间距 */
 }
 
 /* 设置表头的样式 */
 #agent-list thead {
-    background-color: #023f63;  /* 设置表头背景色 */
-    color: white;  /* 设置表头文字颜色为白色 */
-    text-align: center;  /* 表头文字居中 */
-    font-weight: bold;  /* 表头文字加粗 */
+    background-color: #e8e8e8;
+    /* 设置表头背景色 */
+    color: black;
+    /* 设置表头文字颜色为白色 */
+    text-align: center;
+    /* 表头文字居中 */
+    font-weight: bold;
+    /* 表头文字加粗 */
 }
 
 /* 设置表格单元格的样式 */
-#agent-list th, #agent-list td {
-    border: 1px solid #ddd;  /* 设置单元格边框 */
-    padding: 12px;  /* 设置单元格的内边距 */
-    text-align: center;  /* 内容居中 */
+#agent-list th,
+#agent-list td {
+    border: 1px solid #ddd;
+    /* 设置单元格边框 */
+    padding: 12px;
+    /* 设置单元格的内边距 */
+    text-align: center;
+    /* 内容居中 */
 }
 
 /* 设置表格奇偶行的背景色 */
 #agent-list tbody tr:nth-child(even) {
-    background-color: #f2f2f2;  /* 偶数行背景色 */
+    /* background-color: #f2f2f2; */
+    background-color: #fff;
+    /* 偶数行背景色 */
 }
 
 #agent-list tbody tr:nth-child(odd) {
-    background-color: #fff;  /* 奇数行背景色 */
+    background-color: #fff;
+    /* 奇数行背景色 */
 }
 
 /* 鼠标悬停行时的效果 */
 #agent-list tbody tr:hover {
-    background-color: #f1f1f1;  /* 鼠标悬停时背景色 */
-    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+    background-color: #f1f1f1;
+    /* 鼠标悬停时背景色 */
+    cursor: pointer;
+    /* 鼠标悬停时显示为指针 */
 }
 
 /* 设置最后一列按钮的样式 */
 #agent-list .actions button {
-    background-color: #023f63;  /* 按钮背景色 */
-    color: white;  /* 按钮文字颜色 */
-    border: none;  /* 去除按钮边框 */
-    padding: 6px 12px;  /* 设置按钮内边距 */
-    border-radius: 4px;  /* 设置按钮圆角 */
-    cursor: pointer;  /* 鼠标悬停时显示为指针 */
-    margin: 2px;  /* 按钮之间有一点间隔 */
+    background-color: #023f63;
+    /* 按钮背景色 */
+    color: white;
+    /* 按钮文字颜色 */
+    border: none;
+    /* 去除按钮边框 */
+    padding: 6px 12px;
+    /* 设置按钮内边距 */
+    border-radius: 4px;
+    /* 设置按钮圆角 */
+    cursor: pointer;
+    /* 鼠标悬停时显示为指针 */
+    margin: 2px;
+    /* 按钮之间有一点间隔 */
 }
 
 /* 鼠标悬停在按钮上时的效果 */
 #agent-list .actions button:hover {
-    background-color: #023f63;  /* 鼠标悬停时按钮颜色 */
+    background-color: #023f63;
+    /* 鼠标悬停时按钮颜色 */
 }
 
 /* CSS */
 .free-agent {
-    color: green; /* 免费的智能体使用绿色 */
+    color: green;
+    /* 免费的智能体使用绿色 */
 }
 
 .paid-agent {
-    color: red; /* 收费的智能体使用红色 */
+    color: red;
+    /* 收费的智能体使用红色 */
 }
 
 /* CSS - 设置选中时的背景颜色 */
 .active-agent {
-    background-color: #c7e6f8; /* 可以根据需要修改为任何颜色 */
+    background-color: #c7e6f8;
+    /* 可以根据需要修改为任何颜色 */
 }
 
 /* 弹框背景覆盖全屏 */
 #wechat_pay_qr {
-    display: none; /* 初始不显示 */
+    display: none;
+    /* 初始不显示 */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 半透明背景 */
     display: flex;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
+    justify-content: center;
+    /* 水平居中 */
+    align-items: center;
+    /* 垂直居中 */
     z-index: 9999;
 }
 
@@ -826,21 +904,27 @@ pre .key {
     background: white;
     padding: 20px;
     width: auto;
-    max-width: 400px;  /* 最大宽度限制 */
-    min-width: 300px;  /* 最小宽度限制 */
+    max-width: 400px;
+    /* 最大宽度限制 */
+    min-width: 300px;
+    /* 最小宽度限制 */
     text-align: center;
-    border-radius: 10px; /* 圆角 */
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+    border-radius: 10px;
+    /* 圆角 */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    /* 添加阴影 */
 }
 
 /* 公司Logo样式 */
 .companyLogoDiv {
     text-align: center;
-    margin-bottom: 15px; /* 距离二维码的间距 */
+    margin-bottom: 15px;
+    /* 距离二维码的间距 */
 }
 
 .company_logo {
-    max-width: 150px;  /* 你可以根据需要调整宽度 */
+    max-width: 150px;
+    /* 你可以根据需要调整宽度 */
     height: auto;
     display: inline-block;
 }
@@ -849,7 +933,8 @@ pre .key {
 #qrCode {
     width: 100%;
     height: 100%;
-    max-width: 300px; /* 限制二维码最大宽度 */
+    max-width: 300px;
+    /* 限制二维码最大宽度 */
     margin-bottom: 20px;
 }
 
@@ -906,29 +991,40 @@ pre .key {
 
 /* 默认隐藏 paid-agent-list-container */
 .paid-agent-list-container {
-    display: none;           /* 默认隐藏 */
-    width: 100%;             /* 宽度占满父容器 */
-    height: 90%;            /* 高度占满父容器 */
-    box-sizing: border-box;  /* 包括内边距和边框 */
-    background-color: white;  /* 背景颜色 */
-    padding: 20px;           /* 内边距 */
+    display: none;
+    /* 默认隐藏 */
+    width: 100%;
+    /* 宽度占满父容器 */
+    height: 90%;
+    /* 高度占满父容器 */
+    box-sizing: border-box;
+    /* 包括内边距和边框 */
+    background-color: white;
+    /* 背景颜色 */
+    padding: 20px;
+    /* 内边距 */
     z-index: 1;
     justify-content: center;
     align-items: center;
-    position: relative; /* 设置为相对定位 */
+    position: relative;
+    /* 设置为相对定位 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的表格 */
 .paid-agent-list-container table {
-    width: 100%;               /* 表格宽度 100% */
-    border-collapse: collapse; /* 合并边框 */
+    width: 100%;
+    /* 表格宽度 100% */
+    border-collapse: collapse;
+    /* 合并边框 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的 th 和 td */
 .paid-agent-list-container th,
 .paid-agent-list-container td {
-    padding: 10px;             /* 设置单元格内边距 */
-    text-align: center;        /* 文字居中对齐 */
+    padding: 10px;
+    /* 设置单元格内边距 */
+    text-align: center;
+    /* 文字居中对齐 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的 button */
@@ -942,73 +1038,97 @@ pre .key {
     transition: background-color 0.3s;
     /*position: absolute;*/
     bottom: 50px;
-    padding-left:5px;
-    padding-right:5px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的分页容器 */
 .paid-agent-list-container .pagination {
-    display: flex;             /* 使用 flexbox 布局 */
-    justify-content: center;   /* 水平居中对齐分页按钮 */
-    margin-top: 20px;          /* 分页区域与表格之间的距离 */
+    display: flex;
+    /* 使用 flexbox 布局 */
+    justify-content: center;
+    /* 水平居中对齐分页按钮 */
+    margin-top: 20px;
+    /* 分页区域与表格之间的距离 */
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的分页按钮 */
 .paid-agent-list-container .pagination button {
-    margin: 0 5px;             /* 按钮之间的间距 */
+    margin: 0 5px;
+    /* 按钮之间的间距 */
     padding: 5px 10px;
 }
 
 /* 设置表格的整体样式 */
 .paid-agent-list {
-    width: 100%;  /* 设置表格宽度为100% */
-    border-collapse: collapse;  /* 合并表格的边框 */
-    margin-top: 0.5em;  /* 给表格顶部加一点间距 */
+    width: 100%;
+    /* 设置表格宽度为100% */
+    border-collapse: collapse;
+    /* 合并表格的边框 */
+    margin-top: 0.5em;
+    /* 给表格顶部加一点间距 */
 }
 
 /* 设置表头的样式 */
 .paid-agent-list thead {
-    background-color: #023f63;  /* 设置表头背景色 */
-    color: white;  /* 设置表头文字颜色为白色 */
-    text-align: center;  /* 表头文字居中 */
-    font-weight: bold;  /* 表头文字加粗 */
+    background-color: #e8e8e8;
+    /* 设置表头背景色 */
+    color: black;
+    /* 设置表头文字颜色为白色 */
+    text-align: center;
+    /* 表头文字居中 */
+    font-weight: bold;
+    /* 表头文字加粗 */
 }
 
 /* 设置表格单元格的样式 */
-.paid-agent-list th, .paid-agent-list td {
-    border: 1px solid #ddd;  /* 设置单元格边框 */
-    padding: 12px;  /* 设置单元格的内边距 */
-    text-align: center;  /* 内容居中 */
+.paid-agent-list th,
+.paid-agent-list td {
+    border: 1px solid #ddd;
+    /* 设置单元格边框 */
+    padding: 12px;
+    /* 设置单元格的内边距 */
+    text-align: center;
+    /* 内容居中 */
 }
 
 /* 设置表格奇偶行的背景色 */
 .paid-agent-list tbody tr:nth-child(even) {
-    background-color: #f2f2f2;  /* 偶数行背景色 */
+    background-color: #f2f2f2;
+    /* 偶数行背景色 */
 }
 
 .paid-agent-list tbody tr:nth-child(odd) {
-    background-color: #fff;  /* 奇数行背景色 */
+    background-color: #fff;
+    /* 奇数行背景色 */
 }
 
 /* 鼠标悬停行时的效果 */
 .paid-agent-list tbody tr:hover {
-    background-color: #f1f1f1;  /* 鼠标悬停时背景色 */
-    cursor: pointer;  /* 鼠标悬停时显示为指针 */
+    background-color: #f1f1f1;
+    /* 鼠标悬停时背景色 */
+    cursor: pointer;
+    /* 鼠标悬停时显示为指针 */
 }
 
 /* 确保 logo 在标题前面 */
 .Small_logo {
-    width: 30px;  /* 设置 logo 的宽度 */
+    width: 30px;
+    /* 设置 logo 的宽度 */
     height: auto;
     display: inline-block;
-    vertical-align: middle;  /* 垂直居中对齐 logo */
-    margin-right: 10px;  /* 控制 logo 和标题的间距 */
+    vertical-align: middle;
+    /* 垂直居中对齐 logo */
+    margin-right: 10px;
+    /* 控制 logo 和标题的间距 */
 }
+
 /* =============查看收费智能体CSS============= */
 
 /* 遮罩层，默认隐藏 */
 .recharge-overlay {
-    display: none;  /* 默认不显示 */
+    display: none;
+    /* 默认不显示 */
     position: fixed;
     top: 0;
     left: 0;
@@ -1019,10 +1139,10 @@ pre .key {
     align-items: center;
     z-index: 999;
     transition: opacity 0.3s ease-in-out;
-  }
-  
-  /* 弹框 */
-  .recharge-modal {
+}
+
+/* 弹框 */
+.recharge-modal {
     background-color: white;
     border-radius: 12px;
     padding: 30px 40px;
@@ -1031,10 +1151,10 @@ pre .key {
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
     text-align: center;
     transition: transform 0.3s ease-out;
-  }
-  
-  /* 关闭按钮 */
-  .recharge-close-btn {
+}
+
+/* 关闭按钮 */
+.recharge-close-btn {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -1044,92 +1164,94 @@ pre .key {
     color: #aaa;
     cursor: pointer;
     transition: color 0.3s;
-  }
-  
-  .recharge-close-btn:hover {
+}
+
+.recharge-close-btn:hover {
     color: var(--rechage-color);
-  }
-  
-  /* 弹框头部 */
-  .recharge-modal-header {
+}
+
+/* 弹框头部 */
+.recharge-modal-header {
     margin-bottom: 20px;
-  }
-  
-  .recharge-agent-name {
+}
+
+.recharge-agent-name {
     font-size: 22px;
     font-weight: bold;
     color: #333;
-  }
-  
-  /* 内容部分 */
-  .recharge-modal-body {
+}
+
+/* 内容部分 */
+.recharge-modal-body {
     display: flex;
     justify-content: space-between;
     align-items: stretch;
     margin-bottom: 20px;
     gap: 20px;
     width: 100%;
-  }
-  
-  /* 左侧 - 单次调用价格 */
-  .recharge-left, .recharge-right {
+}
+
+/* 左侧 - 单次调用价格 */
+.recharge-left,
+.recharge-right {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     height: 100%;
     flex: 1;
-  }
-  
-  .recharge-left {
+}
+
+.recharge-left {
     text-align: left;
-  }
-  
-  .recharge-right {
+}
+
+.recharge-right {
     text-align: left;
-  }
-  
-  /* 确保 p 和 label 垂直对齐 */
-  .recharge-left p, .recharge-right label {
+}
+
+/* 确保 p 和 label 垂直对齐 */
+.recharge-left p,
+.recharge-right label {
     font-size: 14px;
     color: #666;
     margin-bottom: 5px;
     text-align: left;
     line-height: 1.5;
-  }
-  
-  .recharge-price {
+}
+
+.recharge-price {
     margin-top: 10px;
     font-size: 22px;
     font-weight: bold;
     color: var(----rechage-color);
     text-align: left;
-  }
-  
-  #recharge-call-count {
+}
+
+#recharge-call-count {
     width: 100%;
     padding: 12px;
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 8px;
     transition: border 0.3s;
-  }
-  
-  #recharge-call-count:focus {
+}
+
+#recharge-call-count:focus {
     border-color: var(--rechage-color);
     outline: none;
-  }
-  
-  /* 底部部分 */
-  .recharge-footer {
+}
+
+/* 底部部分 */
+.recharge-footer {
     display: flex;
     justify-content: center;
     width: 100%;
     margin-top: 20px;
     gap: 10px;
-  }
-  
-  /* 底部按钮 */
-  .recharge-footer .recharge-subscribe-btn {
+}
+
+/* 底部按钮 */
+.recharge-footer .recharge-subscribe-btn {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1143,25 +1265,28 @@ pre .key {
     font-weight: bold;
     cursor: pointer;
     transition: background 0.3s ease;
-  }
-  
-  .recharge-subscribe-btn:hover {
+}
+
+.recharge-subscribe-btn:hover {
     background: linear-gradient(90deg, var(--rechage-color), var(--rechage-color2));
-  }
-  
-  .recharge-subscribe-btn span {
+}
+
+.recharge-subscribe-btn span {
     margin-right: 8px;
-  }
+}
 
 @font-face {
-    font-family: 'fangsong'; /* 你给字体起的名字 */
+    font-family: 'fangsong';
+    /* 你给字体起的名字 */
     src: url('../font/fangsong_GB2312.TTF') format('truetype');
-    font-weight: normal; /* 字体粗细 */
-    font-style: normal;  /* 字体样式（正常、斜体等） */
+    font-weight: normal;
+    /* 字体粗细 */
+    font-style: normal;
+    /* 字体样式（正常、斜体等） */
 }
 
 @media (max-width: 768px) {
-    .msg{
+    .msg {
         --msg-width: 20rem;
         --msg-height: 12rem;
         width: var(--msg-width);
@@ -1170,7 +1295,7 @@ pre .key {
 }
 
 @media (min-width: 768px) {
-    .msg{
+    .msg {
         --msg-width: 20rem;
         --msg-height: 12rem;
         width: var(--msg-width);
@@ -1178,55 +1303,59 @@ pre .key {
     }
 }
 
-.msg{
+.msg {
     position: fixed;
-    z-index:999;
+    z-index: 999;
     top: calc(50% - (var(--msg-height) / 2));
     /* margin-top:-80px; */
     left: calc(50% - var(--msg-width) / 2);
     /* margin-left: calc(50% - var(--msg-width));; */
     /* margin-left: auto;
     margin-right: auto; */
-    background:#fff;
-    box-shadow:5px 5px 8px #999;
-    font-size:17px;
-    color:#666;
-    border:1px solid #f8f8f8;
+    background: #fff;
+    box-shadow: 5px 5px 8px #999;
+    font-size: 17px;
+    color: #666;
+    border: 1px solid #f8f8f8;
     text-align: center;
     line-height: 2rem;
-    display:inline-block;
-    padding-bottom:20px;
-    border-radius:2px;
+    display: inline-block;
+    padding-bottom: 20px;
+    border-radius: 2px;
 
     /* display: flex;
     flex-direction: column; */
 }
 
-.msg_top{
-    background:#f8f8f8;
-    padding:5px 15px 5px 20px;
-    text-align:left;
+.msg_top {
+    background: #f8f8f8;
+    padding: 5px 15px 5px 20px;
+    text-align: left;
     flex: 1;
 }
-.msg_top span{
-    font-size:22px;
-    float:right;
-    cursor:pointer;
+
+.msg_top span {
+    font-size: 22px;
+    float: right;
+    cursor: pointer;
 }
-.msg_cont{
-    padding:15px 20px 20px;
-    text-align:left;
+
+.msg_cont {
+    padding: 15px 20px 20px;
+    text-align: left;
     flex: 2;
 }
-.msg_clear{
-    display:inline-block;
-    color:#fff;
-    padding:1px 15px;
-    background:#023f63;;
-    border-radius:2px;
-    float:right;
-    margin-right:5px;
-    cursor:pointer;
+
+.msg_clear {
+    display: inline-block;
+    color: #fff;
+    padding: 1px 15px;
+    background: #023f63;
+    ;
+    border-radius: 2px;
+    float: right;
+    margin-right: 5px;
+    cursor: pointer;
 }
 
 
@@ -1235,7 +1364,8 @@ pre .key {
     text-align: justify;
 }
 
-.left, .right {
+.left,
+.right {
     display: inline-block;
     width: 30%;
     vertical-align: top;
@@ -1244,11 +1374,13 @@ pre .key {
     text-align: center;
     border-radius: 3px;
 }
+
 .left {
     margin-left: 2%;
     background-color: #263b7e;
     color: white;
 }
+
 .right {
     background-color: #002f64;
     margin-left: 36%;
@@ -1261,19 +1393,19 @@ pre .key {
 }
 
 
-.ball-left-top{
-    top:0px;
+.ball-left-top {
+    top: 0px;
     left: 0px;
 }
 
-.ball-right-top{
+.ball-right-top {
     top: 0px;
     right: 0px;
     display: block;
 }
 
 .ball-describe-item {
-    background:#023f63;
+    background: #023f63;
     color: rgb(250, 250, 250);
     padding: 0 0.7rem 0 0.7rem;
     border-radius: 3px;
@@ -1282,15 +1414,20 @@ pre .key {
 
 .ball-right-top ul {
     display: flex;
-    flex-direction: column; /* 设置主轴为垂直方向 */
-    align-items: flex-end;  /* 将所有项目沿交叉轴（水平方向）右对齐 */
-    padding: 0;             /* 移除默认内边距 */
-    margin: 0;  
+    flex-direction: column;
+    /* 设置主轴为垂直方向 */
+    align-items: flex-end;
+    /* 将所有项目沿交叉轴（水平方向）右对齐 */
+    padding: 0;
+    /* 移除默认内边距 */
+    margin: 0;
 }
 
 .ball-right-top ul li {
-    text-align: right;      /* 让 <li> 内的内容右对齐 */
-    margin-bottom: 10px;    /* 维持列表项之间的间距 */
+    text-align: right;
+    /* 让 <li> 内的内容右对齐 */
+    margin-bottom: 10px;
+    /* 维持列表项之间的间距 */
 }
 
 .ball-corner ul li {
@@ -1335,7 +1472,7 @@ pre .key {
     }
 }
 
-.ball-corner-container:after{
+.ball-corner-container:after {
     position: absolute;
     top: 0;
     left: 0;
@@ -1343,12 +1480,15 @@ pre .key {
     bottom: 0;
     width: 100%;
     height: 100%;
-    background-color: rgb(255, 255, 255); /* 匹配页面背景色 */
+    background-color: rgb(255, 255, 255);
+    /* 匹配页面背景色 */
     z-index: 1;
     clip-path: circle(53%);
-    pointer-events: none; /* 确保遮罩不会干扰鼠标事件 */
-    content:'';
-    overflow: visible; /* 确保内容超出容器时仍然可见 */
+    pointer-events: none;
+    /* 确保遮罩不会干扰鼠标事件 */
+    content: '';
+    overflow: visible;
+    /* 确保内容超出容器时仍然可见 */
 }
 
 /* ==============创建智能体CSS开始===================== */
@@ -1363,17 +1503,17 @@ pre .key {
     display: flex;
     align-items: center;
     justify-content: center;
-    visibility: hidden; 
-    z-index: 1000; 
+    visibility: hidden;
+    z-index: 1000;
 }
 
 .createLagiAgent-content {
-    background: #ffffff; 
-    width: 90%; 
+    background: #ffffff;
+    width: 90%;
     max-width: 600px;
     padding: 20px 30px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
 }
 
@@ -1409,7 +1549,7 @@ pre .key {
 }
 
 #createLagiAgentForm textarea {
-    height: 200px; 
+    height: 200px;
     width: 100%;
     padding: 10px 15px;
     margin-top: 5px;
@@ -1420,7 +1560,7 @@ pre .key {
 }
 
 #createLagiAgentForm input[type="text"] {
-    height: auto; 
+    height: auto;
     width: 100%;
     padding: 10px 15px;
     margin-top: 5px;
@@ -1474,6 +1614,5 @@ pre .key {
     }
 }
 
-  
-  /* ==============创建智能体CSS结束===================== */
 
+/* ==============创建智能体CSS结束===================== */

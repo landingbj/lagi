@@ -502,11 +502,11 @@ let promptNavs = [
                 title: '我的订阅',
             },
             {
-                id:668,
+                id: 668,
                 title: '我的语料',
             },
             {
-                id:669,
+                id: 669,
                 title: '我的模型',
             }
         ]
@@ -833,7 +833,7 @@ function getPromptDialog(id, e) {
         return;
     }
 
-    if(parentNav.id == 15) {
+    if (parentNav.id == 15) {
         return goToUserTab(id, e);
     } else {
         $('#conTab').show();
@@ -845,10 +845,10 @@ function getPromptDialog(id, e) {
         $('#item-content').show();
         $('#not-content form').show();
         showBallDiv();
-    } 
+    }
 
-    
-    if(parentNav.id === 11) {
+
+    if (parentNav.id === 11) {
         currentAppId = nav.id;
     }
 
@@ -894,20 +894,20 @@ function getPromptDialog(id, e) {
 
 
 function goToUserTab(id, e) {
-    if (id === 666 || id == 667 ||  id == 668 || id == 669) {
-        if (!getCookie('userId')) {
-            openModal(e);
-            return;
-        }
-    }
+    // if (id === 666 || id == 667 ||  id == 668 || id == 669) {
+    //     if (!getCookie('userId')) {
+    //         openModal(e);
+    //         return;
+    //     }
+    // }
     $('#conTab').hide();
     $('#mytab').show();
     $('#not-content form').hide();
-    let subNavs =  promptNavs[4].subNavs;
-    let tabs =  $('#mytab .tab');
-    for(let i = 0; i < subNavs.length ; i++) {
+    let subNavs = promptNavs[4].subNavs;
+    let tabs = $('#mytab .tab');
+    for (let i = 0; i < subNavs.length; i++) {
         let tab = tabs[i];
-        if(id == subNavs[i].id) {
+        if (id == subNavs[i].id) {
             tab.style.display = 'block';
         } else {
             tab.style.display = 'none';
@@ -923,12 +923,12 @@ function goToUserTab(id, e) {
         return;
     }
 
-    if(id == 668) {
+    if (id == 668) {
         loadUploadFileList(1);
         return;
     }
 
-    if(id == 669) {
+    if (id == 669) {
         loadUserModule($('.model-modules-title')[0], 'user-finetune', 'loadFinetuneData')
         return;
     }
