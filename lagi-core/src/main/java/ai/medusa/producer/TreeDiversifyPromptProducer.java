@@ -3,16 +3,19 @@ package ai.medusa.producer;
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
 import ai.medusa.dao.TreeDiversifyDao;
+import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
+import ai.openai.pojo.ChatCompletionResult;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
 
@@ -55,6 +58,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
         if(nextPrompt == null || nextPrompt.isEmpty()) {
             return result;
         }
+        CompletionCache instance = CompletionCache.getInstance();
         nextPrompt.forEach(prompt -> {
             List<String> predictPromptList = new ArrayList<>(promptList);
             predictPromptList.add(prompt);
@@ -64,6 +68,11 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
                     .build();
             PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
             diversifiedPromptInput = promptCacheTrigger.analyzeChatBoundaries(diversifiedPromptInput);
+            // skill cached
+            ChatCompletionResult chatCompletionResult = instance.get(diversifiedPromptInput);
+            if(chatCompletionResult != null) {
+                return;
+            }
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
@@ -77,15 +86,17 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
 
 
     public void loadGraphNode2VectorDB() {
-        List<String> allNodeTexts = treeDiversifyDao.getAllNodeTexts();
-        allNodeTexts.forEach(text -> {
-            try {
-                List<IndexSearchData> indexSearchData = searchWordVector(text);
-                if(indexSearchData == null || indexSearchData.isEmpty()) {
-                    insertVector(text);
+        CompletableFuture.runAsync(() -> {
+            List<String> allNodeTexts = treeDiversifyDao.getAllNodeTexts();
+            allNodeTexts.forEach(text -> {
+                try {
+                    List<IndexSearchData> indexSearchData = searchWordVector(text);
+                    if(indexSearchData == null || indexSearchData.isEmpty()) {
+                        insertVector(text);
+                    }
+                }catch (Exception ignored) {
                 }
-            }catch (Exception ignored) {
-            }
+            });
         });
     }
 
