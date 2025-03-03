@@ -83,6 +83,7 @@ public class OpenAiApiUtil {
         LlmApiResponse result = LlmApiResponse.builder().build();
         try (Response response = client.newCall(request).execute();) {
             String bodyStr = response.body().string();
+            System.out.println("bodyStr: " + bodyStr);
             if (response.code() != 200) {
                 Integer code = convertErrorFunc.apply(response);
                 result.setCode(code);

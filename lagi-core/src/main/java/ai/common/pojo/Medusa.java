@@ -16,10 +16,14 @@ public class Medusa {
     private Boolean enableRagDiver;
     @JsonProperty("enable_page_diver")
     private Boolean enablePageDiver;
+    @JsonProperty("enable_reason_diver")
+    private Boolean enableReasonDiver;
     private Long consumeDelay;
     private Long preDelay;
     private Double lcsRatioPromptInput;
     private Double similarityCutoff;
     @JsonProperty("llm_assist")
     private Boolean llmAssist;
+    @JsonProperty("reason_model")
+    private String reasonModel;
 }

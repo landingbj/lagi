@@ -32,6 +32,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
     private static final DiversifyPromptProducer treeDiversifyPromptProducer = new TreeDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer ragDiversifyPromptProducer = new RagDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer pageDiversifyPromptProducer = new PageDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
+    private static final DiversifyPromptProducer reasonDiversifyPromptProducer = new ReasonDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
 
     private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
     private static final double LCS_RATIO_PROMPT_INPUT = PromptCacheConfig.LCS_RATIO_PROMPT_INPUT;
@@ -183,6 +184,9 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
             }
             if(PromptCacheConfig.getEnablePageDiver()) {
                 promptProcessor.connectProducer(pageDiversifyPromptProducer);
+            }
+            if(PromptCacheConfig.getEnableReasonDiver() && PromptCacheConfig.getReasonModel() != null) {
+                promptProcessor.connectProducer(reasonDiversifyPromptProducer);
             }
             promptProcessor.registerProducerErrorHandler(new DiversifyPromptErrorHandler(promptPool));
             promptProcessor.connectConsumer(new CompletePromptConsumer(CompletionCache.getInstance()));
