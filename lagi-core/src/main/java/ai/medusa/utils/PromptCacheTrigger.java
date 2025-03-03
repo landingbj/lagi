@@ -48,6 +48,12 @@ public class PromptCacheTrigger {
         this.qaCache = completionCache.getQaCache();
     }
 
+    public PromptCacheTrigger() {
+        completionCache = null;
+        promptCache = null;
+        qaCache = null;
+    }
+
     public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
         executorService.execute(() -> writeCache(promptInput, chatCompletionResult));
     }

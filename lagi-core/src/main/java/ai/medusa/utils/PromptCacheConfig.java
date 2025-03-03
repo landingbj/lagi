@@ -25,6 +25,7 @@ public class PromptCacheConfig {
     public static String LOCATE_ALGORITHM = "hash";
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
+    public static String MEDUSA_TREE_CATEGORY = "medusa_tree";
     public static final int QA_SIMILARITY_TOP_K = 10;
     public static double QA_SIMILARITY_CUTOFF = 0.1;
 
