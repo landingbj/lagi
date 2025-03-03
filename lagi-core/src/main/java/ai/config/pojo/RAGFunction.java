@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 public class RAGFunction {
     private String  vector;
-    private String fulltext;
+    private String term;
     private String graph;
     private Boolean enable;
     private Integer priority;
