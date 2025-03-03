@@ -79,8 +79,7 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
 
     private ChatCompletionRequest getCompletionsRequest(PooledPrompt item, List<IndexSearchData> indexSearchDataList) {
         PromptInput promptInput = item.getPromptInput();
-        String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
-        ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prompt);
+        ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequestByPrompts(promptInput.getPromptList());
         GetRagContext ragContext = completionsService.getRagContext(indexSearchDataList);
         if(ragContext != null) {
             String context = ragContext.getContext();
