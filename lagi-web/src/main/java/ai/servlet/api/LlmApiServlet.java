@@ -466,6 +466,15 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
+        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest.getUserId());
+        long count = userLlmAdapters.stream().map(adapter -> ((ModelService) adapter).getModel())
+                .filter(model -> Objects.equals(model, chatCompletionRequest.getModel())).count();
+        Integer maxContext = null;
+        Integer maxMsg = null;
+        if(count > 0L) {
+            maxContext = 1024*3;
+            maxMsg = 1024 * 4;
+        }
         if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
@@ -478,7 +487,7 @@ public class LlmApiServlet extends BaseServlet {
             }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);
-                String contextStr = CompletionUtil.truncate(context.getContext());
+                String contextStr = CompletionUtil.truncate(context.getContext(), maxContext);
                 context.setContext(contextStr);
                 completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
                 ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
@@ -489,11 +498,10 @@ public class LlmApiServlet extends BaseServlet {
             indexSearchDataList = null;
         }
         if(!hasTruncate) {
-            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
+            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages(), maxMsg);
             chatCompletionRequest.setMessages(chatMessages);
         }
 
-        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest.getUserId());
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
                 Observable<ChatCompletionResult> result;
@@ -530,6 +538,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private List<ILlmAdapter> getUserLlmAdapters(String userId) {
+        // TODO 2025/3/4  support invoke remote service
         ManagerDao managerDao = new ManagerDao();
         List<ManagerModel> managerModels = managerDao.getManagerModels(userId, 1);
         return managerModels.stream().map(m -> {

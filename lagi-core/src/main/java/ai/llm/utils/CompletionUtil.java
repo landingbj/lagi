@@ -53,9 +53,12 @@ public class CompletionUtil {
         return truncate(context, MAX_INPUT);
     }
 
-    public static String truncate(String context, int maxLength) {
+    public static String truncate(String context, Integer maxLength) {
         if(context == null) {
             return "";
+        }
+        if(maxLength == null) {
+            maxLength = MAX_INPUT;
         }
         if(context.length() <= maxLength) {
             return context;
@@ -67,7 +70,10 @@ public class CompletionUtil {
         return truncateChatMessages(chatMessages, MAX_INPUT);
     }
 
-    public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages, int maxLength) {
+    public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages, Integer maxLength) {
+        if(maxLength == null) {
+            maxLength = MAX_INPUT;
+        }
         if(chatMessages != null && !chatMessages.isEmpty()) {
             ChatMessage systemChatMessage = null;
             if (chatMessages.get(0).getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {

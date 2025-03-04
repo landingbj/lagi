@@ -429,6 +429,11 @@ async function doTrain(el) {
                 }
                 let msg = decoder.decode(value, { stream: true });
                 msg =  msg.slice(5);
+                if(msg == '[DONE]') {
+                    console.log('Connection closed by server');
+                    enableTrain(el);
+                    return;
+                }
                 try {
                     let json =  JSON.parse(msg.replaceAll("'", "\""));
                     let loss = json["loss"];
