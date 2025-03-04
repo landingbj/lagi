@@ -174,9 +174,9 @@ Example：Set priority keywords and stop keywords:
 Thank you for your support of Lag[i] ! To help you get started quickly and easily, we have provided a pre-packaged Lag[i] application that is ready for immediate use.
 
 - **Jar File**: The core dependency library of Lag[i].
-  - File Name: lagi-core-1.0.3-jar-with-dependencies.jar
+  - File Name: lagi-core-1.0.4-jar-with-dependencies.jar
   - File Size: 250.5 MB
-  - Download Link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-core-1.0.3-jar-with-dependencies.jar)
+  - Download Link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-core-1.0.4-jar-with-dependencies.jar)
 
 - **War File**: The Web application of Lag[i], which can be directly deployed to a web container.
   - File Name: lagi-web.war
