@@ -107,7 +107,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
         if(text.isEmpty()) {
             return Collections.emptyList();
         }
-        String nodeText = text.get(text.size() - 1);
+        String nodeText = text.get(0);
         return treeDiversifyDao.searchChildNode(nodeText, top);
     }
 
@@ -116,29 +116,45 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
         if(promptList == null || promptList.isEmpty()) {
             return texts;
         }
-        List<IndexSearchData> lastIndexSearchData = null ;
-        for (String prompt  :  promptList) {
-            List<IndexSearchData> indexSearchData = searchWordVector(prompt);
-            String text;
-            if(indexSearchData == null || indexSearchData.isEmpty()) {
-                text = prompt;
-                insertVector(text);
-                indexSearchData = searchWordVector(text);
-            } else {
-                text = indexSearchData.get(0).getText();
-            }
-            Integer id = treeDiversifyDao.getIdByText(text);
-            if(id == null) {
-                treeDiversifyDao.saveGraphNode(text);
-            }
-            if(lastIndexSearchData != null && !lastIndexSearchData.isEmpty()) {
-                String lastText = lastIndexSearchData.get(0).getText();
-                treeDiversifyDao.saveGraphNodeAndRelation(text, lastText);
-            }
-            texts.add(text);
-            lastIndexSearchData = indexSearchData;
-        }
+        addAdjacentUnsavedNodesToDatabase(promptList, texts);
         return texts;
+    }
+
+
+    private void addAdjacentUnsavedNodesToDatabase(List<String> promptList, List<String> texts) {
+        String lastText = null;
+        Integer lastId = null;
+        for (int i = promptList.size() - 1; i >= 0; i--) {
+            // convert prompt to text ( real save to database text)
+            String currentPrompt = promptList.get(i);
+            List<IndexSearchData> indexSearchData = searchWordVector(currentPrompt);
+            if(indexSearchData == null || indexSearchData.isEmpty()) {
+                insertVector(currentPrompt);
+                indexSearchData = searchWordVector(currentPrompt);
+            }
+            // save text to database
+            String currentText = indexSearchData.get(0).getText();
+            Integer cId = treeDiversifyDao.getIdByText(currentText);
+            if(cId == null) {
+                treeDiversifyDao.saveGraphNode(currentText);
+                cId = treeDiversifyDao.getIdByText(currentText);
+            }
+            // add saved text to texts
+            texts.add(currentText);
+            // save relation
+            if(lastText != null && lastId != null) {
+                // if relation exists, break
+                boolean b = treeDiversifyDao.hasRelation(cId, lastId);
+                // update hitCount or save relation
+                treeDiversifyDao.saveRelation(cId, lastId);
+                if(b) {
+                    break;
+                }
+            }
+            // go to save next relation
+            lastText = currentText;
+            lastId = cId;
+        }
     }
 
 
