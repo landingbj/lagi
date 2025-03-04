@@ -42,7 +42,7 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
                 cache.put(item.getPromptInput(), result);
             }
         } catch (Exception e) {
-            throw new FailedDiversifyPromptException(item, e);
+            log.error(String.valueOf(new FailedDiversifyPromptException(item, e)));
         }
     }
 

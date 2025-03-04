@@ -5,6 +5,6 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class ReasonDiversifyQuestions {
+public class DiversifyQuestions {
     private List<String> questions;
 }

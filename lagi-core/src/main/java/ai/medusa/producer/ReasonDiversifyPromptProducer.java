@@ -4,7 +4,7 @@ import ai.llm.service.CompletionsService;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
-import ai.medusa.pojo.ReasonDiversifyQuestions;
+import ai.medusa.pojo.DiversifyQuestions;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -68,11 +68,12 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         if (diversifiedContent == null || diversifiedContent.isEmpty()) {
             return result;
         }
-        ReasonDiversifyQuestions reasonDiversifyQuestions = gson.fromJson(diversifiedContent, ReasonDiversifyQuestions.class);
+        DiversifyQuestions reasonDiversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
         for (int i = 0; i < reasonDiversifyQuestions.getQuestions().size(); i++) {
             String question = reasonDiversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
+            promptList.addAll(promptInput.getPromptList());
             promptList.add(question);
             PromptInput diversifiedPromptInput = PromptInput.builder()
                     .parameter(promptInput.getParameter())

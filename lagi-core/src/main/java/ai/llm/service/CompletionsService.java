@@ -355,8 +355,11 @@ public class CompletionsService implements ChatCompletion {
         List<ChatMessage> messages = new ArrayList<>();
         prompts.forEach(prompt->{
             messages.add(getChatMessage(prompt, LagiGlobal.LLM_ROLE_USER));
-            messages.add(getChatMessage("", LagiGlobal.LLM_ROLE_ASSISTANT));
+            messages.add(getChatMessage(" ", LagiGlobal.LLM_ROLE_ASSISTANT));
         });
+        if (messages.size() > 1) {
+            messages.remove(messages.size() - 1);
+        }
         return getCompletionsRequest(messages);
     }
 

@@ -240,8 +240,7 @@ stores:
 
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
     enable: false
-    algorithm: hash
-    llm_assist: false
+    algorithm: hash,graph,llm
 
 functions:
   embedding:
