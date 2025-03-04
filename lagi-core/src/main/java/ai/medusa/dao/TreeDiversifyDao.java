@@ -109,6 +109,20 @@ public class TreeDiversifyDao {
 
     }
 
+
+    public void saveRelation(Integer pId, Integer cId) {
+
+        String query = "INSERT INTO tree_diversify_relations (parent_id, child_id, hitCount) VALUES (?, ?, 1) ON CONFLICT(parent_id, child_id) DO UPDATE SET hitCount = hitCount + 1";
+        try (PreparedStatement ps = DriverManager.getConnection(DB_URL).prepareStatement(query)) {
+            ps.setInt(1, pId);
+            ps.setInt(2, cId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error executing SQL query", e);
+        }
+
+    }
+
     public Integer getIdByText(String text) {
         String query = "SELECT id FROM tree_diversify WHERE text = ?";
         try (PreparedStatement ps = DriverManager.getConnection(DB_URL).prepareStatement(query)) {
@@ -135,6 +149,27 @@ public class TreeDiversifyDao {
             log.error("Error executing SQL query", e);
         }
         return res;
+    }
+
+
+    public boolean hasRelation(Integer parentId, Integer childId) {
+        boolean result = false;
+        String query = "select count(1) as c from tree_diversify_relations where parent_id = ? and child_id = ?";
+        try (PreparedStatement ps = DriverManager.getConnection(DB_URL).prepareStatement(query)) {
+            ps.setInt(1, parentId);
+            ps.setInt(2, childId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int c = rs.getInt("c");
+                if(c > 0) {
+                    result = true;
+                    break;
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error executing SQL query", e);
+        }
+        return result;
     }
 
     public static void main(String[] args) {
