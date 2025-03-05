@@ -8,10 +8,12 @@ import ai.migrate.service.PayService;
 import ai.servlet.dto.*;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -148,10 +150,29 @@ public class AgentServlet extends BaseServlet {
 
     private void orchestrationAgent(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        String lagiUserId = req.getParameter("lagiUserId");
-        String agentId = req.getParameter("agentId");
-        List<OrchestrationItem> orchestrationData = gson.fromJson(req.getParameter("orchestrationData"), new TypeToken<List<OrchestrationItem>>(){}.getType());
-        Response response = agentService.orchestrationAgent(lagiUserId, agentId,orchestrationData);
+
+        // 从请求体中读取 JSON 数据
+        BufferedReader reader = req.getReader();
+        StringBuilder jsonBody = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            jsonBody.append(line);
+        }
+
+        // 使用 Gson 解析 JSON 数据
+        Gson gson = new Gson();
+        JsonObject jsonObject = gson.fromJson(jsonBody.toString(), JsonObject.class);
+
+        // 提取字段
+        String lagiUserId = jsonObject.get("lagiUserId").getAsString();
+        String agentId = jsonObject.get("agentId").getAsString();
+        List<OrchestrationItem> orchestrationData = gson.fromJson(
+                jsonObject.get("orchestrationData"),
+                new TypeToken<List<OrchestrationItem>>(){}.getType()
+        );
+
+        // 调用服务层处理逻辑
+        Response response = agentService.orchestrationAgent(lagiUserId, agentId, orchestrationData);
         responsePrint(resp, gson.toJson(response));
     }
 

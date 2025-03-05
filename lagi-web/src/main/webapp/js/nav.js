@@ -894,12 +894,12 @@ function getPromptDialog(id, e) {
 
 
 function goToUserTab(id, e) {
-    // if (id === 666 || id == 667 ||  id == 668 || id == 669) {
-    //     if (!getCookie('userId')) {
-    //         openModal(e);
-    //         return;
-    //     }
-    // }
+    if (id === 666 || id == 667 || id == 668 || id == 669) {
+        if (!getCookie('userId')) {
+            openModal(e);
+            return;
+        }
+    }
     $('#conTab').hide();
     $('#mytab').show();
     $('#not-content form').hide();

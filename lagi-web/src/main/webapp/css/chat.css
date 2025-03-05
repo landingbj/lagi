@@ -586,23 +586,27 @@ pre .key {
 
 /* agent-list-container 样式 */
 #agent-list-container {
-    display: none;
-    /* 默认隐藏 */
+    /* display: none;
     width: 100%;
-    /* 宽度占满父容器 */
     height: 90%;
-    /* 高度占满父容器 */
     box-sizing: border-box;
-    /* 包括内边距和边框 */
     background-color: white;
-    /* 背景颜色，根据需要调整 */
     padding: 20px;
-    /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    position: relative; */
+    display: none;
+    width: 100%;
+    height: 90%;
+    box-sizing: border-box;
+    background-color: white;
+    padding: 52px 20px 20px 42px;
     z-index: 1;
     justify-content: center;
     align-items: center;
     position: relative;
-    /* 设置为相对定位 */
+    font-size: 12px;
 }
 
 #agent-list th,
@@ -991,23 +995,27 @@ pre .key {
 
 /* 默认隐藏 paid-agent-list-container */
 .paid-agent-list-container {
-    display: none;
-    /* 默认隐藏 */
+    /* display: none;
     width: 100%;
-    /* 宽度占满父容器 */
     height: 90%;
-    /* 高度占满父容器 */
     box-sizing: border-box;
-    /* 包括内边距和边框 */
     background-color: white;
-    /* 背景颜色 */
     padding: 20px;
-    /* 内边距 */
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    position: relative; */
+    display: none;
+    width: 100%;
+    height: 90%;
+    box-sizing: border-box;
+    background-color: white;
+    padding: 52px 20px 20px 42px;
     z-index: 1;
     justify-content: center;
     align-items: center;
     position: relative;
-    /* 设置为相对定位 */
+    font-size: 12px;
 }
 
 /* 仅影响 id 为 paid-agent-list-container 下的表格 */
@@ -1094,12 +1102,12 @@ pre .key {
 
 /* 设置表格奇偶行的背景色 */
 .paid-agent-list tbody tr:nth-child(even) {
-    background-color: #f2f2f2;
+    /* background-color: #f2f2f2; */
     /* 偶数行背景色 */
 }
 
 .paid-agent-list tbody tr:nth-child(odd) {
-    background-color: #fff;
+    /* background-color: #fff; */
     /* 奇数行背景色 */
 }
 

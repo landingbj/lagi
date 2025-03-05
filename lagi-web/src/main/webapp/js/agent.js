@@ -176,30 +176,90 @@ function renderPagination(totalPages, currentPage) {
     let paginationContainer = document.getElementById('pagination');
     paginationContainer.innerHTML = '';
 
-    // 添加上一页按钮
+    // Style for the pagination container (using inline style, no background color)
+    paginationContainer.style.display = 'flex';
+    paginationContainer.style.gap = '5px';
+    paginationContainer.style.justifyContent = 'center';
+    paginationContainer.style.padding = '20px';
+    paginationContainer.style.alignItems = 'center'; // Ensure vertical centering of all elements
+
+    // 添加上一页按钮 (using SVG for left arrow, removed problematic flex on button)
     let prevButton = document.createElement('button');
-    prevButton.textContent = '<';
+    prevButton.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
     prevButton.onclick = () => {
         if (currentPage > 1) loadAgentList(currentPage - 1);
     };
+    // Inline styles for prev/next buttons
+    prevButton.style.padding = '8px 12px';
+    prevButton.style.border = 'none';
+    prevButton.style.borderRadius = '4px';
+    prevButton.style.backgroundColor = '#007bff';
+    prevButton.style.color = 'white';
+    prevButton.style.cursor = 'pointer';
+    prevButton.style.fontSize = '14px';
+    prevButton.style.transition = 'background-color 0.3s';
+    prevButton.style.outline = 'none';
+    // Remove display: 'flex' from button, apply it to SVG container if needed
+    prevButton.querySelector('svg').style.display = 'block'; // Ensure SVG is visible and centered
+    prevButton.querySelector('svg').style.margin = 'auto'; // Center the SVG within the button
+    prevButton.onmouseover = () => prevButton.style.backgroundColor = '#0056b3';
+    prevButton.onmouseout = () => prevButton.style.backgroundColor = '#007bff';
     paginationContainer.appendChild(prevButton);
 
     for (let i = 1; i <= totalPages; i++) {
         let button = document.createElement('button');
         button.textContent = i;
         button.onclick = () => loadAgentList(i);
-        if (i === currentPage) {
-            button.classList.add('active');
-        }
+        // Inline styles for page number buttons, ensuring centering
+        button.style.padding = '8px 12px';
+        button.style.border = 'none';
+        button.style.borderRadius = '4px';
+        button.style.backgroundColor = i === currentPage ? '#007bff' : 'transparent';
+        button.style.color = i === currentPage ? 'white' : '#007bff';
+        button.style.cursor = 'pointer';
+        button.style.fontSize = '14px';
+        button.style.transition = 'background-color 0.3s, color 0.3s';
+        button.style.outline = 'none';
+        button.style.border = '1px solid #007bff';
+        button.style.display = 'flex'; // Use flex on the button to center the text
+        button.style.alignItems = 'center'; // Vertically center the text
+        button.style.justifyContent = 'center'; // Horizontally center the text
+        button.onmouseover = () => {
+            if (i !== currentPage) {
+                button.style.backgroundColor = '#e9ecef';
+                button.style.color = '#0056b3';
+            }
+        };
+        button.onmouseout = () => {
+            if (i !== currentPage) {
+                button.style.backgroundColor = 'transparent';
+                button.style.color = '#007bff';
+            }
+        };
         paginationContainer.appendChild(button);
     }
 
-    // 添加下一页按钮
+    // 添加下一页按钮 (using SVG for right arrow, same fix as prevButton)
     let nextButton = document.createElement('button');
-    nextButton.textContent = '>';
+    nextButton.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
     nextButton.onclick = () => {
         if (currentPage < totalPages) loadAgentList(currentPage + 1);
     };
+    // Inline styles for prev/next buttons (same as prevButton)
+    nextButton.style.padding = '8px 12px';
+    nextButton.style.border = 'none';
+    nextButton.style.borderRadius = '4px';
+    nextButton.style.backgroundColor = '#007bff';
+    nextButton.style.color = 'white';
+    nextButton.style.cursor = 'pointer';
+    nextButton.style.fontSize = '14px';
+    nextButton.style.transition = 'background-color 0.3s';
+    nextButton.style.outline = 'none';
+    // Remove display: 'flex' from button, apply it to SVG container if needed
+    nextButton.querySelector('svg').style.display = 'block'; // Ensure SVG is visible and centered
+    nextButton.querySelector('svg').style.margin = 'auto'; // Center the SVG within the button
+    nextButton.onmouseover = () => nextButton.style.backgroundColor = '#0056b3';
+    nextButton.onmouseout = () => nextButton.style.backgroundColor = '#007bff';
     paginationContainer.appendChild(nextButton);
 }
 
@@ -328,15 +388,92 @@ function renderPaidPagination(totalPage, currentPage) {
     let paginationContainer = document.getElementById("paid-agent-pagination");
     paginationContainer.innerHTML = '';  // 清空分页容器
 
+    // Style for the pagination container (using inline style, no background color)
+    paginationContainer.style.display = 'flex';
+    paginationContainer.style.gap = '5px';
+    paginationContainer.style.justifyContent = 'center';
+    paginationContainer.style.padding = '20px';
+    paginationContainer.style.alignItems = 'center'; // Ensure vertical centering of all elements
+
+    // 添加上一页按钮 (using SVG for left arrow)
+    let prevButton = document.createElement('button');
+    prevButton.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+    prevButton.onclick = () => {
+        if (currentPage > 1) loadPaidAgentList(currentPage - 1);
+    };
+    // Inline styles for prev/next buttons
+    prevButton.style.padding = '8px 12px';
+    prevButton.style.border = 'none';
+    prevButton.style.borderRadius = '4px';
+    prevButton.style.backgroundColor = '#007bff';
+    prevButton.style.color = 'white';
+    prevButton.style.cursor = 'pointer';
+    prevButton.style.fontSize = '14px';
+    prevButton.style.transition = 'background-color 0.3s';
+    prevButton.style.outline = 'none';
+    // Ensure SVG is visible and centered
+    prevButton.querySelector('svg').style.display = 'block';
+    prevButton.querySelector('svg').style.margin = 'auto';
+    prevButton.onmouseover = () => prevButton.style.backgroundColor = '#0056b3';
+    prevButton.onmouseout = () => prevButton.style.backgroundColor = '#007bff';
+    paginationContainer.appendChild(prevButton);
+
+    // 添加分页按钮
     for (let i = 1; i <= totalPage; i++) {
-        let button = document.createElement("button");
+        let button = document.createElement('button');
         button.textContent = i;
         button.onclick = () => loadPaidAgentList(i);
-        if (i === currentPage) {
-            button.style.fontWeight = 'bold';
-        }
+        // Inline styles for page number buttons, ensuring centering
+        button.style.padding = '8px 12px';
+        button.style.border = 'none';
+        button.style.borderRadius = '4px';
+        button.style.backgroundColor = i === currentPage ? '#007bff' : 'transparent';
+        button.style.color = i === currentPage ? 'white' : '#007bff';
+        button.style.cursor = 'pointer';
+        button.style.fontSize = '14px';
+        button.style.transition = 'background-color 0.3s, color 0.3s';
+        button.style.outline = 'none';
+        button.style.border = '1px solid #007bff';
+        button.style.display = 'flex'; // Use flex to center the text
+        button.style.alignItems = 'center'; // Vertically center the text
+        button.style.justifyContent = 'center'; // Horizontally center the text
+        button.onmouseover = () => {
+            if (i !== currentPage) {
+                button.style.backgroundColor = '#e9ecef';
+                button.style.color = '#0056b3';
+            }
+        };
+        button.onmouseout = () => {
+            if (i !== currentPage) {
+                button.style.backgroundColor = 'transparent';
+                button.style.color = '#007bff';
+            }
+        };
         paginationContainer.appendChild(button);
     }
+
+    // 添加下一页按钮 (using SVG for right arrow)
+    let nextButton = document.createElement('button');
+    nextButton.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
+    nextButton.onclick = () => {
+        if (currentPage < totalPage) loadPaidAgentList(currentPage + 1);
+    };
+    // Inline styles for prev/next buttons (same as prevButton)
+    nextButton.style.padding = '8px 12px';
+    nextButton.style.border = 'none';
+    nextButton.style.borderRadius = '4px';
+    nextButton.style.backgroundColor = '#007bff';
+    nextButton.style.color = 'white';
+    nextButton.style.cursor = 'pointer';
+    nextButton.style.fontSize = '14px';
+    nextButton.style.transition = 'background-color 0.3s';
+    nextButton.style.outline = 'none';
+    // Ensure SVG is visible and centered
+    nextButton.querySelector('svg').style.display = 'block';
+    nextButton.querySelector('svg').style.margin = 'auto';
+    nextButton.onmouseover = () => nextButton.style.backgroundColor = '#0056b3';
+    nextButton.onmouseout = () => nextButton.style.backgroundColor = '#007bff';
+    paginationContainer.appendChild(nextButton);
 }
 
 // 显示 div 的函数
@@ -1169,7 +1306,7 @@ function saveOrchestration() {
         }
     });
 
-    fetch('/agent/orchestration', {
+    fetch('/agent/orchestrationAgent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1177,14 +1314,20 @@ function saveOrchestration() {
             agentId: agentId,
             orchestrationData: orchestrationData
         })
-    }).then(response => response.json())
+    })
+        .then(response => response.json())  // 解析后端返回的 JSON
         .then(data => {
-            if (data.success) {
+            // 根据后端返回的 status 字段判断
+            if (data.status === "success") {
                 alert("修改成功");
                 closeOrchestrationAgent();
             } else {
                 alert("修改失败");
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);  // 捕获网络错误或解析错误
+            alert("请求失败，请稍后重试");
         });
 }
 // ========= 编排智能体js结束=============
