@@ -68,6 +68,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         request.setMax_tokens(1024);
         request.setTemperature(0);
         request.setMessages(chatMessages);
+        request.setStream(false);
         System.out.println("request = " + gson.toJson(request));
         return completionsService.completions(request);
     }
@@ -96,6 +97,9 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             ChatCompletionResult result = callLLm(prompt, history, user_msg);
             System.out.println("结束调用大模型, 耗时：" + (System.currentTimeMillis() - start));
             String answer = result.getChoices().get(0).getMessage().getContent();
+            if(answer.startsWith("json")) {
+                answer = answer.replace("json", "");
+            }
 //            System.out.println(agentConfig.getName() + "调用结果：" + answer);
             ResponseTemplate responseTemplate;
             try {
