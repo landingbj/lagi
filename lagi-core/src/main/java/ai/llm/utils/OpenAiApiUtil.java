@@ -114,6 +114,8 @@ public class OpenAiApiUtil {
                                                    Function<Response, Integer> convertErrorFunc, Map<String, String> headers) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeout, TimeUnit.SECONDS)
+                .readTimeout(timeout, TimeUnit.SECONDS)
+                .writeTimeout(timeout, TimeUnit.SECONDS)
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType mediaType = MediaType.get("application/json");

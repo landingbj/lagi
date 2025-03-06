@@ -67,6 +67,27 @@ public class AgentScoreDao {
         }
     }
 
+    public void saveOrUpdateScore(Integer agentId, String agentName, String keyword, String question, Double score) {
+        String sql = "INSERT INTO agent_scores(agent_id, agent_name, keyword, question, score) \n" +
+                "VALUES(?, ?, ?, ?, ?) \n" +
+                "ON CONFLICT(agent_id, keyword) DO UPDATE SET \n" +
+                "    agent_name = excluded.agent_name, \n" +
+                "    keyword = excluded.keyword, \n" +
+                "    question = excluded.question, \n" +
+                "    score = excluded.score;";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, agentId);
+            pstmt.setString(2, agentName);
+            pstmt.setString(3, keyword);
+            pstmt.setString(4, question);
+            pstmt.setDouble(5, score);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error connecting to database", e);
+        }
+    }
+
     public List<AgentIntentScore> getAgentScore(String keyword) {
         String sql = "SELECT agent_id, agent_name, keyword, question, score FROM agent_scores WHERE keyword = ? and score > 0";
         List<AgentIntentScore> scores = new ArrayList<>();

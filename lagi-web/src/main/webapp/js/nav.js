@@ -157,7 +157,7 @@ let promptNavs = [
                 "id": -9,
                 "agentId": "oil",
                 "title": "油价助手",
-                "templateIssues": "今天的国际油价是多少?"
+                "templateIssues": "今天的北京油价是多少?"
             },
             {
                 "id": -10,

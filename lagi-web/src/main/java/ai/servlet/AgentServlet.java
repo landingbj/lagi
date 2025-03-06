@@ -1,11 +1,16 @@
 package ai.servlet;
 
+import ai.agent.Agent;
+import ai.common.exception.RRException;
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
 import ai.dto.*;
+import ai.manager.AgentManager;
 import ai.migrate.service.AgentService;
 import ai.migrate.service.PayService;
 import ai.servlet.dto.*;
+import ai.worker.skillMap.SkillMap;
+import cn.hutool.core.util.StrUtil;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -67,6 +72,8 @@ public class AgentServlet extends BaseServlet {
             this.createLagiAgent(req, resp);
         }else if (method.equals("orchestrationAgent")) {
             this.orchestrationAgent(req, resp);
+        } else if(method.equals("manualScoring")) {
+            this.manualScoring(req, resp);
         }
     }
 
@@ -197,5 +204,45 @@ public class AgentServlet extends BaseServlet {
         DeductExpensesRequest deductExpensesRequest = reqBodyToObj(req, DeductExpensesRequest.class);
         Response response = agentService.deductExpenses(deductExpensesRequest);
         responsePrint(resp, gson.toJson(response));
+    }
+
+    public void manualScoring(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        ManualScoring manualScoring = reqBodyToObj(req, ManualScoring.class);
+        if(manualScoring == null) {
+            responsePrint(resp, "{\"code\": 400, \"message\": \"参数错误\"}");
+            return ;
+        }
+        if(manualScoring.getQuestion() == null || manualScoring.getAgentId() == null || manualScoring.getScore() == null) {
+            responsePrint(resp, "{\"code\": 400, \"message\": \"参数错误\"}");
+            return ;
+        }
+        SkillMap skillMap = new SkillMap();
+        LagiAgentResponse lagiAgentResponse = agentService.getLagiAgent(null, manualScoring.getAgentId().toString());
+        String agentName = null;
+        if(lagiAgentResponse != null && lagiAgentResponse.getData() != null) {
+            agentName = lagiAgentResponse.getData().getName();
+        }
+        if(StrUtil.isBlank(agentName)) {
+            List<Agent<?, ?>> agents = AgentManager.getInstance().agents();
+            if(agents != null) {
+                for (Agent<?, ?> agent : agents) {
+                    if(agent.getAgentConfig().getId().equals(manualScoring.getAgentId())) {
+                        agentName = agent.getAgentConfig().getName();
+                        break;
+                    }
+                }
+            }
+        }
+        if(StrUtil.isBlank(agentName)) {
+            responsePrint(resp, "{\"code\": 400, \"message\": \"未找到对应的智能体\"}");
+            return ;
+        }
+        try {
+            skillMap.manualScoring(manualScoring.getQuestion(), manualScoring.getAgentId(), agentName ,manualScoring.getScore());
+            responsePrint(resp, "{\"code\": 0, \"message\": \"录入成功\"}");
+        } catch (RRException e) {
+            responsePrint(resp, "{\"code\": 500, \"message\": \"" + e.getMsg() + "\"}");
+        }
     }
 }

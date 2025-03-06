@@ -1,6 +1,7 @@
 package ai.worker.skillMap;
 
 import ai.agent.Agent;
+import ai.common.exception.RRException;
 import ai.common.utils.LRUCache;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.pojo.AgentConfig;
@@ -351,4 +352,20 @@ public class SkillMap {
         Random random = new Random();
         return random.nextInt(MAX_RAG_AGENT_ID - MIN_RAG_AGENT_ID) + MIN_RAG_AGENT_ID;
     }
+
+    public void manualScoring(String question, Integer agentId, String agentName, Double score) {
+        IntentResponse safeIntentResponse = getSafeIntentResponse(question);
+        if(safeIntentResponse == null) {
+            throw new RRException("未识别到意图");
+        }
+        List<String> keywords = safeIntentResponse.getKeywords();
+        if(keywords == null) {
+            throw new RRException("未识别到关键词");
+        }
+        keywords.forEach(keyword -> {
+            agentScoreDao.saveOrUpdateScore(agentId, agentName, keyword, question, score);
+            cachedSkillMap.remove(keyword);
+        });
+    }
+
 }

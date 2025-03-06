@@ -292,6 +292,13 @@ public class LlmApiServlet extends BaseServlet {
     private void goStream(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         LLmRequest llmRequest = reqBodyToObj(req, LLmRequest.class);
+        if(llmRequest.getAgentId() != null) {
+            ChatCompletionResult work = defaultWorker.work("appointedWorker", llmRequest);
+            if(work != null) {
+                convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), resp, work);
+                return;
+            }
+        }
         PrintWriter out = resp.getWriter();
         String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
@@ -439,7 +446,11 @@ public class LlmApiServlet extends BaseServlet {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
-                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                try {
+                    indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                } catch (Exception e) {
+                    logger.error("vector search failed : ", e);
+                }
                 if(indexSearchDataList.isEmpty()) {
                     String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
                     outPrintJson(resp, chatCompletionRequest, s);
@@ -483,7 +494,11 @@ public class LlmApiServlet extends BaseServlet {
                 return;
             }
             if(indexSearchDataList == null) {
-                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                try {
+                    indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                } catch (Exception e) {
+                    logger.error("vector search failed : ", e);
+                }
             }
             if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
                 context = completionsService.getRagContext(indexSearchDataList);

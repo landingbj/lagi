@@ -133,7 +133,6 @@ public class CompletionsService implements ChatCompletion {
                     return result;
                 } catch (RRException e) {
                     freezingAdapterByErrorCode(adapter, e.getCode());
-                    throw e;
                 }
             }
         }
