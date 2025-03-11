@@ -59,15 +59,10 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
                             </path>
                         </svg></button>
 `;
-    let part2 = await generateSelect(conv.user.question);
-    // let part2 = `<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this)">
-    //                     <option value="default" data-priceperreq="0">智能推荐</option>
-    //                     <option value="1" data-priceperreq="0.01">收费智能体1</option>
-    //                     <option value="2" data-priceperreq="0.02">收费智能体2</option>
-    //                     <option value="3" data-priceperreq="0.03">收费智能体3</option>
-    //                     <option value="4" data-priceperreq="0.04">收费智能体4</option>
-    //                     <option value="5" data-priceperreq="0.05">收费智能体5</option>
-    //                 </select> `;
+    let part2 = `<select class="custom-select" style="color:black; border-radius: 10px;"  onchange="handleSelect(this,'${conv.user.question}')">
+    <option value="default" data-priceperreq="0">智能推荐</option>
+</select>`;
+
 
     let part3 = `
                     <audio class="myAudio1" controls="" preload="metadata" style="width:100px">
@@ -103,11 +98,14 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
     $('#item-content').append(chatHtml);
     replaceConversationAttached();
     $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
-    return $($(' .markdown')[$('.markdown').length - 1]);
+    let markdown =  $($(' .markdown')[$('.markdown').length - 1]);
+    generateSelect(conv.user.question, markdown);
+    return markdown;
 }
 
 // 请求接口并生成HTML字符串
-async function generateSelect(userQuestion) {
+async function generateSelect(userQuestion, markdown) {
+    let customSelect =  $(markdown.find('.custom-select')[0]);
     const url = "/skill/relatedAgents";
     const requestData = {
         stream: false,
@@ -121,29 +119,28 @@ async function generateSelect(userQuestion) {
             }
         ]
     };
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestData)
-        });
-        const result = await response.json();
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestData)
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`上传失败，状态码: ${response.status}`);
+        }
+        return response.json();
+    }).then(result => {
         if (result.code === 0 && result.data && Array.isArray(result.data) && result.data.length > 0) {
             const agents = result.data;
-            let part2 = `<select class="custom-select" style="color:black; border-radius: 10px;" id="customSelect" onchange="handleSelect(this,'${userQuestion}')"><option value="default" data-priceperreq="0">智能推荐</option>`;
             agents.forEach(agent => {
-            part2 += `<option value="${agent.id}" data-priceperreq="${agent.pricePerReq}" title="使用这些智能体来获取更准确的回答！">${agent.name}</option>`;
+                let html = `<option value="${agent.id}" data-priceperreq="${agent.pricePerReq}" title="使用这些智能体来获取更准确的回答！">${agent.name}</option>`;
+                customSelect.append(html);
             });
-            part2 += `</select>`;
-            return part2;
-        } else {
-            return '';
         }
-    } catch (error) {
-        return '';
-    }
+    }).catch(error => {
+    }).finally(() => {
+    })
 }
 
 

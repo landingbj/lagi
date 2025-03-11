@@ -452,6 +452,7 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
                 } else {
                     if (paras["stream"]) {
                         streamOutput(paras, question, robootAnswerJq);
+                        // streamOutput(paras, question, robootAnswerJq, "v1/chat/completions");
                         solidGeneralOutput(paras, question, robootAnswerJq);
                     } else {
                         generalOutput(paras, question, robootAnswerJq);
@@ -564,6 +565,13 @@ function solidGeneralOutput(paras, question, robootAnswerJq, url="chat/go/solid"
     });
 }
 
+const THINK_TEMPLATE_START = '<think>';
+const THINK_TEMPLATE_END = '</think>';
+const THINK_RENDER_START = '<div class="think">';
+const THINK_RENDER_END = '</div>';
+const CODE_START = "'''";
+const CODE_END = "'''";
+
 
 function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
     function isJsonString(str) {
@@ -598,7 +606,8 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
         let fullText = '';
         let flag = true;
         let lastChunkPart = '';
-
+        let sourceContent = '';
+        robootAnswerJq.html('<p></p>');
         while (flag) {
             const {value, done} = await reader.read();
             let res = new TextDecoder().decode(value);
@@ -615,16 +624,14 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
             } else {
                 lastChunkPart = '';
             }
-
-            for (let i = 0; i < chunkArray.length; i++) {
-                let chunk = chunkArray[i];
+            for (let chunk of chunkArray) {
                 if (chunk === "[DONE]") {
                     CONVERSATION_CONTEXT.push({"role": "user", "content": question});
                     CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
                     flag = false;
                     break;
                 }
-                var json = JSON.parse(chunk);
+                let json = JSON.parse(chunk);
                 if (json.choices === undefined) {
                     queryLock = false;
                     robootAnswerJq.html("调用失败！");
@@ -633,35 +640,32 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                 if (json.choices.length === 0) {
                     continue;
                 }
-                var chatMessage = json.choices[0].message;
-
-                if (chatMessage.filename === undefined) {
-
-                } else {
-                    //var a = '<ul style="list-style:none;padding-left:5px;">';
-                    var a = '';
-                    let isFirst = true; // 标记是否是第一个文件名
-
+                let chatMessage = json.choices[0].message;
+                let a = '';
+                if (chatMessage.filename) {
                     for (let i = 0; i < chatMessage.filename.length; i++) {
-                        let marginLeft = isFirst ? '0' : '50px';
                         a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a></br>`;
-                        isFirst = false;
-                        //console.log("这里的路径是："+chatMessage.filepath[i]);
-                        //a+=`<a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a><br>`;
                     }
-                    //a +='</ul>'
                 }
 
-                // var a = '<a style="color: #666;text-decoration: none;" ' +
-                //     'href="uploadFile/downloadFile?filePath=' + chatMessage.filepath + '&fileName=' +
-                //     chatMessage.filename + '">' + chatMessage.filename + '</a>';
-
-                if (chatMessage.content === undefined) {
+                if (!chatMessage.content) {
                     continue;
                 }
-                var t = chatMessage.content;
-                t = t.replaceAll("\n", "<br>");
-                fullText += t;
+                // console.log("content:", chatMessage);
+                sourceContent  +=  chatMessage.content;
+                let temp = sourceContent.replaceAll(/(\n)+/g, '<br/>');
+                temp = temp.replaceAll(/ /g, '&nbsp;');
+                temp = temp.replaceAll(/<\/?code>/g, '');
+                temp = marked.parse(temp);
+                if(temp.includes(THINK_TEMPLATE_START)) {
+                    temp = temp.replaceAll(THINK_TEMPLATE_START, THINK_RENDER_START);
+                    if(!temp.includes(THINK_TEMPLATE_END)) {
+                        temp += THINK_RENDER_END;
+                    } else {
+                        temp = temp.replaceAll(THINK_TEMPLATE_END, THINK_RENDER_END);
+                    }
+                }
+                fullText = temp + '<br/>';
                 result = `
                         ${fullText}
                         ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
@@ -671,8 +675,6 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                 // `;
                 if (chatMessage.contextChunkIds) {
                     if (chatMessage.contextChunkIds instanceof Array) {
-                        // filterChunk(chatMessage.filename, chatMessage.filepath, chatMessage.contextChunkIds, fullText, robootAnswerJq);
-                        // result += `<div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><br>`;
                         getCropRect(chatMessage.contextChunkIds, fullText, robootAnswerJq);
                     }
                 }

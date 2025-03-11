@@ -1247,6 +1247,7 @@
     <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
     <script src="libs/jquery-3.1.1.min.js"></script>
     <script src="js/fingerprint2.min.js"></script>
+    <script src="js/marked.min.js"></script>
     <script src="libs/marked.min.js"></script>
     <script src="libs/echart.min.js"></script>
     <script src="libs/sse.js?ver=${initParam.version}"></script>

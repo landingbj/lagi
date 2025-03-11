@@ -104,7 +104,6 @@ var voice_url = '';
 
 // 播音功能的实现
 function txtTovoice(txt, emotion) {
-    console.log(emotion, txt)
     // 获取最后一个进行播放。
     var len = $(".myAudio1").length;
 // 检查是否至少存在一个匹配的元素

@@ -161,7 +161,6 @@ function loadBall() {
        let maxLenth = 0;
         for(let i = 0; i < words.length ; i++) {
             let con =  longestCommonSubsequence(word,  words[i]);
-            console.log(con);
             if(con >= 2 && con > maxLenth) {
                 highWord = words[i];
                 maxLenth = con.length;

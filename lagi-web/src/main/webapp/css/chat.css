@@ -287,8 +287,14 @@ pre .key {
 }
 
 .chat-div br {
-    display: none;
+    /* display: none; */
 }
+
+.chat-div ul>li,  .chat-div ol>li{
+    padding-left: 16px;
+}
+
+
 
 .better-result {
     display: none;
@@ -1624,3 +1630,14 @@ pre .key {
 
 
 /* ==============创建智能体CSS结束===================== */
+.think {
+    background: rgba(0, 0, 0, 0.1);
+    color: rgb(55, 55, 55);
+    padding: 12px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+code {
+    
+}

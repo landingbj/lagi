@@ -539,10 +539,9 @@ function loadNavStatus() {
 }
 
 function buildPromptDialogContent(nav) {
-    p = nav.prompt;
-    o = nav.operation;
-    html = `&nbsp;&nbsp;&nbsp;&nbsp;功能介绍：${p}<br/>&nbsp;&nbsp;&nbsp;&nbsp;操作方式: ${o}`
-    // return `${pre} ${ exampleImgSrc ? `<img src='${exampleImgSrc}' alt='example' style="width: 100%;"></img>`: '' }`;
+    let p = nav.prompt;
+    let o = nav.operation;
+    let html = `&nbsp;&nbsp;&nbsp;&nbsp;功能介绍：${p}<br/>&nbsp;&nbsp;&nbsp;&nbsp;操作方式: ${o}`
     return html;
 }
 
@@ -572,7 +571,6 @@ function genNavItems(navs) {
     let g = 1;
     for (let index = 0; index < navs.length; index++) {
         const nav = navs[index];
-
         let group = nav.group == undefined ? 1 : nav.group;
         let style = group == g ? '' : 'style="margin-top:1em"';
         if (g != group) {
