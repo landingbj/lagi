@@ -278,7 +278,7 @@ functions:
         enable: true
         stream: true
         priority: 100
-    filter: default_filter
+  filter: default_filter
 
   translate:
     - backend: ernie
