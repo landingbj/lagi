@@ -440,7 +440,7 @@ public class LlmApiServlet extends BaseServlet {
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
-        String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
+        String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"source\":%s,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
         if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
@@ -490,7 +490,7 @@ public class LlmApiServlet extends BaseServlet {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
-                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
+                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, chatCompletionRequest.getModel(), answer));
                 return;
             }
             if(indexSearchDataList == null) {
@@ -609,8 +609,8 @@ public class LlmApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         PrintWriter out = resp.getWriter();
         out.print("data: " + json + "\n\n");
-        out.print("data: " + "[DONE]" + "\n\n");
         out.flush();
+        out.print("data: " + "[DONE]" + "\n\n");
         out.close();
     }
 

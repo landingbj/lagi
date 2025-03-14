@@ -93,7 +93,6 @@ public class VectorCacheLoader {
         public List<String> getNeighbors(String q, int count) {
             List<String> res = new ArrayList<>();
             Data data = getDate(q);
-            Long seq = data.getSeq();
             String source = getKey(data.getSeq(), data.getQ());
             for (int i = 0; i < count; i++) {
                 source = seqToData.lowerKey(source);
@@ -102,9 +101,6 @@ public class VectorCacheLoader {
                 }
                 Data cData = seqToData.get(source);
                 if(cData == null) {
-                    break;
-                }
-                if(!Objects.equals(cData.getSeq(), seq)) {
                     break;
                 }
                 res.add(cData.getQ());
@@ -117,9 +113,6 @@ public class VectorCacheLoader {
                 }
                 Data cData = seqToData.get(source);
                 if(cData == null) {
-                    break;
-                }
-                if(!Objects.equals(cData.getSeq(), seq)) {
                     break;
                 }
                 res.add(cData.getQ());

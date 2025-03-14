@@ -140,7 +140,7 @@ public class ExpressionParser {
             skipWhitespace();
             StringBuilder sb = new StringBuilder();
             while (pos < length && (Character.isLetterOrDigit(input.charAt(pos))
-                    || input.charAt(pos) == '_') || input.charAt(pos) == '-'
+                    || input.charAt(pos) == '_') || input.charAt(pos) == '-' || input.charAt(pos) == ':'
             ) {
                 sb.append(input.charAt(pos));
                 pos++;

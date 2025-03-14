@@ -9,6 +9,7 @@ import ai.servlet.BaseServlet;
 import ai.servlet.dto.VectorDeleteRequest;
 import ai.servlet.dto.VectorQueryRequest;
 import ai.servlet.dto.VectorUpsertRequest;
+import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,7 +165,22 @@ public class VectorApiServlet extends BaseServlet {
         List<UpsertRecord> upsertRecords = vectorUpsertRequest.getData();
         String category = vectorUpsertRequest.getCategory();
         boolean isContextLinked = vectorUpsertRequest.getContextLinked();
+        if(isContextLinked && upsertRecords.size() == 2) {
+            long timestamp = Instant.now().toEpochMilli();
+            UpsertRecord instructionRecord = upsertRecords.get(0);
+            UpsertRecord outputRecord = upsertRecords.get(1);
+            instructionRecord.getMetadata().put("seq", Long.toString(timestamp));
+            outputRecord.getMetadata().put("seq", Long.toString(timestamp));
+            String s1 = instructionRecord.getMetadata().get("filename");
+            String s2 = outputRecord.getMetadata().get("filename");
+            if(s1 == null && s2 == null) {
+                instructionRecord.getMetadata().put("filename", "");
+                outputRecord.getMetadata().put("filename", "");
+            }
+            VectorCacheLoader.put2L2(instructionRecord.getDocument().replaceAll("\n",""), timestamp, outputRecord.getDocument());
+        }
         vectorStoreService.upsertCustomVectors(upsertRecords, category, isContextLinked);
+
         Map<String, Object> result = new HashMap<>();
         result.put("status", "success");
         responsePrint(resp, toJson(result));
