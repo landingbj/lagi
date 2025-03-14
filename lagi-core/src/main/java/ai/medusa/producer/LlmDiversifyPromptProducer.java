@@ -13,12 +13,15 @@ import ai.utils.JsonExtractor;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
+    private static final Logger logger = LoggerFactory.getLogger(LlmDiversifyPromptProducer.class);
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
 
@@ -77,6 +80,7 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
                     .indexSearchData(searchByContext(diversifiedPromptInput))
                     .build();
             result.add(pooledPrompt);
+            logger.info("llm diversify prompt: {}", promptList);
         }
         return result;
     }

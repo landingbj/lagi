@@ -47,7 +47,10 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
         PromptInput promptInput = item.getPromptInput();
         String question = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
 
-        List<IndexSearchData> indexSearchDataList = search(question, promptInput.getParameter().getCategory());
+        List<IndexSearchData> indexSearchDataList = new ArrayList<>();
+        if (promptInput.getParameter().getCategory() != null) {
+            indexSearchDataList = search(question, promptInput.getParameter().getCategory());
+        }
 
         if (indexSearchDataList.isEmpty()) {
             return result;

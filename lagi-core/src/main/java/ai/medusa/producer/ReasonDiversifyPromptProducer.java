@@ -13,6 +13,8 @@ import ai.utils.JsonExtractor;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,8 +23,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
+    private static final Logger logger = LoggerFactory.getLogger(ReasonDiversifyPromptProducer.class);
     private final CompletionsService completionsService = new CompletionsService();
-    private static final Pattern THINK_TAG_PATTERN = Pattern.compile("<think>(.*?)</think>", Pattern.DOTALL);
+    private static final Pattern THINK_TAG_PATTERN = Pattern.compile("(.*?)</think>", Pattern.DOTALL);
     private final Gson gson = new Gson();
 
     public ReasonDiversifyPromptProducer(int limit) {
@@ -85,6 +88,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
                     .indexSearchData(searchByContext(diversifiedPromptInput))
                     .build();
             result.add(pooledPrompt);
+            logger.info("reason diversify prompt: {}", promptList);
         }
         return result;
     }
@@ -124,7 +128,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         if (reasoningContent == null) {
             Matcher matcher = THINK_TAG_PATTERN.matcher(content);
             if (matcher.find()) {
-                return matcher.group(1).trim();
+                return matcher.group(1).trim().replace("<think>", "");
             }
         }
         return reasoningContent;
