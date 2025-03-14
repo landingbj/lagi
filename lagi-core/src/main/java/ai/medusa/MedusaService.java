@@ -20,7 +20,7 @@ public class MedusaService {
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        if (PromptCacheConfig.MEDUSA_ENABLE && LagiGlobal.RAG_ENABLE) {
+        if (PromptCacheConfig.MEDUSA_ENABLE) {
             switch (PromptCacheConfig.LOCATE_ALGORITHM) {
                 case "lcs":
                 case "tree":
