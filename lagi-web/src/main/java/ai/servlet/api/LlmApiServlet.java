@@ -271,6 +271,12 @@ public class LlmApiServlet extends BaseServlet {
 
     private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult) throws IOException {
         if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+            chatCompletionResult.getChoices().forEach(choice -> {
+                if (choice != null && choice.getMessage() != null) {
+                    choice.setDelta(choice.getMessage());
+                    choice.setMessage(null);
+                }
+            });
             streamOutPrint(resp, chatCompletionResult);
         } else {
             outPrint(resp, chatCompletionResult);
