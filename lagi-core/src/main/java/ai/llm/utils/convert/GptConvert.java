@@ -53,8 +53,10 @@ public class GptConvert {
         }
         ChatCompletionResult result = gson.fromJson(body, ChatCompletionResult.class);
         result.getChoices().forEach(choice -> {
-            choice.setMessage(choice.getDelta());
-            choice.setDelta(null);
+            if(choice.getDelta() != null) {
+                choice.setMessage(choice.getDelta());
+                choice.setDelta(null);
+            }
         });
         return result;
     }
