@@ -15,4 +15,5 @@ public class Medusa {
     private Double similarityCutoff;
     @JsonProperty("reason_model")
     private String reasonModel;
+    private String inits;
 }

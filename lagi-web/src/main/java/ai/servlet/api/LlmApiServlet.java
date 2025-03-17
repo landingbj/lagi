@@ -79,6 +79,12 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     @Override
+    public void init() throws ServletException {
+        medusaService.init();
+        super.init();
+    }
+
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
