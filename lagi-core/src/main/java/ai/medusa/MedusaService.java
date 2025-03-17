@@ -1,8 +1,12 @@
 package ai.medusa;
 
+import ai.common.pojo.Medusa;
 import ai.common.utils.FastIndexList;
+import ai.config.ContextLoader;
+import ai.config.GlobalConfigurations;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
+import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.PromptParameter;
 import ai.medusa.utils.PromptCacheConfig;
@@ -11,7 +15,10 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
+import ai.vector.VectorStoreService;
+import cn.hutool.core.util.StrUtil;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +27,7 @@ public class MedusaService {
     private final CompletionsService completionsService = new CompletionsService();
 
     static {
-        if (PromptCacheConfig.MEDUSA_ENABLE && LagiGlobal.RAG_ENABLE) {
+        if (PromptCacheConfig.MEDUSA_ENABLE) {
             switch (PromptCacheConfig.LOCATE_ALGORITHM) {
                 case "lcs":
                 case "tree":
@@ -32,6 +39,30 @@ public class MedusaService {
             cache.startProcessingPrompt();
         }
     }
+
+    @PostConstruct
+    public void init() {
+        GlobalConfigurations configuration = ContextLoader.configuration;
+        if(configuration != null && configuration.getStores() != null && configuration.getStores().getMedusa() != null) {
+            Medusa medusa = configuration.getStores().getMedusa();
+            String inits = medusa.getInits();
+            if(!StrUtil.isBlank(inits)) {
+                String[] prePrompts = inits.split(",");
+                VectorStoreService vectorStoreService = new VectorStoreService();
+                for (String prePrompt : prePrompts) {
+                    ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prePrompt);
+                    chatCompletionRequest.setCategory(vectorStoreService.getVectorStoreConfig().getDefaultCategory());
+                    PromptInput promptInput = getPromptInput(chatCompletionRequest);
+                    triggerCachePut(promptInput);
+                    if (getPromptPool() != null) {
+                        getPromptPool().put(PooledPrompt.builder()
+                                .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                    }
+                }
+            }
+        }
+    }
+
 
     public ChatCompletionResult get(PromptInput promptInput) {
         if (cache == null) {
