@@ -27,6 +27,7 @@ public class ModelService implements ModelVerify{
     protected String router;
     private String publisher;
     private String serverName;
+    protected Integer concurrency;
     @Override
     public boolean verify() {
         if(getApiKey() == null || getApiKey().startsWith("you")) {

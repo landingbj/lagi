@@ -13,5 +13,6 @@ public class EnhanceChatCompletionRequest extends ChatCompletionRequest {
     private String userId;
     private String ip;
     private String browserIp;
+    private Integer priority;
     private Boolean rag;
 }

@@ -9,6 +9,7 @@ import ai.common.utils.ThreadPoolManager;
 import ai.learn.questionAnswer.KShingle;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.ChatCompletionResultWithSource;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.FreezingService;
 import ai.medusa.utils.LCS;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -153,7 +154,7 @@ public class BasicRoute extends Route {
     public RouteCompletionResult invokeLlm(ChatCompletionRequest request) {
         ILlmAdapter adapter = llmAdapters.get(name);
         if (adapter != null && FreezingService.notFreezingAdapter(adapter)) {
-            ChatCompletionRequest copy = new ChatCompletionRequest();
+            EnhanceChatCompletionRequest copy = new EnhanceChatCompletionRequest();
             BeanUtil.copyProperties(request, copy);
             try {
                 ChatCompletionResult result = SensitiveWordUtil.filter(adapter.completions(copy));

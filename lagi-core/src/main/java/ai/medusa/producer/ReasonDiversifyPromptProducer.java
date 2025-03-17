@@ -1,6 +1,8 @@
 package ai.medusa.producer;
 
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -107,7 +109,8 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
     }
 
     private ChatCompletionRequest getCompletionRequest(PromptInput promptInput, String model, String prompt) {
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         chatCompletionRequest.setTemperature(promptInput.getParameter().getTemperature());
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setMax_tokens(promptInput.getParameter().getMaxTokens());

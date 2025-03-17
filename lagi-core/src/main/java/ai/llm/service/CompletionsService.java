@@ -23,6 +23,7 @@ import ai.llm.pojo.GetRagContext;
 import ai.llm.utils.LLMErrorConstants;
 import ai.llm.utils.PolicyConstants;
 import ai.llm.utils.PollingScheduler;
+import ai.llm.utils.PriorityLock;
 import ai.manager.AIManager;
 import ai.manager.LlmManager;
 import ai.mr.IMapper;
@@ -142,7 +143,7 @@ public class CompletionsService implements ChatCompletion {
         String handle = getPolicy().getHandle();
         if (!PolicyConstants.POLLING.equals(handle)) {
             for (ILlmAdapter adapter : adapters) {
-                ChatCompletionRequest copy = new ChatCompletionRequest();
+                EnhanceChatCompletionRequest copy = new EnhanceChatCompletionRequest();
                 BeanUtil.copyProperties(chatCompletionRequest, copy);
                 if (adapter != null) {
                     try {
@@ -387,7 +388,8 @@ public class CompletionsService implements ChatCompletion {
     }
 
     public ChatCompletionRequest getCompletionsRequest(List<ChatMessage> messages, double temperature, int maxTokens, String category) {
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         chatCompletionRequest.setTemperature(temperature);
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setMax_tokens(maxTokens);

@@ -27,6 +27,7 @@ import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.llm.utils.LlmAdapterFactory;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -437,6 +438,7 @@ public class LlmApiServlet extends BaseServlet {
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
         EnhanceChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+        chatCompletionRequest.setPriority(PriorityLock.HIGH_PRIORITY);
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
@@ -468,11 +470,7 @@ public class LlmApiServlet extends BaseServlet {
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
                 return;
             } else {
-                medusaService.triggerCachePut(promptInput);
-                if (medusaService.getPromptPool() != null) {
-                    medusaService.getPromptPool().put(PooledPrompt.builder()
-                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
-                }
+                medusaService.triggerCachePutAndDiversify(promptInput);
             }
         }
         boolean hasTruncate = false;

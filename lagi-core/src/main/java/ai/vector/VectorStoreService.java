@@ -56,9 +56,9 @@ public class VectorStoreService {
     private static final VectorCache vectorCache = VectorCache.getInstance();
 
     public VectorStoreService() {
-        if (LagiGlobal.RAG_ENABLE) {
+//        if (LagiGlobal.RAG_ENABLE) {
             this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
-        }
+//        }
     }
 
     public VectorStoreConfig getVectorStoreConfig() {

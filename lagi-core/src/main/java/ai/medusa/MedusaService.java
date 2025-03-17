@@ -3,6 +3,7 @@ package ai.medusa;
 import ai.common.utils.FastIndexList;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
+import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.PromptParameter;
 import ai.medusa.utils.PromptCacheConfig;
@@ -14,6 +15,7 @@ import ai.utils.LagiGlobal;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class MedusaService {
     private static ICache<PromptInput, ChatCompletionResult> cache;
@@ -46,6 +48,23 @@ public class MedusaService {
         }
         cache.put(promptInput, chatCompletionResult);
     }
+
+    public void triggerCachePutAndDiversify(PromptInput promptInput) {
+
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(3000);
+            }catch (InterruptedException ignored){}
+            if (this.getPromptPool() != null) {
+                this.triggerCachePut(promptInput);
+                this.getPromptPool().put(PooledPrompt.builder()
+                        .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+            }
+
+        });
+    }
+
 
     public void triggerCachePut(PromptInput promptInput) {
         if (cache == null) {

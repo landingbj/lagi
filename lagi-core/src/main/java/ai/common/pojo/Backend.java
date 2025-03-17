@@ -42,4 +42,5 @@ public class Backend {
     private String defaultModel;
     private String publisher;
     private String serverName;
+    private Integer concurrency;
 }
