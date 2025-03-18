@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
     private final CompletionsService completionsService = new CompletionsService();
-    private static final Pattern THINK_TAG_PATTERN = Pattern.compile("<think>(.*?)</think>", Pattern.DOTALL);
+    private static final Pattern THINK_TAG_PATTERN = Pattern.compile("(.*?)</think>", Pattern.DOTALL);
     private final Gson gson = new Gson();
 
     public ReasonDiversifyPromptProducer(int limit) {
@@ -130,7 +130,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         if (reasoningContent == null) {
             Matcher matcher = THINK_TAG_PATTERN.matcher(content);
             if (matcher.find()) {
-                return matcher.group(1).trim();
+                return matcher.group(1).trim().replace("<think>", "");
             }
         }
         return reasoningContent;
