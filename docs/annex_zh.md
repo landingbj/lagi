@@ -54,7 +54,7 @@ docker run -d \
 
 ### 修改配置
 
-为了在Lag[i]中使用，修改lagi.yml配置文件中stores>vectors>url字段的值
+为了在LinkMind中使用，修改lagi.yml配置文件中stores>vectors>url字段的值
 
  ```yaml
  vector:
@@ -74,15 +74,15 @@ docker run -d \
 
 ### 方式一：直接导入jar包
 
-您可以直接通过import JAR包的方式使用lag[i] (联基),将一个传统的业务转换为大模型的业务。
+您可以直接通过import JAR包的方式使用LinkMind(联智),将一个传统的业务转换为大模型的业务。
 
-1. **下载JAR包**：可直接下载lag[i] (联基) JAR包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)）。
+1. **下载JAR包**：可直接下载LinkMind(联智) JAR包（[点击下载](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)）。
   
 2. **导入JAR包**：将下载的JAR包复制到你的项目的lib目录中。
   
 3. **构建和运行项目**：在您的项目中，构建和运行项目。
 
-通过这种方式，您可以将lag[i] (联基) 工程以JAR包直接集成到你的项目中。
+通过这种方式，您可以将LinkMind(联智) 工程以JAR包直接集成到你的项目中。
 
 **注意**：
 
@@ -97,13 +97,13 @@ docker run -d \
 1.  **导入项目**：
     - 打开Eclipse。
     - 选择 File > Import...。
-    - 在 General > Existing Projects into Workspace 中选择lag[i] (联基) 项目文件夹。
+    - 在 General > Existing Projects into Workspace 中选择LinkMind(联智) 项目文件夹。
     - 勾选你想要导入的项目，然后点击 Finish。
 
 2.  **构建路径和依赖**：
     - 在 Project Explorer 中找到你的项目。
     - 右键点击项目，选择 Properties。
-    - 在 Java Build Path > Libraries 中，点击 Add External JARs... 并选择lag[i] (联基) 的libs目录下的所有JAR包。
+    - 在 Java Build Path > Libraries 中，点击 Add External JARs... 并选择LinkMind(联智) 的libs目录下的所有JAR包。
 
 3.  **同步项目**：
     - 在 Project Explorer 中右键点击项目，选择 Build Project。
@@ -113,13 +113,13 @@ docker run -d \
 1.  **导入项目**：
     - 打开IntelliJ IDEA。
     - 选择 File > Open。
-    - 选择lag[i] (联基) 项目文件夹。
+    - 选择LinkMind(联智) 项目文件夹。
     - 点击 OK。
 
 2.  **添加依赖**：
     - 在 Project 窗口中找到你的项目。
     - 右键点击项目，选择 Add Dependency...。
-    - 选择 Module Dependency 或 Project Dependency，然后选择lag[i] (联基) 的JAR包。
+    - 选择 Module Dependency 或 Project Dependency，然后选择LinkMind(联智) 的JAR包。
 
 3.  **同步项目**：
     - 在 Project 窗口中右键点击项目，选择 Build Project。
@@ -132,9 +132,9 @@ docker run -d \
 
 ### 方式三：Docker镜像
 
-Docker允许你将你的应用打包成一个可部署的容器。为了更便捷的使用Lag[i]，我们提供了封装好的Docker镜像可以直接使用。
+Docker允许你将你的应用打包成一个可部署的容器。为了更便捷的使用LinkMind，我们提供了封装好的Docker镜像可以直接使用。
 
-**1. 拉取Lag[i] (联基) docker 镜像**
+**1. 拉取LinkMind(联智) docker 镜像**
 
 拉取镜像命令
 
@@ -150,12 +150,12 @@ docker pull yinruoxi666/lagi-web:1.0.0
 docker run -d --name lagi-web -p 8080:8080 yinruoxi666/lagi-web:1.0.0
 ```
 
-您也可以在自己Docker中引入一个Lag[i] (联基)，并将它集成到自己的项目中。以下是一些基本步骤：
+您也可以在自己Docker中引入一个LinkMind(联智)，并将它集成到自己的项目中。以下是一些基本步骤：
 
-**1. 准备lag[i] (联基) 工程**
+**1. 准备LinkMind(联智) 工程**
 
-- 确保 lag[i] (联基) 工程的构建正确无误。
-- 使用Maven等构建工具将 lag[i] (联基) 打包成 WAR 文件。
+- 确保 LinkMind(联智) 工程的构建正确无误。
+- 使用Maven等构建工具将 LinkMind(联智) 打包成 WAR 文件。
 
 **2. 创建一个Dockerfile文件，并添加以下内容**
 
@@ -189,7 +189,7 @@ docker run -d -p 8080:8080 lagi-image
 
 **5. 集成到自己项目中**
 
-在你的项目中，创建一个Dockerfile，指定如何构建包含 lag[i] (联基) 镜像的容器。
+在你的项目中，创建一个Dockerfile，指定如何构建包含 LinkMind(联智) 镜像的容器。
 
 ```dockerfile
 FROM lagi-image

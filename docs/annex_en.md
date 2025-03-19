@@ -59,7 +59,7 @@ docker run -d \
 
 ### Modify Configuration
 
-To use it in Lag[i], modify the `stores>vectors>url` field in the `lagi.yml` configuration file:
+To use it in LinkMind, modify the `stores>vectors>url` field in the `lagi.yml` configuration file:
 
 ```yaml
 vector:
@@ -79,9 +79,9 @@ vector:
 
 ### Method 1: Directly Import the JAR Package
 
-You can directly use Lag[i] (联基) by importing its JAR package to transform a traditional business into a large model-based business.
+You can directly use LinkMind(联智) by importing its JAR package to transform a traditional business into a large model-based business.
 
-1. **Download the JAR package**: Download the Lag[i] (联基) JAR package ([Click to download](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)).
+1. **Download the JAR package**: Download the LinkMind(联智) JAR package ([Click to download](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)).
 
 2. **Import the JAR package**: Copy the downloaded JAR package to the `lib` directory of your project.
 
@@ -100,13 +100,13 @@ You can directly use Lag[i] (联基) by importing its JAR package to transform a
 1. **Import the project**:
    - Open Eclipse.
    - Select `File > Import...`.
-   - Under `General > Existing Projects into Workspace`, select the Lag[i] (联基) project folder.
+   - Under `General > Existing Projects into Workspace`, select the LinkMind(联智) project folder.
    - Check the projects you want to import and click `Finish`.
 
 2. **Build path and dependencies**:
    - In `Project Explorer`, locate your project.
    - Right-click on the project and select `Properties`.
-   - Under `Java Build Path > Libraries`, click `Add External JARs...` and select all the JAR files in the `libs` directory of Lag[i] (联基).
+   - Under `Java Build Path > Libraries`, click `Add External JARs...` and select all the JAR files in the `libs` directory of LinkMind(联智).
 
 3. **Synchronize the project**:
    - Right-click on the project in `Project Explorer` and select `Build Project`.
@@ -116,13 +116,13 @@ You can directly use Lag[i] (联基) by importing its JAR package to transform a
 1. **Import the project**:
    - Open IntelliJ IDEA.
    - Select `File > Open`.
-   - Choose the Lag[i] (联基) project folder.
+   - Choose the LinkMind(联智) project folder.
    - Click `OK`.
 
 2. **Add dependencies**:
    - In the `Project` window, locate your project.
    - Right-click the project and select `Add Dependency...`.
-   - Choose `Module Dependency` or `Project Dependency` and select the JAR files for Lag[i] (联基).
+   - Choose `Module Dependency` or `Project Dependency` and select the JAR files for LinkMind(联智).
 
 3. **Synchronize the project**:
    - Right-click the project in the `Project` window and select `Build Project`.
@@ -135,9 +135,9 @@ You can directly use Lag[i] (联基) by importing its JAR package to transform a
 
 ### Method 3: Docker Image
 
-Docker allows you to package your application into a deployable container. To simplify using Lag[i], we provide a pre-built Docker image.
+Docker allows you to package your application into a deployable container. To simplify using LinkMind, we provide a pre-built Docker image.
 
-**1. Pull the Lag[i] (联基) Docker Image**
+**1. Pull the LinkMind(联智) Docker Image**
 
 Command to pull the image:
 
@@ -153,12 +153,12 @@ Command to start the container:
 docker run -d --name lagi-web -p 8080:8080 yinruoxi666/lagi-web:1.0.0
 ```
 
-You can also integrate Lag[i] (联基) into your own project using Docker. Below are the basic steps:
+You can also integrate LinkMind(联智) into your own project using Docker. Below are the basic steps:
 
-**1. Prepare the Lag[i] (联基) Project**
+**1. Prepare the LinkMind(联智) Project**
 
-- Ensure the Lag[i] (联基) project is built without errors.
-- Use Maven or another build tool to package the Lag[i] (联基) project into a WAR file.
+- Ensure the LinkMind(联智) project is built without errors.
+- Use Maven or another build tool to package the LinkMind(联智) project into a WAR file.
 
 **2. Create a Dockerfile and Add the Following Content**
 
@@ -195,7 +195,7 @@ Ensure `your-image-name` is replaced with the image name used in Step 3.
 
 **5. Integrate into Your Project**
 
-In your project, create a Dockerfile to specify how to build a container with the Lag[i] (联基) image.
+In your project, create a Dockerfile to specify how to build a container with the LinkMind(联智) image.
 
 ```dockerfile
 FROM lagi-image

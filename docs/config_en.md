@@ -1,9 +1,9 @@
 # Configuration Reference Guide
 
-System Homepage Display Name: This setting specifies the name displayed on the system homepage, which is "Lag[i]".
+System Homepage Display Name: This setting specifies the name displayed on the system homepage, which is "LinkMind".
 
 ```yaml
-system_title: Lag[i]
+system_title: LinkMind
 ```
 
 Model Configuration
