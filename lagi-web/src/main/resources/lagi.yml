@@ -241,6 +241,8 @@ stores:
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
     enable: false
     algorithm: hash
+    producer_thread_num: 1
+    consumer_thread_num: 1
     inits: '你好,
             介绍一下你自己,
             感冒发烧了，除了吃药还有哪些方法？,

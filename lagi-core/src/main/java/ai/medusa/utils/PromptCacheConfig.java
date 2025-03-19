@@ -11,10 +11,10 @@ public class PromptCacheConfig {
     public static final int POOL_INITIAL = 1;
     public static final int POOL_DIVERSIFIED = 2;
     public static final int POOL_CACHE_PUT = 3;
-    public static final int PRODUCER_THREADS = 1;
-    public static final int CONSUMER_THREADS = 1;
-    public static final int TOTAL_THREAD_COUNT = 2;
-    public static final int THREAD_RUN_LIMIT = 4;
+    public static int PRODUCER_THREADS = 1;
+    public static int CONSUMER_THREADS = 1;
+    public static int TOTAL_THREAD_COUNT = 2;
+    public static int THREAD_RUN_LIMIT = 2;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
     public static final int COMPLETION_CACHE_SIZE = 10000;
@@ -117,6 +117,14 @@ public class PromptCacheConfig {
             preDelay = config.getPreDelay() != null ? config.getPreDelay() : preDelay;
             QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
             LCS_RATIO_PROMPT_INPUT = config.getLcsRatioPromptInput() != null ? config.getLcsRatioPromptInput() : LCS_RATIO_PROMPT_INPUT;
+            initPipelineConfig(config);
         }
+    }
+
+    private static void initPipelineConfig(Medusa config) {
+        PRODUCER_THREADS = config.getProducerThreadNum() != null ? config.getProducerThreadNum() : PRODUCER_THREADS;
+        CONSUMER_THREADS = config.getConsumerThreadNum() != null ? config.getConsumerThreadNum() : CONSUMER_THREADS;
+        TOTAL_THREAD_COUNT = PRODUCER_THREADS + CONSUMER_THREADS;
+        THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT;
     }
 }
