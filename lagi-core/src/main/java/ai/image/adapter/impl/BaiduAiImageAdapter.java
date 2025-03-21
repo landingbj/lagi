@@ -21,6 +21,8 @@ import java.net.URLEncoder;
 @ImgEnhance(modelNames = "enhance")
 public class BaiduAiImageAdapter extends ModelService implements ImageEnhanceAdapter {
 
+
+
     @Override
     public boolean verify() {
         if(getApiKey() == null || getApiKey().startsWith("you")) {

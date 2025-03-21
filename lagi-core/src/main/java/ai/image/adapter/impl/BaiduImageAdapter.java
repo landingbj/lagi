@@ -50,10 +50,17 @@ public class BaiduImageAdapter extends ModelService implements IImage2TextAdapte
         Image2TextRequest image2TextRequest = new Image2TextRequest();
         BeanUtil.copyProperties(param.getExtendParam(), image2TextRequest, "user_id");
         String fileContentAsBase64 = null;
-        try {
-            fileContentAsBase64 = ImageUtil.getFileContentAsBase64(param.getImageUrl());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(param.getImageUrl().startsWith("http")) {
+            byte[] imgData = ImageUtil.getFileStream(param.getImageUrl());
+            if(imgData != null) {
+                fileContentAsBase64 = Base64Util.encode(imgData);
+            }
+        } else {
+            try {
+                fileContentAsBase64 = ImageUtil.getFileContentAsBase64(param.getImageUrl());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         if (StrUtil.isBlank(fileContentAsBase64)) {
             return null;

@@ -8,8 +8,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import ai.common.pojo.ImageGenerationRequest;
-import ai.common.pojo.ImageGenerationResult;
+import ai.common.pojo.*;
+import ai.image.pojo.ImageEnhanceRequest;
 import ai.image.service.AllImageService;
 import ai.ocr.OcrService;
 import ai.servlet.BaseServlet;
@@ -41,7 +41,25 @@ public class ImageApiServlet extends BaseServlet {
             this.generations(req, resp);
         } else if (method.equals("image2ocr")) {
             this.image2ocr(req, resp);
+        } else if(method.equals("image2text")) {
+            this.imageToText(req, resp);
+        } else if(method.equals("image2enhance")) {
+            this.enhanceImage(req, resp);
         }
+    }
+
+    private void enhanceImage(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        ImageEnhanceRequest request = reqBodyToObj(req, ImageEnhanceRequest.class);
+        ImageEnhanceResult result = imageService.enhance(request);
+        responsePrint(resp, toJson(result));
+    }
+
+    private void imageToText(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        FileRequest request = reqBodyToObj(req, FileRequest.class);
+        ImageToTextResponse result = imageService.toText(request);
+        responsePrint(resp, toJson(result));
     }
 
     private void generations(HttpServletRequest req, HttpServletResponse resp) throws IOException {

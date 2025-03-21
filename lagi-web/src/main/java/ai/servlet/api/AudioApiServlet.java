@@ -38,6 +38,8 @@ public class AudioApiServlet extends BaseServlet {
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("asr") || method.equals("speech2text")) {
             this.asr(req, resp);
+        } else if (method.equals("tts") || method.equals("text2speech")) {
+            this.tts4Post(req, resp);
         }
     }
 
@@ -99,4 +101,12 @@ public class AudioApiServlet extends BaseServlet {
             }
         }
     }
+
+    private void tts4Post(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        TTSRequestParam ttsRequestParam = reqBodyToObj(req, TTSRequestParam.class);
+        TTSResult result = audioService.tts(ttsRequestParam);
+        responsePrint(resp, toJson(result));
+    }
+
 }

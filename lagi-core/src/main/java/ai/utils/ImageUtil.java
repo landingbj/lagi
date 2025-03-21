@@ -2,7 +2,6 @@ package ai.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.BASE64Decoder;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -33,8 +32,8 @@ public class ImageUtil {
         File file = null;
         try {
             file = File.createTempFile(UUID.randomUUID().toString(), prefix);
-            BASE64Decoder decoder = new BASE64Decoder();
-            byte[] bytes =  decoder.decodeBuffer(base64);
+//            BASE64Decoder decoder = new BASE64Decoder();
+            byte[] bytes = Base64.getDecoder().decode(base64);
             fos = new FileOutputStream(file);
             bos = new BufferedOutputStream(fos);
             bos.write(bytes);

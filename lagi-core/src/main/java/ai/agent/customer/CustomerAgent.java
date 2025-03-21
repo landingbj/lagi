@@ -44,6 +44,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
 
     private ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
         ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setModel("qwen-turbo");
         List<ChatMessage> chatMessages = new ArrayList<>();
         ChatMessage systemMessage = new ChatMessage();
         systemMessage.setContent(prompt);
