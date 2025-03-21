@@ -20,7 +20,7 @@ public class TreeDiversifyDao {
             // 创建表
             String sql = "CREATE TABLE IF NOT EXISTS tree_diversify (\n" +
                     "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-                    "    text VARCHAR(255) NOT NULL UNIQUE\n" +
+                    "    text NOT NULL UNIQUE\n" +
                     ");";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.executeUpdate();

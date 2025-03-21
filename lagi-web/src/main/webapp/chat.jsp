@@ -246,7 +246,7 @@
               <!-- <div  class="w-full h-full absolute">
           </div> -->
               <div>
-                <div id="model-prefences" class="w-full h-16 pl-10 absolute left-0 top-0 ">
+                <div id="model-prefences" class="w-full h-16 pl-10 absolute left-0 top-0" style="z-index:1000">
                   <div id="model-selects" class="inline-block model-selects float-left">
                   </div>
                   <div class="model-btns w-20 flex-1 inline-block">

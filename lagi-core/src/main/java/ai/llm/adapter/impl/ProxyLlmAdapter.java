@@ -1,5 +1,6 @@
 package ai.llm.adapter.impl;
 
+import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
+@LLM(modelNames = {"qwen-turbo","qwen-plus","qwen-max","qwen-max-1201","qwen-max-longcontext", "DeepSeek-R1-Distill-Qwen-32B"})
 public class ProxyLlmAdapter extends ModelService implements ILlmAdapter {
 
     private final ILlmAdapter llmAdapter;

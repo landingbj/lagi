@@ -29,7 +29,7 @@ public class PreferenceServlet extends RestfulServlet {
 
 
     public PreferenceServlet(){
-        List<ModelInfo> aLLMs = LlmManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, LLM.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aLLMs = LlmManager.getInstance().getAllAdapters().stream().limit(1).map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, LLM.class).stream()).collect(Collectors.toList());
         List<ModelInfo> aTTSs = TTSManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, TTS.class).stream()).collect(Collectors.toList());
         List<ModelInfo> aASRs = ASRManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, ASR.class).stream()).collect(Collectors.toList());
         List<ModelInfo> aImg2Texts = Image2TextManger.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, Img2Text.class).stream()).collect(Collectors.toList());

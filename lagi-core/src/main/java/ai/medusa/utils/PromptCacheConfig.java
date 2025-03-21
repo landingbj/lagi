@@ -87,9 +87,9 @@ public class PromptCacheConfig {
     @Getter
     private static Boolean enableTreeDriver = true;
     @Getter
-    private static Boolean enableRagDriver = true;
+    private static Boolean enableRagDriver = false;
     @Getter
-    private static Boolean enablePageDriver = true;
+    private static Boolean enablePageDriver = false;
     @Getter
     private static Boolean enableReasonDriver = false;
     @Getter

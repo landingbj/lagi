@@ -144,7 +144,7 @@ public class SkillMapUtil {
                 try {
                     saveScore(intentResponse, request, agent);
                 } catch (Exception e) {
-                    log.error("scoreAgents error", e);
+                    log.error("scoreAgents error");
                 }
             }
         });
@@ -169,6 +169,9 @@ public class SkillMapUtil {
     }
 
     public static void saveScore(IntentResponse intentResponse, ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent) {
+        if(intentResponse == null ||  intentResponse.getKeywords()  == null ) {
+            return;
+        }
         List<String> keywords = intentResponse.getKeywords();
         AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
         if (agentIntentScore == null) {
