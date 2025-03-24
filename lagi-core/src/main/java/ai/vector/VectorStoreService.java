@@ -264,6 +264,10 @@ public class VectorStoreService {
         return this.vectorStore.fetch(where);
     }
 
+    public List<IndexRecord> fetch(Map<String, String> where, String category) {
+        return this.vectorStore.fetch(where, category);
+    }
+
     public void delete(List<String> ids) {
         this.vectorStore.delete(ids);
     }

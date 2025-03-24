@@ -468,6 +468,7 @@ public class LlmApiServlet extends BaseServlet {
             if (chatCompletionResult != null) {
                 outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+                medusaService.triggerCachePutAndDiversify(promptInput);
                 return;
             } else {
                 medusaService.triggerCachePutAndDiversify(promptInput);
