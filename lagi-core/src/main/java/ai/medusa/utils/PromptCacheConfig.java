@@ -125,6 +125,6 @@ public class PromptCacheConfig {
         PRODUCER_THREADS = config.getProducerThreadNum() != null ? config.getProducerThreadNum() : PRODUCER_THREADS;
         CONSUMER_THREADS = config.getConsumerThreadNum() != null ? config.getConsumerThreadNum() : CONSUMER_THREADS;
         TOTAL_THREAD_COUNT = PRODUCER_THREADS + CONSUMER_THREADS;
-        THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT * 10;
+        THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT * QA_SIMILARITY_TOP_K * 5;
     }
 }
