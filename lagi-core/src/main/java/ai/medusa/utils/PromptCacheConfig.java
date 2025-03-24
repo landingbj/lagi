@@ -13,8 +13,8 @@ public class PromptCacheConfig {
     public static final int POOL_CACHE_PUT = 3;
     public static int PRODUCER_THREADS = 1;
     public static int CONSUMER_THREADS = 1;
-    public static int TOTAL_THREAD_COUNT = 2;
-    public static int THREAD_RUN_LIMIT = 2;
+    public static int TOTAL_THREAD_COUNT;
+    public static int THREAD_RUN_LIMIT;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
     public static final int COMPLETION_CACHE_SIZE = 10000;
@@ -125,6 +125,6 @@ public class PromptCacheConfig {
         PRODUCER_THREADS = config.getProducerThreadNum() != null ? config.getProducerThreadNum() : PRODUCER_THREADS;
         CONSUMER_THREADS = config.getConsumerThreadNum() != null ? config.getConsumerThreadNum() : CONSUMER_THREADS;
         TOTAL_THREAD_COUNT = PRODUCER_THREADS + CONSUMER_THREADS;
-        THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT;
+        THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT * 10;
     }
 }
