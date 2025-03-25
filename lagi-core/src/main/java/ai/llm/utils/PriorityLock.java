@@ -19,11 +19,15 @@ public class PriorityLock {
     private final int LOW_LIMIT = 1;
     public static final int LOW_PRIORITY = 50;
     public static final int HIGH_PRIORITY = 100;
+    private static final int PRIORITY_QUEUE_INITIAL_CAPACITY = 10000;
 
 
-    private final PriorityBlockingQueue<LockRequest> lockQueue = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<LockRequest> lockQueue = new PriorityBlockingQueue<>(PRIORITY_QUEUE_INITIAL_CAPACITY);
 
     public PriorityLock(int limit) {
+        if (limit < 2) {
+            limit = 2;
+        }
         this.limit = limit;
     }
 
@@ -47,7 +51,6 @@ public class PriorityLock {
         while (true) {
             lock.lock();
             try {
-//                System.out.println(lockQueue);
                 LockRequest head = lockQueue.peek();
                 if(head == null) {
                     break;
@@ -97,7 +100,7 @@ public class PriorityLock {
         if(priority > LOW_PRIORITY) {
             return currentLockCount.get() < limit;
         }
-        return currentLockCount.get() < limit && lowLockCount.get() < LOW_LIMIT;
+        return currentLockCount.get() < limit && lowLockCount.get() < limit - LOW_LIMIT;
     }
 
     public static void main(String[] args) {

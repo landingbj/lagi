@@ -80,7 +80,7 @@ public class PromptCacheConfig {
 
     public static final int SUBSTRING_THRESHOLD = 2;
     public static final int START_CORE_THRESHOLD = 3;
-    public static final int ANSWER_CORE_THRESHOLD = 3;
+    public static final int ANSWER_CORE_THRESHOLD = 4;
     public static final double LCS_RATIO_QUESTION = 0.5;
     public static double LCS_RATIO_PROMPT_INPUT = 0.8;
 
