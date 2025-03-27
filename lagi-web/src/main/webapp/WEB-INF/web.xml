@@ -308,4 +308,13 @@
         <servlet-name>DocumentApiServlet</servlet-name>
         <url-pattern>/doc/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PadCoordinateApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.PadCoordinateApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PadCoordinateApiServlet</servlet-name>
+        <url-pattern>/pad/*</url-pattern>
+    </servlet-mapping>
 </web-app>
