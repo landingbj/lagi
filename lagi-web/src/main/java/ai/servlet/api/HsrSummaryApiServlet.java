@@ -287,90 +287,63 @@ public class HsrSummaryApiServlet extends BaseServlet {
             String[] lines = content.split("\n");
             logger.debug("内容分割为 {} 行", lines.length);
 
+            XWPFTable currentTable = null; // 用于跟踪当前表格
+            List<String> tableRows = new ArrayList<>(); // 暂存表格行
+
             for (int i = 0; i < lines.length; i++) {
-                String line = lines[i];
-                if (line == null || line.trim().isEmpty()) {
-                    logger.debug("跳过 null 或空行，行号: {}", i);
-                    continue; // 不保留空行
+                String line = lines[i] != null ? lines[i].trim() : "";
+                if (line.isEmpty()) {
+                    continue; // 跳过空行
                 }
-
                 logger.debug("处理行内容，行号: {}, 内容: {}", i, line);
-                try {
-                    // 处理标题行（格式: 1.0 或 2.1）
-                    if (line.matches("\\d+\\.\\d+\\s+.*")) {
-                        XWPFParagraph paragraph = document.createParagraph();
-                        XWPFRun run = paragraph.createRun();
-                        run.setBold(true);
-                        run.setFontSize(14);
-                        run.setText(line);
-                        logger.debug("格式化为章节标题，行号: {}, 内容: {}", i, line);
 
-                        // 处理表格行（格式: | xxx | xxx |）
-                    } else if (line.startsWith("|") && line.endsWith("|")) {
-                        String[] cells = line.split("\\|");
-                        int columnCount = cells.length - 2; // 减去首尾空元素
-                        if (columnCount <= 0) {
-                            logger.debug("无效表格行，跳过，行号: {}", i);
-                            continue;
-                        }
-
-                        try {
-                            // 创建表格并初始化列数（最小为 1 列）
-                            XWPFTable table = document.createTable(1, Math.max(columnCount, 1));
-                            XWPFTableRow row = table.getRow(0);
-                            if (row == null) {
-                                logger.error("表格行创建失败，行号: {}", i);
-                                continue;
-                            }
-
-                            boolean isHeader = line.contains("---");
-
-                            // 填充第一行
-                            for (int j = 1; j < cells.length - 1; j++) {
-                                String trimmedCell = cells[j].trim();
-                                if (!trimmedCell.isEmpty()) {
-                                    if (row.getCell(j - 1) == null) {
-                                        row.addNewTableCell(); // 动态增加单元格，防止空指针
-                                    }
-                                    row.getCell(j - 1).setText(trimmedCell);
-                                    logger.debug("添加表格单元格，行号: {}, 单元格: {}", i, trimmedCell);
-                                }
-                            }
-
-                            // 如果不是表头，删除第一行并重新创建
-                            if (!isHeader && columnCount > 0) {
-                                table.removeRow(0);
-                                XWPFTableRow newRow = table.createRow();
-                                for (int j = 1; j < cells.length - 1; j++) {
-                                    String trimmedCell = cells[j].trim();
-                                    if (!trimmedCell.isEmpty()) {
-                                        if (newRow.getCell(j - 1) == null) {
-                                            newRow.addNewTableCell(); // 动态增加单元格
-                                        }
-                                        newRow.getCell(j - 1).setText(trimmedCell);
-                                        logger.debug("添加表格数据单元格，行号: {}, 单元格: {}", i, trimmedCell);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.error("处理表格行失败，行号: {}, 内容: {}", i, line, e);
-                            throw e;
-                        }
-
-                        // 处理普通段落
-                    } else {
-                        XWPFParagraph paragraph = document.createParagraph();
-                        XWPFRun run = paragraph.createRun();
-                        run.setText(line);
-                        logger.debug("设置段落文本，行号: {}, 内容: {}", i, line);
+                // 处理标题（支持 # 和数字编号）
+                // 处理标题（支持 # 和数字编号）
+                if (line.matches("\\d+\\.\\d+(\\.\\d+)?\\s+.*") || line.startsWith("#")) {
+                    if (currentTable != null) {
+                        flushTable(document, currentTable, tableRows); // 结束上一个表格
+                        currentTable = null;
+                        tableRows.clear();
                     }
-                } catch (Exception e) {
-                    logger.error("处理行失败，行号: {}, 内容: {}", i, line, e);
-                    throw e;
+
+                    XWPFParagraph paragraph = document.createParagraph();
+                    XWPFRun run = paragraph.createRun();
+                    int headingLevel = calculateHeadingLevel(line);
+                    String cleanText = cleanHeading(line); // 清理标题，确保移除 ** 等标记
+
+                    run.setBold(true);
+                    run.setFontSize(12 + (4 - headingLevel) * 2); // 动态调整字体大小
+                    run.setText(cleanText);
+                    paragraph.setStyle("Heading" + headingLevel); // 设置 Word 标题样式
+                    logger.debug("格式化为标题，层级: {}, 内容: {}", headingLevel, cleanText);
+                } else if (line.startsWith("|") && line.endsWith("|")) {
+                    if (currentTable == null && tableRows.isEmpty()) {
+                        tableRows.add(line);
+                    } else if (!line.contains("---")) { // 忽略分隔符行
+                        tableRows.add(line);
+                    }
+
+                    // 检测表格结束
+                } else if (!tableRows.isEmpty()) {
+                    if (currentTable == null) {
+                        currentTable = createTableFromRows(document, tableRows);
+                    }
+                    flushTable(document, currentTable, tableRows);
+                    currentTable = null;
+                    tableRows.clear();
+                    addParagraph(document, cleanMarkdownText(line)); // 处理当前非表格行
+
+                    // 处理普通段落
+                } else {
+                    addParagraph(document, cleanMarkdownText(line));
                 }
             }
 
-            // 将生成的内容写入文件
+            // 处理未结束的表格
+            if (!tableRows.isEmpty() && currentTable != null) {
+                flushTable(document, currentTable, tableRows);
+            }
+
             document.write(out);
             logger.info("Word 文件写入成功: {}", file.getAbsolutePath());
         } catch (Exception e) {
@@ -379,6 +352,63 @@ public class HsrSummaryApiServlet extends BaseServlet {
         }
 
         return file;
+    }
+
+    // 计算标题层级
+    private int calculateHeadingLevel(String line) {
+        if (line.matches("\\d+\\.\\d+(\\.\\d+)?\\s+.*")) {
+            return line.split("\\.").length - 1; // 1.0 -> 1, 1.1.1 -> 3
+        }
+        int level = 0;
+        while (line.startsWith("#")) {
+            level++;
+            line = line.substring(1).trim();
+        }
+        return Math.min(level, 4); // 限制最大层级为 4
+    }
+
+    // 清理标题文本
+    private String cleanHeading(String line) {
+        // 移除 Markdown 标题标记 (#) 和加粗标记 (**)
+        String cleaned = line.replaceAll("^#+\\s+", "")  // 移除前导的 # 和空格
+                .replaceAll("[*_`]+", "")   // 移除加粗 (* 或 **)、斜体 (_) 和代码标记 (`)
+                .trim();                   // 移除首尾空格
+        return cleaned;
+    }
+
+    // 清理普通 Markdown 文本
+    private String cleanMarkdownText(String text) {
+        return text.replaceAll("[*_`>]+", "").trim(); // 移除加粗、斜体、引用等标记
+    }
+
+    // 创建表格
+    private XWPFTable createTableFromRows(XWPFDocument document, List<String> tableRows) {
+        int columnCount = tableRows.get(0).split("\\|").length - 2;
+        XWPFTable table = document.createTable(tableRows.size(), columnCount);
+        return table;
+    }
+
+    // 填充表格内容
+    private void flushTable(XWPFDocument document, XWPFTable table, List<String> tableRows) {
+        for (int rowIdx = 0; rowIdx < tableRows.size(); rowIdx++) {
+            String[] cells = tableRows.get(rowIdx).split("\\|");
+            XWPFTableRow row = table.getRow(rowIdx);
+            for (int colIdx = 1; colIdx < cells.length - 1; colIdx++) {
+                if (row.getCell(colIdx - 1) == null) {
+                    row.addNewTableCell();
+                }
+                row.getCell(colIdx - 1).setText(cells[colIdx].trim());
+                logger.debug("填充表格单元格，行: {}, 列: {}, 内容: {}", rowIdx, colIdx - 1, cells[colIdx].trim());
+            }
+        }
+    }
+
+    // 添加普通段落
+    private void addParagraph(XWPFDocument document, String text) {
+        XWPFParagraph paragraph = document.createParagraph();
+        XWPFRun run = paragraph.createRun();
+        run.setText(text);
+        logger.debug("添加段落，内容: {}", text);
     }
 
 
