@@ -139,7 +139,9 @@ public class ExpressionParser {
         private Node parseOperand() {
             skipWhitespace();
             StringBuilder sb = new StringBuilder();
-            while (pos < length && (Character.isLetterOrDigit(input.charAt(pos)) || input.charAt(pos) == '_')) {
+            while (pos < length && (Character.isLetterOrDigit(input.charAt(pos))
+                    || input.charAt(pos) == '_') || input.charAt(pos) == '-' || input.charAt(pos) == ':' || input.charAt(pos) == '/'
+            ) {
                 sb.append(input.charAt(pos));
                 pos++;
             }

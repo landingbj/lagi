@@ -1,6 +1,8 @@
 package ai.common;
 
 
+import ai.llm.pojo.EnhanceChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionRequest;
 import lombok.Data;
 @Data
 public class ModelService implements ModelVerify{
@@ -34,4 +36,13 @@ public class ModelService implements ModelVerify{
         return true;
     }
 
+    protected void setDefaultField(ChatCompletionRequest request) {
+        if (request.getModel() == null) {
+            request.setModel(getModel());
+        }
+        if (request instanceof EnhanceChatCompletionRequest) {
+            ((EnhanceChatCompletionRequest) request).setIp(null);
+            ((EnhanceChatCompletionRequest) request).setBrowserIp(null);
+        }
+    }
 }

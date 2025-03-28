@@ -53,7 +53,7 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
     }
 
     public LlmApiResponse llmCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         String token = sign(getAccessKeyId(), getAccessKeySecret());
         LlmApiResponse completions;
         if (chatCompletionRequest.getStream()) {
@@ -72,12 +72,6 @@ public class SenseChatAdapter extends ModelService implements ILlmAdapter {
                     SenseConvert::convertByResponse);
         }
         return completions;
-    }
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        if (request.getModel() == null) {
-            request.setModel(getModel());
-        }
     }
 
     private String sign(String ak, String sk) {

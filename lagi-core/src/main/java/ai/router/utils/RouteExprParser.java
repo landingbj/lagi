@@ -45,7 +45,10 @@ public class RouteExprParser {
 
     private String parseIdentifier() {
         int start = pos;
-        while (pos < input.length() && (Character.isLetter(input.charAt(pos)) || input.charAt(pos) == '$')) {
+        while (pos < input.length() && (Character.isLetter(input.charAt(pos)) || input.charAt(pos) == '$'
+                || input.charAt(pos) == '-' || input.charAt(pos) == '_'  || input.charAt(pos) == ':' || input.charAt(pos) == '/'
+                || Character.isDigit(input.charAt(pos)))
+        ) {
             pos++;
         }
         if (start == pos) {

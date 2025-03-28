@@ -23,16 +23,9 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
     private static final String COMPLETIONS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
     private static final String STEAM_COMPLETIONS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent";
 
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        if(request.getModel() == null) {
-            request.setModel(getModel());
-        }
-    }
-
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse llmApiResponse = getLlmApiResponse(chatCompletionRequest);
         if(llmApiResponse.getCode() != 200) {
             throw new RRException(llmApiResponse.getCode(), llmApiResponse.getMsg());
@@ -42,7 +35,7 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse llmStreamApiResponse = getLlmStreamApiResponse(chatCompletionRequest);
         if(llmStreamApiResponse.getCode() != 200) {
             throw new RRException(llmStreamApiResponse.getCode(), llmStreamApiResponse.getMsg());
@@ -52,7 +45,7 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
 
 
     private LlmApiResponse getLlmApiResponse(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         String url = COMPLETIONS_URL.replace("{model}", getModel());
         Map<String, String> params = new HashMap<>();
         params.put("key", getApiKey());
@@ -67,7 +60,7 @@ public class GeminiAdapter extends ModelService implements ILlmAdapter {
     }
 
     private LlmApiResponse getLlmStreamApiResponse(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         String apiKey = getApiKey();
         String url = STEAM_COMPLETIONS_URL.replace("{model}", getModel()) + "?key=" + apiKey + "&alt=sse";
         return OpenAiApiUtil.streamCompletions(apiKey, url, 30, chatCompletionRequest,

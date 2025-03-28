@@ -24,7 +24,7 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse completions = OpenAiApiUtil.completions(apiKey, COMPLETIONS_URL, HTTP_TIMEOUT, chatCompletionRequest,
                 MoonshotConvert::convertChatCompletionResult, MoonshotConvert::convertByResponse);
         if(completions.getCode() != 200) {
@@ -38,7 +38,7 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse completions = OpenAiApiUtil.streamCompletions(apiKey, COMPLETIONS_URL, HTTP_TIMEOUT, chatCompletionRequest,
                 MoonshotConvert::convertStreamLine2ChatCompletionResult, MoonshotConvert::convertByResponse);
         if(completions.getCode() != 200) {
@@ -46,12 +46,5 @@ public class MoonshotAdapter extends ModelService implements ILlmAdapter {
             throw new RRException(completions.getCode(), completions.getMsg());
         }
         return completions.getStreamData();
-    }
-
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        if (request.getModel() == null) {
-            request.setModel(getModel());
-        }
     }
 }

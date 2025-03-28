@@ -4,7 +4,6 @@ import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
-import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.LlmApiResponse;
 import ai.llm.utils.OpenAiApiUtil;;
 import ai.llm.utils.convert.GptAzureConvert;
@@ -34,7 +33,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         chatCompletionRequest.setCategory(null);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
@@ -52,7 +51,7 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         chatCompletionRequest.setCategory(null);
         String apiUrl = getApiAddress();
         String apiKey = getApiKey();
@@ -66,16 +65,5 @@ public class GPTAzureAdapter extends ModelService implements ILlmAdapter {
             throw new RRException(code, llmApiResponse.getMsg());
         }
         return llmApiResponse.getStreamData();
-    }
-
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        if (request.getModel() == null) {
-            request.setModel(getModel());
-        }
-        if (request instanceof EnhanceChatCompletionRequest) {
-            ((EnhanceChatCompletionRequest) request).setIp(null);
-            ((EnhanceChatCompletionRequest) request).setBrowserIp(null);
-        }
     }
 }

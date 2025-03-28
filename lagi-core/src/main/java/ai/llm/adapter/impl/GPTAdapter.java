@@ -23,7 +23,7 @@ public class GPTAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse completions = OpenAiApiUtil.completions(apiKey, COMPLETIONS_URL, HTTP_TIMEOUT, chatCompletionRequest,
                 GptConvert::convert2ChatCompletionResult,
                 GptConvert::convertByResponse);
@@ -36,7 +36,7 @@ public class GPTAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse completions = OpenAiApiUtil.streamCompletions(apiKey, COMPLETIONS_URL, HTTP_TIMEOUT, chatCompletionRequest,
                 GptConvert::convertSteamLine2ChatCompletionResult,
                 GptConvert::convertByResponse);
@@ -45,11 +45,5 @@ public class GPTAdapter extends ModelService implements ILlmAdapter {
             throw new RRException(completions.getCode(), completions.getMsg());
         }
         return completions.getStreamData();
-    }
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        if (request.getModel() == null) {
-            request.setModel(getModel());
-        }
     }
 }
