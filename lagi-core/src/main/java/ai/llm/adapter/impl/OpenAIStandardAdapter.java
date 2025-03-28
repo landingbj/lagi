@@ -48,6 +48,7 @@ public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
     }
 
     private void setDefaultModel(ChatCompletionRequest request) {
+        request.setCategory(null);
         if (request.getModel() == null) {
             request.setModel(getModel());
         }

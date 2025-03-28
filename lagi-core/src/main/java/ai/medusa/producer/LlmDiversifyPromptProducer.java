@@ -1,6 +1,8 @@
 package ai.medusa.producer;
 
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.pojo.DiversifyQuestions;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
@@ -13,15 +15,14 @@ import ai.utils.JsonExtractor;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
-    private static final Logger logger = LoggerFactory.getLogger(LlmDiversifyPromptProducer.class);
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
 
@@ -80,14 +81,15 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
                     .indexSearchData(searchByContext(diversifiedPromptInput))
                     .build();
             result.add(pooledPrompt);
-            logger.info("llm diversify prompt: {}", promptList);
         }
+        log.info("llm diversify prompt: {}", result);
         return result;
     }
 
     private ChatCompletionRequest getDiversifyRequest(PooledPrompt item) {
         PromptInput promptInput = item.getPromptInput();
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         chatCompletionRequest.setTemperature(promptInput.getParameter().getTemperature());
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setMax_tokens(promptInput.getParameter().getMaxTokens());

@@ -12,5 +12,5 @@ import lombok.*;
 public class EnhanceChatCompletionRequest extends ChatCompletionRequest {
     private String ip;
     private String browserIp;
-//    private String sessionId;
+    private Integer priority;
 }

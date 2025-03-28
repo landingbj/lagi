@@ -1,6 +1,8 @@
 package ai.medusa.producer;
 
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -13,8 +15,7 @@ import ai.utils.JsonExtractor;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,8 +23,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
-    private static final Logger logger = LoggerFactory.getLogger(ReasonDiversifyPromptProducer.class);
     private final CompletionsService completionsService = new CompletionsService();
     private static final Pattern THINK_TAG_PATTERN = Pattern.compile("(.*?)</think>", Pattern.DOTALL);
     private final Gson gson = new Gson();
@@ -88,8 +89,8 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
                     .indexSearchData(searchByContext(diversifiedPromptInput))
                     .build();
             result.add(pooledPrompt);
-            logger.info("reason diversify prompt: {}", promptList);
         }
+        log.info("reason diversify: {}",  result);
         return result;
     }
 
@@ -108,7 +109,8 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
     }
 
     private ChatCompletionRequest getCompletionRequest(PromptInput promptInput, String model, String prompt) {
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         chatCompletionRequest.setTemperature(promptInput.getParameter().getTemperature());
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setMax_tokens(promptInput.getParameter().getMaxTokens());

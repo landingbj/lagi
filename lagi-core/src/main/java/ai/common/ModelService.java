@@ -25,7 +25,7 @@ public class ModelService implements ModelVerify{
     protected String alias;
     protected Boolean enable;
     protected String router;
-
+    protected Integer concurrency;
     @Override
     public boolean verify() {
         if(getApiKey() == null || getApiKey().startsWith("you")) {

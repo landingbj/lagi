@@ -75,10 +75,12 @@ public class PromptCacheConfig {
     public static String MEDUSA_TREE_CATEGORY = "medusa_tree";
     public static final int QA_SIMILARITY_TOP_K = 10;
     public static double QA_SIMILARITY_CUTOFF = 0.1;
+    public static final int TREE_SIMILARITY_TOP_K = 3;
+    public static final double TREE_SIMILARITY_CUTOFF = 0.05;
 
     public static final int SUBSTRING_THRESHOLD = 2;
     public static final int START_CORE_THRESHOLD = 3;
-    public static final int ANSWER_CORE_THRESHOLD = 2;
+    public static final int ANSWER_CORE_THRESHOLD = 4;
     public static final double LCS_RATIO_QUESTION = 0.5;
     public static double LCS_RATIO_PROMPT_INPUT = 0.8;
 

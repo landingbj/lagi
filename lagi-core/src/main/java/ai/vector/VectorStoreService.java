@@ -87,13 +87,10 @@ public class VectorStoreService {
                 return;
             } else if (content!=null){
                 if (ChapterExtractorUtil.isChapterDocument(content)) {
-                    System.out.println("是章节类文档");
                     docs = ChapterExtractorUtil.getChunkDocument(content, 512);
                 } else if (SectionExtractorUtil.isChapterDocument(content)) {
-                    System.out.println("是小节类文档");
                     docs = SectionExtractorUtil.getChunkDocument(content, 1024);
                 } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
-                    System.out.println("是条列类文档");
                     docs = OrdinanceExtractorUtil.getChunkDocument(content, 1024);
             } else {
                     if (WordDocxUtils.checkImagesInWord(file)){
@@ -104,7 +101,6 @@ public class VectorStoreService {
                             docs = fileService.splitContentChunks(content, 512);
                         }
                     }else {
-                        System.out.println("不包含图片类文档");
                         docs = fileService.splitContentChunks(content, 512);
                     }
                 }
@@ -240,6 +236,10 @@ public class VectorStoreService {
 
     public List<IndexRecord> fetch(Map<String, String> where) {
         return this.vectorStore.fetch(where);
+    }
+
+    public List<IndexRecord> fetch(Map<String, String> where, String category) {
+        return this.vectorStore.fetch(where, category);
     }
 
     public void delete(List<String> ids) {

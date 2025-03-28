@@ -31,6 +31,9 @@ public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerP
     }
 
     protected List<IndexSearchData> searchByContext(PromptInput promptInput) {
+        if (promptInput.getParameter().getCategory() == null) {
+            return Collections.emptyList();
+        }
         ChatCompletionRequest request = new ChatCompletionRequest();
         request.setTemperature(promptInput.getParameter().getTemperature());
         request.setMax_tokens(promptInput.getParameter().getMaxTokens());
