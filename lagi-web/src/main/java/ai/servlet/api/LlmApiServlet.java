@@ -83,6 +83,8 @@ public class LlmApiServlet extends BaseServlet {
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private Boolean RAG_ENABLE = null;
+    private Boolean MEDUSA_ENABLE = null;
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
@@ -110,9 +112,55 @@ public class LlmApiServlet extends BaseServlet {
             this.goStream(req, resp);
         } else if(method.equals("solid")) {
             this.goSolid(req, resp);
+        } else if(method.equals("isMedusa")) {
+            this.isMedusa(req, resp);
+        } else if(method.equals("isRAG")) {
+            this.isRAG(req, resp);
         } else {
             responsePrint(resp, "method not found");
         }
+    }
+
+
+    private void isRAG(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String enable = req.getParameter("RAG");
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        if (enable!=null&&!"".equals(enable)){
+            if(enable.equals("true")){
+                map.put("RAG", "RAG已开启");
+                this.RAG_ENABLE = true;
+            }else {
+                map.put("RAG", "RAG已关闭");
+                this.RAG_ENABLE = false;
+            }
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+    }
+
+    private void isMedusa(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String enable = req.getParameter("medusa");
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        if (enable!=null&&!"".equals(enable)){
+            if(enable.equals("true")){
+                map.put("medusa", "medusa已开启");
+                this.MEDUSA_ENABLE = true;
+            }else {
+                map.put("medusa", "medusa已关闭");
+                this.MEDUSA_ENABLE = false;
+            }
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+
     }
 
     private void go(HttpServletRequest req, HttpServletResponse resp) throws IOException{
@@ -437,6 +485,9 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
+        if (RAG_ENABLE == null){
+            RAG_ENABLE = RAG_CONFIG.getEnable();
+        }
         EnhanceChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
         chatCompletionRequest.setPriority(PriorityLock.HIGH_PRIORITY);
         ChatCompletionResult chatCompletionResult = null;
@@ -444,7 +495,7 @@ public class LlmApiServlet extends BaseServlet {
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"source\":%s,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
-        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
+        if (Boolean.TRUE.equals(RAG_ENABLE) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
@@ -461,7 +512,10 @@ public class LlmApiServlet extends BaseServlet {
             }
         }
 
-        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable())) {
+        if (MEDUSA_ENABLE==null){
+            MEDUSA_ENABLE = MEDUSA_CONFIG.getEnable();
+        }
+        if(Boolean.TRUE.equals(MEDUSA_ENABLE)) {
             ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
             PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             chatCompletionResult = medusaService.locate(promptInput);
@@ -485,7 +539,7 @@ public class LlmApiServlet extends BaseServlet {
             maxContext = 1024*3;
             maxMsg = 1024 * 4;
         }
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable()) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE) && (!Boolean.FALSE.equals(chatCompletionRequest.getRag()))) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
