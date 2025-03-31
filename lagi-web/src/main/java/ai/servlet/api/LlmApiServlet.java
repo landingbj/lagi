@@ -225,13 +225,10 @@ public class LlmApiServlet extends BaseServlet {
             if (chatCompletionResult != null) {
                 outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+                medusaService.triggerCachePutAndDiversify(promptInput);
                 return;
             } else {
-                medusaService.triggerCachePut(promptInput);
-                if (medusaService.getPromptPool() != null) {
-                    medusaService.getPromptPool().put(PooledPrompt.builder()
-                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
-                }
+                medusaService.triggerCachePutAndDiversify(promptInput);
             }
         }
         boolean hasTruncate = false;

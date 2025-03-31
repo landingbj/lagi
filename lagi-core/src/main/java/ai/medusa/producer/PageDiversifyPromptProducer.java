@@ -85,7 +85,7 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
                 result.add(pooledPrompt);
             }
         }
-        log.info("page diversify prompt: {}", result);
+        log.error("page diversify prompt: {}", result);
         return result;
     }
 
