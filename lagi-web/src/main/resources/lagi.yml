@@ -1,4 +1,4 @@
-system_title: Lag[i]
+system_title: LinkMind
 
 models:
   # Landing is a MOE model provided by Beijing Landing Technologies
@@ -225,22 +225,34 @@ stores:
   database:
     - name: mysql
       jdbcUrl: you-jdbc-url
-      driverClassName: com.mysql.cj.jdbc.Driver
+      driver: com.mysql.cj.jdbc.Driver
       username: your-username
       password: your-password
 
   rag: # RAG enhances large language models by integrating external knowledge retrieval.
     vector: chroma
-    fulltext: elastic
+    term: elastic
     graph: landing
     enable: false
     priority: 10
-    default: "Please give prompt more precisely"
     track: true
+    default: "Please give prompt more precisely"
 
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
     enable: false
     algorithm: hash
+    producer_thread_num: 1
+    consumer_thread_num: 1
+    inits: '你好,
+            介绍一下你自己,
+            感冒发烧了，除了吃药还有哪些方法？,
+            预测新能源汽车未来 5 年的发展趋势未来的发展趋势？
+            推荐一些生日礼物,
+            健康减脂食谱推荐,
+            提供一些第一次一个人出门旅行的建议,
+            我要去旅游，推荐几个小众好玩的地方,
+            给我推荐一些中国必吃的美食,
+            推荐一些好看的电影'
 
 functions:
   embedding:

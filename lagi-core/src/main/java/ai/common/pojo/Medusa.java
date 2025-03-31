@@ -8,16 +8,16 @@ public class Medusa {
     private Boolean enable;
     private String algorithm;
     private Boolean enableL2;
-    @JsonProperty("enable_llm_diver")
-    private Boolean enableLlmDiver;
-    @JsonProperty("enable_tree_diver")
-    private Boolean enableTreeDiver;
-    @JsonProperty("enable_rag_diver")
-    private Boolean enableRagDiver;
-    @JsonProperty("enable_page_diver")
-    private Boolean enablePageDiver;
+    private Boolean enableReasonDiver;
     private Long consumeDelay;
     private Long preDelay;
     private Double lcsRatioPromptInput;
     private Double similarityCutoff;
+    @JsonProperty("reason_model")
+    private String reasonModel;
+    private String inits;
+    @JsonProperty("producer_thread_num")
+    private Integer producerThreadNum;
+    @JsonProperty("consumer_thread_num")
+    private Integer consumerThreadNum;
 }

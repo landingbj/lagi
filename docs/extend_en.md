@@ -1,10 +1,10 @@
 ### **Extension Development Documentation**
 
-You can refer to this documentation to freely extend Lag[i] to suit your business needs.
+You can refer to this documentation to freely extend LinkMind to suit your business needs.
 
 ### **Model Extension**
 
-If you wish to extend Lag[i] to support other large models, you can refer to the following sections.
+If you wish to extend LinkMind to support other large models, you can refer to the following sections.
 
 #### **1. Add New Configuration**
 
@@ -468,7 +468,7 @@ public class YonrAdapter extends ModelService implements Video2EnhanceAdapter {
 
 ### **Vector Database Extension**
 
-If you want to extend Lag[i] to support other vector databases, follow the steps below.
+If you want to extend LinkMind to support other vector databases, follow the steps below.
 
 #### **1. Add New Configuration**
 

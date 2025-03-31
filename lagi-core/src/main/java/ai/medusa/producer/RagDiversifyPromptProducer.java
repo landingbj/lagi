@@ -5,11 +5,13 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
     public RagDiversifyPromptProducer(int limit) {
         super(limit);
@@ -47,7 +49,10 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
         PromptInput promptInput = item.getPromptInput();
         String question = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
 
-        List<IndexSearchData> indexSearchDataList = search(question, promptInput.getParameter().getCategory());
+        List<IndexSearchData> indexSearchDataList = new ArrayList<>();
+        if (promptInput.getParameter().getCategory() != null) {
+            indexSearchDataList = search(question, promptInput.getParameter().getCategory());
+        }
 
         if (indexSearchDataList.isEmpty()) {
             return result;
@@ -83,7 +88,7 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
                     .indexSearchData(searchByContext(newPromptInput))
                     .build());
         });
-
+        log.info("rag diversify prompt: {}", result);
         return result;
     }
 }

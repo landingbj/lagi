@@ -37,7 +37,7 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse llmApiResponse = llmCompletions(chatCompletionRequest);
         if (llmApiResponse.getCode() != 200) {
             logger.error("SparkAdapter stream  api code:{}  error:{} ", llmApiResponse.getCode(), llmApiResponse.getMsg());
@@ -47,7 +47,7 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
     }
 
     public LlmApiResponse llmCompletions(ChatCompletionRequest chatCompletionRequest) {
-        setDefaultModel(chatCompletionRequest);
+        setDefaultField(chatCompletionRequest);
         LlmApiResponse completions;
         if (chatCompletionRequest.getStream()) {
             completions = OpenAiApiUtil.streamCompletions(getApiKey(),
@@ -65,11 +65,5 @@ public class SparkAdapter extends ModelService implements ILlmAdapter {
                     SparkConvert::convertByResponse);
         }
         return completions;
-    }
-
-    private void setDefaultModel(ChatCompletionRequest request) {
-        if (request.getModel() == null) {
-            request.setModel(getModel());
-        }
     }
 }

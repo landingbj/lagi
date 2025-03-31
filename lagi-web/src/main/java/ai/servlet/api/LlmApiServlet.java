@@ -35,7 +35,6 @@ import ai.common.pojo.IndexSearchData;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
-import ai.response.ChatMessageResponse;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.utils.ClientIpAddressUtil;
@@ -50,6 +49,7 @@ import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.worker.DefaultWorker;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
@@ -67,6 +67,7 @@ public class LlmApiServlet extends BaseServlet {
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private Boolean RAG_ENABLE = null;
     private Boolean MEDUSA_ENABLE = null;
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
@@ -93,7 +94,29 @@ public class LlmApiServlet extends BaseServlet {
             this.go(req, resp);
         } else if(method.equals("isMedusa")) {
             this.isMedusa(req, resp);
+        } else if(method.equals("isRAG")) {
+            this.isRAG(req, resp);
         }
+    }
+
+    private void isRAG(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String enable = req.getParameter("RAG");
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        if (enable!=null&&!"".equals(enable)){
+            if(enable.equals("true")){
+                map.put("RAG", "RAG已开启");
+                this.RAG_ENABLE = true;
+            }else {
+                this.RAG_ENABLE = false;
+                map.put("RAG", "RAG已关闭");
+            }
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
     }
 
     private void isMedusa(HttpServletRequest req, HttpServletResponse resp) throws IOException{
@@ -170,7 +193,9 @@ public class LlmApiServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         PrintWriter out = resp.getWriter();
         HttpSession session = req.getSession();
-
+        if (RAG_ENABLE == null){
+            RAG_ENABLE = RAG_CONFIG.getEnable();
+        }
         ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
         Integer max_tokens =1024;
         Object maxTokens = BeanUtil.getProperty(chatCompletionRequest, "max_tokens");
@@ -186,7 +211,7 @@ public class LlmApiServlet extends BaseServlet {
         List<IndexSearchData> indexSearchDataList = null;
         String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
 
-        if (Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (Boolean.TRUE.equals(RAG_ENABLE)) {
             ModelService modelService = (ModelService) LlmRouterDispatcher
                     .getRagAdapter(null).stream().findFirst().orElse(null);
             if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
@@ -220,7 +245,7 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_CONFIG.getEnable())) {
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE)) {
             String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
             String answer = VectorCacheLoader.get2L2(lastMessage);
             if(StrUtil.isNotBlank(answer)) {
@@ -289,8 +314,9 @@ public class LlmApiServlet extends BaseServlet {
     private void addChunkIds(ChatCompletionResult result, GetRagContext context) {
         result.getChoices().forEach(choice -> {
             ChatMessage message = choice.getMessage();
-            ChatMessageResponse build = ChatMessageResponse.builder().contextChunkIds(context.getChunkIds()).build();
-            BeanUtil.copyProperties(message, build);
+            ChatMessage build = ChatMessage.builder().contextChunkIds(context.getChunkIds()).build();
+            CopyOptions copyOption = CopyOptions.create(null, true);
+            BeanUtil.copyProperties(message, build, copyOption);
             choice.setMessage(build);
         });
     }
@@ -436,7 +462,7 @@ public class LlmApiServlet extends BaseServlet {
 
             for (int j = 0; j < lastResult.length; j++) {
                 for (int i = 0; i < lastResult[j].getChoices().size(); i++) {
-                    ChatMessageResponse message = new ChatMessageResponse();
+                    ChatMessage message = new ChatMessage();
                         message.setFilename(filenames);
                         message.setFilepath(filePaths);
                         message.setContext(ragContext.getContext());

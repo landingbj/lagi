@@ -1,9 +1,9 @@
 # 配置参考指南
 
-系统首页展示名称，这个设置指定了将在系统首页显示的名称，这里是“ Lag[i]”。
+系统首页展示名称，这个设置指定了将在系统首页显示的名称，这里是“ LinkMind”。
 
 ```yaml
-system_title: Lag[i]
+system_title: LinkMind
 ```
 
 模型配置

@@ -32,6 +32,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
     private static final DiversifyPromptProducer treeDiversifyPromptProducer = new TreeDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer ragDiversifyPromptProducer = new RagDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer pageDiversifyPromptProducer = new PageDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
+    private static final DiversifyPromptProducer reasonDiversifyPromptProducer = new ReasonDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
 
     private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
     private static final double LCS_RATIO_PROMPT_INPUT = PromptCacheConfig.LCS_RATIO_PROMPT_INPUT;
@@ -82,16 +83,16 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                 List<String> curPromptList = promptInput.getPromptList();
                 List<String> promptList1;
                 List<String> promptList2;
-                if(index == 0) {
-                    if(curPromptList.size() > 1
-                            && ContinueWordUtil.containsStoppingWorlds(curPromptList.get(curPromptList.size() -1)) ) {
+                if (index == 0) {
+                    if (curPromptList.size() > 1
+                            && ContinueWordUtil.containsStoppingWorlds(curPromptList.get(curPromptList.size() - 1))) {
                         continue;
                     }
                     promptList1 = Lists.newArrayList(promptListInCache.get(0));
-                    promptList2 = Lists.newArrayList(curPromptList.get(curPromptList.size() -1));
+                    promptList2 = Lists.newArrayList(curPromptList.get(curPromptList.size() - 1));
                 } else {
                     promptList1 = Lists.newArrayList(promptListInCache.get(0), promptListInCache.get(index));
-                    promptList2 = Lists.newArrayList(curPromptList.get(0), curPromptList.get(curPromptList.size() -1));
+                    promptList2 = Lists.newArrayList(curPromptList.get(0), curPromptList.get(curPromptList.size() - 1));
                 }
                 double ratio = LCS.getLcsRatio(promptList1, promptList2, SUBSTRING_THRESHOLD);
 
@@ -149,17 +150,20 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.THREAD_RUN_LIMIT
             );
             promptLoader.connectProducer(new PickPromptProducer(promptPool));
-            if(PromptCacheConfig.getEnableLlmDiver()) {
+            if (PromptCacheConfig.getEnableLlmDriver()) {
                 promptLoader.connectConsumer(llmDiversifyPromptProducer);
             }
-            if(PromptCacheConfig.getEnableTreeDiver()) {
+            if (PromptCacheConfig.getEnableTreeDriver()) {
                 promptLoader.connectConsumer(treeDiversifyPromptProducer);
             }
-            if(PromptCacheConfig.getEnableRagDiver()) {
+            if (PromptCacheConfig.getEnableRagDriver()) {
                 promptLoader.connectConsumer(ragDiversifyPromptProducer);
             }
-            if(PromptCacheConfig.getEnablePageDiver()) {
+            if (PromptCacheConfig.getEnablePageDriver()) {
                 promptLoader.connectConsumer(pageDiversifyPromptProducer);
+            }
+            if (PromptCacheConfig.getEnableReasonDriver()) {
+                promptLoader.connectConsumer(reasonDiversifyPromptProducer);
             }
             promptLoader.start();
         }
@@ -172,17 +176,20 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.THREAD_RUN_LIMIT
             );
 
-            if(PromptCacheConfig.getEnableLlmDiver()) {
+            if (PromptCacheConfig.getEnableLlmDriver()) {
                 promptProcessor.connectProducer(llmDiversifyPromptProducer);
             }
-            if(PromptCacheConfig.getEnableTreeDiver()) {
+            if (PromptCacheConfig.getEnableTreeDriver()) {
                 promptProcessor.connectProducer(treeDiversifyPromptProducer);
             }
-            if(PromptCacheConfig.getEnableRagDiver()) {
+            if (PromptCacheConfig.getEnableRagDriver()) {
                 promptProcessor.connectProducer(ragDiversifyPromptProducer);
             }
-            if(PromptCacheConfig.getEnablePageDiver()) {
+            if (PromptCacheConfig.getEnablePageDriver()) {
                 promptProcessor.connectProducer(pageDiversifyPromptProducer);
+            }
+            if (PromptCacheConfig.getEnableReasonDriver()) {
+                promptProcessor.connectProducer(reasonDiversifyPromptProducer);
             }
             promptProcessor.registerProducerErrorHandler(new DiversifyPromptErrorHandler(promptPool));
             promptProcessor.connectConsumer(new CompletePromptConsumer(CompletionCache.getInstance()));

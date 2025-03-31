@@ -13,7 +13,7 @@ public class AIManager<T> {
 
     private final Logger log = LoggerFactory.getLogger(AIManager.class);
 
-    private final Map<String, T> aiMap = new ConcurrentHashMap<>();
+    protected final Map<String, T> aiMap = new ConcurrentHashMap<>();
 
 
     public void register(String key, T adapter) {

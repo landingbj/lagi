@@ -37,7 +37,7 @@ public class VectorStoreManager {
             return;
         }
         Map<String, VectorStoreConfig> vectorMap = vectorStoreConfigs.stream().collect(Collectors.toMap(VectorStoreConfig::getName, vectorStoreConfig -> vectorStoreConfig));
-        if(Boolean.TRUE.equals(ragFunction.getEnable())) {
+//        if(Boolean.TRUE.equals(ragFunction.getEnable())) {
             VectorStoreConfig vectorStoreConfig = vectorMap.get(ragFunction.getVector());
             Optional.ofNullable(vectorStoreConfig).ifPresent(v -> {
                 try {
@@ -52,7 +52,7 @@ public class VectorStoreManager {
                     log.error("registerVectorStore ({})error", v.getName());
                 }}
             );
-        }
+//        }
     }
 
     public void register(String key, VectorStore adapter) {

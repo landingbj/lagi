@@ -166,6 +166,10 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>llm</servlet-name>
+        <url-pattern>/chat/isRAG</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>llm</servlet-name>
         <url-pattern>/chat/isMedusa</url-pattern>
     </servlet-mapping>
 

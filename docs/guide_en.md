@@ -2,7 +2,7 @@
 
 ## Overview
 
-- **Introduction**: This guide for Lag[i] provides clear and detailed instructions to help you understand and use various AI functions offered in the project. With this guide, you can easily integrate AI features such as text conversations, speech recognition, text-to-speech, and image generation into your applications for smarter and more human-like interactions.
+- **Introduction**: This guide for LinkMind provides clear and detailed instructions to help you understand and use various AI functions offered in the project. With this guide, you can easily integrate AI features such as text conversations, speech recognition, text-to-speech, and image generation into your applications for smarter and more human-like interactions.
 - **Background**: With the rapid advancement of artificial intelligence technology, more and more application scenarios require interaction with AI models, such as intelligent customer service, voice assistants, and image processing. To meet these needs, this project provides various AI functions aimed at helping you seamlessly apply AI technology to your business scenarios, enhancing user experience and efficiency.
 
 ## Before You Start
@@ -15,7 +15,7 @@ You can either directly import the jar file or use Maven to add dependencies and
 
 If you choose to import the jar file directly, you only need to complete the following two steps to start using the methods.
 
-- 1. Download the jar: Download the Lag[i] jar file required for the relevant functions ([Click to download](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)).
+- 1. Download the jar: Download the LinkMind jar file required for the relevant functions ([Click to download](https://downloads.saasai.top/lagi/lagi-core-1.0.2-jar-with-dependencies.jar)).
 
 - 1. Import the jar: Place the jar file in your `lib` directory to use the relevant functions.
 
@@ -25,7 +25,7 @@ If you choose to import the jar file directly, you only need to complete the fol
 
 If you choose Maven to import dependencies, you only need to complete the following three steps to start using the methods.
 
-- 1. Import the jar: Download and import the Lag[i] jar file and place it in the `lib` directory.
+- 1. Import the jar: Download and import the LinkMind jar file and place it in the `lib` directory.
 
 - 1. Add the dependency: Add the following content to the `dependencies` section in your project's `pom.xml` file:
 

@@ -48,6 +48,12 @@ public class PromptCacheTrigger {
         this.qaCache = completionCache.getQaCache();
     }
 
+    public PromptCacheTrigger() {
+        completionCache = null;
+        promptCache = null;
+        qaCache = null;
+    }
+
     public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
         executorService.execute(() -> writeCache(promptInput, chatCompletionResult));
     }
@@ -104,11 +110,20 @@ public class PromptCacheTrigger {
 //        qaCache.put(newestPrompt, promptInputList);
         qaCache.put(newestPrompt, promptInputs);
         promptCache.put(promptInputInCache, completionResults);
+        log.info("putCache2: {}", promptInputs);
     }
 
     private synchronized void putCache(String newestPrompt, PromptInput promptInputWithBoundaries, ChatCompletionResult chatCompletionResult) {
         List<PromptInput> promptInputList = qaCache.get(newestPrompt);
-        List<ChatCompletionResult> completionResults = promptCache.get(promptInputWithBoundaries);
+
+        PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
+        List<ChatCompletionResult> completionResults = promptCache.get(lastPromptInput);
+        if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResults == null) {
+           completionResults = promptCache.get(promptInputWithBoundaries);
+        } else {
+            putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt);
+            return;
+        }
 
         if (promptInputList == null || promptInputList.isEmpty()) {
             promptInputList = new ArrayList<>();
@@ -123,6 +138,7 @@ public class PromptCacheTrigger {
 
         qaCache.put(newestPrompt, promptInputList);
         promptCache.put(promptInputWithBoundaries, completionResults);
+        log.info("putCache1: {}", promptInputList);
     }
 
     public PromptInput analyzeChatBoundaries(PromptInput promptInput) {
@@ -263,6 +279,7 @@ public class PromptCacheTrigger {
             }
             if(curDialog.isEmpty()) {
                 curDialog.add(qaPair);
+                qaCore = LCS.findLongestCommonSubstrings(qaPair.getQ(), qaPair.getA(), PromptCacheConfig.START_CORE_THRESHOLD);
                 continue;
             }
             String lastQ = curDialog.get(0).getQ();
