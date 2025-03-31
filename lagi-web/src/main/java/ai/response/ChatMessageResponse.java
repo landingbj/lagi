@@ -10,7 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-@Builder
 public class ChatMessageResponse extends ChatMessage {
     private List<String> contextChunkIds;
 }
