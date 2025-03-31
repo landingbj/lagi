@@ -67,6 +67,7 @@ public class LlmApiServlet extends BaseServlet {
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private Boolean MEDUSA_ENABLE = null;
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
@@ -90,7 +91,30 @@ public class LlmApiServlet extends BaseServlet {
             this.embeddings(req, resp);
         } else if(method.equals("go")) {
             this.go(req, resp);
+        } else if(method.equals("isMedusa")) {
+            this.isMedusa(req, resp);
         }
+    }
+
+    private void isMedusa(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String enable = req.getParameter("medusa");
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "success");
+        if (enable!=null&&!"".equals(enable)){
+            if(enable.equals("true")){
+                map.put("medusa", "medusa已开启");
+                this.MEDUSA_ENABLE = true;
+            }else {
+                this.MEDUSA_ENABLE = false;
+                map.put("medusa", "medusa已关闭");
+            }
+        }
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(map));
+        out.flush();
+        out.close();
+
     }
 
     private void go(HttpServletRequest req, HttpServletResponse resp) throws IOException{
@@ -175,7 +199,10 @@ public class LlmApiServlet extends BaseServlet {
             }
         }
 
-        if(Boolean.TRUE.equals(MEDUSA_CONFIG.getEnable())) {
+        if (MEDUSA_ENABLE==null){
+            MEDUSA_ENABLE = MEDUSA_CONFIG.getEnable();
+        }
+        if(Boolean.TRUE.equals(MEDUSA_ENABLE)) {
             ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
             PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             chatCompletionResult = medusaService.locate(promptInput);
