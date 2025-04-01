@@ -56,7 +56,7 @@ function search() {
         text: searchText,
         n: vectorMaxTop,
         where: {},
-        category: "lagi"
+        category: window.category
     };
 
     $.ajax({

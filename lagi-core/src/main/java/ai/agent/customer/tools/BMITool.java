@@ -46,7 +46,7 @@ public class BMITool extends AbstractTool {
     private String search(String sex, Integer age, Integer weight, Integer height) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", token);
+        headers.put("Authorization", "Bearer " + token);
         Map<String, Object> body = new HashMap<>();
         if(sex != null) {
             body.put("sex", sex);

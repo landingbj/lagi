@@ -44,7 +44,7 @@ public class FoodCalorieTool extends AbstractTool {
     private String search(String food) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", token);
+        headers.put("Authorization", "Bearer " + token);
         Map<String, Object> body = new HashMap<>();
         body.put("food", food);
         Gson gson = new Gson();

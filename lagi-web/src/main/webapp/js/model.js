@@ -429,8 +429,10 @@ async function doTrain(el) {
                 }
                 let msg = decoder.decode(value, { stream: true });
                 msg =  msg.slice(5);
-                if(msg == '[DONE]') {
+                if(msg.includes('[DONE]') ) {
                     console.log('Connection closed by server');
+                    $('#train-view-content').append(`<p>${msg}</p>`);
+                    scrollToButton();
                     enableTrain(el);
                     return;
                 }
@@ -445,7 +447,7 @@ async function doTrain(el) {
                 }
                 $('#train-view-content').append(`<p>${msg}</p>`);
                 scrollToButton();
-                return readStream(params);
+                return readStream(params, el);
             }).catch(error => {
                 console.error('Connection error:', error);
                 enableTrain(el);

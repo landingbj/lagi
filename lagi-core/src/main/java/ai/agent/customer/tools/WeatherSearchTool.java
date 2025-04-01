@@ -41,7 +41,7 @@ public class WeatherSearchTool extends AbstractTool {
     private String search(String city) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        headers.put("Authorization", token);
+        headers.put("Authorization", "Bearer " + token);
         String post = ApiInvokeUtil.post(API_ADDRESS, headers, "{\"city\":\"" + city + "\"}", 15, TimeUnit.SECONDS);
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
