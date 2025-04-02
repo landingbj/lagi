@@ -1,10 +1,10 @@
 package ai.medusa.producer;
 
 import ai.common.pojo.IndexSearchData;
-import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

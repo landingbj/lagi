@@ -15,7 +15,6 @@ import ai.openai.pojo.ChatMessage;
 import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorDbService;
-import ai.vector.VectorStoreService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

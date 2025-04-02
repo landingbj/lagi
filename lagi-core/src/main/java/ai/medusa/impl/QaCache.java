@@ -1,8 +1,8 @@
 package ai.medusa.impl;
 
 import ai.common.pojo.IndexSearchData;
-import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.utils.LRUCache;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;

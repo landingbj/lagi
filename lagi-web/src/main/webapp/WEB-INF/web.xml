@@ -164,6 +164,14 @@
         <servlet-name>llm</servlet-name>
         <url-pattern>/chat/go</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>llm</servlet-name>
+        <url-pattern>/chat/isRAG</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>llm</servlet-name>
+        <url-pattern>/chat/isMedusa</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>asr</servlet-name>

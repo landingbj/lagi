@@ -1,12 +1,14 @@
 package ai.openai.pojo;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.util.List;
 
 @Data
 @EqualsAndHashCode
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChatMessage {
     private String role;
     private String content;
