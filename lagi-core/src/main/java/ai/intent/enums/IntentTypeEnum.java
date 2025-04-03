@@ -27,6 +27,7 @@ public enum IntentTypeEnum {
             "画.*?张.*?图$",
             "画.*?张.*?图片$",
             "画.*?张.*?图像$",
+            "(请|帮忙|帮|帮助|帮我|帮助我)?(生成|画|绘制).+(画|图像|图片|图|肖像)$",
             "(请|帮忙|帮|帮助)?.+(生成|画|绘制|给出).*?(张|副|幅).*?(画|图像|图片|图|肖像)"}),
     VIDEO("svd_by_text", new String[]{"生成.*?视频$",
             "生成视频.*?",}),
@@ -126,8 +127,7 @@ public enum IntentTypeEnum {
     public static void main(String[] args) {
         String ins = "Please help write a poem";
         List<String> ls = new ArrayList<>();
-        ls.add("帮忙");
-        ls.add("画一副山水画");
+        ls.add("帮我画一只小狗在草地上玩耍");
         for(IntentTypeEnum e : IntentTypeEnum.values()) {
             if(e.matches(ls)) {
                 System.out.println(e.name);

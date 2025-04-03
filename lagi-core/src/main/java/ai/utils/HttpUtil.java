@@ -209,4 +209,21 @@ public class HttpUtil {
         }
         return responseMessage;
     }
+
+    public static String getBaseUrl(String url) {
+        try {
+            URI uri = new URI(url);
+            StringBuilder baseUrl = new StringBuilder();
+            baseUrl.append(uri.getScheme()).append("://");
+            baseUrl.append(uri.getHost());
+            if (uri.getPort() != -1) {
+                baseUrl.append(":").append(uri.getPort());
+            }
+            return baseUrl.toString();
+        } catch (URISyntaxException e) {
+            System.err.println("无效的 URL: " + e.getMessage());
+            return null;
+        }
+    }
+
 }

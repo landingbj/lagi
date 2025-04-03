@@ -3,6 +3,7 @@ package ai.agent.customer.tools;
 import ai.agent.customer.pojo.ToolArg;
 import ai.agent.customer.pojo.ToolInfo;
 import ai.utils.ApiInvokeUtil;
+import ai.utils.HttpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -50,6 +51,7 @@ public class ImageGenTool extends AbstractTool {
             String status = (String)res.get("status");
             if(!"failed".equals(status)){
                 String url =  (String) res.get("result");
+                url = HttpUtil.getBaseUrl(endpoint) + "/" + url;
                 return "图片生成成功地址:"+url;
             }
         } catch (Exception ignored) {

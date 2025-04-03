@@ -29,9 +29,7 @@ import ai.llm.utils.CompletionUtil;
 import ai.llm.utils.LlmAdapterFactory;
 import ai.llm.utils.PriorityLock;
 import ai.medusa.MedusaService;
-import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
-import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.AgentService;
@@ -46,10 +44,7 @@ import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
 import ai.servlet.dto.PaidLagiAgent;
-import ai.utils.ClientIpAddressUtil;
-import ai.utils.MigrateGlobal;
-import ai.utils.SafeDeductionTool;
-import ai.utils.SensitiveWordUtil;
+import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
@@ -67,6 +62,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -217,7 +213,7 @@ public class LlmApiServlet extends BaseServlet {
             return;
         }
         String firstAnswer = ChatCompletionUtil.getFirstAnswer(work);
-        convert2streamAndOutput(firstAnswer, resp, work);
+        convert2streamAndOutput(firstAnswer, req, resp, work);
         if(work instanceof ChatCompletionResultWithSource) {
             ChatCompletionResultWithSource resultWithSource = (ChatCompletionResultWithSource) work;
             if(lLmRequest.getAgentId() != null) {
@@ -282,7 +278,7 @@ public class LlmApiServlet extends BaseServlet {
         return JSONUtil.toBean(format, ChatCompletionResultWithSource.class);
     }
 
-    private void convert2streamAndOutput(String firstAnswer, HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
+    private void convert2streamAndOutput(String firstAnswer, HttpServletRequest req, HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         PrintWriter out = resp.getWriter();
         int length = 5;
@@ -310,6 +306,25 @@ public class LlmApiServlet extends BaseServlet {
         }
         chatCompletionResult.getChoices().get(0).getMessage().setContent("");
         out.print("data: " + gson.toJson(chatCompletionResult) + "\n\n");
+        try {
+            List<String> imageList = chatCompletionResult.getChoices().get(0).getMessage().getImageList();
+            if(imageList != null && !imageList.isEmpty()) {
+                String rootPath = req.getRealPath("");
+                String filePath = rootPath+"static/images/";
+                File file = new File(filePath);
+                if(!file.exists()) {
+                    file.mkdirs();
+                }
+                imageList = imageList.stream().map(image -> {
+                    WhisperResponse whisperResponse = DownloadUtils.downloadFile(image, ".jpeg", filePath);
+                    return "static/images/" +  whisperResponse.getMsg();
+                }).collect(Collectors.toList());
+                chatCompletionResult.getChoices().get(0).getMessage().setImageList(imageList);
+            }
+        } catch (Exception ignored) {
+
+        }
+
         out.flush();
         out.print("data: " + "[DONE]" + "\n\n");
         out.flush();
@@ -344,7 +359,7 @@ public class LlmApiServlet extends BaseServlet {
         if(llmRequest.getAgentId() != null) {
             ChatCompletionResult work = defaultWorker.work("appointedWorker", llmRequest);
             if(work != null) {
-                convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), resp, work);
+                convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), req,  resp, work);
                 return;
             }
         }
@@ -360,7 +375,12 @@ public class LlmApiServlet extends BaseServlet {
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);
         if (skillMapAgentList.isEmpty()) {
             if(llmAndAgentList.isEmpty()) {
-                outputAgent = SkillMapUtil.getHighestPriorityLlm();
+                skillMapAgentList = SkillMapUtil.pickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest));
+                if(skillMapAgentList != null && !skillMapAgentList.isEmpty()) {
+                    outputAgent = skillMapAgentList.get(0);
+                } else {
+                    outputAgent = SkillMapUtil.getHighestPriorityLlm();
+                }
             } else {
                 outputAgent = llmAndAgentList.get(0);
             }
@@ -389,8 +409,9 @@ public class LlmApiServlet extends BaseServlet {
             ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(outputAgent.getAgentConfig().getName(), outputAgent.getAgentConfig().getId());
             BeanUtil.copyProperties(result, chatCompletionResultWithSource);
             String answer = ChatCompletionUtil.getFirstAnswer(result);
-            convert2streamAndOutput(answer, resp, chatCompletionResultWithSource);
+            convert2streamAndOutput(answer, req, resp, chatCompletionResultWithSource);
             resultWithSource[0] = chatCompletionResultWithSource;
+            SkillMapUtil.getOrInsertScore(llmRequest, outputAgent, result);
         } else {
             llmRequest.setStream(true);
             Observable<ChatCompletionResult> result = outputAgent.stream(llmRequest);
@@ -408,6 +429,13 @@ public class LlmApiServlet extends BaseServlet {
                         out.flush();
                         if (resultWithSource[0] == null) {
                             resultWithSource[0] = chatCompletionResultWithSource;
+                        } else {
+                            try {
+                                String content = resultWithSource[0].getChoices().get(0).getMessage().getContent();
+                                String content1 = chatCompletionResult.getChoices().get(0).getMessage().getContent();
+                                resultWithSource[0].getChoices().get(0).getMessage().setContent(content + content1);
+                            } catch (Exception ignored) {
+                            }
                         }
                     },
                     e -> {
@@ -417,6 +445,7 @@ public class LlmApiServlet extends BaseServlet {
                         out.print("data: " + "[DONE]" + "\n\n");
                         out.flush();
                         out.close();
+                        SkillMapUtil.getOrInsertScore(llmRequest, finalOutputAgent, resultWithSource[0]);
                     }
             );
         }
@@ -428,6 +457,8 @@ public class LlmApiServlet extends BaseServlet {
                 traceService.syncAddAgentTrace(resultWithSource[0]);
             }
         }
+        Agent<ChatCompletionRequest, ChatCompletionResult> finalOutputAgent1 = outputAgent;
+        allAgents = allAgents.stream().filter(agent -> StrUtil.isBlank(agent.getAgentConfig().getDescribe()) && !Objects.equals(finalOutputAgent1.getAgentConfig().getId(), agent.getAgentConfig().getId())).collect(Collectors.toList());
         SkillMapUtil.scoreAgents(llmRequest, allAgents);
     }
 

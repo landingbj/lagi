@@ -13,6 +13,7 @@ import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.pojo.AgentIntentScore;
 import ai.worker.pojo.IntentResponse;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
@@ -98,6 +99,20 @@ public class SkillMapUtil {
             String question) {
         return rankAgentByIntentKeyword(agentList, question, THRESHOLD);
     }
+
+    public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentByDescribe(
+            String question) {
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList = getLlmAndAgentList();
+        List<SkillMap.PickAgent> pickAgents = agentList.stream().filter(agent -> StrUtil.isNotBlank(agent.getAgentConfig().getDescribe())).map(agent -> {
+            AgentConfig agentConfig = agent.getAgentConfig();
+            return SkillMap.PickAgent.builder().describe(agent.getAgentConfig().getDescribe()).id(agentConfig.getId()).build();
+        }).collect(Collectors.toList());
+        SkillMap skillMap1 = new SkillMap();
+        List<SkillMap.PickAgent> pickAgents1 = skillMap1.pickAgent(question, pickAgents);
+        Set<Integer> set = pickAgents1.stream().map(SkillMap.PickAgent::getId).collect(Collectors.toSet());
+        return agentList.stream().filter(agent -> set.contains(agent.getAgentConfig().getId())).collect(Collectors.toList());
+    }
+
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,

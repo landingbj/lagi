@@ -39,7 +39,6 @@ public class DefaultBestWorker extends RouteWorker{
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> all = new ArrayList<>();
         all.addAll(agents);
         all.addAll(additionalAgents);
-        all = all.subList(0, 10);
         ChatCompletionRequest request = new ChatCompletionRequest();
         BeanUtil.copyProperties(data, request);
         request.setStream(false);

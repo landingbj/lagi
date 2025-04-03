@@ -8,6 +8,7 @@ import ai.config.pojo.AgentConfig;
 import ai.learn.questionAnswer.KShingle;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.utils.JsonExtractor;
 import ai.utils.LlmUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.pojo.AgentIntentScore;
@@ -16,9 +17,12 @@ import ai.worker.pojo.ScoreResponse;
 import ai.worker.skillMap.db.AgentScoreDao;
 import ai.worker.skillMap.prompt.SkillMapPrompt;
 import cn.hutool.core.util.StrUtil;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -271,6 +275,7 @@ public class SkillMap {
                 .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
                 .build();
         saveAgentScore(agentScore);
+        log.info("save agent score: {}", agentScore);
     }
 
     private void save(AgentConfig agentConfig, String question, String answer, String keyword) {
@@ -308,7 +313,8 @@ public class SkillMap {
                 ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.KEYWORD_PROMPT_TEMPLATE, question),
                         Collections.emptyList(),
                         SkillMapPrompt.KEYWORD_USER_PROMPT);
-                return gson.fromJson(ChatCompletionUtil.getFirstAnswer(chatCompletionResult), IntentResponse.class);
+                String json = JsonExtractor.extractJson(ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+                return gson.fromJson(json, IntentResponse.class);
             } catch (Exception e) {
             }
         }
@@ -323,7 +329,8 @@ public class SkillMap {
                         Collections.emptyList(),
                         SkillMapPrompt.SCORE_USER_PROMPT);
                 String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
-                ScoreResponse scoreResponse = gson.fromJson(firstAnswer, ScoreResponse.class);
+                String json = JsonExtractor.extractJson(firstAnswer);
+                ScoreResponse scoreResponse = gson.fromJson(json, ScoreResponse.class);
                 Double score = scoreResponse.getScore();
                 if(score > 0) {
                     double similarity = getSimilarity(question, answer);
@@ -334,6 +341,42 @@ public class SkillMap {
             }
         }
         return null;
+    }
+
+    @Builder
+    @ToString
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Data
+    public static
+    class PickAgent{
+        private Integer id;
+        private String describe;
+    }
+
+    public List<PickAgent> pickAgent(String question, List<PickAgent> pickAgents) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[\n");
+        for (PickAgent pickAgent : pickAgents) {
+            stringBuilder.append(StrUtil.format("{\"id\": {}, \"describe\": \"{}\"},\n", pickAgent.getId(), pickAgent.getDescribe()));
+        }
+        stringBuilder.append("]\n");
+        String agents = stringBuilder.toString();
+        for (int i = 0;i < maxTry; i++) {
+            try {
+                ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.AGENT_PICK_PROMPT_TEMPLATE, agents), Collections.emptyList(), question);
+                String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
+                String json = JsonExtractor.extractJson(firstAnswer);
+                Type typeResponse = new TypeToken<List<PickAgent>>() {}.getType();
+                List<PickAgent> pickAgent = gson.fromJson(json, typeResponse);
+                if(pickAgent == null) {
+                    return Collections.emptyList();
+                }
+                return pickAgent;
+            } catch (Exception e) {
+            }
+        }
+        return Collections.emptyList();
     }
 
 

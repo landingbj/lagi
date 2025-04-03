@@ -608,6 +608,7 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
         let lastChunkPart = '';
         let sourceContent = '';
         robootAnswerJq.html('<p></p>');
+        let totalChunk = '';
         while (flag) {
             const {value, done} = await reader.read();
             let res = new TextDecoder().decode(value);
@@ -615,7 +616,10 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                 robootAnswerJq.html(res.replaceAll('error:', ''));
                 return;
             }
-            let chunkStr = lastChunkPart + new TextDecoder().decode(value).replaceAll('data: ', '').trim();
+            if(!res.endsWith("\n\n")) {
+                continue;
+            }
+            let chunkStr = lastChunkPart +res.replaceAll('data: ', '').trim();
             const chunkArray = chunkStr.split("\n\n");
 
             let lastChunk = chunkArray[chunkArray.length - 1];
@@ -648,7 +652,7 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                     }
                 }
 
-                if (!chatMessage.content) {
+                if (chatMessage.content === undefined) {
                     continue;
                 }
                 // console.log("content:", chatMessage);

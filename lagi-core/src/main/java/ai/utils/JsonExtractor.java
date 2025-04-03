@@ -2,6 +2,7 @@ package ai.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,19 +51,42 @@ public class JsonExtractor {
         return results.isEmpty() ? null : results.get(0);
     }
 
+
+    public static String extractJson(String input) {
+        Stack<Character> stack = new Stack<>();
+        int startIndex = -1;
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == '{' || c == '[') {
+                if (stack.isEmpty()) {
+                    startIndex = i;
+                }
+                stack.push(c);
+            } else if (c == '}' || c == ']') {
+                if (!stack.isEmpty()) {
+                    char top = stack.pop();
+                    if ((top == '{' && c == '}') || (top == '[' && c == ']')) {
+                        if (stack.isEmpty()) {
+                            return input.substring(startIndex, i + 1);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+
+
+
     // Example usage
     public static void main(String[] args) {
-        String testString = "Some text before {\"name\": \"John\", \"age\": 30} and some text after. " +
-                "Also here's an array [1, 2, 3, 4] and another object {\"city\": \"New York\"}";
-
-        List<String> jsonStrings = extractJsonStrings(testString);
-
-        System.out.println("Found " + jsonStrings.size() + " JSON strings:");
-        for (String json : jsonStrings) {
-            System.out.println(json);
+        String input = "Some text {\"data\": [{\"key\": \"value\"}]} more text";
+        String json = extractJson(input);
+        if (json != null) {
+            System.out.println("Extracted JSON: " + json);
+        } else {
+            System.out.println("No valid JSON found.");
         }
-
-        System.out.println("\nFirst JSON string:");
-        System.out.println(extractFirstJsonString(testString));
     }
 }

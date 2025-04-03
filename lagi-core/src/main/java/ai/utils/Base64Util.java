@@ -1,6 +1,7 @@
 package ai.utils;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -29,6 +30,25 @@ public class Base64Util {
             return null;
         }
         return Base64.getEncoder().encodeToString(data);
+    }
+
+
+    public static String imageToBase64(String imageUrl) {
+        try  {
+            URL url = new URL(imageUrl);
+            InputStream inputStream = url.openStream();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            byte[] imageBytes = outputStream.toByteArray();
+            return Base64.getEncoder().encodeToString(imageBytes);
+        } catch (Exception ignored) {
+
+        }
+        return  null;
     }
 
 
