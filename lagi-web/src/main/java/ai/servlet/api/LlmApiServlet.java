@@ -3,7 +3,6 @@ package ai.servlet.api;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -14,7 +13,6 @@ import javax.servlet.http.HttpSession;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.pojo.Medusa;
-import ai.common.utils.ThreadPoolManager;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
 import ai.dto.ModelPreferenceDto;
@@ -27,12 +25,10 @@ import ai.llm.schedule.QueueSchedule;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
-import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.llm.service.CompletionsService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
-import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.router.pojo.LLmRequest;
@@ -52,6 +48,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -72,11 +69,9 @@ public class LlmApiServlet extends BaseServlet {
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
-    private static ExecutorService executorService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     static {
-        ThreadPoolManager.registerExecutor("dynamic-stream");
-        executorService = ThreadPoolManager.getExecutor("dynamic-stream");
         VectorCacheLoader.load();
     }
 
@@ -197,6 +192,9 @@ public class LlmApiServlet extends BaseServlet {
             RAG_ENABLE = RAG_CONFIG.getEnable();
         }
         ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+
+        boolean isMultiModal = CompletionUtil.isMultiModal(chatCompletionRequest);
+
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
@@ -233,32 +231,35 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE)) {
-            String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
-            String answer = VectorCacheLoader.get2L2(lastMessage);
-            if(StrUtil.isNotBlank(answer)) {
-                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
-                return;
+        if (!isMultiModal) {
+            if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE)) {
+                String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                String answer = VectorCacheLoader.get2L2(lastMessage);
+                if(StrUtil.isNotBlank(answer)) {
+                    outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
+                    return;
+                }
+                if(indexSearchDataList == null) {
+                    indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                }
+                if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                    context = completionsService.getRagContext(indexSearchDataList);
+                    String contextStr = CompletionUtil.truncate(context.getContext());
+                    context.setContext(contextStr);
+                    completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
+                    ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
+                    chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
+                    hasTruncate = true;
+                }
+            } else {
+                indexSearchDataList = null;
             }
-            if(indexSearchDataList == null) {
-                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+            if(!hasTruncate) {
+                List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
+                chatCompletionRequest.setMessages(chatMessages);
             }
-            if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                context = completionsService.getRagContext(indexSearchDataList);
-                String contextStr = CompletionUtil.truncate(context.getContext());
-                context.setContext(contextStr);
-                completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
-                ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
-                chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
-                hasTruncate = true;
-            }
-        } else {
-            indexSearchDataList = null;
         }
-        if(!hasTruncate) {
-            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
-            chatCompletionRequest.setMessages(chatMessages);
-        }
+
         EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
                 .ip(ClientIpAddressUtil.getClientIpAddress(req))
                 .build();
@@ -358,7 +359,7 @@ public class LlmApiServlet extends BaseServlet {
 
     private ChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
         ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
-        ChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, ChatCompletionRequest.class);
+        ChatCompletionRequest chatCompletionRequest = objectMapper.readValue(requestToJson(req), ChatCompletionRequest.class);
         if(chatCompletionRequest.getModel() == null
                 && preference != null
                 && preference.getLlm() != null) {
