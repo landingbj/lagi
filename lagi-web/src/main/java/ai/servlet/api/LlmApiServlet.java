@@ -10,6 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.concurrent.*;
 
 import ai.common.ModelService;
 import ai.common.exception.RRException;
@@ -21,6 +22,7 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.schedule.QueueSchedule;
@@ -96,6 +98,180 @@ public class LlmApiServlet extends BaseServlet {
             this.isMedusa(req, resp);
         } else if(method.equals("isRAG")) {
             this.isRAG(req, resp);
+        } else if(method.equals("completionsRAG")) {
+            this.completionsRAG(req, resp);
+        }
+    }
+
+    private void completionsRAG(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        resp.setContentType("application/json;charset=utf-8");
+
+        PrintWriter out = resp.getWriter();
+        HttpSession session = req.getSession();
+        if (RAG_ENABLE == null){
+            RAG_ENABLE = RAG_CONFIG.getEnable();
+        }
+        ChatCompletionRequest chatCompletionRequest = setCustomerModel(req, session);
+        Integer max_tokens =1024;
+        Object maxTokens = BeanUtil.getProperty(chatCompletionRequest, "max_tokens");
+        if(maxTokens == null) {
+            chatCompletionRequest.setMax_tokens(max_tokens);
+        }
+        if(chatCompletionRequest!=null&&chatCompletionRequest.getMax_tokens()==0){
+            max_tokens = chatCompletionRequest.getMax_tokens();
+            chatCompletionRequest.setMax_tokens(max_tokens);
+        }
+        try {
+            // 使用线程池执行多线程任务
+            ExecutorService executorService = Executors.newFixedThreadPool(2);
+            CountDownLatch countDownLatch = new CountDownLatch(2);
+            // 使用Future来捕获两个线程的执行结果
+            Future<?> future1 = executorService.submit(() -> {
+                try {
+                    isRAGCompletions(req, resp, chatCompletionRequest, out ,true, countDownLatch);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            });
+
+            Future<?> future2 = executorService.submit(() -> {
+                try {
+                    isRAGCompletions(req, resp, chatCompletionRequest, out ,false, countDownLatch);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            });
+
+            // 等待两个任务完成
+            future1.get();
+            future2.get();
+            countDownLatch.await();
+            out.close();
+            // 关闭线程池
+            executorService.shutdown();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+
+    }
+
+    private void isRAGCompletions(HttpServletRequest req, HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, PrintWriter out ,boolean isRAG, CountDownLatch countDownLatch) throws IOException {
+        ChatCompletionResultWithSource chatCompletionResult = null;
+
+        List<IndexSearchData> indexSearchDataList = null;
+        String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\",\"isRAG\":"+isRAG+"}}]}";
+
+        if (Boolean.TRUE.equals(isRAG)) {
+            ModelService modelService = (ModelService) LlmRouterDispatcher
+                    .getRagAdapter(null).stream().findFirst().orElse(null);
+            if(modelService != null  && RAG_CONFIG.getPriority() > modelService.getPriority()) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                if(indexSearchDataList.isEmpty()) {
+                    String s = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
+                    outPrintJson(resp, chatCompletionRequest, s);
+                    return;
+                }
+            }
+        }
+
+        if (MEDUSA_ENABLE==null){
+            MEDUSA_ENABLE = MEDUSA_CONFIG.getEnable();
+        }
+        if(Boolean.TRUE.equals(MEDUSA_ENABLE)) {
+            ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
+            PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
+            ChatCompletionResult medusaCompletionResult = medusaService.locate(promptInput);
+            if (medusaCompletionResult != null) {
+                outPrintChatCompletion(resp, chatCompletionRequest, medusaCompletionResult, isRAG , countDownLatch, out);
+                logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+                return;
+            } else {
+                medusaService.triggerCachePut(promptInput);
+                if (medusaService.getPromptPool() != null) {
+                    medusaService.getPromptPool().put(PooledPrompt.builder()
+                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                }
+            }
+        }
+        boolean hasTruncate = false;
+        GetRagContext context = null;
+        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(isRAG)) {
+            String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+            String answer = VectorCacheLoader.get2L2(lastMessage);
+            if(StrUtil.isNotBlank(answer)) {
+                outPrintJson(resp, chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
+                countDownLatch.countDown();
+                return;
+            }
+            if(indexSearchDataList == null) {
+                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+            }
+            if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                context = completionsService.getRagContext(indexSearchDataList);
+                String contextStr = CompletionUtil.truncate(context.getContext());
+                context.setContext(contextStr);
+                completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
+                ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
+                chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
+                hasTruncate = true;
+            }
+        } else {
+            indexSearchDataList = null;
+        }
+        if(!hasTruncate) {
+            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
+            chatCompletionRequest.setMessages(chatMessages);
+        }
+        EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
+                .ip(ClientIpAddressUtil.getClientIpAddress(req))
+                .build();
+        BeanUtil.copyProperties(chatCompletionRequest, enhance);
+        chatCompletionRequest = enhance;
+        if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
+            try {
+                Observable<ChatCompletionResult> result;
+                if(enableQueueHandle) {
+                    result = queueSchedule.streamSchedule(chatCompletionRequest, indexSearchDataList);
+                } else {
+                    result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
+                }
+                resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+                Object outLock = new Object();
+                streamOutPrint(result, context, indexSearchDataList, out , isRAG , outLock);
+            } catch (RRException e) {
+                resp.setStatus(e.getCode());
+                responsePrint(resp, e.getMsg());
+            }finally {
+                countDownLatch.countDown();
+            }
+
+        } else {
+            try {
+                ChatCompletionResult result;
+                if(enableQueueHandle) {
+                    result = queueSchedule.schedule(chatCompletionRequest, indexSearchDataList);
+                } else {
+                    result = completionsService.completions(chatCompletionRequest, indexSearchDataList);
+                }
+                if (context != null) {
+                    CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
+                    addChunkIds(result, context);
+                }
+                ChatCompletionResultWithSource resultSource = new ChatCompletionResultWithSource();
+                BeanUtil.copyProperties(result, resultSource);
+                String source = isRAG?"知识库":"大模型";
+                resultSource.setSource(source);
+                synchronized ("aaa") {
+                    responsePrint(resp, toJson(resultSource));
+                }
+            } catch (RRException e) {
+                resp.setStatus(e.getCode());
+                responsePrint(resp, e.getMsg());
+            } finally {
+                countDownLatch.countDown();
+            }
         }
     }
 
@@ -336,6 +512,37 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
+    private void outPrintChatCompletion(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, ChatCompletionResult chatCompletionResult , boolean isRAG ,CountDownLatch countDownLatch,PrintWriter out) throws IOException {
+        try {
+            if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
+                chatCompletionResult.getChoices().forEach(choice -> {
+                    if (choice != null && choice.getMessage() != null) {
+                        choice.setDelta(choice.getMessage());
+                        choice.setMessage(null);
+                    }
+                });
+                if (chatCompletionResult.getId()!=null){
+                    String source = "美杜莎";
+                    ChatCompletionResultWithSource resultSource = new ChatCompletionResultWithSource();
+                        BeanUtil.copyProperties(chatCompletionResult, resultSource);
+                    resultSource.setSource(source);
+                    resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+                    synchronized ("rag") {
+                        out.print("data: " + toJson(resultSource) + "\n\n");
+                        out.print("data: " + "[DONE]" + "\n\n");
+                        out.flush();
+                    }
+                }
+            } else {
+                outPrint(resp, chatCompletionResult);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            countDownLatch.countDown();
+        }
+    }
+
     private void outPrintJson(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest, String s) throws IOException {
         if(Boolean.TRUE.equals(chatCompletionRequest.getStream())) {
             streamOutPrint(resp, s);
@@ -445,6 +652,104 @@ public class LlmApiServlet extends BaseServlet {
         );
     }
 
+    private void streamOutPrint1(Observable<ChatCompletionResult> observable, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out ,boolean isRAG, CountDownLatch countDownLatch) {
+        final ChatCompletionResult[] lastResult = {null, null};
+        observable.subscribe(
+                data -> {
+                    lastResult[0] = data;
+                    ChatCompletionResult filter = SensitiveWordUtil.filter(data);
+                    filter.setObject("chat.completion.chunk");
+                    ChatCompletionResultWithSource resultSource = new ChatCompletionResultWithSource();
+                    BeanUtil.copyProperties(filter, resultSource);
+                    String source = isRAG?"知识库":"大模型";
+                    resultSource.setSource(source);
+                    for (ChatCompletionChoice choice : resultSource.getChoices()) {
+                        choice.setDelta(choice.getMessage());
+                        choice.setMessage(null);
+                    }
+                    String msg = gson.toJson(resultSource);
+                    out.print("data: " + msg + "\n\n");
+                    out.flush();
+                    if (lastResult[1] == null) {
+                        lastResult[1] = data;
+                    } else {
+                        for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
+                            ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
+                            ChatCompletionChoice chunkChoice = data.getChoices().get(i);
+                            if(chunkChoice.getDelta() != null) {
+                                String chunkContent = chunkChoice.getDelta().getContent();
+                                String content = choice.getDelta().getContent();
+                                choice.getDelta().setContent(content + chunkContent);
+                            }
+                        }
+                    }
+                },
+                e -> {
+                    logger.error("", e);
+                },
+                () -> {
+                    if(lastResult[0] == null) {
+                        return;
+                    }
+                    extracted(lastResult,indexSearchDataList,context, out);
+                    lastResult[0].setChoices(lastResult[1].getChoices());
+                    out.flush();
+                    countDownLatch.countDown();
+                }
+        );
+    }
+
+    private void streamOutPrint(Observable<ChatCompletionResult> observable, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out, boolean isRAG,Object outLock) {
+        final ChatCompletionResult[] lastResult = {null, null};
+
+        observable.subscribe(
+                data -> {
+                    lastResult[0] = data;
+                    ChatCompletionResult filter = SensitiveWordUtil.filter(data);
+                    filter.setObject("chat.completion.chunk");
+                    ChatCompletionResultWithSource resultSource = new ChatCompletionResultWithSource();
+                    BeanUtil.copyProperties(filter, resultSource);
+                    String source = isRAG ? "知识库" : "大模型";
+                    resultSource.setSource(source);
+                    for (ChatCompletionChoice choice : resultSource.getChoices()) {
+                        choice.setDelta(choice.getMessage());
+                        choice.setMessage(null);
+                    }
+                    String msg = gson.toJson(resultSource);
+                    synchronized ("rag") {
+                       out.print("data: " + msg + "\n\n");
+                       out.flush();
+                    }
+
+                    if (lastResult[1] == null) {
+                        lastResult[1] = data;
+                    } else {
+                        for (int i = 0; i < lastResult[1].getChoices().size(); i++) {
+                            ChatCompletionChoice choice = lastResult[1].getChoices().get(i);
+                            ChatCompletionChoice chunkChoice = data.getChoices().get(i);
+                            if (chunkChoice.getDelta() != null) {
+                                String chunkContent = chunkChoice.getDelta().getContent();
+                                String content = choice.getDelta().getContent();
+                                choice.getDelta().setContent(content + chunkContent);
+                            }
+                        }
+                    }
+                },
+                e -> {
+                    logger.error("", e);
+                },
+                () -> {
+                    if (lastResult[0] == null) {
+                        return;
+                    }
+                    synchronized ("rag") {
+                            extracted(lastResult, indexSearchDataList, context, out);
+                            lastResult[0].setChoices(lastResult[1].getChoices());
+                            out.flush();
+                    }
+                }
+        );
+    }
     private void extracted(ChatCompletionResult[] lastResult, List<IndexSearchData> indexSearchDataList, GetRagContext ragContext, PrintWriter out) {
         if (lastResult[0] != null && !lastResult[0].getChoices().isEmpty()
                 && indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
@@ -475,7 +780,12 @@ public class LlmApiServlet extends BaseServlet {
                 }
             }
 
-            out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");
+            ChatCompletionResultWithSource resultSource = new ChatCompletionResultWithSource();
+            BeanUtil.copyProperties(lastResult[0], resultSource);
+            String source = "知识库";
+            resultSource.setSource(source);
+
+            out.print("data: " + gson.toJson(resultSource) + "\n\n");
         }
         out.print("data: " + "[DONE]" + "\n\n");
     }
