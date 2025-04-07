@@ -66,6 +66,7 @@ public class SampleIntentServiceImpl implements IntentService {
             return intentResult;
         }
         intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
+        intentResult.setContinuedIndex(chatCompletionRequest.getMessages().size() - 1);
         List<Integer> res = PromptCacheTrigger.analyzeChatBoundariesForIntent(chatCompletionRequest);
         if(res.size() == 1) {
             return intentResult;
