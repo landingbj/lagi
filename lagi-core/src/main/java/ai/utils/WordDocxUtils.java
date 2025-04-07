@@ -1,6 +1,13 @@
 package ai.utils;
 
 import ai.utils.word.WordUtils;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.model.PicturesTable;
 import org.apache.poi.hwpf.usermodel.Picture;
@@ -35,8 +42,31 @@ public class WordDocxUtils extends WordUtils {
                     return picturesTable != null && !pictures.isEmpty();
                 }
             }
-        }
+        } else if (extString.toLowerCase().trim().equals(".pdf")) {
+            try (PDDocument document = PDDocument.load(file)) {
+                for (PDPage page : document.getPages()) {
+                    if (hasImages(page)) {
+                        return true;
+                    }
+                }
+            }
+    }
 
+        return false;
+    }
+    private static boolean hasImages(PDPage page) throws IOException {
+        PDResources resources = page.getResources();
+        if (resources != null) {
+            COSDictionary xObjects = (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
+            if (xObjects != null) {
+                for (COSName name : xObjects.keySet()) {
+                    PDXObject xObject = resources.getXObject(name);
+                    if (xObject instanceof PDImageXObject) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 }
