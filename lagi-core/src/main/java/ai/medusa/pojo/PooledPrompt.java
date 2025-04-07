@@ -1,9 +1,7 @@
 package ai.medusa.pojo;
 
 import ai.common.pojo.IndexSearchData;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -12,6 +10,8 @@ import java.util.List;
 @Data
 @Builder
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class PooledPrompt implements Serializable {
     private PromptInput promptInput;
     private Integer status;

@@ -19,4 +19,6 @@ public class Medusa {
     private Integer producerThreadNum;
     @JsonProperty("consumer_thread_num")
     private Integer consumerThreadNum;
+    @JsonProperty("aheads")
+    private Integer aheads;
 }

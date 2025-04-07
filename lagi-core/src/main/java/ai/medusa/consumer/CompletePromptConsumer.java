@@ -1,8 +1,10 @@
 package ai.medusa.consumer;
 
 import ai.common.pojo.IndexSearchData;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
@@ -12,6 +14,7 @@ import ai.mr.pipeline.Consumer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -85,6 +88,9 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
             String context = ragContext.getContext();
             completionsService.addVectorDBContext(chatCompletionRequest, context);
         }
+        EnhanceChatCompletionRequest enhanceChatCompletionRequest = new EnhanceChatCompletionRequest();
+        BeanUtil.copyProperties(chatCompletionRequest, enhanceChatCompletionRequest);
+        enhanceChatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         return chatCompletionRequest;
     }
 

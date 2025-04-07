@@ -8,6 +8,7 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -66,6 +67,8 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions diversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
+        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
+        promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
         for (int i = 0; i < diversifyQuestions.getQuestions().size(); i++) {
             String question = diversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
@@ -98,7 +101,7 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
         message.setRole(LagiGlobal.LLM_ROLE_USER);
         String promptTemplate = PromptCacheConfig.DIVERSIFY_PROMPT;
         String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
-        String content = String.format(promptTemplate, prompt);
+        String content = String.format(promptTemplate, PromptCacheConfig.LLM_DIVERSIFY_LIMIT, prompt);
         message.setContent(content);
         messages.add(message);
         chatCompletionRequest.setMessages(messages);

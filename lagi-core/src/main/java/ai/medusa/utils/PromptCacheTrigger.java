@@ -3,9 +3,11 @@ package ai.medusa.utils;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.QaPair;
 import ai.common.utils.ThreadPoolManager;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.service.CompletionsService;
 import ai.llm.utils.CompletionUtil;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.impl.QaCache;
 import ai.medusa.pojo.PromptInput;
@@ -16,6 +18,7 @@ import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorDbService;
 import ai.vector.VectorStoreService;
+import cn.hutool.core.bean.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,23 +96,32 @@ public class PromptCacheTrigger {
     }
 
     private synchronized void putCache(PromptInput promptInputWithBoundaries, PromptInput lastPromptInput, ChatCompletionResult chatCompletionResult, String newestPrompt) {
-        String firstPrompt = PromptInputUtil.getFirstPrompt(promptInputWithBoundaries);
-        List<PromptInput> promptInputList = qaCache.get(firstPrompt);
+        String lastPrompt = PromptInputUtil.getLastPrompt(promptInputWithBoundaries);
+        List<PromptInput> promptInputList = qaCache.get(lastPrompt);
+        if (promptInputList == null || promptInputList.isEmpty()) {
+            return;
+        }
 //        int index = promptInputList.indexOf(lastPromptInput);
 //        PromptInput promptInputInCache = promptInputList.get(index);
         PromptInput promptInputInCache = promptInputList.get(0);
         List<ChatCompletionResult> completionResults = promptCache.get(promptInputInCache);
         completionResults.add(chatCompletionResult);
-        promptCache.remove(promptInputInCache);
-        promptInputInCache.getPromptList().add(newestPrompt);
+//        promptCache.remove(promptInputInCache);
+
+        List<String> promptList = new ArrayList<>(promptInputInCache.getPromptList());
+        promptList.add(newestPrompt);
+        PromptInput newPromptInput = PromptInput.builder().promptList(promptList)
+                .parameter(promptInputInCache.getParameter()).build();
+
+//        promptInputInCache.getPromptList().add(newestPrompt);
         List<PromptInput> promptInputs = qaCache.get(newestPrompt);
         if(promptInputs == null) {
             promptInputs = new ArrayList<>();
         }
-        promptInputs.add(promptInputInCache);
+        promptInputs.add(newPromptInput);
 //        qaCache.put(newestPrompt, promptInputList);
         qaCache.put(newestPrompt, promptInputs);
-        promptCache.put(promptInputInCache, completionResults);
+        promptCache.put(newPromptInput, completionResults);
         log.info("putCache2: {}", promptInputs);
     }
 
@@ -350,7 +362,12 @@ public class PromptCacheTrigger {
         if (context != null) {
             completionsService.addVectorDBContext(request, context);
         }
-        ChatCompletionResult result = completionsService.completions(request);
+
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        BeanUtil.copyProperties(request, chatCompletionRequest);
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
+
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         CompletionUtil.populateContext(result, indexSearchDataList, context);
         return result;
     }

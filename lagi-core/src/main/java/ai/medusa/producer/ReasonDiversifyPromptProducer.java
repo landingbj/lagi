@@ -8,6 +8,7 @@ import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.DiversifyQuestions;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -74,6 +75,8 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions reasonDiversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
+        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
+        promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
         for (int i = 0; i < reasonDiversifyQuestions.getQuestions().size(); i++) {
             String question = reasonDiversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
@@ -98,7 +101,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         PromptInput promptInput = item.getPromptInput();
         String promptTemplate = PromptCacheConfig.REASON_DIVERSIFY_PROMPT;
         String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
-        String result = String.format(promptTemplate, prompt, reasonContent);
+        String result = String.format(promptTemplate, PromptCacheConfig.REASON_DIVERSIFY_LIMIT, prompt, reasonContent);
         return getCompletionRequest(promptInput, null, result);
     }
 

@@ -30,7 +30,9 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
 
     public TreeDiversifyPromptProducer(int limit) {
         super(limit);
-        loadGraphNode2VectorDB();
+        if (PromptCacheConfig.getEnableTreeDriver()) {
+            loadGraphNode2VectorDB();
+        }
     }
 
     @Override
