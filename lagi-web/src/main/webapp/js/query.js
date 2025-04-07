@@ -377,7 +377,22 @@ function getLoginStatus(appId, username) {
 
 const CONVERSATION_CONTEXT = [];
 
-function getTextResult(question, robootAnswerJq, conversation, agentId) {
+async function getSessionId() {
+    const response = await fetch(`/chat/getSession`);
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data["sessionId"];
+}
+
+let sessionId = null;
+
+async function getTextResult(question, robootAnswerJq, conversation, agentId) {
+    
+    if(CONVERSATION_CONTEXT.length == 0) {
+        sessionId = await getSessionId();
+    }
     // debugger
     var result = '';
     var paras = {
@@ -390,7 +405,8 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
         "worker": "BestWorker",
         // "stream": false,
         "stream": true,
-        "userId": globalUserId
+        "userId": globalUserId,
+        "sessionId": sessionId,
     };
     if (agentId) {
         paras["worker"] = "appointedWorker";

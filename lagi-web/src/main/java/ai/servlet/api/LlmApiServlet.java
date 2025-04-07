@@ -18,6 +18,9 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.intent.enums.IntentStatusEnum;
+import ai.intent.impl.SampleIntentServiceImpl;
+import ai.intent.pojo.IntentResult;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
@@ -28,8 +31,10 @@ import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.llm.utils.LlmAdapterFactory;
 import ai.llm.utils.PriorityLock;
+import ai.llm.utils.SummaryUtil;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PromptInput;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.AgentService;
@@ -86,9 +91,14 @@ public class LlmApiServlet extends BaseServlet {
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private final AgentService agentService = new AgentService();
     private final TraceService traceService = new TraceService();
+    private static final LRUCache<String, Agent<ChatCompletionRequest, ChatCompletionResult>> agentLRUCache;
+
+    private ai.intent.IntentService sampleIntentService = new SampleIntentServiceImpl();
+
 //    private final ManagerDao managerDao = new ManagerDao();
 
     static {
+        agentLRUCache = new LRUCache<>(PromptCacheConfig.RAW_ANSWER_CACHE_SIZE);
         VectorCacheLoader.load();
     }
 
@@ -115,6 +125,23 @@ public class LlmApiServlet extends BaseServlet {
         } else {
             responsePrint(resp, "method not found");
         }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String url = req.getRequestURI();
+        String method = url.substring(url.lastIndexOf("/") + 1);
+        if(method.equals("getSession")) {
+            this.getSession(req, resp);
+        }
+    }
+
+    private void getSession(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String sessionId = UUID.randomUUID().toString();
+        agentLRUCache.put(sessionId, null);
+        responsePrint(resp, "{\"sessionId\": \""+sessionId+"+\"}");
     }
 
 
@@ -366,30 +393,42 @@ public class LlmApiServlet extends BaseServlet {
         PrintWriter out = resp.getWriter();
         String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList = SkillMapUtil.rankAgentByIntentKeyword(allAgents, ChatCompletionUtil.getLastMessage(llmRequest));
-        skillMapAgentList.forEach(
-                agent -> logger.info("Matched agent in skill map: {}", agent.getAgentConfig().getName())
-        );
+        String invoke = SummaryUtil.invoke(llmRequest);
+        logger.info("Summary: {}", invoke);
+        IntentResult intentResult = sampleIntentService.detectIntent(llmRequest);
+        logger.info("intentResult: {}", intentResult);
+        // completion : get new outputAgent
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
-        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(llmRequest.getUserId());
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);
-        if (skillMapAgentList.isEmpty()) {
-            if(llmAndAgentList.isEmpty()) {
-                skillMapAgentList = SkillMapUtil.pickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest));
-                if(skillMapAgentList != null && !skillMapAgentList.isEmpty()) {
-                    outputAgent = skillMapAgentList.get(0);
+        if(IntentStatusEnum.COMPLETION.getName().equals(intentResult.getStatus())) {
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList = SkillMapUtil.rankAgentByIntentKeyword(allAgents, ChatCompletionUtil.getLastMessage(llmRequest));
+            skillMapAgentList.forEach(
+                    agent -> logger.info("Matched agent in skill map: {}", agent.getAgentConfig().getName())
+            );
+            List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(llmRequest.getUserId());
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);
+            if (skillMapAgentList.isEmpty()) {
+                if(llmAndAgentList.isEmpty()) {
+                    skillMapAgentList = SkillMapUtil.pickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest));
+                    if(skillMapAgentList != null && !skillMapAgentList.isEmpty()) {
+                        outputAgent = skillMapAgentList.get(0);
+                    } else {
+                        outputAgent = SkillMapUtil.getHighestPriorityLlm();
+                    }
                 } else {
-                    outputAgent = SkillMapUtil.getHighestPriorityLlm();
+                    outputAgent = llmAndAgentList.get(0);
                 }
             } else {
-                outputAgent = llmAndAgentList.get(0);
+                skillMapAgentList.addAll(0, llmAndAgentList);
+                outputAgent = getFirstStreamAgent(skillMapAgentList);
+                if (outputAgent == null) {
+                    outputAgent = skillMapAgentList.get(0);
+                }
             }
-        } else {
-            skillMapAgentList.addAll(0, llmAndAgentList);
-            outputAgent = getFirstStreamAgent(skillMapAgentList);
-            if (outputAgent == null) {
-                outputAgent = skillMapAgentList.get(0);
-            }
+            agentLRUCache.put(llmRequest.getSessionId(), outputAgent);
+        }
+        // continue : get lastAgent
+        else {
+            outputAgent = agentLRUCache.get(llmRequest.getSessionId());
         }
 
         if (outputAgent == null) {

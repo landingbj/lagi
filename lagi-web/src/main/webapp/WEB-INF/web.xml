@@ -181,6 +181,11 @@
         <url-pattern>/chat/go/solid</url-pattern>
     </servlet-mapping>
 
+    <servlet-mapping>
+        <servlet-name>llm</servlet-name>
+        <url-pattern>/chat/getSession</url-pattern>
+    </servlet-mapping>
+
     <servlet>
         <servlet-name>asr</servlet-name>
         <servlet-class>ai.servlet.api.AudioApiServlet</servlet-class>
