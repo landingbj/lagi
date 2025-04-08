@@ -427,6 +427,8 @@ async function getTextResult(question, robootAnswerJq, conversation, agentId) {
                     result = `
                         <img src='${res.result}' alt='Image' style="width: 320px;">
                     `
+                    CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": "图片已生成\n\n"});
                     robootAnswerJq.html(result);
                     answer = result;
                     let p = robootAnswerJq.parent().parent().parent();
