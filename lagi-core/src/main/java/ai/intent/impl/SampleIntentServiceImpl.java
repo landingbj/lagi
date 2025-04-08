@@ -3,16 +3,13 @@ package ai.intent.impl;
 
 import ai.common.pojo.IndexSearchData;
 import ai.common.utils.ThreadPoolManager;
-import ai.embedding.Embeddings;
 import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.enums.IntentTypeEnum;
 import ai.intent.pojo.IntentResult;
-import ai.manager.EmbeddingManager;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.ContinueWordUtil;
-import ai.utils.CosineSimilarityUtil;
 import ai.utils.StoppingWordUtil;
 import ai.utils.StrFilterUtil;
 import ai.utils.qa.ChatCompletionUtil;
@@ -83,26 +80,11 @@ public class SampleIntentServiceImpl implements IntentService {
             intentResult.setContinuedIndex(lIndex);
             return intentResult;
         }
-        setIntentByVectorV2(chatCompletionRequest, lIndex, lastQ, intentResult);
+        setIntentByVector(chatCompletionRequest, lIndex, lastQ, intentResult);
         return intentResult;
     }
 
-    private static void setIntentByVectorV2(ChatCompletionRequest chatCompletionRequest, Integer lIndex, String lastQ, IntentResult intentResult) {
-        Embeddings embeddings = EmbeddingManager.getInstance().getAdapter();
-        String lQ = chatCompletionRequest.getMessages().get(lIndex).getContent();
-        List<Float> embedding1 = embeddings.createEmbedding(lQ);
-        List<Float> embedding2 = embeddings.createEmbedding(lastQ);
-        double v1 = CosineSimilarityUtil.calculateCosineSimilarity(embedding1, embedding2);
-        log.info("lQ: {}\n lastQ: {} \n v1:{}", lQ, lastQ, v1);
-        if(v1 > 0.6) {
-            intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
-            intentResult.setContinuedIndex(lIndex);
-        } else {
-            intentResult.setStatus(IntentStatusEnum.COMPLETION.getName());
-        }
-    }
-
-    private static void setIntentByVector(ChatCompletionRequest chatCompletionRequest, Integer lIndex, String lastQ, IntentResult intentResult) {
+    protected void setIntentByVector(ChatCompletionRequest chatCompletionRequest, Integer lIndex, String lastQ, IntentResult intentResult) {
         VectorStoreService vectorStoreService = new VectorStoreService();
         String lQ = chatCompletionRequest.getMessages().get(lIndex).getContent();
         String complexQ = lQ + lastQ;

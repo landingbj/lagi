@@ -18,8 +18,9 @@ import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
+import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
-import ai.intent.impl.SampleIntentServiceImpl;
+import ai.intent.impl.VectorIntentServiceImpl;
 import ai.intent.pojo.IntentResult;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.ChatCompletionResultWithSource;
@@ -35,7 +36,6 @@ import ai.llm.utils.SummaryUtil;
 import ai.manager.AgentManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.PromptInput;
-import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.AgentService;
@@ -94,7 +94,7 @@ public class LlmApiServlet extends BaseServlet {
     private final TraceService traceService = new TraceService();
     private static final LRUCache<String, Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>>> agentLRUCache;
 
-    private ai.intent.IntentService sampleIntentService = new SampleIntentServiceImpl();
+    private final IntentService intentService = new VectorIntentServiceImpl();
 
 //    private final ManagerDao managerDao = new ManagerDao();
 
@@ -102,6 +102,13 @@ public class LlmApiServlet extends BaseServlet {
         agentLRUCache = new LRUCache<>(1000);
         VectorCacheLoader.load();
     }
+
+    @Override
+    public void init() throws ServletException {
+        medusaService.init();
+        super.init();
+    }
+
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -403,7 +410,7 @@ public class LlmApiServlet extends BaseServlet {
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
         String invoke = SummaryUtil.invoke(llmRequest);
         logger.info("Summary: {}", invoke);
-        IntentResult intentResult = sampleIntentService.detectIntent(llmRequest);
+        IntentResult intentResult = intentService.detectIntent(llmRequest);
         logger.info("intentResult: {}", intentResult);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
         // continue : get lastAgent
