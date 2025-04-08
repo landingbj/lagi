@@ -13,10 +13,12 @@ public class Medusa {
     private Long preDelay;
     private Double lcsRatioPromptInput;
     private Double similarityCutoff;
+    private String inits;
     @JsonProperty("reason_model")
     private String reasonModel;
     @JsonProperty("producer_thread_num")
     private Integer producerThreadNum;
     @JsonProperty("consumer_thread_num")
     private Integer consumerThreadNum;
+
 }
