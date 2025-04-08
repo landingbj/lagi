@@ -22,4 +22,5 @@ public class Medusa {
     private Integer consumerThreadNum;
     @JsonProperty("aheads")
     private Integer aheads;
+    private Integer priority;
 }

@@ -85,6 +85,7 @@ public class PromptCacheConfig {
     public static final int ANSWER_CORE_THRESHOLD = 4;
     public static final double LCS_RATIO_QUESTION = 0.5;
     public static double LCS_RATIO_PROMPT_INPUT = 0.8;
+    public static int MEDUSA_PRIORITY = 1;
 
     @Getter
     private static Boolean enableLlmDriver = false;
@@ -130,6 +131,8 @@ public class PromptCacheConfig {
         CONSUMER_THREADS = config.getConsumerThreadNum() != null ? config.getConsumerThreadNum() : CONSUMER_THREADS;
         TOTAL_THREAD_COUNT = PRODUCER_THREADS + CONSUMER_THREADS;
         THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT * QA_SIMILARITY_TOP_K * 5;
+
+        MEDUSA_PRIORITY = config.getPriority() != null ? config.getPriority() : MEDUSA_PRIORITY;
 
         LLM_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() : LLM_DIVERSIFY_LIMIT;
         REASON_DIVERSIFY_LIMIT = LLM_DIVERSIFY_LIMIT * 2;

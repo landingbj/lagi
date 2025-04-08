@@ -67,8 +67,6 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions diversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
-        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
-        promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
         for (int i = 0; i < diversifyQuestions.getQuestions().size(); i++) {
             String question = diversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();

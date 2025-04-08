@@ -1,6 +1,7 @@
 package ai.llm.utils;
 
 
+import ai.medusa.utils.PromptCacheConfig;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ public class PriorityLock {
     private final AtomicInteger lowLockCount = new AtomicInteger(0);
     private final int limit;
     private final int LOW_LIMIT = 1;
-    public static final int LOW_PRIORITY = 50;
+    public static final int LOW_PRIORITY = PromptCacheConfig.MEDUSA_PRIORITY;
     public static final int HIGH_PRIORITY = 100;
     private static final int PRIORITY_QUEUE_INITIAL_CAPACITY = 10000;
 

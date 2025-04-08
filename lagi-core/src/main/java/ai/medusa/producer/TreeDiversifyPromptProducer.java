@@ -97,8 +97,6 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
                     .parameter(item.getPromptInput().getParameter())
                     .promptList(predictPromptList)
                     .build();
-            PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
-            diversifiedPromptInput = promptCacheTrigger.analyzeChatBoundaries(diversifiedPromptInput);
             // skill cached
             ChatCompletionResult chatCompletionResult = instance.get(diversifiedPromptInput);
             if (chatCompletionResult != null) {

@@ -10,6 +10,7 @@ import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheTrigger;
 import ai.mr.pipeline.Consumer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -82,6 +83,8 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
 
     private ChatCompletionRequest getCompletionsRequest(PooledPrompt item, List<IndexSearchData> indexSearchDataList) {
         PromptInput promptInput = item.getPromptInput();
+        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
+        promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
         ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequestByPrompts(promptInput.getPromptList());
         GetRagContext ragContext = completionsService.getRagContext(indexSearchDataList);
         if(ragContext != null) {

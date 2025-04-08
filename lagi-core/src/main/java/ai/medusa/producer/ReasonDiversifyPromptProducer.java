@@ -75,8 +75,6 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions reasonDiversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
-        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
-        promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
         for (int i = 0; i < reasonDiversifyQuestions.getQuestions().size(); i++) {
             String question = reasonDiversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
