@@ -10,6 +10,7 @@ import ai.medusa.pojo.TreeDiversifyNode;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.utils.LRUCache;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -27,6 +28,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
     private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.TREE_SIMILARITY_CUTOFF;
     private static final TreeDiversifyDao treeDiversifyDao = new TreeDiversifyDao();
     private static final Logger log = LoggerFactory.getLogger(TreeDiversifyPromptProducer.class);
+    private static final LRUCache<PooledPrompt, Integer> diversifyCache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
 
     public TreeDiversifyPromptProducer(int limit) {
         super(limit);
@@ -45,12 +47,39 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) {
-        return diversify(item);
+        return diversifyTree(item);
     }
 
     @Override
     public void consume(PooledPrompt item) throws Exception {
         super.consume(item);
+    }
+
+    public Collection<PooledPrompt> diversifyTree(PooledPrompt item) {
+        Collection<PooledPrompt> result = new ArrayList<>();
+        Collection<PooledPrompt> tempResult = diversify(item);
+        result.addAll(tempResult);
+        int count = 0;
+        while (count < 5) {
+            if (tempResult.isEmpty()) {
+                break;
+            }
+            Collection<PooledPrompt> nextInput = new ArrayList<>();
+            for (PooledPrompt pooledPrompt : tempResult) {
+                System.out.println("diversifyCache.containsKey " + diversifyCache.containsKey(pooledPrompt));
+                if (diversifyCache.containsKey(pooledPrompt)) {
+                    log.info("prompt already in cache, skip: {}", pooledPrompt);
+                    continue;
+                }
+                Collection<PooledPrompt> tempPooledPrompt = diversify(pooledPrompt);
+                nextInput.addAll(tempPooledPrompt);
+                result.addAll(tempPooledPrompt);
+                diversifyCache.put(pooledPrompt, 1);
+            }
+            count++;
+            tempResult = nextInput;
+        }
+        return result;
     }
 
     public Collection<PooledPrompt> diversify(PooledPrompt item) {

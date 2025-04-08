@@ -122,7 +122,7 @@ public class PromptCacheTrigger {
 //        qaCache.put(newestPrompt, promptInputList);
         qaCache.put(newestPrompt, promptInputs);
         promptCache.put(newPromptInput, completionResults);
-        log.info("putCache2: {}", promptInputs);
+        log.info("current cache size {}, putCache2: {}", promptCache.size(), promptInputs);
     }
 
     private synchronized void putCache(String newestPrompt, PromptInput promptInputWithBoundaries, ChatCompletionResult chatCompletionResult) {
@@ -150,7 +150,7 @@ public class PromptCacheTrigger {
 
         qaCache.put(newestPrompt, promptInputList);
         promptCache.put(promptInputWithBoundaries, completionResults);
-        log.info("putCache1: {}", promptInputList);
+        log.info("current cache size {}, putCache1: {}", promptCache.size(), promptInputList);
     }
 
     public PromptInput analyzeChatBoundaries(PromptInput promptInput) {

@@ -51,6 +51,7 @@ public class MedusaService {
                         String[] prePrompts = inits.split(",");
                         VectorStoreService vectorStoreService = new VectorStoreService();
                         for (String prePrompt : prePrompts) {
+                            prePrompt = prePrompt.trim();
                             ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prePrompt);
                             chatCompletionRequest.setCategory(vectorStoreService.getVectorStoreConfig().getDefaultCategory());
                             PromptInput promptInput = getPromptInput(chatCompletionRequest);
