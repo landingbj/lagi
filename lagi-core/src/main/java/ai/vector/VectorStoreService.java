@@ -99,7 +99,8 @@ public class VectorStoreService {
             }
         } else if (file.getName().endsWith(".jpg") ||file.getName().endsWith(".webp")||
                 file.getName().endsWith(".jpeg") || file.getName().endsWith(".png") ||
-                file.getName().endsWith(".gif") || file.getName().endsWith(".bmp")) {
+                file.getName().endsWith(".gif") || file.getName().endsWith(".bmp")||
+                file.getName().endsWith(".pptx") ||file.getName().endsWith(".ppt"))  {
             docs = fileService.splitChunks(file, tuwen_type);
         } else {
             String content = fileService.getFileContent(file);
