@@ -60,13 +60,15 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
         Collection<PooledPrompt> tempResult = diversify(item);
         result.addAll(tempResult);
         int count = 0;
-        while (count < 5) {
+        while (count < PromptCacheConfig.TREE_DIVERSIFY_LIMIT) {
             if (tempResult.isEmpty()) {
                 break;
             }
             Collection<PooledPrompt> nextInput = new ArrayList<>();
             for (PooledPrompt pooledPrompt : tempResult) {
-                System.out.println("diversifyCache.containsKey " + diversifyCache.containsKey(pooledPrompt));
+                List<String> promptStrs = pooledPrompt.getPromptInput().getPromptList();
+                promptStrs = promptStrs.subList(promptStrs.size() - 1, promptStrs.size());
+                pooledPrompt.getPromptInput().setPromptList(promptStrs);
                 if (diversifyCache.containsKey(pooledPrompt)) {
                     log.info("prompt already in cache, skip: {}", pooledPrompt);
                     continue;

@@ -40,6 +40,13 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
 
     @Override
     public void consume(PooledPrompt item) throws FailedDiversifyPromptException {
+        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
+        PromptInput promptInput = promptCacheTrigger.analyzeChatBoundaries(item.getPromptInput());
+        item.setPromptInput(promptInput);
+        ChatCompletionResult chatCompletionResult = cache.get(promptInput);
+        if (chatCompletionResult != null) {
+            return;
+        }
         try {
             ChatCompletionResult result = completions(item);
             if (result != null) {
@@ -83,8 +90,6 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
 
     private ChatCompletionRequest getCompletionsRequest(PooledPrompt item, List<IndexSearchData> indexSearchDataList) {
         PromptInput promptInput = item.getPromptInput();
-        PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
-        promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
         ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequestByPrompts(promptInput.getPromptList());
         GetRagContext ragContext = completionsService.getRagContext(indexSearchDataList);
         if(ragContext != null) {

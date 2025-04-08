@@ -17,17 +17,19 @@ public class PromptCacheConfig {
     public static int THREAD_RUN_LIMIT;
     public static int LLM_DIVERSIFY_LIMIT = 1;
     public static int REASON_DIVERSIFY_LIMIT;
+    public static int TREE_DIVERSIFY_LIMIT;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
     public static final int COMPLETION_CACHE_SIZE = 10000;
     public static final int RAW_ANSWER_CACHE_SIZE = 10000;
 
-    public static final String DIVERSIFY_PROMPT = "### 任务\n任务：以下提供一个提示词，请根据这个提示词推测用户之后可能输入的问题。结果只返回问题本身，" +
-            "不需要提供相关描述和分析。如果有多种可能性，最多只返回%d个问题，并将其以JSON结构输出。\n\n" +
+    public static final String DIVERSIFY_PROMPT = "### 任务\n任务：以下提供一个提示词，请根据这个提示词推测用户之后可能输入的提示词。结果只返回提示词本身，" +
+            "不需要提供相关描述和分析。如果有多种可能性，最多只返回%d个提示词，并将其以JSON结构输出。\n\n" +
             "### 提示词\n```\n%s\n```\n\n" +
             "### 执行要求\n" +
             "1. 仅输出JSON格式，不要输出任何解释性文字。\n" +
-            "2. 输出的问题是用户可能向大语言模型输入的。\n\n" +
+            "2. 输出的提示词是用户可能向大语言模型输入的。\n" +
+            "3. 输出的提示词语言要与输入的提示词一致。\n\n" +
             "### 输出格式\n" +
             "输出格式为JSON，结构如下：\n" +
             "```json\n" +
@@ -47,12 +49,13 @@ public class PromptCacheConfig {
             "```";
 
     public static final String REASON_DIVERSIFY_PROMPT = "### 任务\n" +
-            "任务：以下提供一个提示词和推理模型的思考过程，请根据两者推测用户之后可能输入的问题。结果只返回问题本身，不需要提供相关描述和分析。如果有多种可能性，最多只返回%d个问题，并将其以JSON结构输出。\n\n" +
+            "任务：以下提供一个提示词和推理模型的思考过程，请根据两者总结推理过程的核心要点，推测用户之后最可能输入的提示词。结果只返回提示词本身，不需要提供相关描述和分析。如果有多种可能性，最多只返回%d个提示词，并将其以JSON结构输出。\n\n" +
             "### 提示词\n```\n%s\n```\n\n" +
             "### 思考过程\n```\n%s\n```\n\n" +
             "### 执行要求\n" +
             "1. 仅输出JSON格式，不要输出任何解释性文字。\n" +
-            "2. 输出的问题是用户可能向大语言模型输入的。\n\n" +
+            "2. 输出的提示词是用户可能向大语言模型输入的。\n" +
+            "3. 输出的提示词语言要与输入的提示词一致。\n\n" +
             "### 输出格式\n" +
             "输出格式为JSON，结构如下：\n" +
             "```json\n" +
@@ -136,5 +139,6 @@ public class PromptCacheConfig {
 
         LLM_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() : LLM_DIVERSIFY_LIMIT;
         REASON_DIVERSIFY_LIMIT = LLM_DIVERSIFY_LIMIT * 2;
+        TREE_DIVERSIFY_LIMIT = LLM_DIVERSIFY_LIMIT * 100;
     }
 }

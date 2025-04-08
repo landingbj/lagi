@@ -12,6 +12,7 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class PooledPrompt implements Serializable {
     private PromptInput promptInput;
     private Integer status;

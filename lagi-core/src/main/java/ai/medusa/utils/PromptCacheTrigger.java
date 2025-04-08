@@ -384,7 +384,10 @@ public class PromptCacheTrigger {
         String answer = rawAnswerCache.get(messages);
         if (answer == null) {
             ChatCompletionRequest request = completionsService.getCompletionsRequest(messages);
-            ChatCompletionResult result = completionsService.completions(request);
+            EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+            BeanUtil.copyProperties(request, chatCompletionRequest);
+            chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
+            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
             answer = ChatCompletionUtil.getFirstAnswer(result);
             rawAnswerCache.put(messages, answer);
             delay(PromptCacheConfig.getPreDelay());
