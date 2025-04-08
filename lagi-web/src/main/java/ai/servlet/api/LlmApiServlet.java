@@ -391,6 +391,10 @@ public class LlmApiServlet extends BaseServlet {
             ChatCompletionResult work = defaultWorker.work("appointedWorker", llmRequest);
             if(work != null) {
                 convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), req,  resp, work);
+                try {
+                    agentLRUCache.put(llmRequest.getSessionId(), new Pair<>(llmRequest.getMessages().size() -1 , (Agent<ChatCompletionRequest, ChatCompletionResult>)AgentManager.getInstance().get(llmRequest.getAgentId())));
+                } catch (Exception ignored) {
+                }
                 return;
             }
         }
