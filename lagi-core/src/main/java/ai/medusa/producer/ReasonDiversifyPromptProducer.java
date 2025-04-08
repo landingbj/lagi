@@ -1,5 +1,8 @@
 package ai.medusa.producer;
 
+import ai.common.pojo.IndexSearchData;
+import ai.config.ContextLoader;
+import ai.config.pojo.RAGFunction;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
 import ai.llm.utils.PriorityLock;
@@ -29,6 +32,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
     private final CompletionsService completionsService = new CompletionsService();
     private static final Pattern THINK_TAG_PATTERN = Pattern.compile("(.*?)</think>", Pattern.DOTALL);
     private final Gson gson = new Gson();
+    private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
 
     public ReasonDiversifyPromptProducer(int limit) {
         super(limit);
@@ -84,10 +88,14 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
                     .parameter(promptInput.getParameter())
                     .promptList(promptList)
                     .build();
+            List<IndexSearchData>  indexSearchDataList = null;
+            if (RAG_CONFIG.getEnable()) {
+                indexSearchDataList = searchByContext(diversifiedPromptInput);
+            }
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
-                    .indexSearchData(searchByContext(diversifiedPromptInput))
+                    .indexSearchData(indexSearchDataList)
                     .build();
             result.add(pooledPrompt);
         }

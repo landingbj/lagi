@@ -74,7 +74,7 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
         ChatCompletionRequest completionRequest = getCompletionsRequest(item, indexSearchDataList);
         delay(PromptCacheConfig.getConsumeDelay());
         ChatCompletionResult chatCompletionResult = completionsService.completions(completionRequest);
-        if (!indexSearchDataList.isEmpty()) {
+        if (indexSearchDataList !=null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);
             List<String> imageList = getImageFiles(indexData);
             for (int i = 0; i < chatCompletionResult.getChoices().size(); i++) {
