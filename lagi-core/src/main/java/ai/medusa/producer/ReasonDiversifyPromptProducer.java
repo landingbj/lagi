@@ -122,7 +122,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         chatCompletionRequest.setTemperature(promptInput.getParameter().getTemperature());
         chatCompletionRequest.setStream(false);
-        chatCompletionRequest.setMax_tokens(promptInput.getParameter().getMaxTokens());
+        chatCompletionRequest.setMax_tokens(4096);
         chatCompletionRequest.setModel(model);
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();

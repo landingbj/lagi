@@ -3,6 +3,7 @@ package ai.medusa.producer;
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
 import ai.medusa.dao.TreeDiversifyDao;
+import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -46,8 +47,12 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
     }
 
     @Override
-    public Collection<PooledPrompt> produce(PooledPrompt item) {
-        return diversifyTree(item);
+    public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        try {
+            return diversifyTree(item);
+        } catch (Exception e) {
+            throw new FailedDiversifyPromptException(item, e);
+        }
     }
 
     @Override
@@ -81,6 +86,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
             count++;
             tempResult = nextInput;
         }
+        log.info("diversify tree prompt is done, {}", item);
         return result;
     }
 
