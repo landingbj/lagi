@@ -91,8 +91,10 @@ public class VectorStoreService {
             }
         }
         if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx")||file.getName().endsWith(".csv")){
-            if (ExcelSqlUtil.isConnect()&&ExcelSqlUtil.isSql(file.getPath())){
-                ExcelSqlUtil.uploadSql(file.getPath(),(String)metadatas.get("filename"),(String)metadatas.get("file_id"));
+            if (ExcelSqlUtil.isSql(file.getPath())){
+                if (ExcelSqlUtil.isSqlietConnect()||ExcelSqlUtil.isConnect()){
+                    ExcelSqlUtil.uploadSql(file.getPath(),(String)metadatas.get("filename"),(String)metadatas.get("file_id"));
+                }
                 return;
             }else {
                 docs = fileService.splitChunks(file, biaoge_type);

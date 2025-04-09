@@ -23,7 +23,7 @@ public class TextToSqlSearchTool extends AbstractTool {
     }
 
     private String search(String demand) {
-        if (ExcelSqlUtil.isConnect()){
+        if (ExcelSqlUtil.isConnect()||ExcelSqlUtil.isSqlietConnect()){
             String sql1 = ExcelSqlUtil.WorkflowsToSql(demand);
             String sql = ExcelSqlUtil.toSql(sql1,demand);
             String out = ExcelSqlUtil.toText(sql,demand, sql1);
@@ -41,7 +41,8 @@ public class TextToSqlSearchTool extends AbstractTool {
 
     public static void main(String[] args) {
         TextToSqlSearchTool tool = new TextToSqlSearchTool();
-        String result = tool.search("语文成绩大于80分的同学有那些");
+//        String result = tool.search("语文成绩大于80分的同学有那些");
+        String result = tool.search("帮我查询名字叫学生1的成绩");
         System.out.println(result);
     }
 }
