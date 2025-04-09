@@ -134,7 +134,7 @@ public class UploadFileServlet extends HttpServlet {
         }.getType());
         vectorDbService.deleteDoc(idList);
         uploadFileService.deleteUploadFile(idList);
-        if (ExcelSqlUtil.isConnect()){
+        if (ExcelSqlUtil.isConnect()||ExcelSqlUtil.isSqlietConnect()){
             ExcelSqlUtil.deleteListSql(idList);
         }
         Map<String, Object> map = new HashMap<>();

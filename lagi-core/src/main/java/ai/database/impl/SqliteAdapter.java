@@ -1,78 +1,82 @@
 package ai.database.impl;
 
-import ai.common.pojo.Backend;
-import ai.config.ContextLoader;
-import ai.database.pojo.SQLJdbc;
 import ai.database.pojo.TableColumnInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class MysqlAdapter {
-    private  String name;
-    private  String driver;
-    private  String url;
-    private  String username;
-    private  String password;
-    public  String model;
-    public MysqlAdapter(String databaseName,String storageName){
-        init(storageName);
-        if (databaseName!=null&&url!=null){
-            String regex = "jdbc:mysql://([^/]+)";
+public class SqliteAdapter {
+    private String url;
+    public String model;
+    private static final Logger log = LoggerFactory.getLogger(SqliteAdapter.class);
 
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(url);
-            String hostPort = "";
-            if (matcher.find()) {
-                hostPort = matcher.group(1);
-            } else {
-                System.out.println("No host and port found.");
+    public SqliteAdapter() {
+        init();
+    }
+
+    private void init() {
+        // url = "jdbc:sqlite:D:\\Tomcat8\\apache-tomcat-9.0.0.M21\\bin\\saas.db";
+        url = "jdbc:sqlite:saas.db";
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = DriverManager.getConnection(url);
+            stmt = conn.createStatement();
+            DatabaseMetaData dbm = conn.getMetaData();
+            ResultSet tables = dbm.getTables(null, null, "table_info", null);
+            if (!tables.next()) {
+                String createTableInfo = "CREATE TABLE table_info (" +
+                        " id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        " file_id TEXT NOT NULL," +
+                        " table_name TEXT NOT NULL," +
+                        " description TEXT" +
+                        ");";
+                stmt.executeUpdate(createTableInfo);
             }
-            url = "jdbc:mysql://" + hostPort + "/" + databaseName + "?useUnicode=true&characterEncoding=utf-8&useSSL=false";
-        }
-       }
 
-        public MysqlAdapter(String storageName){
-            init(storageName);
-        }
-
-        private void init(String storageName){
-            this.name = storageName;
+            tables = dbm.getTables(null, null, "detailed_data", null);
+            if (!tables.next()) {
+                StringBuilder createDetailedData = new StringBuilder("CREATE TABLE detailed_data (" +
+                        " id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        " table_info_id INTEGER NOT NULL,");
+                for (int i = 1; i <= 36; i++) {
+                    createDetailedData.append(" field").append(i).append(" TEXT,");
+                }
+                createDetailedData.append(" FOREIGN KEY (table_info_id) REFERENCES table_info(id) ON DELETE CASCADE" +
+                        ");");
+                stmt.executeUpdate(createDetailedData.toString());
+            }
+            log.info("Tables created successfully or already exist.");
+        } catch (SQLException e) {
+            log.error("An error occurred while checking or creating tables.", e);
+        } finally {
             try {
-                List<Backend> list = ContextLoader.configuration.getFunctions().getText2sql();
-                Backend maxBackend = list.stream()
-                        .filter(Backend::getEnable)
-                        .max(Comparator.comparingInt(Backend::getPriority)) .orElseThrow(() -> new NoSuchElementException("No enabled backends found"));
-                SQLJdbc database = ContextLoader.configuration.getStores().getDatabase().stream()
-                        .filter(sqlJdbc -> sqlJdbc.getName().equals(this.name))
-                        .findFirst()
-                        .orElseThrow(() -> new NoSuchElementException("Database not found"));
-                driver = database.getDriver();
-                url = database.getJdbcUrl();
-                username = database.getUsername();
-                password = database.getPassword();
-                model = maxBackend.getModel();
-            } catch (Exception e) {
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
+    }
 
     /**
      * 打开连接
      */
     public Connection getCon() {
         Connection con = null;
-
         try {
-            Class.forName(driver);
-            con = DriverManager.getConnection(url,username,password);
+            con = DriverManager.getConnection(url);
         } catch (Exception e) {
-            System.out.println("数据库连接失败:"+e);
+            e.printStackTrace();
         }
-        return con;}
+        return con;
+    }
 
     /**
      * 关闭连接
@@ -137,7 +141,7 @@ public class MysqlAdapter {
         Connection con = null;
         PreparedStatement pre = null;
         ResultSet res = null;
-        List<T> list = new ArrayList<T>();
+        List<T> list = new ArrayList<>();
         try {
             con = getCon();
             pre = con.prepareStatement(sql);
@@ -151,7 +155,6 @@ public class MysqlAdapter {
                 for (Field f : fields) {
                     f.setAccessible(true);
                     f.set(t, res.getObject(f.getName()));
-
                 }
                 list.add(t);
             }
@@ -165,26 +168,23 @@ public class MysqlAdapter {
 
     /**
      * 无实体类的通用查询
-     *
      */
     public List<Map<String, Object>> select(String sql, Object... objs) {
         Connection con = null;
         PreparedStatement pre = null;
         ResultSet res = null;
-        List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> list = new ArrayList<>();
         try {
             con = getCon();
             pre = con.prepareStatement(sql);
-
             for (int i = 0; i < objs.length; i++) {
                 pre.setObject(i + 1, objs[i]);
             }
             res = pre.executeQuery();
             ResultSetMetaData rsmd = res.getMetaData();
-
             while (res.next()) {
                 Map<String, Object> rowMap = new HashMap<>();
-                for (int i = 1; i <= res.getMetaData().getColumnCount(); i++) {
+                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     String columnName = rsmd.getColumnLabel(i);
                     Object columnValue = res.getObject(i);
                     rowMap.put(columnName, columnValue);
@@ -192,7 +192,6 @@ public class MysqlAdapter {
                 list.add(rowMap);
             }
         } catch (SQLException e) {
-            //e.printStackTrace();
             Map<String, Object> rowMap = new HashMap<>();
             rowMap.put("error", e.getMessage());
             list.add(rowMap);
@@ -212,7 +211,6 @@ public class MysqlAdapter {
     public int executeUpdate(String sql, Object... objs) {
         Connection con = null;
         PreparedStatement pre = null;
-        ResultSet res = null;
         try {
             con = getCon();
             pre = con.prepareStatement(sql);
@@ -223,7 +221,7 @@ public class MysqlAdapter {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            close(con, pre, res);
+            close(con, pre);
         }
         return 0;
     }
@@ -302,9 +300,7 @@ public class MysqlAdapter {
             try {
                 con = getCon();
                 DatabaseMetaData metaData = con.getMetaData();
-                String[] catalogs = table.split("[。.]");
-                resultSet = metaData.getColumns(catalogs[0], null, table, null);
-
+                resultSet = metaData.getColumns(null, null, table, null);
                 while (resultSet.next()) {
                     String columnName = resultSet.getString("COLUMN_NAME");
                     String columnType = resultSet.getString("TYPE_NAME");
@@ -319,21 +315,19 @@ public class MysqlAdapter {
                             columnSize,
                             columnRemark
                     );
-
                     columnInfos.add(columnInfo);
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 return null;
             } finally {
-                close(con, null,resultSet);// 关闭连接
+                close(con, null, resultSet);
             }
         }
         return columnInfos;
     }
 
-    public List<Map<String,Object>> sqlToValue(String sql) {
-        List<Map<String,Object>> list = select(sql);
+    public List<Map<String, Object>> sqlToValue(String sql) {
+        List<Map<String, Object>> list = select(sql);
         return list.size() > 0 && list != null ? list : new ArrayList<>();
     }
-
 }
