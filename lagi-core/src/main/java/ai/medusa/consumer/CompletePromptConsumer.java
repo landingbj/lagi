@@ -42,7 +42,10 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
     public void consume(PooledPrompt item) throws FailedDiversifyPromptException {
         try {
             PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
-            PromptInput promptInput = promptCacheTrigger.analyzeChatBoundaries(item.getPromptInput());
+            PromptInput promptInput = item.getPromptInput();
+            if (item.getNeedSplitBoundary()) {
+                promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
+            }
             item.setPromptInput(promptInput);
             ChatCompletionResult chatCompletionResult = cache.get(promptInput);
             if (chatCompletionResult != null) {

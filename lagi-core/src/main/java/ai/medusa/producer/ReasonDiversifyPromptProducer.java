@@ -32,7 +32,6 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
     private final CompletionsService completionsService = new CompletionsService();
     private static final Pattern THINK_TAG_PATTERN = Pattern.compile("(.*?)</think>", Pattern.DOTALL);
     private final Gson gson = new Gson();
-    private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
 
     public ReasonDiversifyPromptProducer(int limit) {
         super(limit);
@@ -92,10 +91,12 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
             if (RAG_CONFIG.getEnable()) {
                 indexSearchDataList = searchByContext(diversifiedPromptInput);
             }
+            boolean needSplitBoundary = promptList.size() != 2;
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
                     .indexSearchData(indexSearchDataList)
+                    .needSplitBoundary(needSplitBoundary)
                     .build();
             result.add(pooledPrompt);
         }

@@ -16,8 +16,8 @@ public class PromptCacheConfig {
     public static int TOTAL_THREAD_COUNT;
     public static int THREAD_RUN_LIMIT;
     public static int LLM_DIVERSIFY_LIMIT = 1;
-    public static int REASON_DIVERSIFY_LIMIT;
-    public static int TREE_DIVERSIFY_LIMIT;
+    public static int REASON_DIVERSIFY_LIMIT = 1;
+    public static int TREE_DIVERSIFY_LIMIT = 1;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
     public static final int COMPLETION_CACHE_SIZE = 10000;
@@ -78,17 +78,18 @@ public class PromptCacheConfig {
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
     public static String MEDUSA_TREE_CATEGORY = "medusa_tree";
-    public static final int QA_SIMILARITY_TOP_K = 10;
-    public static double QA_SIMILARITY_CUTOFF = 0.1;
+    public static final int QA_SIMILARITY_TOP_K = 30;
+    public static double QA_SIMILARITY_CUTOFF = 0.18;
     public static final int TREE_SIMILARITY_TOP_K = 3;
-    public static final double TREE_SIMILARITY_CUTOFF = 0.05;
 
     public static final int SUBSTRING_THRESHOLD = 2;
     public static final int START_CORE_THRESHOLD = 3;
     public static final int ANSWER_CORE_THRESHOLD = 4;
-    public static final double LCS_RATIO_QUESTION = 0.5;
-    public static double LCS_RATIO_PROMPT_INPUT = 0.8;
+    public static double LCS_RATIO_PROMPT_INPUT = 0.6;
     public static int MEDUSA_PRIORITY = 1;
+
+    public static String CACHE_PERSISTENT_PATH = "./medusa_cache";
+    public static int CACHE_PERSISTENT_BATCH_SIZE = 20;
 
     @Getter
     private static Boolean enableLlmDriver = false;
@@ -138,7 +139,11 @@ public class PromptCacheConfig {
         MEDUSA_PRIORITY = config.getPriority() != null ? config.getPriority() : MEDUSA_PRIORITY;
 
         LLM_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() : LLM_DIVERSIFY_LIMIT;
-        REASON_DIVERSIFY_LIMIT = LLM_DIVERSIFY_LIMIT * 2;
-        TREE_DIVERSIFY_LIMIT = LLM_DIVERSIFY_LIMIT * 100;
+        REASON_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 2: REASON_DIVERSIFY_LIMIT;
+        TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 5: LLM_DIVERSIFY_LIMIT;
+
+        QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
+        CACHE_PERSISTENT_PATH = config.getCachePersistentPath() != null ? config.getCachePersistentPath() : CACHE_PERSISTENT_PATH;
+        CACHE_PERSISTENT_BATCH_SIZE = config.getCachePersistentBatchSize() != null ? config.getCachePersistentBatchSize() : CACHE_PERSISTENT_BATCH_SIZE;
     }
 }

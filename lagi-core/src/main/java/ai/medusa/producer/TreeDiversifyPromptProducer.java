@@ -9,7 +9,6 @@ import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.TreeDiversifyNode;
 import ai.medusa.utils.PromptCacheConfig;
-import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LRUCache;
 import ai.vector.VectorStoreService;
@@ -26,7 +25,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
     private static final String MEDUSA_CATEGORY = PromptCacheConfig.MEDUSA_TREE_CATEGORY;
     private static final int TREE_SIMILARITY_TOP_K = PromptCacheConfig.TREE_SIMILARITY_TOP_K;
-    private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.TREE_SIMILARITY_CUTOFF;
+    private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.QA_SIMILARITY_CUTOFF;
     private static final TreeDiversifyDao treeDiversifyDao = new TreeDiversifyDao();
     private static final Logger log = LoggerFactory.getLogger(TreeDiversifyPromptProducer.class);
     private static final LRUCache<PooledPrompt, Integer> diversifyCache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
@@ -110,10 +109,14 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
             if (chatCompletionResult != null) {
                 return;
             }
+            List<IndexSearchData>  indexSearchDataList = null;
+            if (RAG_CONFIG.getEnable()) {
+                indexSearchDataList = searchByContext(diversifiedPromptInput);
+            }
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
-                    .indexSearchData(searchByContext(diversifiedPromptInput))
+                    .indexSearchData(indexSearchDataList)
                     .build();
             result.add(pooledPrompt);
         });
@@ -133,6 +136,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
             allNodeTexts.forEach(node -> {
                 try {
                     if (!vectorExists(node.getId())) {
+                        log.info("load graph node to vector DB node: {}", node.getId());
                         insertVector(node.getId(), node.getText());
                     }
                 } catch (Exception e) {

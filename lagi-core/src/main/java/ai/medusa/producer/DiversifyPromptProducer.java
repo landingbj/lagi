@@ -1,6 +1,8 @@
 package ai.medusa.producer;
 
 import ai.common.pojo.IndexSearchData;
+import ai.config.ContextLoader;
+import ai.config.pojo.RAGFunction;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
@@ -21,6 +23,7 @@ import java.util.concurrent.Semaphore;
 
 @Slf4j
 public abstract class DiversifyPromptProducer extends ConnectedProducerConsumerPipeline<PooledPrompt, PooledPrompt> {
+    protected final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
     private static final LRUCache<ChatCompletionRequest, List<IndexSearchData>> cache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
     private final VectorStoreService vectorStoreService = new VectorStoreService();
 

@@ -23,4 +23,10 @@ public class Medusa {
     @JsonProperty("aheads")
     private Integer aheads;
     private Integer priority;
+    @JsonProperty("qa_similarity_cutoff")
+    private Double qaSimilarityCutoff;
+    @JsonProperty("cache_persistent_path")
+    private String cachePersistentPath;
+    @JsonProperty("cache_persistent_batch_size")
+    private Integer cachePersistentBatchSize;
 }

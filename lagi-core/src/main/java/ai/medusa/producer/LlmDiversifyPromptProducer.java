@@ -11,7 +11,6 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
-import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -29,7 +28,6 @@ import java.util.List;
 public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
-    private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
 
     public LlmDiversifyPromptProducer(int limit) {
         super(limit);
@@ -84,10 +82,12 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
             if (RAG_CONFIG.getEnable()) {
                 indexSearchDataList = searchByContext(diversifiedPromptInput);
             }
+            boolean needSplitBoundary = promptList.size() != 2;
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
                     .indexSearchData(indexSearchDataList)
+                    .needSplitBoundary(needSplitBoundary)
                     .build();
             result.add(pooledPrompt);
         }
