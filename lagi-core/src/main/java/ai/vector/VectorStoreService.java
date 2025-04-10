@@ -106,10 +106,12 @@ public class VectorStoreService {
             docs = fileService.splitChunks(file, tuwen_type);
         } else {
             String content = fileService.getFileContent(file);
-            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, wenben_type)) {
+            if (content==null){
+                docs = fileService.getChunkDocumentScannedPDF(file,512);
+            }else if (QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
                 //Is QA
                 return;
-            } else if (content!=null){
+            } else {
                 if (ChapterExtractorUtil.isChapterDocument(content)) {
                     System.out.println("是章节类文档");
                     docs = ChapterExtractorUtil.getChunkDocument(content, wenben_type);
