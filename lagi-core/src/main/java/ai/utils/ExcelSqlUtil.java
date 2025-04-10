@@ -306,59 +306,61 @@ public class ExcelSqlUtil {
         for (int i = 1; i <= fieldSize; i++) {
             fields.append(", field").append(i);
         }
-        StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
-        for (int i = 1; i < rows.size(); i++) {
-            List<JSONObject> dataRow = rows.get(i);
-            List<String> rowData = new ArrayList<>();
-            String text = "";
-            for (int j = 0; j < dataRow.size(); j++) {
-                JSONObject cell = dataRow.get(j);
-                String cellValue = cell.getStr("cellValue");
+        final int BATCH_SIZE = 1000; // 每批次插入1000条数据
+        for (int batchStart = 0; batchStart < rows.size(); batchStart += BATCH_SIZE) {
+            int batchEnd = Math.min(batchStart + BATCH_SIZE, rows.size());
+            StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
 
-                if (cell.containsKey("isMerge") && cell.getBool("isMerge")) {
-                    // 获取合并单元格的起始和结束行列
-                    int firstRow = cell.getInt("firstRow");
-                    int firstCol = cell.getInt("firstColumn");
-                    // 这里只在合并单元格的起始位置才输出值
-                    if (firstRow == i && firstCol == j) {
-                        rowData.add(cellValue);
+            for (int i = batchStart; i < batchEnd; i++) {
+                List<JSONObject> dataRow = rows.get(i);
+                List<String> rowData = new ArrayList<>();
+                String text = "";
+                for (int j = 0; j < dataRow.size(); j++) {
+                    JSONObject cell = dataRow.get(j);
+                    String cellValue = cell.getStr("cellValue");
+
+                    if (cell.containsKey("isMerge") && cell.getBool("isMerge")) {
+                        int firstRow = cell.getInt("firstRow");
+                        int firstCol = cell.getInt("firstColumn");
+                        if (firstRow == i && firstCol == j) {
+                            rowData.add(cellValue);
+                        } else {
+                            rowData.add("");
+                        }
                     } else {
-                        rowData.add("");
+                        rowData.add(cellValue);
                     }
+                }
+
+                sql.append("(").append(table_info_id);
+
+                for (Integer j = 0; j < fieldSize; j++) {
+                    String value = rowData.size() > j ? rowData.get(j).toString() : null;
+                    if (value == null) {
+                        sql.append(", NULL");
+                    } else {
+                        String cleanValue = value.replace("'", "''");
+                        sql.append(", '").append(cleanValue.trim()).append("'");
+                    }
+                }
+
+                if (i < batchEnd - 1) {
+                    sql.append("), ");
                 } else {
-                    rowData.add(cellValue);
+                    sql.append(");");
                 }
             }
 
-
-            sql.append("(").append(table_info_id);
-
-            for (Integer j = 0; j < fieldSize; j++) {
-                String value = rowData.size()>j ? rowData.get(j).toString() : null;
-                if (value == null) {
-                    sql.append(", NULL");
-                } else {
-                    String cleanValue = value.replace("'", "''");
-                    sql.append(", '").append(cleanValue.trim()).append("'");
-                }
-            }
-
-            if (i < rows.size() - 1) {
-                sql.append("), ");
+            boolean ismysql = false;
+            if (isConnect()) {
+                ismysql = mysqlAdapter.executeUpdate(sql.toString()) <= 0;
             } else {
-                sql.append(");");
+                ismysql = sqliteAdapter.executeUpdate(sql.toString()) <= 0;
+            }
+            if (ismysql) {
+                throw new RuntimeException("插入数据失败");
             }
         }
-        boolean ismysql = false;
-        if (isConnect()){
-            ismysql = mysqlAdapter.executeUpdate(sql.toString())<=0;
-        }else {
-            ismysql = sqliteAdapter.executeUpdate(sql.toString())<=0;
-        }
-        if (ismysql){
-            throw new RuntimeException("插入数据失败");
-        }
-
     }
     public static String getDetails() {
         List<Map<String, Object>> list = new ArrayList<>();
