@@ -157,16 +157,20 @@ public class FileService {
             System.out.println("ocr 未启用");
         }
         List<FileChunkResponse.Document> result = new ArrayList<>();
-        //处理的图片
         List<File> fileList = pdftoImage(file);
         for (int i = 0; i < fileList.size(); i++) {
             FileChunkResponse.Image image = new FileChunkResponse.Image();
-            image.setPath(fileList.get(i).getPath());
+            String normalizedPath = fileList.get(i).getPath().replace("\\", "/");
+            String imagePath = "";
+            int index = normalizedPath.indexOf("/upload");
+            if (index != -1) {
+                imagePath = normalizedPath.substring(index);
+                System.out.println("提取的路径部分: " + imagePath);
+            }
+            image.setPath(imagePath);
             List<FileChunkResponse.Image> list = new ArrayList<>();
             list.add(image);
-
             String content = pdfContent.get(i);
-
             int start = 0;
             while (start < content.length()) {
                 int end = Math.min(start + chunkSize, content.length());
@@ -185,12 +189,13 @@ public class FileService {
         try {
             PDDocument document = PDDocument.load(file);
             PDFRenderer pdfRenderer = new PDFRenderer(document);
-            File outputDir = new File("output_images");
-            if (!outputDir.exists()) {
-                outputDir.mkdirs();
+            String normalizedPath = file.getAbsolutePath().replace("\\", "/");
+            String outputDir = "";
+            int index = normalizedPath.indexOf("/upload");
+            if (index != -1) {
+                outputDir = normalizedPath.substring(0, index + "/upload".length());
             }
-            System.out.println("创建保存图片的目录..."+outputDir.getAbsolutePath());
-
+            System.out.println("创建保存图片的目录..."+outputDir);
             List<String> imageFiles = new ArrayList<>();
             List<File> fileList = new ArrayList<>();
 
@@ -198,13 +203,10 @@ public class FileService {
                 BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(pageIndex, 100);  // 300 DPI的清晰度
                 File outputFile = new File(outputDir, file.getName()+"_page_" + (pageIndex + 1) + ".png");
                 ImageIO.write(bufferedImage, "PNG", outputFile);
-                imageFiles.add(outputFile.getAbsolutePath());
+                imageFiles.add("/upload/"+file.getName()+"_page_" + (pageIndex + 1) + ".png");
                 fileList.add(outputFile);
             }
             document.close();
-            for (String imageFile : imageFiles) {
-                System.out.println("保存的图片文件路径：" + imageFile);
-            }
             return fileList;
         } catch (Exception e) {
             e.printStackTrace();
