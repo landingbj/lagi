@@ -83,17 +83,19 @@ public class VectorStoreService {
             docs = fileService.splitChunks(file, 512);
         } else {
             String content = fileService.getFileContent(file);
-            if (content!=null&&QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
+            if (content==null){
+                docs = fileService.getChunkDocumentScannedPDF(file,512);
+            }else if (QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
                 //Is QA
                 return;
-            } else if (content!=null){
+            } else {
                 if (ChapterExtractorUtil.isChapterDocument(content)) {
                     docs = ChapterExtractorUtil.getChunkDocument(content, 512);
                 } else if (SectionExtractorUtil.isChapterDocument(content)) {
                     docs = SectionExtractorUtil.getChunkDocument(content, 1024);
                 } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
                     docs = OrdinanceExtractorUtil.getChunkDocument(content, 1024);
-            } else {
+                } else {
                     if (WordDocxUtils.checkImagesInWord(file)){
                         FileChunkResponse response = fileService.extractContent(file);
                         if (response != null && response.getStatus().equals("success")) {

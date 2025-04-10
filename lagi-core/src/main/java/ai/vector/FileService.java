@@ -1,12 +1,10 @@
 package ai.vector;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,11 +12,16 @@ import java.util.stream.Collectors;
 import ai.common.pojo.FileChunkResponse;
 import ai.common.pojo.Response;
 import ai.ocr.OcrService;
+import ai.ocr.PdfPageSizeLimitException;
 import ai.utils.*;
 
 import ai.utils.pdf.PdfUtil;
 import ai.utils.word.WordUtils;
 import com.google.gson.Gson;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+
+import javax.imageio.ImageIO;
 
 public class FileService {
     private static final String EXTRACT_CONTENT_URL = AiGlobal.SAAS_URL + "/saas/extractContentWithImage";
@@ -145,6 +148,70 @@ public class FileService {
         return result;
     }
 
+    public static List<FileChunkResponse.Document> getChunkDocumentScannedPDF(File file,Integer chunkSize){
+        OcrService ocrService = new OcrService();
+        List<String> pdfContent = new ArrayList<>();
+        try {
+            pdfContent = ocrService.doc2ocr(file, Arrays.asList("chn", "eng","tai"));
+        }catch (Exception e){
+            System.out.println("ocr 未启用");
+        }
+        List<FileChunkResponse.Document> result = new ArrayList<>();
+        //处理的图片
+        List<File> fileList = pdftoImage(file);
+        for (int i = 0; i < fileList.size(); i++) {
+            FileChunkResponse.Image image = new FileChunkResponse.Image();
+            image.setPath(fileList.get(i).getPath());
+            List<FileChunkResponse.Image> list = new ArrayList<>();
+            list.add(image);
+
+            String content = pdfContent.get(i);
+
+            int start = 0;
+            while (start < content.length()) {
+                int end = Math.min(start + chunkSize, content.length());
+                String text = content.substring(start, end).replaceAll("\\s+", " ");
+                FileChunkResponse.Document doc =  new FileChunkResponse.Document();
+                doc.setText(text);
+                doc.setImages(list);
+                result.add(doc);
+                start = end;
+            }
+        }
+        return result;
+    }
+
+    private static List<File> pdftoImage(File file) {
+        try {
+            PDDocument document = PDDocument.load(file);
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            File outputDir = new File("output_images");
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+            System.out.println("创建保存图片的目录..."+outputDir.getAbsolutePath());
+
+            List<String> imageFiles = new ArrayList<>();
+            List<File> fileList = new ArrayList<>();
+
+            for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
+                BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(pageIndex, 100);  // 300 DPI的清晰度
+                File outputFile = new File(outputDir, file.getName()+"_page_" + (pageIndex + 1) + ".png");
+                ImageIO.write(bufferedImage, "PNG", outputFile);
+                imageFiles.add(outputFile.getAbsolutePath());
+                fileList.add(outputFile);
+            }
+            document.close();
+            for (String imageFile : imageFiles) {
+                System.out.println("保存的图片文件路径：" + imageFile);
+            }
+            return fileList;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public String getFileContent(File file) throws IOException {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         InputStream in = Files.newInputStream(file.toPath());
@@ -159,6 +226,12 @@ public class FileService {
                 content = getString(file.getPath());
                 break;
             case ".pdf":
+                content = PdfUtil.webPdfParse(in);
+                if (content==null||content.trim().isEmpty()){
+                    System.out.println("扫描件");
+                    content = null;
+                    break;
+                }
                 Response response = toMarkdown(file);
                 if (response != null && response.getStatus().equals("success")){
                     content = response.getData();
@@ -168,7 +241,11 @@ public class FileService {
                             .replaceAll("(\r?\n){2,}", "\n")
                             .replaceAll("(?<=\r?\n)\\s*", "")
                             .replaceAll("(?<![.!?;:。！？；：\\s\\d])\r?\n", "");
-                    content = content!=null?removeDirectory(content):content;
+                    if (content != null) {
+                        content = removeDirectory(content);
+                    } else {
+                        System.out.println("扫描件");
+                    }
                 }
                 break;
             case ".xls":
