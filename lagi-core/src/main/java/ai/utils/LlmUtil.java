@@ -1,5 +1,6 @@
 package ai.utils;
 
+import ai.config.ContextLoader;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -16,7 +17,7 @@ public class LlmUtil {
 
     public static ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setModel("qwen-turbo");
+        request.setModel(ContextLoader.configuration.getAgentGeneralConfiguration().getModel());
         List<ChatMessage> chatMessages = new ArrayList<>();
         ChatMessage systemMessage = new ChatMessage();
         systemMessage.setContent(prompt);
@@ -47,7 +48,7 @@ public class LlmUtil {
 
     public static ChatCompletionResult callLLm(String prompt, ChatCompletionRequest req) {
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setModel("qwen-turbo");
+        request.setModel(ContextLoader.configuration.getAgentGeneralConfiguration().getModel());
         List<ChatMessage> chatMessages = new ArrayList<>();
         ChatMessage systemMessage = new ChatMessage();
         systemMessage.setContent(prompt);

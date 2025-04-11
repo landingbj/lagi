@@ -33,6 +33,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private List<FilterConfig> filters;
     @JsonProperty("fine_tune")
     private FineTuneConfig fineTune;
+    @JsonProperty("agent_general_config")
+    private Backend agentGeneralConfiguration;
 
     @Override
     public void init() {
@@ -48,6 +50,11 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Routers.getInstance().register(functions, routers);
         WorkerManager.getInstance().register(workers);
         registerFilter();
+        if(agentGeneralConfiguration == null) {
+            agentGeneralConfiguration = Backend.builder()
+                    .model("qwen-turbo")
+                    .build();
+        }
     }
 
     private void registerFilter() {
