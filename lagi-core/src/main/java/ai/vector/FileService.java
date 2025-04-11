@@ -74,28 +74,15 @@ public class FileService {
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
                   fileType.equals(".gif")||fileType.equals(".bmp")||
                   fileType.equals(".webp")||fileType.equals(".jpg")){
-            return getChunkDocumentImage(result, file, chunkSize);
+            return getChunkDocumentImage(file, chunkSize);
         }else if (fileType.equals(".pptx")||fileType.equals(".ppt")){
             return PptUtil.getChunkDocumentPpt(file, chunkSize);
         }
         String content = getFileContent(file);
-        int start = 0;
-        while (start < content.length()) {
-            int end = Math.min(start + chunkSize, content.length());
-            int lastSentenceEnd = Math.max(content.lastIndexOf('.', end), content.lastIndexOf('\n', end));
-            if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
-                end = lastSentenceEnd + 1;
-            }
-            String text = content.substring(start, end).replaceAll("\\s+", " ");
-            FileChunkResponse.Document doc = new FileChunkResponse.Document();
-            doc.setText(text);
-            result.add(doc);
-            start = end;
-        }
-        return result;
+        return splitContentChunks(chunkSize, content);
     }
 
-    public List<FileChunkResponse.Document> splitContentChunks(String content, int chunkSize) throws IOException {
+    public static List<FileChunkResponse.Document> splitContentChunks(int chunkSize, String content) {
         List<FileChunkResponse.Document> result = new ArrayList<>();
         int start = 0;
         while (start < content.length()) {
@@ -113,7 +100,9 @@ public class FileService {
         return result;
     }
 
-    public static List<FileChunkResponse.Document> getChunkDocumentImage(List<FileChunkResponse.Document> result,File file,Integer chunkSize) {
+
+    public static List<FileChunkResponse.Document> getChunkDocumentImage(File file,Integer chunkSize) {
+        List<FileChunkResponse.Document> result = new ArrayList<>();
         List<String> langList = new ArrayList<>();
         langList.add("chn,eng,tai");
         OcrService ocrService = new OcrService();

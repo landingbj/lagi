@@ -15,6 +15,9 @@ import ai.openai.pojo.ChatMessage;
 import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.impl.BaseVectorStore;
+import ai.vector.loader.DocumentLoader;
+import ai.vector.loader.impl.*;
+import ai.vector.loader.pojo.SplitConfig;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -40,6 +43,7 @@ public class VectorStoreService {
     private BaseVectorStore vectorStore;
     private final FileService fileService = new FileService();
     private static final ExecutorService executor;
+    private Map<String, DocumentLoader> loaderMap = new HashMap<>();
 
     static {
         ThreadPoolManager.registerExecutor("vector-service", new ThreadPoolExecutor(30, 100, 10, TimeUnit.SECONDS,
@@ -57,7 +61,38 @@ public class VectorStoreService {
 
     public VectorStoreService() {
 //        if (LagiGlobal.RAG_ENABLE) {
-            this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
+        this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
+        TxtLoader txtLoader = new TxtLoader();
+        loaderMap.put("txt", txtLoader);
+
+        ExcelLoader excelLoader = new ExcelLoader();
+        loaderMap.put("xls", excelLoader);
+        loaderMap.put("xlsx", excelLoader);
+
+        CsvLoader csvLoader = new CsvLoader();
+        loaderMap.put("csv", csvLoader);
+
+        ImageLoader imageLoader = new ImageLoader();
+        loaderMap.put("jpg", imageLoader);
+        loaderMap.put("jpeg", imageLoader);
+        loaderMap.put("webp", imageLoader);
+        loaderMap.put("png", imageLoader);
+        loaderMap.put("gif", imageLoader);
+        loaderMap.put("bmp", imageLoader);
+
+        DocLoader docLoader = new DocLoader();
+        loaderMap.put("doc", docLoader);
+        loaderMap.put("docx", docLoader);
+
+        PptLoader pptLoader = new PptLoader();
+        loaderMap.put("pptx", pptLoader);
+        loaderMap.put("ppt", pptLoader);
+
+        PdfLoader pdfLoader = new PdfLoader();
+        loaderMap.put("pdf", pdfLoader);
+
+        loaderMap.put("common", docLoader);
+
 //        }
     }
 
@@ -68,8 +103,11 @@ public class VectorStoreService {
         return vectorStore.getConfig();
     }
 
+
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
-        List<FileChunkResponse.Document> docs = new ArrayList<>();
+        // todo 按页切割文件
+
+//        List<FileChunkResponse.Document> docs = new ArrayList<>();
         List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
         Integer wenben_type = 512;
         Integer biaoge_type = 512;
@@ -90,52 +128,11 @@ public class VectorStoreService {
                 }
             }
         }
-        if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx")||file.getName().endsWith(".csv")){
-            if (ExcelSqlUtil.isSql(file.getPath())){
-                if (ExcelSqlUtil.isSqlietConnect()||ExcelSqlUtil.isConnect()){
-                    ExcelSqlUtil.uploadSql(file.getPath(),(String)metadatas.get("filename"),(String)metadatas.get("file_id"));
-                }
-                return;
-            }else {
-                docs = fileService.splitChunks(file, biaoge_type);
-            }
-        } else if (file.getName().endsWith(".jpg") ||file.getName().endsWith(".webp")||
-                file.getName().endsWith(".jpeg") || file.getName().endsWith(".png") ||
-                file.getName().endsWith(".gif") || file.getName().endsWith(".bmp")||
-                file.getName().endsWith(".pptx") ||file.getName().endsWith(".ppt"))  {
-            docs = fileService.splitChunks(file, tuwen_type);
-        } else {
-            String content = fileService.getFileContent(file);
-            if (content==null){
-                docs = fileService.getChunkDocumentScannedPDF(file,512);
-            }else if (QaExtractorUtil.extractQA(content, category, metadatas, 512)) {
-                //Is QA
-                return;
-            } else {
-                if (ChapterExtractorUtil.isChapterDocument(content)) {
-                    System.out.println("是章节类文档");
-                    docs = ChapterExtractorUtil.getChunkDocument(content, wenben_type);
-                } else if (SectionExtractorUtil.isChapterDocument(content, wenben_type)) {
-                    System.out.println("是小节类文档");
-                    docs = SectionExtractorUtil.getChunkDocument(content, wenben_type);
-                } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
-                    System.out.println("是条列类文档");
-                    docs = OrdinanceExtractorUtil.getChunkDocument(content, wenben_type);
-                } else {
-                    if (WordDocxUtils.checkImagesInWord(file)){
-                        FileChunkResponse response = fileService.extractContent(file);
-                        if (response != null && response.getStatus().equals("success")) {
-                            docs = response.getData();
-                        } else {
-                            docs = fileService.splitContentChunks(content, wenben_type);
-                        }
-                    }else {
-                        System.out.println("不包含图片类文档");
-                        docs = fileService.splitContentChunks(content, wenben_type);
-                    }
-                }
-            }
-        }
+
+        String suffix = file.getName().toLowerCase().split("\\.")[1];
+        DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
+
+        List<FileChunkResponse.Document> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
         List<FileInfo> fileList = new ArrayList<>();
 
         String fileName = metadatas.get("filename").toString();
