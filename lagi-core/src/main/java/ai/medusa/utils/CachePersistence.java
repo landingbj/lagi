@@ -33,7 +33,7 @@ public class CachePersistence {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         this.jsonlFilePath = persistenceDirectory + File.separator + "cache_" + timestamp + ".jsonl";
         try {
             File jsonlFile = new File(jsonlFilePath);
