@@ -1,6 +1,5 @@
 package ai.utils;
 
-import ai.vector.DocToHtml;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Picture;
@@ -30,7 +29,7 @@ public class WordToHtmlUtils {
         try {
             FileInputStream fis = new FileInputStream(path);
             if (path.toLowerCase().endsWith(".doc")) {
-                System.out.println(DocToHtml.inputDocPath(path));
+                System.out.println(inputDocPath(path));
             }else if (path.toLowerCase().endsWith(".docx")){
                 parseFile3( path, fis);
             }
