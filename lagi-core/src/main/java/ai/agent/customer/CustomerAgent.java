@@ -4,6 +4,7 @@ import ai.agent.Agent;
 import ai.agent.customer.pojo.*;
 import ai.agent.customer.prompt.Prompt;
 import ai.agent.customer.tools.*;
+import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -42,7 +43,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
 
     private ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setModel("qwen-turbo");
+        request.setModel(ContextLoader.configuration.getAgentGeneralConfiguration().getModel());
         List<ChatMessage> chatMessages = new ArrayList<>();
         ChatMessage systemMessage = new ChatMessage();
         systemMessage.setContent(prompt);

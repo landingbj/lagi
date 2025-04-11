@@ -73,7 +73,6 @@ public class SqliteAdapter {
         Connection con = null;
         try {
             con = DriverManager.getConnection(url);
-            System.out.println("成功连接到 SQLite 数据库");
         } catch (Exception e) {
             e.printStackTrace();
         }

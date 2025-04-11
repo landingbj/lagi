@@ -3,10 +3,7 @@ package ai.utils;
 import ai.common.pojo.FileChunkResponse;
 import org.apache.poi.hslf.usermodel.HSLFSlide;
 import org.apache.poi.hslf.usermodel.HSLFSlideShow;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFShape;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFTextShape;
+import org.apache.poi.xslf.usermodel.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -59,10 +56,7 @@ public class PptUtil {
                     XSLFSlide slide = slides.get(i);
                     StringBuilder textContent = new StringBuilder();
                     for (XSLFShape shape : slide.getShapes()) {
-                        if (shape instanceof XSLFTextShape) {
-                            XSLFTextShape textShape = (XSLFTextShape) shape;
-                            textContent.append(textShape.getText()).append("\n");
-                        }
+                        extractTextFromShape(shape, textContent);
                     }
                     int width = ppt.getPageSize().width;
                     int height = ppt.getPageSize().height;
@@ -90,7 +84,7 @@ public class PptUtil {
                     for (Object shapeObj : slide.getShapes()) {
                         if (shapeObj instanceof org.apache.poi.hslf.usermodel.HSLFTextShape) {
                             org.apache.poi.hslf.usermodel.HSLFTextShape textShape = (org.apache.poi.hslf.usermodel.HSLFTextShape) shapeObj;
-                            textContent.append(textShape.getText()).append("\n");
+                            extractTextFromHSLFShape(textShape, textContent);
                         }
                     }
                     int width = ppt.getPageSize().width;
@@ -101,17 +95,51 @@ public class PptUtil {
                     graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                     graphics.setColor(Color.WHITE);
                     graphics.fillRect(0, 0, width, height);
-                    slide.draw(graphics);
-                    String imagePath = outDir + "/slide_" + (i + 1) + ".png";
-                    ImageIO.write(img, "PNG", new FileOutputStream(imagePath));
-                    String normalizedPath = imagePath.replace("\\", "/");
-                    String basePath = normalizedPath.substring(normalizedPath.indexOf("/upload"));
+                    String basePath = null;
+                    try {
+                        slide.draw(graphics);
+                        String imagePath = outDir + "/slide_" + (i + 1) + ".png";
+                        ImageIO.write(img, "PNG", new FileOutputStream(imagePath));
+                        String normalizedPath = imagePath.replace("\\", "/");
+                        basePath = normalizedPath.substring(normalizedPath.indexOf("/upload"));
+                    } catch (Exception ignored) {
+                    }
                     SlideInfo slideInfo = new SlideInfo(textContent.toString(), basePath);
                     slideInfoList.add(slideInfo);
                 }
             }
         }
         return slideInfoList;
+    }
+
+    private static void extractTextFromShape(XSLFShape shape, StringBuilder textContent) {
+        if (shape instanceof XSLFTextShape) {
+            XSLFTextShape textShape = (XSLFTextShape) shape;
+            String text = textShape.getText();
+            if (text != null && !text.trim().isEmpty()) {
+                textContent.append(text.trim()).append("\n");
+            }
+        } else if (shape instanceof XSLFGroupShape) {
+            XSLFGroupShape groupShape = (XSLFGroupShape) shape;
+            for (XSLFShape childShape : groupShape.getShapes()) {
+                extractTextFromShape(childShape, textContent);
+            }
+        }
+    }
+
+    private static void extractTextFromHSLFShape(org.apache.poi.hslf.usermodel.HSLFShape shape, StringBuilder textContent) {
+        if (shape instanceof org.apache.poi.hslf.usermodel.HSLFTextShape) {
+            org.apache.poi.hslf.usermodel.HSLFTextShape textShape = (org.apache.poi.hslf.usermodel.HSLFTextShape) shape;
+            String text = textShape.getText();
+            if (text != null && !text.trim().isEmpty()) {
+                textContent.append(text.trim()).append("\n");
+            }
+        } else if (shape instanceof org.apache.poi.hslf.usermodel.HSLFGroupShape) {
+            org.apache.poi.hslf.usermodel.HSLFGroupShape groupShape = (org.apache.poi.hslf.usermodel.HSLFGroupShape) shape;
+            for (org.apache.poi.hslf.usermodel.HSLFShape childShape : groupShape.getShapes()) {
+                extractTextFromHSLFShape(childShape, textContent);
+            }
+        }
     }
 
     public static String getPptContent(File file) throws IOException {
@@ -172,17 +200,17 @@ public class PptUtil {
         return result;
     }
     public static void main(String[] args) throws IOException {
-        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\政务数据\\营业前消防安全检查.pptx";
-        List<FileChunkResponse.Document> rr= getChunkDocumentPpt(new File(filePath), 512);
-        for (FileChunkResponse.Document document : rr) {
-            System.out.println(document.getText());
-            System.out.println(document.getImages());
-            System.out.println("------------------------------");
-        }
-//        for (SlideInfo slideInfo : readPpt(filePath)) {
-//            System.out.println(slideInfo.getTextContent().replaceAll("\\n+", "\n"));
-//            System.out.println(slideInfo.getImagePath());
+        String filePath = "C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\upload\\大模型交流_0221.pptx";
+//        List<FileChunkResponse.Document> rr= getChunkDocumentPpt(new File(filePath), 512);
+//        for (FileChunkResponse.Document document : rr) {
+//            System.out.println(document.getText());
+//            System.out.println(document.getImages());
+//            System.out.println("------------------------------");
 //        }
+        for (SlideInfo slideInfo : readPpt(filePath)) {
+            System.out.println(slideInfo.getTextContent().replaceAll("\\n+", "\n"));
+            System.out.println(slideInfo.getImagePath());
+        }
     }
 
 }
