@@ -29,18 +29,18 @@ public class SectionExtractorUtil {
         while (matcher.find()) {
             StringBuilder sb = new StringBuilder();
             if (matcher.start() > lastMatchEnd) {
-                String unmatchedText = document.substring(lastMatchEnd, matcher.start()).replaceAll("\\s+", "");;
+                String unmatchedText = document.substring(lastMatchEnd, matcher.start()).replaceAll("\\s+", " ");;
                 if (unmatchedText.trim().length() > 0){
                     sb.append(unmatchedText);
                 }
             }
-            String sectionContent = matcher.group(0).replaceAll("\\s+", "");
+            String sectionContent = matcher.group(0).replaceAll("\\s+", " ");
             sb.append(sectionContent);
             sections.add(sb);
             lastMatchEnd = matcher.end();
         }
         if (lastMatchEnd < document.length()) {
-            String remainingText = document.substring(lastMatchEnd).replaceAll("\\s+", "");
+            String remainingText = document.substring(lastMatchEnd).replaceAll("\\s+", " ");
             if (remainingText.trim().length() > 0){
                 sections.add(new StringBuilder(remainingText));
             }

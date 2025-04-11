@@ -95,11 +95,15 @@ public class PptUtil {
                     graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                     graphics.setColor(Color.WHITE);
                     graphics.fillRect(0, 0, width, height);
-                    slide.draw(graphics);
-                    String imagePath = outDir + "/slide_" + (i + 1) + ".png";
-                    ImageIO.write(img, "PNG", new FileOutputStream(imagePath));
-                    String normalizedPath = imagePath.replace("\\", "/");
-                    String basePath = normalizedPath.substring(normalizedPath.indexOf("/upload"));
+                    String basePath = null;
+                    try {
+                        slide.draw(graphics);
+                        String imagePath = outDir + "/slide_" + (i + 1) + ".png";
+                        ImageIO.write(img, "PNG", new FileOutputStream(imagePath));
+                        String normalizedPath = imagePath.replace("\\", "/");
+                        basePath = normalizedPath.substring(normalizedPath.indexOf("/upload"));
+                    } catch (Exception ignored) {
+                    }
                     SlideInfo slideInfo = new SlideInfo(textContent.toString(), basePath);
                     slideInfoList.add(slideInfo);
                 }
