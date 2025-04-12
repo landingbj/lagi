@@ -47,6 +47,9 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() != null) {
+            return Collections.emptyList();
+        }
         try {
             return diversifyTree(item);
         } catch (Exception e) {

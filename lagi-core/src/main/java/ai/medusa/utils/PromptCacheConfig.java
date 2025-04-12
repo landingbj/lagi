@@ -20,7 +20,7 @@ public class PromptCacheConfig {
     public static int TREE_DIVERSIFY_LIMIT = 1;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
-    public static final int COMPLETION_CACHE_SIZE = 10000;
+    public static final int COMPLETION_CACHE_SIZE = 100000;
     public static final int RAW_ANSWER_CACHE_SIZE = 10000;
 
     public static final String DIVERSIFY_PROMPT = "### 任务\n任务：以下提供一个提示词，请根据这个提示词推测用户之后可能输入的提示词。结果只返回提示词本身，" +
@@ -140,7 +140,7 @@ public class PromptCacheConfig {
 
         LLM_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() : LLM_DIVERSIFY_LIMIT;
         REASON_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 2: REASON_DIVERSIFY_LIMIT;
-        TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 5: LLM_DIVERSIFY_LIMIT;
+        TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 3: LLM_DIVERSIFY_LIMIT;
 
         QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
         CACHE_PERSISTENT_PATH = config.getCachePersistentPath() != null ? config.getCachePersistentPath() : CACHE_PERSISTENT_PATH;

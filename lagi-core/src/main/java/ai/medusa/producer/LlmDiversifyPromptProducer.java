@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -43,10 +44,15 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() != null) {
+            return Collections.emptyList();
+        }
         try {
             return diversify(item);
         } catch (Exception e) {
-            throw new FailedDiversifyPromptException(item, e);
+//            throw new FailedDiversifyPromptException(item, e);
+            log.error("Failed to diversify prompt: {}", item, e);
+            return Collections.emptyList();
         }
     }
 
@@ -69,7 +75,11 @@ public class LlmDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions diversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
-        for (int i = 0; i < diversifyQuestions.getQuestions().size(); i++) {
+        int size = diversifyQuestions.getQuestions().size();
+        if (size > PromptCacheConfig.LLM_DIVERSIFY_LIMIT) {
+            size = PromptCacheConfig.LLM_DIVERSIFY_LIMIT;
+        }
+        for (int i = 0; i < size; i++) {
             String question = diversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
             promptList.addAll(promptInput.getPromptList());

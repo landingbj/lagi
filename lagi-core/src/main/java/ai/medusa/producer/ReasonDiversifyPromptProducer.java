@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,10 +48,15 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() == null || item.getPromptInput().getReasoningContent().isEmpty()) {
+            return Collections.emptyList();
+        }
         try {
             return diversify(item);
         } catch (Exception e) {
-            throw new FailedDiversifyPromptException(item, e);
+//            throw new FailedDiversifyPromptException(item, e);
+            log.error("Failed to diversify prompt: {}", item, e);
+            return Collections.emptyList();
         }
     }
 
@@ -65,8 +71,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
 
     private Collection<PooledPrompt> getDiversifiedResult(PooledPrompt item) {
         Collection<PooledPrompt> result = new ArrayList<>();
-        ChatCompletionResult reasonCompletionResult = completionsService.completions(getReasonRequest(item));
-        String reasonContent = extractReasonContent(reasonCompletionResult);
+        String reasonContent = item.getPromptInput().getReasoningContent();
         if (reasonContent == null || reasonContent.isEmpty()) {
             return result;
         }
@@ -78,7 +83,11 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions reasonDiversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
-        for (int i = 0; i < reasonDiversifyQuestions.getQuestions().size(); i++) {
+        int size = reasonDiversifyQuestions.getQuestions().size();
+        if (size > PromptCacheConfig.REASON_DIVERSIFY_LIMIT) {
+            size = PromptCacheConfig.REASON_DIVERSIFY_LIMIT;
+        }
+        for (int i = 0; i < size; i++) {
             String question = reasonDiversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
             promptList.addAll(promptInput.getPromptList());

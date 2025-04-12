@@ -104,14 +104,11 @@ public class MedusaService {
     }
 
     public void triggerCachePutAndDiversify(PromptInput promptInput) {
-
-
         CompletableFuture.runAsync(() -> {
             try {
                 Thread.sleep(3000);
             }catch (InterruptedException ignored){}
             if (this.getPromptPool() != null) {
-                this.triggerCachePut(promptInput);
                 this.getPromptPool().put(PooledPrompt.builder()
                         .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
             }
