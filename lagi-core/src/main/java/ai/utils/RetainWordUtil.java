@@ -16,6 +16,9 @@ public class RetainWordUtil {
     }
 
     public static void addWords(List<String> wordList) {
+        if(wordList == null) {
+            return;
+        }
         set.addAll(wordList);
     }
 
