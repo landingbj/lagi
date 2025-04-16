@@ -29,4 +29,6 @@ public class Medusa {
     private String cachePersistentPath;
     @JsonProperty("cache_persistent_batch_size")
     private Integer cachePersistentBatchSize;
+    @JsonProperty("flush")
+    private Boolean flush;
 }

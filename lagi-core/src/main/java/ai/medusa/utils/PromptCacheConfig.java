@@ -77,6 +77,7 @@ public class PromptCacheConfig {
     public static String LOCATE_ALGORITHM = "hash";
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
+    public static boolean MEDUSA_FLUSH = true;
     public static String MEDUSA_TREE_CATEGORY = "medusa_tree";
     public static final int QA_SIMILARITY_TOP_K = 30;
     public static double QA_SIMILARITY_CUTOFF = 0.18;
@@ -145,5 +146,7 @@ public class PromptCacheConfig {
         QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
         CACHE_PERSISTENT_PATH = config.getCachePersistentPath() != null ? config.getCachePersistentPath() : CACHE_PERSISTENT_PATH;
         CACHE_PERSISTENT_BATCH_SIZE = config.getCachePersistentBatchSize() != null ? config.getCachePersistentBatchSize() : CACHE_PERSISTENT_BATCH_SIZE;
+
+        MEDUSA_FLUSH = config.getFlush() != null ? config.getFlush() : MEDUSA_FLUSH;
     }
 }

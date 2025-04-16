@@ -70,18 +70,18 @@ public class PromptCacheTrigger {
     }
 
     public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        triggerWriteCache(promptInput, chatCompletionResult, true);
+        triggerWriteCache(promptInput, chatCompletionResult, true, true);
     }
 
-    public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent) {
-        executorService.execute(() -> writeCache(promptInput, chatCompletionResult, needPersistent));
+    public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
+        executorService.execute(() -> writeCache(promptInput, chatCompletionResult, needPersistent, flush));
     }
 
-    public void writeCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent) {
+    public void writeCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
         String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
 
         if (chatCompletionResult != null) {
-            putCache(newestPrompt, promptInput, chatCompletionResult, needPersistent);
+            putCache(newestPrompt, promptInput, chatCompletionResult, needPersistent, flush);
             return;
         }
 
@@ -98,7 +98,7 @@ public class PromptCacheTrigger {
         // If the prompt list has only one prompt, add the prompt input to the cache.
         // If the prompt list has more than one prompt and the last prompt is not in the prompt cache, add the prompt to the cache.
         if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResultList == null) {
-            putCache(newestPrompt, promptInputWithBoundaries, chatCompletionResult, needPersistent);
+            putCache(newestPrompt, promptInputWithBoundaries, chatCompletionResult, needPersistent, flush);
             return;
         }
 
@@ -108,11 +108,11 @@ public class PromptCacheTrigger {
         }
 
         // If the prompt list has more than one prompt and the last prompt is in the prompt cache, append the prompt to the cache.
-        putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt, needPersistent);
+        putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt, needPersistent, flush);
     }
 
     private synchronized void putCache(PromptInput promptInputWithBoundaries, PromptInput lastPromptInput,
-                                       ChatCompletionResult chatCompletionResult, String newestPrompt, boolean needPersistent) {
+                                       ChatCompletionResult chatCompletionResult, String newestPrompt, boolean needPersistent, boolean flush) {
         String lastPrompt = PromptInputUtil.getLastPrompt(promptInputWithBoundaries);
         List<PromptInput> promptInputList = qaCache.get(lastPrompt);
         if (promptInputList == null || promptInputList.isEmpty()) {
@@ -138,16 +138,18 @@ public class PromptCacheTrigger {
         }
         promptInputs.add(newPromptInput);
 //        qaCache.put(newestPrompt, promptInputList);
-        qaCache.put(newestPrompt, promptInputs);
+        qaCache.put(newestPrompt, promptInputs, flush);
         promptCache.put(newPromptInput, completionResults);
         if (needPersistent) {
             cachePersistence.addItem(new CacheItem(newPromptInput, chatCompletionResult));
         }
-        log.info("current cache size {}, putCache2: {}", promptCache.size(), promptInputs);
+        if (flush) {
+            log.info("current cache size {}, putCache2: {}", promptCache.size(), promptInputs);
+        }
     }
 
     private synchronized void putCache(String newestPrompt, PromptInput promptInputWithBoundaries,
-                                       ChatCompletionResult chatCompletionResult, boolean needPersistent) {
+                                       ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
         List<PromptInput> promptInputList = qaCache.get(newestPrompt);
 
         PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
@@ -155,7 +157,7 @@ public class PromptCacheTrigger {
         if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResults == null) {
            completionResults = promptCache.get(promptInputWithBoundaries);
         } else {
-            putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt, needPersistent);
+            putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt, needPersistent, flush);
             return;
         }
 
@@ -170,12 +172,14 @@ public class PromptCacheTrigger {
         promptInputList.add(promptInputWithBoundaries);
         completionResults.add(chatCompletionResult);
 
-        qaCache.put(newestPrompt, promptInputList);
+        qaCache.put(newestPrompt, promptInputList, flush);
         promptCache.put(promptInputWithBoundaries, completionResults);
         if (needPersistent) {
             cachePersistence.addItem(new CacheItem(promptInputWithBoundaries, chatCompletionResult));
         }
-        log.info("current cache size {}, putCache1: {}", promptCache.size(), promptInputList);
+        if (flush) {
+            log.info("current cache size {}, putCache1: {}", promptCache.size(), promptInputList);
+        }
     }
 
     public PromptInput analyzeChatBoundaries(PromptInput promptInput) {
