@@ -9,8 +9,14 @@ import ai.vector.loader.DocumentLoader;
 import ai.vector.loader.pojo.SplitConfig;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Collections;
@@ -18,7 +24,6 @@ import java.util.List;
 
 @Slf4j
 public class PdfLoader implements DocumentLoader {
-
     // checked
     @Override
     public List<FileChunkResponse.Document> load(String path, SplitConfig splitConfig) {
@@ -31,6 +36,12 @@ public class PdfLoader implements DocumentLoader {
             if (content==null||content.trim().isEmpty()){
                 System.out.println("扫描件");
                 return FileService.getChunkDocumentScannedPDF(file,splitConfig.getChunkSizeForMixUp());
+            }
+            if (hasImages(file)){
+                FileChunkResponse response = fileService.extractContent(file);
+                if (response != null && response.getStatus().equals("success")) {
+                    return response.getData();
+                }
             }
             Response response = fileService.toMarkdown(file);
             if (response != null && response.getStatus().equals("success")){
@@ -47,7 +58,6 @@ public class PdfLoader implements DocumentLoader {
                     return FileService.getChunkDocumentScannedPDF(file,splitConfig.getChunkSizeForMixUp());
                 }
             }
-
             // qa 对
             if (QaExtractorUtil.extractQA(content, splitConfig.getCategory(), splitConfig.getExtra(), splitConfig.getChunkSizeForText())) {
                 return Collections.emptyList();
@@ -60,28 +70,30 @@ public class PdfLoader implements DocumentLoader {
             } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
                 return OrdinanceExtractorUtil.getChunkDocument(content, splitConfig.getChunkSizeForText());
             }else {
-                try {
-                    if (WordDocxUtils.checkImagesInWord(file)){
-                        FileChunkResponse response1 = fileService.extractContent(file);
-                        if (response1 != null && response1.getStatus().equals("success")) {
-                            return response1.getData();
-                        } else {
-                            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
-                        }
-                    }else {
-                        System.out.println("不包含图片类文档");
-                        return fileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
-                    }
-                } catch (Exception e) {
-                    log.error("load doc file error", e);
-                }
-            }
-            if(content!=null) {
-                return FileService.splitContentChunks(splitConfig.getChunkSizeForMixUp(), content);
+                return fileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
             }
         }catch (Exception e) {
             log.error("load pdf file error", e);
         }
         return Collections.emptyList();
+    }
+
+    public static boolean hasImages(File file) {
+        try (PDDocument document = PDDocument.load(file)) {
+            for (PDPage page : document.getPages()) {
+                PDResources resources = page.getResources();
+                for (COSName xObjectName : resources.getXObjectNames()) {
+                    if (resources.isImageXObject(xObjectName)) {
+                        PDImageXObject image = (PDImageXObject) resources.getXObject(xObjectName);
+                        if (image != null) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }
