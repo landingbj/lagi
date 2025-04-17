@@ -28,12 +28,14 @@ import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.schedule.QueueSchedule;
 import ai.llm.service.CompletionsService;
+import ai.llm.service.FreezingService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.llm.utils.LlmAdapterFactory;
 import ai.llm.utils.PriorityLock;
 import ai.llm.utils.SummaryUtil;
 import ai.manager.AgentManager;
+import ai.manager.LlmManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
@@ -492,10 +494,22 @@ public class LlmApiServlet extends BaseServlet {
                 throw new RRException("调用接口失败, 未获取有效结果");
             }
             Agent<ChatCompletionRequest, ChatCompletionResult> finalOutputAgent = outputAgent;
+            if(finalOutputAgent instanceof LocalRagAgent) {
+                List<ILlmAdapter> collect = LlmManager.getInstance().getAdapters().stream().filter(a -> a != null && FreezingService.notFreezingAdapter(a)).collect(Collectors.toList());
+                if(!collect.isEmpty()) {
+                    ModelService modelService = (ModelService) collect.get(0);
+                    finalOutputAgent.getAgentConfig().setName(modelService.getModel());
+                }
+            }
             result.subscribe(
                     data -> {
                         ChatCompletionResult chatCompletionResult = SensitiveWordUtil.filter(data);
-                        ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
+                        ChatCompletionResultWithSource chatCompletionResultWithSource;
+                        if(StrUtil.isNotBlank(chatCompletionResult.getModel())) {
+                            chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
+                        } else {
+                            chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
+                        }
                         BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
                         String msg = gson.toJson(chatCompletionResultWithSource);
                         out.print("data: " + msg + "\n\n");
