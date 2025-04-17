@@ -98,7 +98,7 @@ public class LlmApiServlet extends BaseServlet {
     private final AgentService agentService = new AgentService();
     private final TraceService traceService = new TraceService();
     private static final LRUCache<String, Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>>> agentLRUCache;
-
+    private final IntentService intentService = new VectorIntentServiceImpl();
     private static MedusaMonitor medusaMonitor;
 
     static {
