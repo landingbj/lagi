@@ -7,6 +7,8 @@ import ai.common.pojo.Backend;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.pojo.AgentConfig;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.service.FreezingService;
+import ai.manager.LlmManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.LagiGlobal;
@@ -76,6 +78,20 @@ public class SkillMapUtil {
     }
 
     public static Agent<ChatCompletionRequest, ChatCompletionResult> getHighestPriorityLlm() {
+        String name = highestPriorityLlm.getAgentConfig().getName();
+        ILlmAdapter adapter = LlmManager.getInstance().getAdapter(name);
+        boolean b = FreezingService.notFreezingAdapter(adapter);
+        if(b) {
+            return highestPriorityLlm;
+        } else {
+            List<ILlmAdapter> collect = LlmManager.getInstance().getAdapters().stream().filter(a -> a != null && FreezingService.notFreezingAdapter(a)).collect(Collectors.toList());
+            if(!collect.isEmpty()) {
+                ILlmAdapter adapter1 = collect.get(0);
+                ModelService modelService =  (ModelService) adapter1;
+                String model = modelService.getModel();
+                highestPriorityLlm.getAgentConfig().setName(model);
+            }
+        }
         return highestPriorityLlm;
     }
 
