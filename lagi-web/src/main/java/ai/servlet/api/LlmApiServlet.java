@@ -506,7 +506,7 @@ public class LlmApiServlet extends BaseServlet {
                         ChatCompletionResult chatCompletionResult = SensitiveWordUtil.filter(data);
                         ChatCompletionResultWithSource chatCompletionResultWithSource;
                         if(StrUtil.isNotBlank(chatCompletionResult.getModel())) {
-                            chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
+                            chatCompletionResultWithSource = new ChatCompletionResultWithSource(chatCompletionResult.getModel(), finalOutputAgent.getAgentConfig().getId());
                         } else {
                             chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
                         }

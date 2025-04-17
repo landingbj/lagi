@@ -199,7 +199,7 @@ let promptNavs = [
                 "id": -16,
                 "agentId": "image",
                 "title": "图像生成",
-                "templateIssues": "帮我生成一张海滩风景的图像"
+                "templateIssues": "帮我生成一副海滩风景"
             },
             {
                 "id": -17,
