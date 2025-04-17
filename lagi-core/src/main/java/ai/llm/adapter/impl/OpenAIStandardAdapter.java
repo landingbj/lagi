@@ -55,6 +55,8 @@ public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
         if (request instanceof EnhanceChatCompletionRequest) {
             ((EnhanceChatCompletionRequest) request).setIp(null);
             ((EnhanceChatCompletionRequest) request).setBrowserIp(null);
+            ((EnhanceChatCompletionRequest) request).setUserId(null);
+            request.setSessionId(null);
         }
     }
 }
