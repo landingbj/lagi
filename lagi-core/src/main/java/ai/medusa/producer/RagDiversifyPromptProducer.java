@@ -1,14 +1,15 @@
 package ai.medusa.producer;
 
 import ai.common.pojo.IndexSearchData;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
-import ai.medusa.utils.PromptCacheConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -27,6 +28,9 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() != null) {
+            return Collections.emptyList();
+        }
         try {
             return diversify(item);
         } catch (Exception e) {

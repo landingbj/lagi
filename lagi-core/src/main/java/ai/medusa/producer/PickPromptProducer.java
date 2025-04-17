@@ -1,12 +1,12 @@
 package ai.medusa.producer;
 
-import ai.dao.Pool;
-import ai.medusa.pojo.PooledPrompt;
-import ai.mr.pipeline.DelayedPoolProducer;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+
+import ai.dao.Pool;
+import ai.medusa.pojo.PooledPrompt;
+import ai.mr.pipeline.DelayedPoolProducer;
 
 public class PickPromptProducer extends DelayedPoolProducer<PooledPrompt, PooledPrompt> {
     public PickPromptProducer(Pool<PooledPrompt> pool) {

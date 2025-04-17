@@ -3,13 +3,14 @@ package ai.medusa.producer;
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
 import ai.medusa.dao.TreeDiversifyDao;
+import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.TreeDiversifyNode;
 import ai.medusa.utils.PromptCacheConfig;
-import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.utils.LRUCache;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -24,9 +25,10 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
     private static final String MEDUSA_CATEGORY = PromptCacheConfig.MEDUSA_TREE_CATEGORY;
     private static final int TREE_SIMILARITY_TOP_K = PromptCacheConfig.TREE_SIMILARITY_TOP_K;
-    private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.TREE_SIMILARITY_CUTOFF;
+    private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.QA_SIMILARITY_CUTOFF;
     private static final TreeDiversifyDao treeDiversifyDao = new TreeDiversifyDao();
     private static final Logger log = LoggerFactory.getLogger(TreeDiversifyPromptProducer.class);
+    private static final LRUCache<PooledPrompt, Integer> diversifyCache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
 
     public TreeDiversifyPromptProducer(int limit) {
         super(limit);
@@ -44,13 +46,50 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
     }
 
     @Override
-    public Collection<PooledPrompt> produce(PooledPrompt item) {
-        return diversify(item);
+    public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() != null) {
+            return Collections.emptyList();
+        }
+        try {
+            return diversifyTree(item);
+        } catch (Exception e) {
+            throw new FailedDiversifyPromptException(item, e);
+        }
     }
 
     @Override
     public void consume(PooledPrompt item) throws Exception {
         super.consume(item);
+    }
+
+    public Collection<PooledPrompt> diversifyTree(PooledPrompt item) {
+        Collection<PooledPrompt> result = new ArrayList<>();
+        Collection<PooledPrompt> tempResult = diversify(item);
+        result.addAll(tempResult);
+        int count = 0;
+        while (count < PromptCacheConfig.TREE_DIVERSIFY_LIMIT) {
+            if (tempResult.isEmpty()) {
+                break;
+            }
+            Collection<PooledPrompt> nextInput = new ArrayList<>();
+            for (PooledPrompt pooledPrompt : tempResult) {
+                List<String> promptStrs = pooledPrompt.getPromptInput().getPromptList();
+                promptStrs = promptStrs.subList(promptStrs.size() - 1, promptStrs.size());
+                pooledPrompt.getPromptInput().setPromptList(promptStrs);
+                if (diversifyCache.containsKey(pooledPrompt)) {
+                    log.info("prompt already in cache, skip: {}", pooledPrompt);
+                    continue;
+                }
+                Collection<PooledPrompt> tempPooledPrompt = diversify(pooledPrompt);
+                nextInput.addAll(tempPooledPrompt);
+                result.addAll(tempPooledPrompt);
+                diversifyCache.put(pooledPrompt, 1);
+            }
+            count++;
+            tempResult = nextInput;
+        }
+        log.info("diversify tree prompt is done, {}", item);
+        return result;
     }
 
     public Collection<PooledPrompt> diversify(PooledPrompt item) {
@@ -68,17 +107,19 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
                     .parameter(item.getPromptInput().getParameter())
                     .promptList(predictPromptList)
                     .build();
-            PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
-            diversifiedPromptInput = promptCacheTrigger.analyzeChatBoundaries(diversifiedPromptInput);
             // skill cached
             ChatCompletionResult chatCompletionResult = instance.get(diversifiedPromptInput);
             if (chatCompletionResult != null) {
                 return;
             }
+            List<IndexSearchData>  indexSearchDataList = null;
+            if (RAG_CONFIG.getEnable()) {
+                indexSearchDataList = searchByContext(diversifiedPromptInput);
+            }
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
-                    .indexSearchData(searchByContext(diversifiedPromptInput))
+                    .indexSearchData(indexSearchDataList)
                     .build();
             result.add(pooledPrompt);
         });
@@ -98,6 +139,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
             allNodeTexts.forEach(node -> {
                 try {
                     if (!vectorExists(node.getId())) {
+                        log.info("load graph node to vector DB node: {}", node.getId());
                         insertVector(node.getId(), node.getText());
                     }
                 } catch (Exception e) {

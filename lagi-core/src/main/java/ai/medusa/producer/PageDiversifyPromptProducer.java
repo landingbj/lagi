@@ -39,6 +39,9 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() != null) {
+            return Collections.emptyList();
+        }
         try {
             return diversify(item);
         } catch (Exception e) {
@@ -85,7 +88,7 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
                 result.add(pooledPrompt);
             }
         }
-        log.error("page diversify prompt: {}", result);
+        log.info("page diversify prompt: {}", result);
         return result;
     }
 

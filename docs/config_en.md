@@ -87,10 +87,17 @@ stores:
       priority: 10 # Priority; if this priority exceeds the model's, it will return the default prompt if no context is matched.
       default: "Please give prompt more precisely" # Default prompt returned when no context is matched.
       track: true # Enables document tracking.
-  # Configuration for Medusa's accelerated inference service.
+  # This section is the configuration for Medusa's accelerated inference service. You can prepopulate the cache using the pre-trained `medusa.json`. Set `flush` to true for the first initialization, and later you can set it back to false for routine start/stop operations.
   medusa:
-    enable: true # Determines if it is enabled.
-    algorithm: hash # Algorithm used.
+      enable: true # Whether to enable
+      algorithm: hash,llm,tree # Algorithms to use
+      reason_model: deepseek-r1 # Inference model
+      aheads: 1 # Number of pre-inference requests
+      producer_thread_num: 1 # Number of producer threads
+      consumer_thread_num: 2 # Number of consumer threads
+      cache_persistent_path: medusa_cache # Cache persistence path
+      cache_persistent_batch_size: 2 # Cache persistence batch size
+      flush: true # Whether to reload the cache on every startup
 ```
 
 Middleware Functionality Configuration

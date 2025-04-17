@@ -1,13 +1,13 @@
 package ai.medusa.impl;
 
 import ai.medusa.ICache;
+import ai.medusa.utils.*;
 import ai.medusa.consumer.CompletePromptConsumer;
 import ai.medusa.exception.CompletePromptErrorHandler;
 import ai.medusa.exception.DiversifyPromptErrorHandler;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.producer.*;
-import ai.medusa.utils.*;
 import ai.mr.pipeline.ProducerConsumerPipeline;
 import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.openai.pojo.ChatCompletionResult;
@@ -51,7 +51,12 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
 
     @Override
     public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        new PromptCacheTrigger(this).triggerWriteCache(promptInput, chatCompletionResult);
+        put(promptInput, chatCompletionResult, true, true);
+    }
+
+    @Override
+    public void put(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
+        new PromptCacheTrigger(this).triggerWriteCache(promptInput, chatCompletionResult, needPersistent, flush);
     }
 
     @Override

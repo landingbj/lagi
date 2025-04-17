@@ -6,9 +6,11 @@ import ai.config.ContextLoader;
 import ai.config.GlobalConfigurations;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
+import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.PromptParameter;
+import ai.medusa.utils.CacheLoader;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptPool;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -45,28 +47,47 @@ public class MedusaService {
             try {
                 GlobalConfigurations configuration = ContextLoader.configuration;
                 if(configuration != null && configuration.getStores() != null && configuration.getStores().getMedusa() != null) {
+                    loadCacheFromFile();
                     Medusa medusa = configuration.getStores().getMedusa();
                     String inits = medusa.getInits();
-                    if(!StrUtil.isBlank(inits)) {
-                        String[] prePrompts = inits.split(",");
-                        VectorStoreService vectorStoreService = new VectorStoreService();
-                        for (String prePrompt : prePrompts) {
-                            ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prePrompt);
-                            chatCompletionRequest.setCategory(vectorStoreService.getVectorStoreConfig().getDefaultCategory());
-                            PromptInput promptInput = getPromptInput(chatCompletionRequest);
-                            triggerCachePut(promptInput);
-                            if (getPromptPool() != null) {
-                                getPromptPool().put(PooledPrompt.builder()
-                                        .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
-                            }
-                        }
-                    }
+                    preloadPrompts(inits);
                 }
             }catch (Exception ignored){}
         });
     }
 
+    private void loadCacheFromFile() {
+        if (cache == null) {
+            return;
+        }
+        CacheLoader cacheLoader = CacheLoader.getInstance();
+        cacheLoader.loadFromFiles();
+        List<CacheItem> cacheItems = cacheLoader.getLoadedItems();
+        for (CacheItem cacheItem : cacheItems) {
+            PromptInput promptInput = cacheItem.getPromptInput();
+            ChatCompletionResult chatCompletionRequest = cacheItem.getChatCompletionResult();
+            cache.put(promptInput, chatCompletionRequest, false, PromptCacheConfig.MEDUSA_FLUSH);
+        }
+        cacheLoader.clearLoadedItems();
+    }
 
+    private void preloadPrompts(String inits) {
+        if(!StrUtil.isBlank(inits)) {
+            String[] prePrompts = inits.split(",");
+            VectorStoreService vectorStoreService = new VectorStoreService();
+            for (String prePrompt : prePrompts) {
+                prePrompt = prePrompt.trim();
+                ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prePrompt);
+                chatCompletionRequest.setCategory(vectorStoreService.getVectorStoreConfig().getDefaultCategory());
+                PromptInput promptInput = getPromptInput(chatCompletionRequest);
+                triggerCachePut(promptInput);
+                if (getPromptPool() != null) {
+                    getPromptPool().put(PooledPrompt.builder()
+                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                }
+            }
+        }
+    }
 
     public ChatCompletionResult get(PromptInput promptInput) {
         if (cache == null) {
@@ -83,14 +104,11 @@ public class MedusaService {
     }
 
     public void triggerCachePutAndDiversify(PromptInput promptInput) {
-
-
         CompletableFuture.runAsync(() -> {
             try {
                 Thread.sleep(3000);
             }catch (InterruptedException ignored){}
             if (this.getPromptPool() != null) {
-                this.triggerCachePut(promptInput);
                 this.getPromptPool().put(PooledPrompt.builder()
                         .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
             }
