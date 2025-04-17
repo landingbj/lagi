@@ -9581,7 +9581,7 @@ code[class*=language-],
 pre[class*=language-] {
     word-wrap: normal;
     background: none;
-    color: #fff;
+    color: #000000;
     -webkit-hyphens: none;
     hyphens: none;
     line-height: 1.5;

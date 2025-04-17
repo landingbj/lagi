@@ -5,13 +5,6 @@ window.finger = null;
 
 
 window.onload = function () {
-    window.category = getCookie("category");
-    var categoryTmp = window.category;
-    if (categoryTmp === "" || categoryTmp === undefined) {
-        getCategory("");
-    } else {
-        getCategory(categoryTmp);
-    }
     
     initHelloPage();
     loadTheme();
@@ -30,6 +23,8 @@ window.onload = function () {
         window.finger = murmur;
     })
 }
+
+
 
 
 function setCookie(cname, cvalue, exdays) {
@@ -58,27 +53,7 @@ function generateUUID() {
     });
 }
 
-function getCategory(currentCategory) {
-    $.ajax({
-        type: "GET",
-        url: "user/getRandomCategory?currentCategory=" + currentCategory,
-        success: function (res) {
-            var category = 'temp';
-            if (res.status === 'success') {
-                category = res.data.category;
-                setCookie("category", category, 180);
-            } else {
-                setCookie("category", category, 1);
-            }
-            window.category = category;
-        },
-        error: function (res) {
-            var category = 'temp';
-            setCookie("category", category, 1);
-            window.category = category;
-        }
-    });
-}
+
 
 // *******************************事件绑定 结束*****************************************************
 

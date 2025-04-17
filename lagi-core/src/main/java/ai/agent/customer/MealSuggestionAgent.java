@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 public class MealSuggestionAgent extends CustomerAgent {
     public MealSuggestionAgent(AgentConfig agentConfig) {
         super(agentConfig);
-        MealSuggestionTool mealSuggestionTool = new MealSuggestionTool();
+        MealSuggestionTool mealSuggestionTool = new MealSuggestionTool(agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(mealSuggestionTool.getToolInfo(), finishTool.getToolInfo());
     }

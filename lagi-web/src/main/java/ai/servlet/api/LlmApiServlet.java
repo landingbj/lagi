@@ -62,6 +62,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,7 +316,7 @@ public class LlmApiServlet extends BaseServlet {
 
     private ChatCompletionResultWithSource convertResponse(String source,  String response) {
         String format = StrUtil.format("{\"source\":\"{}\",  \"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", source, response);
-        return JSONUtil.toBean(format, ChatCompletionResultWithSource.class);
+        return new Gson().fromJson(format, ChatCompletionResultWithSource.class);
     }
 
     private void convert2streamAndOutput(String firstAnswer, HttpServletRequest req, HttpServletResponse resp, ChatCompletionResult chatCompletionResult) throws IOException {
@@ -326,11 +327,11 @@ public class LlmApiServlet extends BaseServlet {
         if(chatCompletionResult instanceof ChatCompletionResultWithSource) {
             source = ((ChatCompletionResultWithSource) chatCompletionResult).getSource();
         }
+        firstAnswer = firstAnswer.replaceAll("\n", "   \n");
         for (int i = 0; i < firstAnswer.length(); i += length) {
             int end = Math.min(i + length, firstAnswer.length());
             try {
                 String substring = firstAnswer.substring(i, end);
-                substring = substring.replaceAll("\n", "<br/>");
                 ChatCompletionResult result = convertResponse(source, substring);
                 ChatCompletionResult filter = SensitiveWordUtil.filter(result);
                 String msg = gson.toJson(filter);
@@ -344,8 +345,18 @@ public class LlmApiServlet extends BaseServlet {
                 logger.error("produce stream", ignored);
             }
         }
+        loaderWebPic2Local(req, chatCompletionResult);
         chatCompletionResult.getChoices().get(0).getMessage().setContent("");
         out.print("data: " + gson.toJson(chatCompletionResult) + "\n\n");
+
+
+        out.flush();
+        out.print("data: " + "[DONE]" + "\n\n");
+        out.flush();
+        out.close();
+    }
+
+    private void loaderWebPic2Local(HttpServletRequest req, ChatCompletionResult chatCompletionResult) {
         try {
             List<String> imageList = chatCompletionResult.getChoices().get(0).getMessage().getImageList();
             if(imageList != null && !imageList.isEmpty()) {
@@ -356,7 +367,7 @@ public class LlmApiServlet extends BaseServlet {
                     file.mkdirs();
                 }
                 imageList = imageList.stream().map(image -> {
-                    WhisperResponse whisperResponse = DownloadUtils.downloadFile(image, ".jpeg", filePath);
+                    WhisperResponse whisperResponse = DownloadUtils.downloadFile(image, "jpeg", filePath);
                     return "static/images/" +  whisperResponse.getMsg();
                 }).collect(Collectors.toList());
                 chatCompletionResult.getChoices().get(0).getMessage().setImageList(imageList);
@@ -364,11 +375,6 @@ public class LlmApiServlet extends BaseServlet {
         } catch (Exception ignored) {
 
         }
-
-        out.flush();
-        out.print("data: " + "[DONE]" + "\n\n");
-        out.flush();
-        out.close();
     }
 
     private List<Agent<ChatCompletionRequest, ChatCompletionResult>> getAllAgents(LLmRequest llmRequest, String uri) throws IOException {
@@ -411,11 +417,15 @@ public class LlmApiServlet extends BaseServlet {
         PrintWriter out = resp.getWriter();
         String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
-        String invoke = SummaryUtil.invoke(llmRequest);
-        logger.info("Summary: {}", invoke);
+        long count = llmRequest.getMessages().stream().filter(message -> message.getRole().equals("user")).count();
+        if(count > 1) {
+            String invoke = SummaryUtil.invoke(llmRequest);
+            logger.info("Summary: {}", invoke);
+        }
         IntentResult intentResult = intentService.detectIntent(llmRequest);
         logger.info("intentResult: {}", intentResult);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
+
         // continue : get lastAgent
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
             Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair = agentLRUCache.get(llmRequest.getSessionId());
@@ -564,6 +574,7 @@ public class LlmApiServlet extends BaseServlet {
         }
         ChatCompletionResultWithSource resultWithSource = new ChatCompletionResultWithSource(outputAgent.getAgentConfig().getName(), outputAgent.getAgentConfig().getId());
         BeanUtil.copyProperties(result, resultWithSource);
+        loaderWebPic2Local(req, resultWithSource);
         responsePrint(resp, toJson(resultWithSource));
 
         if (outputAgent instanceof LocalRagAgent) {

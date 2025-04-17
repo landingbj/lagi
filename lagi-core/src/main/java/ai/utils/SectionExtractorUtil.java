@@ -74,7 +74,7 @@ public class SectionExtractorUtil {
                     section.setLength(0);
                 }
                 if (section.length()>0 && (section.length()+section1.length()) <= maxLength){
-                    section1.append(section+"/n");
+                    section1.append(section).append("\n");
                 }else {
                     if (section1.length() > 0) {
                         result.add(section1.toString().trim());

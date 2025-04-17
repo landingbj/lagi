@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
@@ -97,9 +99,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             ChatCompletionResult result = callLLm(prompt, history, user_msg);
             System.out.println("结束调用大模型, 耗时：" + (System.currentTimeMillis() - start));
             String answer = result.getChoices().get(0).getMessage().getContent();
-            if(answer.startsWith("json")) {
-                answer = answer.replace("json", "");
-            }
+            answer = extractJson(answer);
 //            System.out.println(agentConfig.getName() + "调用结果：" + answer);
             ResponseTemplate responseTemplate;
             try {
@@ -195,4 +195,14 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         return null;
     }
 
+
+
+    public static String extractJson(String input) {
+        Pattern pattern = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(input);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
+    }
 }

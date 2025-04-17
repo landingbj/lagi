@@ -21,6 +21,7 @@ import ai.sevice.CookieService;
 import ai.utils.MigrateGlobal;
 import ai.utils.ValidateCodeCreator;
 import ai.vector.VectorStoreService;
+import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 
 import ai.common.pojo.Configuration;
@@ -151,6 +152,7 @@ public class UserServlet extends BaseServlet {
     private void getRandomCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         String currentCategory = req.getParameter("currentCategory");
+        String userId = req.getParameter("userId");
         JsonObject data = new JsonObject();
         String category;
         VectorStoreConfig vectorStoreConfig = new VectorStoreService().getVectorStoreConfig();
@@ -165,6 +167,9 @@ public class UserServlet extends BaseServlet {
             } else {
                 category = currentCategory;
             }
+        }
+        if(StrUtil.isNotBlank(userId)) {
+            category = category + "_" + userId;
         }
         data.addProperty("category", category);
         Map<String, Object> map = new HashMap<>();

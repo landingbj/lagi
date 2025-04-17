@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    authLoginCookie();
+
     document.getElementById('login-form').addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             submitLogin();
@@ -10,6 +10,13 @@ $(document).ready(function () {
             submitRegister();
         }
     });
+
+    // 同步
+    authLoginCookie();
+    // 获取category
+    getCategory();
+    
+    
 });
 
 document.addEventListener('click', function (event) {
@@ -113,6 +120,7 @@ function authLoginCookie() {
     if (auth) {
         $.ajax({
             type: "POST",
+            async: false,
             contentType: "application/json;charset=utf-8",
             url: "/user/authLoginCookie",
             data: JSON.stringify({"cookieValue": auth}),
@@ -129,6 +137,40 @@ function authLoginCookie() {
 }
 
 
+function getCategory() {
+    window.category = null;
+    let categoryTmp = window.category;
+    if (categoryTmp === "" || categoryTmp === undefined) {
+        currentCategory = "";
+    } else {
+        currentCategory = categoryTmp;
+    }
+    let url = "user/getRandomCategory?currentCategory=" + currentCategory;
+    const auth = getCookie('lagi-auth');
+    if(auth) {
+        url +="&userId=" + getCookie('userId');
+    }
+    $.ajax({
+        type: "GET",
+        contentType: "application/json;charset=utf-8",
+        url: url,
+        success: function (res) {
+            let category = 'temp';
+            if (res.status === 'success') {
+                category = res.data.category;
+                // setCookie("category", category, 180);
+            } else {
+                // setCookie("category", category, 1);
+            }
+            window.category = category;
+        },
+        error: function (res) {
+            let category = 'temp';
+            // setCookie("category", category, 1);
+            window.category = category;
+        }
+    });
+}
 
 
 function submitLogin() {

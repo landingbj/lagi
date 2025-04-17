@@ -16,6 +16,7 @@ import java.util.Map;
 public class LotteryResultsTool extends AbstractTool {
 
     private static final String API_ADDRESS = "https://api.pearktrue.cn/api/lottery/";
+//    https://api.pearktrue.cn/api/lottery/?get=ssq
 
     public LotteryResultsTool() {
         init();
@@ -27,10 +28,10 @@ public class LotteryResultsTool extends AbstractTool {
                 .description("通过API查询彩票结果")
                 .args(java.util.Arrays.asList(
                         ToolArg.builder()
-                                .name("get").type("string").description("彩票类型,包括（快乐8、双色球、大乐透、福彩3D、排列3、排列5、七乐彩、7星彩、胜负彩、进球彩、半全场）,彩票的缩写（kl8、ssq、dlt、fc3d、pl3、pl5、qlc、qxc、sfc、jqc、bqc）")
+                                .name("type").type("string").description("彩票类型的缩写形式, 彩票全程缩写对应关系如下 :\n 快乐8:kl8\n双色球:ssq\n大乐透:dlt\n福彩3D:fc3d\n排列3:pl3\n排列5:pl5\n七乐彩:qlc\n7星彩:qxc\n胜负彩:sfc\n、进球彩:jqc\n半全场:bqc")
                                 .build(),
                         ToolArg.builder()
-                                .name("num").type("int").description("查询天数，默认为30")
+                                .name("num").type("int").description("查询天数，默认为1")
                                 .build()))
                 .build();
         register(this);
@@ -70,21 +71,24 @@ public class LotteryResultsTool extends AbstractTool {
         }
 
         StringBuilder resultBuilder = new StringBuilder();
+        resultBuilder.append("彩票开奖结果如下：\n");
+        resultBuilder.append("|期号").append("|开奖时间").append("|销售金额").append("|中奖号码").append("|追加号码|").append(" \n");
+        resultBuilder.append("|-----|-----|-----|-----|-----| \n");
         for (Map<String, String> result : results) {
-            resultBuilder.append("期号: ").append(result.get("issue")).append("\n")
-                    .append("开奖时间: ").append(result.get("opentime")).append("\n")
-                    .append("销售金额: ").append(result.get("salemoney")).append("\n")
-                    .append("中奖号码: ").append(result.get("drawnumber")).append("\n")
-                    .append("追加号码: ").append(result.get("trailnumber")).append("\n\n");
+            resultBuilder.append("|").append(result.get("issue"))
+                    .append("|").append(result.get("opentime"))
+                    .append("|").append(result.get("salemoney"))
+                    .append("|").append(result.get("drawnumber"))
+                    .append("|").append(result.get("trailnumber"))
+                    .append("| \n");
         }
-
         return resultBuilder.toString();
     }
 
     @Override
     public String apply(Map<String, Object> args) {
-        String lotteryType = (String) args.get("get");
-        int numDays = args.containsKey("num") ? (int) args.get("num") : 30;
+        String lotteryType = (String) args.get("type");
+        int numDays = args.containsKey("num") ? ((Double)args.get("num")).intValue() : 30;
         return getLotteryResults(lotteryType, numDays);
     }
 

@@ -18,6 +18,9 @@ public class PriorityWordUtil  {
     }
 
     public static void addWords(List<String> wordList) {
+        if(wordList == null) {
+            return;
+        }
         ahoCorasick.addWords(wordList);
     }
 

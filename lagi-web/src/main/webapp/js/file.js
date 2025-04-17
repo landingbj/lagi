@@ -1,5 +1,5 @@
 function loadUploadFileList(pageNumber) {
-    fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&pageSize=10`)
+    fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&category=${window.category}&pageSize=10`)
     .then(response => {
         if(response.status == 200) {
             return response.json();

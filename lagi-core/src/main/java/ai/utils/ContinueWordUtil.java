@@ -17,6 +17,9 @@ public class ContinueWordUtil {
     }
 
     public static void addWords(List<String> wordList) {
+        if(wordList == null) {
+            return;
+        }
         patterns.addAll(wordList);
     }
 

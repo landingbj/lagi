@@ -1258,12 +1258,12 @@
     <script src="js/chat.js?ver=${initParam.version}"></script>
     <script src="js/conversations.js?ver=${initParam.version}"></script>
     <script src="js/nav.js?ver=${initParam.version}"></script>
+    <script src="js/login.js?ver=${initParam.version}"></script>
     <script src="js/index.js?ver=${initParam.version}"></script>
     <script src="js/self.js?ver=${initParam.version}"></script>
     <script src="js/query.js?ver=${initParam.version}"></script>
     <script src="js/ball.js?ver=${initParam.version}"></script>
     <script src="js/agent.js?ver=${initParam.version}"></script>
-    <script src="js/login.js?ver=${initParam.version}"></script>
     <script src="js/model.js?ver=${initParam.version}"></script>
     <script src="js/vector_settings.js?ver=${initParam.version}"></script>
   </body>

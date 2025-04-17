@@ -17,7 +17,10 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class HistoryInTodayTool extends AbstractTool {
     // doc https://api.aa1.cn/doc/baike.html
-    private static final String API_ADDRESS = "https://zj.v.api.aa1.cn/api/bk/?num=5&type=json";
+//    private static final String API_ADDRESS = "https://zj.v.api.aa1.cn/api/bk/?num=5&type=json";
+
+//   doc https://www.free-api.com/doc/72
+    private static final String API_ADDRESS = "https://api.asilu.com/today";
     private String token = "";
 
     public HistoryInTodayTool() {
@@ -40,8 +43,6 @@ public class HistoryInTodayTool extends AbstractTool {
 
     private String search() {
         Map<String, String> params = new HashMap<>();
-        params.put("type", "json");
-        params.put("num", "1");
         Gson gson = new Gson();
         String post = ApiInvokeUtil.get(API_ADDRESS, params, null, 15, TimeUnit.SECONDS);
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
@@ -52,8 +53,12 @@ public class HistoryInTodayTool extends AbstractTool {
         if(((Double)map.get("code")).intValue() != 200) {
             return "抱歉历史上今天的事件失败";
         }
-        List<String> data  = (List<String>)map.get("content");
-        return data.toString();
+        List<Map<String, Object>> data  = (List<Map<String, Object>>)map.get("data");
+        StringBuilder sb = new StringBuilder();
+        data.forEach(item -> {
+            sb.append(item.get("year")).append("年:").append(item.get("title")).append("\n");
+        });
+        return sb.toString();
     }
 
 

@@ -675,10 +675,11 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                 }
                 // console.log("content:", chatMessage);
                 sourceContent  +=  chatMessage.content;
-                let temp = sourceContent.replaceAll(/(\n)+/g, '<br/>');
-                temp = temp.replaceAll(/ /g, '&nbsp;');
-                temp = temp.replaceAll(/<\/?code>/g, '');
+                let temp = sourceContent;
                 temp = marked.parse(temp);
+                // temp = temp.replaceAll(/ /g, '&nbsp;');
+                // temp = temp.replaceAll(/<\/?code>/g, '');
+                // temp = temp .replaceAll(/(\n)+/g, '<br/>');
                 if(temp.includes(THINK_TEMPLATE_START)) {
                     temp = temp.replaceAll(THINK_TEMPLATE_START, THINK_RENDER_START);
                     if(!temp.includes(THINK_TEMPLATE_END)) {
@@ -794,6 +795,9 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                 if (res.code !== 0) {
                     console.log(res);
                     context_jq.apppend(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
+                    return;
+                }
+                if(!context_jq) {
                     return;
                 }
                 let data = res.data;
