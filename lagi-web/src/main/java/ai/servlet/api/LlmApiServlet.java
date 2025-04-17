@@ -89,7 +89,7 @@ public class LlmApiServlet extends BaseServlet {
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
-    private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private static final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
     private Boolean RAG_ENABLE = null;
     private Boolean MEDUSA_ENABLE = null;
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
@@ -99,12 +99,13 @@ public class LlmApiServlet extends BaseServlet {
     private final TraceService traceService = new TraceService();
     private static final LRUCache<String, Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>>> agentLRUCache;
 
-    private final IntentService intentService = new VectorIntentServiceImpl();
-
-//    private final ManagerDao managerDao = new ManagerDao();
+    private static MedusaMonitor medusaMonitor;
 
     static {
         agentLRUCache = new LRUCache<>(1000);
+        if (MEDUSA_CONFIG.getEnable()) {
+            medusaMonitor = MedusaMonitor.getInstance();
+        }
         VectorCacheLoader.load();
     }
 
@@ -716,7 +717,9 @@ public class LlmApiServlet extends BaseServlet {
                     CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
                     addChunkIds(result, context);
                 }
-                medusaMonitor.put(medusaService.getPromptInput(chatCompletionRequest), result);
+                if (medusaMonitor != null) {
+                    medusaMonitor.put(medusaService.getPromptInput(chatCompletionRequest), result);
+                }
                 responsePrint(resp, toJson(result));
             } catch (RRException e) {
                 resp.setStatus(e.getCode());
@@ -818,8 +821,6 @@ public class LlmApiServlet extends BaseServlet {
         return medusaRequest;
     }
 
-    private static final MedusaMonitor medusaMonitor = MedusaMonitor.getInstance();
-
     private void streamOutPrint(PromptInput promptInput, Observable<ChatCompletionResult> observable, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out) {
         final ChatCompletionResult[] lastResult = {null};
         String key = UUID.randomUUID().toString();
@@ -830,7 +831,7 @@ public class LlmApiServlet extends BaseServlet {
                     String msg = gson.toJson(filter);
                     out.print("data: " + msg + "\n\n");
                     out.flush();
-                    if (promptInput != null && filter != null) {
+                    if (medusaMonitor != null && promptInput != null && filter != null) {
                         medusaMonitor.put(key, new CacheItem(promptInput, filter));
                     }
                 },
@@ -845,7 +846,7 @@ public class LlmApiServlet extends BaseServlet {
                     extracted(lastResult,indexSearchDataList,context, out);
                     out.flush();
                     out.close();
-                    if (promptInput != null && lastResult[0] != null) {
+                    if (medusaMonitor != null && promptInput != null && lastResult[0] != null) {
                         medusaMonitor.put(key, new CacheItem(promptInput, lastResult[0]));
                         medusaMonitor.finish(key);
                     }
