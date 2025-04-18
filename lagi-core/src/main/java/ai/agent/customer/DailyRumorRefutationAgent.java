@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 public class DailyRumorRefutationAgent extends CustomerAgent {
     public DailyRumorRefutationAgent(AgentConfig agentConfig) {
         super(agentConfig);
-        DailyRumorRefutationTool dailyRumorRefutationTool = new DailyRumorRefutationTool();
+        DailyRumorRefutationTool dailyRumorRefutationTool = new DailyRumorRefutationTool(agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(dailyRumorRefutationTool.getToolInfo(), finishTool.getToolInfo());
     }

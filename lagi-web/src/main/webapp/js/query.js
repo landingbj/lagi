@@ -649,7 +649,7 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
             for (let chunk of chunkArray) {
                 if (chunk === "[DONE]") {
                     CONVERSATION_CONTEXT.push({"role": "user", "content": question});
-                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": sourceContent});
                     flag = false;
                     break;
                 }
@@ -709,6 +709,7 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
 
     generateStream(paras).then(r => {
         let lastAnswer = CONVERSATION_CONTEXT[CONVERSATION_CONTEXT.length - 1]["content"]
+        
         txtTovoice(lastAnswer, "default");
         enableQueryBtn();
         querying = false;

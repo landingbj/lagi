@@ -428,7 +428,7 @@ public class LlmApiServlet extends BaseServlet {
         IntentResult intentResult = intentService.detectIntent(llmRequest);
         logger.info("intentResult: {}", intentResult);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
-
+        
         // continue : get lastAgent
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
             Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair = agentLRUCache.get(llmRequest.getSessionId());

@@ -52,16 +52,21 @@ public class FoodCalorieTool extends AbstractTool {
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> map = gson.fromJson(post, type);
         if (map == null) {
-            return "查询失败";
+            return "查询失败, 可能因为查询次数限制";
         }
-        Object o = map.get("data");
-        List<List<Map<String, String>>> listOfMaps = (List<List<Map<String, String>>>) o;
-        Map<String, String> map1 = listOfMaps.get(0).get(0);
-        map1.put("food", map1.get("name"));
-        map1.put("热量/卡路里", map1.get("calorie"));
-        map1.remove("name");
-        map1.remove("calorie");
-        return gson.toJson(map1);
+
+        Map<String, Object> o = (Map<String, Object>)map.get("data");
+        List<Map<String, String>> listOfMaps = (List<Map<String, String>>) o.get("lists");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("|食物名称|热量/卡路里|  \n");
+        stringBuilder.append("|----|----|  \n");
+        listOfMaps.forEach(map1 -> {
+            String name = (String) map1.get("name");
+            String calorie = (String) map1.get("calorie");
+            stringBuilder.append("|").append(name).append("|").append(calorie).append("|  \n");
+        });
+
+        return stringBuilder.toString();
     }
 
 

@@ -13,24 +13,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Setter
 public class DailyRumorRefutationTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.pearktrue.cn/api/zhihu/recommend/";
+//    private static final String API_ADDRESS = "https://api.pearktrue.cn/api/zhihu/recommend/";
 
-    public DailyRumorRefutationTool() {
+    private static final String API_ADDRESS = "https://api.istero.com/resource/zhihu/feeds/essence";
+
+    private String token;
+
+    public DailyRumorRefutationTool(String token) {
         init();
+        this.token = token;
     }
 
     private void init() {
         name = "daily_rumor_refutation";
         toolInfo = ToolInfo.builder().name("daily_rumor_refutation")
                 .description("这是一个获取每日辟谣前线内容的工具，帮助用户查看最新的辟谣新闻")
-                .args(Lists.newArrayList(
-                        ToolArg.builder()
-                                .name("time").type("string").description("可选，获取指定时间的辟谣新闻")
-                                .build()))
+                .args(Lists.newArrayList())
                 .build();
         register(this);
     }
@@ -38,6 +41,9 @@ public class DailyRumorRefutationTool extends AbstractTool {
     public String getDailyRumorRefutation() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
+        if(token != null) {
+            headers.put("Authorization", "Bearer " + token);
+        }
         Map<String, String> queryParams = null;
         String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 15, TimeUnit.SECONDS);
 
@@ -59,9 +65,10 @@ public class DailyRumorRefutationTool extends AbstractTool {
         }
 
         StringBuilder result = new StringBuilder("今日辟谣新闻:\n");
+        dataList = dataList.stream().limit(1).collect(Collectors.toList());
         for (Map<String, Object> data : dataList) {
             String title = (String) data.get("title");
-            String text = (String) data.get("text");
+            String text = (String) data.getOrDefault("text", data.get("excerpt"));
             String url = (String) data.get("url");
             result.append("\n标题: ").append(title)
                   .append("\n内容: ").append(text)
@@ -78,7 +85,7 @@ public class DailyRumorRefutationTool extends AbstractTool {
     }
 
     public static void main(String[] args) {
-        DailyRumorRefutationTool tool = new DailyRumorRefutationTool();
+        DailyRumorRefutationTool tool = new DailyRumorRefutationTool("a");
         String result = tool.getDailyRumorRefutation();
         System.out.println(result);
     }

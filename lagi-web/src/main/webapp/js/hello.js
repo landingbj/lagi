@@ -261,7 +261,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
 
     if(width == 300 && height == 120) {
         line1height = 16;
-        line2height = 64;
+        line2height = 48;
         line3height = 16;
     }else if(width == 150 && height == 60) {
         line1height = 8;

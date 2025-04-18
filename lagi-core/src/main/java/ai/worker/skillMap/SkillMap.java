@@ -360,6 +360,7 @@ public class SkillMap {
         for (PickAgent pickAgent : pickAgents) {
             stringBuilder.append(StrUtil.format("{\"id\": {}, \"describe\": \"{}\"},\n", pickAgent.getId(), pickAgent.getDescribe()));
         }
+        stringBuilder.append("{\"id\": 0, \"describe\": \"{通用功能智能体,能处理所有问题但专业度不高}\"},\n");
         stringBuilder.append("]\n");
         String agents = stringBuilder.toString();
         for (int i = 0;i < maxTry; i++) {
@@ -372,6 +373,7 @@ public class SkillMap {
                 if(pickAgent == null) {
                     return Collections.emptyList();
                 }
+                pickAgent = pickAgent.stream().filter(p-> p.getId() != 0).collect(Collectors.toList());
                 return pickAgent;
             } catch (Exception e) {
             }

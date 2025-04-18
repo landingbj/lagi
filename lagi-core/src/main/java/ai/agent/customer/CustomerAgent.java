@@ -67,7 +67,7 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
         userMessage.setRole("user");
         userMessage.setContent(userMsg);
         chatMessages.add(userMessage);
-        request.setMax_tokens(1024);
+        request.setMax_tokens(2048);
         request.setTemperature(0);
         request.setMessages(chatMessages);
         request.setStream(false);

@@ -139,13 +139,13 @@ let promptNavs = [
                 "id": -6,
                 "agentId": "yuanQi",
                 "title": "元器助手",
-                "templateIssues": "这款电子元器件的规格是什么?"
+                "templateIssues": "Dota2推荐一个适合新手玩的英雄"
             },
             {
                 "id": -7,
                 "agentId": "xiaohongshu",
                 "title": "红书优选",
-                "templateIssues": "推荐一些适合冬季穿的羽绒服"
+                "templateIssues": "帮我为 女式瑜伽裤 写一份营销文案"
             },
             {
                 "id": -8,
@@ -217,7 +217,7 @@ let promptNavs = [
                 "id": -19,
                 "agentId": "anime_pictures",
                 "title": "动漫图片",
-                "templateIssues": "帮我生成一张动漫图片"
+                "templateIssues": "帮我搜索一张动漫图片"
             },
             {
                 "id": -20,
