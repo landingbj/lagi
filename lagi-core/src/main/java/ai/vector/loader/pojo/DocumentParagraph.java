@@ -21,6 +21,11 @@ public class DocumentParagraph {
      */
     private String subType;
 
+    /**
+     * 1 2 3 4 5 6
+     */
+    private String level;
+
     private String txt;
 
     private List<String> images;

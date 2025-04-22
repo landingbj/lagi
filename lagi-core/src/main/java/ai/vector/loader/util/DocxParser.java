@@ -1,6 +1,5 @@
 package ai.vector.loader.util;
 
-import ai.utils.Base64Util;
 import ai.vector.loader.pojo.Document;
 import ai.vector.loader.pojo.DocumentParagraph;
 import cn.hutool.core.text.StrBuilder;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class DocxParser {
 
@@ -30,8 +28,11 @@ public class DocxParser {
             }
         }
 
-        if (styleName != null && (styleName.startsWith("Heading") || styleName.startsWith("标题"))) {
-            return true;
+        if(styleName != null) {
+            styleName = styleName.toLowerCase();
+            if(styleName.startsWith("heading") || styleName.startsWith("标题")) {
+                return true;
+            }
         }
 
         CTPPr pPr = paragraph.getCTP().getPPr();
@@ -47,24 +48,20 @@ public class DocxParser {
         FileInputStream fis = new FileInputStream(filePath);
         XWPFDocument document = new XWPFDocument(fis);
         List<IBodyElement> bodyElements = document.getBodyElements();
-        int count = 0;
         res = Document.builder()
                 .type(2)
                 .paragraphs(new ArrayList<>())
                 .fileName(new File(filePath).getName())
-                .titleCount(count)
+                .titleCount(0)
                 .build();
         for (IBodyElement bodyElement : bodyElements) {
             DocumentParagraph documentParagraph = new DocumentParagraph();
-
             if (bodyElement instanceof XWPFParagraph) {
                 XWPFParagraph paragraph = (XWPFParagraph) bodyElement;
                 String text = paragraph.getText();
                 if(StrUtil.isBlank(text)) {
                     List<String> imagesInParagraph = getImagesInParagraph(paragraph);
                     if(!imagesInParagraph.isEmpty()) {
-                        count += imagesInParagraph.size();
-                        System.out.println("b" + count);
                         documentParagraph.setType("image");
                         documentParagraph.setImages(imagesInParagraph);
                     } else {
@@ -74,6 +71,7 @@ public class DocxParser {
                     }
                 } else {
                     boolean title = isTitle(paragraph);
+                    res.setTitleCount(res.getTitleCount() + 1);
                     documentParagraph.setType("txt");
                     documentParagraph.setSubType(title ? "title" : "txt");
                     documentParagraph.setTxt(text + "\n");
@@ -93,7 +91,6 @@ public class DocxParser {
                             List<String> imagesInParagraph = getImagesInParagraph(paragraph);
                             if (!imagesInParagraph.isEmpty()) {
                                 DocumentParagraph imageParagraph = new DocumentParagraph();
-                                System.out.println("c:" + count);
                                 imageParagraph.setType("image");
                                 imageParagraph.setImages(imagesInParagraph);
                                 res.getParagraphs().add(imageParagraph);
@@ -104,66 +101,53 @@ public class DocxParser {
                 }
                 documentParagraph.setTable(tb);
             } else if (bodyElement instanceof XWPFSDT) {
-                XWPFSDT xwpfsdt = (XWPFSDT) bodyElement;
-                XWPFDocument document1 = xwpfsdt.getDocument();
-                List<XWPFParagraph> paragraphs = document1.getParagraphs();
-                for (XWPFParagraph paragraph : paragraphs) {
-                    documentParagraph = new DocumentParagraph();
-                    String text = paragraph.getText();
-                    if(StrUtil.isBlank(text)) {
-                        List<String> imagesInParagraph = getImagesInParagraph(paragraph);
-                        if(!imagesInParagraph.isEmpty()) {
-                            count += imagesInParagraph.size();
-                            System.out.println("a:"  + count);
-                            documentParagraph.setType("image");
-                            documentParagraph.setImages(imagesInParagraph);
-                        } else {
-                            documentParagraph.setType("txt");
-                            documentParagraph.setSubType("txt");
-                            documentParagraph.setTxt("\n");
-                        }
-                    } else {
-                        boolean title = isTitle(paragraph);
-                        documentParagraph.setType("txt");
-                        documentParagraph.setSubType(title ? "title" : "txt");
-                        documentParagraph.setTxt(text + "\n");
-                    }
-                    res.getParagraphs().add(documentParagraph);
-                }
-                continue;
+//                XWPFSDT xwpfsdt = (XWPFSDT) bodyElement;
+//                XWPFDocument document1 = xwpfsdt.getDocument();
+//                List<XWPFParagraph> paragraphs = document1.getParagraphs();
+//                System.out.println("b");
+//                for (XWPFParagraph paragraph : paragraphs) {
+//                    documentParagraph = new DocumentParagraph();
+//                    String text = paragraph.getText();
+//                    System.out.println(text);
+//                    if(StrUtil.isBlank(text)) {
+//                        List<String> imagesInParagraph = getImagesInParagraph(paragraph);
+//                        if(!imagesInParagraph.isEmpty()) {
+//                            count += imagesInParagraph.size();
+////                            System.out.println("a:"  + count);
+//                            documentParagraph.setType("image");
+//                            documentParagraph.setImages(imagesInParagraph);
+//                        } else {
+//                            documentParagraph.setType("txt");
+//                            documentParagraph.setSubType("txt");
+//                            documentParagraph.setTxt("\n");
+//                        }
+//                    } else {
+//                        boolean title = isTitle(paragraph);
+//                        documentParagraph.setType("txt");
+//                        documentParagraph.setSubType(title ? "title" : "txt");
+//                        documentParagraph.setTxt(text + "\n");
+//                    }
+//                    res.getParagraphs().add(documentParagraph);
+//                }
+//                continue;
             }
             res.getParagraphs().add(documentParagraph);
         }
-//        System.out.println(count);
-        List<XWPFPictureData> allPictures = document.getAllPictures();
-//        System.out.println(allPictures.size());
-        for (int i = 0; i < allPictures.size(); i++) {
-            XWPFPictureData xwpfPictureData = allPictures.get(i);
-            String s = Base64.getEncoder().encodeToString((xwpfPictureData.getData()));
-            Base64Util.toFile("C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\1\\" + i + ".png", s);
-        }
-        List<DocumentParagraph> paragraphs = res.getParagraphs();
-        AtomicInteger atomicInteger = new AtomicInteger(0);
-        long count1 = paragraphs.stream().filter(paragraph -> "image".equals(paragraph.getType())).count();
-        System.out.println(count1);
-        paragraphs.stream().filter(paragraph -> "image".equals(paragraph.getType())).forEach(paragraph -> {
-            List<String> images = paragraph.getImages();
-            images.forEach(image -> {
-                int i = atomicInteger.getAndIncrement();
-                Base64Util.toFile("C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\1\\a\\" + i +  ".png", image);
-            });
-        });
+//        List<XWPFPictureData> allPictures = document.getAllPictures();
         document.close();
         fis.close();
         return res;
     }
 
+//    private static int count = 0;
     public static List<String> getImagesInParagraph(XWPFParagraph paragraph) {
         List<String> pictures = new ArrayList<>();
         for (XWPFRun run : paragraph.getRuns()) {
             List<XWPFPicture> embeddedPictures = run.getEmbeddedPictures();
             for (XWPFPicture picture : embeddedPictures) {
                 pictures.add(Base64.getEncoder().encodeToString((picture.getPictureData().getData())));
+//                Base64Util.toFile("C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\2\\"+count+".png", Base64.getEncoder().encodeToString((picture.getPictureData().getData())));
+//                count++;
             }
         }
         return pictures;
@@ -171,7 +155,7 @@ public class DocxParser {
 
     public static void main(String[] args) {
         try {
-            Document document = loadDocx("C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\1\\安全带未系提示电路.docx");
+            Document document = loadDocx("C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\2\\大模型中间件产品介绍V1.4.docx");
             StrBuilder sb = new StrBuilder();
             document.getParagraphs().forEach(documentParagraph -> {
                 sb.append(documentParagraph.getTxt());
