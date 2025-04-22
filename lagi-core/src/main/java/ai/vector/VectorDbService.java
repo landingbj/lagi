@@ -32,13 +32,23 @@ public class VectorDbService {
     }
 
     public void deleteDoc(List<String> idList) {
+        List<Map<String, String>> whereList = convert2WhereMap(idList);
+        vectorStoreService.deleteWhere(whereList);
+    }
+
+    public void deleteDoc(List<String> idList, String category) {
+        List<Map<String, String>> whereList = convert2WhereMap(idList);
+        vectorStoreService.deleteWhere(whereList, category);
+    }
+
+    private List<Map<String, String>> convert2WhereMap(List<String> idList) {
         List<Map<String, String>> whereList = new ArrayList<>();
         for (String id : idList) {
             Map<String, String> where = new HashMap<>();
             where.put("file_id", id);
             whereList.add(where);
         }
-        vectorStoreService.deleteWhere(whereList);
+        return whereList;
     }
 
     public List<IndexSearchData> search(String question, String category) {

@@ -148,7 +148,8 @@ async function deleteFile(filename, fileId) {
     if(!flag) {
         return ;
     }
-    fetch(`/uploadFile/deleteFile`,  
+    let category = window.category;
+    fetch('/uploadFile/deleteFile?category='+category,
         {
             method: "POST",
             headers: {
