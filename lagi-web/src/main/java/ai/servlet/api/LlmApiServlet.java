@@ -776,6 +776,7 @@ public class LlmApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         PrintWriter out = resp.getWriter();
         out.print("data: " + toJson(chatCompletionResult) + "\n\n");
+        out.flush();
         out.print("data: " + "[DONE]" + "\n\n");
         out.flush();
         out.close();
@@ -883,6 +884,7 @@ public class LlmApiServlet extends BaseServlet {
             }
 
             out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");
+            out.flush();
         }
         out.print("data: " + "[DONE]" + "\n\n");
     }
