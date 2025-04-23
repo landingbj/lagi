@@ -623,10 +623,9 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
 
         let fullText = '';
         let flag = true;
-        let lastChunkPart = '';
+        let buffer = '';
         let sourceContent = '';
         robootAnswerJq.html('<p></p>');
-        let totalChunk = '';
         while (flag) {
             const {value, done} = await reader.read();
             let res = new TextDecoder().decode(value);
@@ -634,24 +633,22 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                 robootAnswerJq.html(res.replaceAll('error:', ''));
                 return;
             }
-            if(!res.endsWith("\n\n")) {
-                continue;
-            }
-            let chunkStr = lastChunkPart +res.replaceAll('data: ', '').trim();
-            const chunkArray = chunkStr.split("\n\n");
+            buffer += res;
+            const chunkArray = buffer.split("\n\n");
 
-            let lastChunk = chunkArray[chunkArray.length - 1];
-            if (!isJsonString(chunkArray[chunkArray.length - 1]) && lastChunk !== "[DONE]") {
-                lastChunkPart = chunkArray.pop();
-            } else {
-                lastChunkPart = '';
-            }
             for (let chunk of chunkArray) {
+                chunk = chunk.replaceAll('data: ', '').trim();
                 if (chunk === "[DONE]") {
                     CONVERSATION_CONTEXT.push({"role": "user", "content": question});
                     CONVERSATION_CONTEXT.push({"role": "assistant", "content": sourceContent});
                     flag = false;
                     break;
+                }
+                if (chunk.length === 0 || !isJsonString(chunk)) {
+                    buffer = chunk;
+                    break;
+                } else {
+                    buffer = '';
                 }
                 let json = JSON.parse(chunk);
                 if (json.choices === undefined) {
@@ -795,7 +792,7 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                 let context_jq = jqObj.children('.context-box');
                 if (res.code !== 0) {
                     console.log(res);
-                    context_jq.apppend(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
+                    context_jq.append(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
                     return;
                 }
                 if(!context_jq) {
@@ -803,12 +800,12 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                 }
                 let data = res.data;
                 if (!(data instanceof Array)) {
-                    context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
+                    context_jq.append(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     console.log(data);
                     return;
                 }
                 if (data.length == 0) {
-                    context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
+                    context_jq.append(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     return;
                 }
                 let html = `<div class="context-link" style="float: left;"><span>内容定位:</span>${(function () {
@@ -832,6 +829,9 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                     return h;
                 })()}</div><br>`;
                 context_jq.append(html);
+            },
+            error: function() {
+                jqObj.children('.context-box').children('.loading-box').remove();
             }
         });
     });
