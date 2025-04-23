@@ -9,12 +9,11 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class UploadFile {
-    private String fileId;
-    private String filename;
-    private String filepath;
-    private String category;
-    private Long createTime;
+public class UserRagSetting {
+    private Integer id;
     private String userId;
-
+    private String fileType;
+    private String category;
+    private Integer chunkSize;
+    private Double temperature;
 }

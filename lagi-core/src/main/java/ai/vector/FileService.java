@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import ai.common.pojo.FileChunkResponse;
 import ai.common.pojo.Response;
 import ai.ocr.OcrService;
-import ai.ocr.PdfPageSizeLimitException;
 import ai.utils.*;
 
 import ai.utils.pdf.PdfUtil;
@@ -69,33 +68,21 @@ public class FileService {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         String fileType = extString.toLowerCase().toLowerCase();
         if (fileType.equals(".xls")||fileType.equals(".xlsx")){
-            return EasyExcelUtil.getChunkDocumentExcel(file,1024);
+            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
         }else if (fileType.equals(".csv")){
-            return EasyExcelUtil.getChunkDocumentCsv(file, chunkSize);
+            return EasyExcelUtil.getChunkDocumentCsv(file);
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
                   fileType.equals(".gif")||fileType.equals(".bmp")||
                   fileType.equals(".webp")||fileType.equals(".jpg")){
-            return getChunkDocumentImage(result, file, chunkSize);
+            return getChunkDocumentImage(file, chunkSize);
         }else if (fileType.equals(".pptx")||fileType.equals(".ppt")){
             return PptUtil.getChunkDocumentPpt(file, chunkSize);
         }
         String content = getFileContent(file);
-        int start = 0;
-        while (start < content.length()) {
-            int end = Math.min(start + chunkSize, content.length());
-            int lastSentenceEnd = Math.max(content.lastIndexOf('.', end), content.lastIndexOf('\n', end));
-            if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
-                end = lastSentenceEnd + 1;
-            }
-            String text = content.substring(start, end).replaceAll("\\s+", " ");
-            FileChunkResponse.Document doc = new FileChunkResponse.Document();
-            doc.setText(text);
-            result.add(doc);
-            start = end;
-        }
-        return result;
+        return splitContentChunks(chunkSize, content);
     }
-    public List<FileChunkResponse.Document> splitContentChunks(String content, int chunkSize) throws IOException {
+
+    public static List<FileChunkResponse.Document> splitContentChunks(int chunkSize, String content) {
         List<FileChunkResponse.Document> result = new ArrayList<>();
         int start = 0;
         while (start < content.length()) {
@@ -113,7 +100,9 @@ public class FileService {
         return result;
     }
 
-    public static List<FileChunkResponse.Document> getChunkDocumentImage(List<FileChunkResponse.Document> result,File file,Integer chunkSize) {
+
+    public static List<FileChunkResponse.Document> getChunkDocumentImage(File file,Integer chunkSize) {
+        List<FileChunkResponse.Document> result = new ArrayList<>();
         List<String> langList = new ArrayList<>();
         langList.add("chn,eng,tai");
         OcrService ocrService = new OcrService();
@@ -147,7 +136,6 @@ public class FileService {
 
         return result;
     }
-
     public static List<FileChunkResponse.Document> getChunkDocumentScannedPDF(File file,Integer chunkSize){
         OcrService ocrService = new OcrService();
         List<String> pdfContent = new ArrayList<>();
@@ -160,8 +148,12 @@ public class FileService {
         List<File> fileList = pdftoImage(file);
         for (int i = 0; i < fileList.size(); i++) {
             FileChunkResponse.Image image = new FileChunkResponse.Image();
+
+
             String normalizedPath = fileList.get(i).getPath().replace("\\", "/");
+
             String imagePath = "";
+            // 查找 "upload" 目录的起始位置
             int index = normalizedPath.indexOf("/upload");
             if (index != -1) {
                 imagePath = normalizedPath.substring(index);
@@ -170,7 +162,9 @@ public class FileService {
             image.setPath(imagePath);
             List<FileChunkResponse.Image> list = new ArrayList<>();
             list.add(image);
+
             String content = pdfContent.get(i);
+
             int start = 0;
             while (start < content.length()) {
                 int end = Math.min(start + chunkSize, content.length());
@@ -275,6 +269,7 @@ public class FileService {
             case ".ppt":
                 content = PptUtil.getPptContent(file);
                 break;
+
             default:
                 System.out.println("无法识别该文件");
                 break;
