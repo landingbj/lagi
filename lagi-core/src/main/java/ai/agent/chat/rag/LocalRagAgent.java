@@ -2,6 +2,7 @@ package ai.agent.chat.rag;
 
 import ai.agent.chat.BaseChatAgent;
 import ai.common.exception.RRException;
+import ai.common.pojo.Backend;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.RAGFunction;
@@ -21,6 +22,7 @@ import java.io.IOException;
 public class LocalRagAgent extends BaseChatAgent {
     private final Gson gson = new Gson();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
+    private final Backend agentGeneralConfiguration = ContextLoader.configuration.getAgentGeneralConfiguration();
     private static final int HTTP_TIMEOUT = 60;
 
     public LocalRagAgent(AgentConfig agentConfig) {
@@ -29,9 +31,13 @@ public class LocalRagAgent extends BaseChatAgent {
 
     @Override
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
+        String endpoint = agentConfig.getEndpoint();
+        if (agentGeneralConfiguration.getEndpoint() != null) {
+            endpoint = agentGeneralConfiguration.getEndpoint();
+        }
         String responseJson;
         try {
-            responseJson = OkHttpUtil.post(agentConfig.getEndpoint() + "/v1/chat/completions", gson.toJson(data));
+            responseJson = OkHttpUtil.post(endpoint + "/v1/chat/completions", gson.toJson(data));
         } catch (IOException e) {
             String SAMPLE_COMPLETION_RESULT_PATTERN = "{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"%s\"}}]}";
             responseJson = String.format(SAMPLE_COMPLETION_RESULT_PATTERN, RAG_CONFIG.getDefaultText());
@@ -42,7 +48,11 @@ public class LocalRagAgent extends BaseChatAgent {
 
     @Override
     public Observable<ChatCompletionResult> stream(ChatCompletionRequest data) {
-        LlmApiResponse completions = OpenAiApiUtil.streamCompletions("", agentConfig.getEndpoint() + "/v1/chat/completions", HTTP_TIMEOUT, data,
+        String endpoint = agentConfig.getEndpoint();
+        if (agentGeneralConfiguration.getEndpoint() != null) {
+            endpoint = agentGeneralConfiguration.getEndpoint();
+        }
+        LlmApiResponse completions = OpenAiApiUtil.streamCompletions("", endpoint + "/v1/chat/completions", HTTP_TIMEOUT, data,
                 this::convertSteamLine2ChatCompletionResult, GptConvert::convertByResponse);
         if (completions.getCode() != 200) {
             log.error("LocalRagAgent  stream api : code {}  error  {}", completions.getCode(), completions.getMsg());
