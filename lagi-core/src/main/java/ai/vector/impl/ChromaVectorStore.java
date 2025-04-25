@@ -15,6 +15,7 @@ import tech.amikos.chromadb.handler.ApiException;
 import java.util.*;
 
 public class ChromaVectorStore extends BaseVectorStore {
+    private static final int TIMEOUT = 60 * 3;
     public static class CustomEmbeddingFunction implements EmbeddingFunction {
         private Embeddings ef;
 
@@ -35,18 +36,23 @@ public class ChromaVectorStore extends BaseVectorStore {
 
     private CustomEmbeddingFunction embeddingFunction;
     private Map<String, String> colMetadata;
-    private Client client;
 
     public ChromaVectorStore(VectorStoreConfig config, Embeddings embeddingFunction) {
         this.config = config;
         this.embeddingFunction = new CustomEmbeddingFunction(embeddingFunction);
-        client = new Client(config.getUrl());
         colMetadata = new LinkedTreeMap<>();
         colMetadata.put("hnsw:space", config.getMetric());
         colMetadata.put("embedding_function", this.embeddingFunction.getClass().getName());
     }
 
+    private Client getClient() {
+        Client client = new Client(this.config.getUrl());
+        client.setTimeout(TIMEOUT);
+        return client;
+    }
+
     private Collection getCollection(String category) {
+        Client client = getClient();
         Collection collection = null;
         try {
             collection = client.createCollection(category, colMetadata, true, this.embeddingFunction);
@@ -197,6 +203,7 @@ public class ChromaVectorStore extends BaseVectorStore {
     @Override
     public void deleteCollection(String category) {
         try {
+            Client client = getClient();
             for (VectorCollection vectorCollection : listCollections()) {
                 if (vectorCollection.getCategory().equals(category)) {
                     client.deleteCollection(category);
@@ -212,6 +219,7 @@ public class ChromaVectorStore extends BaseVectorStore {
     public List<VectorCollection> listCollections() {
         List<VectorCollection> result = new ArrayList<>();
         try {
+            Client client = getClient();
             List<Collection> collections = client.listCollections();
             for (Collection collection : collections) {
                 VectorCollection vectorCollection = VectorCollection.builder()
