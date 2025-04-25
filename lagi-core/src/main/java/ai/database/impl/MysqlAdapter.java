@@ -70,7 +70,7 @@ public class MysqlAdapter {
             Class.forName(driver);
             con = DriverManager.getConnection(url,username,password);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("数据库连接失败:"+e);
         }
         return con;}
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 
+import ai.common.pojo.UserRagSetting;
 import ai.migrate.dao.UploadFileDao;
 import ai.migrate.db.Conn;
 import ai.common.pojo.UploadFile;
@@ -50,22 +51,32 @@ public class UploadFileService {
             File file = new File(uploadFile.getFilepath());
             if (file.exists()) {
                 file.delete();
-            }            
+            }
         }
         return result;
     }
 
-    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category) throws SQLException {
-        if (category == null) {
+    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category, String userId) throws SQLException {
+        if (category == null && userId == null) {
             return uploadFileDao.getUploadFileList(pageNumber, pageSize);
         }
-        return uploadFileDao.getUploadFileList(pageNumber, pageSize, category);
+        return uploadFileDao.getUploadFileList(pageNumber, pageSize, category, userId);
     }
-    
-    public int getTotalRow(String category) throws SQLException {
-        if (category == null) {
+
+    public int getTotalRow(String category, String userId) throws SQLException {
+        if (category == null && userId == null) {
             return uploadFileDao.getTotalRow();
         }
-        return uploadFileDao.getTotalRow(category);
+        return uploadFileDao.getTotalRow(category, userId);
+    }
+    public List<UserRagSetting> getTextBlockSize(String category, String userId) throws SQLException {
+        return uploadFileDao.getTextBlockSize(category, userId);
+    }
+
+    public boolean updateTextBlockSize(UserRagSetting userRagSetting) throws SQLException {
+        return uploadFileDao.updateTextBlockSize(userRagSetting) >0;
+    }
+    public boolean deleteTextBlockSize(UserRagSetting userRagSetting) throws SQLException {
+        return uploadFileDao.deleteTextBlockSize(userRagSetting) >0;
     }
 }

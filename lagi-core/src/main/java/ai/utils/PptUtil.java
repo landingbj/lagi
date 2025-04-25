@@ -172,7 +172,8 @@ public class PptUtil {
         return result;
     }
     public static void main(String[] args) throws IOException {
-        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\政务数据\\营业前消防安全检查.pptx";
+        //"C:\Users\ruiqing.luo\Desktop\rag调优\政务数据\营业前消防安全检查.pptx"
+        String filePath = "C:\\Users\\ruiqing.luo\\Desktop\\中移-大模型中间件交流演示\\中移集成-交流演示.pptx";
         List<FileChunkResponse.Document> rr= getChunkDocumentPpt(new File(filePath), 512);
         for (FileChunkResponse.Document document : rr) {
             System.out.println(document.getText());

@@ -1,11 +1,17 @@
 package ai.medusa.producer;
 
+import ai.common.pojo.IndexSearchData;
+import ai.config.ContextLoader;
+import ai.config.pojo.RAGFunction;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.DiversifyQuestions;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheTrigger;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -13,17 +19,17 @@ import ai.utils.JsonExtractor;
 import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
-    private static final Logger logger = LoggerFactory.getLogger(ReasonDiversifyPromptProducer.class);
     private final CompletionsService completionsService = new CompletionsService();
     private static final Pattern THINK_TAG_PATTERN = Pattern.compile("(.*?)</think>", Pattern.DOTALL);
     private final Gson gson = new Gson();
@@ -42,10 +48,15 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() == null || item.getPromptInput().getReasoningContent().isEmpty()) {
+            return Collections.emptyList();
+        }
         try {
             return diversify(item);
         } catch (Exception e) {
-            throw new FailedDiversifyPromptException(item, e);
+//            throw new FailedDiversifyPromptException(item, e);
+            log.error("Failed to diversify prompt: {}", item, e);
+            return Collections.emptyList();
         }
     }
 
@@ -60,8 +71,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
 
     private Collection<PooledPrompt> getDiversifiedResult(PooledPrompt item) {
         Collection<PooledPrompt> result = new ArrayList<>();
-        ChatCompletionResult reasonCompletionResult = completionsService.completions(getReasonRequest(item));
-        String reasonContent = extractReasonContent(reasonCompletionResult);
+        String reasonContent = item.getPromptInput().getReasoningContent();
         if (reasonContent == null || reasonContent.isEmpty()) {
             return result;
         }
@@ -73,7 +83,11 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         }
         DiversifyQuestions reasonDiversifyQuestions = gson.fromJson(diversifiedContent, DiversifyQuestions.class);
         PromptInput promptInput = item.getPromptInput();
-        for (int i = 0; i < reasonDiversifyQuestions.getQuestions().size(); i++) {
+        int size = reasonDiversifyQuestions.getQuestions().size();
+        if (size > PromptCacheConfig.REASON_DIVERSIFY_LIMIT) {
+            size = PromptCacheConfig.REASON_DIVERSIFY_LIMIT;
+        }
+        for (int i = 0; i < size; i++) {
             String question = reasonDiversifyQuestions.getQuestions().get(i);
             List<String> promptList = new ArrayList<>();
             promptList.addAll(promptInput.getPromptList());
@@ -82,14 +96,20 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
                     .parameter(promptInput.getParameter())
                     .promptList(promptList)
                     .build();
+            List<IndexSearchData>  indexSearchDataList = null;
+            if (RAG_CONFIG.getEnable()) {
+                indexSearchDataList = searchByContext(diversifiedPromptInput);
+            }
+            boolean needSplitBoundary = promptList.size() != 2;
             PooledPrompt pooledPrompt = PooledPrompt.builder()
                     .promptInput(diversifiedPromptInput)
                     .status(PromptCacheConfig.POOL_INITIAL)
-                    .indexSearchData(searchByContext(diversifiedPromptInput))
+                    .indexSearchData(indexSearchDataList)
+                    .needSplitBoundary(needSplitBoundary)
                     .build();
             result.add(pooledPrompt);
-            logger.info("reason diversify prompt: {}", promptList);
         }
+        log.info("reason diversify: {}",  result);
         return result;
     }
 
@@ -97,7 +117,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
         PromptInput promptInput = item.getPromptInput();
         String promptTemplate = PromptCacheConfig.REASON_DIVERSIFY_PROMPT;
         String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
-        String result = String.format(promptTemplate, prompt, reasonContent);
+        String result = String.format(promptTemplate, PromptCacheConfig.REASON_DIVERSIFY_LIMIT, prompt, reasonContent);
         return getCompletionRequest(promptInput, null, result);
     }
 
@@ -108,10 +128,11 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
     }
 
     private ChatCompletionRequest getCompletionRequest(PromptInput promptInput, String model, String prompt) {
-        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         chatCompletionRequest.setTemperature(promptInput.getParameter().getTemperature());
         chatCompletionRequest.setStream(false);
-        chatCompletionRequest.setMax_tokens(promptInput.getParameter().getMaxTokens());
+        chatCompletionRequest.setMax_tokens(4096);
         chatCompletionRequest.setModel(model);
         List<ChatMessage> messages = new ArrayList<>();
         ChatMessage message = new ChatMessage();

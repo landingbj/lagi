@@ -22,7 +22,7 @@ public class CompletePromptErrorHandler implements ProducerConsumerErrorHandler 
         if (e instanceof FailedDiversifyPromptException) {
             PooledPrompt item = ((FailedDiversifyPromptException) e).getPooledPrompt();
             this.pool.returnItem(item);
-            System.out.println("this.pool " + this.pool.contains(item));
+            logger.warn("return item to pool: {}", item);
         }
     }
 }

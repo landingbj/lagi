@@ -15,17 +15,21 @@ public class PromptCacheConfig {
     public static int CONSUMER_THREADS = 1;
     public static int TOTAL_THREAD_COUNT;
     public static int THREAD_RUN_LIMIT;
+    public static int LLM_DIVERSIFY_LIMIT = 1;
+    public static int REASON_DIVERSIFY_LIMIT = 1;
+    public static int TREE_DIVERSIFY_LIMIT = 1;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
-    public static final int COMPLETION_CACHE_SIZE = 10000;
+    public static final int COMPLETION_CACHE_SIZE = 100000;
     public static final int RAW_ANSWER_CACHE_SIZE = 10000;
 
-    public static final String DIVERSIFY_PROMPT = "### 任务\n任务：以下提供一个提示词，请根据这个提示词推测用户之后可能输入的问题。结果只返回问题本身，" +
-            "不需要提供相关描述和分析。如果有多种可能性，最多只返回3个问题，并将其以JSON结构输出。\n\n" +
+    public static final String DIVERSIFY_PROMPT = "### 任务\n任务：以下提供一个提示词，请根据这个提示词推测用户之后可能输入的提示词。结果只返回提示词本身，" +
+            "不需要提供相关描述和分析。如果有多种可能性，最多只返回%d个提示词，并将其以JSON结构输出。\n\n" +
             "### 提示词\n```\n%s\n```\n\n" +
             "### 执行要求\n" +
             "1. 仅输出JSON格式，不要输出任何解释性文字。\n" +
-            "2. 输出的问题是用户可能向大语言模型输入的。\n\n" +
+            "2. 输出的提示词是用户可能向大语言模型输入的。\n" +
+            "3. 输出的提示词语言要与输入的提示词一致。\n\n" +
             "### 输出格式\n" +
             "输出格式为JSON，结构如下：\n" +
             "```json\n" +
@@ -45,12 +49,13 @@ public class PromptCacheConfig {
             "```";
 
     public static final String REASON_DIVERSIFY_PROMPT = "### 任务\n" +
-            "任务：以下提供一个提示词和推理模型的思考过程，请根据两者推测用户之后可能输入的问题。结果只返回问题本身，不需要提供相关描述和分析。如果有多种可能性，最多只返回3个问题，并将其以JSON结构输出。\n\n" +
+            "任务：以下提供一个提示词和推理模型的思考过程，请根据两者总结推理过程的核心要点，推测用户之后最可能输入的提示词。结果只返回提示词本身，不需要提供相关描述和分析。如果有多种可能性，最多只返回%d个提示词，并将其以JSON结构输出。\n\n" +
             "### 提示词\n```\n%s\n```\n\n" +
             "### 思考过程\n```\n%s\n```\n\n" +
             "### 执行要求\n" +
             "1. 仅输出JSON格式，不要输出任何解释性文字。\n" +
-            "2. 输出的问题是用户可能向大语言模型输入的。\n\n" +
+            "2. 输出的提示词是用户可能向大语言模型输入的。\n" +
+            "3. 输出的提示词语言要与输入的提示词一致。\n\n" +
             "### 输出格式\n" +
             "输出格式为JSON，结构如下：\n" +
             "```json\n" +
@@ -72,15 +77,20 @@ public class PromptCacheConfig {
     public static String LOCATE_ALGORITHM = "hash";
     public static boolean MEDUSA_ENABLE = false;
     public static String MEDUSA_CATEGORY = "medusa";
+    public static boolean MEDUSA_FLUSH = true;
     public static String MEDUSA_TREE_CATEGORY = "medusa_tree";
-    public static final int QA_SIMILARITY_TOP_K = 10;
-    public static double QA_SIMILARITY_CUTOFF = 0.1;
+    public static final int QA_SIMILARITY_TOP_K = 30;
+    public static double QA_SIMILARITY_CUTOFF = 0.18;
+    public static final int TREE_SIMILARITY_TOP_K = 3;
 
     public static final int SUBSTRING_THRESHOLD = 2;
     public static final int START_CORE_THRESHOLD = 3;
-    public static final int ANSWER_CORE_THRESHOLD = 2;
-    public static final double LCS_RATIO_QUESTION = 0.5;
-    public static double LCS_RATIO_PROMPT_INPUT = 0.8;
+    public static final int ANSWER_CORE_THRESHOLD = 4;
+    public static double LCS_RATIO_PROMPT_INPUT = 0.6;
+    public static int MEDUSA_PRIORITY = 1;
+
+    public static String CACHE_PERSISTENT_PATH = "./medusa_cache";
+    public static int CACHE_PERSISTENT_BATCH_SIZE = 20;
 
     @Getter
     private static Boolean enableLlmDriver = false;
@@ -126,5 +136,17 @@ public class PromptCacheConfig {
         CONSUMER_THREADS = config.getConsumerThreadNum() != null ? config.getConsumerThreadNum() : CONSUMER_THREADS;
         TOTAL_THREAD_COUNT = PRODUCER_THREADS + CONSUMER_THREADS;
         THREAD_RUN_LIMIT = TOTAL_THREAD_COUNT * QA_SIMILARITY_TOP_K * 5;
+
+        MEDUSA_PRIORITY = config.getPriority() != null ? config.getPriority() : MEDUSA_PRIORITY;
+
+        LLM_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() : LLM_DIVERSIFY_LIMIT;
+        REASON_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 2: REASON_DIVERSIFY_LIMIT;
+        TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 3: LLM_DIVERSIFY_LIMIT;
+
+        QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
+        CACHE_PERSISTENT_PATH = config.getCachePersistentPath() != null ? config.getCachePersistentPath() : CACHE_PERSISTENT_PATH;
+        CACHE_PERSISTENT_BATCH_SIZE = config.getCachePersistentBatchSize() != null ? config.getCachePersistentBatchSize() : CACHE_PERSISTENT_BATCH_SIZE;
+
+        MEDUSA_FLUSH = config.getFlush() != null ? config.getFlush() : MEDUSA_FLUSH;
     }
 }

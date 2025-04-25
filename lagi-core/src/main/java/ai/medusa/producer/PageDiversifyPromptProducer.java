@@ -14,12 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
 
     private static final Logger log = LoggerFactory.getLogger(PageDiversifyPromptProducer.class);
     private final int nearNum = 8;
+
 
     VectorStoreService vectorStoreService = new VectorStoreService();
 
@@ -37,6 +39,9 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
+        if (item.getPromptInput().getReasoningContent() != null) {
+            return Collections.emptyList();
+        }
         try {
             return diversify(item);
         } catch (Exception e) {
@@ -53,45 +58,37 @@ public class PageDiversifyPromptProducer extends DiversifyPromptProducer {
         Collection<PooledPrompt> result = new ArrayList<>();
         PromptInput promptInput = item.getPromptInput();
         if(promptInput == null || promptInput.getPromptList() == null || promptInput.getPromptList().isEmpty()) {
-            return result;
+            return Collections.emptyList();
         }
-        String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
-        String answer = VectorCacheLoader.get2L2(prompt);
-        if(StrUtil.isBlank(answer)) {
-            return result;
-        }
-        List<String> questions = VectorCacheLoader.getFromL2Near(prompt, nearNum);
-        for (int i = 0 ; i < questions.size(); i++) {
-            List<IndexSearchData> indexSearchData = null;
-            try {
-                semaphore.acquire();
-                try {
-                    indexSearchData = vectorStoreService.search(questions.get(i), LagiGlobal.getDefaultCategory());
-                }catch (Exception e) {
-                    log.error("page diversify Failed to search for question: {}", questions.get(i), e);
-                } finally {
-                    semaphore.release();
-                }
-            } catch (InterruptedException e) {
-                log.error("page diversify Failed to acquire semaphore", e);
-            }
-            if(indexSearchData == null) {
+        List<String> promptList1 = promptInput.getPromptList();
+        for (String prompt : promptList1) {
+            String answer = VectorCacheLoader.get2L2(prompt);
+            if(StrUtil.isBlank(answer)) {
                 continue;
             }
-            String text = questions.get(i);
-            List<String> promptList = new ArrayList<>();
-            promptList.add(text);
-            PromptInput diversifiedPromptInput = PromptInput.builder()
-                    .parameter(promptInput.getParameter())
-                    .promptList(promptList)
-                    .build();
-            PooledPrompt pooledPrompt = PooledPrompt.builder()
-                    .promptInput(diversifiedPromptInput)
-                    .status(PromptCacheConfig.POOL_INITIAL)
-                    .indexSearchData(indexSearchData)
-                    .build();
-            result.add(pooledPrompt);
+            List<String> questions = VectorCacheLoader.getFromL2Near(prompt, nearNum);
+            for (int i = 0 ; i < questions.size(); i++) {
+                List<IndexSearchData> indexSearchData = null;
+                indexSearchData = vectorStoreService.search(questions.get(i), LagiGlobal.getDefaultCategory());
+                if(indexSearchData == null) {
+                    continue;
+                }
+                String text = questions.get(i);
+                List<String> promptList = new ArrayList<>();
+                promptList.add(text);
+                PromptInput diversifiedPromptInput = PromptInput.builder()
+                        .parameter(promptInput.getParameter())
+                        .promptList(promptList)
+                        .build();
+                PooledPrompt pooledPrompt = PooledPrompt.builder()
+                        .promptInput(diversifiedPromptInput)
+                        .status(PromptCacheConfig.POOL_INITIAL)
+                        .indexSearchData(indexSearchData)
+                        .build();
+                result.add(pooledPrompt);
+            }
         }
+        log.info("page diversify prompt: {}", result);
         return result;
     }
 

@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.landingbj</groupId>
         <artifactId>lagi</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
     </parent>
 
     <artifactId>lagi-core</artifactId>
@@ -65,6 +65,17 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-scratchpad</artifactId>
             <version>4.1.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.xmlgraphics</groupId>
+                    <artifactId>batik-bridge</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-bridge</artifactId>
+            <version>1.16</version>
         </dependency>
         <dependency>
             <groupId>net.sf.json-lib</groupId>
@@ -155,7 +166,7 @@
         <dependency>
             <groupId>io.github.amikos-tech</groupId>
             <artifactId>chromadb-java-client</artifactId>
-            <version>0.1.4</version>
+            <version>0.1.5</version>
         </dependency>
         <dependency>
             <groupId>cn.bigmodel.openapi</groupId>
@@ -307,7 +318,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <phase>none</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>

@@ -25,10 +25,12 @@ public class QaCache {
 
     static {
         cache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
-        try {
-            vectorStoreService.deleteCollection(MEDUSA_CATEGORY);
-        } catch (Exception e) {
-            logger.error("QaCache :{}", e.getMessage());
+        if (PromptCacheConfig.MEDUSA_FLUSH) {
+            try {
+                vectorStoreService.deleteCollection(MEDUSA_CATEGORY);
+            } catch (Exception e) {
+                logger.error("QaCache :{}", e.getMessage());
+            }
         }
     }
 
@@ -37,10 +39,16 @@ public class QaCache {
     }
 
     public void put(String key, List<PromptInput> value) {
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("category", MEDUSA_CATEGORY);
-        UpsertRecord upsertRecord = UpsertRecord.newBuilder().withDocument(key).withMetadata(metadata).build();
-        vectorStoreService.upsertCustomVectors(Collections.singletonList(upsertRecord), MEDUSA_CATEGORY);
+        put(key, value, true);
+    }
+
+    public void put(String key, List<PromptInput> value, boolean flush) {
+        if (flush) {
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("category", MEDUSA_CATEGORY);
+            UpsertRecord upsertRecord = UpsertRecord.newBuilder().withDocument(key).withMetadata(metadata).build();
+            vectorStoreService.upsertCustomVectors(Collections.singletonList(upsertRecord), MEDUSA_CATEGORY);
+        }
         cache.put(key, value);
     }
 
@@ -57,7 +65,7 @@ public class QaCache {
             return null;
         }
         IndexSearchData indexSearchData = indexSearchDataList.get(0);
-        logger.info("Prompt in vector db index search data: {}", indexSearchData);
+//        logger.info("Prompt in vector db index search data: {}", indexSearchData);
         return indexSearchData.getText();
     }
 }

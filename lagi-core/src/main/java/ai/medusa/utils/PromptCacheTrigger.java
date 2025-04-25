@@ -3,11 +3,14 @@ package ai.medusa.utils;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.QaPair;
 import ai.common.utils.ThreadPoolManager;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.service.CompletionsService;
 import ai.llm.utils.CompletionUtil;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.impl.QaCache;
+import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -16,30 +19,42 @@ import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorDbService;
 import ai.vector.VectorStoreService;
+import cn.hutool.core.bean.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class PromptCacheTrigger {
     private static final Logger log = LoggerFactory.getLogger(PromptCacheTrigger.class);
     private final CompletionsService completionsService = new CompletionsService();
-    private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
-    private static final double LCS_RATIO_QUESTION = PromptCacheConfig.LCS_RATIO_QUESTION;
     private final CompletionCache completionCache;
-    private static final ExecutorService executorService;
+    private static final ThreadPoolExecutor executorService;
     private final VectorDbService vectorStoreService = new VectorDbService();
     private final LRUCache<PromptInput, List<ChatCompletionResult>> promptCache;
     private final QaCache qaCache;
+    private final CachePersistence cachePersistence = CachePersistence.getInstance();
+    private static final int CORE_POOL_SIZE = 5;
+    private static final int MAXIMUM_POOL_SIZE = 30;
+    private static final int KEEP_ALIVE_TIME = 60;
 
     private static final LRUCache<List<ChatMessage>, String> rawAnswerCache;
 
     static {
         rawAnswerCache = new LRUCache<>(PromptCacheConfig.RAW_ANSWER_CACHE_SIZE);
-        ThreadPoolManager.registerExecutor("medusa");
-        executorService = ThreadPoolManager.getExecutor("medusa");
+        executorService = new ThreadPoolExecutor(
+                CORE_POOL_SIZE,
+                MAXIMUM_POOL_SIZE,
+                KEEP_ALIVE_TIME,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(CORE_POOL_SIZE * 1000)
+        );
+        executorService.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     public PromptCacheTrigger(CompletionCache completionCache) {
@@ -55,14 +70,18 @@ public class PromptCacheTrigger {
     }
 
     public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
-        executorService.execute(() -> writeCache(promptInput, chatCompletionResult));
+        triggerWriteCache(promptInput, chatCompletionResult, true, true);
     }
 
-    public void writeCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult) {
+    public void triggerWriteCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
+        executorService.execute(() -> writeCache(promptInput, chatCompletionResult, needPersistent, flush));
+    }
+
+    public void writeCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
         String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
 
         if (chatCompletionResult != null) {
-            putCache(newestPrompt, promptInput, chatCompletionResult);
+            putCache(newestPrompt, promptInput, chatCompletionResult, needPersistent, flush);
             return;
         }
 
@@ -79,7 +98,7 @@ public class PromptCacheTrigger {
         // If the prompt list has only one prompt, add the prompt input to the cache.
         // If the prompt list has more than one prompt and the last prompt is not in the prompt cache, add the prompt to the cache.
         if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResultList == null) {
-            putCache(newestPrompt, promptInputWithBoundaries, chatCompletionResult);
+            putCache(newestPrompt, promptInputWithBoundaries, chatCompletionResult, needPersistent, flush);
             return;
         }
 
@@ -89,30 +108,48 @@ public class PromptCacheTrigger {
         }
 
         // If the prompt list has more than one prompt and the last prompt is in the prompt cache, append the prompt to the cache.
-        putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt);
+        putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt, needPersistent, flush);
     }
 
-    private synchronized void putCache(PromptInput promptInputWithBoundaries, PromptInput lastPromptInput, ChatCompletionResult chatCompletionResult, String newestPrompt) {
-        String firstPrompt = PromptInputUtil.getFirstPrompt(promptInputWithBoundaries);
-        List<PromptInput> promptInputList = qaCache.get(firstPrompt);
+    private synchronized void putCache(PromptInput promptInputWithBoundaries, PromptInput lastPromptInput,
+                                       ChatCompletionResult chatCompletionResult, String newestPrompt, boolean needPersistent, boolean flush) {
+        String lastPrompt = PromptInputUtil.getLastPrompt(promptInputWithBoundaries);
+        List<PromptInput> promptInputList = qaCache.get(lastPrompt);
+        if (promptInputList == null || promptInputList.isEmpty()) {
+            return;
+        }
 //        int index = promptInputList.indexOf(lastPromptInput);
 //        PromptInput promptInputInCache = promptInputList.get(index);
         PromptInput promptInputInCache = promptInputList.get(0);
         List<ChatCompletionResult> completionResults = promptCache.get(promptInputInCache);
+        completionResults = new ArrayList<>(completionResults);
         completionResults.add(chatCompletionResult);
-        promptCache.remove(promptInputInCache);
-        promptInputInCache.getPromptList().add(newestPrompt);
+//        promptCache.remove(promptInputInCache);
+
+        List<String> promptList = new ArrayList<>(promptInputInCache.getPromptList());
+        promptList.add(newestPrompt);
+        PromptInput newPromptInput = PromptInput.builder().promptList(promptList)
+                .parameter(promptInputInCache.getParameter()).build();
+
+//        promptInputInCache.getPromptList().add(newestPrompt);
         List<PromptInput> promptInputs = qaCache.get(newestPrompt);
         if(promptInputs == null) {
             promptInputs = new ArrayList<>();
         }
-        promptInputs.add(promptInputInCache);
+        promptInputs.add(newPromptInput);
 //        qaCache.put(newestPrompt, promptInputList);
-        qaCache.put(newestPrompt, promptInputs);
-        promptCache.put(promptInputInCache, completionResults);
+        qaCache.put(newestPrompt, promptInputs, flush);
+        promptCache.put(newPromptInput, completionResults);
+        if (needPersistent) {
+            cachePersistence.addItem(new CacheItem(newPromptInput, chatCompletionResult));
+        }
+        if (flush) {
+            log.info("current cache size {}, putCache2: {}", promptCache.size(), promptInputs);
+        }
     }
 
-    private synchronized void putCache(String newestPrompt, PromptInput promptInputWithBoundaries, ChatCompletionResult chatCompletionResult) {
+    private synchronized void putCache(String newestPrompt, PromptInput promptInputWithBoundaries,
+                                       ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
         List<PromptInput> promptInputList = qaCache.get(newestPrompt);
 
         PromptInput lastPromptInput = PromptInputUtil.getLastPromptInput(promptInputWithBoundaries);
@@ -120,7 +157,7 @@ public class PromptCacheTrigger {
         if (promptInputWithBoundaries.getPromptList().size() == 1 && completionResults == null) {
            completionResults = promptCache.get(promptInputWithBoundaries);
         } else {
-            putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt);
+            putCache(promptInputWithBoundaries, lastPromptInput, chatCompletionResult, newestPrompt, needPersistent, flush);
             return;
         }
 
@@ -135,8 +172,14 @@ public class PromptCacheTrigger {
         promptInputList.add(promptInputWithBoundaries);
         completionResults.add(chatCompletionResult);
 
-        qaCache.put(newestPrompt, promptInputList);
+        qaCache.put(newestPrompt, promptInputList, flush);
         promptCache.put(promptInputWithBoundaries, completionResults);
+        if (needPersistent) {
+            cachePersistence.addItem(new CacheItem(promptInputWithBoundaries, chatCompletionResult));
+        }
+        if (flush) {
+            log.info("current cache size {}, putCache1: {}", promptCache.size(), promptInputList);
+        }
     }
 
     public PromptInput analyzeChatBoundaries(PromptInput promptInput) {
@@ -348,7 +391,12 @@ public class PromptCacheTrigger {
         if (context != null) {
             completionsService.addVectorDBContext(request, context);
         }
-        ChatCompletionResult result = completionsService.completions(request);
+
+        EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+        BeanUtil.copyProperties(request, chatCompletionRequest);
+        chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
+
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         CompletionUtil.populateContext(result, indexSearchDataList, context);
         return result;
     }
@@ -365,7 +413,10 @@ public class PromptCacheTrigger {
         String answer = rawAnswerCache.get(messages);
         if (answer == null) {
             ChatCompletionRequest request = completionsService.getCompletionsRequest(messages);
-            ChatCompletionResult result = completionsService.completions(request);
+            EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
+            BeanUtil.copyProperties(request, chatCompletionRequest);
+            chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
+            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
             answer = ChatCompletionUtil.getFirstAnswer(result);
             rawAnswerCache.put(messages, answer);
             delay(PromptCacheConfig.getPreDelay());

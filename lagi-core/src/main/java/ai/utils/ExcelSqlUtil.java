@@ -2,12 +2,12 @@ package ai.utils;
 
 import ai.config.ContextLoader;
 import ai.database.impl.MysqlAdapter;
+import ai.database.impl.SqliteAdapter;
 import ai.database.pojo.SQLJdbc;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
-import ai.vector.pojo.ExcelPage;
 import cn.hutool.json.JSONObject;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
@@ -31,24 +31,32 @@ import java.util.stream.Collectors;
 public class ExcelSqlUtil {
     private static SQLJdbc sqlJdbc ;
     private static MysqlAdapter mysqlAdapter;
+    private static SqliteAdapter sqliteAdapter;
     private static final Logger log = LoggerFactory.getLogger(ExcelSqlUtil.class);
     private static boolean isSwitch = false;
 
     static {
-//        ContextLoader.loadContext();
-        sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
-                .findFirst()  // 获取流中的第一个元素
-                .orElseThrow(() -> new NoSuchElementException("No database found"));
-        try {
-            if (new MysqlAdapter(sqlJdbc.getName()).selectCount("SELECT 1")>0){
+        //        ContextLoader.loadContext();
+        List<SQLJdbc> database = ContextLoader.configuration.getStores().getDatabase();
+        if(!(database== null || database.isEmpty())) {
+            sqlJdbc = ContextLoader.configuration.getStores().getDatabase().stream()
+                    .findFirst()  // 获取流中的第一个元素
+                    .orElseThrow(() -> new NoSuchElementException("No database found"));
+            try {
                 mysqlAdapter = new MysqlAdapter(sqlJdbc.getName());
-                isSwitch =initTextToSqlSearch();
-                if (!isSwitch){
-                    log.info("mysql初始化失败！---智能问数模式已关闭！");
+                if (isConnect()){
+                    if (new MysqlAdapter(sqlJdbc.getName()).selectCount("SELECT 1")>0){
+                        isSwitch =initTextToSqlSearch();
+                        if (!isSwitch){
+                            log.info("mysql初始化失败！---智能问数模式已关闭！");
+                        }
+                    }
+                }else {
+                    sqliteAdapter = new SqliteAdapter();
                 }
+            }catch (Exception e){
+                log.error("初始化失败,智能问数模式已关闭！");
             }
-        }catch (Exception e){
-            log.error("mysql连接失败！---智能问数模式已关闭！");
         }
     }
 
@@ -58,6 +66,14 @@ public class ExcelSqlUtil {
         }
         return false;
     }
+
+    public static boolean isSqlietConnect(){
+        if (sqliteAdapter!=null){
+            return sqliteAdapter.selectCount("SELECT 1")>0;
+        }
+        return false;
+    }
+
     public static boolean isSql(String excelFilePath) {
         File file = new File(excelFilePath);
         boolean flag = false;
@@ -162,45 +178,55 @@ public class ExcelSqlUtil {
             fileName = fileName.substring(0, dotIndex);
         }
         if (file.getName().endsWith(".csv")){
-                Map<String, List<List<Object>>> res = EasyExcelUtil.readCsv(filePath);
-                List<List<Object>> result =  res.get("data");
-                List<Object> headers =  res.get("header").get(0);
-                StringBuilder description = new StringBuilder();
-                for (int i = 0; i < headers.size(); i++) {
-                    String fieldName = "字段field" + (i + 1);
-                    description.append(fieldName + " 代表 " + headers.get(i) + ",\n");
-                }
-                String insertSQL = "INSERT INTO table_info (table_name,file_id,description) VALUES ('%s','%s','%s');";
-                insertSQL = String.format(insertSQL, fileName,fileId, description);
-                Integer table_info_id = mysqlAdapter.executeUpdateGeneratedKeys(insertSQL);
+            Map<String, List<List<Object>>> res = EasyExcelUtil.readCsv(filePath);
+            List<List<Object>> result =  res.get("data");
+            List<Object> headers =  res.get("header").get(0);
+            StringBuilder description = new StringBuilder();
+            for (int i = 0; i < headers.size(); i++) {
+                String fieldName = "字段field" + (i + 1);
+                description.append(fieldName + " 代表 " + headers.get(i) + ",\n");
+            }
+            String insertSQL = "INSERT INTO table_info (table_name,file_id,description) VALUES ('%s','%s','%s');";
+            insertSQL = String.format(insertSQL, fileName,fileId, description);
+            Integer table_info_id = 0;
+            if (isConnect()){
+                table_info_id = mysqlAdapter.executeUpdateGeneratedKeys(insertSQL);
+            }else {
+                table_info_id = sqliteAdapter.executeUpdateGeneratedKeys(insertSQL);
+            }
 
-                Integer fieldSize = headers.size();
-                StringBuilder fields = new StringBuilder("table_info_id");
-                for (int i = 1; i <= fieldSize; i++) {
-                    fields.append(", field").append(i);
-                }
-                StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
-                for (int i = 0; i < result.size(); i++) {
-                    List<Object> dataRow = result.get(i);
-                    sql.append("(").append(table_info_id);
 
-                    for (Integer j = 0; j < fieldSize; j++) {
-                        String value = dataRow.size()>j ? dataRow.get(j).toString() : null;
-                        if (value == null) {
-                            sql.append(", NULL");
-                        } else {
-                            String cleanValue = value.replace("'", "''");
-                            sql.append(", '").append(cleanValue.trim()).append("'");
-                        }
-                    }
+            Integer fieldSize = headers.size();
+            StringBuilder fields = new StringBuilder("table_info_id");
+            for (int i = 1; i <= fieldSize; i++) {
+                fields.append(", field").append(i);
+            }
+            StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
+            for (int i = 0; i < result.size(); i++) {
+                List<Object> dataRow = result.get(i);
+                sql.append("(").append(table_info_id);
 
-                    if (i < result.size() - 1) {
-                        sql.append("), ");
+                for (Integer j = 0; j < fieldSize; j++) {
+                    String value = dataRow.size()>j ? dataRow.get(j).toString() : null;
+                    if (value == null) {
+                        sql.append(", NULL");
                     } else {
-                        sql.append(");");
+                        String cleanValue = value.replace("'", "''");
+                        sql.append(", '").append(cleanValue.trim()).append("'");
                     }
                 }
+
+                if (i < result.size() - 1) {
+                    sql.append("), ");
+                } else {
+                    sql.append(");");
+                }
+            }
+            if (isConnect()){
                 mysqlAdapter.executeUpdate(sql.toString());
+            }else {
+                sqliteAdapter.executeUpdate(sql.toString());
+            }
             return;
         }
 
@@ -208,8 +234,7 @@ public class ExcelSqlUtil {
         List<String> sheetNames = reader.getSheetNames();
         Map<String, List<List<JSONObject>>> list = new HashMap<>();
         for (int i = 0; i < sheetNames.size(); i++) {
-            ExcelPage excelPage = EasyExcelUtil.readMergeExcel(filePath, i, 0, 0);
-            List<List<JSONObject>> result = excelPage.getData();
+            List<List<JSONObject>> result = EasyExcelUtil.readMergeExcel(filePath, i, 0, 0);
             if (result.size() > 0){
                 list.put(fileName+"里的"+sheetNames.get(i)+"表", result);
             }
@@ -230,13 +255,24 @@ public class ExcelSqlUtil {
             }
             String insertSQL = "INSERT INTO table_info (table_name,file_id,description) VALUES ('%s','%s','%s');";
             insertSQL = String.format(insertSQL, tableName,fileId, description);
-            Integer table_info_id = mysqlAdapter.executeUpdateGeneratedKeys(insertSQL);
+            Integer table_info_id = 0;
+            if (isConnect()){
+                table_info_id = mysqlAdapter.executeUpdateGeneratedKeys(insertSQL);
+            }else {
+                table_info_id = sqliteAdapter.executeUpdateGeneratedKeys(insertSQL);
+            }
             setDetailsTable(headers.size(), rows, table_info_id);
         }
     }
     public static boolean deleteSql(String fileId) {
         String sql = "DELETE FROM table_info WHERE file_id = ?";
-        return mysqlAdapter.executeUpdate(sql, fileId)>0;
+        boolean ismysql = false;
+        if (isConnect()){
+            ismysql = mysqlAdapter.executeUpdate(sql, fileId)>0;
+        }else {
+            ismysql = sqliteAdapter.executeUpdate(sql, fileId)>0;
+        }
+        return ismysql;
     }
     public static boolean deleteListSql(List<String> idList) {
         if (idList == null || idList.isEmpty()) {
@@ -246,11 +282,23 @@ public class ExcelSqlUtil {
                 .map(id -> "'" + id + "'")
                 .collect(Collectors.joining(", "));
         String sql = "DELETE FROM table_info WHERE file_id IN (" + idListStr + ");";
-        return mysqlAdapter.executeUpdate(sql)>0;
+        boolean ismysql = false;
+        if (isConnect()){
+            ismysql = mysqlAdapter.executeUpdate(sql)>0;
+        }else {
+            ismysql = sqliteAdapter.executeUpdate(sql)>0;
+        }
+        return ismysql;
     }
     public static boolean truncationSql() {
         String sql = "DELETE d FROM detailed_data d JOIN table_info t ON d.table_info_id = t.id;";
-        return mysqlAdapter.executeUpdate(sql)>0;
+        boolean ismysql = false;
+        if (isConnect()){
+            ismysql = mysqlAdapter.executeUpdate(sql)>0;
+        }else {
+            ismysql = sqliteAdapter.executeUpdate(sql)>0;
+        }
+        return ismysql;
     }
     private static void setDetailsTable(Integer fieldSize, List<List<JSONObject>> rows,Integer table_info_id) {
 
@@ -258,56 +306,69 @@ public class ExcelSqlUtil {
         for (int i = 1; i <= fieldSize; i++) {
             fields.append(", field").append(i);
         }
-        StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
-        for (int i = 1; i < rows.size(); i++) {
-            List<JSONObject> dataRow = rows.get(i);
-            List<String> rowData = new ArrayList<>();
-            String text = "";
-            for (int j = 0; j < dataRow.size(); j++) {
-                JSONObject cell = dataRow.get(j);
-                String cellValue = cell.getStr("cellValue");
+        final int BATCH_SIZE = 1000; // 每批次插入1000条数据
+        for (int batchStart = 0; batchStart < rows.size(); batchStart += BATCH_SIZE) {
+            int batchEnd = Math.min(batchStart + BATCH_SIZE, rows.size());
+            StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
 
-                if (cell.containsKey("isMerge") && cell.getBool("isMerge")) {
-                    // 获取合并单元格的起始和结束行列
-                    int firstRow = cell.getInt("firstRow");
-                    int firstCol = cell.getInt("firstColumn");
-                    // 这里只在合并单元格的起始位置才输出值
-                    if (firstRow == i && firstCol == j) {
-                        rowData.add(cellValue);
+            for (int i = batchStart; i < batchEnd; i++) {
+                List<JSONObject> dataRow = rows.get(i);
+                List<String> rowData = new ArrayList<>();
+                String text = "";
+                for (int j = 0; j < dataRow.size(); j++) {
+                    JSONObject cell = dataRow.get(j);
+                    String cellValue = cell.getStr("cellValue");
+
+                    if (cell.containsKey("isMerge") && cell.getBool("isMerge")) {
+                        int firstRow = cell.getInt("firstRow");
+                        int firstCol = cell.getInt("firstColumn");
+                        if (firstRow == i && firstCol == j) {
+                            rowData.add(cellValue);
+                        } else {
+                            rowData.add("");
+                        }
                     } else {
-                        rowData.add("");
+                        rowData.add(cellValue);
                     }
+                }
+
+                sql.append("(").append(table_info_id);
+
+                for (Integer j = 0; j < fieldSize; j++) {
+                    String value = rowData.size() > j ? rowData.get(j).toString() : null;
+                    if (value == null) {
+                        sql.append(", NULL");
+                    } else {
+                        String cleanValue = value.replace("'", "''");
+                        sql.append(", '").append(cleanValue.trim()).append("'");
+                    }
+                }
+
+                if (i < batchEnd - 1) {
+                    sql.append("), ");
                 } else {
-                    rowData.add(cellValue);
+                    sql.append(");");
                 }
             }
 
-
-            sql.append("(").append(table_info_id);
-
-            for (Integer j = 0; j < fieldSize; j++) {
-                String value = rowData.size()>j ? rowData.get(j).toString() : null;
-                if (value == null) {
-                    sql.append(", NULL");
-                } else {
-                    String cleanValue = value.replace("'", "''");
-                    sql.append(", '").append(cleanValue.trim()).append("'");
-                }
-            }
-
-            if (i < rows.size() - 1) {
-                sql.append("), ");
+            boolean ismysql = false;
+            if (isConnect()) {
+                ismysql = mysqlAdapter.executeUpdate(sql.toString()) <= 0;
             } else {
-                sql.append(");");
+                ismysql = sqliteAdapter.executeUpdate(sql.toString()) <= 0;
+            }
+            if (ismysql) {
+                throw new RuntimeException("插入数据失败");
             }
         }
-        if (mysqlAdapter.executeUpdate(sql.toString())<=0){
-            throw new RuntimeException("插入数据失败");
-        }
-
     }
     public static String getDetails() {
-        List<Map<String, Object>> list = new MysqlAdapter("mysql").sqlToValue("SELECT * FROM table_info;");
+        List<Map<String, Object>> list = new ArrayList<>();
+        if (isConnect()){
+            list = new MysqlAdapter("mysql").sqlToValue("SELECT * FROM table_info;");
+        }else {
+            list = sqliteAdapter.sqlToValue("SELECT * FROM table_info;");
+        }
         return toIntroduce(list);
     }
     private static String toIntroduce(List<Map<String, Object>> list) {
@@ -359,9 +420,17 @@ public class ExcelSqlUtil {
     }
     public static String toText(String sql,String demand,String sql1) {
         List<Map<String, Object>> list = new ArrayList<>();
-        list = mysqlAdapter.sqlToValue(sql);
+        if (isConnect()){
+            list = mysqlAdapter.sqlToValue(sql);
+        }else {
+            list = sqliteAdapter.sqlToValue(sql);
+        }
         List<Map<String, Object>> list1 = new ArrayList<>();
-        list1 = mysqlAdapter.sqlToValue(sql1);
+        if (isConnect()){
+            list1 = mysqlAdapter.sqlToValue(sql1);
+        }else {
+            list1 = sqliteAdapter.sqlToValue(sql1);
+        }
         StringBuilder sb = new StringBuilder();
         sb.append("表名为：detailed_data，");
         sb.append("字段table_info_id，int(11)，");
@@ -384,6 +453,7 @@ public class ExcelSqlUtil {
                 " \n ”。用户需求:“" + demand+"”。" );
         chatCompletionRequest.setMessages(Lists.newArrayList(message));
         chatCompletionRequest.setStream(false);
+        System.out.println(message.getContent());
         chatCompletionRequest.setModel(mysqlAdapter.model);
         CompletionsService completionsService = new CompletionsService();
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
@@ -442,7 +512,11 @@ public class ExcelSqlUtil {
     }
     public static String toSql(String sql,String demand) {
         List<Map<String, Object>> list = new ArrayList<>();
-        list = mysqlAdapter.sqlToValue(sql);
+        if (isConnect()){
+            list = mysqlAdapter.sqlToValue(sql);
+        }else {
+            list = sqliteAdapter.sqlToValue(sql);
+        }
         StringBuilder sb = new StringBuilder();
         sb.append("表名为：detailed_data，");
         sb.append("字段table_info_id，int(11)，");
@@ -574,7 +648,7 @@ public class ExcelSqlUtil {
 
     @Test
     public void text(){
-        String demand = "各科成绩都大于60分的人有那些，总分分别是多少。";
+        String demand = "高三三班学生各科成绩都大于60分的人有那些，总分分别是多少。";
         String sql1 = WorkflowsToSql(demand);
 //        System.out.println("生成的sql是:\n"+sql1);
         String sql = toSql(sql1,demand);
@@ -582,12 +656,32 @@ public class ExcelSqlUtil {
         String out = toText(sql,demand, sql1);
         System.out.println(out);
     }
+
+    @Test
+    public void text1(){
+        SqliteAdapter mysqlAdapter = new SqliteAdapter();
+        List<Map<String, Object>> list = new ArrayList<>();
+        //SELECT id, table_name, description FROM table_info
+        list = mysqlAdapter.sqlToValue("SELECT id, table_name, description FROM table_info");
+        System.out.println(list);
+    }
+
+    @Test
+    public void text2(){
+
+        System.out.println(isConnect());
+    }
+
+
     public static void main(String[] args) {
         try {
             String excelFilePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\节点分类-测试用.csv";
             System.out.println("是否走sql:"+isSql(excelFilePath));
             String tableName = "detailed_data";
             List<List<Object>> result =  EasyExcelUtil.readCsv(excelFilePath).get("data");
+            for (List<Object> list : result) {
+                System.out.println(list);
+            }
         }catch (Exception e){
             System.out.println(e);
         }

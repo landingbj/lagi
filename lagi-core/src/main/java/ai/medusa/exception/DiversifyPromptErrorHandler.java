@@ -20,7 +20,9 @@ public class DiversifyPromptErrorHandler implements ProducerConsumerErrorHandler
     public void handle(Exception e) {
         logger.warn("Diversify Prompt Exception:", e);
         if (e instanceof FailedDiversifyPromptException) {
-            this.pool.returnItem(((FailedDiversifyPromptException) e).getPooledPrompt());
+            PooledPrompt item = ((FailedDiversifyPromptException) e).getPooledPrompt();
+            this.pool.returnItem(item);
+            logger.warn("return item to pool: {}", item);
         }
     }
 }

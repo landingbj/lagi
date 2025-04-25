@@ -1,23 +1,28 @@
 package ai.medusa.consumer;
 
 import ai.common.pojo.IndexSearchData;
+import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.PriorityLock;
 import ai.medusa.exception.FailedDiversifyPromptException;
 import ai.medusa.impl.CompletionCache;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.utils.PromptCacheTrigger;
 import ai.mr.pipeline.Consumer;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -37,12 +42,23 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
     @Override
     public void consume(PooledPrompt item) throws FailedDiversifyPromptException {
         try {
+            PromptCacheTrigger promptCacheTrigger = new PromptCacheTrigger();
+            PromptInput promptInput = item.getPromptInput();
+            if (item.getNeedSplitBoundary()) {
+                promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
+            }
+            item.setPromptInput(promptInput);
+            ChatCompletionResult chatCompletionResult = cache.get(promptInput);
+            if (chatCompletionResult != null) {
+                return;
+            }
             ChatCompletionResult result = completions(item);
             if (result != null) {
                 cache.put(item.getPromptInput(), result);
             }
         } catch (Exception e) {
-            log.error(String.valueOf(new FailedDiversifyPromptException(item, e)));
+//            throw new FailedDiversifyPromptException(item, e);
+            log.error("Failed to consume prompt: {}", item, e);
         }
     }
 
@@ -63,7 +79,7 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
         ChatCompletionRequest completionRequest = getCompletionsRequest(item, indexSearchDataList);
         delay(PromptCacheConfig.getConsumeDelay());
         ChatCompletionResult chatCompletionResult = completionsService.completions(completionRequest);
-        if (!indexSearchDataList.isEmpty()) {
+        if (indexSearchDataList !=null && !indexSearchDataList.isEmpty()) {
             IndexSearchData indexData = indexSearchDataList.get(0);
             List<String> imageList = getImageFiles(indexData);
             for (int i = 0; i < chatCompletionResult.getChoices().size(); i++) {
@@ -85,6 +101,9 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
             String context = ragContext.getContext();
             completionsService.addVectorDBContext(chatCompletionRequest, context);
         }
+        EnhanceChatCompletionRequest enhanceChatCompletionRequest = new EnhanceChatCompletionRequest();
+        BeanUtil.copyProperties(chatCompletionRequest, enhanceChatCompletionRequest);
+        enhanceChatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
         return chatCompletionRequest;
     }
 

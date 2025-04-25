@@ -4,7 +4,6 @@ import ai.annotation.LLM;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.llm.adapter.ILlmAdapter;
-import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.LlmApiResponse;
 import ai.llm.utils.OpenAiApiUtil;
 import ai.llm.utils.convert.GptConvert;
@@ -76,15 +75,5 @@ public class LandingAdapter extends ModelService implements ILlmAdapter {
             throw new RRException(completions.getCode(), completions.getMsg());
         }
         return completions.getStreamData();
-    }
-
-    private void setDefaultField(ChatCompletionRequest request) {
-        if (request.getModel() == null) {
-            request.setModel(getModel());
-        }
-        if (request instanceof EnhanceChatCompletionRequest) {
-            ((EnhanceChatCompletionRequest) request).setIp(null);
-            ((EnhanceChatCompletionRequest) request).setBrowserIp(null);
-        }
     }
 }

@@ -2,9 +2,11 @@ package ai.embedding.impl;
 
 import ai.common.client.AiServiceCall;
 import ai.common.pojo.EmbeddingConfig;
+import ai.embedding.EmbeddingConstant;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.embedding.pojo.OpenAIEmbeddingResponse;
+import com.google.common.cache.Cache;
 import com.google.gson.Gson;
 import okhttp3.*;
 
@@ -14,8 +16,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class VicunaEmbeddings implements Embeddings {
+    private static final Cache<List<String>, List<List<Float>>> cache = EmbeddingConstant.getEmbeddingCache();
     private final Gson gson = new Gson();
-    private static final AiServiceCall call = new AiServiceCall();
     private String openAIAPIKey;
     private String modelName;
     private String apiEndpoint;
@@ -32,7 +34,11 @@ public class VicunaEmbeddings implements Embeddings {
     }
 
     public List<List<Float>> createEmbedding(List<String> docs) {
-        List<List<Float>> result = new ArrayList<>();
+        List<List<Float>> result = cache.getIfPresent(docs);
+        if (result != null) {
+            return result;
+        }
+        result = new ArrayList<>();
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectionPool(connectionPool)
                 .build();
@@ -59,6 +65,9 @@ public class VicunaEmbeddings implements Embeddings {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if (!result.isEmpty()) {
+            cache.put(docs, result);
         }
         return result;
     }

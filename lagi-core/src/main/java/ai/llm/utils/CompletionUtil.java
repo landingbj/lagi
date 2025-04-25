@@ -2,10 +2,16 @@ package ai.llm.utils;
 
 import ai.common.pojo.IndexSearchData;
 import ai.config.ContextLoader;
+import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.openai.pojo.MultiModalContent;
 import ai.utils.LagiGlobal;
+import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorStoreService;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 import java.text.DateFormat;
@@ -16,9 +22,14 @@ import java.util.UUID;
 public class CompletionUtil {
     private static final Gson gson = new Gson();
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
-
-
     private static final int MAX_INPUT = ContextLoader.configuration.getFunctions().getChat().getContextLength();
+
+    private static final ObjectMapper mapper;
+
+    static {
+        mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    }
 //    private static final int MAX_INPUT = 1024;
 
     public static ChatCompletionResult getDummyCompletion() {
@@ -54,10 +65,10 @@ public class CompletionUtil {
     }
 
     public static String truncate(String context, int maxLength) {
-        if(context == null) {
+        if (context == null) {
             return "";
         }
-        if(context.length() <= maxLength) {
+        if (context.length() <= maxLength) {
             return context;
         }
         return context.substring(0, maxLength);
@@ -68,7 +79,7 @@ public class CompletionUtil {
     }
 
     public static List<ChatMessage> truncateChatMessages(List<ChatMessage> chatMessages, int maxLength) {
-        if(chatMessages != null && !chatMessages.isEmpty()) {
+        if (chatMessages != null && !chatMessages.isEmpty()) {
             ChatMessage systemChatMessage = null;
             if (chatMessages.get(0).getRole().equals(LagiGlobal.LLM_ROLE_SYSTEM)) {
                 systemChatMessage = chatMessages.get(0);
@@ -81,13 +92,13 @@ public class CompletionUtil {
             lastQuestion.setContent(truncate(lastQuestion.getContent(), userMaxLength));
             int length = lastQuestion.getContent().length();
             int lastIndex = chatMessages.size() - 1;
-            for(int i = chatMessages.size() - 2; i >= 0; i--) {
+            for (int i = chatMessages.size() - 2; i >= 0; i--) {
                 ChatMessage chatMessage = chatMessages.get(i);
                 length += chatMessage.getContent().length();
-                if(length > userMaxLength) {
+                if (length > userMaxLength) {
                     break;
                 }
-                if(chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
+                if (chatMessage.getRole().equals(LagiGlobal.LLM_ROLE_USER)) {
                     lastIndex = i;
                 }
             }
@@ -99,6 +110,22 @@ public class CompletionUtil {
         return chatMessages;
     }
 
+    public static boolean isMultiModal(String content) {
+        try {
+            List<MultiModalContent> contentList = mapper.readValue(content, new TypeReference<List<MultiModalContent>>() {
+            });
+            if (!contentList.isEmpty()) {
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
+    public static boolean isMultiModal(ChatCompletionRequest chatCompletionRequest) {
+        String content = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+        return isMultiModal(content);
+    }
 
     public static void main(String[] args) {
         ChatCompletionResult result = getDummyCompletion();

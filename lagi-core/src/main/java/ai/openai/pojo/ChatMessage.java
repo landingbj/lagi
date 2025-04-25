@@ -1,14 +1,22 @@
 package ai.openai.pojo;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import ai.openai.deserializer.ContentDeserializer;
+import ai.openai.serializer.ContentSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.*;
 
 import java.util.List;
 
 @Data
 @EqualsAndHashCode
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChatMessage {
     private String role;
+    @JsonSerialize(using = ContentSerializer.class)
+    @JsonDeserialize(using = ContentDeserializer.class)
     private String content;
     private String reasoning_content;
     private List<String> filename;

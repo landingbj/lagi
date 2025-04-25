@@ -1,6 +1,7 @@
 package ai.medusa.dao;
 
 
+import ai.medusa.pojo.TreeDiversifyNode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -20,7 +21,7 @@ public class TreeDiversifyDao {
             // 创建表
             String sql = "CREATE TABLE IF NOT EXISTS tree_diversify (\n" +
                     "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-                    "    text VARCHAR(255) NOT NULL UNIQUE\n" +
+                    "    text NOT NULL UNIQUE\n" +
                     ");";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.executeUpdate();
@@ -137,18 +138,34 @@ public class TreeDiversifyDao {
         return null;
     }
 
-    public List<String> getAllNodeTexts() {
-        List<String> res = new ArrayList<>();
-        String query = "SELECT text FROM tree_diversify order by id";
+    public List<TreeDiversifyNode> getAllNodeTexts() {
+        List<TreeDiversifyNode> res = new ArrayList<>();
+        String query = "SELECT id, text FROM tree_diversify order by id";
         try (PreparedStatement ps = DriverManager.getConnection(DB_URL).prepareStatement(query)) {
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                res.add(rs.getString("text"));
+            while (rs.next()) {
+                TreeDiversifyNode node = new TreeDiversifyNode();
+                node.setId(rs.getString("id"));
+                node.setText(rs.getString("text"));
+                res.add(node);
             }
         } catch (SQLException e) {
             log.error("Error executing SQL query", e);
         }
         return res;
+    }
+
+    public int getAllNodeCount() {
+        String query = "SELECT count(1) as c FROM tree_diversify";
+        try (PreparedStatement ps = DriverManager.getConnection(DB_URL).prepareStatement(query)) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("c");
+            }
+        } catch (SQLException e) {
+            log.error("Error executing SQL query", e);
+        }
+        return 0;
     }
 
 
