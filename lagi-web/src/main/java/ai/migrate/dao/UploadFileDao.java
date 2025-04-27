@@ -43,12 +43,24 @@ public class UploadFileDao {
         ps.setString(2, entity.getFilename());
         ps.setString(3, entity.getFilepath());
         ps.setString(4, entity.getCategory());
-        ps.setLong(5, entity.getCreateTime());
-        ps.setString(6, entity.getUserId());
+
+        if (entity.getCreateTime() != null) {
+            ps.setLong(5, entity.getCreateTime());
+        } else {
+            ps.setNull(5, java.sql.Types.BIGINT);
+        }
+
+        if (entity.getUserId() != null) {
+            ps.setString(6, entity.getUserId());
+        } else {
+            ps.setNull(6, java.sql.Types.VARCHAR);
+        }
+
         result = ps.executeUpdate();
         BaseIndex.closeConnection(ps, conn);
         return result;
     }
+
 
     public UploadFile getUploadFileList(String fileId, Conn conn) throws SQLException {
         UploadFile result = null;
