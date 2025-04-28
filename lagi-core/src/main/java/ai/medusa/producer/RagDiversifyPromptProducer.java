@@ -34,7 +34,9 @@ public class RagDiversifyPromptProducer extends DiversifyPromptProducer {
         try {
             return diversify(item);
         } catch (Exception e) {
-            throw new FailedDiversifyPromptException(item, e);
+//            throw new FailedDiversifyPromptException(item, e);
+            log.error("Failed to diversify prompt: {}", item, e);
+            return Collections.emptyList();
         }
     }
 
