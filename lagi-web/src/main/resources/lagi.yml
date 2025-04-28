@@ -463,6 +463,9 @@ agents:
   - name: travel
     driver: ai.agent.customer.CityTravelRouteAgent
 
+  - name: mcp
+    driver: ai.agent.mcp.McpAgent
+
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
 workers:
@@ -508,6 +511,11 @@ routers:
     # % is a wildcard to represent agent name.
     # if specified, invoke this agent.
     # if just % is given, % would be decided by parameter at calling time.
+
+mcp:
+  server:
+    - name: mcp
+      url: your-mcp-url
 
 # Filter rules for sensitive words or sentence, with priority and etc.
 filters:

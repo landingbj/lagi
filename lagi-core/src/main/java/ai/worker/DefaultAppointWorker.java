@@ -31,13 +31,13 @@ public class DefaultAppointWorker extends RouteWorker {
 
     public DefaultAppointWorker(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
-        String routeName = RouterParser.getRuleName(workerConfig.getRoute());
-        this.route = Routers.getInstance().getRoute(routeName);
+//        String routeName = RouterParser.getRuleName(workerConfig.getRoute());
+        this.route = Routers.getInstance().getRoute(workerConfig.getRoute());
         List<String> agents = RouterParser.getParams(workerConfig.getRoute());
         if(agents.size() == 1 && RouteGlobal.WILDCARD_STRING.equals(agents.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
-                if(agent.getAgentConfig() !=null && agent.getAgentConfig().getAppId() !=null) {
+                if(agent.getAgentConfig() !=null) {
                     try {
                         String appId = agent.getAgentConfig().getName();
                         agentMap.put(appId, (Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
