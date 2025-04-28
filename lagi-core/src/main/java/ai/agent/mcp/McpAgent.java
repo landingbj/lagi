@@ -92,7 +92,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
                     chatMessages.add(assistantMessage);
                     nextFunctionCalls.addAll(assistantMessage.getTool_calls());
                     if(temp.getChoices().get(0).getMessage().getContent() != null) {
-                        result.getChoices().get(0).getMessage().setContent(temp.getChoices().get(0).getMessage().getContent());
+                        result.getChoices().get(0).setMessage(assistantMessage);
                     }
                 }
                 functionCalls = nextFunctionCalls;
