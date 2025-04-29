@@ -20,7 +20,7 @@ public class HikariDS {
     static {
         landingbjConfig = new HikariConfig(LANDINGBJ_CONFIG_PATH);
         landingbjDS = new HikariDataSource(landingbjConfig);
-        initializeDatabase("/init.sql");
+//        initializeDatabase("/init.sql");
     }
 
     private HikariDS() {
