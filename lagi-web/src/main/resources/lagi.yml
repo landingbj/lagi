@@ -513,7 +513,7 @@ routers:
 mcps:
   # set default driver
   driver: ai.mcps.CommonSseMcpClient
-  server:
+  servers:
     - name: amap_mcp
       url: https://mcp.amap.com/sse?key=your-key
     - name: baidu_search_mcp
