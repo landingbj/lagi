@@ -122,6 +122,9 @@ public class PromptCacheTrigger {
 //        PromptInput promptInputInCache = promptInputList.get(index);
         PromptInput promptInputInCache = promptInputList.get(0);
         List<ChatCompletionResult> completionResults = promptCache.get(promptInputInCache);
+        if (completionResults == null) {
+            return;
+        }
         completionResults = new ArrayList<>(completionResults);
         completionResults.add(chatCompletionResult);
 //        promptCache.remove(promptInputInCache);
