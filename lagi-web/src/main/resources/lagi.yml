@@ -519,7 +519,7 @@ mcps:
     - name: baidu_search_mcp
       url: http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api_key=Bearer+your-key
       # The driver is optional, if not specified, the default driver will be used.
-      driver: ai.mcps.CommonSseMcpClient
+      # driver: ai.mcps.CommonSseMcpClient
 
 # Filter rules for sensitive words or sentence, with priority and etc.
 filters:
