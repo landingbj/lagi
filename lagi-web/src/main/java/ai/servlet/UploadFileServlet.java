@@ -24,6 +24,7 @@ import ai.utils.ExcelSqlUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorStoreService;
 import ai.vector.pojo.UpsertRecord;
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
@@ -130,11 +131,16 @@ public class UploadFileServlet extends HttpServlet {
     private void deleteFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("utf-8");
         resp.setContentType("application/json;charset=utf-8");
+        String category = req.getParameter("category");
         List<String> idList = gson.fromJson(requestToJson(req), new TypeToken<List<String>>() {
         }.getType());
-        vectorDbService.deleteDoc(idList);
+        if(StrUtil.isBlank(category)) {
+            vectorDbService.deleteDoc(idList);
+        } else {
+            vectorDbService.deleteDoc(idList, category);
+        }
         uploadFileService.deleteUploadFile(idList);
-        if (ExcelSqlUtil.isConnect()){
+        if (ExcelSqlUtil.isConnect()||ExcelSqlUtil.isSqlietConnect()){
             ExcelSqlUtil.deleteListSql(idList);
         }
         Map<String, Object> map = new HashMap<>();
@@ -151,6 +157,7 @@ public class UploadFileServlet extends HttpServlet {
         int pageNumber = 1;
 
         String category = req.getParameter("category");
+        String userId = req.getParameter("lagiUserId");
 
         if (req.getParameter("pageNumber") != null) {
             pageSize = Integer.parseInt(req.getParameter("pageSize"));
@@ -161,8 +168,8 @@ public class UploadFileServlet extends HttpServlet {
         List<UploadFile> result = null;
         int totalRow = 0;
         try {
-            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category);
-            totalRow = uploadFileService.getTotalRow(category);
+            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category, userId);
+            totalRow = uploadFileService.getTotalRow(category, userId);
         } catch (SQLException e) {
             e.printStackTrace();
         }

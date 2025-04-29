@@ -23,7 +23,7 @@ public class TextToSqlSearchTool extends AbstractTool {
     }
 
     private String search(String demand) {
-        if (ExcelSqlUtil.isConnect()){
+        if (ExcelSqlUtil.isConnect()||ExcelSqlUtil.isSqlietConnect()){
             String sql1 = ExcelSqlUtil.WorkflowsToSql(demand);
             String sql = ExcelSqlUtil.toSql(sql1,demand);
             String out = ExcelSqlUtil.toText(sql,demand, sql1);

@@ -88,10 +88,17 @@ stores:
       priority: 10 # 优先级，当该优先级大于模型时,则匹配不到上下文就只返回default中提示语
       default: "Please give prompt more precisely" # 如未匹配到上下文，则返回该提示语
       track: true # 开启文档跟踪
-  # 这部分是美杜莎的加速推理服务的配置
+  # 这部分是美杜莎的加速推理服务的配置，可以通过预训练的medusa.json来预准备缓存，第一次flush置成true来初始化，后续可以改回false用做日常启停。
   medusa:
     enable: true # 是否开启
-    algorithm: hash # 使用的算法
+    algorithm: hash,llm,tree # 使用的算法
+    reason_model: deepseek-r1 # 推理模型
+    aheads: 1 # 预推理的请求数
+    producer_thread_num: 1 # 生产者线程数
+    consumer_thread_num: 2 # 消费者线程数
+    cache_persistent_path: medusa_cache # 缓存持久化路径
+    cache_persistent_batch_size: 2 # 缓存持久化批次大小
+    flush: true # 缓存是否每次启动时都重新加载
 ```
 
 中间件功能配置

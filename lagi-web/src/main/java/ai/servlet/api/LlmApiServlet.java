@@ -14,6 +14,8 @@ import java.util.concurrent.*;
 
 import ai.common.ModelService;
 import ai.common.exception.RRException;
+import ai.common.pojo.Configuration;
+import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.ContextLoader;
@@ -26,15 +28,13 @@ import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
 import ai.llm.schedule.QueueSchedule;
+import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.medusa.MedusaService;
-import ai.medusa.pojo.PooledPrompt;
+import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
-import ai.llm.service.CompletionsService;
-import ai.common.pojo.Configuration;
-import ai.common.pojo.IndexSearchData;
-import ai.medusa.utils.PromptCacheConfig;
+import ai.medusa.MedusaMonitor;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.router.pojo.LLmRequest;
@@ -54,6 +54,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.reactivex.Observable;
 import org.slf4j.Logger;
@@ -68,18 +69,27 @@ public class LlmApiServlet extends BaseServlet {
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
-    private final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private static final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
     private Boolean RAG_ENABLE = null;
     private Boolean MEDUSA_ENABLE = null;
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
-    private static ExecutorService executorService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static MedusaMonitor medusaMonitor;
 
     static {
-        ThreadPoolManager.registerExecutor("dynamic-stream");
-        executorService = ThreadPoolManager.getExecutor("dynamic-stream");
+        if (MEDUSA_CONFIG.getEnable()) {
+            medusaMonitor = MedusaMonitor.getInstance();
+        }
         VectorCacheLoader.load();
+    }
+
+    @Override
+    public void init() throws ServletException {
+        medusaService.init();
+        super.init();
     }
 
     @Override
@@ -328,7 +338,7 @@ public class LlmApiServlet extends BaseServlet {
         convert2streamAndOutput(firstAnswer, resp, work);
     }
 
-    
+
 
     private ChatCompletionResult convertResponse(String response) {
         String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", response);
@@ -382,6 +392,8 @@ public class LlmApiServlet extends BaseServlet {
             max_tokens = chatCompletionRequest.getMax_tokens();
             chatCompletionRequest.setMax_tokens(max_tokens);
         }
+        boolean isMultiModal = CompletionUtil.isMultiModal(chatCompletionRequest);
+
         ChatCompletionResult chatCompletionResult = null;
 
         List<IndexSearchData> indexSearchDataList = null;
@@ -410,43 +422,43 @@ public class LlmApiServlet extends BaseServlet {
             if (chatCompletionResult != null) {
                 outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
+//                medusaService.triggerCachePutAndDiversify(promptInput);
                 return;
             } else {
-                medusaService.triggerCachePut(promptInput);
-                if (medusaService.getPromptPool() != null) {
-                    medusaService.getPromptPool().put(PooledPrompt.builder()
-                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
-                }
+                medusaService.triggerCachePutAndDiversify(promptInput);
             }
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE)) {
-            String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
-            String answer = VectorCacheLoader.get2L2(lastMessage);
-            if(StrUtil.isNotBlank(answer)) {
-                outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
-                return;
+        if (!isMultiModal) {
+            if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE)) {
+                String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
+                String answer = VectorCacheLoader.get2L2(lastMessage);
+                if(StrUtil.isNotBlank(answer)) {
+                    outPrintJson(resp,  chatCompletionRequest,String.format(SAMPLE_COMPLETION_RESULT_PATTERN, answer));
+                    return;
+                }
+                if(indexSearchDataList == null) {
+                    indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+                }
+                if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
+                    context = completionsService.getRagContext(indexSearchDataList);
+                    String contextStr = CompletionUtil.truncate(context.getContext());
+                    context.setContext(contextStr);
+                    completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
+                    ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
+                    chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
+                    hasTruncate = true;
+                }
+            } else {
+                indexSearchDataList = null;
             }
-            if(indexSearchDataList == null) {
-                indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
+            if(!hasTruncate) {
+                List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
+                chatCompletionRequest.setMessages(chatMessages);
             }
-            if (indexSearchDataList != null && !indexSearchDataList.isEmpty()) {
-                context = completionsService.getRagContext(indexSearchDataList);
-                String contextStr = CompletionUtil.truncate(context.getContext());
-                context.setContext(contextStr);
-                completionsService.addVectorDBContext(chatCompletionRequest, contextStr);
-                ChatMessage chatMessage = chatCompletionRequest.getMessages().get(chatCompletionRequest.getMessages().size() - 1);
-                chatCompletionRequest.setMessages(Lists.newArrayList(chatMessage));
-                hasTruncate = true;
-            }
-        } else {
-            indexSearchDataList = null;
         }
-        if(!hasTruncate) {
-            List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
-            chatCompletionRequest.setMessages(chatMessages);
-        }
+
         EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
                 .ip(ClientIpAddressUtil.getClientIpAddress(req))
                 .build();
@@ -461,7 +473,7 @@ public class LlmApiServlet extends BaseServlet {
                     result = completionsService.streamCompletions(chatCompletionRequest, indexSearchDataList);
                 }
                 resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-                streamOutPrint(result, context, indexSearchDataList, out);
+                streamOutPrint(medusaService.getPromptInput(chatCompletionRequest), result, context, indexSearchDataList, out);
             } catch (RRException e) {
                 resp.setStatus(e.getCode());
                 responsePrint(resp, e.getMsg());
@@ -478,6 +490,9 @@ public class LlmApiServlet extends BaseServlet {
                 if (context != null) {
                     CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
                     addChunkIds(result, context);
+                }
+                if (medusaMonitor != null) {
+                    medusaMonitor.put(medusaService.getPromptInput(chatCompletionRequest), result);
                 }
                 responsePrint(resp, toJson(result));
             } catch (RRException e) {
@@ -609,8 +624,9 @@ public class LlmApiServlet extends BaseServlet {
         return medusaRequest;
     }
 
-    private void streamOutPrint(Observable<ChatCompletionResult> observable, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out) {
-        final ChatCompletionResult[] lastResult = {null, null};
+    private void streamOutPrint(PromptInput promptInput, Observable<ChatCompletionResult> observable, GetRagContext context, List<IndexSearchData> indexSearchDataList, PrintWriter out) {
+        final ChatCompletionResult[] lastResult = {null};
+        String key = UUID.randomUUID().toString();
         observable.subscribe(
                 data -> {
                     lastResult[0] = data;
@@ -623,6 +639,9 @@ public class LlmApiServlet extends BaseServlet {
                     String msg = gson.toJson(filter);
                     out.print("data: " + msg + "\n\n");
                     out.flush();
+                    if (medusaMonitor != null && promptInput != null && filter != null) {
+                        medusaMonitor.put(key, new CacheItem(promptInput, filter));
+                    }
                     if (lastResult[1] == null) {
                         lastResult[1] = data;
                     } else {
@@ -639,6 +658,7 @@ public class LlmApiServlet extends BaseServlet {
                 },
                 e -> {
                     logger.error("", e);
+                    medusaMonitor.finish(key);
                 },
                 () -> {
                     if(lastResult[0] == null) {
@@ -648,6 +668,10 @@ public class LlmApiServlet extends BaseServlet {
                     lastResult[0].setChoices(lastResult[1].getChoices());
                     out.flush();
                     out.close();
+                    if (medusaMonitor != null && promptInput != null && lastResult[0] != null) {
+                        medusaMonitor.put(key, new CacheItem(promptInput, lastResult[0]));
+                        medusaMonitor.finish(key);
+                    }
                 }
         );
     }

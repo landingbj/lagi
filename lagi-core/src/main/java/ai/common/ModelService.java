@@ -44,5 +44,6 @@ public class ModelService implements ModelVerify{
             ((EnhanceChatCompletionRequest) request).setIp(null);
             ((EnhanceChatCompletionRequest) request).setBrowserIp(null);
         }
+        request.setCategory(null);
     }
 }

@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.landingbj</groupId>
         <artifactId>lagi</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
     </parent>
     <artifactId>lagi-web</artifactId>
     <packaging>war</packaging>
@@ -88,5 +88,14 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>saas.db</exclude>
+                </excludes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
     </build>
 </project>

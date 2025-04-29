@@ -32,6 +32,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private List<RouterConfig> routers;
     private List<FilterConfig> filters;
 
+    private McpConfig mcps;
+
     @Override
     public void init() {
         EmbeddingManager.getInstance().register(functions.getEmbedding());
@@ -45,6 +47,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Routers.getInstance().register(workers, routers);
         Routers.getInstance().register(functions, routers);
         WorkerManager.getInstance().register(workers);
+        McpManager.getInstance().register(mcps);
         registerFilter();
     }
 

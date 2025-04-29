@@ -62,6 +62,15 @@ public class OpenAiApiUtil {
                                              Function<String, ChatCompletionResult> convertResponseFunc,
                                              Function<Response, Integer> convertErrorFunc,
                                              Map<String, String> headers) {
+        return completions(apikey, apiUrl, timeout, gson.toJson(req), convertResponseFunc, convertErrorFunc, headers);
+    }
+
+    public static LlmApiResponse completions(String apikey, String apiUrl,
+                                             Integer timeout,
+                                             String json,
+                                             Function<String, ChatCompletionResult> convertResponseFunc,
+                                             Function<Response, Integer> convertErrorFunc,
+                                             Map<String, String> headers) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeout, TimeUnit.SECONDS)
                 .readTimeout(timeout, TimeUnit.SECONDS)
@@ -69,7 +78,6 @@ public class OpenAiApiUtil {
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType mediaType = MediaType.get("application/json");
-        String json = gson.toJson(req);
         RequestBody body = RequestBody.create(json, mediaType);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(apiUrl)

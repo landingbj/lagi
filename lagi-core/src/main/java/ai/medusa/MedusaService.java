@@ -1,17 +1,24 @@
 package ai.medusa;
 
+import ai.common.pojo.Medusa;
 import ai.common.utils.FastIndexList;
+import ai.config.ContextLoader;
+import ai.config.GlobalConfigurations;
 import ai.llm.service.CompletionsService;
 import ai.medusa.impl.CompletionCache;
+import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PooledPrompt;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.pojo.PromptParameter;
+import ai.medusa.utils.CacheLoader;
 import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptPool;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.LagiGlobal;
+import ai.vector.VectorStoreService;
+import cn.hutool.core.util.StrUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +42,53 @@ public class MedusaService {
         }
     }
 
+    public void init() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                GlobalConfigurations configuration = ContextLoader.configuration;
+                if(configuration != null && configuration.getStores() != null && configuration.getStores().getMedusa() != null) {
+                    loadCacheFromFile();
+                    Medusa medusa = configuration.getStores().getMedusa();
+                    String inits = medusa.getInits();
+                    preloadPrompts(inits);
+                }
+            }catch (Exception ignored){}
+        });
+    }
+
+    private void loadCacheFromFile() {
+        if (cache == null) {
+            return;
+        }
+        CacheLoader cacheLoader = CacheLoader.getInstance();
+        cacheLoader.loadFromFiles();
+        List<CacheItem> cacheItems = cacheLoader.getLoadedItems();
+        for (CacheItem cacheItem : cacheItems) {
+            PromptInput promptInput = cacheItem.getPromptInput();
+            ChatCompletionResult chatCompletionRequest = cacheItem.getChatCompletionResult();
+            cache.put(promptInput, chatCompletionRequest, false, PromptCacheConfig.MEDUSA_FLUSH);
+        }
+        cacheLoader.clearLoadedItems();
+    }
+
+    private void preloadPrompts(String inits) {
+        if(!StrUtil.isBlank(inits)) {
+            String[] prePrompts = inits.split(",");
+            VectorStoreService vectorStoreService = new VectorStoreService();
+            for (String prePrompt : prePrompts) {
+                prePrompt = prePrompt.trim();
+                ChatCompletionRequest chatCompletionRequest = completionsService.getCompletionsRequest(prePrompt);
+                chatCompletionRequest.setCategory(vectorStoreService.getVectorStoreConfig().getDefaultCategory());
+                PromptInput promptInput = getPromptInput(chatCompletionRequest);
+                triggerCachePut(promptInput);
+                if (getPromptPool() != null) {
+                    getPromptPool().put(PooledPrompt.builder()
+                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
+                }
+            }
+        }
+    }
+
     public ChatCompletionResult get(PromptInput promptInput) {
         if (cache == null) {
             return null;
@@ -50,14 +104,11 @@ public class MedusaService {
     }
 
     public void triggerCachePutAndDiversify(PromptInput promptInput) {
-
-
         CompletableFuture.runAsync(() -> {
             try {
                 Thread.sleep(3000);
             }catch (InterruptedException ignored){}
             if (this.getPromptPool() != null) {
-                this.triggerCachePut(promptInput);
                 this.getPromptPool().put(PooledPrompt.builder()
                         .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
             }

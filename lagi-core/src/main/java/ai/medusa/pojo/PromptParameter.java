@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @Builder
-@EqualsAndHashCode(exclude = {"maxTokens"})
+@EqualsAndHashCode
 public class PromptParameter {
     private String systemPrompt;
     private Double temperature;
