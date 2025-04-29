@@ -32,7 +32,7 @@ public class McpManager {
         if (defaultDriver != null) {
             try {
                 Class.forName(defaultDriver);
-                List<McpBackend> server = config.getServer();
+                List<McpBackend> server = config.getServers();
                 if(server != null) {
                     for (McpBackend mcpBackend : server) {
                         if(mcpBackend.getDriver() == null) {
@@ -44,7 +44,7 @@ public class McpManager {
 
             }
         }
-        register(config.getServer());
+        register(config.getServers());
     }
 
     public void register(List<McpBackend> mcpBackends)
