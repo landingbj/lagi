@@ -25,9 +25,12 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
 
     private final CompletionsService completionsService;
 
+    private String mcpName;
+
     public McpAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
         this.completionsService = new CompletionsService();
+        this.mcpName = agentConfig.getName();
     }
 
     @Override
@@ -65,7 +68,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
         EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
         BeanUtil.copyProperties(data, chatCompletionRequest);
         chatCompletionRequest.setStream(false);
-        try (SyncMcpClient newMcpClient = McpManager.getInstance().getNewMcpClient(agentConfig.getName())){
+        try (SyncMcpClient newMcpClient = McpManager.getInstance().getNewMcpClient(this.mcpName)){
             newMcpClient.initialize();
             // TODO 2025/4/28 use cursor to get tools
             McpSchema.ListToolsResult listToolsResult = newMcpClient.listTools();
@@ -99,7 +102,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
             }
             return result;
         } catch (Exception e) {
-            log.error("get new mcpClient error");
+            log.error("get new mcpClient error ", e);
         }
 
         return null;

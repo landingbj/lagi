@@ -10,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 public class CommonSseMcpClient implements SyncMcpClient{
@@ -21,7 +19,7 @@ public class CommonSseMcpClient implements SyncMcpClient{
     public CommonSseMcpClient(McpBackend mcpBackend){
         HttpClientSseClientTransport httpClientSseClientTransport = new HttpClientSseClientTransport(mcpBackend.getUrl());
         this.client = McpClient.sync(httpClientSseClientTransport)
-                .requestTimeout(Duration.ofSeconds(10))
+                .requestTimeout(Duration.ofSeconds(60))
                 .capabilities(ClientCapabilities.builder()
                         .roots(true)
                         .sampling().build())
@@ -147,10 +145,11 @@ public class CommonSseMcpClient implements SyncMcpClient{
 
 
     public static void main(String[] args) throws Exception {
-        McpBackend build = McpBackend.builder().url("https://mcp.amap.com/sse?key=eb1f6d6fd5d2d50bcc93c6af1336aca4").build();
+        McpBackend build = McpBackend.builder().url("https://mcp.amap.com/sse?key=").build();
+//        McpBackend build = McpBackend.builder().url("http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api_key=").build();
         try (CommonSseMcpClient commonSseMcpClient = new CommonSseMcpClient(build)){
-
             commonSseMcpClient.initialize();
+            commonSseMcpClient.setLoggingLevel(LoggingLevel.DEBUG);
             ListToolsResult listToolsResult = commonSseMcpClient.listTools();
             for (Tool tool : listToolsResult.getTools()) {
 //                if ("maps_weather".equals(tool.getName())) {
