@@ -463,8 +463,6 @@ agents:
   - name: travel
     driver: ai.agent.customer.CityTravelRouteAgent
 
-  - name: mcp
-    driver: ai.agent.mcp.McpAgent
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
@@ -512,10 +510,16 @@ routers:
     # if specified, invoke this agent.
     # if just % is given, % would be decided by parameter at calling time.
 
-mcp:
-  server:
-    - name: mcp
-      url: your-mcp-url
+mcps:
+  # set default driver
+  driver: ai.mcps.CommonSseMcpClient
+  servers:
+    - name: amap_mcp
+      url: https://mcp.amap.com/sse?key=your-key
+    - name: baidu_search_mcp
+      url: http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api_key=Bearer+your-key
+      # The driver is optional, if not specified, the default driver will be used.
+      driver: ai.mcps.CommonSseMcpClient
 
 # Filter rules for sensitive words or sentence, with priority and etc.
 filters:

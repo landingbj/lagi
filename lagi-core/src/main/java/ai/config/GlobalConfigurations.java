@@ -32,7 +32,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private List<RouterConfig> routers;
     private List<FilterConfig> filters;
 
-    private McpConfig mcp;
+    private McpConfig mcps;
 
     @Override
     public void init() {
@@ -47,9 +47,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Routers.getInstance().register(workers, routers);
         Routers.getInstance().register(functions, routers);
         WorkerManager.getInstance().register(workers);
-        if(mcp != null){
-            McpManager.getInstance().register(mcp.getServer());
-        }
+        McpManager.getInstance().register(mcps);
         registerFilter();
     }
 

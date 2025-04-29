@@ -1,6 +1,7 @@
 package ai.manager;
 
 import ai.common.pojo.McpBackend;
+import ai.config.pojo.McpConfig;
 import ai.mcps.CommonSseMcpClient;
 import ai.mcps.SyncMcpClient;
 import lombok.Getter;
@@ -21,6 +22,30 @@ public class McpManager {
     private McpManager(){}
     private final Map<String, McpBackend> mcpBackendsMap = new ConcurrentHashMap<>();
 
+
+    public void register(McpConfig config)
+    {
+        if(config == null) {
+            return;
+        }
+        String defaultDriver = config.getDriver();
+        if (defaultDriver != null) {
+            try {
+                Class.forName(defaultDriver);
+                List<McpBackend> server = config.getServers();
+                if(server != null) {
+                    for (McpBackend mcpBackend : server) {
+                        if(mcpBackend.getDriver() == null) {
+                            mcpBackend.setDriver(defaultDriver);
+                        }
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+
+            }
+        }
+        register(config.getServers());
+    }
 
     public void register(List<McpBackend> mcpBackends)
     {
@@ -43,17 +68,21 @@ public class McpManager {
     public SyncMcpClient getNewMcpClient(String name)
     {
         McpBackend mcpBackend = mcpBackendsMap.get(name);
+        if(mcpBackend == null) {
+            return null;
+        }
         String driver = mcpBackend.getDriver();
         if(driver == null) {
             return new CommonSseMcpClient(mcpBackend);
         }
         try {
-            Constructor<?> constructor = Class.forName(driver).getConstructor(McpBackend.class);
+            Class<?> aClass = Class.forName(driver);
+            Constructor<?> constructor = aClass.getConstructor(McpBackend.class);
             return (SyncMcpClient) constructor.newInstance(mcpBackend);
         } catch (Exception e) {
-            log.error("get ({})error", driver);
+            log.error("get mcp driver: {}  error", driver);
         }
-        return null;
+        return new CommonSseMcpClient(mcpBackend);
     }
 
     public List<McpBackend> getMcpBackends() {

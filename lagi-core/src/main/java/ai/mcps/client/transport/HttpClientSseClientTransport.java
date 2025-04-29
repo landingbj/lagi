@@ -50,8 +50,6 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 	/** Base URI for the MCP server */
 	private final String baseUri;
 
-	private final String queryParams;
-
 	/** SSE client for handling server-sent events. Uses the /sse endpoint */
 	private final FlowSseClient sseClient;
 
@@ -97,11 +95,8 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		Assert.notNull(objectMapper, "ObjectMapper must not be null");
 		Assert.hasText(baseUri, "baseUri must not be empty");
 		Assert.notNull(clientBuilder, "clientBuilder must not be null");
-		String sseEndpoint = UrlPathExtractor.extractLastPathSegment(baseUri);
-		this.SSE_ENDPOINT = sseEndpoint.isEmpty() ? this.SSE_ENDPOINT: sseEndpoint;
-		String[] split = baseUri.split(this.SSE_ENDPOINT);
-		this.baseUri = split[0];
-		this.queryParams = split.length > 1 ? split[1] : "";
+		this.baseUri = UrlPathExtractor.getBaseUrl(baseUri);
+		this.SSE_ENDPOINT = baseUri.replace(this.baseUri, "");
 		this.objectMapper = objectMapper;
 		var globalConfig = RequestConfig.custom().setConnectTimeout(Timeout.ofSeconds(10)).build();
 		clientBuilder.setDefaultRequestConfig(globalConfig);
@@ -129,7 +124,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		connectionFuture.set(future);
 
-		sseClient.subscribe(this.baseUri + this.SSE_ENDPOINT + this.queryParams, new FlowSseClient.SseEventHandler() {
+		sseClient.subscribe(this.baseUri + this.SSE_ENDPOINT, new FlowSseClient.SseEventHandler() {
 			@Override
 			public void onEvent(FlowSseClient.SseEvent event) {
 				if (isClosing) {
@@ -186,7 +181,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		}
 
 		try {
-			if (!closeLatch.await(10, TimeUnit.SECONDS)) {
+			if (!closeLatch.await(30, TimeUnit.SECONDS)) {
 				return Mono.error(new McpError("Failed to wait for the message endpoint"));
 			}
 		}
