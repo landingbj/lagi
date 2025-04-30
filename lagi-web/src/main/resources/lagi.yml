@@ -463,6 +463,10 @@ agents:
   - name: travel
     driver: ai.agent.customer.CityTravelRouteAgent
 
+  - name: mcp
+    mcps: amap,baidu_search
+    driver: ai.agent.mcp.McpAgent
+
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
