@@ -29,18 +29,6 @@ public class DocLoader implements DocumentLoader {
         FileService fileService = new FileService();
         File file = new File(path);
         String content = null;
-        if(file.getName().endsWith(".docx")) {
-            try {
-                Document document = DocxParser.loadDocx(path);
-                List<DocumentParagraph> paragraphs = document.getParagraphs();
-                boolean b = hasTitle(document);
-                if(b) {
-                    return splitByTitle(path, paragraphs, splitConfig.getChunkSizeForText());
-                }
-            }catch (Exception ignored){
-            }
-        }
-
         try {
             if (WordDocxUtils.checkImagesInWord(file)){
                 FileChunkResponse response = fileService.extractContent(file);
@@ -54,6 +42,17 @@ public class DocLoader implements DocumentLoader {
             content = content!=null? FileService.removeDirectory(content):content;
         } catch (Exception e) {
             log.error("load doc file error", e);
+        }
+        if(file.getName().endsWith(".docx")) {
+            try {
+                Document document = DocxParser.loadDocx(path);
+                List<DocumentParagraph> paragraphs = document.getParagraphs();
+                boolean b = hasTitle(document);
+                if(b) {
+                    return splitByTitle(path, paragraphs, splitConfig.getChunkSizeForText());
+                }
+            }catch (Exception ignored){
+            }
         }
         if(content == null) {
             return Collections.emptyList();
