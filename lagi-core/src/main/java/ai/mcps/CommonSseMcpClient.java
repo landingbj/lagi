@@ -15,8 +15,10 @@ import java.time.Duration;
 public class CommonSseMcpClient implements SyncMcpClient{
 
     private final McpSyncClient client;
+    private final String name;
 
     public CommonSseMcpClient(McpBackend mcpBackend){
+        this.name = mcpBackend.getName();
         HttpClientSseClientTransport httpClientSseClientTransport = new HttpClientSseClientTransport(mcpBackend.getUrl());
         this.client = McpClient.sync(httpClientSseClientTransport)
                 .requestTimeout(Duration.ofSeconds(60))
@@ -34,6 +36,11 @@ public class CommonSseMcpClient implements SyncMcpClient{
                     log.info("Prompts updated: {}", prompts);
                 }))
                 .build();
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     public McpSchema.InitializeResult initialize() {
