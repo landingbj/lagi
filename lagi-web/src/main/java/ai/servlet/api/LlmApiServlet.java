@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import ai.medusa.pojo.PooledPrompt;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +36,7 @@ import ai.medusa.MedusaService;
 import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.MedusaMonitor;
+import ai.medusa.utils.PromptCacheConfig;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.router.pojo.LLmRequest;
@@ -69,7 +71,7 @@ public class LlmApiServlet extends BaseServlet {
     private final Logger logger = LoggerFactory.getLogger(LlmApiServlet.class);
     private final MedusaService medusaService = new MedusaService();
     private final RAGFunction RAG_CONFIG = ContextLoader.configuration.getStores().getRag();
-    private static final Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
+    private static Medusa MEDUSA_CONFIG = ContextLoader.configuration.getStores().getMedusa();
     private Boolean RAG_ENABLE = null;
     private Boolean MEDUSA_ENABLE = null;
     private final Boolean enableQueueHandle = ContextLoader.configuration.getFunctions().getChat().getEnableQueueHandle();
@@ -189,22 +191,20 @@ public class LlmApiServlet extends BaseServlet {
         if (MEDUSA_ENABLE==null){
             MEDUSA_ENABLE = MEDUSA_CONFIG.getEnable();
         }
+
         if(Boolean.TRUE.equals(MEDUSA_ENABLE)) {
             ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
             PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
             ChatCompletionResult medusaCompletionResult = medusaService.locate(promptInput);
-            if (medusaCompletionResult != null) {
+            if (chatCompletionResult != null) {
                 outPrintChatCompletion(resp, chatCompletionRequest, medusaCompletionResult, isRAG , countDownLatch, out);
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
                 return;
             } else {
-                medusaService.triggerCachePut(promptInput);
-                if (medusaService.getPromptPool() != null) {
-                    medusaService.getPromptPool().put(PooledPrompt.builder()
-                            .promptInput(promptInput).status(PromptCacheConfig.POOL_INITIAL).build());
-                }
+                medusaService.triggerCachePutAndDiversify(promptInput);
             }
         }
+
         boolean hasTruncate = false;
         GetRagContext context = null;
         if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(isRAG)) {
@@ -392,7 +392,7 @@ public class LlmApiServlet extends BaseServlet {
             max_tokens = chatCompletionRequest.getMax_tokens();
             chatCompletionRequest.setMax_tokens(max_tokens);
         }
-        boolean isMultiModal = CompletionUtil.isMultiModal(chatCompletionRequest);
+//        boolean isMultiModal = CompletionUtil.isMultiModal(chatCompletionRequest);
 
         ChatCompletionResult chatCompletionResult = null;
 
@@ -430,7 +430,7 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        if (!isMultiModal) {
+//        if (!isMultiModal) {
             if (chatCompletionRequest.getCategory() != null && Boolean.TRUE.equals(RAG_ENABLE)) {
                 String lastMessage = ChatCompletionUtil.getLastMessage(chatCompletionRequest);
                 String answer = VectorCacheLoader.get2L2(lastMessage);
@@ -457,7 +457,7 @@ public class LlmApiServlet extends BaseServlet {
                 List<ChatMessage> chatMessages = CompletionUtil.truncateChatMessages(chatCompletionRequest.getMessages());
                 chatCompletionRequest.setMessages(chatMessages);
             }
-        }
+//        }
 
         EnhanceChatCompletionRequest enhance = EnhanceChatCompletionRequest.builder()
                 .ip(ClientIpAddressUtil.getClientIpAddress(req))
