@@ -5,6 +5,7 @@ import ai.mcps.spec.McpSchema;
 
 public interface SyncMcpClient extends AutoCloseable{
 
+   String getName();
 
      McpSchema.InitializeResult initialize();
     /**

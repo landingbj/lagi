@@ -14,9 +14,8 @@ import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
 
@@ -25,12 +24,17 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
 
     private final CompletionsService completionsService;
 
-    private String mcpName;
+    private List<String> mcpNames = new ArrayList<>();
 
     public McpAgent(AgentConfig agentConfig) {
         this.agentConfig = agentConfig;
         this.completionsService = new CompletionsService();
-        this.mcpName = agentConfig.getName();
+        String mcps = agentConfig.getMcps();
+        if (mcps == null) {
+            throw new RuntimeException("mcp name is null");
+        }
+        String[] split = mcps.split(",");
+        this.mcpNames.addAll(Arrays.asList(split));
     }
 
     @Override
@@ -68,44 +72,72 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
         EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
         BeanUtil.copyProperties(data, chatCompletionRequest);
         chatCompletionRequest.setStream(false);
-        try (SyncMcpClient newMcpClient = McpManager.getInstance().getNewMcpClient(this.mcpName)){
-            newMcpClient.initialize();
-            // TODO 2025/4/28 use cursor to get tools
-            McpSchema.ListToolsResult listToolsResult = newMcpClient.listTools();
-            List<Tool> tools = convert2FunctionCallTools(listToolsResult);
-            chatCompletionRequest.setTools(tools);
-            ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
-            ChatMessage assistantMessage = result.getChoices().get(0).getMessage();
-            List<ToolCall> functionCalls = assistantMessage.getTool_calls();
-            List<ChatMessage> chatMessages = chatCompletionRequest.getMessages();
-            chatMessages.add(assistantMessage);
-            while (!functionCalls.isEmpty()) {
-                List<ToolCall> loopFunctionCalls =  new ArrayList<>(functionCalls);
-                List<ToolCall> nextFunctionCalls =  new ArrayList<>();
-                for (ToolCall functionCall: loopFunctionCalls) {
-                    McpSchema.CallToolRequest callToolRequest = convertFunctionToolCall2McpToolCall(functionCall);
-                    McpSchema.CallToolResult callToolResult = newMcpClient.callTool(callToolRequest);
-                    ChatMessage toolChatMessage = new ChatMessage();
-                    toolChatMessage.setRole("tool");
-                    toolChatMessage.setTool_call_id(functionCall.getId());
-                    toolChatMessage.setContent(callToolResult.getContent().get(0).toString());
-                    chatMessages.add(toolChatMessage);
-                    ChatCompletionResult temp = completionsService.completions(chatCompletionRequest);
-                    assistantMessage = temp.getChoices().get(0).getMessage();
-                    chatMessages.add(assistantMessage);
-                    nextFunctionCalls.addAll(assistantMessage.getTool_calls());
-                    if(temp.getChoices().get(0).getMessage().getContent() != null) {
-                        result.getChoices().get(0).setMessage(assistantMessage);
+        List<SyncMcpClient> mcpClients = this.mcpNames.stream().map(name -> McpManager.getInstance().getNewMcpClient(name))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        List<Tool> tools = new ArrayList<>();
+        Map<String, SyncMcpClient> toolNameSyncMcpClientHashMap = new HashMap<>();
+        for (SyncMcpClient mcpClient : mcpClients) {
+            try {
+                mcpClient.initialize();
+                // TODO 2025/4/28 use cursor to get tools
+                McpSchema.ListToolsResult listToolsResult = mcpClient.listTools();
+                List<Tool> tools1 = convert2FunctionCallTools(listToolsResult);
+                if(listToolsResult.getNextCursor() != null) {
+                    while (listToolsResult.getNextCursor() != null) {
+                        listToolsResult = mcpClient.listTools(listToolsResult.getNextCursor());
+                        List<Tool> temp = convert2FunctionCallTools(listToolsResult);
+                        tools1.addAll(temp);
                     }
                 }
-                functionCalls = nextFunctionCalls;
+                for (Tool tool : tools1) {
+                    toolNameSyncMcpClientHashMap.put(tool.getFunction().getName(), mcpClient);
+                }
+                tools.addAll(tools1);
+            } catch (Exception e) {
+                log.error("get mcpClient error ", e);
             }
-            return result;
-        } catch (Exception e) {
-            log.error("get new mcpClient error ", e);
+        }
+        chatCompletionRequest.setTools(tools);
+        ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
+        ChatMessage assistantMessage = result.getChoices().get(0).getMessage();
+        List<ToolCall> functionCalls = assistantMessage.getTool_calls();
+        List<ChatMessage> chatMessages = chatCompletionRequest.getMessages();
+        chatMessages.add(assistantMessage);
+        while (!functionCalls.isEmpty()) {
+            List<ToolCall> loopFunctionCalls =  new ArrayList<>(functionCalls);
+            List<ToolCall> nextFunctionCalls =  new ArrayList<>();
+            for (ToolCall functionCall: loopFunctionCalls) {
+                SyncMcpClient syncMcpClient = toolNameSyncMcpClientHashMap.get(functionCall.getFunction().getName());
+                McpSchema.CallToolRequest callToolRequest = convertFunctionToolCall2McpToolCall(functionCall);
+                if(callToolRequest == null) {
+                    continue;
+                }
+                McpSchema.CallToolResult callToolResult = syncMcpClient.callTool(callToolRequest);
+                ChatMessage toolChatMessage = new ChatMessage();
+                toolChatMessage.setRole("tool");
+                toolChatMessage.setTool_call_id(functionCall.getId());
+                toolChatMessage.setContent(callToolResult.getContent().get(0).toString());
+                chatMessages.add(toolChatMessage);
+                ChatCompletionResult temp = completionsService.completions(chatCompletionRequest);
+                assistantMessage = temp.getChoices().get(0).getMessage();
+                chatMessages.add(assistantMessage);
+                nextFunctionCalls.addAll(assistantMessage.getTool_calls());
+                if(temp.getChoices().get(0).getMessage().getContent() != null) {
+                    result.getChoices().get(0).setMessage(assistantMessage);
+                }
+            }
+            functionCalls = nextFunctionCalls;
         }
 
-        return null;
+        mcpClients.forEach(mcpClient -> {
+            try {
+                mcpClient.close();
+            } catch (Exception ignored) {
+            }
+        });
+
+        return result;
     }
 
 
