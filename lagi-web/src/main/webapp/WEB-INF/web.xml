@@ -334,4 +334,23 @@
         <url-pattern>/mcp/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>PadCoordinateApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.PadCoordinateApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PadCoordinateApiServlet</servlet-name>
+        <url-pattern>/pad/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>HsrSummaryApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.HsrSummaryApiServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>HsrSummaryApiServlet</servlet-name>
+        <url-pattern>/hsrsummary/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
