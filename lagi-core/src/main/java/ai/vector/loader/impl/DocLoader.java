@@ -11,7 +11,10 @@ import ai.vector.loader.pojo.SplitConfig;
 import ai.vector.loader.util.DocxParser;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,6 +33,20 @@ public class DocLoader implements DocumentLoader {
         File file = new File(path);
         String content = null;
 
+        if(file.getName().endsWith(".docx")) {
+            try {
+                Document document = DocxParser.loadDocx(path);
+                List<DocumentParagraph> paragraphs = document.getParagraphs();
+                boolean b = hasTitle(document);
+                if(b) {
+                    List<FileChunkResponse.Document> res = splitByTitle(path, paragraphs, splitConfig.getChunkSizeForText());
+                    if (isImageValid(res, file)){
+                        return res;
+                    }                }
+            }catch (Exception ignored){
+            }
+        }
+
         try {
             if (WordDocxUtils.checkImagesInWord(file)){
                 FileChunkResponse response = fileService.extractContent(file);
@@ -43,18 +60,6 @@ public class DocLoader implements DocumentLoader {
             content = content!=null? FileService.removeDirectory(content):content;
         } catch (Exception e) {
             log.error("load doc file error", e);
-        }
-
-        if(file.getName().endsWith(".docx")) {
-            try {
-                Document document = DocxParser.loadDocx(path);
-                List<DocumentParagraph> paragraphs = document.getParagraphs();
-                boolean b = hasTitle(document);
-                if(b) {
-                    return splitByTitle(path, paragraphs, splitConfig.getChunkSizeForText());
-                }
-            }catch (Exception ignored){
-            }
         }
 
         if(content == null) {
@@ -210,6 +215,37 @@ public class DocLoader implements DocumentLoader {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 检查图片是否损坏
+     */
+    public static boolean isImageValid(List<FileChunkResponse.Document>  document,File dir) {
+        int uploadIndex = dir.toString().indexOf("upload");
+        String parentPath = "";
+        // 提取 "/upload" 前面的路径
+        if (uploadIndex != -1) {
+            parentPath = dir.toString().substring(0, uploadIndex);
+        }
+        for (FileChunkResponse.Document re : document) {
+            if (re.getImages() != null){
+                for (FileChunkResponse.Image image : re.getImages()) {
+                    File file = new File(parentPath+image.getPath());
+                    if (!file.exists() || file.length() == 0) {
+                        return false;
+                    }
+                    try {
+                        BufferedImage imagen = ImageIO.read(file);
+                        if (imagen == null) {
+                            return false;
+                        }
+                    } catch (IOException e) {
+                        return false;
+                    }
+                }
+
+            }
+        }
+        return true;
+    }
 
 //    private List<FileChunkResponse.Image> covert2FileChunkResponseImage(File dir,  DocumentParagraph paragraph) {
 //        List<String> imagesTemp = paragraph.getImages();
