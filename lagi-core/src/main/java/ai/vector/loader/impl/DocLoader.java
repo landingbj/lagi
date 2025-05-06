@@ -11,14 +11,14 @@ import ai.vector.loader.pojo.SplitConfig;
 import ai.vector.loader.util.DocxParser;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +29,21 @@ public class DocLoader implements DocumentLoader {
         FileService fileService = new FileService();
         File file = new File(path);
         String content = null;
+        if(file.getName().endsWith(".docx")) {
+            try {
+                Document document = DocxParser.loadDocx(path);
+                List<DocumentParagraph> paragraphs = document.getParagraphs();
+                boolean b = hasTitle(document);
+                if(b) {
+                    List<FileChunkResponse.Document> res = splitByTitle(path, paragraphs, splitConfig.getChunkSizeForText());
+                    if (isImageValid(res, file)){
+                        return res;
+                    }
+                }
+            }catch (Exception ignored){
+            }
+        }
+
         try {
             if (WordDocxUtils.checkImagesInWord(file)){
                 FileChunkResponse response = fileService.extractContent(file);
@@ -43,17 +58,7 @@ public class DocLoader implements DocumentLoader {
         } catch (Exception e) {
             log.error("load doc file error", e);
         }
-        if(file.getName().endsWith(".docx")) {
-            try {
-                Document document = DocxParser.loadDocx(path);
-                List<DocumentParagraph> paragraphs = document.getParagraphs();
-                boolean b = hasTitle(document);
-                if(b) {
-                    return splitByTitle(path, paragraphs, splitConfig.getChunkSizeForText());
-                }
-            }catch (Exception ignored){
-            }
-        }
+
         if(content == null) {
             return Collections.emptyList();
         }
@@ -208,6 +213,38 @@ public class DocLoader implements DocumentLoader {
     }
 
 
+    /**
+     * 检查图片是否损坏
+     */
+    public static boolean isImageValid(List<FileChunkResponse.Document>  document,File dir) {
+        int uploadIndex = dir.toString().indexOf("upload");
+        String parentPath = "";
+        // 提取 "/upload" 前面的路径
+        if (uploadIndex != -1) {
+            parentPath = dir.toString().substring(0, uploadIndex);
+        }
+        for (FileChunkResponse.Document re : document) {
+            if (re.getImages() != null){
+                for (FileChunkResponse.Image image : re.getImages()) {
+                    File file = new File(parentPath+image.getPath());
+                    if (!file.exists() || file.length() == 0) {
+                        return false;
+                    }
+                    try {
+                        BufferedImage imagen = ImageIO.read(file);
+                        if (imagen == null) {
+                            return false;
+                        }
+                    } catch (IOException e) {
+                        return false;
+                    }
+                }
+
+            }
+        }
+        return true;
+    }
+
 //    private List<FileChunkResponse.Image> covert2FileChunkResponseImage(File dir,  DocumentParagraph paragraph) {
 //        List<String> imagesTemp = paragraph.getImages();
 //        return imagesTemp.stream().map(image -> {
@@ -260,13 +297,13 @@ public class DocLoader implements DocumentLoader {
 
         SplitConfig splitConfig = new SplitConfig(512, 512, 512, "a", Collections.emptyMap());
         DocLoader docLoader = new DocLoader();
-        List<FileChunkResponse.Document> load = docLoader.load("C:\\Users\\Administrator\\Desktop\\bushu\\RAG\\测试文档\\2\\大模型中间件产品介绍V1.4.docx", splitConfig);
+        List<FileChunkResponse.Document> load = docLoader.load("C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\A测试用\\安全带未系提示电路.docx", splitConfig);
         for (FileChunkResponse.Document document : load) {
             System.out.println(document.getText());
-//            if(document.getText() != null) {
+            if(document.getText() != null) {
                 System.out.println(document.getText().length()+ "__________________________________________");
-//            }
-//            System.out.println(document.getImages());
+            }
+            System.out.println(document.getImages());
         }
     }
 }
