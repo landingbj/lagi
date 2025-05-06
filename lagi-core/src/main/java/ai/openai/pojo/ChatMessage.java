@@ -28,4 +28,5 @@ public class ChatMessage {
     private String context;
     private List<String> contextChunkIds;
     private List<ToolCall> tool_calls;
+    private String tool_call_id;
 }

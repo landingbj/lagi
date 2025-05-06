@@ -90,7 +90,7 @@ public class CacheLoader {
         }
         try (Stream<Path> pathStream = Files.list(Paths.get(persistenceDirectory))) {
             List<Path> files = pathStream
-                    .filter(path -> path.toString().endsWith(".jsonl"))
+                    .filter(path -> path.toString().endsWith(".jsonl") || path.toString().endsWith(".json"))
                     .collect(Collectors.toList());
             logger.info("Found {} JSONL files in {}", files.size(), persistenceDirectory);
             for (Path path : files) {

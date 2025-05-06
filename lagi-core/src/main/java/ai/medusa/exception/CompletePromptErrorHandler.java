@@ -18,11 +18,11 @@ public class CompletePromptErrorHandler implements ProducerConsumerErrorHandler 
 
     @Override
     public void handle(Exception e) {
-        logger.warn("Complete Prompt Exception:", e);
-        if (e instanceof FailedDiversifyPromptException) {
-            PooledPrompt item = ((FailedDiversifyPromptException) e).getPooledPrompt();
-            this.pool.returnItem(item);
-            logger.warn("return item to pool: {}", item);
-        }
+//        logger.warn("Complete Prompt Exception:", e);
+//        if (e instanceof FailedDiversifyPromptException) {
+//            PooledPrompt item = ((FailedDiversifyPromptException) e).getPooledPrompt();
+//            this.pool.returnItem(item);
+//            logger.warn("return item to pool: {}", item);
+//        }
     }
 }

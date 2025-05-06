@@ -18,4 +18,5 @@ public class AgentConfig {
     private String userId;
     private String wrongCase;
     private String endpoint;
+    private String mcps;
 }

@@ -16,6 +16,7 @@
     <filter>
         <filter-name>CORS</filter-name>
         <filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>
+        <async-supported>true</async-supported>
         <init-param>
             <param-name>cors.allowOrigin</param-name>
             <param-value>*</param-value>
@@ -317,22 +318,20 @@
         <url-pattern>/doc/*</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>PadCoordinateApiServlet</servlet-name>
-        <servlet-class>ai.servlet.api.PadCoordinateApiServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>PadCoordinateApiServlet</servlet-name>
-        <url-pattern>/pad/*</url-pattern>
-    </servlet-mapping>
 
+    <!-- 定义 Servlet -->
     <servlet>
-        <servlet-name>HsrSummaryApiServlet</servlet-name>
-        <servlet-class>ai.servlet.api.HsrSummaryApiServlet</servlet-class>
+        <servlet-name>mcpServlet</servlet-name>
+        <!-- 请替换为实际的 Servlet 类名 -->
+        <servlet-class>ai.servlet.McpSseHttpServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+        <async-supported>true</async-supported>
     </servlet>
 
+    <!-- 配置 Servlet 映射 -->
     <servlet-mapping>
-        <servlet-name>HsrSummaryApiServlet</servlet-name>
-        <url-pattern>/hsrsummary/*</url-pattern>
+        <servlet-name>mcpServlet</servlet-name>
+        <url-pattern>/mcp/*</url-pattern>
     </servlet-mapping>
+
 </web-app>

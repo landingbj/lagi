@@ -8,6 +8,7 @@ import ai.common.utils.MappingIterable;
 import ai.llm.utils.convert.QwenConvert;
 import ai.openai.pojo.*;
 import ai.utils.qa.ChatCompletionUtil;
+import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.dashscope.aigc.generation.Generation;
 import com.alibaba.dashscope.aigc.generation.GenerationParam;
 import com.alibaba.dashscope.aigc.generation.GenerationResult;
@@ -73,9 +74,20 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
     private GenerationParam convertRequest(ChatCompletionRequest request) {
         List<Message> messages = new ArrayList<>();
         for (ChatMessage chatMessage : request.getMessages()) {
+            List<ToolCall> toolCalls = chatMessage.getTool_calls();
+            List<ToolCallBase> collect = null;
+            if(toolCalls != null) {
+                collect = toolCalls.stream().map(toolCall -> {
+                    com.alibaba.dashscope.tools.ToolCallFunction build = com.alibaba.dashscope.tools.ToolCallFunction.builder().build();
+                    BeanUtil.copyProperties(toolCall, build);
+                    return build;
+                }).collect(Collectors.toList());
+            }
             Message msg = Message.builder()
                     .role(chatMessage.getRole())
                     .content(chatMessage.getContent())
+                    .toolCallId(chatMessage.getTool_call_id())
+                    .toolCalls(collect)
                     .build();
             messages.add(msg);
         }
