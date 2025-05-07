@@ -103,7 +103,7 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
     }
 
     private VideoJobResponse wait2Result(String requestId) {
-        int limit = 50;
+        int limit = 600;
         while (limit > 0) {
             limit --;
             VideoJobQueryResponse query = query(requestId);
