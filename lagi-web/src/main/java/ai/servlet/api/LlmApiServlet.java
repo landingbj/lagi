@@ -38,6 +38,7 @@ import ai.manager.AgentManager;
 import ai.manager.LlmManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.CacheItem;
+import ai.medusa.pojo.MedusaMetadata;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.MedusaMonitor;
 import ai.medusa.utils.PromptCacheTrigger;
@@ -636,16 +637,16 @@ public class LlmApiServlet extends BaseServlet {
             MEDUSA_ENABLE = MEDUSA_CONFIG.getEnable();
         }
         if(Boolean.TRUE.equals(MEDUSA_ENABLE)) {
-//            ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
             PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
             chatCompletionResult = medusaService.locate(promptInput);
             if (chatCompletionResult != null) {
                 outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
-//                medusaService.triggerCachePutAndDiversify(promptInput);
+                promptInput.getMedusaMetadata().setCacheHit(true);
+                medusaService.triggerCachePutAndDiversify(promptInput, true);
                 return;
             } else {
-                medusaService.triggerCachePutAndDiversify(promptInput);
+                medusaService.triggerCachePutAndDiversify(promptInput, true);
             }
         }
         boolean hasTruncate = false;

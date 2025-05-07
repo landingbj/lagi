@@ -48,7 +48,7 @@ public class CompletePromptConsumer implements Consumer<PooledPrompt> {
                 promptInput = promptCacheTrigger.analyzeChatBoundaries(promptInput);
             }
             item.setPromptInput(promptInput);
-            ChatCompletionResult chatCompletionResult = cache.get(promptInput);
+            ChatCompletionResult chatCompletionResult = cache.pickCompletionResult(promptInput, PromptCacheConfig.MIN_SIMILARITY_CUTOFF / 2);
             if (chatCompletionResult != null) {
                 return;
             }

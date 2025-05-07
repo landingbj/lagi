@@ -67,7 +67,7 @@ public class MedusaMonitor {
             String reasonContent = extractReasonContent(cacheItem.getChatCompletionResult());
             if (reasonContent != null && !reasonContent.isEmpty()) {
                 PromptInput promptInput = cacheItem.getPromptInput();
-                promptInput.setReasoningContent(reasonContent);
+                promptInput.getMedusaMetadata().setReasoningContent(reasonContent);
                 medusaService.triggerCachePutAndDiversify(promptInput);
                 reasonMonitorMap.put(key, cacheItem);
             }
@@ -97,7 +97,7 @@ public class MedusaMonitor {
                 String content = getContent(cacheItem.getChatCompletionResult());
                 if (content.trim().startsWith("<think>")) {
                     PromptInput promptInput = cacheItem.getPromptInput();
-                    promptInput.setReasoningContent(content.replace("<think>", "").trim());
+                    promptInput.getMedusaMetadata().setReasoningContent(content.replace("<think>", "").trim());
                     medusaService.triggerCachePut(promptInput);
                     reasonMonitorMap.put(key, cacheItem);
                 }
@@ -120,11 +120,11 @@ public class MedusaMonitor {
             if (reasonContent == null) {
                 reasonContent = getContent(completionResult);
                 if (reasonContent.startsWith("<think>")) {
-                    promptInput.setReasoningContent(reasonContent.replace("<think>", ""));
+                    promptInput.getMedusaMetadata().setReasoningContent(reasonContent.replace("<think>", ""));
                     medusaService.triggerCachePutAndDiversify(promptInput);
                 }
             } else {
-                promptInput.setReasoningContent(reasonContent);
+                promptInput.getMedusaMetadata().setReasoningContent(reasonContent);
                 medusaService.triggerCachePutAndDiversify(promptInput);
             }
             medusaService.put(promptInput, completionResult);
