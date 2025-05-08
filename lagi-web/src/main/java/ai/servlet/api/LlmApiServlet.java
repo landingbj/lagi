@@ -229,16 +229,16 @@ public class LlmApiServlet extends BaseServlet {
             MEDUSA_ENABLE = MEDUSA_CONFIG.getEnable();
         }
         if(Boolean.TRUE.equals(MEDUSA_ENABLE)) {
-            ChatCompletionRequest medusaRequest = getCompletionRequest(chatCompletionRequest);
-            PromptInput promptInput = medusaService.getPromptInput(medusaRequest);
+            PromptInput promptInput = medusaService.getPromptInput(chatCompletionRequest);
             chatCompletionResult = medusaService.locate(promptInput);
             if (chatCompletionResult != null) {
                 outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
                 logger.info("Cache hit: {}", PromptInputUtil.getNewestPrompt(promptInput));
-//                medusaService.triggerCachePutAndDiversify(promptInput);
+                promptInput.getMedusaMetadata().setCacheHit(true);
+                medusaService.triggerCachePutAndDiversify(promptInput, true);
                 return;
             } else {
-                medusaService.triggerCachePutAndDiversify(promptInput);
+                medusaService.triggerCachePutAndDiversify(promptInput, true);
             }
         }
         boolean hasTruncate = false;

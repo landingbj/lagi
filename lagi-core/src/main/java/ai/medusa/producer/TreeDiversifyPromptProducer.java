@@ -25,7 +25,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
     private static final String MEDUSA_CATEGORY = PromptCacheConfig.MEDUSA_TREE_CATEGORY;
     private static final int TREE_SIMILARITY_TOP_K = PromptCacheConfig.TREE_SIMILARITY_TOP_K;
-    private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.QA_SIMILARITY_CUTOFF;
+    private static final double TREE_SIMILARITY_CUTOFF = PromptCacheConfig.MIN_SIMILARITY_CUTOFF;
     private static final TreeDiversifyDao treeDiversifyDao = new TreeDiversifyDao();
     private static final Logger log = LoggerFactory.getLogger(TreeDiversifyPromptProducer.class);
     private static final LRUCache<PooledPrompt, Integer> diversifyCache = new LRUCache<>(PromptCacheConfig.COMPLETION_CACHE_SIZE);
@@ -47,7 +47,7 @@ public class TreeDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
-        if (item.getPromptInput().getReasoningContent() != null) {
+        if (item.getPromptInput().getMedusaMetadata().getReasoningContent() != null) {
             return Collections.emptyList();
         }
         try {

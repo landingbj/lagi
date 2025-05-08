@@ -13,8 +13,10 @@ import ai.mr.pipeline.ThreadedProducerConsumerPipeline;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.utils.ContinueWordUtil;
 import ai.utils.LRUCache;
+import ai.utils.qa.ChatCompletionUtil;
 import com.google.common.collect.Lists;
 import lombok.Getter;
+import org.apache.commons.lang3.SerializationUtils;
 
 import java.util.List;
 
@@ -33,6 +35,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
     private static final DiversifyPromptProducer ragDiversifyPromptProducer = new RagDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer pageDiversifyPromptProducer = new PageDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
     private static final DiversifyPromptProducer reasonDiversifyPromptProducer = new ReasonDiversifyPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
+    private static final DiversifyPromptProducer directPromptProducer = new DirectPromptProducer(PromptCacheConfig.PRODUCER_LIMIT);
 
     private static final int SUBSTRING_THRESHOLD = PromptCacheConfig.SUBSTRING_THRESHOLD;
     private static final double LCS_RATIO_PROMPT_INPUT = PromptCacheConfig.LCS_RATIO_PROMPT_INPUT;
@@ -65,19 +68,23 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
     }
 
     public ChatCompletionResult pickCompletionResult(PromptInput promptInput) {
+        return pickCompletionResult(promptInput, PromptCacheConfig.QA_SIMILARITY_CUTOFF);
+    }
+
+    public ChatCompletionResult pickCompletionResult(PromptInput promptInput, double similarityCutoff) {
         if (promptInput == null) {
             return null;
         }
         String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
         List<PromptInput> promptInputList = qaCache.get(newestPrompt);
         if (promptInputList == null) {
-            newestPrompt = qaCache.getPromptInVectorDb(newestPrompt);
+            newestPrompt = qaCache.getPromptInVectorDb(newestPrompt, similarityCutoff);
             if (newestPrompt != null) {
                 promptInputList = qaCache.get(newestPrompt);
             }
         }
         PromptInput pickedPromptInput = null;
-        double maxRatio = 0;
+        double maxRatio = -1d;
         if (promptInputList != null) {
             for (PromptInput promptInputInCache : promptInputList) {
                 if (!promptInput.getParameter().equals(promptInputInCache.getParameter())) {
@@ -100,16 +107,15 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     promptList2 = Lists.newArrayList(curPromptList.get(0), curPromptList.get(curPromptList.size() - 1));
                 }
                 double ratio = LCS.getLcsRatio(promptList1, promptList2, SUBSTRING_THRESHOLD);
-
                 if (ratio > maxRatio) {
                     maxRatio = ratio;
                     pickedPromptInput = promptInputInCache;
                 }
             }
         }
-        if (maxRatio < LCS_RATIO_PROMPT_INPUT) {
-            pickedPromptInput = null;
-        }
+//        if (maxRatio < LCS_RATIO_PROMPT_INPUT) {
+//            pickedPromptInput = null;
+//        }
         ChatCompletionResult result = null;
 
         if (pickedPromptInput != null) {
@@ -119,6 +125,21 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                 result = resultListInCache.get(index);
             }
         }
+        return replaceResult(result, promptInput, newestPrompt);
+    }
+
+    private ChatCompletionResult replaceResult(ChatCompletionResult result, PromptInput promptInput, String newPrompt) {
+        if (result == null) {
+            return null;
+        }
+        ChatCompletionResult newResult = SerializationUtils.clone(result);
+        String content = ChatCompletionUtil.getFirstAnswer(newResult);
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        String prompt = promptInput.getPromptList().get(promptInput.getPromptList().size() - 1);
+        content.replaceAll(prompt, newPrompt);
+        ChatCompletionUtil.setResultContent(newResult, content);
         return result;
     }
 
@@ -155,6 +176,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.THREAD_RUN_LIMIT
             );
             promptLoader.connectProducer(new PickPromptProducer(promptPool));
+            promptLoader.connectConsumer(directPromptProducer);
             if (PromptCacheConfig.getEnableLlmDriver()) {
                 promptLoader.connectConsumer(llmDiversifyPromptProducer);
             }
@@ -180,7 +202,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                     PromptCacheConfig.TOTAL_THREAD_COUNT,
                     PromptCacheConfig.THREAD_RUN_LIMIT
             );
-
+            promptProcessor.connectProducer(directPromptProducer);
             if (PromptCacheConfig.getEnableLlmDriver()) {
                 promptProcessor.connectProducer(llmDiversifyPromptProducer);
             }

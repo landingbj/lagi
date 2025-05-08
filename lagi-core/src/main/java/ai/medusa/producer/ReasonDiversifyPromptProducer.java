@@ -48,7 +48,8 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
 
     @Override
     public Collection<PooledPrompt> produce(PooledPrompt item) throws FailedDiversifyPromptException {
-        if (item.getPromptInput().getReasoningContent() == null || item.getPromptInput().getReasoningContent().isEmpty()) {
+        if (item.getPromptInput().getMedusaMetadata().getReasoningContent() == null ||
+                item.getPromptInput().getMedusaMetadata().getReasoningContent().isEmpty()) {
             return Collections.emptyList();
         }
         try {
@@ -71,7 +72,7 @@ public class ReasonDiversifyPromptProducer extends DiversifyPromptProducer {
 
     private Collection<PooledPrompt> getDiversifiedResult(PooledPrompt item) {
         Collection<PooledPrompt> result = new ArrayList<>();
-        String reasonContent = item.getPromptInput().getReasoningContent();
+        String reasonContent = item.getPromptInput().getMedusaMetadata().getReasoningContent();
         if (reasonContent == null || reasonContent.isEmpty()) {
             return result;
         }

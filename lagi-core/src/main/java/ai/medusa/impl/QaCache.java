@@ -19,7 +19,6 @@ public class QaCache {
     private static final LRUCache<String, List<PromptInput>> cache;
     private static final String MEDUSA_CATEGORY = PromptCacheConfig.MEDUSA_CATEGORY;
     private static final int QA_SIMILARITY_TOP_K = PromptCacheConfig.QA_SIMILARITY_TOP_K;
-    private static final double QA_SIMILARITY_CUTOFF = PromptCacheConfig.QA_SIMILARITY_CUTOFF;
 
     private static final VectorStoreService vectorStoreService = new VectorStoreService();
 
@@ -56,10 +55,11 @@ public class QaCache {
         return cache.size();
     }
 
-    public String getPromptInVectorDb(String key) {
+    public String getPromptInVectorDb(String key, double similarityCutoff) {
         Map<String, String> metadata = new HashMap<>();
         metadata.put("category", MEDUSA_CATEGORY);
-        List<IndexSearchData> indexSearchDataList = vectorStoreService.search(key, QA_SIMILARITY_TOP_K, QA_SIMILARITY_CUTOFF, metadata, MEDUSA_CATEGORY);
+        List<IndexSearchData> indexSearchDataList = vectorStoreService.search(key, QA_SIMILARITY_TOP_K,
+                similarityCutoff, metadata, MEDUSA_CATEGORY);
 
         if (indexSearchDataList.isEmpty()) {
             return null;

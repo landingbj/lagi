@@ -20,7 +20,7 @@ public class PromptCacheConfig {
     public static int TREE_DIVERSIFY_LIMIT = 1;
     public static final int PRODUCER_LIMIT = 1;
     public static final int POOL_CACHE_SIZE = 10000;
-    public static final int COMPLETION_CACHE_SIZE = 100000;
+    public static final int COMPLETION_CACHE_SIZE = 200000;
     public static final int RAW_ANSWER_CACHE_SIZE = 10000;
 
     public static final String DIVERSIFY_PROMPT = "### 任务\n任务：以下提供一个提示词，请根据这个提示词推测用户之后可能输入的提示词。结果只返回提示词本身，" +
@@ -80,7 +80,11 @@ public class PromptCacheConfig {
     public static boolean MEDUSA_FLUSH = true;
     public static String MEDUSA_TREE_CATEGORY = "medusa_tree";
     public static final int QA_SIMILARITY_TOP_K = 30;
-    public static double QA_SIMILARITY_CUTOFF = 0.18;
+    public static double MIN_SIMILARITY_CUTOFF = 0.2;
+    public static int CACHE_HIT_WINDOW = 16;
+    public static double CACHE_HIT_RATIO = 0.3;
+    public static boolean DYNAMIC_SIMILARITY = true;
+    public static double QA_SIMILARITY_CUTOFF;
     public static final int TREE_SIMILARITY_TOP_K = 3;
 
     public static final int SUBSTRING_THRESHOLD = 2;
@@ -125,7 +129,6 @@ public class PromptCacheConfig {
             }
             consumeDelay = config.getConsumeDelay() != null ? config.getConsumeDelay() : consumeDelay;
             preDelay = config.getPreDelay() != null ? config.getPreDelay() : preDelay;
-            QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
             LCS_RATIO_PROMPT_INPUT = config.getLcsRatioPromptInput() != null ? config.getLcsRatioPromptInput() : LCS_RATIO_PROMPT_INPUT;
             initPipelineConfig(config);
         }
@@ -143,9 +146,14 @@ public class PromptCacheConfig {
         REASON_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 2: REASON_DIVERSIFY_LIMIT;
         TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 3: LLM_DIVERSIFY_LIMIT;
 
-        QA_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : QA_SIMILARITY_CUTOFF;
+        MIN_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : MIN_SIMILARITY_CUTOFF;
+        QA_SIMILARITY_CUTOFF = MIN_SIMILARITY_CUTOFF;
         CACHE_PERSISTENT_PATH = config.getCachePersistentPath() != null ? config.getCachePersistentPath() : CACHE_PERSISTENT_PATH;
         CACHE_PERSISTENT_BATCH_SIZE = config.getCachePersistentBatchSize() != null ? config.getCachePersistentBatchSize() : CACHE_PERSISTENT_BATCH_SIZE;
+
+        CACHE_HIT_WINDOW = config.getCacheHitWindow() != null ? config.getCacheHitWindow() : CACHE_HIT_WINDOW;
+        CACHE_HIT_RATIO = config.getCacheHitRatio() != null ? config.getCacheHitRatio() : CACHE_HIT_RATIO;
+        DYNAMIC_SIMILARITY = config.getDynamicSimilarity() != null ? config.getDynamicSimilarity() : DYNAMIC_SIMILARITY;
 
         MEDUSA_FLUSH = config.getFlush() != null ? config.getFlush() : MEDUSA_FLUSH;
     }

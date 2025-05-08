@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatMessage {
+public class ChatMessage implements Serializable {
     private String role;
     @JsonSerialize(using = ContentSerializer.class)
     @JsonDeserialize(using = ContentDeserializer.class)

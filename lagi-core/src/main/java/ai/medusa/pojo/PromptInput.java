@@ -10,10 +10,10 @@ import java.util.List;
 
 @Data
 @Builder
-@EqualsAndHashCode(exclude = {"reasoningContent"})
+@EqualsAndHashCode(exclude = {"medusaMetadata"})
 @ToString
 public class PromptInput implements Serializable {
     private List<String> promptList;
     private PromptParameter parameter;
-    private String reasoningContent;
+    private MedusaMetadata medusaMetadata;
 }

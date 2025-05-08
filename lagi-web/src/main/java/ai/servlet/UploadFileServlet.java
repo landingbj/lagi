@@ -440,6 +440,7 @@ public class UploadFileServlet extends HttpServlet {
                 entity.setFilename(filename);
                 entity.setFilepath(filepath);
                 entity.setFileId(fileId);
+                entity.setCreateTime(new Date().getTime());
                 uploadFileService.addUploadFile(entity);
             } catch (IOException | SQLException e) {
                 e.printStackTrace();
