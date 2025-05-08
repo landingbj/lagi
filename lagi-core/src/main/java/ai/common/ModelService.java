@@ -28,6 +28,7 @@ public class ModelService implements ModelVerify{
     protected Boolean enable;
     protected String router;
     protected Integer concurrency;
+    protected Boolean function;
     @Override
     public boolean verify() {
         if(getApiKey() == null || getApiKey().startsWith("you")) {
@@ -45,5 +46,10 @@ public class ModelService implements ModelVerify{
             ((EnhanceChatCompletionRequest) request).setBrowserIp(null);
         }
         request.setCategory(null);
+        if (function != null && !function) {
+            request.setTools(null);
+            request.setTool_choice(null);
+            request.setParallel_tool_calls(null);
+        }
     }
 }
