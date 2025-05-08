@@ -37,6 +37,7 @@ public class LimitedCapacitySequentialLock {
             remaining--;
         } catch (InterruptedException e){
             log.error("acquire error", e);
+            throw new RuntimeException(e);
         }finally {
             lock.unlock();
         }
