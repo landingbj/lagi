@@ -22,6 +22,10 @@ public class ChatCompletionUtil {
         ;
     }
 
+    public static void setResultContent(ChatCompletionResult chatCompletionResult, String content) {
+        chatCompletionResult.getChoices().get(0).getMessage().setContent(content);
+    }
+
     public static String getFirstAnswer(ChatCompletionResult chatCompletionResult) {
         String content = chatCompletionResult.getChoices().get(0).getMessage().getContent();
         return content;
