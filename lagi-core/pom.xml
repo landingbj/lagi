@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.landingbj</groupId>
         <artifactId>lagi</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
     </parent>
 
     <artifactId>lagi-core</artifactId>
