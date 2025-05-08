@@ -31,6 +31,7 @@ public class VectorStoreConfig {
     private Integer childDepth;
     @JsonProperty("token")
     private String token;
+    private Integer concurrency;
 
     VectorStoreConfig() {
         similarityTopK = 1;

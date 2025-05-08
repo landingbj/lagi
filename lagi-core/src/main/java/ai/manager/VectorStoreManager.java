@@ -10,6 +10,7 @@ import ai.embedding.Embeddings;
 import ai.utils.LagiGlobal;
 import ai.vector.VectorStore;
 import ai.vector.impl.BaseVectorStore;
+import ai.vector.impl.ProxyVectorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,13 @@ public class VectorStoreManager {
     }
 
     public void register(String key, VectorStore adapter) {
+        if(adapter instanceof BaseVectorStore) {
+            BaseVectorStore baseVectorStore = (BaseVectorStore) adapter;
+            Integer concurrency = baseVectorStore.getConfig().getConcurrency();
+            if(concurrency != null && concurrency > 0) {
+                adapter = new ProxyVectorStore(baseVectorStore);
+            }
+        }
         VectorStore temp = aiMap.putIfAbsent(key, adapter);
         if (temp != null) {
             log.error("Adapter {} name {} is already exists!!", adapter.getClass().getName(), key);
