@@ -16,6 +16,7 @@
     <filter>
         <filter-name>CORS</filter-name>
         <filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>
+        <async-supported>true</async-supported>
         <init-param>
             <param-name>cors.allowOrigin</param-name>
             <param-value>*</param-value>
@@ -347,11 +348,16 @@
         <url-pattern>/doc/*</url-pattern>
     </servlet-mapping>
     <servlet>
-        <servlet-name>StatisticsApiServlet</servlet-name>
-        <servlet-class>ai.servlet.api.StatisticsApiServlet</servlet-class>
+        <servlet-name>mcpServlet</servlet-name>
+        <!-- 请替换为实际的 Servlet 类名 -->
+        <servlet-class>ai.servlet.McpSseHttpServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+        <async-supported>true</async-supported>
     </servlet>
+
+    <!-- 配置 Servlet 映射 -->
     <servlet-mapping>
-        <servlet-name>StatisticsApiServlet</servlet-name>
-        <url-pattern>/rank/*</url-pattern>
+        <servlet-name>mcpServlet</servlet-name>
+        <url-pattern>/mcp/*</url-pattern>
     </servlet-mapping>
 </web-app>

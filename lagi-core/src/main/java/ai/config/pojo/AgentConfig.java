@@ -31,4 +31,5 @@ public class AgentConfig {
     private Boolean canOutPut;
     private String describe;
     private String character;
+    private String mcps;
 }

@@ -36,6 +36,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     @JsonProperty("agent_general_config")
     private Backend agentGeneralConfiguration;
 
+    private McpConfig mcps;
+
     @Override
     public void init() {
         EmbeddingManager.getInstance().register(functions.getEmbedding());
@@ -50,6 +52,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Routers.getInstance().register(functions, routers);
         WorkerManager.getInstance().register(workers);
         registerFilter();
+        McpManager.getInstance().register(mcps);
         if(agentGeneralConfiguration == null) {
             agentGeneralConfiguration = Backend.builder()
                     .model("qwen-turbo")

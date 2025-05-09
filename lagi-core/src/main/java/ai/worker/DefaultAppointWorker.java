@@ -35,7 +35,7 @@ public class DefaultAppointWorker extends RouteWorker {
         if(agents.size() == 1 && RouteGlobal.WILDCARD_STRING.equals(agents.get(0))) {
             List<Agent<?, ?>> allAgents = AgentManager.getInstance().agents();
             for (Agent<?, ?> agent : allAgents) {
-                if(agent.getAgentConfig() !=null && agent.getAgentConfig().getAppId() !=null) {
+                if(agent.getAgentConfig() !=null) {
                     try {
                         agentMap.put(agent.getAgentConfig().getId(), (Agent<ChatCompletionRequest, ChatCompletionResult>) agent);
                     } catch (Exception ignored) {
