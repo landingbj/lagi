@@ -7,21 +7,26 @@ LinkMind(联智) 是一款强大的企业级多模态大模型中间件，它可
 在开始之前，请确保您已经准备好以下环境：
 
 * **Java 8 或更高版本**
-* **Maven**
+* **Maven(tomcat版本不能低于兼容的idk的最低版本，如果你的 JDK版本只是1.8，那么Tomcat版本必须在10.0.x以下)**
 * **Docker (可选，用于运行向量数据库)**
 
 ## 1. 下载 LinkMind(联智)
 
 对于开发者而言，我们提供了简便的方法来编译和运行LinkMind(联智) 应用。您可以选择使用maven命令行工具进行封包，或者通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。
 
-### 方法一：使用maven命令
+### 方法一：使用IDE+maven打包
 
-1. **克隆项目**：首先，您需要克隆LinkMind(联智) 项目的仓库:
+1. **克隆项目**：
 
+**打开 GitHub 仓库**：在 IDE 中连接 LinkMind(联智) 的 GitHub 仓库，使用 IDE 的克隆功能，将 LinkMind(联智) 项目克隆到本地。
+
+|       | GitHub 仓库                           |
+| ----- | ------------------------------------- |
+| SSH   | git@github.com:landingbj/lagi.git     |
+| HTTPS | https://github.com/landingbj/lagi.git |
 ```shell
 git clone https://github.com/landingbj/lagi.git
 ```
-
 2. **进入项目**：切换到项目目录：
 
 ```shell
@@ -34,18 +39,54 @@ cd lagi
 mvn clean install
 ```
 
-### 方法二：使用IDE
+4. **选择 IDE**： 您可以选择使用 IntelliJ IDEA 或 Eclipse 等主流 IDE。
 
-1. **选择 IDE**： 您可以选择使用 IntelliJ IDEA 或 Eclipse 等主流 IDE。
+5. **编译项目**： 使用 IDE 的编译功能，编译 LinkMind(联智) 项目。
 
-2. **打开 GitHub 仓库**：在 IDE 中连接 LinkMind(联智) 的 GitHub 仓库，使用 IDE 的克隆功能，将 LinkMind(联智) 项目克隆到本地。
+### 方法二：使用 Web 容器(Tomcat)
 
-|       | GitHub 仓库                             |
-| ----- | ------------------------------------- |
-| SSH   | git@github.com:landingbj/lagi.git     |
-| HTTPS | https://github.com/landingbj/lagi.git |
+安装tomcat之前要先安装jdk1.8;查看相关版本
 
-3. **编译项目**： 使用 IDE 的编译功能，编译 LinkMind(联智) 项目。
+1. **下载并安装jdk1.8**：jdk1.8下载地址：https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+2. **配置jdk环境变量**：
+进入系统环境变量，为jdk添加相应的环境变量。
+* 添加JAVA_HOME变量：点击新建，在弹出的新建对话框中，添加以下内容：
+变量名：JAVA_HOME
+变量值：C:\Program Files\java\jdk
+* 添加CLASSPATH变量：点击新建，在弹出的新建对话框中，添加以下内容：
+变量名：CLASSPATH
+变量值：.;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
+* 更改Path变量：点击编辑，在弹出的新建对话框中点击新建，添加%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin。
+* 测试jdk是否配置完成
+通过java -version命令，查看java版本
+```bash
+java -version
+```
+
+3. **下载Tomcat**： Tomcat下载地址：https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
+
+4. **下载War 文件**：LinkMind(联智)的Web应用，可直接部署到Web容器。
+   - 文件名：`lagi-web.war`
+   - 文件大小：279 MB
+   - 下载链接：[点击这里下载](https://downloads.landingbj.com/lagi/lagi-web.war)
+
+5. **启动项目**：
+
+* 修改配置文件
+
+* 将下好的war包文件放入解压好的Tomcat的webapps路径下，如：
+
+```bash
+C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\
+```
+
+* 执行启动文件，如：
+
+```bash
+C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
+```
+
 
 ## 2. 安装向量数据库
 
