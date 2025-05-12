@@ -14,35 +14,78 @@ Before getting started, ensure you have the following environment ready:
 
 For developers, we provide an easy method to compile and run the LinkMind application. You can either use the Maven command-line tool to package it or run it through popular integrated development environments (IDEs) such as IntelliJ IDEA.
 
-### Method 1: Using Maven Commands
+### Method 1: Use IDE+maven packaging
 
-1. **Clone the Repository**: First, clone the LinkMind project repository:
+1. **Clone the project**:
 
-   ```shell
-   git clone https://github.com/landingbj/lagi.git
+**Open the GitHub repository**: Connect to LinkMind's GitHub repository in the IDE, and use the IDE's clone function to clone the LinkMind project to your local computer.
 
-1. **Navigate to the Project Directory**: Switch to the project directory:
+| | GitHub repository |
+| ----- | ------------------------------------- |
+| SSH | git@github.com:landingbj/lagi.git |
+| HTTPS | https://github.com/landingbj/lagi.git |
+```shell
+git clone https://github.com/landingbj/lagi.git
+```
+2. **Enter the project**: Switch to the project directory:
 
-   ```shell
-   cd lagi
-   ```
+```shell
+cd lagi
+```
 
-2. **Compile the Project**: Run the Maven command in the root directory to compile the project:
+3. **Compile the project**: Run the Maven command in the project root directory to compile:
 
-   ```bash
-   mvn clean install
-   ```
+```bash
+mvn clean install
+```
 
-### Method 2: Using an IDE
+4. **Select IDE**: You can choose to use mainstream IDEs such as IntelliJ IDEA or Eclipse.
 
-1. **Choose an IDE**: You can use IntelliJ IDEA or Eclipse.
+5. **Compile the project**: Use the compilation function of the IDE to compile the LinkMind project.
 
-2. **Connect to the GitHub Repository**: In the IDE, connect to the LinkMind GitHub repository. Use the IDE’s cloning feature to clone the LinkMind project locally.
+### Method 2: Use Web container (Tomcat)
 
-   |       | GitHub Repository                                          |
-   | ----- | ---------------------------------------------------------- |
-   | SSH   | [git@github.com](mailto:git@github.com):landingbj/lagi.git |
-   | HTTPS | https://github.com/landingbj/lagi.git                      |
+Before installing tomcat, you must first install jdk1.8; check the relevant version
+
+1. **Download and install jdk1.8**: jdk1.8 download address: https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+2. **Configure jdk environment variables**:
+Enter the system environment variables and add the corresponding environment variables for jdk.
+* Add JAVA_HOME variable: Click New, in the New dialog box that pops up, add the following content:
+Variable name: JAVA_HOME
+Variable value: C:\Program Files\java\jdk
+* Add CLASSPATH variable: Click New, in the New dialog box that pops up, add the following content:
+Variable name: CLASSPATH
+Variable value: .;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
+* Change Path variable: Click Edit, click New in the New dialog box that pops up, add %JAVA_HOME%\bin;%JAVA_HOME%\jre\bin.
+* Test whether jdk configuration is complete
+Use java -version command to check java version
+```bash
+java -version
+```
+
+3. **Download Tomcat**: Tomcat download address: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
+
+4. **Download War file**: LinkMind (LinkMind) Web application, can be directly deployed to the Web container.
+- File name: `lagi-web.war`
+- File size: 279 MB
+- Download link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-web.war)
+
+5. **Start the project**:
+
+* Modify the configuration file
+
+* Put the downloaded war package file into the unzipped Tomcat webapps path, such as:
+
+```bash
+C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\
+```
+
+* Execute the startup file, such as:
+
+```bash
+C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
+```
 
 3. **Compile the Project**: Use the IDE's compile feature to build the LinkMind project.
 
