@@ -50,7 +50,7 @@ mvn clean install
 1. **下载并安装jdk1.8**：jdk1.8下载地址：https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
 2. **配置jdk环境变量**：
-进入系统环境变量，为jdk添加相应的环境变量。
+搜索‘编辑系统环境变量’进入系统环境变量，为jdk添加相应的环境变量。
 * 添加JAVA_HOME变量：点击新建，在弹出的新建对话框中，添加以下内容：
 变量名：JAVA_HOME
 变量值：C:\Program Files\java\jdk
@@ -58,8 +58,8 @@ mvn clean install
 变量名：CLASSPATH
 变量值：.;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
 * 更改Path变量：点击编辑，在弹出的新建对话框中点击新建，添加%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin。
-* 测试jdk是否配置完成
-通过java -version命令，查看java版本
+* 测试jdk是否配置完成，win+R打开黑窗口，输入cmd
+通过java -version命令，查看java版本，显示jdk版本号则为安装配置完成
 ```bash
 java -version
 ```
@@ -72,20 +72,40 @@ java -version
    - 下载链接：[点击这里下载](https://downloads.landingbj.com/lagi/lagi-web.war)
 
 5. **启动项目**：
-
-* 修改配置文件
-
 * 将下好的war包文件放入解压好的Tomcat的webapps路径下，如：
 
 ```bash
-C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\
+C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\ROOT\
 ```
 
-* 执行启动文件，如：
+* 如果本地未安装elastic和chroma，则修改\apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml中对应配置项为enable: false
+
+```yml
+  term:
+    # This  is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
+    - name: elastic
+      driver: ai.bigdata.impl.ElasticSearchAdapter
+      host: localhost
+      port: 9200
+      enable: false
+
+  rag: # RAG enhances large language models by integrating external knowledge retrieval.
+    vector: chroma
+    term: elastic
+    graph: landing
+    enable: false
+    priority: 10
+    default: "Please give prompt more precisely"
+    track: true
+```
+
+* 打开执行文件‘startup.bat’，如：
 
 ```bash
 C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
 ```
+
+可以通过浏览器访问：http://localhost:8000/查看是否启动成功
 
 
 ## 2. 安装向量数据库

@@ -50,7 +50,7 @@ Before installing tomcat, you must first install jdk1.8; check the relevant vers
 1. **Download and install jdk1.8**: jdk1.8 download address: https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
 2. **Configure jdk environment variables**:
-Enter the system environment variables and add the corresponding environment variables for jdk.
+Search for 'Edit system environment variables' to enter the system environment variables and add the corresponding environment variables for jdk.
 * Add JAVA_HOME variable: Click New, in the New dialog box that pops up, add the following content:
 Variable name: JAVA_HOME
 Variable value: C:\Program Files\java\jdk
@@ -58,34 +58,54 @@ Variable value: C:\Program Files\java\jdk
 Variable name: CLASSPATH
 Variable value: .;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
 * Change Path variable: Click Edit, click New in the New dialog box that pops up, add %JAVA_HOME%\bin;%JAVA_HOME%\jre\bin.
-* Test whether jdk configuration is complete
-Use java -version command to check java version
+* Test whether jdk configuration is complete, win+R opens a black window, and enter cmd
+Use the java -version command to check the java version. If the jdk version number is displayed, the installation and configuration are complete
 ```bash
 java -version
 ```
 
 3. **Download Tomcat**: Tomcat download address: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
 
-4. **Download War file**: LinkMind (LinkMind) Web application, can be directly deployed to the Web container.
+4. **Download War file**: LinkMind's Web application can be directly deployed to the Web container.
 - File name: `lagi-web.war`
 - File size: 279 MB
 - Download link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-web.war)
 
 5. **Start the project**:
-
-* Modify the configuration file
-
 * Put the downloaded war package file into the unzipped Tomcat webapps path, such as:
 
 ```bash
-C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\
+C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\ROOT\
 ```
 
-* Execute the startup file, such as:
+* If elastic and chroma are not installed locally, modify the corresponding configuration item in \apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml to enable: false
+
+```yml
+term:
+# This is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
+- name: elastic
+driver: ai.bigdata.impl.ElasticSearchAdapter
+host: localhost
+port: 9200
+enable: false
+
+rag: # RAG enhances large language models by integrating external knowledge retrieval.
+vector: chroma
+term: elastic
+graph: landing
+enable: false
+priority: 10
+default: "Please give prompt more precisely"
+track: true
+```
+
+* Open the executable file 'startup.bat', such as:
 
 ```bash
 C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
 ```
+
+You can visit the browser: http://localhost:8000/ to check whether the startup is successful
 
 3. **Compile the Project**: Use the IDE's compile feature to build the LinkMind project.
 
