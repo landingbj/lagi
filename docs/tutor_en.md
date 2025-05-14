@@ -47,31 +47,16 @@ mvn clean install
 
 Before installing tomcat, you must first install jdk1.8; check the relevant version
 
-1. **Download and install jdk1.8**: jdk1.8 download address: https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+If idk1.8 is not installed, please refer to Note 1, install idk1.8 before proceeding to the next step
 
-2. **Configure jdk environment variables**:
-Search for 'Edit system environment variables' to enter the system environment variables and add the corresponding environment variables for jdk.
-* Add JAVA_HOME variable: Click New, in the New dialog box that pops up, add the following content:
-Variable name: JAVA_HOME
-Variable value: C:\Program Files\java\jdk
-* Add CLASSPATH variable: Click New, in the New dialog box that pops up, add the following content:
-Variable name: CLASSPATH
-Variable value: .;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
-* Change Path variable: Click Edit, click New in the New dialog box that pops up, add %JAVA_HOME%\bin;%JAVA_HOME%\jre\bin.
-* Test whether jdk configuration is complete, win+R opens a black window, and enter cmd
-Use the java -version command to check the java version. If the jdk version number is displayed, the installation and configuration are complete
-```bash
-java -version
-```
+If Tomcat is not installed, please refer to Note 2, install Tomcat before proceeding to the next step
 
-3. **Download Tomcat**: Tomcat download address: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
-
-4. **Download War file**: LinkMind's Web application can be directly deployed to the Web container.
+1. **Download War file**: LinkMind's Web application can be directly deployed to the Web container.
 - File name: `lagi-web.war`
 - File size: 279 MB
 - Download link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-web.war)
 
-5. **Start the project**:
+2. **Start the project**:
 * Put the downloaded war package file into the unzipped Tomcat webapps path, such as:
 
 ```bash
@@ -105,7 +90,23 @@ track: true
 C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
 ```
 
-You can visit the browser: http://localhost:8000/ to check whether the startup is successful
+You can visit http://localhost:8000/ through the browser to check whether the startup is successful
+
+### Method 3: Docker
+
+- Image name: `yinruoxi666/landingbj/lagi`
+
+- Pull command:
+
+```bash
+docker pull yinruoxi666/landingbj/lagi 
+```
+
+- Start the container: 
+
+```bash 
+docker run -d --name lagi-web -p 8080:8080 landingbj/lagi 
+```
 
 3. **Compile the Project**: Use the IDE's compile feature to build the LinkMind project.
 
@@ -117,27 +118,27 @@ LinkMind supports various vector databases such as ChromaDB. If you want to use 
 
 ### Method 1: Python
 
-***Ensure Python is installed on your system***
+*** Make sure the Python runtime environment is installed (download resources are at the end of the document Note 3) ***
 
-- Install ChromaDB:
+- Install ChromaDB (command execution is executed in a black window)
 
-  ```bash
-  pip install chromadb
-  ```
+```bash
+pip install chromadb
+```
 
-- Create a database storage directory:
+- Create a database storage directory 'db_data'
 
-  ```bash
-  mkdir db_data
-  ```
+```bash
+mkdir db_data
+```
 
-- Start the database service:
+- Start the database service ('db_data' is the name of the folder created in the previous step)
 
-  ```bash
-  # The --path parameter specifies the data persistence path
-  # By default, the service runs on port 8000
-  chroma run --path db_data
-  ```
+```bash
+# The --path parameter can specify the data persistence path
+# Port 8000 is enabled by default
+chroma run --path db_data
+```
 
 **Note:**
 
@@ -173,41 +174,54 @@ Once installed, you can verify the service is running by accessing: http://local
 
 ![img_1.png](images/img_1.png)
 
-## 3. Configuration File
+## 3. Configuration file
 
-Modify the `lagi.yml` configuration file to specify the model you want to use. Replace the `your-api-key` placeholders with your actual API keys and set the `enable` field of the desired model to `true`.
+Modify the `lagi.yml` configuration file, select the model you like, replace the `your-api-key` and other information of the model with your own key, and set the `enable` field of the enabled model to `true` as required.
 
-***Example: Configuring the Kimi Model***
+***Take the configuration of kimi as an example:***
 
-- Enable the model and set the `enable` field to `true`:
+If it is started in Tomcat form, modify the path to: \apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml
 
-  ```yaml
-  - name: kimi
-    type: Moonshot
-    enable: true
-    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
-    driver: ai.llm.adapter.impl.MoonshotAdapter
-    api_key: your-api-key
-  ```
+- Fill in the model information and start the model, modify the enable setting to true.
 
-- Adjust the streaming and priority settings as needed:
+```yaml
+- name: kimi
+type: Moonshot
+enable: true
+model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+driver: ai.llm.adapter.impl.MoonshotAdapter
+api_key: your-api-key
+```
 
-  ```yaml
-  chat:
-    - backend: doubao
-      model: doubao-pro-4k
-      enable: true
-      stream: true
-      priority: 160
-  
-    - backend: kimi
-      model: moonshot-v1-8k
-      enable: true
-      stream: true
-      priority: 150
-  ```
+- According to your needs, set the model output mode stream and priority priority. The larger the value, the higher the priority.
 
-Configure the vector database information:
+```yaml
+chat:
+- backend: doubao
+model: doubao-pro-4k
+enable: true
+stream: true
+priority: 160
+
+- backend: kimi
+model: moonshot-v1-8k
+enable: true
+stream: true
+priority: 150
+```
+
+- According to your needs, add route modification.
+
+```yaml
+# Rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent) # A|B -> Polling, A or B, means randomly polling between A and B;
+# A,B -> Failover, execute A first, if A fails, then execute B;
+# A&B -> Parallel, call A and B at the same time, and select the appropriate unique result;
+# This rule can be combined into ((A&B&C), (E|F)), which means calling ABC at the same time first, and if it fails, randomly call E or F.
+chat:
+route: best((landing&chatgpt), (kimi|ernie))
+```
+
+Select the configured vector database and fill in the corresponding configuration information.
 
 ***Example: Configuring a Local Chroma Database***
 
@@ -283,7 +297,16 @@ LinkMind supports dynamic model switching. Update the `lagi.yml` configuration f
   stream: true
   priority: 10
 ```
+- Add route modifications according to your needs.
 
+```yaml
+# Rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent) # A|B -> Polling, A or B, means randomly polling between A and B;
+# A,B -> Failover, execute A first, if A fails, then execute B;
+# A&B -> Parallel, call A and B at the same time, and select the appropriate unique result;
+# This rule can be combined into ((A&B&C), (E|F)), which means calling ABC at the same time first, and if it fails, randomly call E or F.
+chat:
+route: best((landing&chatgpt), (kimi|ernie))
+```
 Switch models online via the interface:
 
 ![img.png](images/img_3.png)
@@ -359,3 +382,28 @@ For different types of files, Lagi will adopt differentiated processing strategi
 
 By following this tutorial, you have successfully integrated LinkMind into your project. You can now start leveraging LinkMind's powerful AI features to enhance user experience and improve efficiency.
 
+**Note 1**: Tutorial for installing idk1.8
+
+1. **Download and install jdk1.8**: jdk1.8 download address: https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+2. **Configure jdk environment variables**:
+Search for ‘Edit system environment variables’ to enter the system environment variables and add the corresponding environment variables for jdk.
+* Add JAVA_HOME variable: Click New, in the New dialog box that pops up, add the following content:
+Variable name: JAVA_HOME
+Variable value: C:\Program Files\java\jdk
+* Add CLASSPATH variable: Click New, in the New dialog box that pops up, add the following content:
+Variable name: CLASSPATH
+Variable value: .;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
+* Change Path variable: Click Edit, click New in the New dialog box that pops up, add %JAVA_HOME%\bin;%JAVA_HOME%\jre\bin.
+* Test whether jdk configuration is complete, win+R opens a black window, and enter cmd
+Use the java -version command to check the java version. If the jdk version number is displayed, the installation and configuration are complete
+```bash
+java -version
+```
+**Note 2**: Tutorial for installing Tomcat
+
+**Download Tomcat**: Tomcat download address: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
+
+**Note 3**: Tutorial on installing Python
+
+**Download Python**: Python official website: https://www.python.org/

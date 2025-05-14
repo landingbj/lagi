@@ -47,31 +47,17 @@ mvn clean install
 
 安装tomcat之前要先安装jdk1.8;查看相关版本
 
-1. **下载并安装jdk1.8**：jdk1.8下载地址：https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+若没有安装idk1.8，请参考注1，安装idk1.8后再进行下一步
 
-2. **配置jdk环境变量**：
-搜索‘编辑系统环境变量’进入系统环境变量，为jdk添加相应的环境变量。
-* 添加JAVA_HOME变量：点击新建，在弹出的新建对话框中，添加以下内容：
-变量名：JAVA_HOME
-变量值：C:\Program Files\java\jdk
-* 添加CLASSPATH变量：点击新建，在弹出的新建对话框中，添加以下内容：
-变量名：CLASSPATH
-变量值：.;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
-* 更改Path变量：点击编辑，在弹出的新建对话框中点击新建，添加%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin。
-* 测试jdk是否配置完成，win+R打开黑窗口，输入cmd
-通过java -version命令，查看java版本，显示jdk版本号则为安装配置完成
-```bash
-java -version
-```
+若没有安装Tomcat，请参考注2，安装Tomcat后再进行下一步
 
-3. **下载Tomcat**： Tomcat下载地址：https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
 
-4. **下载War 文件**：LinkMind(联智)的Web应用，可直接部署到Web容器。
+1. **下载War 文件**：LinkMind(联智)的Web应用，可直接部署到Web容器。
    - 文件名：`lagi-web.war`
    - 文件大小：279 MB
    - 下载链接：[点击这里下载](https://downloads.landingbj.com/lagi/lagi-web.war)
 
-5. **启动项目**：
+2. **启动项目**：
 * 将下好的war包文件放入解压好的Tomcat的webapps路径下，如：
 
 ```bash
@@ -107,6 +93,22 @@ C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
 
 可以通过浏览器访问：http://localhost:8000/查看是否启动成功
 
+### 方法三：Docker 
+
+- 镜像名称：`yinruoxi666/landingbj/lagi`
+
+- 拉取命令：
+
+  ```bash
+  docker pull yinruoxi666/landingbj/lagi
+  ```
+
+- 启动容器：
+
+  ```bash
+  docker run -d --name lagi-web -p 8080:8080 landingbj/lagi
+  ```
+
 
 ## 2. 安装向量数据库
 
@@ -116,21 +118,21 @@ LinkMind(联智) 支持多种向量数据库，例如 ChromaDB。如果您想使
 
 ### 方式一：Python
 
-***确保已安装 Python 运行环境***
+***确保已安装 Python 运行环境（下载资源在文档最后注3）*** 
 
-- 安装ChromaDB
+- 安装ChromaDB(命令执行都是在黑窗口执行)
 
 ```bash
 pip install chromadb
 ```
 
-- 创建数据库存储目录
+- 创建数据库存储目录 'db_data'
 
 ```bash
 mkdir db_data
 ```
 
-- 启动数据库服务
+- 启动数据库服务( 'db_data'是上一步中创建的文件夹名)
 
 ```bash
 # --path参数可以指定数据持久化路径
@@ -178,6 +180,8 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 ***以配置kimi为例：***
 
+如是以Tomcat形式启动，修改路径为：\apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml
+
 - 填入模型信息并开启模型,修改enable设置为true。
   
   ```yaml
@@ -204,6 +208,17 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
         enable: true
         stream: true
         priority: 150
+  ```
+
+- 根据您的需求，添加route修改。
+  
+  ```yaml
+  # 规则：(小信智能体&股票智能体&汇率智能体) # A|B -> 轮询，A 或 B，表示在 A 和 B 之间随机轮询；
+  # A,B -> 故障转移，先执行 A，如果 A 失败，再执行 B；
+  # A&B -> 并行，同时调用 A 和 B，选择合适的唯一结果；
+  # 该规则可以组合成 ((A&B&C),(E|F))，表示先同时调用 ABC，如果失败，则随机调用 E 或 F。
+    chat:
+      route: best((landing&chatgpt),(kimi|ernie))
   ```
 
 选择配置的向量数据库，并填入对应的配置信息。
@@ -278,6 +293,7 @@ LinkMind(联智) 提供了动态切换模型的功能，您可以在配置文件
 
 修改配置切换模型：通过修改`lagi.yml`配置文件，将需要使用的模型设置为`enable`为`true`。在非流式调用下当前服务宕机，会根据`priority`值自动启用其他模型。
 
+
 ```shell
 - backend: chatglm
   model: glm-3-turbo
@@ -291,6 +307,16 @@ LinkMind(联智) 提供了动态切换模型的功能，您可以在配置文件
   stream: true
   priority: 10
 ```
+- 根据您的需求，同时添加route的修改。
+  
+  ```yaml
+  # 规则：(小信智能体&股票智能体&汇率智能体) # A|B -> 轮询，A 或 B，表示在 A 和 B 之间随机轮询；
+  # A,B -> 故障转移，先执行 A，如果 A 失败，再执行 B；
+  # A&B -> 并行，同时调用 A 和 B，选择合适的唯一结果；
+  # 该规则可以组合成 ((A&B&C),(E|F))，表示先同时调用 ABC，如果失败，则随机调用 E 或 F。
+    chat:
+      route: best((landing&chatgpt),(kimi|ernie))
+  ```
 
 在线切换模型，选择您喜欢的模型。
 ![img.png](images/img_3.png)
@@ -396,3 +422,31 @@ LinkMind(联智) 提供了动态切换模型的功能，您可以在配置文件
 ## 总结
 
 通过本教程，您已经成功地将 LinkMind(联智) 集成到您的项目中，并可以开始使用 LinkMind(联智) 提供的各种 AI 功能。LinkMind(联智) 的强大功能和灵活的扩展性可以帮助您轻松地将大模型技术应用到您的业务中，提升用户体验和效率。
+
+
+
+**注1**：安装idk1.8教程
+
+1. **下载并安装jdk1.8**：jdk1.8下载地址：https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+2. **配置jdk环境变量**：
+搜索‘编辑系统环境变量’进入系统环境变量，为jdk添加相应的环境变量。
+* 添加JAVA_HOME变量：点击新建，在弹出的新建对话框中，添加以下内容：
+变量名：JAVA_HOME
+变量值：C:\Program Files\java\jdk
+* 添加CLASSPATH变量：点击新建，在弹出的新建对话框中，添加以下内容：
+变量名：CLASSPATH
+变量值：.;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar
+* 更改Path变量：点击编辑，在弹出的新建对话框中点击新建，添加%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin。
+* 测试jdk是否配置完成，win+R打开黑窗口，输入cmd
+通过java -version命令，查看java版本，显示jdk版本号则为安装配置完成
+```bash
+java -version
+```
+**注2**：安装Tomcat教程
+
+**下载Tomcat**： Tomcat下载地址：https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.zip
+
+**注3**：安装Python教程
+
+**下载Python **：Python 官网：https://www.python.org/

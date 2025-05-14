@@ -2,7 +2,7 @@
 
 ## **Introduction**
 
-LinkMind is a solution designed by Beijing Landing Technologies Co.,Ltd. specifically for the significant gap between the powerful forces of the large model open-source community and enterprise application deployment. It is an enterprise-level composite multimodal large model middleware aimed at bridging this gap, by providing a secure and professional platform, enabling enterprises to customize and deploy large models in a low-cost, efficient manner.
+LinkMind is a solution carefully developed by Beijing Liandong North Technology Co., Ltd. to address the significant gap between the rapid development of open source big model technology and its actual application in enterprises. It is an enterprise-level composite multimodal big model middleware that aims to bridge this gap and enable enterprises to customize and deploy big models in a low-cost and efficient manner by providing a secure and professional platform.
 
 Supports but is not limited to the following models:
 
@@ -69,7 +69,7 @@ To allow users to intuitively experience the powerful functionality and convenie
 
 ## Quick Start
 
-For developers, we provide a simple way to compile and run the LinkMind application. You can choose to use the Maven command-line tool to package, or run it through mainstream Integrated Development Environments (IDEs) like IntelliJ IDEA. Please ensure your JDK version meets at least the requirements of version 8.
+For developers, we provide a simple way to compile and run the LinkMind application. You can choose to use the Maven command-line tool to package, or run it through mainstream Integrated Development Environments (IDEs) like IntelliJ IDEA. Please make sure you are using JDK version 8 or above.
 
 ### Method 1: Using Maven
 
@@ -141,7 +141,7 @@ If you find the vector databases currently integrated with LinkMind to be less t
 
 ## Security
 
-To better integrate LinkMind into your business,You can do this by adding the keywords you want to filter in the  [`sensitive_word.json`](lagi-web/src/main/resources/sensitive_word.json) file,In the [priority_word.json](lagi-web/src/main/resources/priority_word.json) file, you specify which keywords to answer first.And set the stop keyword in the [stopping_word.json](lagi-web/src/main/resources/stopping_word.json) file,Thus, the returned results of the dialogue are changed, the dialogue is guided in a specific direction, and the dialogue is automatically stopped when needed.
+In order to better integrate LinkMind into your business, you can add the keywords you need to filter in the [sensitive_word.json](lagi-web/src/main/resources/sensitive_word.json) file, specify the priority keywords in the [priority_word.json](lagi-web/src/main/resources/priority_word.json) file, and set the stopping keywords in the [stopping_word.json](lagi-web/src/main/resources/stopping_word.json) file to change the return results of the conversation, guide the conversation in a specific direction, and automatically stop the conversation when needed.
 
 Example: 
 
