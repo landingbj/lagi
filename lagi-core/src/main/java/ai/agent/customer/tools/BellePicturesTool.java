@@ -25,7 +25,7 @@ public class BellePicturesTool extends AbstractTool {
     private void init() {
         name = "belle_pictures";
         toolInfo = ToolInfo.builder().name("belle_pictures")
-                .description("这是一个生成头像工具,调用这个工具可以生成一张头像")
+                .description("这是一个头像随机生成工具,调用这个工具可以随机生成一张头像, 因为并不需要任何参数所以生成的头像是不可控的")
                 .args(Lists.newArrayList()).build();
         register(this);
     }

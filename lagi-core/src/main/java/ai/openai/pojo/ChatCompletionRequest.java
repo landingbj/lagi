@@ -1,9 +1,11 @@
 package ai.openai.pojo;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 @Data
+@EqualsAndHashCode
 public class ChatCompletionRequest {
     private String sessionId;
     private String model;

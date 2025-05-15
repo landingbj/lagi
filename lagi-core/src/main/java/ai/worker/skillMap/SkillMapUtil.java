@@ -2,6 +2,7 @@ package ai.worker.skillMap;
 
 import ai.agent.Agent;
 import ai.agent.chat.rag.LocalRagAgent;
+import ai.agent.mcp.McpAgent;
 import ai.common.ModelService;
 import ai.common.pojo.Backend;
 import ai.common.utils.ThreadPoolManager;
@@ -15,6 +16,7 @@ import ai.utils.LagiGlobal;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.pojo.AgentIntentScore;
 import ai.worker.pojo.IntentResponse;
+import ai.worker.skillMap.db.AgentInfoDao;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -113,12 +115,19 @@ public class SkillMapUtil {
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
             String question) {
-        return rankAgentByIntentKeyword(agentList, question, THRESHOLD);
+        // TODO 2025/5/13 update rank logic
+        return Collections.emptyList();
+//        return rankAgentByIntentKeyword(agentList, question, THRESHOLD);
     }
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentByDescribe(
-            String question) {
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList = getLlmAndAgentList();
+            String question, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
+        agentList = agentList.stream().filter(agent->{
+            if(Boolean.TRUE.equals(agent.getAgentConfig().getIsFeeRequired())) {
+                return Boolean.TRUE.equals(agent.getAgentConfig().getCanOutPut());
+            }
+            return true;
+        }).collect(Collectors.toList());
         List<SkillMap.PickAgent> pickAgents = agentList.stream().filter(agent -> StrUtil.isNotBlank(agent.getAgentConfig().getDescribe())).map(agent -> {
             AgentConfig agentConfig = agent.getAgentConfig();
             return SkillMap.PickAgent.builder().describe(agent.getAgentConfig().getDescribe()).id(agentConfig.getId()).build();
@@ -127,6 +136,12 @@ public class SkillMapUtil {
         List<SkillMap.PickAgent> pickAgents1 = skillMap1.pickAgent(question, pickAgents);
         Set<Integer> set = pickAgents1.stream().map(SkillMap.PickAgent::getId).collect(Collectors.toSet());
         return agentList.stream().filter(agent -> set.contains(agent.getAgentConfig().getId())).collect(Collectors.toList());
+    }
+
+    public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentByDescribe(
+            String question) {
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList = getLlmAndAgentList();
+        return pickAgentByDescribe(question, agentList);
     }
 
 
@@ -145,6 +160,12 @@ public class SkillMapUtil {
             String driver = agentConfig.getDriver();
             Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
             agentConfig.setCanOutPut(haveABalance.getOrDefault(agentConfig.getId(), false));
+            if(agentConfig.getId() != null) {
+                AgentInfoDao.AgentInfo info = AgentInfoDao.getByAgentId(agentConfig.getId());
+                if(info != null) {
+                    agentConfig.setDescribe(info.getAgentDescribe());
+                }
+            }
             if (!agentMap.containsKey(driver)) {
                 try {
                     Class<?> aClass = Class.forName(driver);
@@ -182,6 +203,9 @@ public class SkillMapUtil {
     }
 
     public static double getOrInsertScore(ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
+        if(agent instanceof LocalRagAgent || agent instanceof McpAgent) {
+            return 10.0D;
+        }
         IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(request));
         return getOrInsertScore(intentResponse, request, agent, chatCompletionResult);
     }

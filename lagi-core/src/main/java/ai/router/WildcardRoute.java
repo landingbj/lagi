@@ -27,6 +27,7 @@ public class WildcardRoute extends Route {
             ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource();
             BeanUtil.copyProperties(communicate, chatCompletionResultWithSource);
             chatCompletionResultWithSource.setSource(agents.get(0).getAgentConfig().getName());
+            chatCompletionResultWithSource.setSourceId(agents.get(0).getAgentConfig().getId());
             communicate = chatCompletionResultWithSource;
         }
         return RouteAgentResult.builder().result(Lists.newArrayList(communicate)).build();

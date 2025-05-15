@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class CountdownDayTool extends AbstractTool {
         name = "countdown_day";
         toolInfo = ToolInfo.builder().name("countdown_day")
                 .description("这是一个倒数日工具，可以帮助用户查询接下来的倒数日信息")
+                .args(Collections.emptyList())
                 .build();
         register(this);
     }

@@ -277,9 +277,7 @@
                     <div class="agent-list-container tab" class="w-full" id="agent-list-container">
                       <div class="user-material-head">
                         <span>我的发布</span>
-                      </div>
-                      <div class="my-issue w-full p-1">
-                        <a onclick="backToChat()">
+                        <a onclick="backToChat()" style="float: right; padding-top: 2px;">
                           <svg t="1740019605102" class="icon" viewBox="0 0 1024 1024" version="1.1"
                             xmlns="http://www.w3.org/2000/svg" p-id="9950" xmlns:xlink="http://www.w3.org/1999/xlink"
                             width="24" height="24">
@@ -324,9 +322,7 @@
                     <div class="paid-agent-list-container w-full tab" id="paid-agent-list-container">
                       <div class="user-material-head">
                         <span>我的订阅</span>
-                      </div>
-                      <div class="my-issue w-full p-1">
-                        <a onclick="backToChat()">
+                        <a onclick="backToChat()" style="float: right; padding-top: 2px;">
                           <svg t="1740019605102" class="icon" viewBox="0 0 1024 1024" version="1.1"
                             xmlns="http://www.w3.org/2000/svg" p-id="9950" xmlns:xlink="http://www.w3.org/1999/xlink"
                             width="24" height="24">
@@ -339,6 +335,7 @@
                           </svg>
                         </a>
                       </div>
+
                       <table id="paid-agent-list" class="paid-agent-list " border="1">
                         <thead>
                           <tr>

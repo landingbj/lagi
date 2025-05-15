@@ -41,7 +41,7 @@ public class SogouSearchPicturesTool extends AbstractTool {
         }
         Map<String, Object> data  = (Map<String, Object>)map.get("data");
 //        Map<String, Object> data = gson.fromJson(dataStr, type);
-        return StrUtil.format("{\"图片介绍\": \"{}\",\"图片地址\": \"{}\"}",data.get("title"),data.get("url"));
+        return StrUtil.format("{\"title\": \"{}\",\"imageUrl\": \"{}\"}",data.get("title"),data.get("url"));
     }
 
 

@@ -282,7 +282,7 @@ fileUploadButton.addEventListener("click", function () {
             }
 
             if (!checkFileSizeLimit(selectedFile)) {
-                hideHelloContent();
+                // hideHelloContent();
                 let conversation1 = {
                     user: {question: question},
                     robot: {answer: '鉴于当前资源有限，请适当缩减文件大小，敬请您的谅解！'}
@@ -296,7 +296,7 @@ fileUploadButton.addEventListener("click", function () {
                 alert("请选择指定的文件类型")
                 return;
             }
-            hideHelloContent();
+            // hideHelloContent();
 
             let conversation1 = {user: {question: question}, robot: {answer: ''}}
             let robootAnswerJq1 = await newConversation(conversation1);
@@ -407,7 +407,7 @@ function textQuery1(questionRel, answerRel, fileStatus) {
         }
         
         // 隐藏非对话内容
-        hideHelloContent();
+        // hideHelloContent();
 
         const markdownElements = document.querySelectorAll(".markdown");
         var len = markdownElements.length;

@@ -44,11 +44,11 @@ function showHelloContent() {
 
 
 function hideHelloContent() {
-    // $('#introduces').hide();
-    // $('#modelChoices').hide();
-    // $('#topTitle').hide();
-    // $('#item-content').empty();
-    // hideBallDiv(); // 隐藏球形 div
+    $('#introduces').hide();
+    $('#modelChoices').hide();
+    $('#topTitle').hide();
+    $('#item-content').empty();
+    hideBallDiv(); // 隐藏球形 div
 }
 
 function loadIntroduces() {
@@ -440,11 +440,15 @@ function initAgentTool() {
 
 
 function socialCircles() {
-    // 社交接入
-    for(let i = 0; i < promptNavs.length; i++) {
-        let nav = promptNavs[i];
-        if(nav.key == SOCIAL_NAV_KEY) {
-            getPromptDialog(nav.id);
+    for(const element of promptNavs) {
+        let nav = element;
+        if(nav.id == FEATURE_NAV_ID) {
+            for(const element of nav.subNavs) {
+                let subNav = element;
+                if(subNav.key == SOCIAL_NAV_KEY) {
+                    getPromptDialog(FEATURE_NAV_ID, subNav.id);
+                }
+            }
         }
     }
 }

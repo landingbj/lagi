@@ -8,13 +8,15 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class JokesGenerationTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.v1.jixs.cc/api/wenan-duanzi/index.php";
+//    private static final String API_ADDRESS = "https://api.v1.jixs.cc/api/wenan-duanzi/index.php";
+    private static final String API_ADDRESS = "https://api.pearktrue.cn/api/jdyl/xiaohua.php";
 
     private Gson gson = new Gson();
 
@@ -30,30 +32,41 @@ public class JokesGenerationTool extends AbstractTool {
         register(this);
     }
 
+//    private String search() {
+//        Map<String, String> headers = new HashMap<>();
+//        headers.put("Content-Type", "application/json");
+//        String post = ApiInvokeUtil.post(API_ADDRESS, headers, "", 15, TimeUnit.SECONDS);
+//        Gson gson = new Gson();
+//        Type type = new TypeToken<Map<String, Object>>(){}.getType();
+//        Map<String, Object> map = gson.fromJson(post, type);
+//        String formattedString = "段子生成失败!!!";
+//        try {
+//            if (map == null) {
+//                return "段子生成失败！";
+//            }
+//
+//            if (map.get("code") != null && map.get("code").equals("获取段子成功")) {
+//                Map<String, Object> data  = (Map<String, Object>)map.get("data");
+//                formattedString = StrUtil.format("{\"生成的段子\": \"{}\"",
+//                        data.get("duanzi"));
+//                return formattedString;
+//            }
+//        }catch (Exception e){
+//            return "段子生成失败!!!!";
+//        }
+//        return formattedString;
+//    }
+
     private String search() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        String post = ApiInvokeUtil.post(API_ADDRESS, headers, "", 15, TimeUnit.SECONDS);
-        Gson gson = new Gson();
-        Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        Map<String, Object> map = gson.fromJson(post, type);
-        String formattedString = "段子生成失败!!!";
-        try {
-            if (map == null) {
-                return "段子生成失败！";
-            }
-
-            if (map.get("code") != null && map.get("code").equals("获取段子成功")) {
-                Map<String, Object> data  = (Map<String, Object>)map.get("data");
-                formattedString = StrUtil.format("{\"生成的段子\": \"{}\"",
-                        data.get("duanzi"));
-                return formattedString;
-            }
-        }catch (Exception e){
-            return "段子生成失败!!!!";
+        String get = ApiInvokeUtil.get(API_ADDRESS, Collections.emptyMap(), headers, 15, TimeUnit.SECONDS);
+        if (get == null) {
+            return "段子生成失败！";
         }
-        return formattedString;
+        return get;
     }
+
     @Override
     public String apply(Map<String, Object> stringObjectMap) {
         return search();

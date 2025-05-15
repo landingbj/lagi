@@ -9,6 +9,9 @@ import java.util.List;
 
 public class ToolUtils {
     public static String genToolPrompt(List<ToolInfo> toolInfos) {
+        if(toolInfos == null || toolInfos.isEmpty()) {
+            return "[]\n";
+        }
         List<String> tools = new ArrayList<>();
         for (int i = 0; i < toolInfos.size(); i++) {
             ToolInfo toolInfo = toolInfos.get(i);

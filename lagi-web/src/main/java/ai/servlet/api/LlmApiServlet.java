@@ -371,6 +371,9 @@ public class LlmApiServlet extends BaseServlet {
                     file.mkdirs();
                 }
                 imageList = imageList.stream().map(image -> {
+                    if(image.contains("@")) {
+                        image = image.split("@")[0];
+                    }
                     WhisperResponse whisperResponse = DownloadUtils.downloadFile(image, "jpeg", filePath);
                     return "static/images/" +  whisperResponse.getMsg();
                 }).collect(Collectors.toList());
@@ -407,20 +410,21 @@ public class LlmApiServlet extends BaseServlet {
     private void goStream(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         LLmRequest llmRequest = reqBodyToObj(req, LLmRequest.class);
+        PrintWriter out = resp.getWriter();
+        String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
         if(llmRequest.getAgentId() != null) {
-            ChatCompletionResult work = defaultWorker.work("appointedWorker", llmRequest);
+            ChatCompletionResult work = defaultWorker.work("appointedWorker", allAgents, llmRequest);
             if(work != null) {
                 convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), req,  resp, work);
                 try {
                     agentLRUCache.put(llmRequest.getSessionId(), new Pair<>(llmRequest.getMessages().size() -1 , (Agent<ChatCompletionRequest, ChatCompletionResult>)AgentManager.getInstance().get(llmRequest.getAgentId())));
                 } catch (Exception ignored) {
                 }
+                deductExpense(work, llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
                 return;
             }
         }
-        PrintWriter out = resp.getWriter();
-        String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
         long count = llmRequest.getMessages().stream().filter(message -> message.getRole().equals("user")).count();
         if(count > 1) {
             String invoke = SummaryUtil.invoke(llmRequest);
@@ -429,7 +433,7 @@ public class LlmApiServlet extends BaseServlet {
         IntentResult intentResult = intentService.detectIntent(llmRequest);
         logger.info("intentResult: {}", intentResult);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
-        
+
         // continue : get lastAgent
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
             Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair = agentLRUCache.get(llmRequest.getSessionId());
@@ -447,6 +451,7 @@ public class LlmApiServlet extends BaseServlet {
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);
             if (skillMapAgentList.isEmpty()) {
                 if(llmAndAgentList.isEmpty()) {
+                    // TODO 2025/5/14 to pick up user agents
                     skillMapAgentList = SkillMapUtil.pickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest));
                     if(skillMapAgentList != null && !skillMapAgentList.isEmpty()) {
                         outputAgent = skillMapAgentList.get(0);
@@ -488,7 +493,7 @@ public class LlmApiServlet extends BaseServlet {
             String answer = ChatCompletionUtil.getFirstAnswer(result);
             convert2streamAndOutput(answer, req, resp, chatCompletionResultWithSource);
             resultWithSource[0] = chatCompletionResultWithSource;
-            SkillMapUtil.getOrInsertScore(llmRequest, outputAgent, result);
+//            SkillMapUtil.getOrInsertScore(llmRequest, outputAgent, result);
         } else {
             llmRequest.setStream(true);
             Observable<ChatCompletionResult> result = outputAgent.stream(llmRequest);
@@ -534,7 +539,7 @@ public class LlmApiServlet extends BaseServlet {
                         out.print("data: " + "[DONE]" + "\n\n");
                         out.flush();
                         out.close();
-                        SkillMapUtil.getOrInsertScore(llmRequest, finalOutputAgent, resultWithSource[0]);
+//                        SkillMapUtil.getOrInsertScore(llmRequest, finalOutputAgent, resultWithSource[0]);
                     }
             );
         }
@@ -548,7 +553,8 @@ public class LlmApiServlet extends BaseServlet {
         }
         Agent<ChatCompletionRequest, ChatCompletionResult> finalOutputAgent1 = outputAgent;
         allAgents = allAgents.stream().filter(agent -> StrUtil.isBlank(agent.getAgentConfig().getDescribe()) && !Objects.equals(finalOutputAgent1.getAgentConfig().getId(), agent.getAgentConfig().getId())).collect(Collectors.toList());
-        SkillMapUtil.scoreAgents(llmRequest, allAgents);
+        // TODO 2025/5/12 upgrade agent router
+//        SkillMapUtil.scoreAgents(llmRequest, allAgents);
     }
 
     private static Agent<ChatCompletionRequest, ChatCompletionResult> getFirstStreamAgent(

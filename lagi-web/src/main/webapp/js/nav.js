@@ -17,9 +17,21 @@ let MODEL_TYPES = [MODEL_TYPE_LLM, MODEL_TYPE_ASR, MODEL_TYPE_TTS, MODEL_TYPE_IM
 let currentAppId = null;
 
 
+const MODEL_NAV_ID = 1;
+const AGENT_NAV_ID = 11;
+const ORCHESTRATION_NAV_ID = 12;
+const FEATURE_NAV_ID = 14;
+const MINE_NAV_ID = 15;
+
+let MODEL_NAV = null;
+let AGENT_NAV = null;
+let ORCHESTRATION_NAV = null;
+let FEATURE_NAV = null;
+let MINE_NAV = null;
+
 let promptNavs = [
     {
-        id: 1,
+        id: MODEL_NAV_ID,
         key: 'model',
         icon: 'model',
         title: '大模型',
@@ -118,319 +130,319 @@ let promptNavs = [
         title: '智能体',
         subNavs: [
             {
-                "id": -2,
+                "id": 1010102,
                 "agentId": "stock",
                 "title": "股票助手",
                 "templateIssues": "今天的股市行情如何?"
             },
             {
-                "id": -3,
+                "id": 1010103,
                 "agentId": "exchangeRate",
                 "title": "汇率助手",
                 "templateIssues": "当前美元对人民币汇率是多少?"
             },
             {
-                "id": -5,
+                "id": 1010105,
                 "agentId": "yiYan",
                 "title": "文心助手",
                 "templateIssues": "请帮我写一篇关于科技创新的文章"
             },
             {
-                "id": -6,
+                "id": 1010106,
                 "agentId": "yuanQi",
                 "title": "元器助手",
                 "templateIssues": "Dota2推荐一个适合新手玩的英雄"
             },
             {
-                "id": -7,
+                "id": 1010107,
                 "agentId": "xiaohongshu",
                 "title": "红书优选",
                 "templateIssues": "帮我为 女式瑜伽裤 写一份营销文案"
             },
             {
-                "id": -8,
+                "id": 1010108,
                 "agentId": "weather",
                 "title": "天气助手",
                 "templateIssues": "今天北京天气如何?"
             },
             {
-                "id": -9,
+                "id": 1010109,
                 "agentId": "oil",
                 "title": "油价助手",
                 "templateIssues": "今天的北京油价是多少?"
             },
             {
-                "id": -10,
+                "id": 1010110,
                 "agentId": "bmi",
                 "title": "体重指数",
                 "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
             },
             {
-                "id": -11,
+                "id": 1010111,
                 "agentId": "calorie",
                 "title": "健康饮食",
                 "templateIssues": "一份鸡胸肉的卡路里是多少?"
             },
             {
-                "id": -12,
+                "id": 1010112,
                 "agentId": "dishonest",
                 "title": "失信查询",
                 "templateIssues": "请帮我查询一下这个人的失信记录"
             },
             {
-                "id": -13,
+                "id": 1010113,
                 "agentId": "ticket",
                 "title": "高铁助手",
                 "templateIssues": "从北京到上海的高铁票价是多少?"
             },
             {
-                "id": -14,
+                "id": 1010114,
                 "agentId": "history",
                 "title": "历史今日",
                 "templateIssues": "今天在历史上发生了哪些重大事件?"
             },
             {
-                "id": -15,
+                "id": 1010115,
                 "agentId": "youdao",
                 "title": "有道翻译",
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
             {
-                "id": -16,
+                "id": 1010116,
                 "agentId": "image",
                 "title": "图像生成",
                 "templateIssues": "帮我生成一副海滩风景"
             },
             {
-                "id": -17,
+                "id": 1010117,
                 "agentId": "KFC_text_generate",
                 "title": "疯狂星期",
                 "templateIssues": "帮我生成一个疯狂星期四的文案"
             },
             {
-                "id": -18,
+                "id": 1010118,
                 "agentId": "ip_address_lookup_agent",
                 "title": "ip查询",
                 "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
             },
             {
-                "id": -19,
+                "id": 1010119,
                 "agentId": "anime_pictures",
                 "title": "动漫图片",
                 "templateIssues": "帮我搜索一张动漫图片"
             },
             {
-                "id": -20,
+                "id": 1010120,
                 "agentId": "constellation_luck",
                 "title": "今日运势",
                 "templateIssues": "帮我查查今天白羊座运势怎么样"
             },
             {
-                "id": -21,
+                "id": 1010121,
                 "agentId": "sogou_search_pictures",
                 "title": "搜狗搜图",
                 "templateIssues": "帮我搜索一下刘亦菲的图片"
             },
             {
-                "id": -22,
+                "id": 1010122,
                 "agentId": "belle_pictures",
                 "title": "头像生成",
                 "templateIssues": "帮我生成一张头像"
             },
             {
-                "id": -23,
+                "id": 1010123,
                 "agentId": "baidu_search_pictures",
                 "title": "百度搜图",
                 "templateIssues": "帮我搜索一下关于小米SU7的图片"
             },
             {
-                "id": -24,
+                "id": 1010124,
                 "agentId": "gold_today",
                 "title": "今日金价",
                 "templateIssues": "今天国内金价是多少"
             },
             {
-                "id": -25,
+                "id": 1010125,
                 "agentId": "jokes_generation",
                 "title": "段子生成",
                 "templateIssues": "帮我生成一篇段子"
             },
             {
-                "id": -26,
+                "id": 1010126,
                 "agentId": "meal_suggestion",
                 "title": "美食推荐",
                 "templateIssues": "帮我推荐今天的午餐是什么？"
             },
             {
-                "id": -27,
+                "id": 1010127,
                 "agentId": "countdown_day",
                 "title": "倒数计时",
                 "templateIssues": "帮我查询下最近的倒数日是什么？"
             },
             {
-                "id": -28,
+                "id": 1010128,
                 "agentId": "city_travel_route",
                 "title": "出行路线",
                 "templateIssues": "从武汉到北京的出行路线是什么？"
             },
             {
-                "id": -29,
+                "id": 1010129,
                 "agentId": "car_query",
                 "title": "查询车辆",
                 "templateIssues": "帮我查询小米SU7的车况信息"
             },
             {
-                "id": -30,
+                "id": 1010130,
                 "agentId": "surname_rank",
                 "title": "姓氏排名",
                 "templateIssues": "王姓在百家姓中的排名是多少？"
             },
             {
-                "id": -31,
+                "id": 1010131,
                 "agentId": "investment_income",
                 "title": "收益计算",
                 "templateIssues": "我投资了2432032元，年化收益率3.425%，投资期限5年，按天计算收益是多少？"
             },
             {
-                "id": -32,
+                "id": 1010132,
                 "agentId": "driving_license_search",
                 "title": "驾考题库",
                 "templateIssues": "驾驶员在高速公路上行驶时，车辆左前轮突然爆胎，须第一时间紧握转向盘，然后轻踏制动踏板进行减速，并将车停靠在紧急停车带上。这样做的原因是什么？"
             },
             {
-                "id": -33,
+                "id": 1010133,
                 "agentId": "blood_type_calculation",
                 "title": "血型预测",
                 "templateIssues": "父母血型是B和AB，子代可能是什么血型？"
             },
             {
-                "id": -34,
+                "id": 1010134,
                 "agentId": "bing_search",
                 "title": "Bing搜索",
                 "templateIssues": "帮我搜索关于'PearNo'的信息"
             },
             {
-                "id": -35,
+                "id": 1010135,
                 "agentId": "lottery_results",
                 "title": "彩票查询",
                 "templateIssues": "查询双色球最近的开奖信息"
             },
             {
-                "id": -36,
+                "id": 1010136,
                 "agentId": "text_corrector",
                 "title": "文本纠错",
                 "templateIssues": "帮我检查并纠正以下文本：我一经吃了很多药了，可是病还不好"
             },
             {
-                "id": -37,
+                "id": 1010137,
                 "agentId": "text_difference",
                 "title": "文本对比",
                 "templateIssues": "帮我比较两个文本的差异：奔赴新的远征 vs 我愿意开启新的征程"
             },
             {
-                "id": -38,
+                "id": 1010138,
                 "agentId": "place_search",
                 "title": "地点搜索",
                 "templateIssues": "帮我查找关于罗浮山的信息"
             },
             {
-                "id": -39,
+                "id": 1010139,
                 "agentId": "chip_query",
                 "title": "芯片查询",
                 "templateIssues": "查询ESP8266的芯片参数有哪些？"
             },
             {
-                "id": -40,
+                "id": 1010140,
                 "agentId": "spark_dialog",
                 "title": "星火助手",
                 "templateIssues": "你好，能帮我做些什么？"
             },
             {
-                "id": -41,
+                "id": 1010141,
                 "agentId": "hot_news",
                 "title": "热点新闻",
                 "templateIssues": "今天的热点新闻有哪些？"
             },
             {
-                "id": -42,
+                "id": 1010142,
                 "agentId": "article_rewrite",
                 "title": "文章续写",
                 "templateIssues": "帮我续写这段文字：我爱你"
             },
             {
-                "id": -43,
+                "id": 1010143,
                 "agentId": "recipe_query",
                 "title": "菜谱查询",
                 "templateIssues": "帮我查询家常红烧鱼块的菜谱"
             },
             {
-                "id": -44,
+                "id": 1010144,
                 "agentId": "answer_book",
                 "title": "答案之书",
                 "templateIssues": "我现在应该去钓鱼吗？"
             },
             {
-                "id": -45,
+                "id": 1010145,
                 "agentId": "website_ping",
                 "title": "测速工具",
                 "templateIssues": "测试百度的Ping延迟"
             },
             {
-                "id": -46,
+                "id": 1010146,
                 "agentId": "text_conversion",
                 "title": "文本转换",
                 "templateIssues": "将`随机繁体测试内容`转为繁体"
             },
             {
-                "id": -47,
+                "id": 1010147,
                 "agentId": "population_data",
                 "title": "人口数据",
                 "templateIssues": "最新的世界人口数量是多少？"
             },
             {
-                "id": -48,
+                "id": 1010148,
                 "agentId": "meaning_search",
                 "title": "诗词名言",
                 "templateIssues": "如何树立远大志向？"
             },
             {
-                "id": -49,
+                "id": 1010149,
                 "agentId": "deepseek_chat",
                 "title": "深度问答",
                 "templateIssues": "你好啊？"
             },
             {
-                "id": -50,
+                "id": 1010150,
                 "agentId": "trademark_info",
                 "title": "商标查询",
                 "templateIssues": "帮我查询商标 '哇哈哈' 的信息"
             },
             {
-                "id": -51,
+                "id": 1010151,
                 "agentId": "movie_box_office",
                 "title": "票房榜单",
                 "templateIssues": "当前票房榜单如何？"
             },
             {
-                "id": -52,
+                "id": 1010152,
                 "agentId": "historical_figure_info",
                 "title": "历史人物",
                 "templateIssues": "帮我查询曹操的详细信息"
             },
             {
-                "id": -53,
+                "id": 1010153,
                 "agentId": "daily_rumor_refutation",
                 "title": "辟谣前线",
                 "templateIssues": "帮我查看今天的辟谣新闻"
             },
             {
-                "id": -54,
+                "id": 1010154,
                 "agentId": "google_translate",
                 "title": "谷歌翻译",
                 "templateIssues": "帮我把HelloWorld翻译成中文"
             },
             {
-                "id": -55,
+                "id": 1010155,
                 "agentId": "couplet_generation",
                 "title": "对联生成",
                 "templateIssues": "天增岁月人增寿,帮我生成下联"
@@ -438,7 +450,7 @@ let promptNavs = [
         ]
     },
     {
-        id: 12,
+        id: ORCHESTRATION_NAV_ID,
         key: 'orchestration',
         icon: 'orchestration',
         title: '编排',
@@ -473,7 +485,7 @@ let promptNavs = [
         ]
     },
     {
-        id: 14,
+        id: FEATURE_NAV_ID,
         key: 'feature',
         icon: 'feature',
         title: '特色',
@@ -488,7 +500,7 @@ let promptNavs = [
         ]
     },
     {
-        id: 15,
+        id: MINE_NAV_ID,
         key: 'mine',
         icon: 'mine',
         title: '我的',
@@ -513,6 +525,20 @@ let promptNavs = [
     }
 ];
 
+
+for (const nav of promptNavs) {
+    if(nav.id === MODEL_NAV_ID) {
+        MODEL_NAV = nav;
+    } else if(nav.id === AGENT_NAV_ID) {
+        AGENT_NAV = nav;
+    } else if(nav.id === ORCHESTRATION_NAV_ID) {
+        ORCHESTRATION_NAV = nav;
+    } else if(nav.id === FEATURE_NAV_ID) {
+        FEATURE_NAV = nav;
+    } else if(nav.id === MINE_NAV_ID) {
+        MINE_NAV = nav;
+    }
+}
 
 
 function loadNavStatus() {
@@ -597,7 +623,7 @@ function genNavItems(navs) {
                 <!-- 小箭头图标 -->
                 <span class="arrow ml-2">&gt;</span>
             </a>
-            ${genSubNavItems(nav.subNavs)}  <!-- 二级菜单在这里渲染 -->
+            ${genSubNavItems(nav)}  <!-- 二级菜单在这里渲染 -->
         </li>
         `;
     }
@@ -650,19 +676,117 @@ function toggleSubNav(navId) {
     }
 }
 
-function genSubNavItems(subNavs) {
+function genSubNavItems(nav) {
+    const subNavs = nav.subNavs;
     if (!subNavs) {
         return '';
     }
 
-    let subHtml = '<ul class="sub-nav hidden">';  // 初始时隐藏二级菜单
-    for (let i = 0; i < subNavs.length; i++) {
-        const subNav = subNavs[i];
+    if(nav.id == MODEL_NAV_ID) {
+        return genModelSubNav(subNavs);
+    } else if(nav.id == AGENT_NAV_ID) {
+        return genAgentsNav(subNavs);
+    }else if(nav.id == ORCHESTRATION_NAV_ID) {
+        return getOrchestration(subNavs);
+    } else if(nav.id == FEATURE_NAV_ID) {
+        return genFeatureNav(subNavs);
+    } else if(nav.id == MINE_NAV_ID) {
+        return genMineNav(subNavs);
+    }
+    return '';
+}
 
-        // 如果子菜单项包含 agentId，我们将其存储在 data-app-id 中
+function genModelSubNav(subNavs) {
+    let subHtml = '<ul class="sub-nav hidden">';
+    for (const subNav of subNavs) {
         subHtml += `
         <li class="sub-nav-item">
-            <a onclick="getPromptDialog(${subNav.id},event)" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+            <a onclick="getPromptDialog(${MODEL_NAV_ID}, ${subNav.id},event)" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+                ${subNav.title}
+            </a>
+        </li>
+        `;
+    }
+    subHtml += '</ul>';
+    return subHtml;
+}
+
+function genAgentsNav(subNavs) {
+    let subHtml = '<ul class="sub-nav hidden">';
+    for (const subNav of subNavs) {
+        subHtml += `
+        <li class="sub-nav-item">
+            <a onclick="updateSelectAgent(${subNav.id})" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+                ${subNav.title}
+            </a>
+        </li>
+        `;
+    }
+    subHtml += '</ul>';
+    return subHtml;
+}
+
+function updateSelectAgent(agentId) {
+    backToChat();
+    currentAppId = agentId;
+    const nav = AGENT_NAV.subNavs.find(n => n.id === agentId);
+    currentNav = nav;
+    if (!(nav.prompt && nav.operation)) {
+        $('#queryContent').val(nav.templateIssues);
+        resetBallState();
+        highlightWord(nav.title);
+    }
+}
+
+
+function getOrchestration(subNavs) {
+    let subHtml = '<ul class="sub-nav hidden">';
+    for (const subNav of subNavs) {
+        if(subNav.id == -666) {
+            console.log('subNav', subNav);
+            subHtml += `
+            <li class="sub-nav-item">
+                <a onclick="openCreateAgent()" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+                    ${subNav.title}
+                </a>
+            </li>
+            `;
+            continue;
+        }
+        subHtml += `
+        <li class="sub-nav-item">
+            <a onclick="getPromptDialog(${ORCHESTRATION_NAV_ID}, ${subNav.id},event)" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+                ${subNav.title}
+            </a>
+        </li>
+        `;
+    }
+    subHtml += '</ul>';
+    return subHtml;
+}
+
+
+function genFeatureNav(subNavs) {
+    let subHtml = '<ul class="sub-nav hidden">';
+    for (const subNav of subNavs) {
+        subHtml += `
+        <li class="sub-nav-item">
+            <a onclick="getPromptDialog(${FEATURE_NAV_ID}, ${subNav.id},event)" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
+                ${subNav.title}
+            </a>
+        </li>
+        `;
+    }
+    subHtml += '</ul>';
+    return subHtml;
+}
+
+function genMineNav(subNavs) {
+    let subHtml = '<ul class="sub-nav hidden">';
+    for (const subNav of subNavs) {
+        subHtml += `
+        <li class="sub-nav-item">
+            <a onclick="goToUserTab(${subNav.id},event)" class="sub-nav-link flex py-2 px-2 items-center gap-3 rounded-md bg-default-50 hover:bg-default-100 dark:bg-default-900 dark:hover:bg-[#2A2B32]" data-nav-id="${subNav.id}" data-app-id="${subNav.agentId}">
                 ${subNav.title}
             </a>
         </li>
@@ -737,7 +861,7 @@ function maintenance() {
 let currentPromptDialog;
 
 function loadModelSelect(nav) {
-    if (nav.models !== undefined && Array.isArray(nav.models)) {
+    if (nav &&  nav.models !== undefined && Array.isArray(nav.models)) {
         $('#model-selects').empty();
         $('#model-prefences').show();
         for (let i = 0; i < nav.models.length; i++) {
@@ -751,9 +875,6 @@ function loadModelSelect(nav) {
             `;
             $('#model-selects').append(selectHtml);
         }
-    } else {
-        $('#model-selects').empty();
-        $('#model-prefences').hide();
     }
 }
 
@@ -803,22 +924,57 @@ function getModeList(type) {
 
 let currentNav = null;
 
-function getPromptDialog(id, e) {
+
+function showBallDiv() {
+    const ballDiv = document.getElementById("ball-div");
+    if (ballDiv) {
+        ballDiv.style.display = "block";
+    }
+}
+
+function backToChat() {
+    $('#conTab').show();
+    $('#mytab').hide();
+    $('#queryBox').show();
+    $('#introduces').show();
+    $('#topTitle').show();
+    $('#item-content').show();
+    $('#not-content form').show();
+    const activeListItems = document.querySelectorAll('#conversationsNav a.active');
+    console.log(activeListItems);
+    activeListItems.forEach(a => {
+        console.log(a);
+        a.classList.remove('active');
+    });
+    showBallDiv();
+    $('#model-selects').empty();
+    $('#model-prefences').hide();
+}
+
+function hideBallDiv() {
+    const ballDiv = document.getElementById("ball-div");
+    if (ballDiv) {
+        ballDiv.style.display = "none";
+    }
+}
+
+function getPromptDialog(id, subId) {
     // debugger
     let nav = null;
     let parentNav = null
     // 查找包含指定ID的一级导航项
-    for (let index = 0; index < promptNavs.length; index++) {
-        parentNav = promptNavs[index];
-        for (let j = 0; j < parentNav.subNavs.length; j++) {
-            const subNav = parentNav.subNavs[j];
-            if (subNav.id == id) {
-                nav = subNav;
+    for (const pNav of promptNavs) {
+        if(pNav.id != id) {
+            continue
+        }
+        parentNav = pNav;
+        for (const sNav of parentNav.subNavs) {
+            if (sNav.id == subId) {
+                nav = sNav;
                 currentNav = nav;  // 更新当前导航为选中的子导航
                 break;
             }
         }
-        if (nav) break;  // 如果找到子导航，则跳出循环
     }
     // 如果未找到指定ID的导航项
     if (nav == null) {
@@ -826,45 +982,11 @@ function getPromptDialog(id, e) {
         return;
     }
 
-    if (id === -666) {
-        openCreateAgent();
-        return;
-    }
-
-    if (parentNav.id == 15) {
-        return goToUserTab(id, e);
-    } else {
-        $('#conTab').show();
-        $('#mytab').hide();
-        $('#queryBox').show();
-        $('#introduces').show();
-        // $('#modelChoices').show();
-        $('#topTitle').show();
-        $('#item-content').show();
-        $('#not-content form').show();
-        showBallDiv();
-    }
-
-
-    if (parentNav.id === 11) {
-        currentAppId = nav.id;
-    }
-
-
-    if (!(nav.prompt && nav.operation)) {
-        $('#queryContent').val(nav.templateIssues);
-        resetBallState();
-        highlightWord(nav.title);
-        return;
-    }
-
+    backToChat();
+    
     $('#queryContent').val('');
 
-    // 加载模型选择（子导航项）
     loadModelSelect(nav);
-
-    // 隐藏首页内容
-    hideHelloContent();
 
     let answer = buildPromptDialogContent(nav);
     let answerJq = newRobotStartDialog('');
@@ -878,7 +1000,6 @@ function getPromptDialog(id, e) {
             </video>
         `;
     }
-
 
     // 重置计时器
     clearTimeout(timer);

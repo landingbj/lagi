@@ -27,7 +27,7 @@ public class ImageGenTool extends AbstractTool {
     private void init() {
         name = "image_generator";
         toolInfo = ToolInfo.builder().name("image_generator")
-                .description("这是一个生成图片的工具可以根据输入的图片的英文描述的生成对应的图片")
+                .description("一个图片生成工具, 可以根据用户输入英文描述生成任何类型的图像 如: 风景画、任务画、头像等")
                 .args(Lists.newArrayList(
                         ToolArg.builder().name("prompt").type("string").description("英文描述").build()
                 )).build();

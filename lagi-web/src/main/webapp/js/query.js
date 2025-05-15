@@ -32,36 +32,7 @@ $('#queryContent').keydown(function (event) {
 });
 
 
-function showBallDiv() {
-    const ballDiv = document.getElementById("ball-div");
-    if (ballDiv) {
-        ballDiv.style.display = "block";
-    }
-}
 
-function backToChat() {
-    $('#conTab').show();
-    $('#mytab').hide();
-    $('#queryBox').show();
-    $('#introduces').show();
-    $('#topTitle').show();
-    $('#item-content').show();
-    $('#not-content form').show();
-    const activeListItems = document.querySelectorAll('#conversationsNav a.active');
-    console.log(activeListItems);
-    activeListItems.forEach(a => {
-        console.log(a);
-        a.classList.remove('active');
-    });
-    showBallDiv();
-}
-
-function hideBallDiv() {
-    const ballDiv = document.getElementById("ball-div");
-    if (ballDiv) {
-        ballDiv.style.display = "none";
-    }
-}
 
 function matchingAgents(word) {
     $('#item-content').hide();
@@ -100,7 +71,7 @@ async function textQuery() {
     let agentId = currentAppId;
 
     // 隐藏非对话内容
-    hideHelloContent();
+    // hideHelloContent();
 
     $('#queryBox textarea').val('');
     let conversation = {user: {question: question}, robot: {answer: ''}};
@@ -112,6 +83,8 @@ async function textQuery() {
     } else {
         let robotAnswerJq = await newConversation(conversation);
         getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
+        let request = await getRequest(question, agentId);
+        generateSelect(request, robotAnswerJq);
     }
 
     currentAppId = null;
@@ -135,7 +108,7 @@ async function appointTextQuery(question,selectedAgentId) {
     let agentId = selectedAgentId;
 
     // 隐藏非对话内容
-    hideHelloContent();
+    // hideHelloContent();
 
     $('#queryBox textarea').val('');
     let conversation = {user: {question: question}, robot: {answer: ''}};
@@ -388,14 +361,11 @@ async function getSessionId() {
 
 let sessionId = null;
 
-async function getTextResult(question, robootAnswerJq, conversation, agentId) {
-    
+async function getRequest(question, agentId){
     if(CONVERSATION_CONTEXT.length == 0) {
         sessionId = await getSessionId();
     }
-    // debugger
-    var result = '';
-    var paras = {
+    let paras = {
         "category": window.category,
         "messages": CONVERSATION_CONTEXT.concat([
             {"role": "user", "content": question}
@@ -412,8 +382,19 @@ async function getTextResult(question, robootAnswerJq, conversation, agentId) {
         paras["worker"] = "appointedWorker";
         paras["agentId"] = agentId;
     }
+    return paras;
+}
 
-    var queryUrl = "search/detectIntent";
+async function getTextResult(question, robootAnswerJq, conversation, agentId) {
+    
+    if(CONVERSATION_CONTEXT.length == 0) {
+        sessionId = await getSessionId();
+    }
+    // debugger
+    let result = '';
+    let paras = await getRequest(question, agentId);
+
+    const queryUrl = "search/detectIntent";
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",

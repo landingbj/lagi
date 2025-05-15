@@ -1,9 +1,7 @@
 package ai.agent.mcp;
 
-import ai.agent.Agent;
 import ai.config.pojo.AgentConfig;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
-import ai.llm.service.CompletionsService;
 import ai.manager.McpManager;
 import ai.mcps.SyncMcpClient;
 import ai.mcps.spec.McpSchema;
@@ -13,7 +11,6 @@ import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import io.reactivex.Observable;
 import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +20,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class McpReACTAgent extends Agent<ChatCompletionRequest, ChatCompletionResult> {
+public class McpReACTAgent extends McpAgent {
 
 
     private static final Logger log = LoggerFactory.getLogger(McpReACTAgent.class);
 
-    private final CompletionsService completionsService;
 
     private Gson gson = new Gson();
 
@@ -37,40 +33,9 @@ public class McpReACTAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
     private static final int MAX_LOOP_COUNT = 20;
 
     public McpReACTAgent(AgentConfig agentConfig) {
-        this.agentConfig = agentConfig;
-        this.completionsService = new CompletionsService();
-        String mcps = agentConfig.getMcps();
-        if (mcps == null) {
-            throw new RuntimeException("mcp name is null");
-        }
-        String[] split = mcps.split(",");
-        this.mcpNames.addAll(Arrays.asList(split));
+        super(agentConfig);
     }
 
-    @Override
-    public void connect() {
-
-    }
-
-    @Override
-    public void terminate() {
-
-    }
-
-    @Override
-    public void start() {
-
-    }
-
-    @Override
-    public void stop() {
-
-    }
-
-    @Override
-    public void send(ChatCompletionRequest request) {
-
-    }
 
     private final String SYSTEM_PROMPT = "Assistant is a large language model trained by OpenAI.\n" +
             "\n" +
@@ -119,11 +84,6 @@ public class McpReACTAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             "{input}\n" +
             "AGENT SCRATCHPAD\n" +
             "{agent_scratchpad}";
-
-    @Override
-    public ChatCompletionResult receive() {
-        return null;
-    }
 
     @Data
     @AllArgsConstructor
@@ -287,16 +247,6 @@ public class McpReACTAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
             res.add(functionCallTool);
         }
         return res;
-    }
-
-    @Override
-    public Observable<ChatCompletionResult> stream(ChatCompletionRequest data) {
-        throw new UnsupportedOperationException("streaming is not supported");
-    }
-
-    @Override
-    public boolean canStream() {
-        return false;
     }
 
 

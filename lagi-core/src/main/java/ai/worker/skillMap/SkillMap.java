@@ -14,6 +14,7 @@ import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.pojo.AgentIntentScore;
 import ai.worker.pojo.IntentResponse;
 import ai.worker.pojo.ScoreResponse;
+import ai.worker.skillMap.db.AgentInfoDao;
 import ai.worker.skillMap.db.AgentScoreDao;
 import ai.worker.skillMap.prompt.SkillMapPrompt;
 import cn.hutool.core.util.StrUtil;
@@ -45,6 +46,8 @@ public class SkillMap {
     private static final int maxTry = 3;
 
     private final AgentScoreDao agentScoreDao = new AgentScoreDao();
+
+    private final AgentInfoDao agentInfoDao = new AgentInfoDao();
 
     public static Object getLockObject(String key) {
         return lockMap.computeIfAbsent(key, k -> ThreadLocal.withInitial(Object::new)).get();
@@ -365,7 +368,8 @@ public class SkillMap {
         String agents = stringBuilder.toString();
         for (int i = 0;i < maxTry; i++) {
             try {
-                ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.AGENT_PICK_PROMPT_TEMPLATE, agents), Collections.emptyList(), question);
+                List<Integer> ids = pickAgents.stream().map(PickAgent::getId).collect(Collectors.toList());
+                ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.AGENT_PICK_PROMPT_TEMPLATE, gson.toJson(ids), agents), Collections.emptyList(), question);
                 String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
                 String json = JsonExtractor.extractJson(firstAnswer);
                 Type typeResponse = new TypeToken<List<PickAgent>>() {}.getType();

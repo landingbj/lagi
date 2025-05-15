@@ -23,7 +23,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
 
     private static final Logger log = LoggerFactory.getLogger(McpAgent.class);
 
-    private final CompletionsService completionsService;
+    protected final CompletionsService completionsService;
 
     private List<String> mcpNames = new ArrayList<>();
 

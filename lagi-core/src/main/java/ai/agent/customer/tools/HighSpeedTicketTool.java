@@ -33,7 +33,7 @@ public class HighSpeedTicketTool extends AbstractTool {
                 .args(Lists.newArrayList(
                         ToolArg.builder().name("from").type("string").description("行程起始地点").build(),
                         ToolArg.builder().name("to").type("string").description("行程终点").build(),
-                        ToolArg.builder().name("time").type("string").description("出发日期,格式为 yyyy-mm-dd").build()
+                        ToolArg.builder().name("time").type("string").description("出发日期,格式为 yyyy-mm-dd hh:MM (年-月-日 时-分)").build()
                         ))
                 .build();
         register(this);

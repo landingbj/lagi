@@ -99,32 +99,19 @@ async function newConversation(conv, questionEnable = true, answerEnable = true)
     replaceConversationAttached();
     $('#item-content').scrollTop($('#item-content').prop('scrollHeight'));
     let markdown =  $($(' .markdown')[$('.markdown').length - 1]);
-    generateSelect(conv.user.question, markdown);
     return markdown;
 }
 
 // 请求接口并生成HTML字符串
-async function generateSelect(userQuestion, markdown) {
-    let customSelect =  $(markdown.find('.custom-select')[0]);
+async function generateSelect(request, markdown) {
+    let customSelect =  $(markdown.closest('.robot-return').find('.custom-select')[0]);
     const url = "/skill/relatedAgents";
-    const requestData = {
-        stream: false,
-        temperature: window.myTemperature || 0.8,
-        max_tokens: 1024,
-        category: "default",
-        messages: [
-            {
-                role: "user",
-                content: userQuestion
-            }
-        ]
-    };
     fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(request)
     }).then(response => {
         if (!response.ok) {
             throw new Error(`上传失败，状态码: ${response.status}`);
@@ -139,6 +126,7 @@ async function generateSelect(userQuestion, markdown) {
             });
         }
     }).catch(error => {
+        console.error("relatedAgents 请求失败:", error);
     }).finally(() => {
     })
 }
@@ -223,7 +211,7 @@ function loadConversation(convId) {
     if (convs.length == 0) {
         showHelloContent();
     } else {
-        hideHelloContent();
+        // hideHelloContent();
     }
     for (let index = 0; index < convs.length; index++) {
         const conv = convs[index];
