@@ -353,4 +353,15 @@
         <url-pattern>/hsrsummary/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ImageAnalysisServlet</servlet-name>
+        <servlet-class>ai.servlet.api.ImageAnalysisServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ImageAnalysisServlet</servlet-name>
+        <url-pattern>/analyzeImage/*</url-pattern>
+    </servlet-mapping>
+
+
 </web-app>

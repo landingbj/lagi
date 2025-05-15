@@ -17,6 +17,8 @@ import java.util.*;
 
 public class PadCoordinateApiServlet extends BaseServlet {
     private static final String UPLOAD_DIR = "/upload";
+    private static final String VLIMG_SUBDIR = "/vlimg";
+    private static final String BASE_URL = "https://lumissil.saasai.top";
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -27,6 +29,57 @@ public class PadCoordinateApiServlet extends BaseServlet {
 
         if (method.equals("generatePadTable")) {
             this.generatePadTable(req, resp);
+        } else if (method.equals("uploadImage")) {
+            this.uploadImage(req, resp);
+        } else {
+            resp.getWriter().write("{\"status\": \"failed\", \"msg\": \"Unknown method\"}");
+        }
+    }
+    private void uploadImage(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String msg = null;
+        String imageUrl = null;
+
+        try {
+            List<File> files = getUploadFile(req, 10 * 1024 * 1024, 10 * 1024 * 1024, UPLOAD_DIR + VLIMG_SUBDIR);
+            if (!files.isEmpty()) {
+                File file = files.get(0);
+                imageUrl = uploadFileAndGetUrl(file);
+                resp.getWriter().write("{\"status\": \"success\", \"url\": \"" + imageUrl + "\"}");
+            } else {
+                msg = "未找到上传的文件";
+                resp.getWriter().write("{\"status\": \"failed\", \"msg\": \"" + msg + "\"}");
+            }
+        } catch (Exception e) {
+            msg = "上传文件失败: " + e.getMessage();
+            e.printStackTrace();
+            resp.getWriter().write("{\"status\": \"failed\", \"msg\": \"" + msg + "\"}");
+        }
+    }
+
+    private String uploadFileAndGetUrl(File file) throws IOException {
+        // 获取 Web 应用的根目录
+        String webappDir = getServletContext().getRealPath("/");
+        String imageDir = webappDir + UPLOAD_DIR + VLIMG_SUBDIR;
+
+        // 确保目录存在
+        File dir = new File(imageDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        // 生成唯一文件名，防止覆盖
+        String originalName = file.getName();
+        String extension = originalName.substring(originalName.lastIndexOf("."));
+        String uniqueName = UUID.randomUUID().toString() + extension;
+        File destFile = new File(imageDir, uniqueName);
+
+        // 移动文件到目标目录
+        if (file.renameTo(destFile)) {
+            // 生成公开 URL
+            String relativePath = UPLOAD_DIR+ "/vlimg/" + uniqueName;
+            return BASE_URL + relativePath;
+        } else {
+            throw new IOException("文件移动失败: " + file.getAbsolutePath());
         }
     }
 
