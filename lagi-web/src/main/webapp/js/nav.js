@@ -117,12 +117,6 @@ let promptNavs = [
         icon: 'intelligentAgent',
         title: '智能体',
         subNavs: [
-            // {
-            //     "id": 101,
-            //     "agentId": "stock",
-            //     "title": "股票助手",
-            //     "templateIssues": "今天的股市行情如何?"
-            // },
             {
                 "id": 102,
                 "agentId": "exchangeRate",
@@ -153,24 +147,6 @@ let promptNavs = [
                 "title": "天气助手",
                 "templateIssues": "今天北京天气如何?"
             },
-            // {
-            //     "id": 107,
-            //     "agentId": "oil",
-            //     "title": "油价助手",
-            //     "templateIssues": "今天的国际油价是多少?"
-            // },
-            // {
-            //     "id": 108,
-            //     "agentId": "bmi",
-            //     "title": "体重指数",
-            //     "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
-            // },
-            // {
-            //     "id": 109,
-            //     "agentId": "calorie",
-            //     "title": "健康饮食",
-            //     "templateIssues": "一份鸡胸肉的卡路里是多少?"
-            // },
             {
                 "id": 110,
                 "agentId": "dishonest",
@@ -183,66 +159,18 @@ let promptNavs = [
                 "title": "高铁助手",
                 "templateIssues": "从北京到上海的高铁票价是多少?"
             },
-            // {
-            //     "id": 112,
-            //     "agentId": "history",
-            //     "title": "历史今日",
-            //     "templateIssues": "今天在历史上发生了哪些重大事件?"
-            // },
             {
                 "id": 113,
                 "agentId": "youdao",
                 "title": "有道翻译",
                 "templateIssues": "请翻译‘Hello, how are you?’到中文"
             },
-            // {
-            //     "id": 114,
-            //     "agentId": "image",
-            //     "title": "图像生成",
-            //     "templateIssues": "帮我生成一张海滩风景的图像"
-            // },
-            // {
-            //     "id": 115,
-            //     "agentId": "KFC_text_generate",
-            //     "title": "疯狂星期",
-            //     "templateIssues": "帮我生成一个疯狂星期四的文案"
-            // },
-            // {
-            //     "id": 116,
-            //     "agentId": "ip_address_lookup_agent",
-            //     "title": "ip查询",
-            //     "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
-            // },
-            // {
-            //     "id": 117,
-            //     "agentId": "anime_pictures",
-            //     "title": "动漫图片",
-            //     "templateIssues": "帮我生成一张动漫图片"
-            // },
-            // {
-            //     "id": 118,
-            //     "agentId": "constellation_luck",
-            //     "title": "今日运势",
-            //     "templateIssues": "帮我查查今天白羊座运势怎么样"
-            // },
             {
                 "id": 119,
                 "agentId": "sogou_search_pictures",
                 "title": "搜狗搜图",
                 "templateIssues": "帮我搜索一下刘亦菲的图片"
             },
-            // {
-            //     "id": 120,
-            //     "agentId": "belle_pictures",
-            //     "title": "头像生成",
-            //     "templateIssues": "帮我生成一张头像"
-            // },
-            // {
-            //     "id": 121,
-            //     "agentId": "baidu_search_pictures",
-            //     "title": "百度搜图",
-            //     "templateIssues": "帮我搜索一下关于小米SU7的图片"
-            // },
             {
                 "id": 222,
                 "agentId": "hot_news",
@@ -254,19 +182,7 @@ let promptNavs = [
                 "agentId": "city_travel_route",
                 "title": "出行路线",
                 "templateIssues": "从武汉到北京的出行路线是什么？"
-            },
-            // {
-            //     "id": 122,
-            //     "agentId": "gold_today",
-            //     "title": "今日金价",
-            //     "templateIssues": "今天国内金价是多少"
-            // },
-            // {
-            //     "id": 123,
-            //     "agentId": "jokes_generation",
-            //     "title": "段子生成",
-            //     "templateIssues": "帮我生成一篇段子"
-            // }
+            }
         ]
     },
     {
@@ -314,7 +230,43 @@ let promptNavs = [
                 group: 2
             }
         ]
+    },
+    {
+        id: 15,
+        key: 'interfaceTest',
+        icon: 'interfaceTest',
+        title: '高级功能中心',
+        subNavs: [
+            {
+                id: 15.1,
+                key: 'padCoordinate',
+                title: '焊盘坐标表生成',
+                exampleImgSrc: '../images/padCoordinate.png',
+                exampleVedioSrc: '../video/padCoordinate.mp4',
+                prompt: '上传 TXT 文件以生成焊盘坐标表。文件大小限制为 10MB，若文件较大或数据行数过多，处理可能需要较长时间。',
+                operation: '选择一个 TXT 文件，点击提交按钮，接口将生成并下载焊盘坐标表（DOCX 格式）。'
+            },
+            {
+                id: 15.2,
+                key: 'hsrSummary',
+                title: '安全规范摘要提取',
+                exampleImgSrc: '../images/hsrSummary.png',
+                exampleVedioSrc: '../video/hsrSummary.mp4',
+                prompt: '上传 PDF 文件以生成硬件安全规范摘要。文件大小限制为 10MB，若文件页数过多或内容复杂，处理可能需要较长时间。',
+                operation: '选择一个 PDF 文件，点击提交按钮，接口将生成并下载摘要文件（DOCX 格式）。'
+            },
+            {
+                id: 15.3,
+                key: 'analyzeImage',
+                title: '图片内容结构化分析',
+                exampleImgSrc: '../images/analyzeImage.png',
+                exampleVedioSrc: '../video/analyzeImage.mp4',
+                prompt: '上传 PNG 或 JPEG 图片文件，接口将返回图像内容的结构化分析文本。',
+                operation: '选择一张图片文件，点击提交按钮，接口将返回分析结果并显示在页面上。'
+            }
+        ]
     }
+
 ];
 
 
@@ -604,71 +556,411 @@ function getModeList(type) {
 
 let currentNav = null;
 
+// 通用函数：更新状态信息（从demo中复用）
+function updateStatus(elementId, message, type = 'info') {
+    const statusElement = document.getElementById(elementId);
+    statusElement.textContent = message;
+    statusElement.className = 'status ' + (type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '');
+}
+
+// 通用函数：禁用/启用按钮（从demo中复用）
+function toggleButton(buttonId, disabled) {
+    const button = document.getElementById(buttonId);
+    button.disabled = disabled;
+}
+
+// 通用函数：检查文件大小（从demo中复用）
+function checkFileSize(file, maxSizeMB, statusId) {
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > maxSizeMB) {
+        updateStatus(statusId, `文件大小 (${fileSizeMB.toFixed(2)} MB) 超过 ${maxSizeMB} MB，处理可能需要较长时间，请耐心等待。`, 'warning');
+        return true;
+    } else if (fileSizeMB > maxSizeMB / 2) {
+        updateStatus(statusId, `文件较大 (${fileSizeMB.toFixed(2)} MB)，处理可能稍慢，请稍候。`, 'warning');
+        return true;
+    }
+    return false;
+}
+
+// 处理焊盘坐标表生成
+async function submitPadFile(fileInputId, statusId, buttonId) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    if (!file) {
+        updateStatus(statusId, '请选择一个 TXT 文件', 'error');
+        return;
+    }
+
+    const isLargeFile = checkFileSize(file, 10, statusId);
+    toggleButton(buttonId, true);
+    updateStatus(statusId, isLargeFile ? '正在上传并处理大文件，请耐心等待...' : '正在上传并处理文件...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/pad/generatePadTable', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || '请求失败');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'PadCoordinate.docx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        updateStatus(statusId, '文件生成成功，已下载', 'success');
+    } catch (error) {
+        updateStatus(statusId, '错误：' + error.message, 'error');
+    } finally {
+        toggleButton(buttonId, false);
+    }
+}
+
+// 处理安全规范摘要提取
+async function submitHsrFile(fileInputId, statusId, buttonId) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    if (!file) {
+        updateStatus(statusId, '请选择一个 PDF 文件', 'error');
+        return;
+    }
+
+    const isLargeFile = checkFileSize(file, 10, statusId);
+    toggleButton(buttonId, true);
+    updateStatus(statusId, isLargeFile ? '正在上传并处理大文件，请耐心等待...' : '正在上传并处理文件...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/hsrsummary/generateHsrSummary', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || '请求失败');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'HsrSummary.docx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        updateStatus(statusId, '文件生成成功，已下载', 'success');
+    } catch (error) {
+        updateStatus(statusId, '错误：' + error.message, 'error');
+    } finally {
+        toggleButton(buttonId, false);
+    }
+}
+
+// 处理图片内容结构化分析
+async function submitImage(fileInputId, statusId, buttonId, resultId) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    if (!file) {
+        updateStatus(statusId, '请选择一张图片文件', 'error');
+        return;
+    }
+
+    toggleButton(buttonId, true);
+    updateStatus(statusId, '正在上传并分析图像，请稍候...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/analyzeImage', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('请求失败，状态码: ' + response.status);
+        }
+
+        const result = await response.json();
+        updateStatus(statusId, '分析成功', 'success');
+
+        const resultBox = document.getElementById(resultId);
+        resultBox.textContent = `状态: ${result.status}\n\n${result.data}`;
+    } catch (error) {
+        updateStatus(statusId, '错误：' + error.message, 'error');
+    } finally {
+        toggleButton(buttonId, false);
+    }
+}
+
+// 动态创建文件上传和处理界面
+function createFileUploadUI(nav, containerId) {
+    injectDemoStyles();
+    const container = document.getElementById(containerId);
+    container.innerHTML = ''; // 清空容器
+
+    const sectionId = `section-${nav.key}`;
+    const fileInputId = `${nav.key}-fileInput`;
+    const submitButtonId = `${nav.key}-submitBtn`;
+    const statusId = `${nav.key}-status`;
+    const resultId = `${nav.key}-result`;
+
+    let acceptType = '';
+    if (nav.key === 'padCoordinate') {
+        acceptType = '.txt';
+    } else if (nav.key === 'hsrSummary') {
+        acceptType = '.pdf';
+    } else if (nav.key === 'analyzeImage') {
+        acceptType = 'image/png, image/jpeg';
+    }
+
+    const html = `
+        <div class="section" id="${sectionId}">
+            <h2>${nav.title}</h2>
+            <div class="description">${nav.prompt}</div>
+            <input type="file" id="${fileInputId}" accept="${acceptType}">
+            <button id="${submitButtonId}">提交</button>
+            <div id="${statusId}" class="status"></div>
+            ${nav.key === 'analyzeImage' ? `<pre id="${resultId}"></pre>` : ''}
+        </div>
+    `;
+    container.innerHTML = html;
+
+    // 绑定提交按钮事件
+    const submitButton = document.getElementById(submitButtonId);
+    submitButton.addEventListener('click', () => {
+        if (nav.key === 'padCoordinate') {
+            submitPadFile(fileInputId, statusId, submitButtonId);
+        } else if (nav.key === 'hsrSummary') {
+            submitHsrFile(fileInputId, statusId, submitButtonId);
+        } else if (nav.key === 'analyzeImage') {
+            submitImage(fileInputId, statusId, submitButtonId, resultId);
+        }
+    });
+}
+function injectDemoStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        /* 容器样式 */
+        .section {
+            margin-bottom: 40px;
+            padding: 24px;
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 标题样式 */
+        h2 {
+            color: #1a1a1a;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        /* 描述文本 */
+        .description {
+            font-size: 0.95rem;
+            color: #5c5c5c;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* 文件输入框 */
+        input[type="file"] {
+            display: block;
+            margin-bottom: 16px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+        input[type="file"]:hover {
+            border-color: #007bff;
+        }
+
+        /* 按钮样式 */
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+        }
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+        }
+        button:disabled {
+            background: #d0d0d0;
+            color: #a0a0a0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 状态信息 */
+        .status {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.5;
+            transition: opacity 0.3s ease;
+        }
+        .error {
+            color: #d32f2f;
+            background: #fce7e7;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .success {
+            color: #2e7d32;
+            background: #e8f5e9;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .warning {
+            color: #f57c00;
+            background: #fff3e0;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        /* 结果显示区域 */
+        pre {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #333;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .section {
+                padding: 16px;
+                margin-bottom: 24px;
+            }
+            h2 {
+                font-size: 1.25rem;
+            }
+            .description {
+                font-size: 0.85rem;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            pre {
+                font-size: 0.85rem;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 function getPromptDialog(id) {
-
-
-    // debugger
     let nav = null;
 
-    // 查找包含指定ID的一级导航项
+    // 查找包含指定ID的子导航项
     for (let index = 0; index < promptNavs.length; index++) {
         const category = promptNavs[index];
         for (let j = 0; j < category.subNavs.length; j++) {
             const subNav = category.subNavs[j];
             if (subNav.id == id) {
                 nav = subNav;
-                currentNav = nav;  // 更新当前导航为选中的子导航
+                currentNav = nav;
                 break;
             }
         }
-        if (nav) break;  // 如果找到子导航，则跳出循环
+        if (nav) break;
     }
 
-    // 如果未找到指定ID的导航项
     if (nav == null) {
         alert("找不到对应的信息");
         return;
     }
     currentAppId = nav.agentId;
 
+    // 如果是高级功能中心的子菜单，直接触发文件上传和接口调用
+    if (['padCoordinate', 'hsrSummary', 'analyzeImage'].includes(nav.key)) {
+        // 隐藏首页内容
+        hideHelloContent();
 
-    if (!(nav.prompt && nav.operation)) {
-        $('#queryContent').val(nav.templateIssues);
-        resetBallState();
-        highlightWord(nav.title);
-        return;
+        // 清空并显示文件上传界面
+        createFileUploadUI(nav, 'item-content');
+
+        // 应用demo中的CSS样式（确保页面已包含相关样式）
+        // 如果CSS未包含，可在此处动态注入（见下方说明）
+    } else {
+        // 保留原有逻辑
+        if (!(nav.prompt && nav.operation)) {
+            $('#queryContent').val(nav.templateIssues);
+            resetBallState();
+            highlightWord(nav.title);
+            return;
+        }
+
+        $('#queryContent').val('');
+        loadModelSelect(nav);
+        hideHelloContent();
+
+        let answer = buildPromptDialogContent(nav);
+        let answerJq = newRobotStartDialog('');
+
+        let vedioHtml = '';
+        if (nav.exampleVedioSrc) {
+            vedioHtml = `
+                <video controls width="100%" style="border:10px solid #238efc; border-radius:15px">
+                    <source src="${nav.exampleVedioSrc}" type="video/mp4" />
+                </video>
+            `;
+        }
+
+        clearTimeout(timer);
+        currentPromptDialog = nav;
+        typing(0, answer, answerJq, addRobotDialog, vedioHtml);
     }
-
-    $('#queryContent').val('');
-
-    // 加载模型选择（子导航项）
-    loadModelSelect(nav);
-
-    // 隐藏首页内容
-    hideHelloContent();
-
-    let answer = buildPromptDialogContent(nav);
-    let answerJq = newRobotStartDialog('');
-
-    // 播放视频（如果存在）
-    let vedioHtml = '';
-    if (nav.exampleVedioSrc) {
-        vedioHtml = `
-            <video controls width="100%" style="border:10px solid #238efc; border-radius:15px">
-                <source src="${nav.exampleVedioSrc}" type="video/mp4" />
-            </video>
-        `;
-    }
-
-
-    // 重置计时器
-    clearTimeout(timer);
-
-    // 更新当前的提示框
-    currentPromptDialog = nav;
-
-    // 开始打字效果
-    typing(0, answer, answerJq, addRobotDialog, vedioHtml);
 }
 
 
