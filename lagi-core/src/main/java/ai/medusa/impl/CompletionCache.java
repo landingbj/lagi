@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import org.apache.commons.lang3.SerializationUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -86,6 +87,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
         PromptInput pickedPromptInput = null;
         double maxRatio = -1d;
         if (promptInputList != null) {
+            PromptInputUtil.setApproximateTemperature(promptInput);
             for (PromptInput promptInputInCache : promptInputList) {
                 if (!promptInput.getParameter().equals(promptInputInCache.getParameter())) {
                     continue;
