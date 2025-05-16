@@ -78,6 +78,8 @@ public class PromptCacheTrigger {
     }
 
     public void writeCache(PromptInput promptInput, ChatCompletionResult chatCompletionResult, boolean needPersistent, boolean flush) {
+        PromptInputUtil.setApproximateTemperature(promptInput);
+
         String newestPrompt = PromptInputUtil.getNewestPrompt(promptInput);
 
         if (chatCompletionResult != null) {

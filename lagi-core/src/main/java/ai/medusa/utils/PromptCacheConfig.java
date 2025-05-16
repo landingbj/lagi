@@ -5,6 +5,9 @@ import ai.common.pojo.VectorStoreConfig;
 import cn.hutool.core.util.StrUtil;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PromptCacheConfig {
@@ -96,6 +99,8 @@ public class PromptCacheConfig {
     public static String CACHE_PERSISTENT_PATH = "./medusa_cache";
     public static int CACHE_PERSISTENT_BATCH_SIZE = 20;
 
+    public static List<Double> TEMPERATURE_TOLERANCE;
+
     @Getter
     private static Boolean enableLlmDriver = false;
     @Getter
@@ -143,8 +148,8 @@ public class PromptCacheConfig {
         MEDUSA_PRIORITY = config.getPriority() != null ? config.getPriority() : MEDUSA_PRIORITY;
 
         LLM_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() : LLM_DIVERSIFY_LIMIT;
-        REASON_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 2: REASON_DIVERSIFY_LIMIT;
-        TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 3: LLM_DIVERSIFY_LIMIT;
+        REASON_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 2 : REASON_DIVERSIFY_LIMIT;
+        TREE_DIVERSIFY_LIMIT = config.getAheads() != null ? config.getAheads() * 3 : LLM_DIVERSIFY_LIMIT;
 
         MIN_SIMILARITY_CUTOFF = config.getSimilarityCutoff() != null ? config.getSimilarityCutoff() : MIN_SIMILARITY_CUTOFF;
         QA_SIMILARITY_CUTOFF = MIN_SIMILARITY_CUTOFF;
@@ -156,5 +161,31 @@ public class PromptCacheConfig {
         DYNAMIC_SIMILARITY = config.getDynamicSimilarity() != null ? config.getDynamicSimilarity() : DYNAMIC_SIMILARITY;
 
         MEDUSA_FLUSH = config.getFlush() != null ? config.getFlush() : MEDUSA_FLUSH;
+
+        TEMPERATURE_TOLERANCE = cutIntervalByStep(config.getTolerance() != null ? config.getTolerance() : -1);
+    }
+
+    private static List<Double> cutIntervalByStep(double step) {
+        if (step <= 0) {
+            return null;
+        }
+        List<Double> points = new ArrayList<>();
+        double current = 0.0;
+        while (current < 2.0) {
+            points.add(roundToTwoDecimalPlaces(current));
+            current += step;
+        }
+        if (points.get(points.size() - 1) < 2.0 - 1e-9) {
+            points.add(2.0);
+        } else {
+            points.set(points.size() - 1, 2.0);
+        }
+        return points;
+    }
+
+    private static double roundToTwoDecimalPlaces(double value) {
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }
