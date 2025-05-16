@@ -9,18 +9,20 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import cn.hutool.core.bean.BeanUtil;
 import io.reactivex.Observable;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
-
 @Slf4j
-@LLM(modelNames = {"qwen-turbo","qwen-plus","qwen-max","qwen-max-1201","qwen-max-longcontext", "DeepSeek-R1-Distill-Qwen-32B"})
 public class ProxyLlmAdapter extends ModelService implements ILlmAdapter {
 
     private final ILlmAdapter llmAdapter;
 
 
     private PriorityLock priorityLock = null;
+
+    @Getter
+    private String[] modelNames = {};
 
     public ProxyLlmAdapter(ILlmAdapter llmAdapter) {
         this.llmAdapter = llmAdapter;
@@ -30,6 +32,10 @@ public class ProxyLlmAdapter extends ModelService implements ILlmAdapter {
             if(modelService.getConcurrency() != null) {
                 this.priorityLock = new PriorityLock(modelService.getConcurrency());
             }
+        }
+        LLM annotation = llmAdapter.getClass().getAnnotation(LLM.class);
+        if(annotation != null) {
+            modelNames  = annotation.modelNames();
         }
     }
 

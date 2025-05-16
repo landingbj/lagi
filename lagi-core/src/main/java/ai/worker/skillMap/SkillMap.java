@@ -95,8 +95,7 @@ public class SkillMap {
 
     public List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
-            String question, double edge) {
-        IntentResponse intentResponse = getSafeIntentResponse(question);
+            IntentResponse intentResponse, double edge) {
         if (intentResponse == null || intentResponse.getKeywords() == null || intentResponse.getKeywords().isEmpty()) {
             return Collections.emptyList();
         }
@@ -124,6 +123,13 @@ public class SkillMap {
                         .reversed())
                 .collect(Collectors.toList());
         return highScoreAgents;
+    }
+
+    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
+            String question, double edge) {
+        IntentResponse intentResponse = getSafeIntentResponse(question);
+        return rankAgentByIntentKeyword(agentList, intentResponse, edge);
     }
 
     public List<Agent<ChatCompletionRequest, ChatCompletionResult>> filterAgentByIntentKeyword(
@@ -165,7 +171,7 @@ public class SkillMap {
         return highScoreAgents;
     }
 
-    private IntentResponse getSafeIntentResponse(String question) {
+    public IntentResponse getSafeIntentResponse(String question) {
         try {
             return intentDetect(question);
         } catch (Exception e) {
@@ -355,6 +361,7 @@ public class SkillMap {
     class PickAgent{
         private Integer id;
         private String describe;
+        private String reason;
     }
 
     public List<PickAgent> pickAgent(String question, List<PickAgent> pickAgents) {
@@ -369,7 +376,8 @@ public class SkillMap {
         for (int i = 0;i < maxTry; i++) {
             try {
                 List<Integer> ids = pickAgents.stream().map(PickAgent::getId).collect(Collectors.toList());
-                ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.AGENT_PICK_PROMPT_TEMPLATE, gson.toJson(ids), agents), Collections.emptyList(), question);
+//                ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.AGENT_PICK_SYSTEM_PROMPT, gson.toJson(ids), agents), Collections.emptyList(), question);
+                ChatCompletionResult chatCompletionResult = LlmUtil.callLLm(StrUtil.format(SkillMapPrompt.AGENTS_PICK_SYSTEM_PROMPT, agents), Collections.emptyList(), question);
                 String firstAnswer = ChatCompletionUtil.getFirstAnswer(chatCompletionResult);
                 String json = JsonExtractor.extractJson(firstAnswer);
                 Type typeResponse = new TypeToken<List<PickAgent>>() {}.getType();

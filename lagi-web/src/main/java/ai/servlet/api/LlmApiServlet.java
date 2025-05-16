@@ -38,14 +38,12 @@ import ai.manager.AgentManager;
 import ai.manager.LlmManager;
 import ai.medusa.MedusaService;
 import ai.medusa.pojo.CacheItem;
-import ai.medusa.pojo.MedusaMetadata;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.MedusaMonitor;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
 import ai.migrate.service.AgentService;
 import ai.migrate.service.TraceService;
-import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
@@ -60,6 +58,7 @@ import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
 import ai.worker.DefaultWorker;
+import ai.worker.pojo.IntentResponse;
 import ai.worker.skillMap.SkillMapUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
@@ -79,6 +78,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class LlmApiServlet extends BaseServlet {
@@ -397,7 +398,6 @@ public class LlmApiServlet extends BaseServlet {
         List<AgentConfig> agentConfigs = lagiAgentList.getData();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = convert2AgentList(agentConfigs, haveABalance);
         agents.addAll(llmAndAgentList);
-//        uri = "http://127.0.0.1:8080";
         for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : agents) {
             if (agent instanceof LocalRagAgent) {
                 LocalRagAgent ragAgent = (LocalRagAgent) agent;
@@ -407,43 +407,56 @@ public class LlmApiServlet extends BaseServlet {
         return agents;
     }
 
-    private void goStream(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+    private void goStream(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
         LLmRequest llmRequest = reqBodyToObj(req, LLmRequest.class);
         PrintWriter out = resp.getWriter();
         String uri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
-        if(llmRequest.getAgentId() != null) {
-            ChatCompletionResult work = defaultWorker.work("appointedWorker", allAgents, llmRequest);
-            if(work != null) {
-                convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), req,  resp, work);
-                try {
-                    agentLRUCache.put(llmRequest.getSessionId(), new Pair<>(llmRequest.getMessages().size() -1 , (Agent<ChatCompletionRequest, ChatCompletionResult>)AgentManager.getInstance().get(llmRequest.getAgentId())));
-                } catch (Exception ignored) {
-                }
-                deductExpense(work, llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
-                return;
-            }
+        if (invokeAppointedAgent(req, resp, llmRequest, allAgents)) return;
+//        boolean think = Boolean.TRUE.equals(llmRequest.getThink());
+        boolean think = true;
+        if(think) {
+            out.println("data: " + gson.toJson(convertResponse("", "<think>")) + "\n\n");
+            out.flush();
         }
         long count = llmRequest.getMessages().stream().filter(message -> message.getRole().equals("user")).count();
         if(count > 1) {
             String invoke = SummaryUtil.invoke(llmRequest);
+            if(think) {
+                out.println("data: " + gson.toJson(convertResponse("", "用户的目标：" + invoke + "\n\n")) + "\n\n");
+                out.flush();
+            }
             logger.info("Summary: {}", invoke);
         }
         IntentResult intentResult = intentService.detectIntent(llmRequest);
         logger.info("intentResult: {}", intentResult);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
-
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = null;
+        IntentResponse intentDetect;
         // continue : get lastAgent
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
-            Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair = agentLRUCache.get(llmRequest.getSessionId());
-            if(integerAgentPair != null && Objects.equals(integerAgentPair.getPA(), intentResult.getContinuedIndex())) {
-                outputAgent = integerAgentPair.getPB();
-            }
+            outputAgent = getRecordOutputAgent(llmRequest, intentResult, outputAgent);
         }
         // completion : get new outputAgent
         if(IntentStatusEnum.COMPLETION.getName().equals(intentResult.getStatus()) || outputAgent == null) {
-            List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList = SkillMapUtil.rankAgentByIntentKeyword(allAgents, ChatCompletionUtil.getLastMessage(llmRequest));
+            // TODO 2025/5/15 也需要熔断机制 , 智能体挂了。不再 rank 到.  ;  增加错误熔断机制
+            String userInput = ChatCompletionUtil.getLastMessage(llmRequest);
+            Future<List<Agent<ChatCompletionRequest, ChatCompletionResult>>> future = SkillMapUtil.asyncPickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest), allAgents);
+            intentDetect = SkillMapUtil.intentDetect(userInput);
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> skillMapAgentList = SkillMapUtil.rankAgentByIntentKeyword(allAgents, intentDetect);
+            try {
+                pickAgentList = future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("pick up agent error", e);
+                throw new RRException(500, e.getMessage());
+            }
+            // 取交集
+            skillMapAgentList.retainAll(pickAgentList);
+            // 如交集为空，则取pickAgentList
+            if(skillMapAgentList.isEmpty()) {
+                skillMapAgentList = pickAgentList;
+            }
             skillMapAgentList.forEach(
                     agent -> logger.info("Matched agent in skill map: {}", agent.getAgentConfig().getName())
             );
@@ -451,13 +464,7 @@ public class LlmApiServlet extends BaseServlet {
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);
             if (skillMapAgentList.isEmpty()) {
                 if(llmAndAgentList.isEmpty()) {
-                    // TODO 2025/5/14 to pick up user agents
-                    skillMapAgentList = SkillMapUtil.pickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest));
-                    if(skillMapAgentList != null && !skillMapAgentList.isEmpty()) {
-                        outputAgent = skillMapAgentList.get(0);
-                    } else {
-                        outputAgent = SkillMapUtil.getHighestPriorityLlm();
-                    }
+                    outputAgent = SkillMapUtil.getHighestPriorityLlm();
                 } else {
                     outputAgent = llmAndAgentList.get(0);
                 }
@@ -468,14 +475,20 @@ public class LlmApiServlet extends BaseServlet {
                     outputAgent = skillMapAgentList.get(0);
                 }
             }
-            Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair  = new Pair<>();
-            integerAgentPair.setPA(intentResult.getContinuedIndex());
-            integerAgentPair.setPB(outputAgent);
-            agentLRUCache.put(llmRequest.getSessionId(), integerAgentPair);
+            recordLastOutputAgent(intentResult, outputAgent, llmRequest);
+        } else {
+            intentDetect = null;
         }
 
         if (outputAgent == null) {
             throw new RRException("未找到可stream的agent");
+        }
+
+        if(think) {
+            out.println("data: " + gson.toJson(convertResponse("", "为用户选用智能体：" + outputAgent.getAgentConfig().getName() + "\n\n")) + "\n\n");
+            out.flush();
+            out.println("data: " + gson.toJson(convertResponse("", "</think>")) + "\n\n");
+            out.flush();
         }
 
         if (outputAgent instanceof LocalRagAgent) {
@@ -493,7 +506,7 @@ public class LlmApiServlet extends BaseServlet {
             String answer = ChatCompletionUtil.getFirstAnswer(result);
             convert2streamAndOutput(answer, req, resp, chatCompletionResultWithSource);
             resultWithSource[0] = chatCompletionResultWithSource;
-//            SkillMapUtil.getOrInsertScore(llmRequest, outputAgent, result);
+            agentRunFinishCallBack(resultWithSource, llmRequest, allAgents, outputAgent, intentDetect);
         } else {
             llmRequest.setStream(true);
             Observable<ChatCompletionResult> result = outputAgent.stream(llmRequest);
@@ -539,10 +552,46 @@ public class LlmApiServlet extends BaseServlet {
                         out.print("data: " + "[DONE]" + "\n\n");
                         out.flush();
                         out.close();
-//                        SkillMapUtil.getOrInsertScore(llmRequest, finalOutputAgent, resultWithSource[0]);
+                        agentRunFinishCallBack(resultWithSource, llmRequest, allAgents, finalOutputAgent, intentDetect);
                     }
             );
         }
+
+    }
+
+    private Agent<ChatCompletionRequest, ChatCompletionResult> getRecordOutputAgent(LLmRequest llmRequest, IntentResult intentResult, Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent) {
+        Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair = agentLRUCache.get(llmRequest.getSessionId());
+        if(integerAgentPair != null && Objects.equals(integerAgentPair.getPA(), intentResult.getContinuedIndex())) {
+            outputAgent = integerAgentPair.getPB();
+        }
+        return outputAgent;
+    }
+
+    private void recordLastOutputAgent(IntentResult intentResult, Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent, LLmRequest llmRequest) {
+        Pair<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> integerAgentPair  = new Pair<>();
+        integerAgentPair.setPA(intentResult.getContinuedIndex());
+        integerAgentPair.setPB(outputAgent);
+        agentLRUCache.put(llmRequest.getSessionId(), integerAgentPair);
+    }
+
+    private boolean invokeAppointedAgent(HttpServletRequest req, HttpServletResponse resp, LLmRequest llmRequest, List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents) throws IOException {
+        if(llmRequest.getAgentId() != null) {
+            ChatCompletionResult work = defaultWorker.work("appointedWorker", allAgents, llmRequest);
+            if(work != null) {
+                convert2streamAndOutput(work.getChoices().get(0).getMessage().getContent(), req, resp, work);
+                try {
+                    agentLRUCache.put(llmRequest.getSessionId(), new Pair<>(llmRequest.getMessages().size() -1 , (Agent<ChatCompletionRequest, ChatCompletionResult>)AgentManager.getInstance().get(llmRequest.getAgentId())));
+                } catch (Exception ignored) {
+                }
+                deductExpense(work, llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void agentRunFinishCallBack(ChatCompletionResultWithSource[] resultWithSource, LLmRequest llmRequest, List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents, Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent, IntentResponse intentDetect) {
+        SkillMapUtil.getOrInsertScore(intentDetect, llmRequest, outputAgent, resultWithSource[0]);
         deductExpense(resultWithSource[0], llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
         if (resultWithSource[0] != null) {
             if (outputAgent instanceof LocalRagAgent) {
@@ -551,10 +600,22 @@ public class LlmApiServlet extends BaseServlet {
                 traceService.syncAddAgentTrace(resultWithSource[0]);
             }
         }
-        Agent<ChatCompletionRequest, ChatCompletionResult> finalOutputAgent1 = outputAgent;
-        allAgents = allAgents.stream().filter(agent -> StrUtil.isBlank(agent.getAgentConfig().getDescribe()) && !Objects.equals(finalOutputAgent1.getAgentConfig().getId(), agent.getAgentConfig().getId())).collect(Collectors.toList());
-        // TODO 2025/5/12 upgrade agent router
-//        SkillMapUtil.scoreAgents(llmRequest, allAgents);
+        scorePickAgents(outputAgent, allAgents, intentDetect, llmRequest);
+    }
+
+    private void scorePickAgents(Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent, List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList, IntentResponse intentDetect, LLmRequest llmRequest) {
+        if(pickAgentList != null) {
+            pickAgentList = pickAgentList.stream().filter(agent ->
+                    StrUtil.isBlank(agent.getAgentConfig().getDescribe())
+                            && !Objects.equals(outputAgent.getAgentConfig().getId(), agent.getAgentConfig().getId())
+                            && !(agent instanceof LocalRagAgent)
+            ).collect(Collectors.toList());
+            if(intentDetect != null) {
+                SkillMapUtil.asyncScoreAgents(intentDetect, llmRequest, pickAgentList);
+            }else {
+                SkillMapUtil.asyncScoreAgents(llmRequest, pickAgentList);
+            }
+        }
     }
 
     private static Agent<ChatCompletionRequest, ChatCompletionResult> getFirstStreamAgent(

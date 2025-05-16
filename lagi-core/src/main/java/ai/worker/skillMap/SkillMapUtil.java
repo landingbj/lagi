@@ -23,7 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class SkillMapUtil {
@@ -112,12 +114,29 @@ public class SkillMapUtil {
         return convert2AgentList(collect, new HashMap<>());
     }
 
+    public static Future<IntentResponse> asyncIntentDetect(
+            String question) {
+        return executorService.submit(() -> skillMap.intentDetect(question));
+    }
+
+    public static IntentResponse intentDetect(
+            String question) {
+        return  skillMap.intentDetect(question);
+    }
+
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
             List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
             String question) {
         // TODO 2025/5/13 update rank logic
-        return Collections.emptyList();
-//        return rankAgentByIntentKeyword(agentList, question, THRESHOLD);
+//        return Collections.emptyList();
+        IntentResponse intentResponse = skillMap.intentDetect(question);
+        return rankAgentByIntentKeyword(agentList,  intentResponse, THRESHOLD);
+    }
+
+    public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
+            IntentResponse intent) {
+        return rankAgentByIntentKeyword(agentList, intent,  THRESHOLD);
     }
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentByDescribe(
@@ -138,6 +157,38 @@ public class SkillMapUtil {
         return agentList.stream().filter(agent -> set.contains(agent.getAgentConfig().getId())).collect(Collectors.toList());
     }
 
+    public static Future<List<Agent<ChatCompletionRequest, ChatCompletionResult>>> asyncPickAgentByDescribe(
+            String question) {
+        return executorService.submit(() -> pickAgentByDescribe(question));
+    }
+
+    public static <T> List<List<T>> splitList(List<T> originalList, int chunkSize) {
+        List<List<T>> result = new ArrayList<>();
+        if (originalList == null || originalList.isEmpty()) {
+            return result;
+        }
+        for (int i = 0; i < originalList.size(); i += chunkSize) {
+            int endIndex = Math.min(i + chunkSize, originalList.size());
+            result.add(new ArrayList<>(originalList.subList(i, endIndex)));
+        }
+        return result;
+    }
+
+    public static Future<List<Agent<ChatCompletionRequest, ChatCompletionResult>>> asyncPickAgentByDescribe(
+            String question, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
+        if(agentList.size() > 50) {
+            List<List<Agent<ChatCompletionRequest, ChatCompletionResult>>> lists = splitList(agentList, 50);
+            return executorService.submit(() -> lists.stream().map(list -> asyncPickAgentByDescribe(question, list)).flatMap(future -> {
+                try {
+                    return future.get().stream();
+                } catch (Exception e) {
+                    return Stream.empty();
+                }
+            }).collect(Collectors.toList()));
+        }
+        return executorService.submit(() -> pickAgentByDescribe(question, agentList));
+    }
+
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentByDescribe(
             String question) {
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList = getLlmAndAgentList();
@@ -146,9 +197,8 @@ public class SkillMapUtil {
 
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> rankAgentByIntentKeyword(
-            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList,
-            String question, Double edge) {
-        return skillMap.rankAgentByIntentKeyword(agentList, question, edge);
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList, IntentResponse intentResponse, Double edge) {
+        return skillMap.rankAgentByIntentKeyword(agentList,intentResponse, edge);
     }
 
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs, Map<Integer, Boolean> haveABalance) {
@@ -185,20 +235,31 @@ public class SkillMapUtil {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public static void scoreAgents(ChatCompletionRequest request, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
+    public static void asyncScoreAgents(IntentResponse intentResponse, ChatCompletionRequest request, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
+        executorService.submit(() -> {
+            request.setStream(false);
+            saveAgents(intentResponse, request, agentList);
+        });
+    }
+
+    private static void saveAgents(IntentResponse intentResponse, ChatCompletionRequest request, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
+        for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : agentList) {
+            if (agent instanceof LocalRagAgent) {
+                request.setModel(agent.getAgentConfig().getName());
+            }
+            try {
+                saveScore(intentResponse, request, agent);
+            } catch (Exception e) {
+                log.error("scoreAgents error");
+            }
+        }
+    }
+
+    public static void asyncScoreAgents(ChatCompletionRequest request, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
         executorService.submit(() -> {
             request.setStream(false);
             IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(request));
-            for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : agentList) {
-                if (agent instanceof LocalRagAgent) {
-                    request.setModel(agent.getAgentConfig().getName());
-                }
-                try {
-                    saveScore(intentResponse, request, agent);
-                } catch (Exception e) {
-                    log.error("scoreAgents error");
-                }
-            }
+            saveAgents(intentResponse, request, agentList);
         });
     }
 
@@ -210,7 +271,13 @@ public class SkillMapUtil {
         return getOrInsertScore(intentResponse, request, agent, chatCompletionResult);
     }
 
-    public static double getOrInsertScore(IntentResponse intentResponse, ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
+    public static Double getOrInsertScore(IntentResponse intentResponse, ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
+        if(intentResponse == null) {
+            return null;
+        }
+        if(agent instanceof LocalRagAgent) {
+            return null;
+        }
         List<String> keywords = intentResponse.getKeywords();
         AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
         double scoring;

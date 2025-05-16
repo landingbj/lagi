@@ -14,4 +14,5 @@ public class LLmRequest extends ChatCompletionRequest {
     private Integer agentId;
     private String worker;
     private String userId;
+    private Boolean think;
 }
