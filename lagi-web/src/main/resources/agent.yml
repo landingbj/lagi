@@ -1,0 +1,63 @@
+ agents:
+ # Agent for QQ chat application automation, enabling social interactions and services.
+  - name: qq
+    api_key: your-api-key
+    driver: ai.agent.social.QQAgent
+
+  # Agent for WeChat chat application automation, supporting social interactions and message management.
+  - name: wechat
+    api_key: your-api-key
+    driver: ai.agent.social.WechatAgent
+
+  # Agent for DingTalk chat application automation, providing work collaboration and information exchange services.
+  - name: ding
+    api_key: your-api-key
+    driver: ai.agent.social.DingAgent
+
+  # Agent for Baidu Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
+  - name: yiYan
+    app_id: your-app-id
+    api_key: your-api-key
+    driver: ai.agent.chat.wenxin.BaiduAgent
+
+  # Agent for Tencent YuanQi, providing automated support for Tencent-related products and services.
+  - name: yuanQi
+    app_id: your-app-id
+    api_key: your-api-key
+    driver: ai.agent.chat.tencent.YuanQiAgent
+
+     # Agent for Xiaohongshu (Little Red Book) platform, providing user content recommendations, search, and interaction.
+  - name: zhiPu
+    token: your-token
+    app_id: your-app-id
+    driver: ai.agent.chat.zhipu.ZhipuAgent
+
+    # Agent for querying dishonest persons, helping users access information about people listed as untrustworthy.
+  - name: dishonest
+    token: your-token
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+
+  # Agent for high-speed train ticket queries, providing services to help users quickly find train ticket information.
+  - name: ticket
+    driver: ai.agent.customer.HighSpeedTicketAgent
+
+  # Agent for Youdao translation services, supporting translation between multiple languages.
+  - name: youdao
+    token: your-token
+    driver: ai.agent.customer.YouDaoAgent
+
+  # Sogou image search tool that can help you search for an image online based on your keywords.
+  - name: sogou
+    driver: ai.agent.customer.SogouSearchPicturesAgent
+
+  # Agent for fetching daily hot news, helping users retrieve trending news articles.
+  - name: news
+    driver: ai.agent.customer.HotNewsAgent
+
+  # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
+  - name: travel
+    driver: ai.agent.customer.CityTravelRouteAgent
+
+  - name: mcp
+    mcps: amap,baidu_search
+    driver: ai.agent.mcp.McpAgent

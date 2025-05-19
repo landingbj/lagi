@@ -44,7 +44,9 @@ public class ContextLoader {
 
     public static void loadContext() {
         try {
-            loadContextByResource("lagi.yml");
+            if(configuration == null) {
+                loadContextByResource("lagi.yml");
+            }
         } catch (Exception e) {
             log.warn(e.getMessage());
         }

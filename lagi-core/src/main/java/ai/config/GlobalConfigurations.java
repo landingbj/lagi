@@ -7,6 +7,8 @@ import ai.medusa.utils.PromptCacheConfig;
 import ai.ocr.OcrConfig;
 import ai.router.Routers;
 import ai.utils.*;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -34,8 +36,14 @@ public class GlobalConfigurations extends AbstractConfiguration {
 
     private McpConfig mcps;
 
+    private String includeModels;
+    private String includeStores;
+    private String includeAgents;
+    private String includeMcps;
+
     @Override
     public void init() {
+        loadFromPropertiesFromYaml();
         EmbeddingManager.getInstance().register(functions.getEmbedding());
         BigdataManager.getInstance().register(stores.getBigdata());
         OSSManager.getInstance().register(stores.getOss());
@@ -50,6 +58,78 @@ public class GlobalConfigurations extends AbstractConfiguration {
         McpManager.getInstance().register(mcps);
         registerFilter();
     }
+
+    private void loadFromPropertiesFromYaml() {
+        try {
+            if(models == null) {
+                models = YmlPropertiesLoader.loaderProperties(getIncludeModels(), "models", new cn.hutool.core.lang.TypeReference<List<Backend>>(){});
+            } else {
+                List<Backend> models1 = YmlPropertiesLoader.loaderProperties(getIncludeModels(), "models", new cn.hutool.core.lang.TypeReference<List<Backend>>(){});
+                if (models1 != null && models != null) {
+                    models.addAll(models1);
+                }
+            }
+            if(models != null) {
+                Set<String> modelNames = models.stream().map(Backend::getName).collect(Collectors.toSet());
+                models = models.stream().filter(model -> modelNames.contains(model.getName())).collect(Collectors.toList());
+            }
+        } catch (Exception ignored){}
+        try {
+            if(stores == null) {
+                stores = YmlPropertiesLoader.loaderProperties(getIncludeStores(), "stores", StoreConfig.class);
+            } else {
+                StoreConfig stores1 = YmlPropertiesLoader.loaderProperties(getIncludeStores(), "stores", StoreConfig.class);
+                if(stores1 != null) {
+                    CopyOptions copyOption = CopyOptions.create(null, true, "vectors");
+                    BeanUtil.copyProperties(stores1, stores, copyOption);
+                    if(stores.getVectors() != null  && stores1.getVectors() != null) {
+                        stores.getVectors().addAll(stores1.getVectors());
+                    }
+                }
+            }
+            if(stores != null && stores.getVectors() != null) {
+                List<VectorStoreConfig> vectors = stores.getVectors();
+                Set<String> vectorNames = vectors.stream().map(VectorStoreConfig::getName).collect(Collectors.toSet());
+                stores.setVectors(vectors.stream().filter(vector -> vectorNames.contains(vector.getName())).collect(Collectors.toList()));
+            }
+
+        }catch (Exception ignored) {}
+        try {
+            if(agents == null) {
+                agents = YmlPropertiesLoader.loaderProperties(getIncludeAgents(), "agents", new cn.hutool.core.lang.TypeReference<List<AgentConfig>>(){});
+            } else {
+                List<AgentConfig> agents1 = YmlPropertiesLoader.loaderProperties(getIncludeAgents(), "agents", new cn.hutool.core.lang.TypeReference<List<AgentConfig>>(){});
+                if (agents1 != null && agents != null) {
+                    agents.addAll(agents1);
+                }
+            }
+            if(agents != null) {
+                Set<String> agentNames = agents.stream().map(AgentConfig::getName).collect(Collectors.toSet());
+                agents = agents.stream().filter(model -> agentNames.contains(model.getName())).collect(Collectors.toList());
+            }
+        } catch (Exception ignored) {}
+        try {
+            if(mcps == null) {
+                mcps = YmlPropertiesLoader.loaderProperties(getIncludeMcps(), "mcps", McpConfig.class);
+            } else {
+                McpConfig mcps1 = YmlPropertiesLoader.loaderProperties(getIncludeMcps(), "mcps", McpConfig.class);
+                if(mcps1 != null) {
+                    CopyOptions copyOption = CopyOptions.create(null, true, "servers");
+                    BeanUtil.copyProperties(mcps1, mcps, copyOption);
+                    if(mcps.getServers() != null  && mcps1.getServers() != null) {
+                        mcps.getServers().addAll(mcps1.getServers());
+                    }
+                }
+            }
+            if(mcps != null && mcps.getServers() != null) {
+                List<McpBackend> mcpBackends = mcps.getServers();
+                Set<String> mcpServerNames = mcpBackends.stream().map(McpBackend::getName).collect(Collectors.toSet());
+                mcps.setServers(mcpBackends.stream().filter(vector -> mcpServerNames.contains(vector.getName())).collect(Collectors.toList()));
+            }
+        }catch (Exception ignored) {}
+    }
+
+
 
     private void registerFilter() {
         if (filters != null) {
