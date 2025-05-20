@@ -127,7 +127,8 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
                 result = resultListInCache.get(index);
             }
         }
-        return replaceResult(result, promptInput, newestPrompt);
+//        return replaceResult(result, promptInput, newestPrompt);
+        return result;
     }
 
     private ChatCompletionResult replaceResult(ChatCompletionResult result, PromptInput promptInput, String newPrompt) {
