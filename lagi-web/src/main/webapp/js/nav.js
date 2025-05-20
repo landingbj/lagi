@@ -263,6 +263,15 @@ let promptNavs = [
                 exampleVedioSrc: '../video/analyzeImage.mp4',
                 prompt: '上传 PNG 或 JPEG 图片文件，接口将返回图像内容的结构化分析文本。',
                 operation: '选择一张图片文件，点击提交按钮，接口将返回分析结果并显示在页面上。'
+            },
+            {
+                id: 15.4,
+                key: 'pinDiagramGenerate',
+                title: '引脚图生成与PPT导出',
+                exampleImgSrc: '../images/pinDiagramGenerate.png',
+                exampleVedioSrc: '../video/pinDiagramGenerate.mp4',
+                prompt: '上传 PDF 文件，生成包含引脚图的PPT，或输入关键词查询并显示引脚图。文件大小限制为 10MB。',
+                operation: '选择一个 PDF 文件，点击“下载PPT”生成PPT，或输入关键词后点击“查询”显示截图。'
             }
         ]
     }
@@ -713,190 +722,180 @@ async function submitImage(fileInputId, statusId, buttonId, resultId) {
 function createFileUploadUI(nav, containerId) {
     injectDemoStyles();
     const container = document.getElementById(containerId);
-    container.innerHTML = ''; // 清空容器
+    container.innerHTML = '';
 
     const sectionId = `section-${nav.key}`;
     const fileInputId = `${nav.key}-fileInput`;
-    const submitButtonId = `${nav.key}-submitBtn`;
+    const downloadButtonId = `${nav.key}-downloadBtn`;
+    const queryButtonId = `${nav.key}-queryBtn`;
+    const keywordInputId = `${nav.key}-keywordInput`;
     const statusId = `${nav.key}-status`;
-    const resultId = `${nav.key}-result`;
-
-    let acceptType = '';
-    if (nav.key === 'padCoordinate') {
-        acceptType = '.txt';
-    } else if (nav.key === 'hsrSummary') {
-        acceptType = '.pdf';
-    } else if (nav.key === 'analyzeImage') {
-        acceptType = 'image/png, image/jpeg';
-    }
+    const imageId = `${nav.key}-image`;
 
     const html = `
-        <div class="section" id="${sectionId}">
-            <h2>${nav.title}</h2>
-            <div class="description">${nav.prompt}</div>
-            <input type="file" id="${fileInputId}" accept="${acceptType}">
-            <button id="${submitButtonId}">提交</button>
-            <div id="${statusId}" class="status"></div>
-            ${nav.key === 'analyzeImage' ? `<pre id="${resultId}"></pre>` : ''}
-        </div>
-    `;
+                <div class="section" id="${sectionId}">
+                    <h2>${nav.title}</h2>
+                    <div class="description">${nav.prompt}</div>
+                    <input type="file" id="${fileInputId}" accept=".pdf">
+                    <button id="${downloadButtonId}">下载PPT</button>
+                    <div class="query-section">
+                        <input type="text" id="${keywordInputId}" placeholder="请输入关键词（如 PIN CONFIGURATION）">
+                        <button id="${queryButtonId}">查询</button>
+                    </div>
+                    <div id="${statusId}" class="status"></div>
+                    <img id="${imageId}" style="display: none; max-width: 100%; margin-top: 20px;">
+                </div>
+            `;
     container.innerHTML = html;
 
-    // 绑定提交按钮事件
-    const submitButton = document.getElementById(submitButtonId);
-    submitButton.addEventListener('click', () => {
-        if (nav.key === 'padCoordinate') {
-            submitPadFile(fileInputId, statusId, submitButtonId);
-        } else if (nav.key === 'hsrSummary') {
-            submitHsrFile(fileInputId, statusId, submitButtonId);
-        } else if (nav.key === 'analyzeImage') {
-            submitImage(fileInputId, statusId, submitButtonId, resultId);
-        }
-    });
+    const fileInput = document.getElementById(fileInputId);
+    const downloadButton = document.getElementById(downloadButtonId);
+    const queryButton = document.getElementById(queryButtonId);
+    const keywordInput = document.getElementById(keywordInputId);
+
+    downloadButton.addEventListener('click', () => submitPinDiagram(fileInputId, statusId, downloadButtonId));
+    queryButton.addEventListener('click', () => submitPinDiagram(fileInputId, statusId, queryButtonId, keywordInputId, imageId));
 }
+
 function injectDemoStyles() {
     const style = document.createElement('style');
     style.textContent = `
-        /* 容器样式 */
-        .section {
-            margin-bottom: 40px;
-            padding: 24px;
-            background: #ffffff;
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        /* 标题样式 */
-        h2 {
-            color: #1a1a1a;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            line-height: 1.4;
-        }
-
-        /* 描述文本 */
-        .description {
-            font-size: 0.95rem;
-            color: #5c5c5c;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-
-        /* 文件输入框 */
-        input[type="file"] {
-            display: block;
-            margin-bottom: 16px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #f9f9f9;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: border-color 0.2s ease;
-        }
-        input[type="file"]:hover {
-            border-color: #007bff;
-        }
-
-        /* 按钮样式 */
-        button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: #ffffff;
-            font-size: 0.95rem;
-            font-weight: 500;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
-        }
-        button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
-        }
-        button:active:not(:disabled) {
-            transform: translateY(0);
-            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
-        }
-        button:disabled {
-            background: #d0d0d0;
-            color: #a0a0a0;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        /* 状态信息 */
-        .status {
-            margin-top: 12px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            line-height: 1.5;
-            transition: opacity 0.3s ease;
-        }
-        .error {
-            color: #d32f2f;
-            background: #fce7e7;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-        .success {
-            color: #2e7d32;
-            background: #e8f5e9;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-        .warning {
-            color: #f57c00;
-            background: #fff3e0;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-
-        /* 结果显示区域 */
-        pre {
-            background: #f5f5f5;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
-            color: #333;
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 600px) {
-            .section {
-                padding: 16px;
-                margin-bottom: 24px;
-            }
-            h2 {
-                font-size: 1.25rem;
-            }
-            .description {
-                font-size: 0.85rem;
-            }
-            button {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-            pre {
-                font-size: 0.85rem;
-            }
-        }
-    `;
+                .section {
+                    margin-bottom: 40px;
+                    padding: 24px;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                .section:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+                }
+                h2 {
+                    color: #1a1a1a;
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                    margin-bottom: 16px;
+                }
+                .description {
+                    font-size: 0.95rem;
+                    color: #5c5c5c;
+                    margin-bottom: 20px;
+                }
+                input[type="file"], input[type="text"] {
+                    display: block;
+                    margin-bottom: 16px;
+                    padding: 10px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    background: #f9f9f9;
+                    font-size: 0.9rem;
+                }
+                input[type="text"] {
+                    width: 300px;
+                    display: inline-block;
+                }
+                button {
+                    padding: 12px 24px;
+                    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                    color: #ffffff;
+                    font-size: 0.95rem;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    margin-right: 10px;
+                }
+                button:disabled {
+                    background: #d0d0d0;
+                    color: #a0a0a0;
+                    cursor: not-allowed;
+                }
+                .query-section {
+                    margin-top: 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .status {
+                    margin-top: 12px;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                }
+                .error { color: #d32f2f; background: #fce7e7; padding: 8px 12px; border-radius: 6px; }
+                .success { color: #2e7d32; background: #e8f5e9; padding: 8px 12px; border-radius: 6px; }
+                .warning { color: #f57c00; background: #fff3e0; padding: 8px 12px; border-radius: 6px; }
+            `;
     document.head.appendChild(style);
+}
+
+async function submitPinDiagram(fileInputId, statusId, buttonId, keywordInputId = null, imageId = null) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    if (!file) {
+        updateStatus(statusId, '请选择一个 PDF 文件', 'error');
+        return;
+    }
+
+    const isLargeFile = checkFileSize(file, 10, statusId);
+    toggleButton(buttonId, true);
+    updateStatus(statusId, isLargeFile ? '正在处理大文件，请耐心等待...' : '正在处理文件...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (keywordInputId) {
+        const keyword = document.getElementById(keywordInputId).value;
+        if (!keyword) {
+            updateStatus(statusId, '请输入关键词', 'error');
+            toggleButton(buttonId, false);
+            return;
+        }
+        formData.append('keyword', keyword);
+        console.log('Sending query with keyword:', keyword);
+    } else {
+        console.log('Sending PPT generation request');
+    }
+
+    try {
+        const response = await fetch('/pinDiagramGenerate', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || '请求失败');
+        }
+
+        if (keywordInputId) {
+            const result = await response.json();
+            if (result.status === 'success') {
+                const image = document.getElementById(imageId);
+                image.src = `data:image/png;base64,${result.data}`;
+                image.style.display = 'block';
+                updateStatus(statusId, '图片查询成功', 'success');
+            } else {
+                throw new Error(result.msg);
+            }
+        } else {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'PinDiagrams.pptx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            updateStatus(statusId, 'PPT 生成成功，已下载', 'success');
+        }
+    } catch (error) {
+        console.error('Request failed:', error);
+        updateStatus(statusId, '错误：' + error.message, 'error');
+    } finally {
+        toggleButton(buttonId, false);
+    }
 }
 
 function getPromptDialog(id) {
@@ -923,7 +922,7 @@ function getPromptDialog(id) {
     currentAppId = nav.agentId;
 
     // 如果是高级功能中心的子菜单，直接触发文件上传和接口调用
-    if (['padCoordinate', 'hsrSummary', 'analyzeImage'].includes(nav.key)) {
+    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagramGenerate'].includes(nav.key)) {
         // 隐藏首页内容
         hideHelloContent();
 

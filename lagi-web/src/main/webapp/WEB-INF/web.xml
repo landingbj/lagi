@@ -363,5 +363,14 @@
         <url-pattern>/analyzeImage/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>PinDiagramServlet</servlet-name>
+        <servlet-class>ai.servlet.api.PinDiagramServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>PinDiagramServlet</servlet-name>
+        <url-pattern>/pinDiagramGenerate/*</url-pattern>
+    </servlet-mapping>
 
 </web-app>
