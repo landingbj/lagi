@@ -53,6 +53,9 @@ public class Routers {
     }
 
     public void register(ModelFunctions functions, List<RouterConfig> routerConfigs) {
+        if(functions == null || routerConfigs == null) {
+            return;
+        }
         register(functions.getChat(), routerConfigs);
     }
 

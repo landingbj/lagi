@@ -24,6 +24,9 @@ public class OSSManager {
     }
 
     public void  register(List<OSSConfig> ossConfigs) {
+        if(ossConfigs == null) {
+            return;
+        }
         ossConfigs.forEach(ossConfig -> {
             if(!Boolean.TRUE.equals(ossConfig.getEnable())) {
                 return;
