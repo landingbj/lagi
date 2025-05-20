@@ -24,10 +24,11 @@ const words = [
 
 // 绑定页面回车事件
 $('#queryContent').keydown(function (event) {
-    console.log("event:" + event)
     if (event.keyCode === 13) {
         event.preventDefault();
-        textQuery();
+        if (!$('#queryBtn').prop("disabled")) {
+            textQuery();
+        }
     }
 });
 
@@ -486,7 +487,16 @@ function streamOutput(paras, question, robootAnswerJq) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            let msg = "调用失败！";
+            try {
+                const clonedResponse = response.clone();
+                const data = await clonedResponse.json();
+                if (data && data.message) {
+                    msg = data.message;
+                }
+            } catch (e) {
+            }
+            throw new Error(msg);
         }
         const reader = response.body.getReader();
 
@@ -585,8 +595,8 @@ function streamOutput(paras, question, robootAnswerJq) {
         enableQueryBtn();
         querying = false;
         queryLock = false;
-        if (!robootAnswerJq.text) {
-            robootAnswerJq.html("调用失败！");
+        if (robootAnswerJq.text().trim().length === 0) {
+            robootAnswerJq.html(err);
         }
     });
 }
