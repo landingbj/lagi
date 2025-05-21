@@ -32,7 +32,9 @@ public class DxImageAnalysisServlet extends BaseServlet {
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
 
-    private static final String BACKGROUND_INFO = "DI001: Open/Short Detection\n" +
+    private static final String BACKGROUND_INFO = "DX001: FaultB\n" +
+            "Function: Provides fault feedback to host via FaultB mechanism.Short Description: FaultB pin signals system faults; host must read diagnostic registers periodically.Detailed Description: Every ~40ms (recommended <50ms), the host should issue a read command to the 3138A to maintain safety. This read can determine: 1. If data is received from 3138A (communication check). 2. If fault flags are set via fault type registers (50h/51h), host acts according to specific fault types. 3. If internal temperature (via ADC) exceeds thresholds, host responds accordingly: <-40°C to +65°C: Normal; +65°C to +125°C: Send warning to higher-level system; +125°C to 180°C: Turn on all LEDs to decrease internal temperature. Fault types include: CMWF1 (Communication Watchdog1 Timeout), CMWF2 (Communication Watchdog2 Timeout), TF (Thermal Roll-off), CRCF (UART CRC Fault), RSET_OP (RSET Open), RSET_SH (RSET Short), TSD (Thermal Shutdown), LPBF (PWM Loop Duty Fault), SHORTF (LED Short), OPENF (LED Open), SLSHORTF (Single LED Short), EXF (External Fault), LOF (LDO OV Fault), SCAVF (SCA Data Fault).Detection and Reaction Time: <50msReaction on Fault: If no data is received: host checks communication. If fault is detected: host responds according to the specific fault type. If temperature exceeds thresholds: host takes corresponding thermal mitigation actions.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: See the fault type Register 50h/51h for detailed fault information.\n" +
+            "DI001: Open/Short Detection\n" +
             "Function: Detects LED open/short faults and internal power MOS open/short.Short Description: Monitors voltage between LED (+) and LED (-) (VLED) to detect LED open or short faults.Detailed Description: VLED is compared against thresholds. If VLED < (VCC - Vth_short), an LED short fault is triggered. If VOUT < 0.1V, an LED open fault is triggered. Also detects internal power MOS open/short faults.Detection and Reaction Time: <50uS Reaction on Fault: LED short (VLED < (VCC - Vth_short)): Triggers and reports fault.LED open (VOUT < 0.1V): Triggers and reports fault.\n" +
             "Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI002: OV3/UV3 Monitor\n" +
@@ -54,17 +56,17 @@ public class DxImageAnalysisServlet extends BaseServlet {
             "DI009: CLK Detect\n" +
             "Function: Detects CLK signal errors.Short Description: Identifies CLK as constant high or low for >16uS , indicating an error.Detailed Description: If CLK is constant high or low for >16uS  (counted by 8MHz clock), 3138A considers it a CLK output error.Detection and Reaction Time: <100uS Reaction on Fault: Reports fault and replaces CLK_PWM with CLK_SYS.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI010: Thermal Shutdown\n" +
-            "Function: Monitors internal temperature for thermal shutdown.Short Description: Detects if internal temperature exceeds 170掳C.Detailed Description: Continuously monitors internal temperature. If it exceeds 170掳C, triggers thermal shutdown.Detection and Reaction Time: <100uS Reaction on Fault: Turns off output channel and reports fault to host.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
+            "Function: Monitors internal temperature for thermal shutdown.Short Description: Detects if internal temperature exceeds 170C.Detailed Description: Continuously monitors internal temperature. If it exceeds 170C, triggers thermal shutdown.Detection and Reaction Time: <100uS Reaction on Fault: Turns off output channel and reports fault to host.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI011: ADC\n" +
             "Function: Converts analog signals to digital data for monitoring.Short Description: Converts 26 key analog signals to digital data in registers.Detailed Description: Converts 26 important analog signals to digital data stored in registers. Host can force a reference voltage to monitor ADC function and compare results.Detection and Reaction Time: <10msReaction on Fault: Host detects errors by comparing ADC values.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI012: Output Peak Current Monitor\n" +
             "Function: Monitors output channel peak current.Short Description: Senses output channel current, converts to voltage, and samples via ADC.Detailed Description: Output channel current is sensed and converted to a voltage sampled by ADC. Host reads ADC register to obtain output peak current and compares values.Detection and Reaction Time: <10msReaction on Fault: Host detects errors by comparing ADC register values.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI013: Output Peak Current Monitor BIST\n" +
-            "Function: Verifies DI012 functionality via built-in self-test.Short Description: Forces 6碌A bias current to test output peak current detection after power-up.Detailed Description: Forces 6碌A bias current to verify DI012 output peak current monitor function after power-up.Detection and Reaction Time: <1msReaction on Fault: Host reads ADC register, compares values, and detects errors.Covers Transient Faults: NoDiagnostic Coverage: 60.00%Comments: None\n" +
+            "Function: Verifies DI012 functionality via built-in self-test.Short Description: Forces 6uA bias current to test output peak current detection after power-up.Detailed Description: Forces 6uA bias current to verify DI012 output peak current monitor function after power-up.Detection and Reaction Time: <1msReaction on Fault: Host reads ADC register, compares values, and detects errors.Covers Transient Faults: NoDiagnostic Coverage: 60.00%Comments: None\n" +
             "DI014: SCA Data Injection Test\n" +
             "Function: Tests low voltage power MOS ON/OFF status.Short Description: Forces SCA data to verify power MOS control after power-up.Detailed Description: Forces SCA data to test low voltage power MOS ON/OFF status. Continuously monitors all power MOS gates controlled by 7-bit SCA data.Detection and Reaction Time: <10msReaction on Fault: Reports fault at faultB pin; host reads fault status via fault register.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI015: RSET Open/Short Detect\n" +
-            "Function: Detects RSET pin open or short faults.Short Description: Monitors RSET pin voltage or current for open/short status.Detailed Description: Detects RSET pin open fault if voltage > 3V; detects RSET short fault if current > 310碌A.Detection and Reaction Time: <100uS Reaction on Fault: RSET open (voltage > 3V): Asserts RSET open fault.RSET short (current > 310碌A): Asserts RSET short fault.\n" +
+            "Function: Detects RSET pin open or short faults.Short Description: Monitors RSET pin voltage or current for open/short status.Detailed Description: Detects RSET pin open fault if voltage > 3V; detects RSET short fault if current > 310uA.Detection and Reaction Time: <100uS Reaction on Fault: RSET open (voltage > 3V): Asserts RSET open fault.RSET short (current > 310uA): Asserts RSET short fault.\n" +
             "Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
             "DI016: ECC (Error Correcting Code)\n" +
             "Function: Detects and corrects errors in 512-bit OTP.Short Description: Uses ECC to detect and fix 1-bit errors in 512-bit OTP.Detailed Description: Error Correcting Code detects and corrects 1-bit errors in 512-bit OTP memory.Detection and Reaction Time: <100uS Reaction on Fault: Corrects 1-bit errors in 512-bit OTP.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
@@ -78,32 +80,41 @@ public class DxImageAnalysisServlet extends BaseServlet {
             "DI020: PIN Double Bondings\n" +
             "Function: Ensures redundancy via double bondings on VCC and V5.Short Description: VCC has two bondings on one pad; V5 has two bondings on two pads.Detailed Description: VCC uses two bondings on a single pad; V5 uses two bondings on separate pads for redundancy.Detection and Reaction Time: N/AReaction on Fault: N/ACovers Transient Faults: YesDiagnostic Coverage: 99.00%Comments: Double bonding is a redundancy design with high DC level.";
 
-    private static final String PROMPT = "You are provided with the following inputs:\n" +
-            "1. **Image analysis result**: A JSON array from the vision model, where each object contains a `dx_number` (e.g., \"DX001\", \"DX002\") and a `dx_text` (e.g., \"VIN under voltage detection\"). Example:\n" +
-            "```\n" +
-            "%s\n" +
-            "```\n" +
-            "2. **Background information**: A text containing multiple entries, each starting with a `DI` identifier (e.g., \"DI001\", \"DI002\"), followed by fields including `Function`, `Short Description`, `Detailed Description`, etc. Example:\n" +
-            "```\n" +
-            "%s\n" +
-            "```\n" +
-            "\n" +
-            "Perform the following steps:\n" +
-            "1. **Parse the image analysis result**: Extract each `dx_number` from the JSON array.\n" +
-            "2. **Match with background information**: For each `dx_number` (e.g., \"DX001\"), find the corresponding entry in the background information by matching with `DIxxx` (e.g., \"DI001\"). Assume `DXxxx` corresponds to `DIxxx` (e.g., \"DX001\" maps to \"DI001\").\n" +
-            "3. **Extract Detailed Description**: From the matched `DIxxx` entry, extract the `Detailed Description` field. If no matching `DIxxx` entry is found, use \"No matching description found\" for that `dx_number`.\n" +
-            "4. ** **Output format**: Return a plain text string where each line contains a `dx_number` followed by its corresponding `Detailed Description` from the background information, in the format:\n" +
-            "```\n" +
-            "<dx_number>: <Detailed Description>\n" +
-            "```\n" +
-            "Separate each line with a newline (`\\n`). Do not output in JSON format or include any additional text or commentary.\n" +
-            "\n" +
-            "Example output:\n" +
-            "```\n" +
-            "DX001: VLED is compared against thresholds. If VLED < (VCC - Vth_short), an LED short fault is triggered. If VOUT < 0.1V, an LED open fault is triggered. Also detects internal power MOS open/short faults.\n" +
-            "DX002: VDD voltage is checked against thresholds. VDD < 3.6V triggers VDD UV fault; VDD > 5.5V triggers VDD OV fault.\n" +
-            "DX003: No matching description found\n" +
-            "```";
+    private static final String PROMPT = "private static final String PROMPT = \"You are provided with the following two inputs:\\n\" +\n" +
+            "    \"1. **Image analysis result**: A JSON array from a vision model. Each object contains:\\n\" +\n" +
+            "    \"   - `id`: A string identifier (e.g., \\\"DI001\\\", \\\"DX002\\\")\\n\" +\n" +
+            "    \"   - `description`: A short textual label or function name (e.g., \\\"ADC\\\", \\\"VIN under voltage detection\\\")\\n\" +\n" +
+            "    \"```\\n\" +\n" +
+            "    \"%s\\n\" +  \n" +
+            "    \"```\\n\" +\n" +
+            "    \"\\n\" +\n" +
+            "    \"2. **Background information**: A block of text containing multiple entries. Each entry starts with an identifier like `DI001`, `DI002`, etc., and includes fields such as `Function`, `Short Description`, and `Detailed Description`.\\n\" +\n" +
+            "    \"```\\n\" +\n" +
+            "    \"%s\\n\" +  \n" +
+            "    \"```\\n\" +\n" +
+            "    \"\\n\" +\n" +
+            "    \"Your task:\\n\" +\n" +
+            "    \"1. For each `id` present in the JSON array, **look for an exact match** in the background information.\\n\" +\n" +
+            "    \"2. If a match is found, extract only the value of the `Detailed Description` field from that entry.\\n\" +\n" +
+            "    \"3. If no exact match is found, return the message: \\\"No matching description found\\\".\\n\" +\n" +
+            "    \"\\n\" +\n" +
+            "    \"**Important Constraints**:\\n\" +\n" +
+            "    \"- Do not convert or infer IDs (e.g., do not change DXxxx → DIxxx).\\n\" +\n" +
+            "    \"- Only process the identifiers present in the vision model's JSON array.\\n\" +\n" +
+            "    \"- Do not return or summarize unrelated entries from the background information.\\n\" +\n" +
+            "    \"- Do not return JSON. Output must be plain text.\\n\" +\n" +
+            "    \"\\n\" +\n" +
+            "    \"Output format:\\n\" +\n" +
+            "    \"```\\n\" +\n" +
+            "    \"<id>: <Detailed Description>\\n\" +\n" +
+            "    \"```\\n\" +\n" +
+            "    \"Example:\\n\" +\n" +
+            "    \"```\\n\" +\n" +
+            "    \"DI001: Monitors VIN voltage level. If VIN drops below threshold, triggers undervoltage fault.\\n\" +\n" +
+            "    \"DX003: No matching description found\\n\" +\n" +
+            "    \"DI005: Provides internal communication watchdog and timeout logic.\\n\" +\n" +
+            "    \"```\";\n";
+
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -253,34 +264,39 @@ public class DxImageAnalysisServlet extends BaseServlet {
         logger.info("Analyzing image with vision model: {}", imageUrl);
 
         // Prepare JSON request
-        String visionPrompt = "Carefully analyze the provided image content and perform the following steps:\\n\" +\n" +
-                "            \"\\n\" +\n" +
-                "            \"1. **Scan the entire image thoroughly**: Identify and record all item numbers or identifiers that start with \\\"DX\\\" (e.g., \\\"DX001\\\", \\\"DX002\\\", etc.).\\n\" +\n" +
-                "            \"2. **Ignore irrelevant information**: Exclude any markings or identifiers that do not conform to the \\\"DX\\\" prefix format (such as \\\"DI001\\\" or other non-DX identifiers).\\n\" +\n" +
-                "            \"3. **Associate text descriptions**: For each identified \\\"DX\\\" identifier, locate and extract the corresponding functional name or associated textual description (e.g., \\\"ADC\\\", \\\"VIN under voltage detection\\\", etc.). If a single \\\"DX\\\" identifier appears to be associated with multiple texts, choose the one that is most directly or clearly linked to it.\\n\" +\n" +
-                "            \"4. **Ensure accuracy**: Make sure the extracted information is precise and strictly follows what is visually present in the image.\\n\" +\n" +
-                "            \"\\n\" +\n" +
-                "            \"Return the result as a JSON array, where each object contains the following fields:\\n\" +\n" +
-                "            \"- `\\\"dx_number\\\"`: A string representing the DX identifier.\\n\" +\n" +
-                "            \"- `\\\"dx_text\\\"`: A string representing the associated function name or textual description.\\n\" +\n" +
-                "            \"\\n\" +\n" +
-                "            \"Example output format:\\n\" +\n" +
-                "            \"\\n\" +\n" +
-                "            \"```json\\n\" +\n" +
-                "            \"[\\n\" +\n" +
-                "            \"  {\\n\" +\n" +
-                "            \"    \\\"dx_number\\\": \\\"DX001\\\",\\n\" +\n" +
-                "            \"    \\\"dx_text\\\": \\\"VIN under voltage detection\\\"\\n\" +\n" +
-                "            \"  },\\n\" +\n" +
-                "            \"  {\\n\" +\n" +
-                "            \"    \\\"dx_number\\\": \\\"DX002\\\",\\n\" +\n" +
-                "            \"    \\\"dx_text\\\": \\\"ADC\\\"\\n\" +\n" +
-                "            \"  },\\n\" +\n" +
-                "            \"  ...\\n\" +\n" +
-                "            \"]\\n\" +\n" +
-                "            \"```\\n\" +\n" +
-                "            \"\\n\" +\n" +
-                "            \"Please strictly adhere to this format and return no additional information or commentary. The goal is to ensure that all relevant \\\"DX\\\" identifiers and their associated descriptions are fully and accurately captured from the image. ";
+        String visionPrompt = "Carefully analyze the provided image content and perform the following steps:\n" +
+                "\n" +
+                "1. **Scan the entire image thoroughly**: Identify and record all item identifiers that start with the letter 'D' followed by any combination of letters and digits (e.g., 'DX001', 'DI002', etc.).\n" +
+                "\n" +
+                "2. **Include all valid identifiers**: Include all identifiers that begin with 'D' (e.g., 'DI', 'DX') — do not exclude any relevant items just because they are not 'DX'.\n" +
+                "\n" +
+                "3. **Associate text descriptions**: For each identified identifier, locate and extract the corresponding functional name or textual description that is visually linked with it (e.g., 'ADC', 'VIN under voltage detection', 'PWM loop duty test'). If multiple texts are associated, choose the most directly relevant.\n" +
+                "\n" +
+                "4. **Ensure accuracy**: Make sure the extracted information exactly matches the visual content of the image — do not guess or infer.\n" +
+                "\n" +
+                "Return the result as a JSON array, where each object contains the following fields:\n" +
+                "- `\"id\"`: A string representing the identifier (e.g., 'DI001' or 'DX001').\n" +
+                "- `\"description\"`: A string representing the associated function name or textual description.\n" +
+                "\n" +
+                "Example output format:\n" +
+                "```json\n" +
+                "[\n" +
+                "  {\n" +
+                "    \"id\": \"DX001\",\n" +
+                "    \"description\": \"Flag\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"DI002\",\n" +
+                "    \"description\": \"OV3/UV3\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"DI010\",\n" +
+                "    \"description\": \"Thermal Shutdown\"\n" +
+                "  }\n" +
+                "]\n" +
+                "```\n" +
+                "\n" +
+                "Do not return anything other than the JSON array. Focus only on identifiers that start with the letter 'D'.";
         VisionRequest request = new VisionRequest(imageUrl, visionPrompt);
         String requestBody = gson.toJson(request);
         logger.debug("Vision model request body: {}", requestBody);

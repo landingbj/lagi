@@ -31,7 +31,7 @@ public class PinDiagramServlet extends BaseServlet {
     private static final String[] KEYWORDS = {
             "PIN CONFIGURATION",
             "PIN DESCRIPTION",
-            "Connected to next IS32LT3138A",
+            "Typical Application Circuit",
             "ELECTRICAL CHARACTERISTICS"
     };
 
