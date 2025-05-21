@@ -88,6 +88,7 @@ public class CompletionCache implements ICache<PromptInput, ChatCompletionResult
         double maxRatio = -1d;
         if (promptInputList != null) {
             PromptInputUtil.setApproximateTemperature(promptInput);
+            promptInputList = new ArrayList<>(promptInputList);
             for (PromptInput promptInputInCache : promptInputList) {
                 if (!promptInput.getParameter().equals(promptInputInCache.getParameter())) {
                     continue;
