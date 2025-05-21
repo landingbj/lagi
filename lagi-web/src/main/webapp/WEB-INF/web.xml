@@ -373,4 +373,13 @@
         <url-pattern>/pinDiagramGenerate/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>DxImageAnalysisServlet</servlet-name>
+        <servlet-class>ai.servlet.api.DxImageAnalysisServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DxImageAnalysisServlet</servlet-name>
+        <url-pattern>/dxAnalyzeImage/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
