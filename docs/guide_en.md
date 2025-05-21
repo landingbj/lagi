@@ -5,7 +5,7 @@
 - **Introduction**: This guide for LinkMind provides clear and detailed instructions to help you understand and use various AI functions offered in the project. With this guide, you can easily integrate AI features such as text conversations, speech recognition, text-to-speech, and image generation into your applications for smarter and more human-like interactions.
 - **Background**: With the rapid advancement of artificial intelligence technology, more and more application scenarios require interaction with AI models, such as intelligent customer service, voice assistants, and image processing. To meet these needs, this project provides various AI functions aimed at helping you seamlessly apply AI technology to your business scenarios, enhancing user experience and efficiency.
 
-## Before You Start
+## Preparation
 
 You can either directly import the jar file or use Maven to add dependencies and run the project in mainstream integrated development environments (IDEs) such as IntelliJ IDEA.
 
@@ -27,7 +27,7 @@ If you choose Maven to import dependencies, you only need to complete the follow
 
 - 1. Import the jar: Download and import the LinkMind jar file and place it in the `lib` directory.
 
-- 1. Add the dependency: Add the following content to the `dependencies` section in your project's `pom.xml` file:
+- 2. Add the dependency: Add the following content to the `dependencies` section in your project's `pom.xml` file:
 
   ```xml
   <dependency>
@@ -38,6 +38,13 @@ If you choose Maven to import dependencies, you only need to complete the follow
       <systemPath>${pom.basedir}/lib/lagi-core-1.0.0.jar</systemPath>
   </dependency>
   ```
+- 3. Verify that the dependencies are installed:
+
+To ensure that the dependency packages have been correctly imported and can be used normally, you can verify them by the following methods:
+
+- **Check Maven dependency loading**: Run the mvn dependency:tree command to check whether com.landingbj:lagi-core-1.0.0 appears in the dependency tree.
+- **Log check**: After starting the project, check the log file or console output to confirm whether there are initialization information or error prompts related to lagi-core-1.0.0.
+- **IDE verification**: In IDEs such as IntelliJ IDEA or Eclipse, confirm that lagi-core-1.0.0.jar has been correctly loaded into the project's external libraries (External Libraries), and related classes can be referenced normally without compilation errors.
 
   Note: The jar file includes a default configuration file `lagi.yml`. External configuration files take precedence. If you need to modify the configuration file, you can directly download [lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml) and place it in the `resources` directory of your project. (Refer to the [Configuration Document](config_en.md) for details about `lagi.yml`).
 

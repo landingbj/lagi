@@ -23,7 +23,7 @@ models:
     type: Landing
     enable: false
     drivers: # 多驱动配置.
-      - model: turing,qa,tree,proxy # 驱动支持功能列表
+      - model: turing,qa,tree,proxy # 驱动模型列表
         driver: ai.llm.adapter.impl.LandingAdapter # 驱动地址
       - model: image # 驱动支持功能列表
         driver: ai.image.adapter.impl.LandingImageAdapter # 驱动地址
@@ -48,7 +48,7 @@ stores:
       driver: ai.vector.impl.ChromaVectorStore # 向量数据库驱动
       default_category: default # 向量数据库存储的分类
       similarity_top_k: 10 # 向量数据库查询时使用的参数
-      similarity_cutoff: 0.5
+      similarity_cutoff: 0.5 # 会切掉那些与查询向量相似度 低于 0.5 的结果。
       parent_depth: 1
       child_depth: 1
       url: http://localhost:8000 # 向量数据库的存储配置
@@ -190,7 +190,7 @@ functions:
       model: vision
       enable: true
       priority: 10
-  # 图片OCR配置列表
+  # 图片OCR配置列表 OCR（Optical Character Recognition，光学字符识别）是将图片中的文字内容识别并提取为可编辑文本的技术
   image2ocr:
     - backend: qwen
       model: ocr
@@ -208,7 +208,7 @@ functions:
       model: vision
       enable: true
       priority: 10
-  # 文档OCR配置列表
+  # 文档OCR配置列表 OCR（Optical Character Recognition，光学字符识别）是将图片中的文字内容识别并提取为可编辑文本的技术
   doc2ocr:
     - backend: qwen
       model: ocr
@@ -249,7 +249,7 @@ functions:
     #     606 其他错误
     #     607 超时
     #     608 没有可用的模型
-    handle: failover
+    handle: failover #parallel #failover
     grace_time: 20 # 故障后重试间隔时间
     maxgen: 3 # 故障后最大重试次数 默认为 Integer.MAX_VALUE
 ```

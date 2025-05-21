@@ -63,6 +63,54 @@ LinkMind（联智）是由北京联动北方科技有限公司精心打造的一
     </div>
 </div>
 
+支持但不限于以下数据库类型：
+
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/img_4.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">Chroma&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_5.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">elastic&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_6.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">mysql&nbsp;&nbsp;&nbsp;</span>
+    </div>
+</div>
+
+## 产品特性
+本产品通过一系列先进技术和优化设计，提供高效、稳定且易用的功能，以满足多样化的用户需求。以下为主要特性：
+
+**更精准的检索增强（RAG）**
+
+通过精细化的数据管理和优化算法，确保模型输出具有高准确性。
+支持模型持续学习，逐步提升整体性能和响应精度。
+
+**更快速的预读缓存（Medusa）**
+
+引入 Medusa 技术，通过预读缓存机制有效减少用户等待时间。
+优化数据处理流程，进一步提升模型运行效率。
+
+**更高效的模型性能提升**
+
+采用先进的性能优化策略，显著提高模型的计算效率和响应速度。
+在多种应用场景中保持高性能表现，满足复杂任务需求。
+
+**更稳定的自动切换大模型**
+
+支持多链路备份机制，确保系统在故障发生时能够无缝切换至备用模型。
+提供稳定的运行环境，降低因技术故障导致的服务中断风险。
+
+**更强大的意图探查（Graph）**
+
+利用知识图谱技术，精准识别用户意图并提供针对性的响应。
+快速分析用户输入，确保响应准确、稳定且易于使用。
+
+
+**更便捷的一次编写多模型通用**
+
+支持一次编写即可适配多个模型，显著减少开发中的重复工作。
+降低开发和维护难度，提升整体开发效率。
+
+
 ## 在线Demo
 
 为了让用户能够直观感受到LinkMind(联智) 的强大功能和便捷性，我们提供了一个在线Demo。您可以通过以下链接访问并体验：[https://lagi.landingbj.com](https://lagi.landingbj.com/)。

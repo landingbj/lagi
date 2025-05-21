@@ -23,7 +23,7 @@ models:
     type: Landing
     enable: false
     drivers: # Multi-driver configuration.
-      - model: turing,qa,tree,proxy # List of features supported by the driver.
+      - model: turing,qa,tree,proxy # Driver Model List
         driver: ai.llm.adapter.impl.LandingAdapter # Driver address.
       - model: image # List of features supported by the driver.
         driver: ai.image.adapter.impl.LandingImageAdapter # Driver address.
@@ -47,7 +47,7 @@ stores:
       driver: ai.vector.impl.ChromaVectorStore # Vector database driver.
       default_category: default # Category for vector database storage.
       similarity_top_k: 10 # Parameter used for vector database queries.
-      similarity_cutoff: 0.5
+      similarity_cutoff: 0.5 # Will cut off those results whose similarity to the query vector is less than 0.5.
       parent_depth: 1
       child_depth: 1
       url: http://localhost:8000 # Storage configuration of the vector database.
@@ -247,7 +247,7 @@ functions:
     #       606 Other errors.
     #       607 Timeout.
     #       608 No available model.
-    handle: failover
+    handle: failover #parallel #failover
     grace_time: 20 # Retry interval after failure.
     maxgen: 3 # Maximum retries after failure (default is Integer.MAX_VALUE).
 ```
