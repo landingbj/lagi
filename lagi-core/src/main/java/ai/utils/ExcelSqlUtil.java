@@ -96,7 +96,7 @@ public class ExcelSqlUtil {
                         }
                     }
                     double percentage = ((double) numericCells / totalCells) * 100;
-                    flag = totalCells>0? (percentage > 50):flag;
+                    flag = totalCells>0? (percentage > 55):flag;
                     System.out.printf("Percentage of numeric data in CSV: %.2f%%\n", percentage);
                     break;
                 } catch (IOException e) {
@@ -140,7 +140,7 @@ public class ExcelSqlUtil {
                 System.out.println("数字类型数据的百分比: " + percentage + "%");
                 workbook.close();
                 fis.close();
-                flag = totalCells>0? (percentage > 40):flag;
+                flag = totalCells>0? (percentage > 99):flag;
             }catch (Exception e){
                 System.out.println(e);
                 return false;
@@ -369,6 +369,9 @@ public class ExcelSqlUtil {
         }else {
             list = sqliteAdapter.sqlToValue("SELECT * FROM table_info;");
         }
+        if (list.size()<=0){
+            return null;
+        }
         return toIntroduce(list);
     }
     private static String toIntroduce(List<Map<String, Object>> list) {
@@ -491,13 +494,17 @@ public class ExcelSqlUtil {
         return markdown.toString();
     }
     public static String WorkflowsToSql(String demand) {
+        String details = getDetails();
+        if (details==null){
+            return null;
+        }
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
         chatCompletionRequest.setMax_tokens(1024);
         chatCompletionRequest.setCategory("default");
         ChatMessage message = new ChatMessage();
         message.setRole("user");
-        message.setContent( getDetails() + "用户需求:" + demand );
+        message.setContent( details + "用户需求:" + demand );
         chatCompletionRequest.setMessages(Lists.newArrayList(message));
         chatCompletionRequest.setStream(false);
         chatCompletionRequest.setModel(mysqlAdapter.model);
