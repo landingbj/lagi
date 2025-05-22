@@ -369,6 +369,9 @@ public class ExcelSqlUtil {
         }else {
             list = sqliteAdapter.sqlToValue("SELECT * FROM table_info;");
         }
+        if (list.size()<=0){
+            return null;
+        }
         return toIntroduce(list);
     }
     private static String toIntroduce(List<Map<String, Object>> list) {
@@ -491,6 +494,10 @@ public class ExcelSqlUtil {
         return markdown.toString();
     }
     public static String WorkflowsToSql(String demand) {
+        String details = getDetails();
+        if (details==null){
+            return null;
+        }
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
         chatCompletionRequest.setMax_tokens(1024);

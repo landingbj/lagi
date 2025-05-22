@@ -25,10 +25,14 @@ public class TextToSqlSearchTool extends AbstractTool {
     private String search(String demand) {
         if (ExcelSqlUtil.isConnect()||ExcelSqlUtil.isSqlietConnect()){
             String sql1 = ExcelSqlUtil.WorkflowsToSql(demand);
-            String sql = ExcelSqlUtil.toSql(sql1,demand);
-            String out = ExcelSqlUtil.toText(sql,demand, sql1);
-            System.out.println(out);
-            return StrUtil.format("{\"返回内容\": \"{}\"}",out);
+            if (sql1!=null){
+                String sql = ExcelSqlUtil.toSql(sql1,demand);
+                String out = ExcelSqlUtil.toText(sql,demand, sql1);
+                System.out.println(out);
+                return StrUtil.format("{\"返回内容\": \"{}\"}",out);
+            }else{
+                return StrUtil.format("{\"返回内容\": \"{}\"}","数据库中暂无数据");
+            }
         }
       return "mysql连接失败-智能问数模式已关闭";
     }
