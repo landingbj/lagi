@@ -18,7 +18,6 @@ models:
     access_key_id: your-access-key-id
     access_key_secret: your-access-key-secret
 
-
   # DeepSeek is an open source large language model launched by DeepSeek.
   - name: deepseek
     type: DeepSeek
@@ -32,10 +31,11 @@ models:
                # https://api.lkeap.cloud.tencent.com/v1
     api_key: your-api-key # url address https://platform.deepseek.com/api_keys
 
-
 include_models: model.yml
 
+
 stores:
+
   vector:
     # Chroma is an AI-native open-source embedding database
     # The official website is https://www.trychroma.com/
@@ -80,6 +80,7 @@ stores:
 
 include_stores: store.yml
 
+
 functions:
   embedding:
     - backend: qwen
@@ -87,7 +88,7 @@ functions:
       api_key: you-api-key
 
   chat:
-    route: best((landing&chatgpt),(kimi|ernie))
+    route: best((landing&qwen),(kimi|chatgpt))
     filter: sensitive,priority,stopping,continue
     backends:
       - backend: landing
@@ -108,11 +109,11 @@ functions:
         stream: true
         priority: 120
 
-      - backend: ernie
-        model: ERNIE-Speed-128K
-        enable: false
+      - backend: qwen
+        model: qwen-turbo
+        enable: true
         stream: true
-        priority: 10
+        priority: 300
 
   translate:
     - backend: ernie
@@ -215,8 +216,10 @@ functions:
       enable: true
       priority: 10
 
+
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.
+
 agents:
 
   # Agent for stock queries, providing stock market information, analysis, and related services.
@@ -232,6 +235,7 @@ agents:
     driver: ai.agent.customer.WeatherAgent
 
 include_agents: agent.yml
+
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
@@ -263,6 +267,7 @@ workers:
     route: pass(%)
     worker: ai.worker.DefaultAppointWorker
 
+
 routers:
   - name: best
     rule: (|,&)
@@ -271,12 +276,12 @@ routers:
     # A&B -> parallel, call A and B concurrently, choose the proper only one result;
     # The rule could be combined like ((A&B&C),(E|F)) which means first call ABC simultaneously, if fail, then call E or F randomly.
 
-
   - name: pass
     rule: (%)
     # % is a wildcard to represent agent name.
     # if specified, invoke this agent.
     # if just % is given, % would be decided by parameter at calling time.
+
 
 mcps:
   # set default driver
@@ -285,6 +290,7 @@ mcps:
       url: https://mcp.amap.com/sse?key=your-key
 
 include_mcps: mcp.yml
+
 
 # Filter rules for sensitive words or sentence, with priority and etc.
 filters:

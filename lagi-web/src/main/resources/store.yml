@@ -1,6 +1,7 @@
 stores:
+
   vectors:
- # Pinecone is a vector database for building large-scale machine learning applications
+    # Pinecone is a vector database for building large-scale machine learning applications
     # The official website is https://www.pinecone.io/
     - name: pinecone
       driver: ai.vector.impl.PineconeVectorStore

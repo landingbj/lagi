@@ -1,6 +1,6 @@
- models:
- # Landing is a MOE model provided by Beijing Landing Technologies
- 
+models:
+  # Landing is a MOE model provided by Beijing Landing Technologies
+
   - name: landing
     type: Landing
     enable: true
@@ -38,7 +38,7 @@
     endpoint: your-endpoint
     api_key: your-api-key
 
-      # ERNIE Bot (WenxinYiyan) is an advanced large-scale language model developed by Baidu
+  # ERNIE Bot (WenxinYiyan) is an advanced large-scale language model developed by Baidu
   - name: ernie
     type: Baidu
     enable: true
@@ -124,7 +124,7 @@
     access_token: your-access-token
     alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
 
-     # Claude is a next generation AI assistant built by Anthropic and trained to be safe, accurate, and secure to help you do your best work.
+  # Claude is a next generation AI assistant built by Anthropic and trained to be safe, accurate, and secure to help you do your best work.
   - name: claude
     type: Anthropic
     enable: true
