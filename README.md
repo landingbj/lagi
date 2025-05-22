@@ -63,6 +63,57 @@ Supports but is not limited to the following intelligent agent platforms:
     </div>
 </div>
 
+The following database types are supported but not limited to:
+
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
+    <div style="display: flex; align-items: center; margin: 10px;">
+        <img src="docs/images/logo/img_4.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">Chroma&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_5.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">elastic&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/img_6.png" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;">mysql&nbsp;&nbsp;&nbsp;</span>
+    </div>
+</div>
+
+## Product Features
+This product provides efficient, stable and easy-to-use functions through a series of advanced technologies and optimized designs to meet diverse user needs. The following are the main features:
+
+**More accurate retrieval enhancement (RAG)**
+
+Through refined data management and optimization algorithms, ensure high accuracy of model output.
+
+Support continuous model learning and gradually improve overall performance and response accuracy.
+
+**Faster pre-read cache (Medusa)**
+
+Introducing Medusa technology, effectively reducing user waiting time through pre-read cache mechanism.
+
+Optimize data processing flow to further improve model operation efficiency.
+
+**More efficient model performance improvement**
+
+Adopt advanced performance optimization strategies to significantly improve the computing efficiency and response speed of the model.
+
+Maintain high performance in a variety of application scenarios to meet complex task requirements.
+
+**More stable automatic switching of large models**
+
+Support multi-link backup mechanism to ensure that the system can seamlessly switch to the backup model when a failure occurs.
+
+Provide a stable operating environment to reduce the risk of service interruption caused by technical failures.
+
+**More powerful intent detection (Graph)**
+
+Use knowledge graph technology to accurately identify user intent and provide targeted responses.
+
+Quickly analyze user input to ensure accurate, stable and easy-to-use responses.
+
+**More convenient one-time writing for multiple models**
+
+Supports one-time writing to adapt to multiple models, significantly reducing duplication of work in development.
+
+Reduces development and maintenance difficulties and improves overall development efficiency.
 ## Online Demo
 
 To allow users to intuitively experience the powerful functionality and convenience of LinkMind, we offer an online demo. You can visit and experience it through the following link: [https://lagi.landingbj.com](https://lagi.landingbj.com/).

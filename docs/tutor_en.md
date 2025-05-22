@@ -313,7 +313,7 @@ Switch models online via the interface:
 
 ## 8. Extend Functionality
 
-If LinkMind's supported models or vector databases do not meet your needs, refer to the [extension documentation](extend_en.md) to adapt LinkMind for your preferred models or databases.
+If LinkMind's supported models or vector databases do not meet your needs, refer to the [extension documentation](extend_zh.md) to adapt LinkMind for your preferred models or databases.
 
 ## 9. Custom Training with QA Pairs
 

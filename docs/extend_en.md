@@ -39,6 +39,8 @@ functions:
 
 Create a new `YonrAdapter` class under the `ai>llm>adapter>impl` directory in the `lagi-core` module. Extend `ModelService` and implement the `ILlmAdapter` interface.
 
+Path reference: \lagi\lagi-core\src\main\java\ai\audio\adapter\impl
+
 ```java
 @LLM(modelName = { "Yonr-version"})
 public class YonrAdapter extends ModelService implements ILlmAdapter {

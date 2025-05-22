@@ -1,0 +1,133 @@
+models:
+  # Landing is a MOE model provided by Beijing Landing Technologies
+
+  - name: landing
+    type: Landing
+    enable: true
+    model:  cascade,
+            turing,qa,tree,proxy,
+            image,
+            landing-tts,landing-asr,
+            video
+    # Options for default, llm, image, voice and vision, line by line above.
+    driver: ai.wrapper.impl.LandingAdapter
+    api_key: your-api-key # http://saas.landingbj.com/
+
+  # FastChat is an open platform designed for training, deploying, and evaluating chatbots based on large language models.
+  - name: fastchat
+    type: Vicuna
+    enable: false
+    model: vicuna-13b,vicuna-7b,vicuna-7b-16k,vicuna-13B-16k,vicuna-33B
+    driver: ai.llm.adapter.impl.VicunaAdapter
+    api_address: http://localhost:8090/v1/chat/completions
+
+  # ChatGPT is a state-of-the-art language model developed by OpenAI
+  - name: chatgpt
+    type: OpenAI
+    enable: false
+    model: gpt-3.5-turbo,gpt-4-1106-preview
+    driver: ai.llm.adapter.impl.GPTAdapter
+    api_key: your-api-key # https://platform.openai.com/
+
+  # ChatGPT-Azure is a version of the ChatGPT model integrated into Microsoft Azure's suite of AI services.
+  - name: chatgpt-azure
+    type: Microsoft
+    model: gpt-3.5-turbo,gpt-4-1106-preview,gpt-4o-20240513
+    enable: true
+    driver: ai.llm.adapter.impl.GPTAzureAdapter
+    endpoint: your-endpoint
+    api_key: your-api-key
+
+  # ERNIE Bot (WenxinYiyan) is an advanced large-scale language model developed by Baidu
+  - name: ernie
+    type: Baidu
+    enable: true
+    model:  ERNIE-Bot-turbo,
+            ERNIE-Speed-128K,ERNIE-4.0-8K,ERNIE-3.5-8K-0205,ERNIE-3.5-4K-0205, ERNIE-3.5-8K-1222,
+            Fuyu-8B,Stable-Diffusion-XL,
+            translate,
+            enhance,
+            aiVideo
+    # Options for default, llm, image, translate, image enhance and vision line by line above.
+    driver: ai.wrapper.impl.BaiduAdapter
+    # help document https://developer.baidu.com/article/detail.html?id=1089328
+    # url address https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application
+    app_id: your-app-id
+    api_key: your-api-key
+    secret_key: your-sercet-key
+
+  # chatGLM is committed to building a new generation of cognitive intelligence models by Beijing Zhipu Huazhang Technology Co., LTD.
+  - name: chatglm
+    type: Zhipu
+    enable: true
+    model: glm-3-turbo,glm-4, glm-4v
+    driver: ai.llm.adapter.impl.ZhipuAdapter
+    api_key: your-api-key #  url address https://open.bigmodel.cn/usercenter/apikeys
+
+  # Kimi is an intelligent assistant product developed by Moonshot AI.
+  - name: kimi
+    type: Moonshot
+    enable: true
+    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+    driver: ai.llm.adapter.impl.MoonshotAdapter
+    api_key: your-api-key  #  url address https://platform.moonshot.cn/console/api-keys
+
+  # Baichuan is a new generation of open source large language model launched by Baichuan AI
+  - name: baichuan
+    type: Baichuan
+    enable: true
+    model: Baichuan2-Turbo,Baichuan2-Turbo-192k,Baichuan2-53B
+    driver: ai.llm.adapter.impl.BaichuanAdapter
+    api_key: your-api-key # url address https://platform.baichuan-ai.com/console/apikey
+
+  # iFLYTEK Spark is an AI cognitive model developed by iFLYTEK, aiming to provide natural language interaction and generation capabilities
+  - name: spark
+    type: iFLYTEK
+    enable: true
+    model:  v4.0,
+            v1.1,v2.1,v3.1,v3.5,
+            tti
+    # Options for default, llm and image, line by line above.
+    driver: ai.wrapper.impl.FlytekAdapter
+    app_id: your-app-id
+    api_key: you-api-key  # https://console.xfyun.cn/
+    secret_key: you-secret-key   # https://console.xfyun.cn/
+
+  # SenseChat(RiRiXin) is a large language model developed by SenseTime
+  - name: SenseChat
+    type: SenseTime
+    enable: true
+    model: SenseChat-Turbo,SenseChat-FunctionCall,SenseChat-5,SenseChat-128K,SenseChat-32K #SenseChat
+    driver: ai.llm.adapter.impl.SenseChatAdapter
+    api_key: your-api-key
+    secret_key: your-secret-key # url address https://console.sensecore.cn/iam/Security/access-key
+
+  # Gemini is a family of multimodal large language models developed by Google DeepMind.
+  - name: gemini
+    type: Google
+    enable: true
+    model: gemini-1.5-flash-latest,gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.5-pro-latest
+    driver: ai.llm.adapter.impl.GeminiAdapter
+    api_key: your-api-key
+
+  # Doubao(Doubao) is a AI tool developed by ByteDance based on the lark model
+  - name: doubao
+    type: ByteDance
+    enable: true
+    model:  doubao-pro-4k,
+            doubao-pro-32k,
+            openspeech
+    # Options for default, llm and voice, line by line above.
+    driver: ai.wrapper.impl.ByteDanceAdapter
+    api_key: your-api-key
+    app_id: your-app-id
+    access_token: your-access-token
+    alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
+
+  # Claude is a next generation AI assistant built by Anthropic and trained to be safe, accurate, and secure to help you do your best work.
+  - name: claude
+    type: Anthropic
+    enable: true
+    model: claude-3-5-haiku-20241022,claude-3-5-sonnet-20241022,claude-3-5-sonnet-20240620,claude-3-opus-20240229,claude-3-sonnet-20240229,claude-3-haiku-20240307
+    driver: ai.llm.adapter.impl.ClaudeAdapter
+    api_key: your-api-key # url address https://console.anthropic.com/

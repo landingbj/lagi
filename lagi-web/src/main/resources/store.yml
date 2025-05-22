@@ -1,0 +1,56 @@
+stores:
+
+  vectors:
+    # Pinecone is a vector database for building large-scale machine learning applications
+    # The official website is https://www.pinecone.io/
+    - name: pinecone
+      driver: ai.vector.impl.PineconeVectorStore
+      default_category: default
+      similarity_top_k: 10
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      environment: your-environment
+      project_name: your-project-name
+      index_name: your-index-name
+      api_key: your-api-key
+
+    # Milvus is an open-source vector database designed for storing and searching large volumes of vector data.
+    # The official website is https://milvus.io/
+    - name: milvus
+      driver: ai.vector.impl.MilvusVectorStore
+      default_category: default
+      similarity_top_k: 3
+      similarity_cutoff: 0.5
+      parent_depth: 1
+      child_depth: 1
+      url: http://localhost:19530
+      token: your-token
+
+  oss:
+    - name: landing
+      driver: ai.oss.impl.LandingOSS
+      bucket_name: lagi
+      enable: true
+
+    - name: alibaba
+      driver: ai.oss.impl.AlibabaOSS
+      access_key_id: your-access-key-id
+      access_key_secret: your-access-key-secret
+      bucket_name: ai-service-oss
+      enable: true
+
+  term:
+    # This  is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
+    - name: elastic
+      driver: ai.bigdata.impl.ElasticSearchAdapter
+      host: localhost
+      port: 9200
+      enable: true
+
+  database:
+    - name: mysql
+      jdbcUrl: you-jdbc-url
+      driver: com.mysql.cj.jdbc.Driver
+      username: your-username
+      password: your-password

@@ -1,0 +1,120 @@
+mcps:
+  # set default driver
+  servers:
+
+    - name: baidu_search_mcp
+      url: http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api_key=Bearer+your_api_key
+    # The driver is optional, if not specified, the default driver will be used.
+    # driver: ai.mcps.CommonSseMcpClient
+
+    # Access the acquiring payment service easily through Alipay to pay the MCP Server.
+    - name: alipay_mcp
+      driver: TBD
+
+    # Provide map service solutions for full scenarios.
+    - name: baidu_map_mcp
+      driver: TBD
+
+    # Complete capabilities such as file upload, download, and management within the AI application.
+    - name: baidu_netdisk_mcp
+      driver: TBD
+
+    # Generate high-quality images and videos from text input.
+    - name: wanx_mcp
+      driver: TBD
+
+    # Through searching the public domain and vertical domain knowledge base on the Internet and various ecological data sources, the data needs of real-time question and answer can be met.
+    - name: tongixao_mcp
+      driver: TBD
+
+    # Helps users query and access finance, taxation and data.
+    - name: tax_inquiry_mcp
+      driver: TBD
+
+    #  Invoice data authenticity check.
+    - name: intellect_mcp
+      driver: TBD
+
+    # Digital Human Video,based on the input, digital humans can replace real people to complete the video content generation.
+    - name: digital_human_video_mcp
+      driver: TBD
+
+    # Aviation,check the real-time status of relevant flights.
+    - name: aviation_mcp
+      driver: TBD
+
+    # Qieman,help wealth management practitioners build high-quality AI financial services.
+    - name: qieman_mcp
+      driver: TBD
+
+    # Contains three core image editing capabilities: partial redrawing, intelligent cutout, and AI seamless elimination.
+    - name: meitu_imaging_mcp
+      driver: TBD
+
+    # A local MCP server that generates animations using Manim.
+    - name: abhiemj/manim_mcp
+      driver: TBD
+
+    # A MCP server for the Open Library API that enables AI assistants to search for book information.
+    - name: open_library_mcp
+      driver: TBD
+
+    # Provides comprehensive and accurate Bazi (Chinese Astrology) charting and analysis
+    - name: bazi_mcp
+      driver: TBD
+
+    #Oorlogsbronnen (War Sources) API integration for accessing historical WWII records, photographs, and documents from the Netherlands (1940-1945)
+    - name: oorlogsbronnen_mcp
+      driver: TBD
+
+    # Rijksmuseum API integration for artwork search, details, and collections
+    - name: rijksmuseum_mcp
+      river: TBD
+
+    # Metropolitan Museum of Art Collection API integration to search and display artworks in the collection.
+    - name: metmuseum-mcp
+      driver: TBD
+
+    #  MCP server integration for DaVinci Resolve providing powerful tools for video editing, color grading, media management, and project control
+    - name: davinci_resolve_mcp
+      driver: TBD
+
+    # MCP server using the Aseprite API to create pixel art
+    - name: aseprite_mcp
+      driver: TBD
+
+    # Get Bilibili's popular videos
+    - name: bilibili_mcp
+      driver: TBD
+
+    # Support searching Bilibili content
+    - name: bilibili-mcp-js
+      driver: TBD
+
+    # upload and manipulation of IPFS storage
+    - name: ipfs_mcp
+      driver: TBD
+
+    # This is an MCP for querying books
+    - name: books_mcp
+      driver: TBD
+
+    # Convert nearly any file or web content to Markdown
+    - name: markdownify_mcp
+      driver: TBD
+
+    # An MCP server built on top of Markdown that converts Markdown into interactive mind maps.
+    - name: markmap_mcp
+      driver: TBD
+
+    # An MCP server for nearby place searches with IP-based location detection.
+    - name: nearby_search_mcp
+      driver: TBD
+
+    # MCP server that integrates balldontlie api to provide information about players, teams and games for the NBA, NFL and MLB
+    - name: balldontlie-mcp
+      driver: TBD
+
+    # Access cycling race data, results, and statistics through natural language.
+    - name: firstcycling-mcp
+      driver: TBD

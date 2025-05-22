@@ -1,0 +1,296 @@
+agents:
+  # Agent for QQ chat application automation, enabling social interactions and services.
+  - name: qq
+    api_key: your-api-key
+    driver: ai.agent.social.QQAgent
+
+  # Agent for WeChat chat application automation, supporting social interactions and message management.
+  - name: wechat
+    api_key: your-api-key
+    driver: ai.agent.social.WechatAgent
+
+  # Agent for DingTalk chat application automation, providing work collaboration and information exchange services.
+  - name: ding
+    api_key: your-api-key
+    driver: ai.agent.social.DingAgent
+
+  # Agent for Baidu Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
+  - name: yiYan
+    app_id: your-app-id
+    api_key: your-api-key
+    driver: ai.agent.chat.wenxin.BaiduAgent
+
+  # Agent for Tencent YuanQi, providing automated support for Tencent-related products and services.
+  - name: yuanQi
+    app_id: your-app-id
+    api_key: your-api-key
+    driver: ai.agent.chat.tencent.YuanQiAgent
+
+  # Agent for Xiaohongshu (Little Red Book) platform, providing user content recommendations, search, and interaction.
+  - name: zhiPu
+    token: your-token
+    app_id: your-app-id
+    driver: ai.agent.chat.zhipu.ZhipuAgent
+
+  # Agent for querying dishonest persons, helping users access information about people listed as untrustworthy.
+  - name: dishonest
+    token: your-token
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+
+  # Agent for high-speed train ticket queries, providing services to help users quickly find train ticket information.
+  - name: ticket
+    driver: ai.agent.customer.HighSpeedTicketAgent
+
+  # Agent for Youdao translation services, supporting translation between multiple languages.
+  - name: youdao
+    token: your-token
+    driver: ai.agent.customer.YouDaoAgent
+
+  # Sogou image search tool that can help you search for an image online based on your keywords.
+  - name: sogou
+    driver: ai.agent.customer.SogouSearchPicturesAgent
+
+  # Agent for fetching daily hot news, helping users retrieve trending news articles.
+  - name: news
+    driver: ai.agent.customer.HotNewsAgent
+
+  # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
+  - name: travel
+    driver: ai.agent.customer.CityTravelRouteAgent
+
+  # Agent for mcp, which helps users search for required map routes or fulfill other search needs.
+  - name: mcp
+    mcps: amap_mcp,baidu_search_mcp
+    driver: ai.agent.mcp.McpAgent
+
+  # Agent for citic, helping users inquire about relevant financial issues.
+  - name: citic
+    driver: ai.agent.chat.qianfan.XiaoxinAgent
+
+  # Agent for exchangeRate,helping users understand the exchange rates of different currencies.
+  - name: exchangeRate
+    driver: ai.agent.chat.coze.CozeAgent
+
+  # Agent for xiaohongshu,for generating marketing copy for Xiaohongshu.
+  - name: xiaohongshu
+    driver: ai.agent.chat.zhipu.ZhipuAgent
+
+  # Agent for weather, helping users query the weather, temperature, and humidity
+  - name: weather
+    driver: ai.agent.customer.WeatherAgent
+
+  # Agent for oil，helping users check car oil prices.
+  - name: oil
+    driver: ai.agent.customer.OilPriceAgent
+
+  # Agent for bmi, helping users calculate body mass index (BMI) based on height and weight.
+  - name: bmi
+    driver: ai.agent.customer.BmiAgent
+
+  # Agent for calorie, helping users query the calorie content of food.
+  - name: calorie
+    driver: ai.agent.customer.FoodCalorieAgent
+
+  # Agent for dishonest, helping users query information about dishonest persons subject to enforcement.
+  - name: dishonest
+    driver: ai.agent.customer.DishonestPersonSearchAgent
+
+  # Agent for history, helping users query events that happened on this day in history.
+  - name: history
+    driver: ai.agent.customer.HistoryInToDayAgent
+
+  # Agent for youdao, helping users conduct Youdao translation.
+  - name: youdao
+    driver: ai.agent.customer.YouDaoAgent
+
+  # Agent for image, helping users meet the needs of image generation such as painting, drawing and generating pictures according to their requirements.
+  - name: image
+    driver: ai.agent.customer.ImageGenAgent
+
+  # This is a Crazy Thursday (KFC) copywriting agent that can help you generate Crazy Thursday copy.
+  - name: KFC_text_generate
+    driver: ai.agent.customer.KFCTextGenerationAgent
+
+  #This is an agent that looks up the attribution of an IP address, you just need to tell me the IP address and I can tell you where it belongs.
+  - name: ip_address_lookup_agent
+    driver: ai.agent.customer.IPAddressLookupAgent
+
+  #This is a tool that generates anime pictures, and you can call this tool to generate anime pictures
+  - name: anime_pictures
+    driver: ai.agent.customer.AnimePicturesAgent
+
+  #This is a tool to check today's horoscope according to your horoscope, you just need to tell me your horoscope and I can tell you today's horoscope.
+  - name: constellation_luck
+    driver: ai.agent.customer.ConstellationLuckAgent
+
+  #It's a Sogou image search tool that can help you search for an image online based on your keywords
+  - name: sogou_search_pictures
+    driver: ai.agent.customer.SogouSearchPicturesAgent
+
+  #This is an avatar generation tool, and you can call this tool to generate an avatar
+  - name: belle_pictures
+    driver: ai.agent.customer.BellePicturesAgent
+
+  #This is a Baidu search tool that can help you search for some images online based on your keywords
+  - name: baidu_search_pictures
+    driver: ai.agent.customer.BaiduSearchPicturesAgent
+
+  #This is a tool that can help you get the gold price today
+  - name: gold_today
+    driver: ai.agent.customer.GoldTodayAgent
+
+  #This is a joke generation tool, and you can call this tool to generate jokes
+  - name: jokes_generation
+    driver: ai.agent.customer.JokesGenerationAgent
+
+  # Agent for meal suggestions, helping users choose between different meal options.
+  - name: meal_suggestion
+    driver: ai.agent.customer.MealSuggestionAgent
+
+  # Agent for countdown day information, helping users know upcoming countdown events.
+  - name: countdown_day
+    driver: ai.agent.customer.CountdownDayAgent
+
+  # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
+  - name: city_travel_route
+    driver: ai.agent.customer.CityTravelRouteAgent
+
+  # Agent for querying car details, including price, configuration, and cover image.
+  - name: car_query
+    driver: ai.agent.customer.CarQueryAgent
+
+  # Agent for querying surname ranking in the Hundred Family Surnames
+  - name: surname_rank
+    driver: ai.agent.customer.SurnameRankAgent
+
+  # Agent for calculating investment income
+  - name: investment_income
+    driver: ai.agent.customer.InvestmentIncomeAgent
+
+  # Agent for driving license question search
+  - name: driving_license_search
+    driver: ai.agent.customer.DrivingLicenseSearchAgent
+
+  # Agent for blood type prediction, helping users calculate the possible blood type of their child.
+  - name: blood_type_calculation
+    driver: ai.agent.customer.BloodTypeCalculationAgent
+
+  # Agent for Bing search, helping users search content via Bing.
+  - name: bing_search
+    driver: ai.agent.customer.BingSearchAgent
+
+  # Agent for lottery results, fetching lottery data based on type and number of days.
+  - name: lottery_results
+    driver: ai.agent.customer.LotteryResultsAgent
+
+  # Agent for text correction, fixing spelling and grammar mistakes in the input text.
+  - name: text_corrector
+    driver: ai.agent.customer.TextCorrectorAgent
+
+  # Agent for text difference comparison, detecting missing and added parts between two texts.
+  - name: text_difference
+    driver: ai.agent.customer.TextDifferenceAgent
+
+  # Agent for searching places based on location name, returning basic information about related places.
+  - name: place_search
+    driver: ai.agent.customer.PlaceSearchAgent
+
+  # Agent for querying chip parameters, based on chip keyword or chip ID.
+  - name: chip_query
+    driver: ai.agent.customer.ChipQueryAgent
+
+  # Agent for Spark Lite 1.5 dialogue model, helping users with basic inquiries.
+  - name: spark_dialog
+    driver: ai.agent.customer.SparkDialogAgent
+
+  # Agent for fetching daily hot news, helping users retrieve trending news articles.
+  - name: hot_news
+    driver: ai.agent.customer.HotNewsAgent
+
+  # Article rewriting tool for generating similar paragraphs based on the input content
+  - name: article_rewrite
+    driver: ai.agent.customer.ArticleRewriteAgent
+
+  # Recipe query tool for fetching recipe details including description, ingredients, and instructions
+  - name: recipe_query
+    driver: ai.agent.customer.RecipeQueryAgent
+
+  # Answer book tool for providing answers based on a given question.
+  - name: answer_book
+    driver: ai.agent.customer.AnswerBookAgent
+
+  # Website ping tool to measure the latency to a specific website.
+  - name: website_ping
+    driver: ai.agent.customer.WebsitePingAgent
+
+  # Conversion tool for simplified and traditional Chinese text conversion.
+  - name: text_conversion
+    driver: ai.agent.customer.TextConversionAgent
+
+  # Human population data retrieval tool.
+  - name: population_data
+    driver: ai.agent.customer.PopulationDataAgent
+
+  # Mean search tool to find quotes or famous sayings based on a given meaning.
+  - name: meaning_search
+    driver: ai.agent.customer.MeaningSearchAgent
+
+  # Agent for DeepSeekChat, providing intelligent Q&A through the DeepSeekChat API.
+  - name: deepseek_chat
+    driver: ai.agent.proxy.DeepSeekProxyAgent
+
+  # Agent for trademark keyword information query, including registration info, application date, agent, status, etc.
+  - name: trademark_info
+    driver: ai.agent.customer.TrademarkInfoAgent
+
+  # Agent for movie box office, showing the real-time box office data.
+  - name: movie_box_office
+    driver: ai.agent.customer.MovieBoxOfficeAgent
+
+  # Agent for historical figure information retrieval, providing details of historical figures.
+  - name: historical_figure_info
+    driver: ai.agent.customer.HistoricalFigureInfoAgent
+
+  # Agent for daily rumor refutation content, helping users access the latest rumors debunked.
+  - name: daily_rumor_refutation
+    driver: ai.agent.customer.DailyRumorRefutationAgent
+
+  # Agent for Google Translate, enabling users to translate text between English and Chinese.
+  - name: google_translate
+    driver: ai.agent.customer.GoogleTranslateAgent
+
+  # Agent for Spring Festival Couplet Generation
+  - name: couplet_generation
+    driver: ai.agent.customer.CoupletGenerationAgent
+
+  # This is a tool configuration class that queries through text_to_sql_search.
+  - name: text_to_sql_search
+    driver: ai.agent.customer.TextToSqlSearchAgent
+
+  # Agent for smart cutout,help you complete intelligent image selection and extraction.
+  - name: smart_cutout
+    driver: TBD
+
+  # Agent for background_replacement,help change the background you want.
+  - name: background_replacement
+    driver: TBD
+
+  # Agent for target_elimination,remove unnecessary elements from the image with one click.
+  - name: target_elimination
+    driver: TBD
+
+  # Agent for conversation_intent_analysis,help you analyze conversation intentions and extract key information
+  - name: conversation_intent_analysis
+    driver: TBD
+
+  # Agent for audio_editing,help users organize and analyze uploaded audio and video content and extract key information
+  - name: audio_editing
+    driver: TBD
+
+  # Agent for violation_content_recognition
+  - name: violation_content_recognition
+    driver: TBD
+
+  # Agent for violation_content_recognition,automatically scan text to quickly retrieve illegal or infringing content
+  - name: violation_content_recognition
+    driver: TBD

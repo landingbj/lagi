@@ -40,6 +40,8 @@ functions:
 
 在lagi-core模块下的ai>llm>adapter>impl目录下新建YonrAdapter类并继承ModelService，同时实现ILlmAdapter接口。
 
+路径参考：\lagi\lagi-core\src\main\java\ai\audio\adapter\impl
+
 ```java
 @LLM(modelName = { "Yonr-version"})
 public class YonrAdapter extends ModelService implements ILlmAdapter {

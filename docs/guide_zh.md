@@ -4,7 +4,7 @@
 - **介绍**：这份LinkMind(联智) 的功能调用指南旨在为您提供清晰、详细的指导，帮助您理解并使用项目中提供的各种 AI 功能。通过这份指南，您可以轻松地将文本对话、语音识别、文字转语音、图片生成等 AI 功能集成到您的应用程序中，实现更智能、更人性化的交互体验。
 - **背景**：随着人工智能技术的飞速发展，越来越多的应用场景需要与 AI 模型进行交互，例如智能客服、语音助手、图像处理等。为了满足这些需求，本项目提供了多种 AI 功能，旨在帮助您轻松地将 AI 技术应用于您的业务场景，提升用户体验和效率。
 
-## 开始之前
+## 准备工作
 
 您可以选择直接导入jar，或使用或使用maven引入依赖，通过IntelliJ IDEA等主流的集成开发环境（IDE）进行运行。
 
@@ -37,8 +37,19 @@
         <systemPath>${pom.basedir}/lib/lagi-core-1.0.0.jar</systemPath>
     </dependency>
     ```
+    
+- 3.验证依赖是否安装：
 
+    为确保依赖包已正确引入并可正常使用，您可以通过以下方法进行验证：
+
+    - **检查 Maven 依赖加载**：运行 mvn dependency:tree 命令，查看 com.landingbj:lagi-core-1.0.0 是否出现在依赖树中。
+    - **日志检查**：启动项目后，检查日志文件或控制台输出，确认是否出现与 lagi-core-1.0.0 相关的初始化信息或错误提示。
+    - **IDE 验证**：在 IntelliJ IDEA 或 Eclipse 等 IDE 中，确认 lagi-core-1.0.0.jar 已正确加载到项目的外部库（External Libraries）中，且相关类可以被正常引用而无编译错误。
+
+- 
 注意：该jar内置默认配置文件lagi.yml，以外部配置优先解析。如您需要修改配置文件，可以直接下载配置[lagi.yml](https://github.com/landingbj/lagi/blob/main/lagi-web/src/main/resources/lagi.yml)，并将其放入您工程的resources目录下。（lagi.yml相关配置可以参考[配置文档](config_zh.md)）。
+
+
 
 ## 调用示例
 为了快速上手，我们提供了一些[示例代码](https://github.com/landingbj/lagi/blob/main/lagi-core/src/test/java/ai/example/Demo.java)，您可以根据需要进行修改和调试。
