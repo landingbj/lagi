@@ -307,7 +307,7 @@ public class ExcelSqlUtil {
             fields.append(", field").append(i);
         }
         final int BATCH_SIZE = 1000; // 每批次插入1000条数据
-        for (int batchStart = 0; batchStart < rows.size(); batchStart += BATCH_SIZE) {
+        for (int batchStart = 1; batchStart < rows.size(); batchStart += BATCH_SIZE) {
             int batchEnd = Math.min(batchStart + BATCH_SIZE, rows.size());
             StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
 
