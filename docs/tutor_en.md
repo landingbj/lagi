@@ -105,7 +105,7 @@ docker pull yinruoxi666/landingbj/lagi
 - Start the container: 
 
 ```bash 
-docker run -d --name lagi-web -p 8080:8080 landingbj/lagi 
+docker run -d --name lagi-web -p 8080:8080 yinruoxi666/landingbj/lagi
 ```
 
 3. **Compile the Project**: Use the IDE's compile feature to build the LinkMind project.
@@ -361,22 +361,22 @@ For different types of files, Lagi will adopt differentiated processing strategi
     - For files with a chapter structure, Lagi will prioritize removing non-content elements such as directories, then apply intelligent algorithms to analyze the content and accurately divide it into paragraphs, ensuring the completeness of the paragraphs for easy learning and processing by the model.
 
 3. **Spreadsheet File Processing**:
-    - When processing regular spreadsheet files, Lagi will identify the header's position and layout, converting the content into Markdown format to optimize the model's learning and processing.
+    - When processing regular spreadsheet files, LinkMind will identify the header's position and layout, converting the content into Markdown format to optimize the model's learning and processing.
 
 4. **Pure Numeric Spreadsheet File Processing**:
-    - For spreadsheet files containing pure numbers, Lagi will provide the optimal table slicing solution based on the types of numeric data in the table. It will use text2sql technology to convert the table content into structured data and import it into a MySQL database, where sql2text technology will enable intelligent querying. If MySQL is not configured, it will follow the "Spreadsheet File Processing" procedure.
+    - For spreadsheet files containing pure numbers, LinkMind will provide the optimal table slicing solution based on the types of numeric data in the table. It will use text2sql technology to convert the table content into structured data and import it into a MySQL database, where sql2text technology will enable intelligent querying. If MySQL is not configured, it will follow the "Spreadsheet File Processing" procedure.
 
 5. **Image and Text File Processing**:
-    - For files containing both text and images, Lagi will integrate image-text layout technology to accurately extract images and content from the document, assisting the large model in learning and processing the file. If image-text layout is not configured, the file will be processed using the standard file processing procedure.
+    - For files containing both text and images, LinkMind will integrate image-text layout technology to accurately extract images and content from the document, assisting the large model in learning and processing the file. If image-text layout is not configured, the file will be processed using the standard file processing procedure.
 
 6. **Title File Processing**:
     - Titles in files will be extracted separately as key information units for specialized processing. Accurate recognition of titles ensures they are effectively extracted as core elements of the content, providing high-quality learning data for the large model.
 
 7. **Presentation File Processing**:
-    - For presentation files, Lagi will read the content of each page, associating the page text with images to improve the large model's ability to learn and process the content.
+    - For presentation files, LinkMind will read the content of each page, associating the page text with images to improve the large model's ability to learn and process the content.
 
 8. **Image File Processing**:
-    - When processing image files, Lagi will use OCR technology to perform text and image recognition, associating the recognized information with the image as key information units. If OCR is not configured, the default method will be to associate the image name with the image for processing.
+    - When processing image files, LinkMind will use OCR technology to perform text and image recognition, associating the recognized information with the image as key information units. If OCR is not configured, the default method will be to associate the image name with the image for processing.
 
 ## Conclusion
 
