@@ -47,7 +47,6 @@ public class LandingAdapter extends ModelService implements ILlmAdapter {
                 url = getEndpoint();
             }
         }
-        System.out.println(new Gson().toJson(chatCompletionRequest));
         LlmApiResponse completions = OpenAiApiUtil.completions(getApiKey(), url, HTTP_TIMEOUT, chatCompletionRequest,
                 GptConvert::convert2ChatCompletionResult,
                 GptConvert::convertByResponse);
