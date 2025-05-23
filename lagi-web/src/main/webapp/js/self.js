@@ -394,14 +394,14 @@ function textQuery1(questionRel, answerRel, fileStatus) {
         alert("有对话正在进行请耐心等待");
         return;
     }
-    queryLock = true;
-    disableQueryBtn();
     let question = questionRel;
     if (isBlank(question)) {
         alert("请输入有效字符串！！！");
         $('#queryBox textarea').val('');
         return;
     }
+    queryLock = true;
+    disableQueryBtn();
 
     // 隐藏非对话内容
     hideHelloContent();
@@ -419,6 +419,8 @@ function textQuery1(questionRel, answerRel, fileStatus) {
     }
     addConv(conversation1);
     $('#queryBox textarea').val('');
+    enableQueryBtn();
+    querying = false;
     queryLock = false;
 }
 
