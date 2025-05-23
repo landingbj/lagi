@@ -401,11 +401,15 @@ function getTextResult(question, robootAnswerJq, conversation, agentId) {
             }
             $('#queryBox textarea').val('');
             queryLock = false;
+            enableQueryBtn();
+            querying = false;
             conversation.robot.answer = answer;
             addConv(conversation);
         },
         error: function () {
             $('#queryBox textarea').val('');
+            enableQueryBtn();
+            querying = false;
             queryLock = false;
             robootAnswerJq.html("调用失败！");
             conversation.robot.answer = "调用失败！";
@@ -592,9 +596,6 @@ function streamOutput(paras, question, robootAnswerJq) {
         querying = false;
     }).catch((err) => {
         console.error(err);
-        enableQueryBtn();
-        querying = false;
-        queryLock = false;
         if (robootAnswerJq.text().trim().length === 0) {
             robootAnswerJq.html(err);
         }
