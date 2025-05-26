@@ -285,6 +285,15 @@ let promptNavs = [
                 exampleVedioSrc: '../video/dxAnalyzeImage.mp4', // 可替换为实际视频路径
                 prompt: '上传 PNG 或 JPEG 图片文件，接口将返回DX图像内容的结构化分析文本。',
                 operation: '选择一张图片文件，点击提交按钮，接口将返回分析结果并显示在页面上。'
+            },
+            {
+                id: 15.6,
+                key: 'ruleTxtToExcel',
+                title: '规则TXT转Excel',
+                exampleImgSrc: '../images/ruleTxtToExcel.png',
+                exampleVedioSrc: '../video/ruleTxtToExcel.mp4',
+                prompt: '上传 TXT 文件以生成规则汇总 Excel 文件。文件大小限制为 10MB，若文件较大或数据行数过多，处理可能需要较长时间。',
+                operation: '选择一个 TXT 文件，点击提交按钮，接口将生成并下载 Excel 文件（XLSX 格式）。'
             }
         ]
     }
@@ -824,6 +833,51 @@ async function queryPinDiagramImage(fileInputId, keywordInputId, statusId, butto
     }
 }
 
+// 规则TXT转Excel
+async function submitRuleTxtToExcel(fileInputId, statusId, buttonId) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    if (!file) {
+        updateStatus(statusId, '请选择一个 TXT 文件', 'error');
+        return;
+    }
+
+    const isLargeFile = checkFileSize(file, 10, statusId);
+    toggleButton(buttonId, true);
+    updateStatus(statusId, isLargeFile ? '正在上传并处理大文件，请耐心等待...' : '正在上传并处理文件...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/ruleTxtToExcel', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || '请求失败');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'RuleSummary.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        updateStatus(statusId, 'Excel 文件生成成功，已下载', 'success');
+    } catch (error) {
+        updateStatus(statusId, '错误：' + error.message, 'error');
+    } finally {
+        toggleButton(buttonId, false);
+    }
+}
+
 // 更新 createFileUploadUI，支持 pinDiagram
 function createFileUploadUI(nav, containerId) {
     injectDemoStyles();
@@ -890,6 +944,17 @@ function createFileUploadUI(nav, containerId) {
                 <img id="${imageId}" style="display: none; max-width: 100%; margin-top: 20px; border-radius: 8px;" alt="引脚图">
             </div>
         `;
+    } else if (nav.key === 'ruleTxtToExcel') {
+        acceptType = '.txt';
+        html = `
+            <div class="section" id="${sectionId}">
+                <h2>${nav.title}</h2>
+                <div class="description">${nav.prompt}</div>
+                <input type="file" id="${fileInputId}" accept="${acceptType}">
+                <button id="${submitButtonId}">提交</button>
+                <div id="${statusId}" class="status"></div>
+            </div>
+        `;
     }
 
     container.innerHTML = html;
@@ -905,6 +970,8 @@ function createFileUploadUI(nav, containerId) {
                 submitImage(fileInputId, statusId, submitButtonId, resultId);
             } else if (nav.key === 'pinDiagram') {
                 submitPinDiagramFile(fileInputId, statusId, submitButtonId);
+            }else if (nav.key === 'ruleTxtToExcel') {
+                submitRuleTxtToExcel(fileInputId, statusId, submitButtonId);
             }
         });
     }
@@ -1092,7 +1159,7 @@ function getPromptDialog(id) {
     currentAppId = nav.agentId;
 
     // 如果是高级功能中心的子菜单，直接触发文件上传和接口调用
-    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagram', 'dxAnalyzeImage'].includes(nav.key)) {
+    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagram', 'dxAnalyzeImage', 'ruleTxtToExcel'].includes(nav.key)) {
         // 隐藏首页内容
         hideHelloContent();
 

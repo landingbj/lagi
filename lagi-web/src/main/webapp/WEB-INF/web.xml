@@ -382,4 +382,13 @@
         <url-pattern>/dxAnalyzeImage/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>RuleTxtToExcelServlet</servlet-name>
+        <servlet-class>ai.servlet.api.RuleTxtToExcelServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RuleTxtToExcelServlet</servlet-name>
+        <url-pattern>/ruleTxtToExcel/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
