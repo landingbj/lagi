@@ -162,7 +162,7 @@ public class PromptCacheConfig {
 
         MEDUSA_FLUSH = config.getFlush() != null ? config.getFlush() : MEDUSA_FLUSH;
 
-        TEMPERATURE_TOLERANCE = cutIntervalByStep(config.getTolerance() != null ? config.getTolerance() : -1);
+        TEMPERATURE_TOLERANCE = cutIntervalByStep(config.getTemperatureTolerance() != null ? config.getTemperatureTolerance() : -1);
     }
 
     private static List<Double> cutIntervalByStep(double step) {

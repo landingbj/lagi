@@ -37,6 +37,6 @@ public class Medusa {
     private Double cacheHitRatio;
     @JsonProperty("dynamic_similarity")
     private Boolean dynamicSimilarity;
-    @JsonProperty("tolerance")
-    private Double tolerance;
+    @JsonProperty("temperature_tolerance")
+    private Double temperatureTolerance;
 }
