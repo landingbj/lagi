@@ -53,59 +53,58 @@ If Tomcat is not installed, please refer to Note 2, install Tomcat before procee
 
 1. **Download War file**: LinkMind's Web application can be directly deployed to the Web container.
 - File name: `lagi-web.war`
-- File size: 279 MB
 - Download link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-web.war)
 
 2. **Start the project**:
 * Put the downloaded war package file into the unzipped Tomcat webapps path, such as:
 
 ```bash
-C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\ROOT\
+apache-tomcat-8.5.99\webapps\
 ```
 
 * If elastic and chroma are not installed locally, modify the corresponding configuration item in \apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml to enable: false
 
 ```yml
-term:
-# This is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
-- name: elastic
-driver: ai.bigdata.impl.ElasticSearchAdapter
-host: localhost
-port: 9200
-enable: false
+   term:
+   # This is an adapter for Elasticsearch, providing search and analytics capabilities on large datasets.
+   - name: elastic
+     driver: ai.bigdata.impl.ElasticSearchAdapter
+     host: localhost
+     port: 9200
+     enable: false
 
-rag: # RAG enhances large language models by integrating external knowledge retrieval.
-vector: chroma
-term: elastic
-graph: landing
-enable: false
-priority: 10
-default: "Please give prompt more precisely"
-track: true
+   rag: # RAG enhances large language models by integrating external knowledge retrieval.
+      vector: chroma
+      term: elastic
+      graph: landing
+      enable: false
+      priority: 10
+      default: "Please give prompt more precisely"
+      track: true
 ```
 
 * Open the executable file 'startup.bat', such as:
 
 ```bash
-C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
+apache-tomcat-8.5.99\bin\startup.bat
 ```
 
 You can visit http://localhost:8000/ through the browser to check whether the startup is successful
 
 ### Method 3: Docker
 
-- Image name: `yinruoxi666/landingbj/lagi`
+- Image name: `landingbj/lagi`
 
 - Pull command:
 
 ```bash
-docker pull yinruoxi666/landingbj/lagi 
+docker pull landingbj/lagi 
 ```
 
 - Start the container: 
 
 ```bash 
-docker run -d --name lagi-web -p 8080:8080 yinruoxi666/landingbj/lagi
+docker run -d --name lagi-web -p 8080:8080 landingbj/lagi
 ```
 
 3. **Compile the Project**: Use the IDE's compile feature to build the LinkMind project.
@@ -185,40 +184,40 @@ If it is started in Tomcat form, modify the path to: \apache-tomcat-8.5.99\webap
 - Fill in the model information and start the model, modify the enable setting to true.
 
 ```yaml
-- name: kimi
-type: Moonshot
-enable: true
-model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
-driver: ai.llm.adapter.impl.MoonshotAdapter
-api_key: your-api-key
+   - name: kimi
+     type: Moonshot
+     enable: true
+     model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+     driver: ai.llm.adapter.impl.MoonshotAdapter
+     api_key: your-api-key
 ```
 
 - According to your needs, set the model output mode stream and priority priority. The larger the value, the higher the priority.
 
 ```yaml
-chat:
-- backend: doubao
-model: doubao-pro-4k
-enable: true
-stream: true
-priority: 160
-
-- backend: kimi
-model: moonshot-v1-8k
-enable: true
-stream: true
-priority: 150
+   chat:
+     - backend: doubao
+       model: doubao-pro-4k
+       enable: true
+       stream: true
+       priority: 160
+   
+     - backend: kimi
+       model: moonshot-v1-8k
+       enable: true
+       stream: true
+       priority: 150
 ```
 
 - According to your needs, add route modification.
 
 ```yaml
-# Rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent) # A|B -> Polling, A or B, means randomly polling between A and B;
-# A,B -> Failover, execute A first, if A fails, then execute B;
-# A&B -> Parallel, call A and B at the same time, and select the appropriate unique result;
-# This rule can be combined into ((A&B&C), (E|F)), which means calling ABC at the same time first, and if it fails, randomly call E or F.
-chat:
-route: best((landing&chatgpt), (kimi|ernie))
+   # Rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent) # A|B -> Polling, A or B, means randomly polling between A and B;
+   # A,B -> Failover, execute A first, if A fails, then execute B;
+   # A&B -> Parallel, call A and B at the same time, and select the appropriate unique result;
+   # This rule can be combined into ((A&B&C), (E|F)), which means calling ABC at the same time first, and if it fails, randomly call E or F.
+   chat:
+     route: best((landing&chatgpt), (kimi|ernie))
 ```
 
 Select the configured vector database and fill in the corresponding configuration information.
@@ -285,27 +284,27 @@ Visit the LinkMind page using your browser. Test features such as text conversat
 LinkMind supports dynamic model switching. Update the `lagi.yml` configuration file to enable different models based on your needs. For non-streaming calls, LinkMind will automatically switch to another model based on priority if the current model fails.
 
 ```yaml
-- backend: chatglm
-  model: glm-3-turbo
-  enable: true
-  stream: true
-  priority: 10
-
-- backend: ernie
-  model: ERNIE-Speed-128K
-  enable: false
-  stream: true
-  priority: 10
+   - backend: chatglm
+     model: glm-3-turbo
+     enable: true
+     stream: true
+     priority: 10
+   
+   - backend: ernie
+     model: ERNIE-Speed-128K
+     enable: false
+     stream: true
+     priority: 10
 ```
 - Add route modifications according to your needs.
 
 ```yaml
-# Rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent) # A|B -> Polling, A or B, means randomly polling between A and B;
-# A,B -> Failover, execute A first, if A fails, then execute B;
-# A&B -> Parallel, call A and B at the same time, and select the appropriate unique result;
-# This rule can be combined into ((A&B&C), (E|F)), which means calling ABC at the same time first, and if it fails, randomly call E or F.
-chat:
-route: best((landing&chatgpt), (kimi|ernie))
+   # Rule: (Xiaoxin Agent & Stock Agent & Exchange Rate Agent) # A|B -> Polling, A or B, means randomly polling between A and B;
+   # A,B -> Failover, execute A first, if A fails, then execute B;
+   # A&B -> Parallel, call A and B at the same time, and select the appropriate unique result;
+   # This rule can be combined into ((A&B&C), (E|F)), which means calling ABC at the same time first, and if it fails, randomly call E or F.
+   chat:
+     route: best((landing&chatgpt), (kimi|ernie))
 ```
 Switch models online via the interface:
 

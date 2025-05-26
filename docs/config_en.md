@@ -97,6 +97,9 @@ stores:
       consumer_thread_num: 2 # Number of consumer threads
       cache_persistent_path: medusa_cache # Cache persistence path
       cache_persistent_batch_size: 2 # Cache persistence batch size
+      cache_hit_window: 16    # size of the sliding window for cache hits
+      cache_hit_ratio: 0.3    # minimum cache hit ratio
+      temperature_tolerance: 0.1  # tolerance for the temperature parameter on cache hits
       flush: true # Whether to reload the cache on every startup
 ```
 
@@ -345,3 +348,11 @@ routers:
 
 ```
 
+MCP configuration
+
+```yaml
+mcps:
+  servers:
+    - name: baidu_search_mcp  # MCP service name
+      url: http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api_key=Bearer+your_api_key  # MCP service URL
+```

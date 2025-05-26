@@ -54,17 +54,16 @@ mvn clean install
 
 1. **下载War 文件**：LinkMind(联智)的Web应用，可直接部署到Web容器。
    - 文件名：`lagi-web.war`
-   - 文件大小：279 MB
    - 下载链接：[点击这里下载](https://downloads.landingbj.com/lagi/lagi-web.war)
 
 2. **启动项目**：
 * 将下好的war包文件放入解压好的Tomcat的webapps路径下，如：
 
 ```bash
-C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\ROOT\
+apache-tomcat-8.5.99\webapps\
 ```
 
-* 如果本地未安装elastic和chroma，则修改\apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml中对应配置项为enable: false
+* 如果本地未安装elastic和chroma，则修改apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml中对应配置项为enable: false
 
 ```yml
   term:
@@ -88,25 +87,25 @@ C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\webapps\ROOT\
 * 打开执行文件‘startup.bat’，如：
 
 ```bash
-C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
+apache-tomcat-8.5.99\bin\startup.bat
 ```
 
 可以通过浏览器访问：http://localhost:8000/查看是否启动成功
 
 ### 方法三：Docker 
 
-- 镜像名称：`yinruoxi666/landingbj/lagi`
+- 镜像名称：`landingbj/lagi`
 
 - 拉取命令：
 
   ```bash
-  docker pull yinruoxi666/landingbj/lagi
+  docker pull landingbj/lagi
   ```
 
 - 启动容器：
 
   ```bash
-  docker run -d --name lagi-web -p 8080:8080 yinruoxi666/landingbj/lagi
+  docker run -d --name lagi-web -p 8080:8080 landingbj/lagi
   ```
 
 
@@ -115,8 +114,6 @@ C:\Users\24175\Documents\Environment\apache-tomcat-8.5.99\bin\startup.bat
 LinkMind(联智) 支持多种向量数据库，例如 ChromaDB。如果您想使用检索增强 RAG 功能，需要安装向量数据库。
 
 **以 ChromaDB 为例**:
-
-### 方式一：Python
 
 ***确保已安装 Python 运行环境（下载资源在文档最后注3）*** 
 
@@ -180,17 +177,17 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 ***以配置kimi为例：***
 
-如是以Tomcat形式启动，修改路径为：\apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml
+如是以Tomcat形式启动，修改路径为：apache-tomcat-8.5.99\webapps\ROOT\WEB-INF\classes\lagi.yml
 
 - 填入模型信息并开启模型,修改enable设置为true。
   
   ```yaml
   - name: kimi
-      type: Moonshot
-      enable: true
-      model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
-      driver: ai.llm.adapter.impl.MoonshotAdapter
-      api_key: your-api-key  
+    type: Moonshot
+    enable: true
+    model: moonshot-v1-8k,moonshot-v1-32k,moonshot-v1-128k
+    driver: ai.llm.adapter.impl.MoonshotAdapter
+    api_key: your-api-key  
   ```
 
 - 根据您的需求，设置模型输出的方式stream和优先级priority，值越大优先级越高。

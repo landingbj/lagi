@@ -89,7 +89,6 @@ stores:
       default: "Please give prompt more precisely" # 如未匹配到上下文，则返回该提示语
       track: true # 开启文档跟踪
   # 这部分是美杜莎的加速推理服务的配置，可以通过预训练的medusa.json来预准备缓存，第一次flush置成true来初始化，后续可以改回false用做日常启停。
-  # medusa.json的下载地址：https://downloads.landingbj.com/lagi/medusa.zip
   medusa:
     enable: true # 是否开启
     algorithm: hash,llm,tree # 使用的算法
@@ -99,6 +98,9 @@ stores:
     consumer_thread_num: 2 # 消费者线程数
     cache_persistent_path: medusa_cache # 缓存持久化路径
     cache_persistent_batch_size: 2 # 缓存持久化批次大小
+    cache_hit_window: 16 # cache命中的滑动窗口大小
+    cache_hit_ratio: 0.3 # cache命中的最低比例
+    temperature_tolerance: 0.1  # cache命中时温度参数的容忍度
     flush: true # 缓存是否每次启动时都重新加载
 ```
 
@@ -345,5 +347,12 @@ routers:
     rule: '%'
 ```
 
+MCP配置
 
+```yaml
+mcps:
+  servers:
+    - name: baidu_search_mcp # mcp服务名称
+      url: http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api_key=Bearer+your_api_key # mcp服务地址
+```
 

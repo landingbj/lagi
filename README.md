@@ -228,10 +228,8 @@ Thank you for your support of LinkMind ! To help you get started quickly and eas
 
 - **Jar File**: The core dependency library of LinkMind.
   - File Name: lagi-core-1.0.6-jar-with-dependencies.jar
-  - File Size: 250.5 MB
   - Download Link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-core-1.0.6-jar-with-dependencies.jar)
 
 - **War File**: The Web application of LinkMind, which can be directly deployed to a web container.
   - File Name: lagi-web.war
-  - File Size: 279 MB
   - Download Link: [Click here to download](https://downloads.landingbj.com/lagi/lagi-web.war)
