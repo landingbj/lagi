@@ -57,7 +57,13 @@ public class AIManager<T> {
     private static <T> List<T> getDefaultSortedAdapter(Map<String, T> map) {
         return getSortedAdapter(map, (m1, m2)->{
             if(!(m1 instanceof ModelService)) {
+                if(m2 instanceof ModelService) {
+                    return 1;
+                }
                 return 0;
+            }
+            if(!(m2 instanceof ModelService)) {
+                return -1;
             }
             ModelService ms1 = (ModelService)m1;
             ModelService ms2 = (ModelService)m2;

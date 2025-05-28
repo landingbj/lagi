@@ -6,6 +6,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import cn.hutool.core.text.StrFormatter;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.reactivex.Observable;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -37,7 +38,7 @@ public class OpenAiApiUtil {
 
     public static LlmApiResponse completions(String apikey, String apiUrl,
                                              Integer timeout,
-                                             ChatCompletionRequest req,
+                                             Object req,
                                              Function<String, ChatCompletionResult> convertResponseFunc,
                                              Function<Response, Integer> convertErrorFunc) {
         Map<String, String> headers = new HashMap<>();
@@ -48,7 +49,7 @@ public class OpenAiApiUtil {
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,
                                                    Integer timeout,
-                                                   ChatCompletionRequest req,
+                                                   Object req,
                                                    Function<String, ChatCompletionResult> convertResponseFunc,
                                                    Function<Response, Integer> convertErrorFunc) {
         Map<String, String> headers = new HashMap<>();
@@ -58,7 +59,7 @@ public class OpenAiApiUtil {
 
     public static LlmApiResponse completions(String apikey, String apiUrl,
                                              Integer timeout,
-                                             ChatCompletionRequest req,
+                                             Object req,
                                              Function<String, ChatCompletionResult> convertResponseFunc,
                                              Function<Response, Integer> convertErrorFunc,
                                              Map<String, String> headers) {
@@ -69,7 +70,7 @@ public class OpenAiApiUtil {
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType mediaType = MediaType.get("application/json");
-        String json = gson.toJson(req);
+        String json = new GsonBuilder().disableHtmlEscaping().create().toJson(req);
         RequestBody body = RequestBody.create(json, mediaType);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(apiUrl)
@@ -101,7 +102,7 @@ public class OpenAiApiUtil {
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,
                                                    Integer timeout,
-                                                   ChatCompletionRequest req,
+                                                   Object req,
                                                    Function<String, ChatCompletionResult> convertResponseFunc,
                                                    Function<Response, Integer> convertErrorFunc, Map<String, String> headers) {
         return streamCompletions(apikey, apiUrl, timeout, gson.toJson(req), convertResponseFunc, convertErrorFunc, headers);

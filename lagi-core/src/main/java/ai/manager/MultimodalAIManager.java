@@ -10,6 +10,7 @@ import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
 import ai.llm.adapter.ILlmAdapter;
+import ai.vl.adapter.VlAdapter;
 import ai.wrapper.IWrapper;
 import ai.ocr.IOcr;
 import ai.oss.UniversalOSS;
@@ -47,6 +48,11 @@ public class MultimodalAIManager {
                 register(modelNameList, LlmManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getChat().getBackends());
                 register(modelNameList, LlmInstructionManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getDoc2instruct());
             }
+
+            if(modelService instanceof VlAdapter) {
+                register(modelNameList, VlLlmManager.getInstance(), (VlAdapter) modelService, modelFunctions.getChatVL());
+            }
+
             if(modelService instanceof IAudioAdapter) {
                 register(modelNameList, TTSManager.getInstance(), (IAudioAdapter) modelService, modelFunctions.getText2speech());
                 register(modelNameList, ASRManager.getInstance(), (IAudioAdapter) modelService, modelFunctions.getSpeech2text());

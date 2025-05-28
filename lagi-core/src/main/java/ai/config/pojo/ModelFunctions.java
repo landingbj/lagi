@@ -15,6 +15,8 @@ public class ModelFunctions {
     private List<EmbeddingConfig> embedding;
     @JsonProperty("chat")
     private ModelFunction chat;
+    @JsonProperty("chatVL")
+    private List<Backend> chatVL;
     @JsonProperty("speech2text")
     private List<Backend> speech2text;
     @JsonProperty("text2speech")

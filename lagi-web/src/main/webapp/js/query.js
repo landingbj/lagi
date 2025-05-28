@@ -426,7 +426,7 @@ async function getTextResult(question, robootAnswerJq, conversation, agentId) {
                 // 判断图生文
                 else if (res.samUrl != null) {
                     result = "您所上传的图片的意思是：<br><b>类别</b>：" + res.classification + "<br><b>描述</b>：" + res.caption + "<br>" +
-                        "<b>分割后的图片</b>：  <img src='" + res.samUrl + "' alt='Image'><br>";
+                        "<b>分割后的图片</b>：  <img src='" + res.samUrl + "' alt='Image' style='width:80%;height:60%'><br>";
                     robootAnswerJq.html(result);
                     let p = robootAnswerJq.parent().parent().parent();
                     p.children('.idx').children('.appendVoice').children('audio').hide();
