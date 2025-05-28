@@ -32,88 +32,110 @@ public class DxImageAnalysisServlet extends BaseServlet {
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
 
-    private static final String BACKGROUND_INFO = "DX001: FaultB\n" +
-            "Function: Provides fault feedback to host via FaultB mechanism.Short Description: FaultB pin signals system faults; host must read diagnostic registers periodically.Detailed Description: Every ~40ms (recommended <50ms), the host should issue a read command to the 3138A to maintain safety. This read can determine: 1. If data is received from 3138A (communication check). 2. If fault flags are set via fault type registers (50h/51h), host acts according to specific fault types. 3. If internal temperature (via ADC) exceeds thresholds, host responds accordingly: <-40°C to +65°C: Normal; +65°C to +125°C: Send warning to higher-level system; +125°C to 180°C: Turn on all LEDs to decrease internal temperature. Fault types include: CMWF1 (Communication Watchdog1 Timeout), CMWF2 (Communication Watchdog2 Timeout), TF (Thermal Roll-off), CRCF (UART CRC Fault), RSET_OP (RSET Open), RSET_SH (RSET Short), TSD (Thermal Shutdown), LPBF (PWM Loop Duty Fault), SHORTF (LED Short), OPENF (LED Open), SLSHORTF (Single LED Short), EXF (External Fault), LOF (LDO OV Fault), SCAVF (SCA Data Fault).Detection and Reaction Time: <50msReaction on Fault: If no data is received: host checks communication. If fault is detected: host responds according to the specific fault type. If temperature exceeds thresholds: host takes corresponding thermal mitigation actions.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: See the fault type Register 50h/51h for detailed fault information.\n" +
-            "DI001: Open/Short Detection\n" +
-            "Function: Detects LED open/short faults and internal power MOS open/short.Short Description: Monitors voltage between LED (+) and LED (-) (VLED) to detect LED open or short faults.Detailed Description: VLED is compared against thresholds. If VLED < (VCC - Vth_short), an LED short fault is triggered. If VOUT < 0.1V, an LED open fault is triggered. Also detects internal power MOS open/short faults.Detection and Reaction Time: <50uS Reaction on Fault: LED short (VLED < (VCC - Vth_short)): Triggers and reports fault.LED open (VOUT < 0.1V): Triggers and reports fault.\n" +
-            "Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI002: OV3/UV3 Monitor\n" +
-            "Function: Monitors VDD voltage for overvoltage (OV) or undervoltage (UV).Short Description: Detects if VDD voltage is below 3.6V (UV) or above 5.5V (OV).Detailed Description: VDD voltage is checked against thresholds. VDD < 3.6V triggers VDD UV fault; VDD > 5.5V triggers VDD OV fault.Detection and Reaction Time: <50uS Reaction on Fault: VDD UV: faultB pin pulls low, related register bit sets high, all registers reset.VDD OV: faultB pin pulls low, related register bit sets high.\n" +
-            "Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI003: PWM Loop Duty Test\n" +
-            "Function: Compares commanded and actual PWM dimming for LED.Short Description: Checks if PWM dimming difference exceeds tolerance, reporting a fault if out of range.Detailed Description: Compares commanded PWM dimming with actual LED PWM dimming. If difference exceeds tolerance, a fault is reported.Detection and Reaction Time: <10msReaction on Fault: Sets related register bit high or pulls faultB pin low. Host determines whether to continue LED dimming.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI004: PWM Loop Duty Injection Test\n" +
-            "Function: Tests DI003 functionality by injecting PWM signals.Short Description: Host injects PWM=0 or PWM=1 to verify DI003 operation.Detailed Description: Host injects PWM=0 or PWM=1 to confirm DI003 PWM loop duty test functionality.Detection and Reaction Time: <1msReaction on Fault: Reports fault; host reads fault status.Covers Transient Faults: NoDiagnostic Coverage: 60.00%Comments: None\n" +
-            "DI005: Logic Built-In Self-Test (LBIST)\n" +
-            "Function: Performs digital logic self-test on power-up.Short Description: Executes LBIST after power supply is ready during power-up.Detailed Description: On power-up, digital logic runs LBIST once power supply is stable.Detection and Reaction Time: <500uS Reaction on Fault: Host reads register to check LBIST pass/fail. If pass, proceeds with programmed dimming; if fail, may require another power-up or report to higher-level system.Covers Transient Faults: NoDiagnostic Coverage: 60.00%Comments: None\n" +
-            "DI006: Watchdog\n" +
-            "Function: Monitors communication timeouts using Watchdog1 and Watchdog2.Short Description: Watchdog1 timeouts on no communication; Watchdog2 timeouts if communication misses a configurable timing window.Detailed Description: Watchdog1 triggers on prolonged lack of communication. Watchdog2 triggers if communication falls outside a register-set timing window. No communication means no correct CRC completion.Detection and Reaction Time: <40msReaction on Fault: Watchdog1 or Watchdog2 timeout triggers IC to enter safe mode.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI007: CRC (Cyclic Redundancy Check)\n" +
-            "Function: Validates data frame integrity using CRC.Short Description: Checks CRC in data frame for validity in both received and transmitted data.Detailed Description: CRC is included at the end of data frames. If CRC is incorrect, the frame is invalid. Applies to both received and transmitted data.Detection and Reaction Time: <500uS Reaction on Fault: faultB pin pulls low.Related register bit sets high.CRC accumulation counter increments by 1.\n" +
-            "Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI008: VIN Under Voltage Detection\n" +
-            "Function: Monitors VIN voltage for undervoltage (UV).Short Description: Detects if VIN voltage is below 3.5V (VIN UV).Detailed Description: VIN voltage is checked; if VIN < 3.5V, a VIN UV fault is triggered.Detection and Reaction Time: <50uS Reaction on Fault: Resets all outputs, faultB status, and registers to default values.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI009: CLK Detect\n" +
-            "Function: Detects CLK signal errors.Short Description: Identifies CLK as constant high or low for >16uS , indicating an error.Detailed Description: If CLK is constant high or low for >16uS  (counted by 8MHz clock), 3138A considers it a CLK output error.Detection and Reaction Time: <100uS Reaction on Fault: Reports fault and replaces CLK_PWM with CLK_SYS.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI010: Thermal Shutdown\n" +
-            "Function: Monitors internal temperature for thermal shutdown.Short Description: Detects if internal temperature exceeds 170C.Detailed Description: Continuously monitors internal temperature. If it exceeds 170C, triggers thermal shutdown.Detection and Reaction Time: <100uS Reaction on Fault: Turns off output channel and reports fault to host.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI011: ADC\n" +
-            "Function: Converts analog signals to digital data for monitoring.Short Description: Converts 26 key analog signals to digital data in registers.Detailed Description: Converts 26 important analog signals to digital data stored in registers. Host can force a reference voltage to monitor ADC function and compare results.Detection and Reaction Time: <10msReaction on Fault: Host detects errors by comparing ADC values.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI012: Output Peak Current Monitor\n" +
-            "Function: Monitors output channel peak current.Short Description: Senses output channel current, converts to voltage, and samples via ADC.Detailed Description: Output channel current is sensed and converted to a voltage sampled by ADC. Host reads ADC register to obtain output peak current and compares values.Detection and Reaction Time: <10msReaction on Fault: Host detects errors by comparing ADC register values.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI013: Output Peak Current Monitor BIST\n" +
-            "Function: Verifies DI012 functionality via built-in self-test.Short Description: Forces 6uA bias current to test output peak current detection after power-up.Detailed Description: Forces 6uA bias current to verify DI012 output peak current monitor function after power-up.Detection and Reaction Time: <1msReaction on Fault: Host reads ADC register, compares values, and detects errors.Covers Transient Faults: NoDiagnostic Coverage: 60.00%Comments: None\n" +
-            "DI014: SCA Data Injection Test\n" +
-            "Function: Tests low voltage power MOS ON/OFF status.Short Description: Forces SCA data to verify power MOS control after power-up.Detailed Description: Forces SCA data to test low voltage power MOS ON/OFF status. Continuously monitors all power MOS gates controlled by 7-bit SCA data.Detection and Reaction Time: <10msReaction on Fault: Reports fault at faultB pin; host reads fault status via fault register.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI015: RSET Open/Short Detect\n" +
-            "Function: Detects RSET pin open or short faults.Short Description: Monitors RSET pin voltage or current for open/short status.Detailed Description: Detects RSET pin open fault if voltage > 3V; detects RSET short fault if current > 310uA.Detection and Reaction Time: <100uS Reaction on Fault: RSET open (voltage > 3V): Asserts RSET open fault.RSET short (current > 310uA): Asserts RSET short fault.\n" +
-            "Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI016: ECC (Error Correcting Code)\n" +
-            "Function: Detects and corrects errors in 512-bit OTP.Short Description: Uses ECC to detect and fix 1-bit errors in 512-bit OTP.Detailed Description: Error Correcting Code detects and corrects 1-bit errors in 512-bit OTP memory.Detection and Reaction Time: <100uS Reaction on Fault: Corrects 1-bit errors in 512-bit OTP.Covers Transient Faults: YesDiagnostic Coverage: 90.00%Comments: None\n" +
-            "DI017: V5/V33 Under Voltage Monitor\n" +
-            "Function: Monitors V5 and V33 voltages for undervoltage.Short Description: Detects if V5 < 3.1V or V33 < 2.5V (UV).Detailed Description: Checks V5 and V33 voltages. V5 < 3.1V triggers V5 UV; V33 < 2.5V triggers V33 UV.Detection and Reaction Time: <1msReaction on Fault: Resets all registers and disables communication until V5 > 3.3V and V33 > 2.7V. Host gets no response if issuing read commands.Covers Transient Faults: YesDiagnostic Coverage: 99.00%Comments: Analog comparator ensures high DC level; detection is full-time.\n" +
-            "DI018: V5/V33 Overvoltage Monitor\n" +
-            "Function: Monitors V5 and V33 voltages for overvoltage.Short Description: Detects if V5 or V33 exceeds 6.5V (OV).Detailed Description: Checks if V5 or V33 voltage exceeds 6.5V, triggering V5/V33 OV fault.Detection and Reaction Time: <50uS Reaction on Fault: faultB pin pulls low.Related register bit sets high.\n" +
-            "Covers Transient Faults: YesDiagnostic Coverage: 99.00%Comments: Analog comparator ensures high DC level; detection is full-time.\n" +
-            "DI019: Charge Pump Under Voltage Detect\n" +
-            "Function: Monitors charge pump output voltage for undervoltage.Short Description: Detects if charge pump output for 12 channels is < 3.3V.Detailed Description: Monitors charge pump output voltage for 12 channels. If < 3.3V, reports UV to all channels.Detection and Reaction Time: <50uS Reaction on Fault: Affected channel sets driver output to constant low; no fault report.Covers Transient Faults: YesDiagnostic Coverage: 99.00%Comments: Analog comparator ensures high DC level; detection is full-time.\n" +
-            "DI020: PIN Double Bondings\n" +
-            "Function: Ensures redundancy via double bondings on VCC and V5.Short Description: VCC has two bondings on one pad; V5 has two bondings on two pads.Detailed Description: VCC uses two bondings on a single pad; V5 uses two bondings on separate pads for redundancy.Detection and Reaction Time: N/AReaction on Fault: N/ACovers Transient Faults: YesDiagnostic Coverage: 99.00%Comments: Double bonding is a redundancy design with high DC level.";
+    private static final String BACKGROUND_INFO = "ID Diagnosis\tShort description of diagnostic procedure\tDetailed description of diagnostic procedure\tDetection and reaction time\tReaction in case diagnostics detects a fail\t\"Covers transient faults\n" +
+            "(Yes / No / Partly)\n" +
+            "[Drop-down]\"\t\"Diagnostic Coverage\n" +
+            "estimated\"\tComments\n" +
+            "DI001\tOpen/Short detection\tthe voltage between LED (+) and LED (-), called as VLED is detected. When VLED is lower than (VCC-Vth_short), then LED short fault will be triggered. When VOUT is lower than 0.1V, then LED open fault will be triggered.  This function also can be detected internal power MOS short or open\t<50uS\twhen VLED< (VCC-Vth_short),  LED short will trigger and report fault.                                                           When VOUT<0.1V LED open will trigger and report fault.\tYes\t90.00%\t\n" +
+            "DI002\tOV3/UV3 monitor\t\"VDD voltage will be detected to check whether it is lower or higher than a level                                                             VDD<3.6V means VDD UV\n" +
+            "VDD>5.5V means VDD OV\n" +
+            "\"\t<50uS\tif VDD UV occur, then                                                    1. faultB will be pull low                                                        2. Related Register bit will set high                             3. all register will be reset.                                                         f VDD OV occur, then items 1,2 will action.                         \tYes\t90.00%\t\n" +
+            "DI003\tPWM loop duty test\tcompare the PWM dimming of command and actual PWM dimming of LED, if the difference is out of tolerance, report fault. \t<10mS\twhen report fault, either the related Register bit will be set high or the FaultB pin will be pull low.                                                        The host shuold determine whether or not to go on dimming LED.\tYes\t90.00%\t\n" +
+            "DI004\tPWM loop duty injection test\thost can inject a PWM=0 or PWM=1 to confirm whether DI003 works\t<1mS\twill report a fault and host can read the fault status \tNo\t60.00%\t\n" +
+            "DI005\tLogic build-in self-test\tevery time power up, digital will do Lbist after power supply is ready.\t<500uS\t\"Host can read related Register to check whether Lbist pass or fail.\n" +
+            "If pass, go on to do prorammed dimming.\n" +
+            " If fail, maybe need another power up or report to the high level system.\"\tNo\t60.00%\t\n" +
+            "DI006\tWatchdog\t\"If there is no communication for a long time, Watchdog1 will be timeout.\n" +
+            "If there is no communication for a timing window whose maximum and minimum value can be  set by register, Watchdog2 will be timeout.\n" +
+            "\"\t<40mS\tWatchdog1 and Watchdog2 timeout will trigger and make IC enter safe mode. No communica-tion means that no correct CRC complete.\tYes\t90.00%\t\n" +
+            "DI007\tCRC: Cyclic Redundancy Check\tThe data format has CRC in the frame end, if CRC is not correct, the total data frame is consid-ered as invalid. Note that CRC check not only be in receive data, but also in transmit data.\t<500us\tif one frame has CRC fault, there are 3 actions                                                                                   1. faultB will be pull low.                                                   2. Related Register bit will set high.                                     3. CRC accumulation counter will +1.                               \tYes\t90.00%\t\n" +
+            "DI008\tVIN under voltage detection \tVIN voltage will be detected to check whether it is lower than a level                                                             VIN<3.5V means VIN UV\t<50uS\treset all outputs and faultb status, reset all registers to default value.\tYes\t90.00%\t\n" +
+            "DI009\tCLK Detect\twhen CLK is detected as constant high or low for more than 16us which is counted by 8MHz clock, 3138A will consider CLK output as an error.\t<100uS\twill report a fault and replace CLK_PWM as CLK_SYS\tYes\t90.00%\t\n" +
+            "DI010\tThermal shutdown\tThe internal temperature is always detected to check whether it pass 170C\t<100uS\tIf it exceeds 170C, the output channel will turn-off and report related fault to host\tYes\t90.00%\t\n" +
+            "DI011\tADC\tConvert 26 important analog signals to digital data in Register \t<10mS\thost can force a reference voltage to monitor ADC function, then compare it. Host can pick up error\tYes\t90.00%\t\n" +
+            "DI012\tOutput peak current monitor\t\"Sense output channel current and convert into a voltage which can be sampled by ADC.\n" +
+            "Host can read the ADC register to get the output peak current\n" +
+            "\"\t<10mS\thost can read the output peak current by ADC register, then compare the value, host can pick up the error\tYes\t90.00%\t\n" +
+            "DI013\tOutput peak current monitor BIST\t\"Force 6uA current as a bias current of output peak current detect block, then it can verify \n" +
+            "DI012 function after power up. \n" +
+            "\"\t<1mS\thost can read the output peak current by ADC register, then compare the value, host can pick up the error\tNo\t60.00%\t\n" +
+            "DI014\tSCA DATA injection test\t\"Force SCA data to test low voltage power MOS ON/OFF status after power up.\n" +
+            "Will always monitor all power MOS gate whether it is controlled by 7 bits SCA data\n" +
+            "\"\t<10mS\twill report a fault at faultb pin and host can read back the fault stauts by fault register.\tYes\t90.00%\t\n" +
+            "DI015\tRSET OPEN/SHORT Detect\twill detect RSET PIN OPEN or short status by RSET pin voltage or current.\t<100uS\t\"When RSET PIN voltage is higher than 3V, then RSET OPEN fault will be asserted.\n" +
+            "When RSET PIN current is larger than 310uA, then RSET SHORT fault will be asserted\n" +
+            "\"\tYes\t90.00%\t\n" +
+            "DI016\tECC\tError Correcting Code that can detect and fix its own errors \t<100uS\tWhen 512-bit OTP has 1-bit error, ECC can correct it.\tYes\t90.00%\t\n" +
+            "DI017\tV5/V33 under voltage monitor\tV5V33 voltage will be detect to check whether it is lower than a level                                                             V5<3.1V means V5 UV                                                             V33<2.5V means V33 UV\t<1ms\tIf V5<3.1V or V33<2.5V, all the Register will be reset and can't communication until V5>3.3V&V5>2.7V                                                 eg. disable communcation channel, so Host will get no response if issue read command. Host shall issue read command periodically, frequency < FTTI)\tYes\t99.00%\tanalog comparator is always considered as high DC level and the detect is full time.\n" +
+            "DI018\tV5/V33 overvoltage monitor\tdetect whether V5/V33 exceed 6.5V\t<50us\tif V5/V33 OV accur, then                                                    1. faultB will be pull low                                                        2. Related Register bit will set high\tYes\t99.00%\tanalog comparator is always considered as high DC level and the detect is full time.\n" +
+            "DI019\tcharge pump under voltage detect\tthe charge pump output for 12 different channels power supply is always detected, if less than 3.3V, will report to every channels.\t<50us\twhen any of the total 12 channels receives charge pump UV signal ,this channel will make driver output constant low.                                                No fault report\tYes\t99.00%\tanalog comparator is always considered as high DC level and the detect is full time.\n" +
+            "DI020\tPIN double bondings\tVCC: two bondings on one PAD                                       V5: two bonding on two different PADs\tNA\tNA\tYes\t99.00%\tdouble bonding is a redundancy design which the DC is always considered as high. \n" +
+            "DX001\tFaultB\t\"every some time, maybe 40ms, host should send a read command to 3138A to get feedback to achieve safety machanism. The feedback information can be classified as 3 types:\n" +
+            "1. whether there is read data from 3138A to host. \n" +
+            "2. read Fault type Register to check whether any Fault happens.\n" +
+            "3. read ADC related data to check 3138A internal temperature.\"\tcustomer depend, should be<50ms (describe the time for the read of recommended registers)\t\"Different types will have different action. For example,\n" +
+            "If 1 happens, there should be error in communication. Host should check communication.\n" +
+            "If 2 happens, host will act according to different fault. see note1 for fault type detail information. (FaultB flag)\n" +
+            "If 3 happens, host will act according to different temp, such as \n" +
+            " <-40C~+65C>, normal. \n" +
+            " <+65C~+125C>, send warning to the higher level system.\n" +
+            " <+125C~180C>, turn on all the LED to derease the internal temp.                                                                       \"\tYes\t90.00%\t\"See the fault type Register 50h/51h at the bottom of the sheet                                                                                   CMWF1:  communication watch dog1 timeout fault                                      CMWF2:  communication watch dog2 timeout fault                   TF: thermal roll off fault                                                             CRCF: UART communication CRC fault                    RSET_OP: RSET PIN OPEN fault                                       RSET_SH: RSET PIN Short fault                                           TSD: thermal shutdown fault                                                                                      LPBF: PWM loop duty fault                                                           SHORTF: LED short fault                                                         OPENF:  LED open fault                                              SLSHORTF: single LED short  fault                                       EXF: external fault                                                                LOF: LDO OV fault                                                                         SCAVF: SCA data fault\n" +
+            "\n" +
+            "\"\n";
 
-    private static final String PROMPT = "private static final String PROMPT = \"You are provided with the following two inputs:\\n\" +\n" +
-            "    \"1. **Image analysis result**: A JSON array from a vision model. Each object contains:\\n\" +\n" +
-            "    \"   - `id`: A string identifier (e.g., \\\"DI001\\\", \\\"DX002\\\")\\n\" +\n" +
-            "    \"   - `description`: A short textual label or function name (e.g., \\\"ADC\\\", \\\"VIN under voltage detection\\\")\\n\" +\n" +
-            "    \"```\\n\" +\n" +
-            "    \"%s\\n\" +  \n" +
-            "    \"```\\n\" +\n" +
-            "    \"\\n\" +\n" +
-            "    \"2. **Background information**: A block of text containing multiple entries. Each entry starts with an identifier like `DI001`, `DI002`, etc., and includes fields such as `Function`, `Short Description`, and `Detailed Description`.\\n\" +\n" +
-            "    \"```\\n\" +\n" +
-            "    \"%s\\n\" +  \n" +
-            "    \"```\\n\" +\n" +
-            "    \"\\n\" +\n" +
-            "    \"Your task:\\n\" +\n" +
-            "    \"1. For each `id` present in the JSON array, **look for an exact match** in the background information.\\n\" +\n" +
-            "    \"2. If a match is found, extract only the value of the `Detailed Description` field from that entry.\\n\" +\n" +
-            "    \"3. If no exact match is found, return the message: \\\"No matching description found\\\".\\n\" +\n" +
-            "    \"\\n\" +\n" +
-            "    \"**Important Constraints**:\\n\" +\n" +
-            "    \"- Do not convert or infer IDs (e.g., do not change DXxxx → DIxxx).\\n\" +\n" +
-            "    \"- Only process the identifiers present in the vision model's JSON array.\\n\" +\n" +
-            "    \"- Do not return or summarize unrelated entries from the background information.\\n\" +\n" +
-            "    \"- Do not return JSON. Output must be plain text.\\n\" +\n" +
-            "    \"\\n\" +\n" +
-            "    \"Output format:\\n\" +\n" +
-            "    \"```\\n\" +\n" +
-            "    \"<id>: <Detailed Description>\\n\" +\n" +
-            "    \"```\\n\" +\n" +
-            "    \"Example:\\n\" +\n" +
-            "    \"```\\n\" +\n" +
-            "    \"DI001: Monitors VIN voltage level. If VIN drops below threshold, triggers undervoltage fault.\\n\" +\n" +
-            "    \"DX003: No matching description found\\n\" +\n" +
-            "    \"DI005: Provides internal communication watchdog and timeout logic.\\n\" +\n" +
-            "    \"```\";\n";
+    private static final String PROMPT = "You are provided with the following two inputs:\n" +
+            "1. **Image analysis result**: A JSON array from a vision model. Each object contains:\n" +
+            "   - `id`: A string identifier (e.g., \"DI001\", \"DX001\", \"DI016\")\n" +
+            "   - `description`: A short textual label or function name (e.g., \"Open/Short Detect\", \"FaultB Flag\", \"ADC\")\n" +
+            "```\\n" +
+            "%s\\n" +
+            "```\\n" +
+            "\n" +
+            "2. **Background information**: A block of text containing multiple entries in a tabular format. Each entry starts with an identifier like `DI001`, `DI002`, etc., and includes fields such as `Short description of diagnostic procedure` and `Detailed description of diagnostic procedure`. The text is structured with each entry clearly separated and labeled.\n" +
+            "```\\n" +
+            "%s\\n" +
+            "```\\n" +
+            "\n" +
+            "Your task:\n" +
+            "1. For each `id` present in the JSON array, search for an exact match in the background information based solely on the identifier.\n" +
+            "2. For every matched `id`, extract the complete and unedited `Short description of diagnostic procedure` and `Detailed description of diagnostic procedure` fields from the corresponding entry in the background information. Every `id` from the JSON array must have a corresponding `Short description of diagnostic procedure` and `Detailed description of diagnostic procedure` from the background information.\n" +
+            "\n" +
+            "**Important Constraints**:\n" +
+            "- Do not modify, infer, or convert IDs (e.g., do not treat 'DX001' as 'DI001' or vice versa).\n" +
+            "- Process only the identifiers provided in the vision model's JSON array, ignoring all other background information.\n" +
+            "- Ensure every `id` from the JSON array is matched with its `Short description of diagnostic procedure` and `Detailed description of diagnostic procedure`, with no omissions or exceptions.\n" +
+            "- Output must be plain text, with no JSON formatting.\n" +
+            "- Do not paraphrase or modify the extracted descriptions; they must be verbatim from the background information.\n" +
+            "\n" +
+            "Output format:\n" +
+            "```\\n" +
+            "<id>: Short Description: <Short description of diagnostic procedure>\n" +
+            "      Detailed Description: <Detailed description of diagnostic procedure>\n" +
+            "```\\n" +
+            "Example outputs:\n" +
+            "```\\n" +
+            "DI001: Short Description: Open/Short detection\n" +
+            "       Detailed Description: the voltage between LED (+) and LED (-), called as VLED is detected. When VLED is lower than (VCC-Vth_short), then LED short fault will be triggered. When VOUT is lower than 0.1V, then LED open fault will be triggered. This function also can be detected internal power MOS short or open\n" +
+            "DX001: Short Description: FaultB\n" +
+            "       Detailed Description: every some time, maybe 40ms, host should send a read command to 3138A to get feedback to achieve safety machanism. The feedback information can be classified as 3 types:\n" +
+            "1. whether there is read data from 3138A to host.\n" +
+            "2. read Fault type Register to check whether any Fault happens.\n" +
+            "3. read ADC related data to check 3138A internal temperature.\n" +
+            "DI016: Short Description: ECC\n" +
+            "       Detailed Description: Error Correcting Code that can detect and fix its own errors\n" +
+            "```\n" +
+            "```\\n" +
+            "DI010: Short Description: Thermal shutdown\n" +
+            "       Detailed Description: The internal temperature is always detected to check whether it pass 170C\n" +
+            "DI011: Short Description: ADC\n" +
+            "       Detailed Description: Convert 26 important analog signals to digital data in Register\n" +
+            "```\n" +
+            "```\\n" +
+            "DI003: Short Description: PWM loop duty test\n" +
+            "       Detailed Description: compare the PWM dimming of command and actual PWM dimming of LED, if the difference is out of tolerance, report fault.\n" +
+            "DI004: Short Description: PWM loop duty injection test\n" +
+            "       Detailed Description: host can inject a PWM=0 or PWM=1 to confirm whether DI003 works\n" +
+            "```\n";
 
 
     @Override
@@ -266,37 +288,61 @@ public class DxImageAnalysisServlet extends BaseServlet {
         // Prepare JSON request
         String visionPrompt = "Carefully analyze the provided image content and perform the following steps:\n" +
                 "\n" +
-                "1. **Scan the entire image thoroughly**: Identify and record all item identifiers that start with the letter 'D' followed by any combination of letters and digits (e.g., 'DX001', 'DI002', etc.).\n" +
+                "1. **Scan the entire image thoroughly**: Identify and record all item identifiers that start with the letter 'D' followed by any combination of letters and digits (e.g., 'DX001', 'DI002', 'DI016'). Scan all regions of the image, including the left, right, top, and bottom areas, to ensure no identifier is missed. Pay special attention to identifiers associated with labels like 'FaultB Flag' or similar annotations, as they may be critical. Ensure every visible identifier is captured without omission, regardless of its prefix ('DI', 'DX', etc.).\n" +
                 "\n" +
-                "2. **Include all valid identifiers**: Include all identifiers that begin with 'D' (e.g., 'DI', 'DX') — do not exclude any relevant items just because they are not 'DX'.\n" +
+                "2. **Verify identifiers**: Cross-check each identified identifier against the image to confirm its exact spelling, visibility, and completeness. Ensure identifiers like 'DX001' (often associated with 'FaultB Flag') are explicitly validated. Exclude any identifier that is ambiguous, partially visible, or unreadable. Validate each identifier’s presence with high precision.\n" +
                 "\n" +
-                "3. **Associate text descriptions**: For each identified identifier, locate and extract the corresponding functional name or textual description that is visually linked with it (e.g., 'ADC', 'VIN under voltage detection', 'PWM loop duty test'). If multiple texts are associated, choose the most directly relevant.\n" +
+                "3. **Associate text descriptions**: For each confirmed identifier, locate the single most directly associated functional name or textual description within the image (e.g., 'Open/Short Detect', 'FaultB Flag', 'Thermal Shutdown'). Prioritize text connected via lines or in closest proximity. For example, 'DX001' is typically linked to 'FaultB Flag' in the image. If multiple texts are linked, select only the one with the clearest functional relevance, avoiding secondary annotations.\n" +
                 "\n" +
-                "4. **Ensure accuracy**: Make sure the extracted information exactly matches the visual content of the image — do not guess or infer.\n" +
+                "4. **Ensure precision**: Extract text exactly as it appears in the image, without modification, guessing, or inference. Ensure all identified identifiers, including 'DX001', are included in the output.\n" +
                 "\n" +
                 "Return the result as a JSON array, where each object contains the following fields:\n" +
-                "- `\"id\"`: A string representing the identifier (e.g., 'DI001' or 'DX001').\n" +
+                "- `\"id\"`: A string representing the exact identifier (e.g., 'DI001', 'DX001', 'DI016').\n" +
                 "- `\"description\"`: A string representing the associated function name or textual description.\n" +
                 "\n" +
-                "Example output format:\n" +
+                "Example output formats:\n" +
                 "```json\n" +
                 "[\n" +
                 "  {\n" +
-                "    \"id\": \"DX001\",\n" +
-                "    \"description\": \"Flag\"\n" +
+                "    \"id\": \"DI001\",\n" +
+                "    \"description\": \"Open/Short Detect\"\n" +
                 "  },\n" +
                 "  {\n" +
-                "    \"id\": \"DI002\",\n" +
-                "    \"description\": \"OV3/UV3\"\n" +
+                "    \"id\": \"DX001\",\n" +
+                "    \"description\": \"FaultB Flag\"\n" +
                 "  },\n" +
+                "  {\n" +
+                "    \"id\": \"DI016\",\n" +
+                "    \"description\": \"ECC\"\n" +
+                "  }\n" +
+                "]\n" +
+                "```\n" +
+                "```json\n" +
+                "[\n" +
                 "  {\n" +
                 "    \"id\": \"DI010\",\n" +
                 "    \"description\": \"Thermal Shutdown\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"DI011\",\n" +
+                "    \"description\": \"ADC\"\n" +
+                "  }\n" +
+                "]\n" +
+                "```\n" +
+                "```json\n" +
+                "[\n" +
+                "  {\n" +
+                "    \"id\": \"DI003\",\n" +
+                "    \"description\": \"PWM Loop Duty Test\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"DI004\",\n" +
+                "    \"description\": \"PWM Loop Duty Injection Test\"\n" +
                 "  }\n" +
                 "]\n" +
                 "```\n" +
                 "\n" +
-                "Do not return anything other than the JSON array. Focus only on identifiers that start with the letter 'D'.";
+                "Do not return anything other than the JSON array. Focus solely on identifiers that start with the letter 'D'.";
         VisionRequest request = new VisionRequest(imageUrl, visionPrompt);
         String requestBody = gson.toJson(request);
         logger.debug("Vision model request body: {}", requestBody);

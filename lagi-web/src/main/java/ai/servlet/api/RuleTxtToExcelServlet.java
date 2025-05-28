@@ -64,7 +64,7 @@ public class RuleTxtToExcelServlet extends BaseServlet {
         DiskFileItemFactory factory = new DiskFileItemFactory();
         factory.setRepository(uploadPath.toFile());
         ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setSizeMax(10 * 1024 * 1024); // 10MB 限制
+        upload.setSizeMax(200 * 1024 * 1024); // 200MB 限制
 
         File txtFile = null;
 
@@ -164,43 +164,55 @@ public class RuleTxtToExcelServlet extends BaseServlet {
         }
     }
 
-    private List<Record> parseFile(Path txt) throws IOException {
+    private  List<Record> parseFile(Path txt) throws IOException {
         List<String> lines = Files.readAllLines(txt, StandardCharsets.UTF_8);
         List<Record> result = new ArrayList<>();
 
         Pattern header = Pattern.compile("^[A-Z0-9._]+$");
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).trim();
+
+            // 判断是否为规则头
             if (header.matcher(line).matches()) {
                 String ruleId = line;
-                if (i + 1 >= lines.size()) break;
+                if (i + 1 >= lines.size()) continue;
+
+                // 读取No.
                 String[] nums = lines.get(i + 1).trim().split("\\s+");
-                int no1 = Integer.parseInt(nums[0]);
-                if (no1 == 0) {
-                    continue;
-                }
+                int no = Integer.parseInt(nums[0]);
+                if (no == 0) continue;
+
                 Record rec = new Record();
                 rec.rule = ruleId;
-                rec.no = String.valueOf(no1);
+                rec.no = String.valueOf(no);
 
-                while (i < lines.size() && !lines.get(i).trim().endsWith("{")) {
-                    i++;
-                }
-                StringBuilder sb = new StringBuilder();
-                i++;
+                // 从第三行开始找“{”
+                i += 2;
+                StringBuilder reason = new StringBuilder();
+                boolean inBlock = false;
+
                 while (i < lines.size()) {
-                    String t = lines.get(i).trim();
-                    if (t.equals("}")) break;
-                    if (t.startsWith("@")) {
-                        t = t.substring(1).trim();
+                    String content = lines.get(i).trim();
+
+                    if (content.contains("{")) {
+                        inBlock = true;
+                        // 提取“@”这一行
+                        int atIndex = content.indexOf('@');
+                        if (atIndex != -1) {
+                            reason.append(content.substring(atIndex + 1).trim()).append(" ");
+                        }
+                    } else if (inBlock && content.equals("}")) {
+                        break;
+                    } else if (inBlock) {
+                        reason.append(content).append(" ");
                     }
-                    sb.append(t).append(" ");
                     i++;
                 }
-                rec.reason = sb.toString().trim();
+                rec.reason = reason.toString().trim();
                 result.add(rec);
             }
         }
         return result;
     }
+
 }
