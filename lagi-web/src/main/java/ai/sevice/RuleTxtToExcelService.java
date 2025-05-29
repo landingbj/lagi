@@ -137,10 +137,8 @@ public class RuleTxtToExcelService {
             if (lines.size() < 2 || lines.get(1).trim().startsWith("0 0 ")) {
                 continue;
             }
-            System.out.println(originalLineNums.get(entry.getDateLineNum()) + ": " + lines.size() + " lines");
             printRule(entry);
             RuleTxtToExcelRecord record = parseRuleTxtToExcelRecord(entry);
-            System.out.println();
             records.add(record);
         }
 
