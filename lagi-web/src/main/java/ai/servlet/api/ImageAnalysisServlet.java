@@ -1,6 +1,8 @@
 package ai.servlet.api;
 
+import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Response;
+import ai.dto.BlockItem;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -8,6 +10,10 @@ import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.utils.MigrateGlobal;
 import ai.vector.FileService;
+import ai.vector.VectorStoreService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +26,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ImageAnalysisServlet extends BaseServlet {
     private static final String UPLOAD_DIR = "/upload";
@@ -28,6 +36,7 @@ public class ImageAnalysisServlet extends BaseServlet {
     private final FileService fileService = new FileService();
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
+    private final VectorStoreService vectorStoreService = new VectorStoreService();
 
     // Background information constant remains unchanged
     private static final String BACKGROUND_INFO = "Bias\n" +
@@ -139,16 +148,15 @@ public class ImageAnalysisServlet extends BaseServlet {
             try {
                 File imageFile = files.get(0);
                 logger.info("Processing image file: {}", imageFile.getName());
-
-                // Step 1: Upload image to /process-image endpoint
                 String imageAnalysisResult = uploadImageToProcessEndpoint(imageFile);
-                if (imageAnalysisResult == null || imageAnalysisResult.trim().isEmpty()) {
+                if (imageAnalysisResult.trim().isEmpty()) {
                     throw new RuntimeException("Image processing failed: Empty response from endpoint");
                 }
                 logger.info("Image analysis result received, length: {}", imageAnalysisResult.length());
+                logger.info("Image analysis result received: {}", imageAnalysisResult);
 
                 // Step 2: Combine with background and call LLM
-                String formattedOutput = generateFormattedOutput(imageAnalysisResult);
+                String formattedOutput = searchVectorDb(imageAnalysisResult);
                 if (formattedOutput == null || formattedOutput.trim().isEmpty()) {
                     throw new RuntimeException("Failed to generate formatted output");
                 }
@@ -177,6 +185,95 @@ public class ImageAnalysisServlet extends BaseServlet {
                     .msg(msg != null ? msg : "No file uploaded")
                     .build();
             responsePrint(resp, gson.toJson(response)); // Uses inherited method from BaseServlet
+        }
+    }
+
+
+    private String searchVectorDb(String imageAnalysisResult) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<BlockItem> blockItems = objectMapper.readValue(imageAnalysisResult, new TypeReference<List<BlockItem>>() {
+        });
+        sortByBlueMarkedNumber(blockItems);
+        StringBuilder sb = new StringBuilder();
+        for (BlockItem item : blockItems) {
+            String blockDesc = search(item);
+            sb.append(blockDesc);
+        }
+        if (sb.length() == 0) {
+            return null;
+        }
+        return sb.toString();
+    }
+
+    private String search(BlockItem item) {
+        String query = item.getLargestFontText();
+        if (query.trim().isEmpty()) {
+            return "";
+        }
+        String num = item.getBlueMarkedNumber();
+        String category = "lumissil-block";
+        Map<String, String> metadatas = new HashMap<>();
+        metadatas.put("category", category);
+        List<List<IndexSearchData>> searchResults1 = vectorStoreService.search(query.toLowerCase(), 1, 0.5, metadatas, category, 1, 1);
+        List<List<IndexSearchData>> searchResults2 = vectorStoreService.search(query.toUpperCase(), 1, 0.5, metadatas, category, 1, 1);
+        double similarity1 = getMinSimilarity(searchResults1);
+        double similarity2 = getMinSimilarity(searchResults2);
+        List<List<IndexSearchData>> searchResults;
+        if (similarity1 < similarity2)  {
+            searchResults = searchResults1;
+        } else {
+            searchResults = searchResults2;
+        }
+        StringBuilder sb = new StringBuilder(num + ". ");
+        if (!searchResults.isEmpty()) {
+            List<IndexSearchData> firstResult = searchResults.get(0);
+            for (IndexSearchData data : firstResult) {
+                sb.append(data.getText());
+                sb.append("\n");
+            }
+            return sb.toString();
+        }
+        return "";
+    }
+
+    private double getMinSimilarity(List<List<IndexSearchData>> searchResults) {
+        double minSimilarity = 1.0;
+        if (searchResults == null || searchResults.isEmpty()) {
+            return minSimilarity;
+        }
+        for (List<IndexSearchData> result : searchResults) {
+            if (result != null && !result.isEmpty()) {
+                IndexSearchData firstResult = result.get(0);
+                if (firstResult.getDistance() != null && firstResult.getDistance() < minSimilarity) {
+                    minSimilarity = firstResult.getDistance();
+                }
+            }
+        }
+        return minSimilarity;
+    }
+
+    public static void sortByBlueMarkedNumber(List<BlockItem> blockItems) {
+        blockItems.sort((item1, item2) -> {
+            Integer num1 = parseToInteger(item1.getBlueMarkedNumber());
+            Integer num2 = parseToInteger(item2.getBlueMarkedNumber());
+
+            if (num1 == null && num2 == null) return 0;
+            if (num1 == null) return 1;
+            if (num2 == null) return -1;
+
+            return num1.compareTo(num2);
+        });
+    }
+
+    private static Integer parseToInteger(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(str.trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

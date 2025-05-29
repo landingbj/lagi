@@ -1,41 +1,35 @@
 package ai.servlet.api;
 
 import ai.common.pojo.Response;
+import ai.dto.RuleTxtToExcelRecord;
 import ai.servlet.BaseServlet;
+import ai.sevice.RuleTxtToExcelService;
 import com.google.gson.Gson;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class RuleTxtToExcelServlet extends BaseServlet {
     private static final String UPLOAD_DIR = "upload";
     private static final Logger logger = LoggerFactory.getLogger(RuleTxtToExcelServlet.class);
     private final Gson gson = new Gson();
 
-    // 用来存储一条记录
-    static class Record {
-        String rule;
-        String no;
-        String block = "";   // 本例始终空
-        String reason;
-        String decision = ""; // 本例始终空
-    }
+    private final RuleTxtToExcelService ruleTxtToExcelService = new RuleTxtToExcelService();
+
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -104,45 +98,13 @@ public class RuleTxtToExcelServlet extends BaseServlet {
         }
     }
 
+
     private void generateExcel(File txtFile, HttpServletResponse resp) {
         logger.info("Generating Excel for file: {}", txtFile.getName());
         try {
-            List<Record> records = parseFile(txtFile.toPath());
+            List<RuleTxtToExcelRecord> records = ruleTxtToExcelService.parseFile(txtFile.toPath());
 
-            try (Workbook wb = new XSSFWorkbook()) {
-                Sheet sheet = wb.createSheet("规则汇总");
-
-                // 表头
-                String[] headers = {
-                    "Violation Rule", "No.", "Block of Design Rule Violation", "Reason", "Decision"
-                };
-                Row hr = sheet.createRow(0);
-                CellStyle headStyle = wb.createCellStyle();
-                Font font = wb.createFont();
-                font.setBold(true);
-                headStyle.setFont(font);
-                for (int c = 0; c < headers.length; c++) {
-                    Cell cell = hr.createCell(c);
-                    cell.setCellValue(headers[c]);
-                    cell.setCellStyle(headStyle);
-                }
-
-                // 数据行
-                int rowIdx = 1;
-                for (Record r : records) {
-                    Row row = sheet.createRow(rowIdx++);
-                    row.createCell(0).setCellValue(r.rule);
-                    row.createCell(1).setCellValue(r.no);
-                    row.createCell(2).setCellValue(r.block);
-                    row.createCell(3).setCellValue(r.reason);
-                    row.createCell(4).setCellValue(r.decision);
-                }
-
-                // 自动列宽
-                for (int c = 0; c < headers.length; c++) {
-                    sheet.autoSizeColumn(c);
-                }
-
+            try (Workbook wb = ruleTxtToExcelService.generateExcel(records)) {
                 // 设置响应头为 Excel 下载
                 resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 resp.setHeader("Content-Disposition", "attachment; filename=RuleSummary.xlsx");
@@ -163,56 +125,4 @@ public class RuleTxtToExcelServlet extends BaseServlet {
             }
         }
     }
-
-    private  List<Record> parseFile(Path txt) throws IOException {
-        List<String> lines = Files.readAllLines(txt, StandardCharsets.UTF_8);
-        List<Record> result = new ArrayList<>();
-
-        Pattern header = Pattern.compile("^[A-Z0-9._]+$");
-        for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i).trim();
-
-            // 判断是否为规则头
-            if (header.matcher(line).matches()) {
-                String ruleId = line;
-                if (i + 1 >= lines.size()) continue;
-
-                // 读取No.
-                String[] nums = lines.get(i + 1).trim().split("\\s+");
-                int no = Integer.parseInt(nums[0]);
-                if (no == 0) continue;
-
-                Record rec = new Record();
-                rec.rule = ruleId;
-                rec.no = String.valueOf(no);
-
-                // 从第三行开始找“{”
-                i += 2;
-                StringBuilder reason = new StringBuilder();
-                boolean inBlock = false;
-
-                while (i < lines.size()) {
-                    String content = lines.get(i).trim();
-
-                    if (content.contains("{")) {
-                        inBlock = true;
-                        // 提取“@”这一行
-                        int atIndex = content.indexOf('@');
-                        if (atIndex != -1) {
-                            reason.append(content.substring(atIndex + 1).trim()).append(" ");
-                        }
-                    } else if (inBlock && content.equals("}")) {
-                        break;
-                    } else if (inBlock) {
-                        reason.append(content).append(" ");
-                    }
-                    i++;
-                }
-                rec.reason = reason.toString().trim();
-                result.add(rec);
-            }
-        }
-        return result;
-    }
-
 }

@@ -1,13 +1,20 @@
 package ai.servlet.api;
 
+import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Response;
+import ai.dto.RuleTxt;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
+import ai.utils.JsonExtractor;
 import ai.utils.MigrateGlobal;
 import ai.vector.FileService;
+import ai.vector.VectorStoreService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +26,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DxImageAnalysisServlet extends BaseServlet {
     private static final String UPLOAD_DIR = "/upload";
@@ -31,6 +37,7 @@ public class DxImageAnalysisServlet extends BaseServlet {
     private final FileService fileService = new FileService();
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
+    private final VectorStoreService vectorStoreService = new VectorStoreService();
 
     private static final String BACKGROUND_INFO = "ID Diagnosis\tShort description of diagnostic procedure\tDetailed description of diagnostic procedure\tDetection and reaction time\tReaction in case diagnostics detects a fail\t\"Covers transient faults\n" +
             "(Yes / No / Partly)\n" +
@@ -184,13 +191,16 @@ public class DxImageAnalysisServlet extends BaseServlet {
 
                 // Step 2: Call visual model to analyze the image
                 String imageAnalysisResult = analyzeImageWithVisionModel(imageUrl);
-                if (imageAnalysisResult == null || imageAnalysisResult.trim().isEmpty()) {
+                List<String> jsonList = JsonExtractor.extractJsonArrayString(imageAnalysisResult);
+                if (jsonList.isEmpty() || imageAnalysisResult == null || imageAnalysisResult.trim().isEmpty()) {
                     throw new RuntimeException("Failed to analyze image with vision model");
                 }
-                logger.info("Image analysis result received, length: {}", imageAnalysisResult.length());
+                String json = jsonList.get(0);
+                logger.info("Image analysis result received, size: {}", jsonList.size());
+                logger.info("Image analysis json received: {}", json);
 
                 // Step 3: Generate formatted output using language model
-                String formattedOutput = generateFormattedOutput(imageAnalysisResult);
+                String formattedOutput = searchVectorDb(json);
                 if (formattedOutput == null || formattedOutput.trim().isEmpty()) {
                     throw new RuntimeException("Failed to generate formatted output");
                 }
@@ -272,6 +282,8 @@ public class DxImageAnalysisServlet extends BaseServlet {
         // 生成公开 URL
         String relativePath = UPLOAD_DIR + VLIMG_SUBDIR + "/" + uniqueName;
         String imageUrl = BASE_URL + relativePath;
+//        imageUrl = "https://lumissil.saasai.top/upload/vlimg/1bff935a-83c6-4313-aad8-b2a71bf36173.png";
+//        imageUrl = "https://lumissil.saasai.top/upload/vlimg/b4515d9a-41ec-4284-b095-b1582846c1be.png";
         logger.debug("Generated image URL: {}", imageUrl);
 
         // Store destFile for cleanup
@@ -405,6 +417,54 @@ public class DxImageAnalysisServlet extends BaseServlet {
         }
     }
 
+    private String searchVectorDb(String imageAnalysisResult) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<RuleTxt> ruleTxtList = objectMapper.readValue(imageAnalysisResult, new TypeReference<List<RuleTxt>>() {
+        });
+        StringBuilder sb = new StringBuilder();
+        List<String> texts = new ArrayList<>();
+        for (RuleTxt item : ruleTxtList) {
+            String ruleDesc = search(item);
+            texts.add(ruleDesc);
+        }
+        texts= texts.stream()
+                .filter(Objects::nonNull)
+                .filter(s -> !s.trim().isEmpty())
+                .sorted()
+                .distinct()
+                .collect(Collectors.toList());
+        for (String text : texts) {
+            sb.append(text);
+        }
+        if (sb.length() == 0) {
+            return null;
+        }
+        return sb.toString();
+    }
+
+    private String search(RuleTxt ruleTxt) {
+        String query = ruleTxt.getDescription();
+        if (query.trim().isEmpty()) {
+            return "";
+        }
+        String category = "lumissil-dx";
+        Map<String, String> metadatas = new HashMap<>();
+        metadatas.put("category", category);
+        List<List<IndexSearchData>> searchResults = vectorStoreService.search(query, 1, 0.5, metadatas, category, 1, 1);
+        StringBuilder sb = new StringBuilder();
+        if (!searchResults.isEmpty()) {
+            List<IndexSearchData> firstResult = searchResults.get(0);
+            if (firstResult.size() != 3) {
+                return "";
+            }
+            sb.append(ruleTxt.getId()).append(" ")
+                    .append(firstResult.get(1).getText()).append("\n")
+                    .append(firstResult.get(2).getText()).append("\n\n");
+            return sb.toString();
+        }
+        return "";
+    }
+
     private String generateFormattedOutput(String imageAnalysisResult) {
         logger.info("Generating formatted output with image analysis result");
 
@@ -448,17 +508,33 @@ public class DxImageAnalysisServlet extends BaseServlet {
             this.prompt = prompt;
         }
 
-        public String getImage_url() { return image_url; }
-        public void setImage_url(String image_url) { this.image_url = image_url; }
-        public String getPrompt() { return prompt; }
-        public void setPrompt(String prompt) { this.prompt = prompt; }
+        public String getImage_url() {
+            return image_url;
+        }
+
+        public void setImage_url(String image_url) {
+            this.image_url = image_url;
+        }
+
+        public String getPrompt() {
+            return prompt;
+        }
+
+        public void setPrompt(String prompt) {
+            this.prompt = prompt;
+        }
     }
 
     // Response class for vision model
     private static class VisionResponse {
         private String result;
 
-        public String getResult() { return result; }
-        public void setResult(String result) { this.result = result; }
+        public String getResult() {
+            return result;
+        }
+
+        public void setResult(String result) {
+            this.result = result;
+        }
     }
 }

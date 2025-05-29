@@ -6,6 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JsonExtractor {
+    private static final Pattern arrayPattern = Pattern.compile("\\[(?:[^\\[\\]]|(?:\\[[^\\[\\]]*\\]))*\\]");
+
     /**
      * Extracts JSON strings from a given input string.
      * This method looks for content that appears to be valid JSON objects or arrays.
@@ -28,8 +30,17 @@ public class JsonExtractor {
             jsonStrings.add(objectMatcher.group());
         }
 
+        return jsonStrings;
+    }
+
+    public static List<String> extractJsonArrayString(String input) {
+        if (input == null || input.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> jsonStrings = new ArrayList<>();
+
         // Pattern to find JSON arrays (starting with [ and ending with ])
-        Pattern arrayPattern = Pattern.compile("\\[(?:[^\\[\\]]|(?:\\[[^\\[\\]]*\\]))*\\]");
         Matcher arrayMatcher = arrayPattern.matcher(input);
 
         while (arrayMatcher.find()) {
