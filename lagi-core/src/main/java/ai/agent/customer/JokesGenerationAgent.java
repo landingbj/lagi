@@ -5,6 +5,7 @@ import ai.agent.customer.tools.JokesGenerationTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class JokesGenerationAgent extends CustomerAgent {
     public JokesGenerationAgent(AgentConfig agentConfig) {
         super(agentConfig);

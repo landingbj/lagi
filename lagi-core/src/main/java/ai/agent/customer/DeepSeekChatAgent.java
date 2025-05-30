@@ -5,6 +5,7 @@ import ai.agent.customer.tools.DeepSeekChatTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class DeepSeekChatAgent extends CustomerAgent {
     public DeepSeekChatAgent(AgentConfig agentConfig) {
         super(agentConfig);

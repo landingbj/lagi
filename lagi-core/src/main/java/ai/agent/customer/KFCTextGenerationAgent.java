@@ -5,6 +5,7 @@ import ai.agent.customer.tools.KFCTextGenerationTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class KFCTextGenerationAgent extends CustomerAgent {
     public KFCTextGenerationAgent(AgentConfig agentConfig) {
         super(agentConfig);

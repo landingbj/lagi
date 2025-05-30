@@ -5,6 +5,7 @@ import ai.agent.customer.tools.SparkDialogTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class SparkDialogAgent extends CustomerAgent {
 
     public SparkDialogAgent(AgentConfig agentConfig) {

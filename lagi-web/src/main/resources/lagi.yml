@@ -393,314 +393,225 @@ agents:
     api_key: your-api-key
     driver: ai.agent.social.DingAgent
 
-  # Agent for CITIC Bank customer service, handling user queries and service requests.
-  - id: -1
-    name: citic
-    wrong_case: /u5c0f/u4fe1/u6700/u8fd1/u5b66/u4e60/u4e86
-    driver: ai.agent.chat.qianfan.XiaoxinAgent
-    token: your-token
-
-  # Agent for stock queries, providing stock market information, analysis, and related services.
-  - id: -2
-    name: stock
-    wrong_case: /u62b1/u6b49
-    driver: ai.agent.chat.coze.CozeAgent
-    token: your-token
-    app_id: your-app-id
-
-  # Agent for exchange rate queries, providing real-time exchange rates for major global currencies.
-  - id: -3
-    name: exchangeRate
-    wrong_case: /u62b1/u6b49
-    driver: ai.agent.chat.coze.CozeAgent
-    token: your-token
-    app_id: your-app-id
-
-  # Agent for answering general questions
-  - id: -4
-    name: knowledge
-    driver: ai.agent.chat.rag.RagAgent
-    endpoint: http://127.0.0.1:8080
-
-  # Agent for Baidu Wenxin Yiyan, supporting Chinese text generation and natural language understanding.
-  - id: -5
-    name: yiYan
-    driver: ai.agent.chat.wenxin.BaiduAgent
-    app_id: your-app-id
-    api_key: your-api-key
-
   # Agent for Tencent YuanQi, providing automated support for Tencent-related products and services.
-  - id: -6
+  - id: 1010106
     name: yuanQi
     driver: ai.agent.chat.tencent.YuanQiAgent
     app_id: your-app-id
     api_key: your-api-key
 
-  # Agent for Xiaohongshu (Little Red Book) platform, providing user content recommendations, search, and interaction.
-  - id: -7
-    name: xiaohongshu
-    driver: ai.agent.chat.zhipu.ZhipuAgent
-    token: your-token
-    app_id: your-app-id
-
-  # Agent for weather queries, helping users obtain real-time weather information and forecasts.
-  - id: -8
+  # Agent for weather, helping users query the weather, temperature, and humidity
+  - id: 1010108
     name: weather
     driver: ai.agent.customer.WeatherAgent
     token: your-token
     app_id: weather_agent
 
-  # Agent for oil price queries, providing real-time oil price information and helping users track price fluctuations.
-  - id: -9
+  # Agent for oil，helping users check car oil prices.
+  - id: 1010109
     name: oil
     driver: ai.agent.customer.OilPriceAgent
     token: your-token
     app_id: oil_price_agent
 
-  # Agent for Body Mass Index (BMI) calculations and health management, helping users assess their weight health status.
-  - id: -10
-    name: bmi
-    driver: ai.agent.customer.BmiAgent
-    token: your-token
-    app_id: bmi_agent
-
-  # Agent for food calorie queries, helping users understand the calorie content of different foods.
-  - id: -11
-    name: calorie
-    driver: ai.agent.customer.FoodCalorieAgent
-    token: your-token
-    app_id: food_calorie_agent
-
-  # Agent for querying dishonest persons, helping users access information about people listed as untrustworthy.
-  - id: -12
+  # Agent for dishonest, helping users query information about dishonest persons subject to enforcement.
+  - id: 1010112
     name: dishonest
     driver: ai.agent.customer.DishonestPersonSearchAgent
     token: your-token
     app_id: dishonest_person_search_agent
 
   # Agent for high-speed train ticket queries, providing services to help users quickly find train ticket information.
-  - id: -13
+  - id: 1010113
     name: ticket
     driver: ai.agent.customer.HighSpeedTicketAgent
     app_id: high_speed_ticket_agent
 
-  # Agent for querying "On This Day in History," providing users with important historical events that happened on each day.
-  - id: -14
+  # Agent for history, helping users query events that happened on this day in history.
+  - id: 1010114
     name: history
     driver: ai.agent.customer.HistoryInToDayAgent
     app_id: history_in_today_agent
 
   # Agent for Youdao translation services, supporting translation between multiple languages.
-  - id: -15
+  - id: 1010115
     name: youdao
     driver: ai.agent.customer.YouDaoAgent
     app_id: your-app-id
     token: your-token
 
-  # Agent for generating images
-  - id: -16
+  # Agent for image, helping users meet the needs of image generation such as painting, drawing and generating pictures according to their requirements.
+  - id: 1010116
     name: image
     driver: ai.agent.customer.ImageGenAgent
-    app_id: 5fb446dfb4250d0e
     endpoint: https://lagi.saasai.top/image/generateImage
     token: image_gen_agent
 
-  # This is a Crazy Thursday (KFC) copywriting agent that can help you generate Crazy Thursday copy.
-  - id: -17
-    name: KFC_text_generate
-    driver: ai.agent.customer.KFCTextGenerationAgent
-    app_id: KFC_text_generate
   #This is an agent that looks up the attribution of an IP address, you just need to tell me the IP address and I can tell you where it belongs.
-  - id: -18
+  - id: 1010118
     name: ip_address_lookup_agent
     driver: ai.agent.customer.IPAddressLookupAgent
     app_id: ip_address_lookup_agent
-  #This is a tool that generates anime pictures, and you can call this tool to generate anime pictures
-  - id: -19
-    name: anime_pictures
-    driver: ai.agent.customer.AnimePicturesAgent
-    app_id: anime_pictures
+
   #This is a tool to check today's horoscope according to your horoscope, you just need to tell me your horoscope and I can tell you today's horoscope.
-  - id: -20
+  - id: 1010120
     name: constellation_luck
     driver: ai.agent.customer.ConstellationLuckAgent
     app_id: constellation_luck
+
   #It's a Sogou image search tool that can help you search for an image online based on your keywords
-  - id: -21
+  - id: 1010121
     name: sogou_search_pictures
     driver: ai.agent.customer.SogouSearchPicturesAgent
     app_id: sogou_search_pictures
+
   #This is an avatar generation tool, and you can call this tool to generate an avatar
-  - id: -22
+  - id: 1010122
     name: belle_pictures
-    driver: ai.agent.customer.AnimePicturesAgent
+    driver: ai.agent.customer.BellePicturesAgent
     app_id: belle_pictures
+    endpoint: https://lagi.saasai.top/image/generateImage
+
   #This is a Baidu search tool that can help you search for some images online based on your keywords
-  - id: -23
+  - id: 1010123
     name: baidu_search_pictures
     driver: ai.agent.customer.BaiduSearchPicturesAgent
     app_id: baidu_search_pictures
+
   #This is a tool that can help you get the gold price today
-  - id: -24
+  - id: 1010124
     name: gold_today
     driver: ai.agent.customer.GoldTodayAgent
     app_id: gold_today
-  #This is a joke generation tool, and you can call this tool to generate jokes
-  - id: -25
-    name: jokes_generation
-    driver: ai.agent.customer.JokesGenerationAgent
-    app_id: jokes_generation
+
   # Agent for meal suggestions, helping users choose between different meal options.
-  - id: -26
+  - id: 1010126
     name: meal_suggestion
     driver: ai.agent.customer.MealSuggestionAgent
     app_id: meal_suggestion
+    token: your-token
+
   # Agent for countdown day information, helping users know upcoming countdown events.
-  - id: -27
+  - id: 1010127
     name: countdown_day
     driver: ai.agent.customer.CountdownDayAgent
     app_id: countdown_day
+
   # Agent for city travel route information, helping users find travel routes, distances, fuel consumption, toll fees, etc.
-  - id: -28
+  - id: 1010128
     name: city_travel_route
     driver: ai.agent.customer.CityTravelRouteAgent
     app_id: city_travel_route
+
   # Agent for querying car details, including price, configuration, and cover image.
-  - id: -29
+  - id: 1010129
     name: car_query
     driver: ai.agent.customer.CarQueryAgent
     app_id: car_query
-  # Agent for querying surname ranking in the Hundred Family Surnames
-  - id: -30
-    name: surname_rank
-    driver: ai.agent.customer.SurnameRankAgent
-    app_id: surname_rank
+
   # Agent for calculating investment income
-  - id: -31
+  - id: 1010131
     name: investment_income
     driver: ai.agent.customer.InvestmentIncomeAgent
     app_id: investment_income
+
   # Agent for driving license question search
-  - id: -32
+  - id: 1010132
     name: driving_license_search
     driver: ai.agent.customer.DrivingLicenseSearchAgent
     app_id: driving_license_search
+
   # Agent for blood type prediction, helping users calculate the possible blood type of their child.
-  - id: -33
+  - id: 1010133
     name: blood_type_calculation
     driver: ai.agent.customer.BloodTypeCalculationAgent
     app_id: blood_type_calculation
+
   # Agent for Bing search, helping users search content via Bing.
-  - id: -34
+  - id: 1010134
     name: bing_search
     driver: ai.agent.customer.BingSearchAgent
     app_id: bing_search
+
   # Agent for lottery results, fetching lottery data based on type and number of days.
-  - id: -35
+  - id: 1010135
     name: lottery_results
     driver: ai.agent.customer.LotteryResultsAgent
     app_id: lottery_results
-  # Agent for text correction, fixing spelling and grammar mistakes in the input text.
-  - id: -36
-    name: text_corrector
-    driver: ai.agent.customer.TextCorrectorAgent
-    app_id: text_corrector
-  # Agent for text difference comparison, detecting missing and added parts between two texts.
-  - id: -37
-    name: text_difference
-    driver: ai.agent.customer.TextDifferenceAgent
-    app_id: text_difference
+
   # Agent for searching places based on location name, returning basic information about related places.
-  - id: -38
+  - id: 1010138
     name: place_search
     driver: ai.agent.customer.PlaceSearchAgent
     app_id: place_search
+
   # Agent for querying chip parameters, based on chip keyword or chip ID.
-  - id: -39
+  - id: 1010139
     name: chip_query
     driver: ai.agent.customer.ChipQueryAgent
     app_id: chip_query
-  # Agent for Spark Lite 1.5 dialogue model, helping users with basic inquiries.
-  - id: -40
-    name: spark_dialog
-    driver: ai.agent.customer.SparkDialogAgent
-    app_id: spark_dialog
+
   # Agent for fetching daily hot news, helping users retrieve trending news articles.
-  - id: -41
+  - id: 1010141
     name: hot_news
     driver: ai.agent.customer.HotNewsAgent
     app_id: hot_news
-  # Article rewriting tool for generating similar paragraphs based on the input content
-  - id: -42
-    name: article_rewrite
-    driver: ai.agent.customer.ArticleRewriteAgent
-    app_id: article_rewrite
+
   # Recipe query tool for fetching recipe details including description, ingredients, and instructions
-  - id: -43
+  - id: 1010143
     name: recipe_query
     driver: ai.agent.customer.RecipeQueryAgent
     app_id: recipe_query
-  # Answer book tool for providing answers based on a given question.
-  - id: -44
-    name: answer_book
-    driver: ai.agent.customer.AnswerBookAgent
-    app_id: answer_book
+
   # Website ping tool to measure the latency to a specific website.
-  - id: -45
+  - id: 1010145
     name: website_ping
     driver: ai.agent.customer.WebsitePingAgent
     app_id: website_ping
-  # Conversion tool for simplified and traditional Chinese text conversion.
-  - id: -46
-    name: text_conversion
-    driver: ai.agent.customer.TextConversionAgent
-    app_id: text_conversion
+
   # Human population data retrieval tool.
-  - id: -47
+  - id: 1010147
     name: population_data
     driver: ai.agent.customer.PopulationDataAgent
     app_id: population_data
+
   # Mean search tool to find quotes or famous sayings based on a given meaning.
-  - id: -48
+  - id: 1010148
     name: meaning_search
     driver: ai.agent.customer.MeaningSearchAgent
     app_id: meaning_search
-  # Agent for DeepSeekChat, providing intelligent Q&A through the DeepSeekChat API.
-  - id: -49
-    name: deepseek_chat
-    driver: ai.agent.customer.DeepSeekChatAgent
-    token: your-token
-    app_id: deepseek_chat_agent
+
   # Agent for trademark keyword information query, including registration info, application date, agent, status, etc.
-  - id: -50
+  - id: 1010150
     name: trademark_info
     driver: ai.agent.customer.TrademarkInfoAgent
     app_id: trademark_info
+
   # Agent for movie box office, showing the real-time box office data.
-  - id: -51
+  - id: 1010151
     name: movie_box_office
     driver: ai.agent.customer.MovieBoxOfficeAgent
     app_id: movie_box_office
-  # Agent for historical figure information retrieval, providing details of historical figures.
-  - id: -52
-    name: historical_figure_info
-    driver: ai.agent.customer.HistoricalFigureInfoAgent
-    app_id: historical_figure_info
+
   # Agent for daily rumor refutation content, helping users access the latest rumors debunked.
-  - id: -53
+  - id: 1010153
     name: daily_rumor_refutation
     driver: ai.agent.customer.DailyRumorRefutationAgent
     app_id: daily_rumor_refutation
+    token: your-token
+
   # Agent for Google Translate, enabling users to translate text between English and Chinese.
-  - id: -54
+  - id: 1010154
     name: google_translate
     driver: ai.agent.customer.GoogleTranslateAgent
     app_id: google_translate
-  # Agent for Spring Festival Couplet Generation
-  - id: -55
-    name: couplet_generation
-    driver: ai.agent.customer.CoupletGenerationAgent
-    app_id: couplet_generation
+
+  # This is a tool configuration class that queries through text_to_sql_search.
+  - id: 1010188
+    name: text_to_sql_search
+    driver: ai.agent.customer.TextToSqlSearchAgent
+    app_id: text_to_sql_search
+
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.

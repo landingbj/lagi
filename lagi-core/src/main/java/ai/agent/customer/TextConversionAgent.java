@@ -5,6 +5,7 @@ import ai.agent.customer.tools.TextConversionTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class TextConversionAgent extends CustomerAgent {
     public TextConversionAgent(AgentConfig agentConfig) {
         super(agentConfig);

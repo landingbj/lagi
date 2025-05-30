@@ -5,6 +5,7 @@ import ai.agent.customer.tools.HistoricalFigureInfoTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class HistoricalFigureInfoAgent extends CustomerAgent {
     public HistoricalFigureInfoAgent(AgentConfig agentConfig) {
         super(agentConfig);

@@ -5,6 +5,7 @@ import ai.agent.customer.tools.AnswerBookTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class AnswerBookAgent extends CustomerAgent {
     public AnswerBookAgent(AgentConfig agentConfig) {
         super(agentConfig);

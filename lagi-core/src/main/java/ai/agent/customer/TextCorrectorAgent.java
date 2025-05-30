@@ -5,6 +5,7 @@ import ai.agent.customer.tools.FinishTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class TextCorrectorAgent extends CustomerAgent {
 
     public TextCorrectorAgent(AgentConfig agentConfig) {

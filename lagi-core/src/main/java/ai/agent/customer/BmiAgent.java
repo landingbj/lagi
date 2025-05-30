@@ -5,6 +5,7 @@ import ai.agent.customer.tools.FinishTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class BmiAgent extends CustomerAgent {
     public BmiAgent(AgentConfig agentConfig) {
         super(agentConfig);

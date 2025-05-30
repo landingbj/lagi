@@ -5,6 +5,7 @@ import ai.agent.customer.tools.FoodCalorieTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class FoodCalorieAgent extends CustomerAgent {
     public FoodCalorieAgent(AgentConfig agentConfig) {
         super(agentConfig);

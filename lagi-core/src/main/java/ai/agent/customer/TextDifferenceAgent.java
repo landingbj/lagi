@@ -5,6 +5,7 @@ import ai.agent.customer.tools.FinishTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class TextDifferenceAgent extends CustomerAgent {
 
     public TextDifferenceAgent(AgentConfig agentConfig) {

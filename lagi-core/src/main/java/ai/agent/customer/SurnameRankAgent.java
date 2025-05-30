@@ -5,6 +5,7 @@ import ai.agent.customer.tools.SurnameRankTool;
 import ai.config.pojo.AgentConfig;
 import com.google.common.collect.Lists;
 
+@Deprecated
 public class SurnameRankAgent extends CustomerAgent {
 
     public SurnameRankAgent(AgentConfig agentConfig) {
