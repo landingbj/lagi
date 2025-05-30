@@ -58,7 +58,7 @@ public class RuleTxtToExcelServlet extends BaseServlet {
         DiskFileItemFactory factory = new DiskFileItemFactory();
         factory.setRepository(uploadPath.toFile());
         ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setSizeMax(200 * 1024 * 1024); // 200MB 限制
+        upload.setSizeMax(500 * 1024 * 1024);
 
         File txtFile = null;
 
