@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 public class WeatherAgent extends CustomerAgent {
     public WeatherAgent(AgentConfig agentConfig) {
         super(agentConfig);
-        WeatherSearchTool weatherSearchTool = new WeatherSearchTool(agentConfig.getToken());
+        WeatherSearchTool weatherSearchTool = new WeatherSearchTool(agentConfig.getEndpoint(), agentConfig.getToken());
         FinishTool finishTool = new FinishTool();
         this.toolInfoList = Lists.newArrayList(weatherSearchTool.getToolInfo(),
                 finishTool.getToolInfo());

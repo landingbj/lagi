@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class OilPriceSearchTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.istero.com/resource/oilprice";
+    // limit 20 times/day
+    private static final String API_ADDRESS = "https://api.istero.com/resource/v1/oilprice";
     private String token = "";
 
     public OilPriceSearchTool() {

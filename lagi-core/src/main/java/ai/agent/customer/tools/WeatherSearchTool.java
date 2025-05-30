@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class WeatherSearchTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.istero.com/resource/weather/query";
+    private String API_ADDRESS = "https://api.istero.com/resource/v1/weather/query";
     private String token = "";
 
     public WeatherSearchTool() {
@@ -33,8 +33,11 @@ public class WeatherSearchTool extends AbstractTool {
         register(this);
     }
 
-    public WeatherSearchTool(String token) {
+    public WeatherSearchTool(String endPoint, String token) {
         this.token = token;
+        if(StrUtil.isNotBlank(endPoint)) {
+            API_ADDRESS = endPoint;
+        }
         init();
     }
 
@@ -64,7 +67,7 @@ public class WeatherSearchTool extends AbstractTool {
 
     public static void main(String[] args) {
         String token = "xxxx";
-        WeatherSearchTool weatherSearchTool = new WeatherSearchTool(token);
+        WeatherSearchTool weatherSearchTool = new WeatherSearchTool("", token);
         String result = weatherSearchTool.search("北京");
         System.out.println(result);
     }

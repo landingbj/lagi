@@ -129,36 +129,36 @@ let promptNavs = [
         icon: 'intelligentAgent',
         title: '智能体',
         subNavs: [
-            {
-                "id": 1010102,
-                "agentId": "stock",
-                "title": "股票助手",
-                "templateIssues": "今天的股市行情如何?"
-            },
+            // {
+            //     "id": 1010102,
+            //     "agentId": "stock",
+            //     "title": "股票助手",
+            //     "templateIssues": "今天的股市行情如何?"
+            // },
             {
                 "id": 1010103,
                 "agentId": "exchangeRate",
                 "title": "汇率助手",
                 "templateIssues": "当前美元对人民币汇率是多少?"
             },
-            {
-                "id": 1010105,
-                "agentId": "yiYan",
-                "title": "文心助手",
-                "templateIssues": "请帮我写一篇关于科技创新的文章"
-            },
+            // {
+            //     "id": 1010105,
+            //     "agentId": "yiYan",
+            //     "title": "文心助手",
+            //     "templateIssues": "请帮我写一篇关于科技创新的文章"
+            // },
             {
                 "id": 1010106,
                 "agentId": "yuanQi",
                 "title": "元器助手",
                 "templateIssues": "Dota2推荐一个适合新手玩的英雄"
             },
-            {
-                "id": 1010107,
-                "agentId": "xiaohongshu",
-                "title": "红书优选",
-                "templateIssues": "帮我为 女式瑜伽裤 写一份营销文案"
-            },
+            // {
+            //     "id": 1010107,
+            //     "agentId": "xiaohongshu",
+            //     "title": "红书优选",
+            //     "templateIssues": "帮我为 女式瑜伽裤 写一份营销文案"
+            // },
             {
                 "id": 1010108,
                 "agentId": "weather",
@@ -171,18 +171,18 @@ let promptNavs = [
                 "title": "油价助手",
                 "templateIssues": "今天的北京油价是多少?"
             },
-            {
-                "id": 1010110,
-                "agentId": "bmi",
-                "title": "体重指数",
-                "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
-            },
-            {
-                "id": 1010111,
-                "agentId": "calorie",
-                "title": "健康饮食",
-                "templateIssues": "一份鸡胸肉的卡路里是多少?"
-            },
+            // {
+            //     "id": 1010110,
+            //     "agentId": "bmi",
+            //     "title": "体重指数",
+            //     "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
+            // },
+            // {
+            //     "id": 1010111,
+            //     "agentId": "calorie",
+            //     "title": "健康饮食",
+            //     "templateIssues": "一份鸡胸肉的卡路里是多少?"
+            // },
             {
                 "id": 1010112,
                 "agentId": "dishonest",
@@ -213,24 +213,24 @@ let promptNavs = [
                 "title": "图像生成",
                 "templateIssues": "帮我生成一副海滩风景"
             },
-            {
-                "id": 1010117,
-                "agentId": "KFC_text_generate",
-                "title": "疯狂星期",
-                "templateIssues": "帮我生成一个疯狂星期四的文案"
-            },
+            // {
+            //     "id": 1010117,
+            //     "agentId": "KFC_text_generate",
+            //     "title": "疯狂星期",
+            //     "templateIssues": "帮我生成一个疯狂星期四的文案"
+            // },
             {
                 "id": 1010118,
                 "agentId": "ip_address_lookup_agent",
                 "title": "ip查询",
                 "templateIssues": "帮我查一下ip为127.0.0.1的归属地在那"
             },
-            {
-                "id": 1010119,
-                "agentId": "anime_pictures",
-                "title": "动漫图片",
-                "templateIssues": "帮我搜索一张动漫图片"
-            },
+            // {
+            //     "id": 1010119,
+            //     "agentId": "anime_pictures",
+            //     "title": "动漫图片",
+            //     "templateIssues": "帮我搜索一张动漫图片"
+            // },
             {
                 "id": 1010120,
                 "agentId": "constellation_luck",
@@ -261,12 +261,12 @@ let promptNavs = [
                 "title": "今日金价",
                 "templateIssues": "今天国内金价是多少"
             },
-            {
-                "id": 1010125,
-                "agentId": "jokes_generation",
-                "title": "段子生成",
-                "templateIssues": "帮我生成一篇段子"
-            },
+            // {
+            //     "id": 1010125,
+            //     "agentId": "jokes_generation",
+            //     "title": "段子生成",
+            //     "templateIssues": "帮我生成一篇段子"
+            // },
             {
                 "id": 1010126,
                 "agentId": "meal_suggestion",
@@ -291,12 +291,12 @@ let promptNavs = [
                 "title": "查询车辆",
                 "templateIssues": "帮我查询小米SU7的车况信息"
             },
-            {
-                "id": 1010130,
-                "agentId": "surname_rank",
-                "title": "姓氏排名",
-                "templateIssues": "王姓在百家姓中的排名是多少？"
-            },
+            // {
+            //     "id": 1010130,
+            //     "agentId": "surname_rank",
+            //     "title": "姓氏排名",
+            //     "templateIssues": "王姓在百家姓中的排名是多少？"
+            // },
             {
                 "id": 1010131,
                 "agentId": "investment_income",
@@ -327,18 +327,18 @@ let promptNavs = [
                 "title": "彩票查询",
                 "templateIssues": "查询双色球最近的开奖信息"
             },
-            {
-                "id": 1010136,
-                "agentId": "text_corrector",
-                "title": "文本纠错",
-                "templateIssues": "帮我检查并纠正以下文本：我一经吃了很多药了，可是病还不好"
-            },
-            {
-                "id": 1010137,
-                "agentId": "text_difference",
-                "title": "文本对比",
-                "templateIssues": "帮我比较两个文本的差异：奔赴新的远征 vs 我愿意开启新的征程"
-            },
+            // {
+            //     "id": 1010136,
+            //     "agentId": "text_corrector",
+            //     "title": "文本纠错",
+            //     "templateIssues": "帮我检查并纠正以下文本：我一经吃了很多药了，可是病还不好"
+            // },
+            // {
+            //     "id": 1010137,
+            //     "agentId": "text_difference",
+            //     "title": "文本对比",
+            //     "templateIssues": "帮我比较两个文本的差异：奔赴新的远征 vs 我愿意开启新的征程"
+            // },
             {
                 "id": 1010138,
                 "agentId": "place_search",
@@ -351,66 +351,66 @@ let promptNavs = [
                 "title": "芯片查询",
                 "templateIssues": "查询ESP8266的芯片参数有哪些？"
             },
-            {
-                "id": 1010140,
-                "agentId": "spark_dialog",
-                "title": "星火助手",
-                "templateIssues": "你好，能帮我做些什么？"
-            },
+            // {
+            //     "id": 1010140,
+            //     "agentId": "spark_dialog",
+            //     "title": "星火助手",
+            //     "templateIssues": "你好，能帮我做些什么？"
+            // },
             {
                 "id": 1010141,
                 "agentId": "hot_news",
                 "title": "热点新闻",
                 "templateIssues": "今天的热点新闻有哪些？"
             },
-            {
-                "id": 1010142,
-                "agentId": "article_rewrite",
-                "title": "文章续写",
-                "templateIssues": "帮我续写这段文字：我爱你"
-            },
+            // {
+            //     "id": 1010142,
+            //     "agentId": "article_rewrite",
+            //     "title": "文章续写",
+            //     "templateIssues": "帮我续写这段文字：我爱你"
+            // },
             {
                 "id": 1010143,
                 "agentId": "recipe_query",
                 "title": "菜谱查询",
                 "templateIssues": "帮我查询家常红烧鱼块的菜谱"
             },
-            {
-                "id": 1010144,
-                "agentId": "answer_book",
-                "title": "答案之书",
-                "templateIssues": "我现在应该去钓鱼吗？"
-            },
+            // {
+            //     "id": 1010144,
+            //     "agentId": "answer_book",
+            //     "title": "答案之书",
+            //     "templateIssues": "我现在应该去钓鱼吗？"
+            // },
             {
                 "id": 1010145,
                 "agentId": "website_ping",
                 "title": "测速工具",
                 "templateIssues": "测试百度的Ping延迟"
             },
-            {
-                "id": 1010146,
-                "agentId": "text_conversion",
-                "title": "文本转换",
-                "templateIssues": "将`随机繁体测试内容`转为繁体"
-            },
+            // {
+            //     "id": 1010146,
+            //     "agentId": "text_conversion",
+            //     "title": "文本转换",
+            //     "templateIssues": "将`随机繁体测试内容`转为繁体"
+            // },
             {
                 "id": 1010147,
                 "agentId": "population_data",
                 "title": "人口数据",
                 "templateIssues": "最新的世界人口数量是多少？"
             },
-            {
-                "id": 1010148,
-                "agentId": "meaning_search",
-                "title": "诗词名言",
-                "templateIssues": "如何树立远大志向？"
-            },
-            {
-                "id": 1010149,
-                "agentId": "deepseek_chat",
-                "title": "深度问答",
-                "templateIssues": "你好啊？"
-            },
+            // {
+            //     "id": 1010148,
+            //     "agentId": "meaning_search",
+            //     "title": "诗词名言",
+            //     "templateIssues": "如何树立远大志向？"
+            // },
+            // {
+            //     "id": 1010149,
+            //     "agentId": "deepseek_chat",
+            //     "title": "深度问答",
+            //     "templateIssues": "你好啊？"
+            // },
             {
                 "id": 1010150,
                 "agentId": "trademark_info",
@@ -441,12 +441,12 @@ let promptNavs = [
                 "title": "谷歌翻译",
                 "templateIssues": "帮我把HelloWorld翻译成中文"
             },
-            {
-                "id": 1010155,
-                "agentId": "couplet_generation",
-                "title": "对联生成",
-                "templateIssues": "天增岁月人增寿,帮我生成下联"
-            }
+            // {
+            //     "id": 1010155,
+            //     "agentId": "couplet_generation",
+            //     "title": "对联生成",
+            //     "templateIssues": "天增岁月人增寿,帮我生成下联"
+            // }
         ]
     },
     {

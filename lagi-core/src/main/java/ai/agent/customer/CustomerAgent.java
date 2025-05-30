@@ -109,6 +109,9 @@ public class CustomerAgent extends Agent<ChatCompletionRequest, ChatCompletionRe
                 continue;
             }
             Action action = responseTemplate.getAction();
+            if(action == null) {
+                continue;
+            }
             if ("finish".equals(action.getName())) {
                 finalAnswer = (String) action.getArgs().get("result").toString();
                 imageUrl = (List<String>) action.getArgs().get("imageUrl");
