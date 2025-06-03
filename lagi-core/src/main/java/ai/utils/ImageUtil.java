@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Decoder;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -89,5 +91,38 @@ public class ImageUtil {
     }
 
 
+    public static BufferedImage keepRedChannel(BufferedImage src) {
+        int width = src.getWidth();
+        int height = src.getHeight();
+        BufferedImage dest = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int argb = src.getRGB(x, y);
+                int r = (argb >> 16) & 0xFF;
+                int g = (argb >> 8) & 0xFF;
+                int b = argb & 0xFF;
+                if (r > g && r > b && r > 100) {
+                    dest.setRGB(x, y, argb);
+                } else {
+                    dest.setRGB(x, y, 0xFFFFFFFF);
+                }
+            }
+        }
+        return dest;
+    }
+
+    public static void main(String[] args) {
+        try {
+            File inputFile = new File("E:\\Desktop\\络明芯规则\\bd_1.png");
+            BufferedImage inputImage = ImageIO.read(inputFile);
+
+            BufferedImage outputImage = keepRedChannel(inputImage);
+
+            File outputFile = new File("output_keep_red.png");
+            ImageIO.write(outputImage, "png", outputFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
