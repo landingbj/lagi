@@ -7,4 +7,6 @@ public interface IOcr {
     String recognize(BufferedImage image);
 
     String recognize(BufferedImage image, List<String> languages);
+
+    String recognizeImage(BufferedImage image);
 }

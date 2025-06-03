@@ -77,6 +77,11 @@ public class GotApiAdapter extends ModelService implements IOcr {
         throw new RuntimeException("识别图片文字失败.....");
     }
 
+    @Override
+    public String recognizeImage(BufferedImage image) {
+        return "";
+    }
+
     private String recognize(File file) {
         OkHttpClient client = new OkHttpClient();
         RequestBody fileBody = RequestBody.create(MediaType.parse("image/png"), file);

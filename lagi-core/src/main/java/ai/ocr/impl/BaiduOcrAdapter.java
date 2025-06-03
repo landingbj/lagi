@@ -58,6 +58,11 @@ public class BaiduOcrAdapter extends ModelService implements IOcr {
         return "";
     }
 
+    @Override
+    public String recognizeImage(BufferedImage image) {
+        return "";
+    }
+
     public String toFormatedText(String text) throws IOException {
         StringBuilder sb = new StringBuilder();
         ObjectMapper mapper = new ObjectMapper();

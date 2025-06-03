@@ -33,7 +33,7 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
         Config config = new Config()
                 .setAccessKeyId(getAccessKeyId())
                 .setAccessKeySecret(getAccessKeySecret())
-                .setEndpoint(getEndpoint());
+                .setEndpoint("ocr-api.cn-hangzhou.aliyuncs.com");
         return new com.aliyun.ocr_api20210707.Client(config);
     }
 
@@ -66,6 +66,29 @@ public class AlibabaOcrAdapter extends ModelService implements IOcr {
     @Override
     public String recognize(BufferedImage image, List<String> languages) {
         return "";
+    }
+
+    @Override
+    public String recognizeImage(BufferedImage image) {
+        String result = null;
+        RecognizeAdvancedResponse response;
+        try {
+            com.aliyun.ocr_api20210707.Client client = createClient();
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", os);
+            InputStream bodyStream = new ByteArrayInputStream(os.toByteArray());
+            RecognizeAdvancedRequest recognizeAdvancedRequest = new RecognizeAdvancedRequest()
+                    .setBody(bodyStream)
+                    .setRow(true);
+            RuntimeOptions runtime = new RuntimeOptions();
+            response = client.recognizeAdvancedWithOptions(recognizeAdvancedRequest, runtime);
+            if (response != null && response.getStatusCode() == 200) {
+                result = response.getBody().getData();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 
     public String toFormatedText(String text) throws IOException {

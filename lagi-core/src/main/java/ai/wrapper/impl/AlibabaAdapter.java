@@ -21,7 +21,7 @@ public class AlibabaAdapter extends CommonAdapter implements IWrapper {
 
         modelDriverMap.put("vision", "ai.video.adapter.impl.AlibabaVisionAdapter");
 
-        modelDriverMap.put("ocr", "ai.ocr.impl.AlibabaLangOcrAdapter");
+        modelDriverMap.put("ocr", "ai.ocr.impl.AlibabaOcrAdapter");
         return modelDriverMap;
     }
 }

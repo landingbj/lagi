@@ -1,0 +1,98 @@
+[
+    {
+        "shortDesc": "Open/Short detection",
+        "detailDesc": "the voltage between LED (+) and LED (-), called as VLED is detected. When VLED is lower than (VCC-Vth_short), then LED short fault will be triggered. When VOUT is lower than 0.1V, then LED open fault will be triggered.  This function also can be detected internal power MOS short or open"
+    },
+    {
+        "shortDesc": "OV3/UV3 monitor",
+        "detailDesc": "VDD voltage will be detected to check whether it is lower or higher than a level                                                             VDD<3.6V means VDD UV\nVDD>5.5V means VDD OV"
+    },
+    {
+        "shortDesc": "PWM loop duty test",
+        "detailDesc": "compare the PWM dimming of command and actual PWM dimming of LED, if the difference is out of tolerance, report fault."
+    },
+    {
+        "shortDesc": "PWM loop duty injection test",
+        "detailDesc": "host can inject a PWM=0 or PWM=1 to confirm whether DI003 works"
+    },
+    {
+        "shortDesc": "Logic build-in self-test",
+        "detailDesc": "every time power up, digital will do Lbist after power supply is ready."
+    },
+    {
+        "shortDesc": "Logic-bist",
+        "detailDesc": "every time power up, digital will do Lbist after power supply is ready."
+    },
+    {
+        "shortDesc": "Watchdog",
+        "detailDesc": "If there is no communication for a long time, Watchdog1 will be timeout.\nIf there is no communication for a timing window whose maximum and minimum value can be  set by register, Watchdog2 will be timeout."
+    },
+    {
+        "shortDesc": "Communication Watchdog",
+        "detailDesc": "If there is no communication for a long time, Watchdog1 will be timeout.\nIf there is no communication for a timing window whose maximum and minimum value can be  set by register, Watchdog2 will be timeout."
+    },
+    {
+        "shortDesc": "CRC: Cyclic Redundancy Check",
+        "detailDesc": "The data format has CRC in the frame end, if CRC is not correct, the total data frame is consid-ered as invalid. Note that CRC check not only be in receive data, but also in transmit data."
+    },
+    {
+        "shortDesc": "CRC",
+        "detailDesc": "The data format has CRC in the frame end, if CRC is not correct, the total data frame is consid-ered as invalid. Note that CRC check not only be in receive data, but also in transmit data."
+    },
+    {
+        "shortDesc": "VIN under voltage detection",
+        "detailDesc": "VIN voltage will be detected to check whether it is lower than a level                                                             VIN<3.5V means VIN UV"
+    },
+    {
+        "shortDesc": "CLK Detect",
+        "detailDesc": "when CLK is detected as constant high or low for more than 16us which is counted by 8MHz clock, 3138A will consider CLK output as an error."
+    },
+    {
+        "shortDesc": "Thermal shutdown",
+        "detailDesc": "The internal temperature is always detected to check whether it pass 170C"
+    },
+    {
+        "shortDesc": "ADC",
+        "detailDesc": "Convert 26 important analog signals to digital data in Register"
+    },
+    {
+        "shortDesc": "Output peak current monitor",
+        "detailDesc": "Sense output channel current and convert into a voltage which can be sampled by ADC.\nHost can read the ADC register to get the output peak current"
+    },
+    {
+        "shortDesc": "Output peak current monitor BIST",
+        "detailDesc": "Force 6uA current as a bias current of output peak current detect block, then it can verify \nDI012 function after power up."
+    },
+    {
+        "shortDesc": "SCA DATA injection test",
+        "detailDesc": "Force SCA data to test low voltage power MOS ON/OFF status after power up.\nWill always monitor all power MOS gate whether it is controlled by 7 bits SCA data"
+    },
+    {
+        "shortDesc": "RSET OPEN/SHORT Detect",
+        "detailDesc": "will detect RSET PIN OPEN or short status by RSET pin voltage or current."
+    },
+    {
+        "shortDesc": "ECC",
+        "detailDesc": "Error Correcting Code that can detect and fix its own errors"
+    },
+    {
+        "shortDesc": "V5/V33 under voltage monitor",
+        "detailDesc": "V5V33 voltage will be detect to check whether it is lower than a level                                                             V5<3.1V means V5 UV                                                             V33<2.5V means V33 UV"
+    },
+    {
+        "shortDesc": "V5/V33 overvoltage monitor",
+        "detailDesc": "detect whether V5/V33 exceed 6.5V"
+    },
+    {
+        "shortDesc": "charge pump under voltage detect",
+        "detailDesc": "the charge pump output for 12 different channels power supply is always detected, if less than 3.3V, will report to every channels."
+    },
+    {
+        "shortDesc": "PIN double bondings",
+        "detailDesc": "VCC: two bondings on one PAD                                       V5: two bonding on two different PADs"
+    },
+    {
+        "shortDesc": "FaultB",
+        "detailDesc": "every some time, maybe 40ms, host should send a read command to 3138A to get feedback to achieve safety machanism. The feedback information can be classified as 3 types:\n1. whether there is read data from 3138A to host. \n2. read Fault type Register to check whether any Fault happens.\n3. read ADC related data to check 3138A internal temperature."
+    }
+]

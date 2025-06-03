@@ -122,4 +122,11 @@ public class OcrService {
     public OcrProgress getOcrProgress(String taskId) {
         return processedPageSizeCache.get(taskId);
     }
+
+    public String recognizeImage(BufferedImage image) {
+        for (IOcr adapter : getAdapterByBackends(imageOrcManager)) {
+            return adapter.recognizeImage(image);
+        }
+        return null;
+    }
 }

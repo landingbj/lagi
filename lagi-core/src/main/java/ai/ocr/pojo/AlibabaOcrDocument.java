@@ -19,6 +19,7 @@ public class AlibabaOcrDocument {
     private List<PrismParagraphInfo> prism_paragraphsInfo;
     private List<PrismWordInfo> prism_wordsInfo;
     private List<PrismTablesInfo> prism_tablesInfo;
+    private List<PrismRowInfo> prism_rowsInfo;
     private List<TableHeadTail> tableHeadTail;
     private int width;
 
@@ -103,5 +104,11 @@ public class AlibabaOcrDocument {
     public static class Position {
         private int x;
         private int y;
+    }
+
+    @Data
+    public static class PrismRowInfo {
+        private int rowId;
+        private String word;
     }
 }

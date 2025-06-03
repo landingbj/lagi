@@ -8,6 +8,7 @@ import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
+import ai.sevice.DxImageService;
 import ai.utils.JsonExtractor;
 import ai.utils.MigrateGlobal;
 import ai.vector.FileService;
@@ -38,6 +39,7 @@ public class DxImageAnalysisServlet extends BaseServlet {
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
     private final VectorStoreService vectorStoreService = new VectorStoreService();
+    private final DxImageService dxImageService = new DxImageService();
 
     private static final String BACKGROUND_INFO = "ID Diagnosis\tShort description of diagnostic procedure\tDetailed description of diagnostic procedure\tDetection and reaction time\tReaction in case diagnostics detects a fail\t\"Covers transient faults\n" +
             "(Yes / No / Partly)\n" +
@@ -182,31 +184,12 @@ public class DxImageAnalysisServlet extends BaseServlet {
             logger.info("Processing image file: {}", imageFile.getName());
             File destFile = null;
             try {
-                // Step 1: Upload image and get URL
-                String imageUrl = uploadFileAndGetUrl(imageFile);
-                if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                    throw new RuntimeException("Failed to upload image and get URL");
-                }
-                logger.info("Image URL generated: {}", imageUrl);
-
-                // Step 2: Call visual model to analyze the image
-                String imageAnalysisResult = analyzeImageWithVisionModel(imageUrl);
-                List<String> jsonList = JsonExtractor.extractJsonArrayString(imageAnalysisResult);
-                if (jsonList.isEmpty() || imageAnalysisResult == null || imageAnalysisResult.trim().isEmpty()) {
-                    throw new RuntimeException("Failed to analyze image with vision model");
-                }
-                String json = jsonList.get(0);
-                logger.info("Image analysis result received, size: {}", jsonList.size());
-                logger.info("Image analysis json received: {}", json);
-
-                // Step 3: Generate formatted output using language model
-                String formattedOutput = searchVectorDb(json);
+                String formattedOutput = dxImageService.getAnalyzeImageResult(imageFile.getAbsolutePath());
                 if (formattedOutput == null || formattedOutput.trim().isEmpty()) {
                     throw new RuntimeException("Failed to generate formatted output");
                 }
                 logger.info("Formatted output generated, length: {}", formattedOutput.length());
 
-                // Step 4: Return the result
                 Response response = Response.builder()
                         .status("success")
                         .data(formattedOutput)
@@ -286,13 +269,9 @@ public class DxImageAnalysisServlet extends BaseServlet {
 //        imageUrl = "https://lumissil.saasai.top/upload/vlimg/b4515d9a-41ec-4284-b095-b1582846c1be.png";
         logger.debug("Generated image URL: {}", imageUrl);
 
-        // Store destFile for cleanup
-        this.destFile = destFile; // Store in instance variable for cleanup in analyzeImage
         return imageUrl;
     }
 
-    // Instance variable to store destFile for cleanup
-    private File destFile;
 
     private String analyzeImageWithVisionModel(String imageUrl) throws IOException {
         logger.info("Analyzing image with vision model: {}", imageUrl);

@@ -80,6 +80,11 @@ public class AlibabaLangOcrAdapter extends ModelService implements IOcr {
         return result;
     }
 
+    @Override
+    public String recognizeImage(BufferedImage image) {
+        return "";
+    }
+
     public String toFormatedText(String text) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         AlibabaOcrDocument doc = mapper.readValue(text, AlibabaOcrDocument.class);
