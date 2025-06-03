@@ -15,6 +15,8 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +40,32 @@ public class DxImageService {
 
     private final Gson gson = new Gson();
 
+    private String getImageHash(BufferedImage image) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+
+            int width = image.getWidth();
+            int height = image.getHeight();
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int rgb = image.getRGB(x, y);
+                    md.update((byte) (rgb & 0xFF));
+                    md.update((byte) ((rgb >> 8) & 0xFF));
+                    md.update((byte) ((rgb >> 16) & 0xFF));
+                    md.update((byte) ((rgb >> 24) & 0xFF));
+                }
+            }
+            byte[] digest = md.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5 algorithm not available", e);
+        }
+    }
+
     private List<String> getImageOcr(List<BufferedImage> images) {
         List<String> ocrResults = new ArrayList<>();
         for (BufferedImage image : images) {
@@ -49,12 +77,8 @@ public class DxImageService {
         return ocrResults;
     }
 
-    public String getAnalyzeImageResult(String imagePath) throws IOException {
-        List<DxDiagnosis> diagnoses = CACHE.get(imagePath);
-        if (diagnoses == null) {
-            diagnoses = analyzeImage(imagePath);
-            CACHE.put(imagePath, diagnoses);
-        }
+    public String getAnalyzeImageResult(String imagePath) throws IOException, InterruptedException {
+        List<DxDiagnosis> diagnoses = analyzeImage(imagePath);
         StringBuilder sb = new StringBuilder();
         for (DxDiagnosis diagnosis : diagnoses) {
             sb.append(diagnosis.getId()).append(" ")
@@ -64,9 +88,16 @@ public class DxImageService {
         return sb.toString();
     }
 
-    public List<DxDiagnosis> analyzeImage(String imagePath) throws IOException {
+    public List<DxDiagnosis> analyzeImage(String imagePath) throws IOException, InterruptedException {
         File inputFile = new File(imagePath);
         BufferedImage inputImage = ImageIO.read(inputFile);
+
+        String md5Hash = getImageHash(inputImage);
+        List<DxDiagnosis> diagnoses = CACHE.get(md5Hash);
+        if (diagnoses != null) {
+            Thread.sleep(3 * 1000);
+            return diagnoses;
+        }
 
         BufferedImage outputImage = ImageUtil.keepRedPart(inputImage);
         outputImage = ImageUtil.removeSmallRedAreas(outputImage, 5);
@@ -82,6 +113,11 @@ public class DxImageService {
             expandedImageList.add(expandedImage);
         }
         List<String> ocrResults = getImageOcr(expandedImageList);
+//        List<String> ocrResults = readAllJsonFiles("E:\\Desktop\\络明芯规则\\bd_1_ocr");
+        List<DxDiagnosis> results = parseOcrResults(ocrResults);
+        if (!results.isEmpty()) {
+            CACHE.put(md5Hash, results);
+        }
         return parseOcrResults(ocrResults);
     }
 
