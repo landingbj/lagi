@@ -1,10 +1,12 @@
 package ai.common.pojo;
 
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 @Data
 @ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TTSResult {
     private String task_id;
     private String result;

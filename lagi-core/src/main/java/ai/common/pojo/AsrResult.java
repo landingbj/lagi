@@ -1,5 +1,14 @@
 package ai.common.pojo;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class AsrResult {
     private String task_id;
     private String result;
@@ -38,9 +47,4 @@ public class AsrResult {
         this.message = message;
     }
 
-    @Override
-    public String toString() {
-        return "TaskResult{" + "task_id='" + task_id + '\'' + ", result='" + result + '\'' + ", status=" + status
-                + ", message='" + message + '\'' + '}';
-    }
 }

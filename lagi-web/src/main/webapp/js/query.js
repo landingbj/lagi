@@ -688,7 +688,7 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
     generateStream(paras).then(r => {
         let lastAnswer = CONVERSATION_CONTEXT[CONVERSATION_CONTEXT.length - 1]["content"]
         
-        txtTovoice(lastAnswer, "default");
+        txtTovoice(lastAnswer.replace(/<think>[\s\S]*?<\/think>/g, ''), "default");
         enableQueryBtn();
         querying = false;
         let betterResult = robootAnswerJq.parent().children('.better-result')

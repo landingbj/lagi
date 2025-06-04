@@ -18,6 +18,7 @@ import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 import com.alibaba.dashscope.tools.ToolBase;
 import com.alibaba.dashscope.tools.ToolCallBase;
+import com.alibaba.dashscope.tools.ToolCallFunction;
 import com.alibaba.dashscope.tools.ToolFunction;
 import com.google.gson.Gson;
 import io.reactivex.Flowable;
@@ -78,9 +79,10 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
             List<ToolCallBase> collect = null;
             if(toolCalls != null) {
                 collect = toolCalls.stream().map(toolCall -> {
-                    com.alibaba.dashscope.tools.ToolCallFunction build = com.alibaba.dashscope.tools.ToolCallFunction.builder().build();
-                    BeanUtil.copyProperties(toolCall, build);
-                    return build;
+                    ToolCallFunction toolCallFunction = new ToolCallFunction();
+//                    com.alibaba.dashscope.tools.ToolCallFunction build = com.alibaba.dashscope.tools.ToolCallFunction.builder().build();
+                    BeanUtil.copyProperties(toolCall, toolCallFunction);
+                    return toolCallFunction;
                 }).collect(Collectors.toList());
             }
             Message msg = Message.builder()

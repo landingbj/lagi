@@ -103,6 +103,7 @@ public class MultimodalAIManager {
             AtomicBoolean setDefaultModel = new AtomicBoolean(false);
             if(func != null) {
                 BeanUtil.copyProperties(func,modelService, CopyOptions.create(null, true));
+                modelService.setPriority(func.getPriority());
                 setDefaultModel.set(true);
             } else {
                 setDefaultModel.set(false);

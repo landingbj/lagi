@@ -413,9 +413,9 @@ function textQuery1(questionRel, answerRel, fileStatus) {
         var len = markdownElements.length;
         conversation1 = {user: {question: question}, robot: {answer: answerRel}};
         $($(".markdown")[len - 1]).html(answerRel);
-
+        answerRel.replace(/<think>[\s\S]*?<\/think>/g, '');
         answerRel = answerRel.replace(/<[^>]*>/g, "")
-        answerRel = answerRel.replaceAll("分割后的图片：", "")
+        answerRel = answerRel.replaceAll("分割后的图片：", "");
         // 增加不需要音频文件的判断
         if (fileStatus != 'video') {
             txtTovoice(answerRel, "default");
@@ -462,7 +462,7 @@ async function voiceToTxt(selectedFile) {
 }
 
 function textToVoice(emotionSelect) {
-    var text = $(emotionSelect).parent().parent().parent().find('.result-streaming').text().trim();
+    var text = $(emotionSelect).parent().parent().parent().find('.result-streaming').text().replace(/<think>[\s\S]*?<\/think>/g, '').trim();
     var emotion = $(emotionSelect).find("option:selected").val();
 
     const audioElement = $(emotionSelect).parent().find('.myAudio1')[0];
@@ -505,6 +505,9 @@ function textToVoice(emotionSelect) {
     return;
 }
 
+
+const record_save_type = 'audio/mp3';
+
 $(document).on("change", ".emotionSelect", function () {
     textToVoice(this);
 })
@@ -512,7 +515,7 @@ $(document).on("change", ".emotionSelect", function () {
 function remoteSolve(blob) {
     const formData = new FormData();
     // 将MP3音频文件添加到FormData对象
-    formData.append('audioFile', blob, 'audiofile.mp3');
+    formData.append('audioFile', blob, 'audiofile.wav');
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/search/uploadVoice', true);
     xhr.setRequestHeader('Access-Control-Allow-Origin', 'localhost');
@@ -605,7 +608,7 @@ var Recoder = {
                     // 间视频录制结束时触发
                     _mediaRecorder.onstop = () => {
                         // 通过Blob数据块, 合成完整的Blob块数据
-                        let blob = new Blob(chunks, {'type': 'audio/mp3'});
+                        let blob = new Blob(chunks, {'type': 'audio/wav'});
                         console.log(blob);
 
                         remoteSolve(blob);
