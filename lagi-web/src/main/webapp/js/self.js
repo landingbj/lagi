@@ -20,13 +20,18 @@ const voiceButton = document.getElementById("voiceIcon");
 voiceButton.addEventListener("mousedown", (e) => {
     timeOutEvent = setTimeout(() => {
         longPress()
-    }, 500);
+    }, 300);
     e.preventDefault();
 });
 
 voiceButton.addEventListener("mousemove", (e) => {
     clearTimeout(timeOutEvent);
     timeOutEvent = 0;
+});
+
+voiceButton.addEventListener("mouseout", () => {
+    clearTimeout(timeOutEvent);
+    Recoder.stop();
 });
 
 // 松开按钮停止录音
@@ -558,7 +563,7 @@ var Recoder = {
             {name: 'microphone'}
         ).then(function (permissionStatus) {
             if (permissionStatus.state !== 'prompt') {
-                $("#voiceIcon").css("background", "#eeeeee");
+                $("#voiceIcon").css("background", "rgb(200, 200, 200)");
                 // 停止之前的录制内容
                 mediaRecorder && mediaRecorder.stop();
 

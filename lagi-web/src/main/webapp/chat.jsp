@@ -909,7 +909,7 @@
                             <!-- <svg t="1703233241892" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg> -->
                           </div>
                           <div id="voiceIcon" class="absolute bottom-0 ml-2">
-                            <svg id="voiceSvg" style="width: 24px;height: 24px; margin-bottom: 5px;" t="1694870288752"
+                            <svg id="voiceSvg" style="width: 24px;height: 24px;" t="1694870288752"
                               class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
                               p-id="4046" width="200" height="200">
                               <path

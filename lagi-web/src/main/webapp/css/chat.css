@@ -1638,6 +1638,15 @@ pre .key {
     border-radius: 5px;
 }
 
-code {
-    
+#voiceIcon {
+    border-radius: 5px;
+    z-index: 10;
+    width: 24px;
+    height: 24px;
+    top: 0.6em;
+}
+
+#voiceIcon:hover {
+    background: rgb(238, 238, 238);
+    color: white;
 }
