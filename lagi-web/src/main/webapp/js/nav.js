@@ -129,12 +129,12 @@ let promptNavs = [
         icon: 'intelligentAgent',
         title: '智能体',
         subNavs: [
-            // {
-            //     "id": 1010102,
-            //     "agentId": "stock",
-            //     "title": "股票助手",
-            //     "templateIssues": "今天的股市行情如何?"
-            // },
+            {
+                "id": 1010102,
+                "agentId": "stock",
+                "title": "股票助手",
+                "templateIssues": "今天的股市行情如何?"
+            },
             {
                 "id": 1010103,
                 "agentId": "exchangeRate",
@@ -171,12 +171,12 @@ let promptNavs = [
                 "title": "油价助手",
                 "templateIssues": "今天的北京油价是多少?"
             },
-            // {
-            //     "id": 1010110,
-            //     "agentId": "bmi",
-            //     "title": "体重指数",
-            //     "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
-            // },
+            {
+                "id": 1010110,
+                "agentId": "bmi",
+                "title": "体重指数",
+                "templateIssues": "我身高175cm，体重70kg，计算一下我的BMI值"
+            },
             // {
             //     "id": 1010111,
             //     "agentId": "calorie",
@@ -291,12 +291,12 @@ let promptNavs = [
                 "title": "查询车辆",
                 "templateIssues": "帮我查询小米SU7的车况信息"
             },
-            // {
-            //     "id": 1010130,
-            //     "agentId": "surname_rank",
-            //     "title": "姓氏排名",
-            //     "templateIssues": "王姓在百家姓中的排名是多少？"
-            // },
+            {
+                "id": 1010130,
+                "agentId": "surname_rank",
+                "title": "姓氏排名",
+                "templateIssues": "王姓在百家姓中的排名是多少？"
+            },
             {
                 "id": 1010131,
                 "agentId": "investment_income",
@@ -423,12 +423,12 @@ let promptNavs = [
                 "title": "票房榜单",
                 "templateIssues": "当前票房榜单如何？"
             },
-            {
-                "id": 1010152,
-                "agentId": "historical_figure_info",
-                "title": "历史人物",
-                "templateIssues": "帮我查询曹操的详细信息"
-            },
+            // {
+            //     "id": 1010152,
+            //     "agentId": "historical_figure_info",
+            //     "title": "历史人物",
+            //     "templateIssues": "帮我查询曹操的详细信息"
+            // },
             {
                 "id": 1010153,
                 "agentId": "daily_rumor_refutation",

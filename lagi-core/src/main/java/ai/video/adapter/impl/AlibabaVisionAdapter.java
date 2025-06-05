@@ -15,6 +15,8 @@ import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.videoenhan20200320.Client;
 import com.aliyun.videoenhan20200320.models.*;
 import com.google.common.collect.Maps;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,8 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
 
     private final Logger log = LoggerFactory.getLogger(AlibabaVisionAdapter.class);
 
+    @Getter
+    @Setter
     private UniversalOSS universalOSS;
 
     public Client createClient() {
@@ -123,7 +127,7 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
                 return VideoJobResponse.builder().jobId(requestId).data(query.getVideoUrl()).build();
             }
             else {
-                break;
+                return VideoJobResponse.builder().message(query.getMessage()).build();
             }
         }
         return null;
@@ -169,6 +173,8 @@ public class AlibabaVisionAdapter extends ModelService implements Image2VideoAda
                 videoUrl = JSONUtil.parse(data.getResult()).getByPath("videoUrl", String.class);
             }
             videoJobQueryResponse.setVideoUrl(videoUrl);
+        } else if(statusMap.get(status) == 2 || statusMap.get(status) == 3 || statusMap.get(status) == 4) {
+            videoJobQueryResponse.setMessage(data.getErrorMessage());
         }
         return videoJobQueryResponse;
     }

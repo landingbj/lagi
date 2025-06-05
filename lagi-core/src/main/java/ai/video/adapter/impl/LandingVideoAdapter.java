@@ -17,6 +17,8 @@ import ai.video.pojo.VideoEnhanceRequest;
 import ai.video.pojo.VideoGeneratorRequest;
 import ai.video.pojo.VideoJobResponse;
 import com.google.gson.Gson;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ public class LandingVideoAdapter extends ModelService implements Image2VideoAdap
 
     private final Gson gson = new Gson();
     private final AiServiceCall call = new AiServiceCall();
+    @Getter
+    @Setter
     private UniversalOSS universalOSS;
 
     @Override

@@ -14,6 +14,8 @@ import ai.common.client.AiServiceCall;
 import ai.common.client.AiServiceInfo;
 import ai.learning.pojo.Response;
 import ai.utils.LagiGlobal;
+import lombok.Getter;
+import lombok.Setter;
 
 @ASR(company = "landingbj", modelNames = "landing-asr")
 @TTS(company = "landingbj", modelNames = "landing-tts")
@@ -21,6 +23,8 @@ public class LandingAudioAdapter extends ModelService implements IAudioAdapter {
     private Gson gson = new Gson();
     private AiServiceCall call = new AiServiceCall();
 
+    @Getter
+    @Setter
     private UniversalOSS universalOSS;
 
 

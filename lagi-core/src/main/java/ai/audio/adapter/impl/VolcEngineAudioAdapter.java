@@ -16,6 +16,8 @@ import ai.utils.LagiGlobal;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.io.Files;
+import lombok.Getter;
+import lombok.Setter;
 import okhttp3.*;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +51,8 @@ public class VolcEngineAudioAdapter extends ModelService implements IAudioAdapte
     private final String userId = "388808087185088";
 
 //    private UniversalOSS universalOSS = new LandingOSS();
+    @Getter
+    @Setter
     private UniversalOSS universalOSS;
 
     @Override

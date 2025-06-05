@@ -11,6 +11,8 @@ import ai.oss.UniversalOSS;
 import ai.utils.FileUploadUtil;
 import ai.utils.LagiGlobal;
 import com.google.gson.Gson;
+import lombok.Getter;
+import lombok.Setter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
@@ -21,6 +23,8 @@ import java.io.FileOutputStream;
 @TTS(company = "alibaba", modelNames = "tts")
 public class AlibabaAudioAdapter extends ModelService implements IAudioAdapter {
     private final Gson gson = new Gson();
+    @Getter
+    @Setter
     private UniversalOSS universalOSS;
 
     @Override

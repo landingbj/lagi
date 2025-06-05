@@ -18,4 +18,5 @@ public class VideoJobQueryResponse {
     private Integer status;
     private String progress;
     private String videoUrl;
+    private String message;
 }

@@ -8,6 +8,7 @@ import ai.translate.TranslateService;
 import ai.utils.*;
 import ai.video.pojo.*;
 import ai.video.service.AllVideoService;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -193,8 +194,11 @@ public class ApiService {
         VideoJobResponse enhance = videoService.enhance(videoEnhanceRequest);
         JsonObject result = new JsonObject();
         
-        if (enhance == null) {
+        if (enhance == null || StrUtil.isBlank(enhance.getData())) {
             result.addProperty("status", "failed");
+            if(enhance != null) {
+                result.addProperty("errorMessage", enhance.getMessage());
+            }
             return gson.toJson(result);
         }
         

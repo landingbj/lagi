@@ -9,4 +9,5 @@ public class VideoJobResponse {
     private String status;
     private String jobId;
     private String data;
+    private String message;
 }

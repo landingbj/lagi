@@ -458,8 +458,13 @@ async function getTextResult(question, robootAnswerJq, conversation, agentId) {
                     }
                 }
             } else {
-                robootAnswerJq.html("调用失败！");
-                answer = '调用失败! ';
+                if(res["errorMessage"]){
+                    robootAnswerJq.html(res["errorMessage"]);
+                    answer = res["errorMessage"];
+                } else{
+                    robootAnswerJq.html("调用失败！");
+                    answer = '调用失败! ';
+                }
             }
             $('#queryBox textarea').val('');
             queryLock = false;
