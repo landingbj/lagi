@@ -312,6 +312,98 @@ public class ImageUtil {
         return r > 120 && r > g * 1.1 && r > b * 1.1;
     }
 
+    public static BufferedImage mergeImages(List<BufferedImage> images, int gap, int padX, int padY) {
+        if (images == null || images.isEmpty()) {
+            throw new IllegalArgumentException("图片列表不能为空");
+        }
+
+        // 计算最大高度和总宽度
+        int maxHeight = 0;
+        int totalWidth = 0;
+
+        for (BufferedImage image : images) {
+            if (image != null) {
+                maxHeight = Math.max(maxHeight, image.getHeight());
+                totalWidth += image.getWidth();
+            }
+        }
+
+        // 计算最终图片尺寸
+        int finalWidth = totalWidth + (images.size() - 1) * gap + 2 * padX;
+        int finalHeight = maxHeight + 2 * padY;
+
+        // 创建新的BufferedImage
+        BufferedImage mergedImage = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = mergedImage.createGraphics();
+
+        // 设置背景色为白色
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0, 0, finalWidth, finalHeight);
+
+        // 启用抗锯齿
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        // 绘制图片
+        int currentX = padX;
+        for (int i = 0; i < images.size(); i++) {
+            BufferedImage image = images.get(i);
+            if (image != null) {
+                // 计算垂直居中位置
+                int y = padY + (maxHeight - image.getHeight()) / 2;
+
+                // 绘制图片
+                g2d.drawImage(image, currentX, y, null);
+
+                // 更新X坐标
+                currentX += image.getWidth();
+
+                // 如果不是最后一张图片，添加间隔
+                if (i < images.size() - 1) {
+                    currentX += gap;
+                }
+            }
+        }
+
+        g2d.dispose();
+        return mergedImage;
+    }
+
+    public static BufferedImage binaryImageOptimized(BufferedImage image, int threshold) {
+        if (image == null) {
+            throw new IllegalArgumentException("Image cannot be null");
+        }
+
+        if (threshold < 0 || threshold > 255) {
+            throw new IllegalArgumentException("Threshold must be between 0 and 255");
+        }
+
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        BufferedImage binaryImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int rgb = image.getRGB(x, y);
+
+                int red = (rgb >> 16) & 0xFF;
+                int green = (rgb >> 8) & 0xFF;
+                int blue = rgb & 0xFF;
+
+                int gray = (int) (0.299 * red + 0.587 * green + 0.114 * blue);
+
+                if (gray >= threshold) {
+                    binaryImage.setRGB(x, y, Color.BLACK.getRGB());
+                } else {
+                    binaryImage.setRGB(x, y, Color.WHITE.getRGB());
+                }
+            }
+        }
+
+        return binaryImage;
+    }
+
     public static void main(String[] args) {
         try {
             File inputFile = new File("E:\\Desktop\\络明芯规则\\bd_1.png");
