@@ -97,26 +97,33 @@ public class MultimodalAIManager {
             if(functions == null) {
                 return;
             }
-            Map<String, Backend> funcMap = functions.stream().collect(Collectors.toMap(Backend::getBackend, model -> model));
-            ModelService modelService = (ModelService) adapter;
-            Backend func = funcMap.get(modelService.getBackend());
+            Map<String, Backend> modelFuncMap = functions.stream().collect(Collectors.toMap(Backend::getModel, model -> model));
             AtomicBoolean setDefaultModel = new AtomicBoolean(false);
-            if(func != null) {
-                BeanUtil.copyProperties(func,modelService, CopyOptions.create(null, true));
-                modelService.setPriority(func.getPriority());
-                setDefaultModel.set(true);
-            } else {
-                setDefaultModel.set(false);
-            }
-            if(modelService.getPriority() == null) {
-                modelService.setPriority(0);
-            }
+
             modelNames.forEach(name->{
-                if(!setDefaultModel.get()) {
-                    ((ModelService) adapter).setModel(name);
-                    setDefaultModel.set(true);
+                try {
+                    T newAdapter = (T) adapter.getClass().newInstance();
+                    BeanUtil.copyProperties(adapter, newAdapter);
+                    ModelService modelService = (ModelService) newAdapter;
+                    Backend func = modelFuncMap.get(name);
+                    if(func != null) {
+                        BeanUtil.copyProperties(func, modelService, CopyOptions.create(null, true));
+                        setDefaultModel.set(true);
+                    } else {
+                        setDefaultModel.set(false);
+                    }
+                    if(modelService.getPriority() == null) {
+                        modelService.setPriority(0);
+                    }
+                    if(!setDefaultModel.get()) {
+                        ((ModelService) newAdapter).setModel(name);
+                        setDefaultModel.set(true);
+                    }
+                    aiManager.register(name, newAdapter);
+                } catch (Exception e) {
+
                 }
-                aiManager.register(name, adapter);
+
             });
 
         } catch (Exception e) {

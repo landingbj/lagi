@@ -1,6 +1,7 @@
 package ai.audio.service;
 
 import java.io.File;
+import java.util.List;
 
 import ai.audio.adapter.IAudioAdapter;
 import ai.audio.adapter.IAudioCloneAdapter;
@@ -41,7 +42,8 @@ public class AudioService {
                 return adapter.tts(param);
             }
         } else {
-            for (IAudioAdapter adapter: TTSManager.getInstance().getAdapters()) {
+            List<IAudioAdapter> adapters = TTSManager.getInstance().getAdapters();
+            for (IAudioAdapter adapter: adapters) {
                 return adapter.tts(param);
             }
         }

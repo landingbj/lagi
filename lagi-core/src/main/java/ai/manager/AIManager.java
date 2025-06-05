@@ -67,18 +67,10 @@ public class AIManager<T> {
             }
             ModelService ms1 = (ModelService)m1;
             ModelService ms2 = (ModelService)m2;
-            if((!ms1.getEnable() && !ms2.getEnable()) || (ms1.getEnable() && ms2.getEnable())) {
-                if(ms1.getPriority() != null) {
-                    return ms1.getPriority().compareTo(ms2.getPriority()) * -1;
-                }
-                return 1;
-            } else {
-                if(ms1.getEnable()) {
-                    return -1;
-                } else {
-                    return 1;
-                }
+            if(ms1.getPriority() != null) {
+                return ms1.getPriority().compareTo(ms2.getPriority()) * -1;
             }
+            return 1;
         });
     }
 

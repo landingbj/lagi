@@ -38,6 +38,17 @@ public class QwenAudioAdapter extends ModelService implements IAudioAdapter {
             "Ethan",
             "Chelsie");
 
+    private final static Map<String, Integer> map = new HashMap<>();
+
+    static {
+        map.put("neutral", 0);
+        map.put("happy", 1);
+        map.put("sad", 2);
+        map.put("fear", 3);
+        map.put("hate", 0);
+        map.put("surprise", 1);
+    }
+
 
     @Override
     public boolean verify() {
@@ -92,8 +103,10 @@ public class QwenAudioAdapter extends ModelService implements IAudioAdapter {
 
     @Override
     public TTSResult tts(TTSRequestParam param) {
-        if(param.getEmotion() == null || !voice.contains(param.getEmotion())) {
-            param.setEmotion("Ethan");
+        if(param.getEmotion() == null) {
+            param.setEmotion(voice.get(map.getOrDefault("neutral", 0)));
+        } else {
+            param.setEmotion(voice.get(map.getOrDefault(param.getEmotion(), 0)));
         }
         Map<String, String> headers = new HashMap<>();
         headers.put("Authorization", "Bearer " + getApiKey());
