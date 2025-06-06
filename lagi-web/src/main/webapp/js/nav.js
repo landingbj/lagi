@@ -133,7 +133,7 @@ let promptNavs = [
                 "id": 1010102,
                 "agentId": "stock",
                 "title": "股票助手",
-                "templateIssues": "今天的股市行情如何?"
+                "templateIssues": "请简要分析一下今天上证指数的情况?"
             },
             {
                 "id": 1010103,
