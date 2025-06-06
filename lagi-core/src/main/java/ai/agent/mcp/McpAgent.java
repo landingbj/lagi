@@ -105,7 +105,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
         List<ToolCall> functionCalls = assistantMessage.getTool_calls();
         List<ChatMessage> chatMessages = chatCompletionRequest.getMessages();
         chatMessages.add(assistantMessage);
-        while (!functionCalls.isEmpty()) {
+        while (functionCalls != null && !functionCalls.isEmpty()) {
             List<ToolCall> loopFunctionCalls =  new ArrayList<>(functionCalls);
             List<ToolCall> nextFunctionCalls =  new ArrayList<>();
             for (ToolCall functionCall: loopFunctionCalls) {
@@ -123,7 +123,9 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
                 ChatCompletionResult temp = completionsService.completions(chatCompletionRequest);
                 assistantMessage = temp.getChoices().get(0).getMessage();
                 chatMessages.add(assistantMessage);
-                nextFunctionCalls.addAll(assistantMessage.getTool_calls());
+                if (assistantMessage.getTool_calls() != null) {
+                    nextFunctionCalls.addAll(assistantMessage.getTool_calls());
+                }
                 if(temp.getChoices().get(0).getMessage().getContent() != null) {
                     result.getChoices().get(0).setMessage(assistantMessage);
                 }
@@ -160,7 +162,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
             String description = tool.getDescription();
             McpSchema.JsonSchema inputSchema = tool.getInputSchema();
             Tool functionCallTool = new Tool();
-            functionCallTool.setType(inputSchema.getType());
+            functionCallTool.setType("function");
             Function function = new Function();
             function.setName(name);
             function.setDescription(description);

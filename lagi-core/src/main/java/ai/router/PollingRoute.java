@@ -56,7 +56,14 @@ public class PollingRoute extends Route {
         chatCompletionRequest.setModel(null);
         List<Route> pollingRoutes = new ArrayList<>(this.routes);
         // no ipaddress use sample polling
+        boolean isSamplePolling = false;
         if (chatCompletionRequest instanceof EnhanceChatCompletionRequest) {
+            EnhanceChatCompletionRequest enhanceChatCompletionRequest = (EnhanceChatCompletionRequest) chatCompletionRequest;
+            if (enhanceChatCompletionRequest.getIp() != null && !enhanceChatCompletionRequest.getIp().isEmpty()) {
+                isSamplePolling = true;
+            }
+        }
+        if (isSamplePolling) {
             EnhanceChatCompletionRequest enhanceChatCompletionRequest = (EnhanceChatCompletionRequest) chatCompletionRequest;
             int hash = enhanceChatCompletionRequest.getIp().hashCode();
             while (!pollingRoutes.isEmpty()) {
