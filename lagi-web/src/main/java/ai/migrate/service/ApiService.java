@@ -115,6 +115,29 @@ public class ApiService {
         return generateVideo(imageFile, req);
     }
 
+
+    public String generateVideoByTextV2(String content, HttpServletRequest req) throws IOException {
+        ServletContext context = req.getServletContext();
+        String rootPath = context.getRealPath("");
+        String filePath = rootPath + "static/video/txt2video/";
+        File file = new File(filePath);
+        if(!file.exists()) {
+            file.mkdirs();
+        }
+        HttpSession session = req.getSession();
+        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class) ;
+        VideoJobResponse video = videoService.toVideo(ImageGenerationRequest.builder().model(preference.getImgGen()).prompt(content).build());
+        if(video == null) {
+            throw new RuntimeException("视频生成失败");
+        }
+        String data = video.getData();
+        JsonObject result = new JsonObject();
+        WhisperResponse whisperResponse = DownloadUtils.downloadFile(data, "mp4", filePath);
+        result.addProperty("svdVideoUrl", "static/video/txt2video/" + whisperResponse.getMsg());
+        result.addProperty("status", "success");
+        return gson.toJson(result);
+    }
+
     public String generateVideo(String lastImageFile, HttpServletRequest req) throws IOException {
         File file = new File(lastImageFile);
         VideoGeneratorRequest build = VideoGeneratorRequest.builder()

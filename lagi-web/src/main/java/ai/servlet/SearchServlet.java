@@ -248,7 +248,7 @@ public class SearchServlet extends RestfulServlet {
         } else if (intent.equals(MigrateGlobal.INSTRUCTION_TYPE_SVD) && lastImagePath != null) {
             result = apiService.generateVideo(lastImagePath, req);
         } else if (intent.equals(MigrateGlobal.INSTRUCTION_TYPE_SVD_BY_TEXT)) {
-            result = apiService.generateVideoByText(content, req);
+            result = apiService.generateVideoByTextV2(content, req);
         } else if (intent.equals(MigrateGlobal.INSTRUCTION_TYPE_MMTRACKING) && lastVideoPath != null) {
             result = apiService.motInference(lastVideoPath, req);
         } else if (intent.equals(MigrateGlobal.INSTRUCTION_TYPE_MMEDITING) && lastVideoPath != null) {
