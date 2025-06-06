@@ -131,13 +131,13 @@ let promptNavs = [
         subNavs: [
             {
                 "id": 1010102,
-                "agentId": "stock",
+                "agentId": "cnstock",
                 "title": "股票助手",
                 "templateIssues": "请简要分析一下今天上证指数的情况?"
             },
             {
                 "id": 1010103,
-                "agentId": "exchangeRate",
+                "agentId": "exchange_rate",
                 "title": "汇率助手",
                 "templateIssues": "当前美元对人民币汇率是多少?"
             },
