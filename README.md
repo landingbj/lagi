@@ -45,7 +45,7 @@ Supports but is not limited to the following models:
         <img src="docs/images/logo/model/img_15.webp" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">Claude&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_16.jpg" width="20" style="margin: 10px;" height="20">
-        <span style="font-size: 12px;width: 70px; text-align: left;">Minimax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span style="font-size: 12px;width: 70px; text-align: left;">MiniMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
 	</br>
 </div>
@@ -66,7 +66,7 @@ Supports but is not limited to the following intelligent agent platforms:
     </div>
 </div>
 
-
+ </br>
 The following database types are supported but not limited to:
 
 <div style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
