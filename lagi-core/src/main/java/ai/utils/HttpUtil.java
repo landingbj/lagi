@@ -23,10 +23,13 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -223,6 +226,65 @@ public class HttpUtil {
         } catch (URISyntaxException e) {
             System.err.println("无效的 URL: " + e.getMessage());
             return null;
+        }
+    }
+
+    public static String uploadFile(String uploadUrl, String filePath) throws IOException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new FileNotFoundException("找不到文件: " + filePath);
+        }
+
+        String boundary = "---------------------------" + System.currentTimeMillis();
+        URL url = new URL(uploadUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        // 配置请求
+        connection.setDoOutput(true);
+        connection.setDoInput(true);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+        try (OutputStream outputStream = connection.getOutputStream();
+             PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true)) {
+
+            // 添加文件
+            writer.append("--" + boundary).append("\r\n");
+            writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"").append("\r\n");
+            writer.append("Content-Type: " + Files.probeContentType(Paths.get(filePath))).append("\r\n");
+            writer.append("Content-Transfer-Encoding: binary").append("\r\n");
+            writer.append("\r\n");
+            writer.flush();
+
+            // 写入文件内容
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.flush();
+            }
+
+            // 结束表单
+            writer.append("\r\n");
+            writer.append("--" + boundary + "--").append("\r\n");
+            writer.flush();
+        }
+
+        // 读取响应
+        int responseCode = connection.getResponseCode();
+        System.out.println("HTTP响应代码: " + responseCode);
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(connection.getResponseCode() < 400 ?
+                        connection.getInputStream() : connection.getErrorStream()))) {
+            String line;
+            StringBuilder response = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                response.append(line).append("\n");
+            }
+            return response.toString();
         }
     }
 

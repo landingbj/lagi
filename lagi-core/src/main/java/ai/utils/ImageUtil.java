@@ -88,5 +88,31 @@ public class ImageUtil {
     }
 
 
+    public static File urlToFile(String imageUrl, String dstFilePath) {
+        try {
+            URL url = new URL(imageUrl);
+            InputStream inputStream = url.openStream();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            byte[] imageBytes = outputStream.toByteArray();
+
+            // 写入本地文件
+            File file = new File(dstFilePath);
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+                fileOutputStream.write(imageBytes);
+            }
+            return file;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+
+
+
 
 }
