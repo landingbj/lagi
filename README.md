@@ -66,9 +66,9 @@ Supports but is not limited to the following intelligent agent platforms:
     </div>
 </div>
 
-
+  </br>
 The following database types are supported but not limited to:
-</br>
+  </br>
 <div style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/img_4.png" width="20" style="margin: 10px;" height="20">
