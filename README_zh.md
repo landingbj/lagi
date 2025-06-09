@@ -66,9 +66,9 @@ LinkMind（联智）是由北京联动北方科技有限公司精心打造的一
     </div>
 </div>
 
- </br>
-支持但不限于以下数据库类型：
 
+支持但不限于以下数据库类型：
+</br>
 <div style="display: flex; flex-wrap: wrap; justify-content: flex-start;">
     <div style="display: flex; align-items: center; margin: 10px;">
         <img src="docs/images/logo/img_4.png" width="20" style="margin: 10px;" height="20">
