@@ -44,6 +44,8 @@ LinkMind（联智）是由北京联动北方科技有限公司精心打造的一
         <span style="font-size: 12px;width: 70px; text-align: left;">DeepSeek&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <img src="docs/images/logo/model/img_15.webp" width="20" style="margin: 10px;" height="20">
         <span style="font-size: 12px;width: 70px; text-align: left;">Claude&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <img src="docs/images/logo/model/img_16.jpg" width="20" style="margin: 10px;" height="20">
+        <span style="font-size: 12px;width: 70px; text-align: left;">Minimax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
 	</br>
 </div>
