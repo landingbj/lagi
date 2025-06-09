@@ -160,6 +160,17 @@ models:
   #    alias: doubao-pro-4k=your_endpoint_id,doubao-pro-32k=your_endpoint_id
   #    # address https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?current=1&pageSize=10
 
+  # Minimax was developed by a company called Minimax, a company that focuses on video game development
+  #  - name: minimax
+  #    type: Minimax
+  #    enable: true
+  #    drivers:
+  #      - model: T2V-01-Director,I2V-01-Director,S2V-01,I2V-01-live,I2V-01,T2V-01
+  #        driver: ai.video.adapter.impl.MinimaxVideoAdapter
+  #    api_key: your-api-key
+  #    app_id: your-app-id
+  # url address https://platform.minimaxi.com/user-center/payment/balance
+
 stores:
   vector:
     # Chroma is an AI-native open-source embedding database
