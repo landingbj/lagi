@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class BMITool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.istero.com/resource/bmi/query";
+    private static final String API_ADDRESS = "https://api.istero.com/resource/v1/bmi/query";
     private String token = "";
 
     public BMITool() {
@@ -86,7 +86,7 @@ public class BMITool extends AbstractTool {
     }
 
     public static void main(String[] args) {
-        String token = "xxx";
+        String token = "b35ded1c6b2c6d95e9e74fa48a3b7d2d";
         BMITool weatherSearchTool = new BMITool(token);
         String result = weatherSearchTool.search("男", 12, 30, 150);
         System.out.println(result);

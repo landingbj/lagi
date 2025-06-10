@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Setter
 public class DishonestPersonSearchTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://api.istero.com/resource/laolai";
+    private static final String API_ADDRESS = "https://api.istero.com/resource/v1/laolai";
     private String token = "";
 
     public DishonestPersonSearchTool() {
@@ -101,9 +101,9 @@ public class DishonestPersonSearchTool extends AbstractTool {
     }
 
     public static void main(String[] args) {
-        String token = "xxx";
+        String token = "";
         DishonestPersonSearchTool weatherSearchTool = new DishonestPersonSearchTool(token);
-        String result = weatherSearchTool.search("王五");
+        String result = weatherSearchTool.search("王艳楠");
         System.out.println(result);
     }
 
