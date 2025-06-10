@@ -19,7 +19,7 @@ public class MealSuggestionTool extends AbstractTool {
 
 //    private static final String API_ADDRESS = "https://zj.v.api.aa1.cn/api/eats/";
 
-    private static final String API_ADDRESS = "https://api.istero.com/resource/eat/what";
+    private static final String API_ADDRESS = "https://api.istero.com/resource/v1/eat/what";
 
     private String token = "";
 
@@ -44,8 +44,9 @@ public class MealSuggestionTool extends AbstractTool {
 //    public String getMealSuggestion() {
 //        Map<String, String> headers = new HashMap<>();
 //        headers.put("Content-Type", "application/json");
-//        Map<String, String> queryParams = null;
-//        String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 15, TimeUnit.SECONDS);
+//        headers.put("Authorization", "Bearer "+token);
+//        Map<String, String> queryParams = new HashMap<>();
+//        String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 30, TimeUnit.SECONDS);
 //        if (response == null) {
 //            return "查询失败";
 //        }
@@ -68,13 +69,13 @@ public class MealSuggestionTool extends AbstractTool {
 //
 //        return StrUtil.format("{\"餐食选择1\": \"{}\", \"餐食选择2\": \"{}\", \"提示\": \"{}\"}", meal1, meal2, mealwhat);
 //    }
-
+//
     public String getMealSuggestion() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("token", token);
-        String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 15, TimeUnit.SECONDS);
+        String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 15, java.util.concurrent.TimeUnit.SECONDS);
         if (response == null) {
             return "查询失败";
         }
@@ -103,8 +104,9 @@ public class MealSuggestionTool extends AbstractTool {
     }
 
     public static void main(String[] args) {
-//        MealSuggestionTool mealSuggestionTool = new MealSuggestionTool();
-//        String result = mealSuggestionTool.getMealSuggestion();
-//        System.out.println(result);
+        String token = "";
+        MealSuggestionTool tool = new MealSuggestionTool(token);
+        String result = tool.apply(null);
+        System.out.println(result);
     }
 }
