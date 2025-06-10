@@ -16,7 +16,7 @@ import java.io.IOException;
 public class YoloVideoAdapter extends ModelService implements Video2trackAdapter {
 
     private Gson gson = new Gson();
-    private final Integer RETRY = 50;
+    private final Integer RETRY = 600;
 
     public String getCreateTaskUrl() {
         return getEndpoint() +  "/video_task";
