@@ -51,7 +51,7 @@ public class HistoryInTodayTool extends AbstractTool {
             return "查询失败";
         }
         if(((Double)map.get("code")).intValue() != 200) {
-            return "抱歉历史上今天的事件失败";
+            return "历史上今天没有发生什么大事，是平安太平的一天。";
         }
         List<Map<String, Object>> data  = (List<Map<String, Object>>)map.get("data");
         StringBuilder sb = new StringBuilder();

@@ -41,35 +41,6 @@ public class MealSuggestionTool extends AbstractTool {
         register(this);
     }
 
-//    public String getMealSuggestion() {
-//        Map<String, String> headers = new HashMap<>();
-//        headers.put("Content-Type", "application/json");
-//        headers.put("Authorization", "Bearer "+token);
-//        Map<String, String> queryParams = new HashMap<>();
-//        String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 30, TimeUnit.SECONDS);
-//        if (response == null) {
-//            return "查询失败";
-//        }
-//        Gson gson = new Gson();
-//        Type type = new TypeToken<Map<String, Object>>() {
-//        }.getType();
-//        Map<String, Object> map = gson.fromJson(response, type);
-//
-//        if (map == null || map.get("code") == null) {
-//            return "查询失败";
-//        }
-//
-//        Object codeObj = map.get("code");
-//        if (codeObj instanceof Double && ((Double) codeObj).intValue() != 200) {
-//            return "查询失败";
-//        }
-//        String meal1 = (String) map.get("meal1");
-//        String meal2 = (String) map.get("meal2");
-//        String mealwhat = (String) map.get("mealwhat");
-//
-//        return StrUtil.format("{\"餐食选择1\": \"{}\", \"餐食选择2\": \"{}\", \"提示\": \"{}\"}", meal1, meal2, mealwhat);
-//    }
-//
     public String getMealSuggestion() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
