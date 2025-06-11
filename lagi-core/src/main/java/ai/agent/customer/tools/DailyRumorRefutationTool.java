@@ -9,6 +9,8 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
 
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,15 +20,13 @@ import java.util.stream.Collectors;
 @Setter
 public class DailyRumorRefutationTool extends AbstractTool {
 
-//    private static final String API_ADDRESS = "https://api.pearktrue.cn/api/zhihu/recommend/";
+    private static final String API_ADDRESS = "http://v.juhe.cn/toutiao/index";
 
-    private static final String API_ADDRESS = "https://api.istero.com/resource/zhihu/feeds/essence";
+    private String apiKey;
 
-    private String token;
-
-    public DailyRumorRefutationTool(String token) {
+    public DailyRumorRefutationTool(String apiKey) {
         init();
-        this.token = token;
+        this.apiKey = apiKey;
     }
 
     private void init() {
@@ -41,11 +41,25 @@ public class DailyRumorRefutationTool extends AbstractTool {
     public String getDailyRumorRefutation() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        if(token != null) {
-            headers.put("Authorization", "Bearer " + token);
-        }
-        Map<String, String> queryParams = null;
-        String response = ApiInvokeUtil.get(API_ADDRESS, queryParams, headers, 15, TimeUnit.SECONDS);
+
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("key", apiKey);
+        queryParams.put("type", "shehui"); // 社会新闻分类，可能包含辟谣相关内容
+        queryParams.put("page_size", "5"); // 获取5条新闻
+        queryParams.put("is_filter", "1"); // 过滤广告
+
+        String queryString = queryParams.entrySet().stream()
+                .map(entry -> {
+                    try {
+                        return entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8.toString());
+                    } catch (Exception e) {
+                        return entry.getKey() + "=" + entry.getValue();
+                    }
+                })
+                .collect(Collectors.joining("&"));
+
+        String fullUrl = API_ADDRESS + "?" + queryString;
+        String response = ApiInvokeUtil.get(fullUrl, null, headers, 15, TimeUnit.SECONDS);
 
         if (response == null) {
             return "获取辟谣新闻失败";
@@ -55,28 +69,30 @@ public class DailyRumorRefutationTool extends AbstractTool {
         Type type = new TypeToken<Map<String, Object>>() {}.getType();
         Map<String, Object> map = gson.fromJson(response, type);
 
-        if (map == null || map.get("code") == null || ((Double) map.get("code")).intValue() != 200) {
+        if (map == null || map.get("result") == null) {
             return "获取辟谣新闻失败";
         }
 
-        List<Map<String, Object>> dataList = (List<Map<String, Object>>) map.get("data");
+        Map<String, Object> result = (Map<String, Object>) map.get("result");
+        List<Map<String, Object>> dataList = (List<Map<String, Object>>) result.get("data");
+
         if (dataList == null || dataList.isEmpty()) {
             return "今天没有新的辟谣新闻";
         }
 
-        StringBuilder result = new StringBuilder("今日辟谣新闻:\n");
+        StringBuilder resultBuilder = new StringBuilder("今日辟谣新闻:\n");
         dataList = dataList.stream().limit(1).collect(Collectors.toList());
         for (Map<String, Object> data : dataList) {
             String title = (String) data.get("title");
-            String text = (String) data.getOrDefault("text", data.get("excerpt"));
+            String text = (String) data.get("abstract");
             String url = (String) data.get("url");
-            result.append("\n标题: ").append(title)
-                  .append("\n内容: ").append(text)
-                  .append("\n详情链接: ").append(url)
-                  .append("\n---------------------------------\n");
+            resultBuilder.append("\n标题: ").append(title)
+                    .append("\n内容: ").append(text != null ? text : "无摘要")
+                    .append("\n详情链接: ").append(url != null ? url : "无链接")
+                    .append("\n---------------------------------\n");
         }
 
-        return result.toString();
+        return resultBuilder.toString();
     }
 
     @Override
@@ -85,7 +101,7 @@ public class DailyRumorRefutationTool extends AbstractTool {
     }
 
     public static void main(String[] args) {
-        DailyRumorRefutationTool tool = new DailyRumorRefutationTool("a");
+        DailyRumorRefutationTool tool = new DailyRumorRefutationTool("bb6c94092e7bb81bcea88598c7e1047b");
         String result = tool.getDailyRumorRefutation();
         System.out.println(result);
     }
