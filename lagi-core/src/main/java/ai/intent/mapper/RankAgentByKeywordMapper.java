@@ -24,7 +24,7 @@ import java.util.List;
 @Setter
 @Slf4j
 public class RankAgentByKeywordMapper extends BaseMapper implements IMapper {
-    private static final Double priority = 1d;
+    private static final Double priority = 100d;
     private static final LRUCache<LLmRequest, IntentResponse> intentKeywordCache = IntentGlobal.INTENT_KEYWORD_CACHE;
 
     @Override

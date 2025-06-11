@@ -24,7 +24,8 @@ import java.util.concurrent.Future;
 @Setter
 @Slf4j
 public class PickAgentByDescribeMapper extends BaseMapper implements IMapper {
-    private static final Double priority = 1d;
+    private static final Double priority = 100d;
+
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
@@ -32,8 +33,6 @@ public class PickAgentByDescribeMapper extends BaseMapper implements IMapper {
 
         LLmRequest llmRequest = param.getLlmRequest();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = param.getAllAgents();
-
-        log.info("PickAgentByDescribeMapper llmRequest: {}", llmRequest);
 
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = null;
         Future<List<Agent<ChatCompletionRequest, ChatCompletionResult>>> future = SkillMapUtil.asyncPickAgentByDescribe(ChatCompletionUtil.getLastMessage(llmRequest), allAgents);
@@ -47,8 +46,6 @@ public class PickAgentByDescribeMapper extends BaseMapper implements IMapper {
         intentResult.setAgents(pickAgentList);
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, intentResult);
         result.add(AiGlobalQA.M_LIST_RESULT_PRIORITY, priority);
-
-        log.info("PickAgentByDescribeMapper intentResult: {}", intentResult);
 
         return result;
     }

@@ -21,14 +21,12 @@ import java.util.List;
 @Setter
 @Slf4j
 public class UserLlmMapper extends BaseMapper implements IMapper {
-    private static final Double priority = 1d;
+    private static final Double priority = 50d;
 
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         IntentDetectParam param = (IntentDetectParam) this.getParameters().get(IntentGlobal.MAPPER_INTENT_PARAM);
-
-        log.info("UserLlmMapper llmRequest:");
 
         List<ILlmAdapter> userLlmAdapters = param.getUserLlmAdapters();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.convert2AgentList(userLlmAdapters);

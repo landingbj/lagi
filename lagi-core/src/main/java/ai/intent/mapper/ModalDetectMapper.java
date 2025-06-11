@@ -20,20 +20,15 @@ import java.util.List;
 @Setter
 @Slf4j
 public class ModalDetectMapper extends BaseMapper implements IMapper {
-    private static final Double priority = 1d;
+    private static final Double priority = 50d;
     private IntentService sampleIntentService = new SampleIntentServiceImpl();
 
     @Override
     public List<?> myMapping() {
         List<Object> result = new ArrayList<>();
         IntentDetectParam param = (IntentDetectParam) this.getParameters().get(IntentGlobal.MAPPER_INTENT_PARAM);
-
-
         ChatCompletionRequest request = param.getLlmRequest();
         IntentResult intentModal = sampleIntentService.detectIntent(request);
-
-        log.info("ModalDetectMapper llmRequest: {}", request);
-
         IntentDetectResult intentResult = new IntentDetectResult();
         intentResult.setModal(intentModal);
         result.add(AiGlobalQA.M_LIST_RESULT_TEXT, intentResult);
