@@ -43,6 +43,7 @@ public class IRMapperThread extends MapperThread {
 		} catch (Exception e) {
 			container.onMapperFail(mapperName, priority, e);
 			log.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 

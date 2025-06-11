@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class AgentConfig {
     private Integer id;
     private String lagiUserId;

@@ -31,35 +31,6 @@ public enum IntentTypeEnum {
             "(请|帮忙|帮|帮助)?.+(生成|画|绘制|给出).*?(张|副|幅).*?(画|图像|图片|图|肖像)"}),
     VIDEO("svd_by_text", new String[]{"生成.*?视频$",
             "生成视频.*?",}),
-    TRANSLATE("multilanguage", new String[]{"翻译.*?语",
-            "翻译.*?文",
-            "语.*?翻译",
-            "文.*?翻译",
-            "英语.*?",
-            "英文.*?"}),
-    TIME("time", new String[]{"前天.*?星期几",
-            "昨天.*?星期几",
-            "今天.*?星期几",
-            "明天.*?星期几",
-            "后天.*?星期几",
-            "前天.*?几号",
-            "昨天.*?几号",
-            "今天.*?几号",
-            "明天.*?几号",
-            "后天.*?几号",
-            "现在.*?几点",
-            "现在.*?几点了",
-            "几点了",}),
-
-    ADD_MEETING("add_meeting", new String[]{
-            "预定.*?会议",
-            "安排.*?会议",
-            "添加.*?会议",
-            "增加.*?会议",
-            "创建.*?会议",
-            "新建.*?会议"
-   }),
-
     TEXT("text", new String[]{}),;
 
 
@@ -84,16 +55,6 @@ public enum IntentTypeEnum {
     }
 
     public boolean matches(String instruction, List<String> segments) {
-
-        if(this == IntentTypeEnum.TRANSLATE) {
-            int[] lens = englishLengths(instruction);
-            int max_en_len = lens[0];
-            int total_len = lens[1];
-            double ratio = (double) total_len / (double) max_en_len;
-            if( ratio > 0.1 && max_en_len > 15) {
-                return true;
-            }
-        }
         for (String segment : segments) {
             for (String pattern : patterns) {
                 if (Pattern.matches(pattern, segment)) {

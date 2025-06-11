@@ -44,13 +44,12 @@
     </filter-mapping>
 
     <servlet>
-        <servlet-name>search</servlet-name>
-        <servlet-class>ai.servlet.SearchServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
+        <servlet-name>multimodal</servlet-name>
+        <servlet-class>ai.servlet.MultimodalServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>search</servlet-name>
-        <url-pattern>/search/*</url-pattern>
+        <servlet-name>multimodal</servlet-name>
+        <url-pattern>/multimodal/*</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -349,15 +348,22 @@
     </servlet-mapping>
     <servlet>
         <servlet-name>mcpServlet</servlet-name>
-        <!-- 请替换为实际的 Servlet 类名 -->
         <servlet-class>ai.servlet.McpSseHttpServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
         <async-supported>true</async-supported>
     </servlet>
 
-    <!-- 配置 Servlet 映射 -->
     <servlet-mapping>
         <servlet-name>mcpServlet</servlet-name>
         <url-pattern>/mcp/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>intent</servlet-name>
+        <servlet-class>ai.servlet.api.IntentApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>intent</servlet-name>
+        <url-pattern>/intent/*</url-pattern>
     </servlet-mapping>
 </web-app>

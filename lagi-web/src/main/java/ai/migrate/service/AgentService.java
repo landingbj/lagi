@@ -1,28 +1,35 @@
 package ai.migrate.service;
 
+import ai.agent.Agent;
+import ai.agent.chat.rag.LocalRagAgent;
 import ai.common.pojo.Response;
 import ai.config.pojo.AgentConfig;
+import ai.dao.ManagerDao;
 import ai.dto.DeductExpensesRequest;
 import ai.dto.FeeRequiredAgentRequest;
+import ai.dto.ManagerModel;
+import ai.llm.adapter.ILlmAdapter;
 import ai.llm.service.CompletionsService;
+import ai.llm.utils.LlmAdapterFactory;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.router.pojo.LLmRequest;
 import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
 import ai.servlet.dto.OrchestrationItem;
 import ai.utils.MigrateGlobal;
 import ai.utils.OkHttpUtil;
+import ai.worker.skillMap.SkillMapUtil;
 import cn.hutool.core.util.IdUtil;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AgentService {
     private final Gson gson = new Gson();
@@ -124,6 +131,7 @@ public class AgentService {
         String prompt = template.replace("{}", currentCharacter);
         return prompt;
     }
+
     private String callAIModelForTasksAndLogics(String prompt) {
         ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
         chatCompletionRequest.setTemperature(0.8);
@@ -261,6 +269,35 @@ public class AgentService {
         return prompt.toString();
     }
 
+    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> getAllAgents(LLmRequest llmRequest, String uri) throws IOException {
+        LagiAgentExpenseListResponse paidAgentByUser = getPaidAgentByUser(llmRequest.getUserId(), "1", "1000");
+        Map<Integer, Boolean> haveABalance = paidAgentByUser.getData().stream().collect(Collectors.toMap(AgentConfig::getId, agentConfig -> {
+            BigDecimal balance = agentConfig.getBalance();
+            BigDecimal pricePerReq = agentConfig.getPricePerReq();
+            return balance.doubleValue() >= pricePerReq.doubleValue();
+        }));
 
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> llmAndAgentList = SkillMapUtil.getLlmAndAgentList();
+        LagiAgentListResponse lagiAgentList = getLagiAgentList(null, 1, 1000, "true");
+        List<AgentConfig> agentConfigs = lagiAgentList.getData();
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents = SkillMapUtil.convert2AgentList(agentConfigs, haveABalance);
+        agents.addAll(llmAndAgentList);
+        for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : agents) {
+            if (agent instanceof LocalRagAgent) {
+                LocalRagAgent ragAgent = (LocalRagAgent) agent;
+                ragAgent.getAgentConfig().setEndpoint(uri);
+            }
+        }
+        return agents;
+    }
+
+    public List<ILlmAdapter> getUserLlmAdapters(String userId) {
+        // TODO 2025/3/4  support invoke remote service
+        ManagerDao managerDao = new ManagerDao();
+        List<ManagerModel> managerModels = managerDao.getManagerModels(userId, 1);
+        return managerModels.stream().map(m -> {
+            return LlmAdapterFactory.getLlmAdapter(m.getModelType(), m.getModelName(), 999, m.getApiKey(), m.getEndpoint());
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
 }
 

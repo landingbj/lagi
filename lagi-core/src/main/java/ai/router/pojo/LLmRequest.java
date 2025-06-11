@@ -1,5 +1,6 @@
 package ai.router.pojo;
 
+import ai.intent.pojo.IntentRouteResult;
 import ai.openai.pojo.ChatCompletionRequest;
 import lombok.*;
 
@@ -8,11 +9,12 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(callSuper = true)
 public class LLmRequest extends ChatCompletionRequest {
 //    private String agentId;
     private Integer agentId;
     private String worker;
     private String userId;
     private Boolean think;
+    private IntentRouteResult intent;
 }

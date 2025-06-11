@@ -32,8 +32,6 @@ $('#queryContent').keydown(function (event) {
 });
 
 
-
-
 function matchingAgents(word) {
     $('#item-content').hide();
     showBallDiv();
@@ -62,10 +60,10 @@ async function textQuery() {
         return;
     }
 
-    try{
+    try {
         let highword = getHighWord(question);
         highlightWord(highword)
-    } catch(error) {
+    } catch (error) {
 
     }
     let agentId = currentAppId;
@@ -90,7 +88,7 @@ async function textQuery() {
     currentAppId = null;
 }
 
-async function appointTextQuery(question,selectedAgentId) {
+async function appointTextQuery(question, selectedAgentId) {
     if (queryLock) {
         alert("有对话正在进行请耐心等待");
         return;
@@ -361,8 +359,8 @@ async function getSessionId() {
 
 let sessionId = null;
 
-async function getRequest(question, agentId){
-    if(CONVERSATION_CONTEXT.length == 0) {
+async function getRequest(question, agentId) {
+    if (CONVERSATION_CONTEXT.length == 0) {
         sessionId = await getSessionId();
     }
     let paras = {
@@ -385,105 +383,168 @@ async function getRequest(question, agentId){
     return paras;
 }
 
-async function getTextResult(question, robootAnswerJq, conversation, agentId) {
-    
-    if(CONVERSATION_CONTEXT.length == 0) {
+function multimodalProcess(paras, question, robotAnswerJq, conversation, onSuccess) {
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "multimodal/process",
+        data: JSON.stringify(paras),
+        success: function (res) {
+            if (res.code === 500) {
+                errorOutput(robotAnswerJq, conversation);
+            } else {
+                if (res.status === "failed") {
+                    let errorMessage = res.errorMessage || "调用失败！";
+                    errorOutput(robotAnswerJq, conversation, errorMessage);
+                } else {
+                    let result = onSuccess(res, question, robotAnswerJq);
+                    convOutput(conversation, result);
+                }
+            }
+        },
+        error: function () {
+            errorOutput(robotAnswerJq, conversation, "调用失败！");
+        }
+    });
+}
+
+function generateImageCallback(res, question, robotAnswerJq) {
+    let result = `<img src='${res.result}' alt='Image' style="width: 320px;">`;
+    CONVERSATION_CONTEXT.push({"role": "user", "content": question});
+    CONVERSATION_CONTEXT.push({"role": "assistant", "content": "图片已生成\n\n"});
+    robotAnswerJq.html(result);
+    let p = robotAnswerJq.parent().parent().parent();
+    p.children('.idx').children('.appendVoice').children('audio').hide();
+    p.children('.idx').children('.appendVoice').children('select').hide();
+    return result;
+}
+
+function instructionCallback(res, question, robotAnswerJq) {
+    var instructions = JSON.stringify(res.instructions, null, 2);
+    let result = syntaxHighlight(instructions);
+    robotAnswerJq.html("<pre>" + result + "</pre>");
+    return result;
+}
+
+function image2textCallback(res, question, robotAnswerJq) {
+    let result = "您所上传的图片的意思是：<br><b>类别</b>：" + res.classification + "<br><b>描述</b>：" + res.caption + "<br>" +
+        "<b>分割后的图片</b>：  <img src='" + res.samUrl + "' alt='Image' style='width:80%;height:60%'><br>";
+    robotAnswerJq.html(result);
+    let p = robotAnswerJq.parent().parent().parent();
+    p.children('.idx').children('.appendVoice').children('audio').hide();
+    p.children('.idx').children('.appendVoice').children('select').hide();
+    return result;
+}
+
+
+function imageEnhanceCallback(res, question, robotAnswerJq) {
+    let result = "加强后的图片如下：<br>" + "<img src='" + res.enhanceImageUrl + "' alt='Image'><br>";
+    robotAnswerJq.html(result);
+    return result;
+}
+
+
+function generateVideoCallback(res, question, robotAnswerJq) {
+    let result = "<video id='media' src='" + res.svdVideoUrl + "' controls width='400px' height='400px'></video>";
+    robotAnswerJq.html(result);
+    return result;
+}
+
+
+function videoTrackingCallback(res, question, robotAnswerJq) {
+    let result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
+    robotAnswerJq.html(result);
+    return result;
+}
+
+
+function videoInterpolationCallback(res, question, robotAnswerJq) {
+    let result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
+    robotAnswerJq.html(result);
+    return result;
+}
+
+function convOutput(conversation, answer) {
+    $('#queryBox textarea').val('');
+    queryLock = false;
+    conversation.robot.answer = answer;
+    addConv(conversation);
+}
+
+async function getTextResult(question, robotAnswerJq, conversation, agentId) {
+    if (CONVERSATION_CONTEXT.length === 0) {
         sessionId = await getSessionId();
     }
     // debugger
     let result = '';
     let paras = await getRequest(question, agentId);
 
-    const queryUrl = "search/detectIntent";
+    const queryUrl = "intent/detect";
     $.ajax({
         type: "POST",
         contentType: "application/json;charset=utf-8",
         url: queryUrl,
         data: JSON.stringify(paras),
         success: function (res) {
-            let answer = '';
-            if (res != null && res.status === "success") {
-                // 判断文生图
-                if (res.result !== undefined) {
-                    result = `
-                        <img src='${res.result}' alt='Image' style="width: 320px;">
-                    `
-                    CONVERSATION_CONTEXT.push({"role": "user", "content": question});
-                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": "图片已生成\n\n"});
-                    robootAnswerJq.html(result);
-                    answer = result;
-                    let p = robootAnswerJq.parent().parent().parent();
-                    p.children('.idx').children('.appendVoice').children('audio').hide();
-                    p.children('.idx').children('.appendVoice').children('select').hide();
-                }
-                // 判断生成指令集
-                else if (res.instructions != null) {
-                    var instructions = JSON.stringify(res.instructions, null, 2);
-                    result = syntaxHighlight(instructions);
-                    robootAnswerJq.html("<pre>" + result + "</pre>");
-                    answer = result;
-                }
-                // 判断图生文
-                else if (res.samUrl != null) {
-                    result = "您所上传的图片的意思是：<br><b>类别</b>：" + res.classification + "<br><b>描述</b>：" + res.caption + "<br>" +
-                        "<b>分割后的图片</b>：  <img src='" + res.samUrl + "' alt='Image' style='width:80%;height:60%'><br>";
-                    robootAnswerJq.html(result);
-                    let p = robootAnswerJq.parent().parent().parent();
-                    p.children('.idx').children('.appendVoice').children('audio').hide();
-                    p.children('.idx').children('.appendVoice').children('select').hide();
-                    answer = result;
-                } else if (res.enhanceImageUrl != null) {
-                    result = "加强后的图片如下：<br>" + "<img src='" + res.enhanceImageUrl + "' alt='Image'><br>";
-                    robootAnswerJq.html(result);
-                    answer = result;
-                } else if (res.svdVideoUrl != null) {
-                    result = "<video id='media' src='" + res.svdVideoUrl + "' controls width='400px' height='400px'></video>";
-                    robootAnswerJq.html(result);
-                    answer = result;
-                } else if (res.type != null && res.type === 'mot') {
-                    result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
-                    robootAnswerJq.html(result);
-                    answer = result;
-                } else if (res.type != null && res.type === 'mmediting') {
-                    result = "<video id='media' src='" + res.data + "' controls width='400px' height='400px'></video>";
-                    robootAnswerJq.html(result);
-                    answer = result;
-                } else {
+            let modal = res.modal;
+            paras['intent'] = res;
+            switch (modal) {
+                case "image":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, generateImageCallback);
+                    break;
+                case "instruction":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, instructionCallback);
+                    break
+                case "image-to-text":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, image2textCallback);
+                    break
+                case "esrgan":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, imageEnhanceCallback);
+                    break
+                case "svd_by_text":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, generateVideoCallback);
+                    break
+                case "mmtracking":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, videoTrackingCallback);
+                    break
+                case "mmediting":
+                    multimodalProcess(paras, question, robotAnswerJq, conversation, videoInterpolationCallback);
+                    break
+                case "text":
                     if (paras["stream"]) {
-                        streamOutput(paras, question, robootAnswerJq);
+                        streamOutput(paras, question, robotAnswerJq);
                         // streamOutput(paras, question, robootAnswerJq, "v1/chat/completions");
-                        solidGeneralOutput(paras, question, robootAnswerJq);
+                        // solidGeneralOutput(paras, question, robotAnswerJq);
                     } else {
-                        generalOutput(paras, question, robootAnswerJq);
+                        generalOutput(paras, question, robotAnswerJq);
                     }
-                }
-            } else {
-                if(res["errorMessage"]){
-                    robootAnswerJq.html(res["errorMessage"]);
-                    answer = res["errorMessage"];
-                } else{
-                    robootAnswerJq.html("调用失败！");
-                    answer = '调用失败! ';
-                }
             }
-            $('#queryBox textarea').val('');
-            queryLock = false;
-            conversation.robot.answer = answer;
-            addConv(conversation);
+            // } else {
+            //     if(res["errorMessage"]){
+            //         robootAnswerJq.html(res["errorMessage"]);
+            //         answer = res["errorMessage"];
+            //     } else{
+            //         robootAnswerJq.html("调用失败！");
+            //         answer = '调用失败! ';
+            //     }
+            // }
         },
         error: function () {
-            $('#queryBox textarea').val('');
-            queryLock = false;
-            robootAnswerJq.html("调用失败！");
-            conversation.robot.answer = "调用失败！";
-            addConv(conversation);
+            errorOutput(robotAnswerJq, conversation, '调用失败!')
         }
-
     });
     return result;
 }
 
-function generalOutput(paras, question, robootAnswerJq, url="chat/go") {
+function errorOutput(robotAnswerJq, conversation, errorMessage) {
+    $('#queryBox textarea').val('');
+    queryLock = false;
+    robotAnswerJq.html(errorMessage);
+    conversation.robot.answer = errorMessage;
+    addConv(conversation);
+}
+
+function generalOutput(paras, question, robootAnswerJq, url = "chat/go") {
     // let url = paras.agentId ? 'chat/go' : 'v1/chat/completions';
     // let url = 'v1/chat/completions';
     // let url = 'chat/go';
@@ -519,7 +580,7 @@ function generalOutput(paras, question, robootAnswerJq, url="chat/go") {
             fullText = fullText.replaceAll("\n", "<br>");
             result = `
                         ${fullText} <br>
-                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : ""}                        
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div><br>` : ""}
                         ${res.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${res.source}</small></div></div><br>` : ""}
                         `
@@ -531,7 +592,7 @@ function generalOutput(paras, question, robootAnswerJq, url="chat/go") {
     });
 }
 
-function solidGeneralOutput(paras, question, robootAnswerJq, url="chat/go/solid") {
+function solidGeneralOutput(paras, question, robootAnswerJq, url = "chat/go/solid") {
     let betterResult = robootAnswerJq.parent().children('.better-result')
     $.ajax({
         type: "POST",
@@ -559,7 +620,7 @@ function solidGeneralOutput(paras, question, robootAnswerJq, url="chat/go/solid"
             fullText = fullText.replaceAll("\n", "<br>");
             result = `<h2 class="section-title">更多参考</h2>
                         ${fullText}
-                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : ""}                        
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}
                         ${res.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${res.source}</small></div></div><br>` : ""}
                         `
@@ -577,7 +638,7 @@ const CODE_START = "'''";
 const CODE_END = "'''";
 
 
-function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
+function streamOutput(paras, question, robootAnswerJq, url = "chat/go/stream") {
     function isJsonString(str) {
         try {
             JSON.parse(str);
@@ -657,15 +718,15 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                     continue;
                 }
                 // console.log("content:", chatMessage);
-                sourceContent  +=  chatMessage.content;
+                sourceContent += chatMessage.content;
                 let temp = sourceContent;
                 temp = marked.parse(temp);
                 // temp = temp.replaceAll(/ /g, '&nbsp;');
                 // temp = temp.replaceAll(/<\/?code>/g, '');
                 // temp = temp .replaceAll(/(\n)+/g, '<br/>');
-                if(temp.includes(THINK_TEMPLATE_START)) {
+                if (temp.includes(THINK_TEMPLATE_START)) {
                     temp = temp.replaceAll(THINK_TEMPLATE_START, THINK_RENDER_START);
-                    if(!temp.includes(THINK_TEMPLATE_END)) {
+                    if (!temp.includes(THINK_TEMPLATE_END)) {
                         temp += THINK_RENDER_END;
                     } else {
                         temp = temp.replaceAll(THINK_TEMPLATE_END, THINK_RENDER_END);
@@ -674,7 +735,7 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
                 fullText = temp + '<br/>';
                 result = `
                         ${fullText}
-                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : ""}                        
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}
                         ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}
                         ${json.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${json.source}</small></div></div><br>` : ""}`
@@ -692,10 +753,10 @@ function streamOutput(paras, question, robootAnswerJq, url="chat/go/stream") {
 
     generateStream(paras).then(r => {
         let lastAnswer = CONVERSATION_CONTEXT[CONVERSATION_CONTEXT.length - 1]["content"]
-        
         txtTovoice(lastAnswer.replace(/<think>[\s\S]*?<\/think>/g, ''), "default");
         enableQueryBtn();
         querying = false;
+        queryLock = false;
         let betterResult = robootAnswerJq.parent().children('.better-result')
         betterResult.show();
     }).catch((err) => {
@@ -781,7 +842,7 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                     context_jq.append(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
                     return;
                 }
-                if(!context_jq) {
+                if (!context_jq) {
                     return;
                 }
                 let data = res.data;
@@ -816,7 +877,7 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                 })()}</div><br>`;
                 context_jq.append(html);
             },
-            error: function() {
+            error: function () {
                 jqObj.children('.context-box').children('.loading-box').remove();
             }
         });
@@ -937,7 +998,7 @@ async function retry(index) {
         "stream": true
     };
     let question = preArr[preArr.length - 1]['content']
-    let a =  await addUserDialog(question);
+    let a = await addUserDialog(question);
     let robootAnswerJq = addRobotDialog('');
     if (paras["stream"]) {
         streamOutput(paras, question, robootAnswerJq, "v1/chat/completions");

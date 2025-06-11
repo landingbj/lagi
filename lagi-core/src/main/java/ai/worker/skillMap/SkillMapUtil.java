@@ -201,38 +201,52 @@ public class SkillMapUtil {
         return skillMap.rankAgentByIntentKeyword(agentList,intentResponse, edge);
     }
 
+    public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convertConfig2AgentList(List<AgentConfig> agentConfigs) {
+        Map<String, Constructor<?>> agentMap = new HashMap<>();
+        return agentConfigs.stream().map(agentConfig -> {
+            if (agentConfig == null) {
+                return null;
+            }
+            return convertAgentObject(agentConfig, agentMap);
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
     public static List<Agent<ChatCompletionRequest, ChatCompletionResult>> convert2AgentList(List<AgentConfig> agentConfigs, Map<Integer, Boolean> haveABalance) {
         Map<String, Constructor<?>> agentMap = new HashMap<>();
         return agentConfigs.stream().map(agentConfig -> {
             if (agentConfig == null) {
                 return null;
             }
-            String driver = agentConfig.getDriver();
-            Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
             agentConfig.setCanOutPut(haveABalance.getOrDefault(agentConfig.getId(), false));
-            if(agentConfig.getId() != null) {
-                AgentInfoDao.AgentInfo info = AgentInfoDao.getByAgentId(agentConfig.getId());
-                if(info != null) {
-                    agentConfig.setDescribe(info.getAgentDescribe());
-                }
-            }
-            if (!agentMap.containsKey(driver)) {
-                try {
-                    Class<?> aClass = Class.forName(driver);
-                    Constructor<?> constructor = aClass.getConstructor(AgentConfig.class);
-                    agentMap.put(driver, constructor);
-                    agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
-                } catch (Exception ignored) {
-                }
-            } else {
-                Constructor<?> constructor = agentMap.get(driver);
-                try {
-                    agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
-                } catch (Exception ignored) {
-                }
-            }
-            return agent;
+            return convertAgentObject(agentConfig, agentMap);
         }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    private static Agent<ChatCompletionRequest, ChatCompletionResult> convertAgentObject(AgentConfig agentConfig, Map<String, Constructor<?>> agentMap) {
+        String driver = agentConfig.getDriver();
+        Agent<ChatCompletionRequest, ChatCompletionResult> agent = null;
+        if(agentConfig.getId() != null) {
+            AgentInfoDao.AgentInfo info = AgentInfoDao.getByAgentId(agentConfig.getId());
+            if(info != null) {
+                agentConfig.setDescribe(info.getAgentDescribe());
+            }
+        }
+        if (!agentMap.containsKey(driver)) {
+            try {
+                Class<?> aClass = Class.forName(driver);
+                Constructor<?> constructor = aClass.getConstructor(AgentConfig.class);
+                agentMap.put(driver, constructor);
+                agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
+            } catch (Exception ignored) {
+            }
+        } else {
+            Constructor<?> constructor = agentMap.get(driver);
+            try {
+                agent = (Agent<ChatCompletionRequest, ChatCompletionResult>) constructor.newInstance(agentConfig);
+            } catch (Exception ignored) {
+            }
+        }
+        return agent;
     }
 
     public static void asyncScoreAgents(IntentResponse intentResponse, ChatCompletionRequest request, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agentList) {
