@@ -2,15 +2,12 @@ package ai.servlet.api;
 
 import ai.agent.Agent;
 import ai.intent.IntentGlobal;
-import ai.intent.IntentService;
 import ai.intent.container.IntentContainer;
-import ai.intent.impl.VectorIntentServiceImpl;
 import ai.intent.mapper.ModalDetectMapper;
 import ai.intent.mapper.PickAgentByDescribeMapper;
 import ai.intent.mapper.RankAgentByKeywordMapper;
 import ai.intent.mapper.UserLlmMapper;
 import ai.intent.pojo.IntentDetectParam;
-import ai.intent.pojo.IntentResult;
 import ai.intent.pojo.IntentRouteResult;
 import ai.intent.reducer.IntentReducer;
 import ai.llm.adapter.ILlmAdapter;
@@ -30,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +56,12 @@ public class IntentApiServlet extends RestfulServlet {
         intentDetectParam.setAllAgents(allAgents);
         intentDetectParam.setUserLlmAdapters(userLlmAdapters);
 
-        IntentRouteResult result = detect(intentDetectParam);
+        IntentRouteResult result;
+        if (llmRequest.getAgentId() != null) {
+            result = appointAgent(llmRequest.getAgentId());
+        } else {
+            result = detect(intentDetectParam);
+        }
 
         if (result == null) {
             returnError(resp, out);
@@ -79,14 +82,21 @@ public class IntentApiServlet extends RestfulServlet {
         out.flush();
         out.close();
     }
-    private final IntentService intentService = new VectorIntentServiceImpl();
+
+    private IntentRouteResult appointAgent(int agentId) {
+        IntentRouteResult intentRouteResult = new IntentRouteResult();
+        List<Integer> agents = new ArrayList<>();
+        intentRouteResult.setModal("text");
+        intentRouteResult.setStatus("completion");
+        intentRouteResult.setContinuedIndex(0);
+        agents.add(agentId);
+        intentRouteResult.setAgents(agents);
+        return intentRouteResult;
+    }
 
     private IntentRouteResult detect(IntentDetectParam intentDetectParam) {
         Map<String, Object> params = new HashMap<>();
         params.put(IntentGlobal.MAPPER_INTENT_PARAM, intentDetectParam);
-
-        IntentResult intentResult = intentService.detectIntent(intentDetectParam.getLlmRequest());
-
 
         try (IRContainer contain = new IntentContainer()) {
             IMapper modalDetectMapper = new ModalDetectMapper();

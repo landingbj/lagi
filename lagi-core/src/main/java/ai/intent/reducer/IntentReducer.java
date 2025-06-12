@@ -42,7 +42,7 @@ public class IntentReducer extends BaseReducer implements IReducer {
 
         LLmRequest llmRequest = this.intentDetectParam.getLlmRequest();
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents;
-        List<AgentConfig> agents = new ArrayList<>();
+        List<Integer> agents = new ArrayList<>();
 
         String modal = "text";
         String status = "completion";
@@ -63,7 +63,7 @@ public class IntentReducer extends BaseReducer implements IReducer {
             for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : tmpAgents) {
                 AgentConfig agentConfig = agent.getAgentConfig();
                 if (agentConfig != null) {
-                    agents.add(agentConfig);
+                    agents.add(agentConfig.getId());
                     if (priorityMap.containsKey(agentConfig)) {
                         double oldPriority = priorityMap.get(agentConfig);
                         priority = priority + oldPriority;
@@ -71,13 +71,12 @@ public class IntentReducer extends BaseReducer implements IReducer {
                     priorityMap.put(agentConfig, priority);
                 }
             }
-            System.out.println(intentDetectResult);
         }
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
             status = intentResult.getStatus();
             continuedIndex = intentResult.getContinuedIndex();
             Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = getRecordOutputAgent(llmRequest, intentResult, null);
-            agents.add(outputAgent.getAgentConfig());
+            agents.add(outputAgent.getAgentConfig().getId());
         } else {
             agents = sortAgents(priorityMap);
         }
@@ -92,11 +91,11 @@ public class IntentReducer extends BaseReducer implements IReducer {
         logger.info("IntentReducer Finished Reducing.");
     }
 
-    private List<AgentConfig> sortAgents(Map<AgentConfig, Double> priorityMap) {
+    private List<Integer> sortAgents(Map<AgentConfig, Double> priorityMap) {
         return priorityMap.entrySet()
                 .stream()
-                .sorted(Map.Entry.comparingByValue()) // 默认升序排序
-                .map(Map.Entry::getKey)
+                .sorted(Map.Entry.comparingByValue())
+                .map(entry -> entry.getKey().getId())
                 .collect(Collectors.toList());
     }
 

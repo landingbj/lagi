@@ -29,6 +29,7 @@ import com.google.gson.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class AgentService {
@@ -289,6 +290,15 @@ public class AgentService {
             }
         }
         return agents;
+    }
+
+    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> getAgentsById(List<Integer> agentIds, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents) {
+        if (agentIds == null || agentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return  agents.stream()
+                .filter(agent -> agentIds.contains(agent.getAgentConfig().getId()))
+                .collect(Collectors.toList());
     }
 
     public List<ILlmAdapter> getUserLlmAdapters(String userId) {

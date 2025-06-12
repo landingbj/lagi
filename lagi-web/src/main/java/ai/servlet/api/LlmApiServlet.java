@@ -406,7 +406,7 @@ public class LlmApiServlet extends BaseServlet {
             logger.info("Summary: {}", invoke);
         }
 
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = SkillMapUtil.convertConfig2AgentList(llmRequest.getIntent().getAgents());
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(llmRequest.getIntent().getAgents(), allAgents);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
 
         if (pickAgentList != null && !pickAgentList.isEmpty()) {
@@ -578,7 +578,7 @@ public class LlmApiServlet extends BaseServlet {
         LLmRequest llmRequest = reqBodyToObj(req, LLmRequest.class);
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
 
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = SkillMapUtil.convertConfig2AgentList(llmRequest.getIntent().getAgents());
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(llmRequest.getIntent().getAgents(), allAgents);
         ;
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = pickAgentList.get(0);
 
