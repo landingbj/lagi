@@ -1,4 +1,4 @@
-let topTile = 'Lag[i]';
+let topTile = 'Linkmind';
 let finishedLoadTitle = false;
 
 let activeModel = 0;
@@ -261,7 +261,7 @@ function drawTitle(canvasId='title-canvas',  width = 300, height = 120, line1hei
 
     if(width == 300 && height == 120) {
         line1height = 16;
-        line2height = 48;
+        line2height = 32;
         line3height = 16;
     }else if(width == 150 && height == 60) {
         line1height = 8;

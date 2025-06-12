@@ -62,7 +62,7 @@ public class PrivateDevMMagicAdapter extends ModelService  implements Video2Enha
         }
         if(!"success".equals(enhanceResult.get("status"))) {
             log.error("video enhance failed {}", enhanceResult.get("errorMessage"));
-            return null;
+            return VideoJobResponse.builder().status("failed").message("视频增强失败, 可能是不支持的视频尺寸或格式").build();
         }
         String url = enhanceResult.get("url");
         if(StrUtil.isBlank(url)) {

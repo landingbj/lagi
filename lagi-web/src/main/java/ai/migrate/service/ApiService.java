@@ -178,12 +178,17 @@ public class ApiService {
         if(text.getClassification() == null) {
             text.setClassification("");
         }
-
-        String chinese = translateService.toChinese(text.getCaption());
-        if(chinese != null) {
-            text.setCaption(chinese);
+        if(isEnglishWithSpacesAndPunctuation(text.getCaption())) {
+            String chinese = translateService.toChinese(text.getCaption());
+            if(chinese != null) {
+                text.setCaption(chinese);
+            }
         }
         return gson.toJson(text);
+    }
+
+    public static boolean isEnglishWithSpacesAndPunctuation(String text) {
+        return text.matches("[a-zA-Z\\s.,!?'-]+");
     }
     
     public String motInference(String lastVideoFile, HttpServletRequest req) throws IOException {

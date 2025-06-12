@@ -321,7 +321,7 @@ fileUploadButton.addEventListener("click", function () {
                             if (fileStatus == 'pic') {
                                 if (json.status === "success") {
                                     var question = "您所上传的图片名称为：" + selectedFile.name;
-                                    var result = "已经收到您上传的图片。如果您想生成视频，请输入\"视频生成\"。" +
+                                    var result = "已经收到您上传的图片。" +
                                         "如果您想增强图片，请输入\"图像增强\"。如果您想使用AI描述图片，请输入\"看图说话\"。";
                                     lastFilePath = json.filePath;
                                     textQuery1(question, result, fileStatus);

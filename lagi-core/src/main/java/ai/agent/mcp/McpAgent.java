@@ -1,6 +1,7 @@
 package ai.agent.mcp;
 
 import ai.agent.Agent;
+import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.service.CompletionsService;
@@ -100,6 +101,8 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
             }
         }
         chatCompletionRequest.setTools(tools);
+        String model = ContextLoader.configuration.getAgentGeneralConfiguration().getModel();
+        chatCompletionRequest.setModel(model);
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
         ChatMessage assistantMessage = result.getChoices().get(0).getMessage();
         List<ToolCall> functionCalls = assistantMessage.getTool_calls();

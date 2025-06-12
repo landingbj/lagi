@@ -2,19 +2,18 @@ package ai.agent.customer.tools;
 
 import ai.agent.customer.pojo.ToolArg;
 import ai.agent.customer.pojo.ToolInfo;
-import ai.common.utils.ObservableList;
+import ai.agent.customer.utils.AuthV3Util;
+import ai.agent.customer.utils.HttpUtil;
 import ai.utils.ApiInvokeUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class YouDaoTool extends AbstractTool{
@@ -46,6 +45,14 @@ public class YouDaoTool extends AbstractTool{
     }
 
 
+    private static Map<String, String[]> createRequestParams(String q, String from, String to) {
+        return new HashMap<String, String[]>() {{
+            put("q", new String[]{q});
+            put("from", new String[]{from});
+            put("to", new String[]{to});
+//            put("vocabId", new String[]{vocabId});
+        }};
+    }
 
 
     @Override
@@ -53,41 +60,48 @@ public class YouDaoTool extends AbstractTool{
         String i = (String) map.get("i");
         String from = (String) map.get("from");
         String to = (String) map.get("to");
-        String salt = UUID.randomUUID().toString();
-        String curTime = String.valueOf(System.currentTimeMillis() / 1000);
-        String input;
-        if(i.length() > 20) {
-            input = i.substring(0, 10) + i.length() + i.substring(i.length()-20);
-        } else {
-            input = i;
-        }
-        String dataToHash = appId + input + salt + curTime + appKey;
-        String sign =  DigestUtil.sha256Hex(dataToHash);
-        boolean llmSupport = false;
-        if((from.equals("zh-CHS") || from.equals("zh-CHT") || to.equals("en"))
-         && (to.equals("zh-CHS") || to.equals("zh-CHT") || to.equals("en"))) {
-            llmSupport= true;
-        }
-        Map<String, String> request =  new HashMap<>();
-        if(llmSupport) {
-            request.put("i", i);
-        } else {
-            request.put("q", i);
-        }
-        request.put("from", from);
-        request.put("to", to);
-        request.put("streamType", "increment");
-        request.put("appKey", appId);
-        request.put("salt", salt);
-        request.put("sign", sign);
-        request.put("signType", "v3");
-        request.put("curtime", curTime);
+        byte[] utf8Bytes = i.getBytes(StandardCharsets.UTF_8);
+        i = new String(utf8Bytes, StandardCharsets.UTF_8).trim();
+        utf8Bytes = from.getBytes(StandardCharsets.UTF_8);
+        from = new String(utf8Bytes, StandardCharsets.UTF_8).trim();
+        utf8Bytes = to.getBytes(StandardCharsets.UTF_8);
+        to = new String(utf8Bytes, StandardCharsets.UTF_8).trim();
         try {
+            Map<String, String[]> params = createRequestParams(i, from, to);
+            AuthV3Util.addAuthParams(appId, appKey, params);
             Type type = new TypeToken<HashMap<String, Object>>(){}.getType();
-            if(llmSupport) {
-                return llmTrans(request, type);
-            } else {
-                return apiTrans(request, type);
+            String s = apiTrans(params, type);
+            if(s == null) {
+                String salt = UUID.randomUUID().toString();
+                String curTime = String.valueOf(System.currentTimeMillis() / 1000);
+                String input;
+                if(i.length() > 20) {
+                    input = i.substring(0, 10) + i.length() + i.substring(i.length()-20);
+                } else {
+                    input = i;
+                }
+                String dataToHash = appId + input + salt + curTime + appKey;
+                String sign =  DigestUtil.sha256Hex(dataToHash);
+                boolean llmSupport = false;
+                if((from.equals("zh-CHS") || from.equals("zh-CHT") || to.equals("en"))
+                        && (to.equals("zh-CHS") || to.equals("zh-CHT") || to.equals("en"))) {
+                    llmSupport= true;
+                }
+                Map<String, String> request =  new HashMap<>();
+                if(llmSupport) {
+                    request.put("i", i);
+                } else {
+                    request.put("q", i);
+                }
+                request.put("from", from);
+                request.put("to", to);
+                request.put("streamType", "increment");
+                request.put("appKey", appId);
+                request.put("salt", salt);
+                request.put("sign", sign);
+                request.put("signType", "v3");
+                request.put("curtime", curTime);
+                return apiTrans1(request, type);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,7 +109,7 @@ public class YouDaoTool extends AbstractTool{
         return "";
     }
 
-    private String apiTrans(Map<String, String> request, Type type) {
+    private String apiTrans1(Map<String, String> request, Type type) {
         String post = ApiInvokeUtil.post(API_URL, null, request, 30, TimeUnit.SECONDS);
         Map<String, Object> res = gson.fromJson(post, type);
         int errorCode = Integer.parseInt((String) res.get("errorCode"));
@@ -106,16 +120,47 @@ public class YouDaoTool extends AbstractTool{
         return String.join("\n", translation);
     }
 
-    private String llmTrans(Map<String, String> request, Type type) {
-        ObservableList<String> result = ApiInvokeUtil.sse(LLM_URL, null, request, 30, TimeUnit.SECONDS, response -> {
-            if(StrUtil.isBlank(response)) {
-                return "";
-            }
-            Map<String, String> o = gson.fromJson(response, type);
-            return o.getOrDefault("transIncre", "");
-        });
-        StringBuffer stringBuffer = result.getObservable().reduce(new StringBuffer(), StringBuffer::append).blockingGet();
-        return stringBuffer.toString();
+    private String apiTrans(Map<String, String[]> params, Type type) {
+        byte[] result = null;
+        try {
+            result = HttpUtil.doPost(API_URL, null, params, "application/json");
+        } catch (IOException e) {
+            return "请求翻译api失败";
+        }
+        if (result == null) {
+            return "翻译失败";
+        }
+        String post = new String(result, StandardCharsets.UTF_8);
+        Map<String, Object> res = gson.fromJson(post, type);
+        int errorCode = Integer.parseInt((String) res.get("errorCode"));
+        if(errorCode != 0) {
+           return null;
+        }
+        List<String> translation = (List<String>)res.get("translation");
+        return String.join("\n", translation);
+    }
+
+
+//    private String llmTrans(Map<String, String[]> request, Type type) {
+//        ObservableList<String> result = ApiInvokeUtil.sse(LLM_URL, null, request, 30, TimeUnit.SECONDS, response -> {
+//            if(StrUtil.isBlank(response)) {
+//                return "";
+//            }
+//            Map<String, String> o = gson.fromJson(response, type);
+//            return o.getOrDefault("transIncre", "");
+//        });
+//        StringBuffer stringBuffer = result.getObservable().reduce(new StringBuffer(), StringBuffer::append).blockingGet();
+//        return stringBuffer.toString();
+//    }
+
+    public static void main(String[] args) {
+        YouDaoTool youDaoTool = new YouDaoTool("","");
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("i", "我要吃面条");
+        map.put("from", "zh-CHS");
+        map.put("to", "th");
+        String apply = youDaoTool.apply(map);
+        System.out.println(apply);
     }
 
 }

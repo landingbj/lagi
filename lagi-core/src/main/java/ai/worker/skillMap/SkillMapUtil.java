@@ -278,9 +278,6 @@ public class SkillMapUtil {
     }
 
     public static double getOrInsertScore(ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
-        if(agent instanceof LocalRagAgent || agent instanceof McpAgent) {
-            return 10.0D;
-        }
         IntentResponse intentResponse = skillMap.intentDetect(ChatCompletionUtil.getLastMessage(request));
         return getOrInsertScore(intentResponse, request, agent, chatCompletionResult);
     }

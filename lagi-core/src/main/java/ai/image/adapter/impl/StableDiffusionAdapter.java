@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-@ImgGen(modelNames = "landing-stable-diffusion")
+@ImgGen(modelNames = "stable-diffusion")
 public class StableDiffusionAdapter extends ModelService implements IImageGenerationAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(StableDiffusionAdapter.class);

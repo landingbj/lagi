@@ -11,6 +11,7 @@ import okhttp3.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class YoloVideoAdapter extends ModelService implements Video2trackAdapter {
@@ -76,8 +77,19 @@ public class YoloVideoAdapter extends ModelService implements Video2trackAdapter
         }
     }
 
+    private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(
+            100, // 最大空闲连接数
+            120, // 保持连接的时间
+            TimeUnit.MINUTES
+    );
+
     private String createVideoJob(File file) {
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .writeTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(1, TimeUnit.MINUTES)
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .connectionPool(CONNECTION_POOL)
+                .build();
 
         // 创建 RequestBody，用于封装文件
         RequestBody fileBody = RequestBody.create(MediaType.parse("audio/mpeg"), file);
