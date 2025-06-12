@@ -76,7 +76,9 @@ public class IntentReducer extends BaseReducer implements IReducer {
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
             status = intentResult.getStatus();
             Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = getRecordOutputAgent(llmRequest, intentResult, null);
-            agents.add(outputAgent.getAgentConfig().getId());
+            if (outputAgent != null) {
+                agents.add(outputAgent.getAgentConfig().getId());
+            }
         } else {
             agents = sortAgents(priorityMap);
         }
