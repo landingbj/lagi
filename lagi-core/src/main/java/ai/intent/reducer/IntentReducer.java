@@ -10,7 +10,6 @@ import ai.intent.pojo.IntentDetectParam;
 import ai.intent.pojo.IntentDetectResult;
 import ai.intent.pojo.IntentResult;
 import ai.intent.pojo.IntentRouteResult;
-import ai.llm.adapter.ILlmAdapter;
 import ai.mr.IReducer;
 import ai.mr.reduce.BaseReducer;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -46,8 +45,9 @@ public class IntentReducer extends BaseReducer implements IReducer {
 
         String modal = "text";
         String status = "completion";
-        int continuedIndex = 0;
+        int continuedIndex = intentResult.getContinuedIndex();
         Map<AgentConfig, Double> priorityMap = new HashMap<>();
+        Map<Integer, Boolean> streamFlagMap = new HashMap<>();
 
         for (Object mapperResult : list) {
             List<?> mapperList = (List<?>) mapperResult;
@@ -63,6 +63,7 @@ public class IntentReducer extends BaseReducer implements IReducer {
             for (Agent<ChatCompletionRequest, ChatCompletionResult> agent : tmpAgents) {
                 AgentConfig agentConfig = agent.getAgentConfig();
                 if (agentConfig != null) {
+                    streamFlagMap.put(agentConfig.getId(), agent.canStream());
                     agents.add(agentConfig.getId());
                     if (priorityMap.containsKey(agentConfig)) {
                         double oldPriority = priorityMap.get(agentConfig);
@@ -74,7 +75,6 @@ public class IntentReducer extends BaseReducer implements IReducer {
         }
         if(IntentStatusEnum.CONTINUE.getName().equals(intentResult.getStatus())) {
             status = intentResult.getStatus();
-            continuedIndex = intentResult.getContinuedIndex();
             Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = getRecordOutputAgent(llmRequest, intentResult, null);
             agents.add(outputAgent.getAgentConfig().getId());
         } else {
@@ -86,6 +86,18 @@ public class IntentReducer extends BaseReducer implements IReducer {
         intentRouteResult.setStatus(status);
         intentRouteResult.setContinuedIndex(continuedIndex);
         intentRouteResult.setAgents(agents);
+        intentRouteResult.setInvoke(intentDetectParam.getInvoke());
+
+        boolean allSolid = false;
+        if (!streamFlagMap.isEmpty()) {
+            allSolid = streamFlagMap.values().stream().allMatch(v -> v == Boolean.FALSE);
+        }
+        intentRouteResult.setAllSolid(allSolid);
+        if (!agents.isEmpty()) {
+            intentRouteResult.setFirstStream(streamFlagMap.get(agents.get(0)));
+        } else {
+            intentRouteResult.setFirstStream(Boolean.FALSE);
+        }
 
         result.add(intentRouteResult);
         logger.info("IntentReducer Finished Reducing.");

@@ -64,7 +64,6 @@ public class SummaryUtil {
         String question  = cache.get(key);
         if(question != null) {
             log.info("summary cache 1 hit {}", request);
-            request.getMessages().get(request.getMessages().size() - 1).setContent(question);
             return question;
         }
         try {
@@ -72,7 +71,6 @@ public class SummaryUtil {
             question = cache.get(key);
             if(question != null) {
                 log.info("summary cache 2 hit {}", request);
-                request.getMessages().get(request.getMessages().size() - 1).setContent(question);
                 return question;
             }
             question = ChatCompletionUtil.getLastMessage(request);
@@ -83,7 +81,6 @@ public class SummaryUtil {
             SummaryResult summary =  gson.fromJson(json, SummaryResult.class);
             if(summary != null && summary.getSupplemented_question() != null) {
                 question = summary.getSupplemented_question();
-                request.getMessages().get(request.getMessages().size() - 1).setContent(question);
                 cache.put(key, summary.getSupplemented_question());
             }
             return question;
@@ -93,8 +90,8 @@ public class SummaryUtil {
 
     }
 
-
-
-
+    public static void setInvoke(ChatCompletionRequest request, String question) {
+        request.getMessages().get(request.getMessages().size() - 1).setContent(question);
+    }
 
 }

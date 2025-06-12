@@ -11,6 +11,7 @@ import ai.intent.pojo.IntentDetectParam;
 import ai.intent.pojo.IntentRouteResult;
 import ai.intent.reducer.IntentReducer;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.SummaryUtil;
 import ai.migrate.service.AgentService;
 import ai.mr.IMapper;
 import ai.mr.IRContainer;
@@ -60,6 +61,11 @@ public class IntentApiServlet extends RestfulServlet {
         if (llmRequest.getAgentId() != null) {
             result = appointAgent(llmRequest.getAgentId());
         } else {
+            long count = llmRequest.getMessages().stream().filter(message -> message.getRole().equals("user")).count();
+            if (count > 1) {
+                String invoke = SummaryUtil.invoke(llmRequest);
+                intentDetectParam.setInvoke(invoke);
+            }
             result = detect(intentDetectParam);
         }
 

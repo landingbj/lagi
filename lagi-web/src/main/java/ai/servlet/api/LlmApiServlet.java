@@ -17,6 +17,7 @@ import ai.embedding.EmbeddingFactory;
 import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.intent.IntentGlobal;
+import ai.intent.pojo.IntentRouteResult;
 import ai.llm.adapter.ILlmAdapter;
 import ai.llm.pojo.ChatCompletionResultWithSource;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
@@ -396,9 +397,10 @@ public class LlmApiServlet extends BaseServlet {
             out.println("data: " + gson.toJson(convertResponse("", "<think>")) + "\n\n");
             out.flush();
         }
-        long count = llmRequest.getMessages().stream().filter(message -> message.getRole().equals("user")).count();
-        if (count > 1) {
-            String invoke = SummaryUtil.invoke(llmRequest);
+        IntentRouteResult intentRouteResult = llmRequest.getIntent();
+        if (intentRouteResult.getInvoke() != null) {
+            String invoke = intentRouteResult.getInvoke();
+            SummaryUtil.setInvoke(llmRequest, invoke);
             if (think) {
                 out.println("data: " + gson.toJson(convertResponse("", "用户的目标：" + invoke + "\n\n")) + "\n\n");
                 out.flush();
@@ -406,15 +408,15 @@ public class LlmApiServlet extends BaseServlet {
             logger.info("Summary: {}", invoke);
         }
 
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(llmRequest.getIntent().getAgents(), allAgents);
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(intentRouteResult.getAgents(), allAgents);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
 
-        if (pickAgentList != null && !pickAgentList.isEmpty()) {
-            outputAgent = pickAgentList.get(0);
-        }
-
-        if (outputAgent == null) {
+        if (pickAgentList == null || pickAgentList.isEmpty()) {
             outputAgent = SkillMapUtil.getHighestPriorityLlm();
+        } else if (intentRouteResult.getAllSolid()) {
+            outputAgent = pickAgentList.get(0);
+        } else {
+            outputAgent = getFirstStreamAgent(pickAgentList);
         }
 
         IntentResponse intentDetect = getIntentResponse(llmRequest);
@@ -579,29 +581,24 @@ public class LlmApiServlet extends BaseServlet {
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = getAllAgents(llmRequest, uri);
 
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(llmRequest.getIntent().getAgents(), allAgents);
-        ;
+        if (pickAgentList == null || pickAgentList.isEmpty()) {
+            throw new RRException("agent not found");
+        }
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = pickAgentList.get(0);
 
         if (outputAgent == null || outputAgent.canStream()) {
             throw new RRException("agent not found");
         }
+        IntentResponse intentDetect = getIntentResponse(llmRequest);
+        final ChatCompletionResultWithSource[] resultWithSource = {null};
         llmRequest.setStream(false);
         ChatCompletionResult result = outputAgent.communicate(llmRequest);
-        if (result == null) {
-            throw new RRException("调用接口失败, 未获取有效结果");
-        }
-        ChatCompletionResultWithSource resultWithSource = new ChatCompletionResultWithSource(outputAgent.getAgentConfig().getName(), outputAgent.getAgentConfig().getId());
-        BeanUtil.copyProperties(result, resultWithSource);
-        loaderWebPic2Local(req, resultWithSource);
-        responsePrint(resp, toJson(resultWithSource));
-
-        if (outputAgent instanceof LocalRagAgent) {
-            traceService.syncAddLlmTrace(resultWithSource);
-        } else {
-            traceService.syncAddAgentTrace(resultWithSource);
-        }
-
-        deductExpense(resultWithSource, llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
+        ChatCompletionResultWithSource chatCompletionResultWithSource = new ChatCompletionResultWithSource(outputAgent.getAgentConfig().getName(), outputAgent.getAgentConfig().getId());
+        BeanUtil.copyProperties(result, chatCompletionResultWithSource);
+        responsePrint(resp, toJson(chatCompletionResultWithSource));
+        resultWithSource[0] = chatCompletionResultWithSource;
+        recordLastOutputAgent(llmRequest.getIntent().getContinuedIndex(), outputAgent, llmRequest);
+        agentRunFinishCallBack(resultWithSource, llmRequest, allAgents, outputAgent, intentDetect);
     }
 
     private void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {

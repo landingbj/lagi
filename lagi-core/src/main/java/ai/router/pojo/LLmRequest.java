@@ -4,6 +4,8 @@ import ai.intent.pojo.IntentRouteResult;
 import ai.openai.pojo.ChatCompletionRequest;
 import lombok.*;
 
+import java.io.Serializable;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder

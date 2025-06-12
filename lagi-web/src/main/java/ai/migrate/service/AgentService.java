@@ -292,12 +292,22 @@ public class AgentService {
         return agents;
     }
 
-    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> getAgentsById(List<Integer> agentIds, List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents) {
+    public List<Agent<ChatCompletionRequest, ChatCompletionResult>> getAgentsById(
+            List<Integer> agentIds,
+            List<Agent<ChatCompletionRequest, ChatCompletionResult>> agents) {
+
         if (agentIds == null || agentIds.isEmpty()) {
             return new ArrayList<>();
         }
-        return  agents.stream()
-                .filter(agent -> agentIds.contains(agent.getAgentConfig().getId()))
+
+        Map<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = agents.stream()
+                .collect(Collectors.toMap(
+                        agent -> agent.getAgentConfig().getId(),
+                        agent -> agent
+                ));
+        return agentIds.stream()
+                .map(agentMap::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

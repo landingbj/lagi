@@ -3,10 +3,11 @@ package ai.openai.pojo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
 import java.util.List;
 @Data
 @EqualsAndHashCode
-public class ChatCompletionRequest {
+public class ChatCompletionRequest implements Serializable {
     private String sessionId;
     private String model;
     private double temperature;

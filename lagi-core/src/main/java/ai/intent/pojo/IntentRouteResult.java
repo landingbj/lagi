@@ -10,4 +10,7 @@ public class IntentRouteResult {
     private String status;
     private Integer continuedIndex;
     private List<Integer> agents;
+    private Boolean firstStream;
+    private Boolean allSolid;
+    private String invoke;
 }

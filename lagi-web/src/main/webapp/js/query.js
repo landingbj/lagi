@@ -486,6 +486,10 @@ async function getTextResult(question, robotAnswerJq, conversation, agentId) {
         url: queryUrl,
         data: JSON.stringify(paras),
         success: function (res) {
+            if (res.code === 500) {
+                errorOutput(robotAnswerJq, conversation);
+                return;
+            }
             let modal = res.modal;
             paras['intent'] = res;
             switch (modal) {
@@ -514,7 +518,9 @@ async function getTextResult(question, robotAnswerJq, conversation, agentId) {
                     if (paras["stream"]) {
                         streamOutput(paras, question, robotAnswerJq);
                         // streamOutput(paras, question, robootAnswerJq, "v1/chat/completions");
-                        // solidGeneralOutput(paras, question, robotAnswerJq);
+                        if (!"agentId" in paras && res.agents.length > 0 && !res.firstStream && !res.allSolid) {
+                            solidGeneralOutput(paras, question, robotAnswerJq);
+                        }
                     } else {
                         generalOutput(paras, question, robotAnswerJq);
                     }

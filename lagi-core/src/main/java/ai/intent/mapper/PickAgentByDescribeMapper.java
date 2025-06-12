@@ -4,6 +4,7 @@ import ai.agent.Agent;
 import ai.intent.IntentGlobal;
 import ai.intent.pojo.IntentDetectParam;
 import ai.intent.pojo.IntentDetectResult;
+import ai.llm.utils.SummaryUtil;
 import ai.mr.IMapper;
 import ai.mr.mapper.BaseMapper;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -14,6 +15,7 @@ import ai.utils.qa.ChatCompletionUtil;
 import ai.worker.skillMap.SkillMapUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,11 @@ public class PickAgentByDescribeMapper extends BaseMapper implements IMapper {
         IntentDetectParam param = (IntentDetectParam) this.getParameters().get(IntentGlobal.MAPPER_INTENT_PARAM);
 
         LLmRequest llmRequest = param.getLlmRequest();
+        String invoke = param.getInvoke();
+        llmRequest = SerializationUtils.clone(llmRequest);
+        if (invoke != null && !invoke.isEmpty()) {
+            SummaryUtil.setInvoke(llmRequest, invoke);
+        }
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents = param.getAllAgents();
 
         List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = null;

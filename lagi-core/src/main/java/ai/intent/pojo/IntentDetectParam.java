@@ -14,4 +14,5 @@ public class IntentDetectParam {
     private LLmRequest llmRequest;
     private List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents;
     private List<ILlmAdapter> userLlmAdapters;
+    private String invoke;
 }
