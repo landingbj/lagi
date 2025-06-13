@@ -88,7 +88,8 @@ stores:
       priority: 10 # 优先级，当该优先级大于模型时,则匹配不到上下文就只返回default中提示语
       default: "Please give prompt more precisely" # 如未匹配到上下文，则返回该提示语
       track: true # 开启文档跟踪
-  # 这部分是美杜莎的加速推理服务的配置，可以通过预训练的medusa.json来预准备缓存，第一次flush置成true来初始化，后续可以改回false用做日常启停。
+  # 这部分是美杜莎的加速推理服务的配置，可以通过预训练的medusa.model来预准备缓存，第一次flush置成true来初始化，后续可以改回false用做日常启停。
+  # 完整的medusa.model文件下载地址：https://downloads.landingbj.com/lagi/medusa.model
   medusa:
     enable: true # 是否开启
     algorithm: hash,llm,tree # 使用的算法
