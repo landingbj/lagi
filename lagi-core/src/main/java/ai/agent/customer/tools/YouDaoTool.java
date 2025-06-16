@@ -103,6 +103,7 @@ public class YouDaoTool extends AbstractTool{
                 request.put("curtime", curTime);
                 return apiTrans1(request, type);
             }
+            return s;
         } catch (Exception e) {
             e.printStackTrace();
         }

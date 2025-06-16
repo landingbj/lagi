@@ -1,5 +1,7 @@
 package ai.audio.adapter.impl;
 
+import ai.annotation.ASR;
+import ai.annotation.TTS;
 import ai.audio.adapter.IAudioAdapter;
 import ai.common.ModelService;
 import ai.common.pojo.AsrResult;
@@ -16,6 +18,8 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@TTS(company = "private-dev", modelNames = "tts")
+@ASR(company = "private-dev", modelNames = "asr")
 public class WhisperAudioAdapter extends ModelService implements IAudioAdapter {
 
     private final Gson gson = new Gson();

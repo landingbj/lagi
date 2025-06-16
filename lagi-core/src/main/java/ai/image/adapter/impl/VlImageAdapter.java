@@ -1,5 +1,6 @@
 package ai.image.adapter.impl;
 
+import ai.annotation.Img2Text;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
 import ai.common.pojo.FileRequest;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+@Img2Text(company = "private-dev", modelNames = "vl-image")
 public class VlImageAdapter extends ModelService implements IImage2TextAdapter {
 
     @Override

@@ -286,9 +286,6 @@ public class SkillMapUtil {
         if(intentResponse == null) {
             return null;
         }
-        if(agent instanceof LocalRagAgent) {
-            return null;
-        }
         List<String> keywords = intentResponse.getKeywords();
         AgentIntentScore agentIntentScore = skillMap.agentIntentScore(agent.getAgentConfig().getId(), keywords);
         double scoring;

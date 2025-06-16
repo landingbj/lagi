@@ -1,5 +1,6 @@
 package ai.image.adapter.impl;
 
+import ai.annotation.ImgEnhance;
 import ai.common.ModelService;
 import ai.common.pojo.ImageEnhanceResult;
 import ai.image.adapter.ImageEnhanceAdapter;
@@ -17,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 @Slf4j
+@ImgEnhance(company = "private-dev", modelNames = "realesrgan")
 public class PrivateDevRealEsrganAdapter extends ModelService implements ImageEnhanceAdapter {
 
     @Override

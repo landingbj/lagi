@@ -1,5 +1,6 @@
 package ai.video.adapter.impl;
 
+import ai.annotation.Text2Video;
 import ai.common.ModelService;
 import ai.common.pojo.ImageGenerationRequest;
 import ai.translate.TranslateService;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Text2Video(company = "private-dev", modelNames = {"cogvideoX"})
 public class PrivateDevCogvideoXAdapter extends ModelService  implements Text2VideoAdapter {
 
     @Override

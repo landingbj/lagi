@@ -1,5 +1,6 @@
 package ai.video.adapter.impl;
 
+import ai.annotation.VideoTrack;
 import ai.common.ModelService;
 import ai.utils.OkHttpUtil;
 import ai.video.adapter.Video2trackAdapter;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@VideoTrack(company = "private-dev", modelNames = "yolo")
 public class YoloVideoAdapter extends ModelService implements Video2trackAdapter {
 
     private Gson gson = new Gson();

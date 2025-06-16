@@ -419,6 +419,9 @@ public class LlmApiServlet extends BaseServlet {
             outputAgent = getFirstStreamAgent(pickAgentList);
         }
 
+        if(outputAgent == null) {
+            outputAgent = SkillMapUtil.getHighestPriorityLlm();
+        }
         IntentResponse intentDetect = getIntentResponse(llmRequest);
 
         if (think) {
@@ -539,15 +542,27 @@ public class LlmApiServlet extends BaseServlet {
                 traceService.syncAddAgentTrace(resultWithSource[0]);
             }
         }
-        scorePickAgents(outputAgent, allAgents, intentDetect, llmRequest);
+        List<Integer> agents;
+        if(llmRequest.getIntent().getAgents() != null) {
+            agents = llmRequest.getIntent().getAgents();
+        } else {
+            agents = Collections.emptyList();
+        }
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickedAgents = allAgents.stream()
+                .filter(agent -> (agent instanceof LocalRagAgent) || agents.contains(agent.getAgentConfig().getId()))
+                .collect(Collectors.toList());
+        scorePickAgents(outputAgent, pickedAgents, intentDetect, llmRequest);
+        scoreNoBalanceAgents(intentDetect, llmRequest);
+    }
+
+    private void scoreNoBalanceAgents(IntentResponse intentDetect, LLmRequest llmRequest) {
+        // TODO 2025/6/16 为支付的agent 评分
     }
 
     private void scorePickAgents(Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent, List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList, IntentResponse intentDetect, LLmRequest llmRequest) {
         if (pickAgentList != null) {
             pickAgentList = pickAgentList.stream().filter(agent ->
-                    StrUtil.isBlank(agent.getAgentConfig().getDescribe())
-                            && !Objects.equals(outputAgent.getAgentConfig().getId(), agent.getAgentConfig().getId())
-                            && !(agent instanceof LocalRagAgent)
+                            !Objects.equals(outputAgent.getAgentConfig().getId(), agent.getAgentConfig().getId())
             ).collect(Collectors.toList());
             if (intentDetect != null) {
                 SkillMapUtil.asyncScoreAgents(intentDetect, llmRequest, pickAgentList);

@@ -10,6 +10,7 @@ import ai.intent.pojo.IntentDetectParam;
 import ai.intent.pojo.IntentDetectResult;
 import ai.intent.pojo.IntentResult;
 import ai.intent.pojo.IntentRouteResult;
+import ai.llm.utils.SummaryUtil;
 import ai.mr.IReducer;
 import ai.mr.reduce.BaseReducer;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -37,10 +38,9 @@ public class IntentReducer extends BaseReducer implements IReducer {
 
     @Override
     public void myReducing(List<?> list) {
-        IntentResult intentResult = intentService.detectIntent(this.intentDetectParam.getLlmRequest());
-
         LLmRequest llmRequest = this.intentDetectParam.getLlmRequest();
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents;
+        SummaryUtil.setInvoke(llmRequest, SummaryUtil.invoke(llmRequest));
+        IntentResult intentResult = intentService.detectIntent(this.intentDetectParam.getLlmRequest());
         List<Integer> agents = new ArrayList<>();
 
         String modal = "text";

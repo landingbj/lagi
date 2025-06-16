@@ -94,6 +94,7 @@ public class CompletionsService implements ChatCompletion {
                 }
             }
         }
+        chatCompletionRequest.setModel(null);
         String routeRule = getRoute();
         Route route = Routers.getInstance().getRoute(routeRule);
         RouteCompletionResult result = route.invokeLlm(chatCompletionRequest);
