@@ -87,7 +87,11 @@ stores:
       priority: 10 # Priority; if this priority exceeds the model's, it will return the default prompt if no context is matched.
       default: "Please give prompt more precisely" # Default prompt returned when no context is matched.
       track: true # Enables document tracking.
-  # This section is the configuration for Medusa's accelerated inference service. You can prepopulate the cache using the pre-trained `medusa.json`. Set `flush` to true for the first initialization, and later you can set it back to false for routine start/stop operations.
+      
+  # This section contains the configuration for Medusa's accelerated inference service. 
+  # You can use the pre-trained `medusa.model` to prepopulate the cache. 
+  # Set `flush` to true for the initial run to initialize it; afterward, you can change it back to false for routine start/stop operations.
+  # Full download link for the `medusa.model` file: https://downloads.landingbj.com/lagi/medusa.model
   medusa:
       enable: true # Whether to enable
       algorithm: hash,llm,tree # Algorithms to use
