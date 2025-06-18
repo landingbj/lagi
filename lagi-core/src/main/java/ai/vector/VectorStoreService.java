@@ -196,7 +196,7 @@ public class VectorStoreService {
         this.upsert(upsertRecords, category);
     }
 
-    private UpsertRecord convertToUpsertRecord(FileInfo fileInfo) {
+    public UpsertRecord convertToUpsertRecord(FileInfo fileInfo) {
         UpsertRecord upsertRecord = new UpsertRecord();
         upsertRecord.setDocument(fileInfo.getText());
         upsertRecord.setId(fileInfo.getEmbedding_id());
