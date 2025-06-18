@@ -47,6 +47,7 @@ public class MultimodalAIManager {
             if(modelService instanceof ILlmAdapter) {
                 register(modelNameList, LlmManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getChat().getBackends());
                 register(modelNameList, LlmInstructionManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getDoc2instruct());
+                register(modelNameList, Text2QAManager.getInstance(), (ILlmAdapter) modelService, modelFunctions.getText2qa());
             }
 
             if(modelService instanceof VlAdapter) {

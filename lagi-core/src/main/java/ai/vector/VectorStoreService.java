@@ -18,6 +18,7 @@ import ai.vector.impl.BaseVectorStore;
 import ai.vector.loader.DocumentLoader;
 import ai.vector.loader.impl.*;
 import ai.vector.loader.pojo.SplitConfig;
+import ai.vector.loader.util.TextParse;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -133,6 +134,9 @@ public class VectorStoreService {
         DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
 
         List<FileChunkResponse.Document> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
+
+        docs = TextParse.parseText(file.getPath(),docs, category, metadatas);
+
         List<FileInfo> fileList = new ArrayList<>();
 
         String fileName = metadatas.get("filename").toString();
@@ -196,7 +200,7 @@ public class VectorStoreService {
         this.upsert(upsertRecords, category);
     }
 
-    private UpsertRecord convertToUpsertRecord(FileInfo fileInfo) {
+    public UpsertRecord convertToUpsertRecord(FileInfo fileInfo) {
         UpsertRecord upsertRecord = new UpsertRecord();
         upsertRecord.setDocument(fileInfo.getText());
         upsertRecord.setId(fileInfo.getEmbedding_id());
