@@ -2,7 +2,10 @@ package ai.vector.loader.impl;
 
 import ai.common.pojo.FileChunkResponse;
 import ai.common.pojo.Response;
-import ai.utils.*;
+import ai.utils.ChapterExtractorUtil;
+import ai.utils.OrdinanceExtractorUtil;
+import ai.utils.QaExtractorUtil;
+import ai.utils.SectionExtractorUtil;
 import ai.utils.pdf.PdfUtil;
 import ai.vector.FileService;
 import ai.vector.loader.DocumentLoader;
@@ -19,35 +22,44 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 public class PdfLoader implements DocumentLoader {
-    // checked
     @Override
-    public List<FileChunkResponse.Document> load(String path, SplitConfig splitConfig) {
+    public List<List<FileChunkResponse.Document>> load(String path, SplitConfig splitConfig) {
+        List<FileChunkResponse.Document> documents = docLoad(path, splitConfig);
+        List<List<FileChunkResponse.Document>> res = new ArrayList<>();
+        if (documents != null && !documents.isEmpty()) {
+            res.add(documents);
+        }
+        return res;
+    }
+
+    public List<FileChunkResponse.Document> docLoad(String path, SplitConfig splitConfig) {
         File file = new File(path);
         FileService fileService = new FileService();
         try {
             String content = null;
             InputStream in = Files.newInputStream(file.toPath());
             content = PdfUtil.webPdfParse(in);
-            if (content==null||content.trim().isEmpty()){
+            if (content == null || content.trim().isEmpty()) {
                 System.out.println("扫描件");
-                return FileService.getChunkDocumentScannedPDF(file,splitConfig.getChunkSizeForMixUp());
+                return FileService.getChunkDocumentScannedPDF(file, splitConfig.getChunkSizeForMixUp());
             }
-            if (hasImages(file)){
+            if (hasImages(file)) {
                 FileChunkResponse response = fileService.extractContent(file);
                 if (response != null && response.getStatus().equals("success")) {
                     return response.getData();
                 }
             }
             Response response = fileService.toMarkdown(file);
-            if (response != null && response.getStatus().equals("success")){
+            if (response != null && response.getStatus().equals("success")) {
                 content = response.getData();
-                content = content!=null?FileService.removeDirectory(content):content;
-            }else {
+                content = content != null ? FileService.removeDirectory(content) : content;
+            } else {
                 content = content
                         .replaceAll("(\r?\n){2,}", "\n")
                         .replaceAll("(?<=\r?\n)\\s*", "")
@@ -55,7 +67,7 @@ public class PdfLoader implements DocumentLoader {
                 if (StrUtil.isBlank(content)) {
                     content = FileService.removeDirectory(content);
                 } else {
-                    return FileService.getChunkDocumentScannedPDF(file,splitConfig.getChunkSizeForMixUp());
+                    return FileService.getChunkDocumentScannedPDF(file, splitConfig.getChunkSizeForMixUp());
                 }
             }
             // qa 对
@@ -69,10 +81,10 @@ public class PdfLoader implements DocumentLoader {
                 return SectionExtractorUtil.getChunkDocument(content, splitConfig.getChunkSizeForText());
             } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
                 return OrdinanceExtractorUtil.getChunkDocument(content, splitConfig.getChunkSizeForText());
-            }else {
+            } else {
                 return fileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("load pdf file error", e);
         }
         return Collections.emptyList();

@@ -68,9 +68,9 @@ public class FileService {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         String fileType = extString.toLowerCase().toLowerCase();
         if (fileType.equals(".xls")||fileType.equals(".xlsx")){
-            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
+//            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
         }else if (fileType.equals(".csv")){
-            return EasyExcelUtil.getChunkDocumentCsv(file);
+//            return EasyExcelUtil.getChunkDocumentCsv(file);
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
                   fileType.equals(".gif")||fileType.equals(".bmp")||
                   fileType.equals(".webp")||fileType.equals(".jpg")){

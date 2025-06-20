@@ -12,15 +12,16 @@ import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.manager.VectorStoreManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
-import ai.utils.*;
+import ai.utils.LagiGlobal;
+import ai.utils.StoppingWordUtil;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.db.VectorSettingsDao;
 import ai.vector.impl.BaseVectorStore;
 import ai.vector.loader.DocumentLoader;
 import ai.vector.loader.impl.*;
 import ai.vector.loader.pojo.SplitConfig;
-import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
+import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.UpsertRecord;
 import ai.vector.pojo.VectorCollection;
 import cn.hutool.core.util.StrUtil;
@@ -41,7 +42,6 @@ public class VectorStoreService {
     private static final Logger log = LoggerFactory.getLogger(VectorStoreService.class);
     private final Gson gson = new Gson();
     private BaseVectorStore vectorStore;
-    private final FileService fileService = new FileService();
     private static final ExecutorService executor;
     private Map<String, DocumentLoader> loaderMap = new HashMap<>();
 
@@ -60,7 +60,6 @@ public class VectorStoreService {
     private static final VectorCache vectorCache = VectorCache.getInstance();
 
     public VectorStoreService() {
-//        if (LagiGlobal.RAG_ENABLE) {
         this.vectorStore = (BaseVectorStore) VectorStoreManager.getInstance().getAdapter();
         TxtLoader txtLoader = new TxtLoader();
         loaderMap.put("txt", txtLoader);
@@ -92,8 +91,6 @@ public class VectorStoreService {
         loaderMap.put("pdf", pdfLoader);
 
         loaderMap.put("common", docLoader);
-
-//        }
     }
 
     public VectorStoreConfig getVectorStoreConfig() {
@@ -105,14 +102,11 @@ public class VectorStoreService {
 
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
-        // todo 按页切割文件
-
-//        List<FileChunkResponse.Document> docs = new ArrayList<>();
         List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
         Integer wenben_type = 512;
         Integer biaoge_type = 512;
         Integer tuwen_type = 512;
-        if (userList!=null){
+        if (userList != null) {
             for (UserRagSetting user : userList) {
                 if ("wenben_type".equals(user.getFileType())) {
                     wenben_type = user.getChunkSize();
@@ -128,30 +122,33 @@ public class VectorStoreService {
                 }
             }
         }
-
         String suffix = file.getName().toLowerCase().split("\\.")[1];
         DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
-
-        List<FileChunkResponse.Document> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
-        List<FileInfo> fileList = new ArrayList<>();
-
-        String fileName = metadatas.get("filename").toString();
-        if (fileName != null) {
-            int dotIndex = fileName.lastIndexOf(".");
-            if (dotIndex != -1) {
-                fileName = fileName.substring(0, dotIndex);
-            }
-            FileInfo fi1 = new FileInfo();
-            String e1 = UUID.randomUUID().toString().replace("-", "");
-            fi1.setEmbedding_id(e1);
-            fi1.setText(fileName);
-            Map<String, Object> t1 = new HashMap<>(metadatas);
-            t1.remove("parent_id");
-            fi1.setMetadatas(t1);
-            fileList.add(fi1);
+        List<List<FileChunkResponse.Document>> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
+        for (List<FileChunkResponse.Document> docList : docs) {
+            List<FileInfo> fileList = getFileInfoList(metadatas, docList);
+            upsertFileVectors(fileList, category);
         }
+    }
 
-        for (FileChunkResponse.Document doc : docs) {
+    private List<FileInfo> getFileInfoList(Map<String, Object> metadatas, List<FileChunkResponse.Document> docList) {
+        List<FileInfo> fileList = new ArrayList<>();
+//        String fileName = metadatas.get("filename").toString();
+//        if (fileName != null) {
+//            int dotIndex = fileName.lastIndexOf(".");
+//            if (dotIndex != -1) {
+//                fileName = fileName.substring(0, dotIndex);
+//            }
+//            FileInfo fi1 = new FileInfo();
+//            String e1 = UUID.randomUUID().toString().replace("-", "");
+//            fi1.setEmbedding_id(e1);
+//            fi1.setText(fileName);
+//            Map<String, Object> t1 = new HashMap<>(metadatas);
+//            t1.remove("parent_id");
+//            fi1.setMetadatas(t1);
+//            fileList.add(fi1);
+//        }
+        for (FileChunkResponse.Document doc : docList) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");
             fileInfo.setEmbedding_id(embeddingId);
@@ -163,7 +160,7 @@ public class VectorStoreService {
             fileInfo.setMetadatas(tmpMetadatas);
             fileList.add(fileInfo);
         }
-        upsertFileVectors(fileList, category);
+        return fileList;
     }
 
     public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category) {
@@ -345,8 +342,9 @@ public class VectorStoreService {
         if (question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
-        return search(question, request.getCategory(),request.getUserId());
+        return search(question, request.getCategory(), request.getUserId());
     }
+
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
@@ -379,25 +377,26 @@ public class VectorStoreService {
         }
         return search(question, request.getCategory());
     }
-    public List<IndexSearchData> search(String question, String category,String usr) {
+
+    public List<IndexSearchData> search(String question, String category, String usr) {
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
-        if (usr!=null){
+        if (usr != null) {
             VectorSettingsDao dao = new VectorSettingsDao();
             try {
                 List<UserRagSetting> userRagVector = dao.getUserRagVector(category, usr);
                 for (UserRagSetting userRagSetting : userRagVector) {
-                    if(userRagSetting.getFileType().equals("vector-max-top")){
+                    if (userRagSetting.getFileType().equals("vector-max-top")) {
                         similarity_top_k = userRagSetting.getChunkSize();
                         continue;
                     }
-                    if (userRagSetting.getFileType().equals("distance")){
+                    if (userRagSetting.getFileType().equals("distance")) {
                         similarity_cutoff = userRagSetting.getTemperature();
                         continue;
                     }
                 }
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -426,6 +425,7 @@ public class VectorStoreService {
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
+
     public List<IndexSearchData> search(String question, String category) {
 
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();

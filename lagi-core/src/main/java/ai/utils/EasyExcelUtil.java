@@ -73,7 +73,7 @@ public class EasyExcelUtil {
                                     } else {
                                         rowData.add("");
                                     }
-                                    row.put(columnIndex,lastRowValue);
+                                    row.put(columnIndex, lastRowValue);
                                 } else {
                                     rowData.add(cellValue + "\t");
                                 }
@@ -89,6 +89,7 @@ public class EasyExcelUtil {
                         System.out.println("-------------------------------------------------");
                         lastRowData = new HashMap<>(row);
                     }
+
                     @Override
                     public void doAfterAllAnalysed(AnalysisContext context) {
                         // Once the processing is complete
@@ -102,8 +103,9 @@ public class EasyExcelUtil {
         result.put("data", data);
         return result;
     }
+
     public static String getFileEncode(String path) {
-        String charset ="asci";
+        String charset = "asci";
         byte[] first3Bytes = new byte[3];
         BufferedInputStream bis = null;
         try {
@@ -168,37 +170,35 @@ public class EasyExcelUtil {
         return charset;
     }
 
-    public static Map<String, List<List<Object>>> readCsv(String filePath) throws IOException {
-        List<List<Object>> data = new ArrayList<>();
-        List<Object> header = new ArrayList<>();
+    public static Map<String, List<List<String>>> readCsv(String filePath) {
+        List<List<String>> data = new ArrayList<>();
+        List<String> header = new ArrayList<>();
+        Map<String, List<List<String>>> result = new HashMap<>();
 
-        List<Charset> possibleCharsets = Arrays.asList(Charset.forName("GBK"), Charset.forName("ISO-8859-1"));
-
-        for (Charset charset : possibleCharsets) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), charset))) {
-                String line;
-                boolean isHeader = true;
-
-                while ((line = br.readLine()) != null) {
-                    String[] cells = line.split(",");
-
-                    if (isHeader) {
-                        Collections.addAll(header, cells);
-                        isHeader = false;
-                    } else {
-                        List<Object> rowData = new ArrayList<>();
-                        for (String cell : cells) {
-                            rowData.add(cell + "\t");
-                        }
-                        data.add(rowData);
-                    }
-                }
-                break;
-            } catch (IOException e) {
-                System.err.println("尝试使用编码 " + charset.name() + " 失败，尝试下一个编码...");
-            }
+        String encodingName = EncodingDetector.detectEncoding(filePath);
+        if (encodingName == null) {
+            return result;
         }
-        Map<String, List<List<Object>>> result = new HashMap<>();
+        Charset charset = Charset.forName(encodingName);
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), charset))) {
+            String line;
+            boolean isHeader = true;
+
+            while ((line = br.readLine()) != null) {
+                String[] cells = line.split(",");
+
+                if (isHeader) {
+                    Collections.addAll(header, cells);
+                    isHeader = false;
+                } else {
+                    List<String> rowData = new ArrayList<>();
+                    Collections.addAll(rowData, cells);
+                    data.add(rowData);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("尝试使用编码 " + charset.name() + " 失败，尝试下一个编码...");
+        }
         result.put("header", Collections.singletonList(header));
         result.put("data", data);
         return result;
@@ -235,7 +235,7 @@ public class EasyExcelUtil {
                     rowData.add(cellValue);
                 }
             }
-            text+="| " + String.join(" | ", rowData) + " |</br>";
+            text += "| " + String.join(" | ", rowData) + " |</br>";
             msgList.add(text);
         }
         for (String row : msgList) {
@@ -270,10 +270,11 @@ public class EasyExcelUtil {
         }
 
         if (!currentPageItems.isEmpty()) {
-            pages.add((Page<T>) new Page<>(currentPageIndex, currentPageContent.length() , new ArrayList<>(currentPageItems)));
+            pages.add((Page<T>) new Page<>(currentPageIndex, currentPageContent.length(), new ArrayList<>(currentPageItems)));
         }
         return pages;
     }
+
     public static <T> List<Page<T>> paginate(List<List<Object>> data, int pageSize) {
         List<Page<T>> pages = new ArrayList<>();
         int currentPageIndex = 1;
@@ -315,18 +316,18 @@ public class EasyExcelUtil {
         }
 
         if (!currentPageItems.isEmpty()) {
-            pages.add((Page<T>) new Page<>(currentPageIndex, currentPageContent.length() , new ArrayList<>(currentPageItems)));
+            pages.add((Page<T>) new Page<>(currentPageIndex, currentPageContent.length(), new ArrayList<>(currentPageItems)));
         }
         return pages;
     }
 
-    public static <T>  List<FileChunkResponse.Document> mergePages1(List<Page<T>> pages, String sheet,String header) {
+    public static <T> List<FileChunkResponse.Document> mergePages1(List<Page<T>> pages, String sheet, String header) {
         List<FileChunkResponse.Document> result = new ArrayList<>();
         for (Page<T> page : pages) {
-            String text = "sheet工作表名："+sheet+"/n";
-            text +=header;
+            String text = "sheet工作表名：" + sheet + "/n";
+            text += header;
             for (T item : page.getItems()) {
-                text+=item;
+                text += item;
             }
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
             doc.setText(text);
@@ -340,9 +341,9 @@ public class EasyExcelUtil {
         for (Page<T> page : pages) {
             String text = "";
             List<Object> header1 = (List<Object>) header.get(0);
-            text = "表头: /n " + header1.get(0)+"/n";
+            text = "表头: /n " + header1.get(0) + "/n";
             for (T item : page.getItems()) {
-                text+=item+"/n";
+                text += item + "/n";
             }
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
             doc.setText(text);
@@ -354,6 +355,7 @@ public class EasyExcelUtil {
 
     /**
      * EasyExcel获取excel的分页数据
+     *
      * @param file
      * @return
      * @throws IOException
@@ -367,21 +369,58 @@ public class EasyExcelUtil {
         return mergePages(pages, header);
     }
 
+    public static List<List<FileChunkResponse.Document>> getChunkDocumentExcel(File file, Integer pageSize) {
+        List<List<FileChunkResponse.Document>> result = new ArrayList<>();
+        try {
+            ExcelReader reader = ExcelUtil.getReader(file);
+            List<String> sheetNames = reader.getSheetNames();
+            for (int i = 0; i < sheetNames.size(); i++) {
+                List<List<JSONObject>> rowJsons = readMergeExcel(file.getPath(), i, 0, 0);
+                List<JSONObject> headerRow = rowJsons.get(0);
+                List<String> headers = new ArrayList<>();
+                for (JSONObject cell : headerRow) {
+                    headers.add(cell.getStr("cellValue"));
+                }
+                for (int j = 1; j < rowJsons.size(); j++) {
+                    List<JSONObject> rowJson = rowJsons.get(j);
+                    List<FileChunkResponse.Document> docs = mergeExcelColumn(rowJson, headers);
+                    result.add(docs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private static List<FileChunkResponse.Document> mergeExcelColumn(List<JSONObject> rowJson, List<String> headers) {
+        List<FileChunkResponse.Document> docs = new ArrayList<>();
+        for (int k = 0; k < rowJson.size(); k++) {
+            String header = k < headers.size() ? headers.get(k) + ": " : "";
+            JSONObject cell = rowJson.get(k);
+            String cellValue = cell.getStr("cellValue");
+            FileChunkResponse.Document doc = new FileChunkResponse.Document();
+            doc.setText(header + cellValue + "\n");
+            docs.add(doc);
+        }
+        return docs;
+    }
+
     /**
      * Apache获取excel的分页数据
+     *
      * @param file
      * @return
-     * @throws IOException
      */
-    public static List<FileChunkResponse.Document> getChunkDocumentExcel(File file,Integer pageSize) throws IOException {
+    public static List<FileChunkResponse.Document> getChunkMarkdownExcel(File file, Integer pageSize) {
         List<FileChunkResponse.Document> resultDocument = new ArrayList<>();
         try {
             ExcelReader reader = ExcelUtil.getReader(file);
             List<String> sheetNames = reader.getSheetNames();
             for (int i = 0; i < sheetNames.size(); i++) {
-                List<List<JSONObject>> result =readMergeExcel(file.getPath(),i,0,0);
+                List<List<JSONObject>> result = readMergeExcel(file.getPath(), i, 0, 0);
                 StringBuilder separator = new StringBuilder();
-                if (result.size() <= 0){
+                if (result.size() <= 0) {
                     break;
                 }
                 // 获取表头
@@ -404,14 +443,34 @@ public class EasyExcelUtil {
         return resultDocument;
     }
 
-    public static List<FileChunkResponse.Document> getChunkDocumentCsv(File file) throws IOException {
-        Map<String, List<List<Object>>> result = readCsv(file.getPath());
-        List<Object> header = Collections.singletonList(result.get("header"));
-        List<List<Object>> rowData = result.get("data");
-        int pageSize = 512;
-        List<Page<List<Object>>> pages = paginate(rowData, pageSize);
-        return mergePages(pages, header);
+    public static List<List<FileChunkResponse.Document>> getChunkDocumentCsv(File file) {
+        List<List<FileChunkResponse.Document>> result = new ArrayList<>();
+        Map<String, List<List<String>>> csvData = readCsv(file.getPath());
+        if (csvData.get("header").isEmpty() || csvData.get("data").isEmpty()) {
+            return result;
+        }
+        List<String> header = csvData.get("header").get(0);
+        List<List<String>> rowData = csvData.get("data");
+        for (int i = 0; i < rowData.size(); i++) {
+            List<String> columnList = rowData.get(i);
+            List<FileChunkResponse.Document> docs = mergeCsvColumn(columnList, header);
+            result.add(docs);
+        }
+        return result;
     }
+
+    private static List<FileChunkResponse.Document> mergeCsvColumn(List<String> columnList, List<String> headers) {
+        List<FileChunkResponse.Document> docs = new ArrayList<>();
+        for (int k = 0; k < columnList.size(); k++) {
+            String header = k < headers.size() ? headers.get(k) + ": " : "";
+            String value = columnList.get(k);
+            FileChunkResponse.Document doc = new FileChunkResponse.Document();
+            doc.setText(header + value + "\n");
+            docs.add(doc);
+        }
+        return docs;
+    }
+
     public static String getExcelContent(File file) throws IOException {
         StringBuilder result = new StringBuilder();
         FileInputStream fileInputStream = new FileInputStream(file);
@@ -426,6 +485,7 @@ public class EasyExcelUtil {
                         result.append(String.join("\t", row.values()));
                         result.append("\n");
                     }
+
                     @Override
                     public void doAfterAllAnalysed(AnalysisContext context) {
                         // Once the processing is complete
@@ -439,6 +499,7 @@ public class EasyExcelUtil {
 
     /**
      * 读取excel数据 支持xls格式--apache
+     *
      * @param sheetIndex    sheet页下标：从0开始
      * @param startReadLine 开始读取的行:从0开始
      * @param tailLine      去除最后读取的行
@@ -459,13 +520,13 @@ public class EasyExcelUtil {
                 for (Cell c : row) {
                     JSONObject values = new JSONObject();
                     boolean isMerge = isMergedRegion(sheet, i, c.getColumnIndex());
-                    values.put("isMerge",isMerge);
+                    values.put("isMerge", isMerge);
                     // 判断是否具有合并单元格
                     if (isMerge) {
                         JSONObject rs = getMergedRegionJsonValue(sheet, row.getRowNum(), c.getColumnIndex());
                         values.putAll(rs);
                     } else {
-                        values.put("cellValue",getCellValue(c,formulaEvaluator));
+                        values.put("cellValue", getCellValue(c, formulaEvaluator));
                     }
                     result.add(values);
                 }
@@ -490,11 +551,11 @@ public class EasyExcelUtil {
                 if (column >= firstColumn && column <= lastColumn) {
                     Row fRow = sheet.getRow(firstRow);
                     Cell fCell = fRow.getCell(firstColumn);
-                    values.put("cellValue",getCellValue(fCell));
-                    values.put("firstColumn",firstColumn);
-                    values.put("lastColumn",lastColumn);
-                    values.put("firstRow",firstRow);
-                    values.put("lastRow",lastRow);
+                    values.put("cellValue", getCellValue(fCell));
+                    values.put("firstColumn", firstColumn);
+                    values.put("lastColumn", lastColumn);
+                    values.put("firstRow", firstRow);
+                    values.put("lastRow", lastRow);
                     return values;
                 }
             }
@@ -506,21 +567,24 @@ public class EasyExcelUtil {
      * 获取单元格的值
      */
     private static String getCellValue(Cell cell) {
-        if (cell == null) {return "";}
+        if (cell == null) {
+            return "";
+        }
         if (cell.getCellType() == CellType.STRING) {
             return cell.getStringCellValue();
         }
         if (cell.getCellType() == CellType.BOOLEAN) {
             return String.valueOf(cell.getBooleanCellValue());
         }
-        if (cell.getCellType() ==  CellType.FORMULA) {
+        if (cell.getCellType() == CellType.FORMULA) {
             return cell.getCellFormula();
         }
-        if (cell.getCellType() ==  CellType.NUMERIC) {
+        if (cell.getCellType() == CellType.NUMERIC) {
             return String.valueOf(cell.getNumericCellValue());
         }
         return "";
     }
+
     private static String getCellValue(Cell cell, FormulaEvaluator formulaEvaluator) {
         switch (cell.getCellType()) {
             case STRING:
@@ -547,6 +611,7 @@ public class EasyExcelUtil {
 
     /**
      * 判断指定的单元格是否是合并单元格
+     *
      * @param row    行下标
      * @param column 列下标
      */
@@ -578,13 +643,14 @@ public class EasyExcelUtil {
 
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             return result.toString();
         }
     }
 
     /**
      * 方案1
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -610,6 +676,7 @@ public class EasyExcelUtil {
 
     /**
      * 方案2
+     *
      * @param args
      */
     public static void main2(String[] args) {
@@ -621,7 +688,7 @@ public class EasyExcelUtil {
             List<String> sheetNames = reader.getSheetNames();
             for (int i = 0; i < sheetNames.size(); i++) {
 //                System.out.println(sheetNames.get(i));
-                List<List<JSONObject>> result =readMergeExcel(filePath,i,0,0);
+                List<List<JSONObject>> result = readMergeExcel(filePath, i, 0, 0);
 
                 StringBuilder separator = new StringBuilder();
                 // 获取表头

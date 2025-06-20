@@ -178,9 +178,9 @@ public class ExcelSqlUtil {
             fileName = fileName.substring(0, dotIndex);
         }
         if (file.getName().endsWith(".csv")){
-            Map<String, List<List<Object>>> res = EasyExcelUtil.readCsv(filePath);
-            List<List<Object>> result =  res.get("data");
-            List<Object> headers =  res.get("header").get(0);
+            Map<String, List<List<String>>> res = EasyExcelUtil.readCsv(filePath);
+            List<List<String>> result =  res.get("data");
+            List<String> headers =  res.get("header").get(0);
             StringBuilder description = new StringBuilder();
             for (int i = 0; i < headers.size(); i++) {
                 String fieldName = "字段field" + (i + 1);
@@ -203,7 +203,7 @@ public class ExcelSqlUtil {
             }
             StringBuilder sql = new StringBuilder("INSERT INTO detailed_data (" + fields + ") VALUES ");
             for (int i = 0; i < result.size(); i++) {
-                List<Object> dataRow = result.get(i);
+                List<String> dataRow = result.get(i);
                 sql.append("(").append(table_info_id);
 
                 for (Integer j = 0; j < fieldSize; j++) {
@@ -685,8 +685,8 @@ public class ExcelSqlUtil {
             String excelFilePath = "C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\节点分类-测试用.csv";
             System.out.println("是否走sql:"+isSql(excelFilePath));
             String tableName = "detailed_data";
-            List<List<Object>> result =  EasyExcelUtil.readCsv(excelFilePath).get("data");
-            for (List<Object> list : result) {
+            List<List<String>> result =  EasyExcelUtil.readCsv(excelFilePath).get("data");
+            for (List<String> list : result) {
                 System.out.println(list);
             }
         }catch (Exception e){
