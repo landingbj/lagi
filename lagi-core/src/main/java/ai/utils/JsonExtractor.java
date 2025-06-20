@@ -28,6 +28,14 @@ public class JsonExtractor {
             jsonStrings.add(objectMatcher.group());
         }
 
+        return jsonStrings;
+    }
+
+    public static List<String> extractJsonArrayStrings(String input) {
+        if (input == null || input.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> jsonStrings = new ArrayList<>();
         // Pattern to find JSON arrays (starting with [ and ending with ])
         Pattern arrayPattern = Pattern.compile("\\[(?:[^\\[\\]]|(?:\\[[^\\[\\]]*\\]))*\\]");
         Matcher arrayMatcher = arrayPattern.matcher(input);
@@ -50,19 +58,26 @@ public class JsonExtractor {
         return results.isEmpty() ? null : results.get(0);
     }
 
+    public static String extractFirstJsonArray(String input) {
+        List<String> results = extractJsonArrayStrings(input);
+        return results.isEmpty() ? null : results.get(0);
+    }
+
     // Example usage
     public static void main(String[] args) {
         String testString = "Some text before {\"name\": \"John\", \"age\": 30} and some text after. " +
                 "Also here's an array [1, 2, 3, 4] and another object {\"city\": \"New York\"}";
 
         List<String> jsonStrings = extractJsonStrings(testString);
-
         System.out.println("Found " + jsonStrings.size() + " JSON strings:");
         for (String json : jsonStrings) {
             System.out.println(json);
         }
 
-        System.out.println("\nFirst JSON string:");
-        System.out.println(extractFirstJsonString(testString));
+        List<String> jsonArrayStrings = extractJsonArrayStrings(testString);
+        System.out.println("Found " + jsonArrayStrings.size() + " JSON arrays:");
+        for (String json : jsonArrayStrings) {
+            System.out.println(json);
+        }
     }
 }

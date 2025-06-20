@@ -66,7 +66,8 @@ public class DocLoader implements DocumentLoader {
             String extString = file.getName().substring(file.getName().lastIndexOf("."));
             InputStream in = Files.newInputStream(file.toPath());
             content = WordUtils.getContentsByWord(in, extString).replaceAll("\\n+", "\n");
-            content = content != null ? FileService.removeDirectory(content) : content;
+            content = FileService.removeDirectory(content);
+            content = content.trim();
         } catch (Exception e) {
             log.error("load doc file error", e);
         }
@@ -84,7 +85,7 @@ public class DocLoader implements DocumentLoader {
         } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
             return OrdinanceExtractorUtil.getChunkDocument(content, splitConfig.getChunkSizeForText());
         } else {
-            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
+            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content, true);
         }
     }
 

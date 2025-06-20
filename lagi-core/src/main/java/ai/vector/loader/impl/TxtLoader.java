@@ -41,7 +41,7 @@ public class TxtLoader implements DocumentLoader {
             } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
                 return OrdinanceExtractorUtil.getChunkDocument(content, splitConfig.getChunkSizeForText());
             }
-            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
+            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content, true);
         } catch (Exception e) {
             log.error("load txt file error", e);
         }

@@ -52,7 +52,7 @@ public class ModelFunctions {
     @JsonProperty("filter")
     private String filter;
     @JsonProperty("text2qa")
-    private List<Backend> text2qa;
+    private Backend text2qa;
 
     @JsonCreator
     public ModelFunctions(
@@ -76,7 +76,7 @@ public class ModelFunctions {
             @JsonProperty("doc2ext") List<Backend> doc2ext,
             @JsonProperty("doc2struct") List<Backend> doc2struct,
             @JsonProperty("filter") String filter,
-            @JsonProperty("text2qa") List<Backend> text2qa
+            @JsonProperty("text2qa") Backend text2qa
     ) {
         this.embedding = embedding;
         this.chat = chat;

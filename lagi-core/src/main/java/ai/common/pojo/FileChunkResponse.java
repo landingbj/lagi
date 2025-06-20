@@ -1,6 +1,5 @@
 package ai.common.pojo;
 
-import com.google.gson.Gson;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,18 +14,9 @@ public class FileChunkResponse {
 
     @Data
     public static class Document {
-        private static final Gson gson = new Gson();
         private String text;
         private List<Image> images;
-        @Override
-        public Document clone() {
-            try {
-                return gson.fromJson(gson.toJson(this), FileChunkResponse.Document.class);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
+        private String source;
     }
 
     @Data
