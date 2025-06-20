@@ -21,7 +21,7 @@ import java.io.*;
 import java.security.SignatureException;
 import java.util.HashMap;
 
-@ASR(company = "spark", modelNames = "asr")
+@ASR(company = "spark", modelNames = "asrspark")
 public class SparkAudioAdapter  extends ModelService implements IAudioAdapter {
     private static final String ASRHOST = "https://raasr.xfyun.cn";
     @Override

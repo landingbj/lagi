@@ -398,7 +398,7 @@ public class LlmApiServlet extends BaseServlet {
             out.flush();
         }
         IntentRouteResult intentRouteResult = llmRequest.getIntent();
-        if (intentRouteResult.getInvoke() != null) {
+        if (intentRouteResult!=null&&intentRouteResult.getInvoke() != null) {
             String invoke = intentRouteResult.getInvoke();
             SummaryUtil.setInvoke(llmRequest, invoke);
             if (think) {
@@ -407,8 +407,8 @@ public class LlmApiServlet extends BaseServlet {
             }
             logger.info("Summary: {}", invoke);
         }
-
-        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(intentRouteResult.getAgents(), allAgents);
+        List<Integer> agents = intentRouteResult==null?null:intentRouteResult.getAgents();
+        List<Agent<ChatCompletionRequest, ChatCompletionResult>> pickAgentList = agentService.getAgentsById(agents, allAgents);
         Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent = null;
 
         if (pickAgentList == null || pickAgentList.isEmpty()) {

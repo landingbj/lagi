@@ -9,18 +9,22 @@ import ai.image.adapter.IImageGenerationAdapter;
 import ai.utils.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.core.auth.Auth;
-import com.baidubce.qianfan.model.image.Image2TextRequest;
-import com.baidubce.qianfan.model.image.Image2TextResponse;
-import com.baidubce.qianfan.model.image.Text2ImageRequest;
-import com.baidubce.qianfan.model.image.Text2ImageResponse;
+import com.baidubce.qianfan.model.image.*;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Img2Text(modelNames = "Fuyu-8B")
@@ -67,7 +71,7 @@ public class BaiduImageAdapter extends ModelService implements IImage2TextAdapte
         }
         image2TextRequest.setImage(fileContentAsBase64);
         if(StrUtil.isBlank(image2TextRequest.getPrompt())) {
-            image2TextRequest.setPrompt("detail");
+            image2TextRequest.setPrompt("introduce the picture");
         }
         return image2TextRequest;
     }
@@ -90,15 +94,45 @@ public class BaiduImageAdapter extends ModelService implements IImage2TextAdapte
         return ImageToTextResponse.error();
     }
 
-
-
     @Override
     public ImageGenerationResult generations(ImageGenerationRequest request) {
-        Qianfan qianfan = buildQianfan();
-        Text2ImageRequest text2ImageRequest = convertText2ImageResponse(request);
-        Text2ImageResponse text2ImageResponse = qianfan.text2Image(text2ImageRequest);
-        List<ImageGenerationData> dataList = text2ImageResponse.getData().stream().map(d -> ImageGenerationData.builder().base64Image(d.getB64Image()).build()).collect(Collectors.toList());
-        return ImageGenerationResult.builder().created(text2ImageResponse.getCreated()).dataType("base64").data(dataList).build();
+        if (getAccessToken()==null){
+            Qianfan qianfan = buildQianfan();
+            Text2ImageRequest text2ImageRequest = convertText2ImageResponse(request);
+            Text2ImageResponse text2ImageResponse = qianfan.text2Image(text2ImageRequest);
+            List<ImageGenerationData> dataList = text2ImageResponse.getData().stream().map(d -> ImageGenerationData.builder().base64Image(d.getB64Image()).build()).collect(Collectors.toList());
+            return ImageGenerationResult.builder().created(text2ImageResponse.getCreated()).dataType("base64").data(dataList).build();
+        }else {
+                String json = "{\"prompt\":\""+request.getPrompt()+"\",\"size\":\"1024x1024\",\"n\":1,\"steps\":20,\"sampler_index\":\"Euler a\"}";
+                HttpResponse response = HttpRequest.post("https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/text2image/sd_xl")
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .header("Authorization", "Bearer "+getAccessToken())
+                        .body(json)
+                        .timeout(300 * 1000) // 设置超时为 5 分钟
+                        .execute();
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    String msg = response.body().toString();
+                    JsonNode rootNode = objectMapper.readTree(msg);
+                    JsonNode dataArrayNode = rootNode.get("data");
+                    List<ImageGenerationData> dataList = new ArrayList<>();
+                    if (dataArrayNode.isArray()) {
+                        for (JsonNode dataNode : dataArrayNode) {
+                            String base64Image = dataNode.get("b64_image").asText();
+                            dataList.add(ImageGenerationData.builder().base64Image(base64Image).build());
+                        }
+                    }
+                    return ImageGenerationResult.builder()
+                            .created(System.currentTimeMillis() / 1000L)
+                            .dataType("base64")
+                            .data(dataList)
+                            .build();
+                }catch (Exception e){
+                    logger.error("error", e);
+                }
+         return null;
+        }
     }
 
 

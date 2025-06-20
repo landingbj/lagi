@@ -45,7 +45,7 @@ public class DailyRumorRefutationTool extends AbstractTool {
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("key", apiKey);
         queryParams.put("type", "shehui"); // 社会新闻分类，可能包含辟谣相关内容
-        queryParams.put("page_size", "5"); // 获取5条新闻
+        queryParams.put("page_size", "10"); // 获取10条新闻
         queryParams.put("is_filter", "1"); // 过滤广告
 
         String queryString = queryParams.entrySet().stream()

@@ -282,6 +282,15 @@
         <servlet-name>ocr</servlet-name>
         <url-pattern>/ocr/*</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>rank</servlet-name>
+        <servlet-class>ai.servlet.api.StatisticsApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>rank</servlet-name>
+        <url-pattern>/rank/*</url-pattern>
+    </servlet-mapping>
+
 
     <servlet>
         <servlet-name>modelManagerServlet</servlet-name>
