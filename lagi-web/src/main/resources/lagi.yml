@@ -217,10 +217,8 @@ functions:
       priority: 10
 
   text2qa:
-    - backend: landing
-      model: cascade
-      enable: true
-      priority: 10
+    enable: true
+    model: cascade
 
 
 # The following is the configuration of agents, name is the name of the agent,
