@@ -469,7 +469,8 @@ public class LlmApiServlet extends BaseServlet {
                         if (StrUtil.isNotBlank(chatCompletionResult.getModel())) {
                             chatCompletionResultWithSource = new ChatCompletionResultWithSource(chatCompletionResult.getModel(), finalOutputAgent.getAgentConfig().getId());
                         } else {
-                            chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), finalOutputAgent.getAgentConfig().getId());
+                            Integer AgentId = SkillMapUtil.getNameByID(finalOutputAgent.getAgentConfig().getName());
+                            chatCompletionResultWithSource = new ChatCompletionResultWithSource(finalOutputAgent.getAgentConfig().getName(), AgentId!=null?AgentId:finalOutputAgent.getAgentConfig().getId());
                         }
                         BeanUtil.copyProperties(chatCompletionResult, chatCompletionResultWithSource);
                         String msg = gson.toJson(chatCompletionResultWithSource);
@@ -533,7 +534,8 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void agentRunFinishCallBack(ChatCompletionResultWithSource[] resultWithSource, LLmRequest llmRequest, List<Agent<ChatCompletionRequest, ChatCompletionResult>> allAgents, Agent<ChatCompletionRequest, ChatCompletionResult> outputAgent, IntentResponse intentDetect) {
-        SkillMapUtil.getOrInsertScore(intentDetect, llmRequest, outputAgent, resultWithSource[0]);
+        //更新得分
+        SkillMapUtil.updateScore(intentDetect, llmRequest, outputAgent, resultWithSource[0]);
         deductExpense(resultWithSource[0], llmRequest, allAgents.stream().map(Agent::getAgentConfig).collect(Collectors.toList()));
         if (resultWithSource[0] != null) {
             if (outputAgent instanceof LocalRagAgent) {

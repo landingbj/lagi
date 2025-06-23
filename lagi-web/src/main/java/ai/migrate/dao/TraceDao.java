@@ -76,10 +76,13 @@ public class TraceDao {
         String sql = "INSERT INTO lagi_llm_trace(name) " +
                 "VALUES (?) ON CONFLICT(name) DO UPDATE SET count = count + ?;";
         PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, entity.getName());
-        ps.setInt(2, step);
-        int result = ps.executeUpdate();
-        BaseIndex.closeConnection(null, ps);
-        return result;
+        if (entity.getName() != null){
+            ps.setString(1, entity.getName());
+            ps.setInt(2, step);
+            int result = ps.executeUpdate();
+            BaseIndex.closeConnection(null, ps);
+            return result;
+        }
+        return -1;
     }
 }

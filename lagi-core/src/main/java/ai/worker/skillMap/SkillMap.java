@@ -279,6 +279,24 @@ public class SkillMap {
         }
     }
 
+    public void updateScore(AgentConfig agentConfig, List<String> keywords, Double score) {
+        try {
+            for (String keyword : keywords) {
+                List<AgentIntentScore> agentIntentScores = getAgentScore(keyword);
+                if(agentIntentScores == null || agentIntentScores.isEmpty()) {
+                    save(agentConfig, keyword, score);
+                } else {
+                    boolean present = agentIntentScores.stream().anyMatch(a -> a.getAgentId().equals(agentConfig.getId()));
+                    if(!present) {
+                        save(agentConfig, keyword, score);
+                    }
+                }
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
     private void save(AgentConfig agentConfig, String keyword, double score) {
         AgentIntentScore agentScore = AgentIntentScore.builder()
                 .agentId(agentConfig.getId()).agentName(agentConfig.getName()).keyword(keyword).score(score)
@@ -295,7 +313,8 @@ public class SkillMap {
     private void saveAgentScore(AgentIntentScore agentScore) {
         String keyword = agentScore.getKeyword();
         try {
-            agentScoreDao.saveScore(agentScore.getAgentId(), agentScore.getAgentName(), keyword, agentScore.getQuestion(), agentScore.getScore());
+            agentScoreDao.saveOrUpdateScore(agentScore.getAgentId(), agentScore.getAgentName(), keyword, agentScore.getQuestion(), agentScore.getScore());
+//            agentScoreDao.saveScore(agentScore.getAgentId(), agentScore.getAgentName(), keyword, agentScore.getQuestion(), agentScore.getScore());
         } catch (Exception ignored) {
         }
         removeCached(keyword);
@@ -423,6 +442,9 @@ public class SkillMap {
             agentScoreDao.saveOrUpdateScore(agentId, agentName, keyword, question, score);
             cachedSkillMap.remove(keyword);
         });
+    }
+    public Integer getNameByID(String name) {
+        return agentScoreDao.getNameByID( name);
     }
 
 }

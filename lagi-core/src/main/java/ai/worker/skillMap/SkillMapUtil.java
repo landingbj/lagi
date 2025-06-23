@@ -298,6 +298,21 @@ public class SkillMapUtil {
         return scoring;
     }
 
+    public static Double updateScore(IntentResponse intentResponse, ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent, ChatCompletionResult chatCompletionResult) {
+        List<String> keywords = intentResponse.getKeywords();
+        if(intentResponse == null) {
+            return null;
+        }
+        double scoring;
+        scoring = skillMap.scoring(ChatCompletionUtil.getLastMessage(request), ChatCompletionUtil.getFirstAnswer(chatCompletionResult));
+        skillMap.updateScore(agent.getAgentConfig(), keywords, scoring);
+        return scoring;
+    }
+
+    public static Integer getNameByID(String name) {
+        return skillMap.getNameByID(name);
+    }
+
     public static void saveScore(IntentResponse intentResponse, ChatCompletionRequest request, Agent<ChatCompletionRequest, ChatCompletionResult> agent) {
         if(intentResponse == null ||  intentResponse.getKeywords()  == null ) {
             return;

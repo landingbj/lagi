@@ -678,6 +678,7 @@ function streamOutput(paras, question, robootAnswerJq, url = "chat/go/stream") {
         let flag = true;
         let buffer = '';
         let sourceContent = '';
+        let pageContent = '';
         robootAnswerJq.html('<p></p>');
         while (flag) {
             const {value, done} = await reader.read();
@@ -724,8 +725,11 @@ function streamOutput(paras, question, robootAnswerJq, url = "chat/go/stream") {
                     continue;
                 }
                 // console.log("content:", chatMessage);
-                sourceContent += chatMessage.content;
-                let temp = sourceContent;
+                if(json.source) {
+                    sourceContent  +=  chatMessage.content;
+                }
+                pageContent += chatMessage.content;
+                let temp = pageContent;
                 temp = marked.parse(temp);
                 // temp = temp.replaceAll(/ /g, '&nbsp;');
                 // temp = temp.replaceAll(/<\/?code>/g, '');

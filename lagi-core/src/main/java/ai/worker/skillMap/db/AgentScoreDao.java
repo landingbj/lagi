@@ -252,4 +252,20 @@ public class AgentScoreDao {
         }
         return scores;
     }
+
+    public Integer getNameByID(String name) {
+        String sql = "SELECT agent_id FROM agent_scores WHERE agent_name = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("agent_id");
+            }
+        } catch (SQLException e) {
+            log.error("Error querying agent_scores", e);
+        }
+        return null;
+    }
+
 }
