@@ -110,5 +110,9 @@ public class GlobalConfigurations extends AbstractConfiguration {
                 .build();
     }
 
+    public static void main(String[] args) {
+        ContextLoader.loadContext();
+        System.out.println(ContextLoader.configuration);
+    }
 
 }

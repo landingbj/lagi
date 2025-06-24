@@ -11,14 +11,23 @@ import ai.vector.loader.pojo.SplitConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 public class TxtLoader implements DocumentLoader {
-
     @Override
-    public List<FileChunkResponse.Document> load(String path, SplitConfig splitConfig) {
+    public List<List<FileChunkResponse.Document>> load(String path, SplitConfig splitConfig) {
+        List<FileChunkResponse.Document> documents = txtLoad(path, splitConfig);
+        List<List<FileChunkResponse.Document>> res = new ArrayList<>();
+        if (documents != null && !documents.isEmpty()) {
+            res.add(documents);
+        }
+        return res;
+    }
+
+    public List<FileChunkResponse.Document> txtLoad(String path, SplitConfig splitConfig) {
         File file = new File(path);
         String content = FileService.getString(file.getPath());
         try {
@@ -32,11 +41,10 @@ public class TxtLoader implements DocumentLoader {
             } else if (OrdinanceExtractorUtil.isOrdinanceDocument(content)) {
                 return OrdinanceExtractorUtil.getChunkDocument(content, splitConfig.getChunkSizeForText());
             }
-            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content);
+            return FileService.splitContentChunks(splitConfig.getChunkSizeForText(), content, true);
         } catch (Exception e) {
             log.error("load txt file error", e);
         }
         return Collections.emptyList();
     }
-
 }

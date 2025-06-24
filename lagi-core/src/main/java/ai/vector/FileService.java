@@ -2,6 +2,8 @@ package ai.vector;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -23,16 +25,23 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import javax.imageio.ImageIO;
 
 public class FileService {
+//    private static final String EXTRACT_CONTENT_URL = "http://localhost:8090/file/extract_content_with_image";
     private static final String EXTRACT_CONTENT_URL = AiGlobal.SAAS_URL + "/saas/extractContentWithImage";
     private static final String TO_MARKDOWN_URL = AiGlobal.SAAS_URL + "/saas/toMarkdown";
 
     private final Gson gson = new Gson();
 
     public static void main(String[] args) {
-        FileService fileService = new FileService();
-        File file = new File("D:\\Test\\Datasets\\Document\\知识图谱.PDF");
-        Response response = fileService.toMarkdown(file);
-        System.out.println(response);
+        try {
+            FileService fileService = new FileService();
+//            File file = new File("C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\安全带未系提示电路.docx");
+            File file = new File("C:\\Users\\ruiqing.luo\\Desktop\\rag调优\\风力发电机组故障处理手册.pdf");
+            FileChunkResponse response = fileService.extractContent(file);
+            System.out.println(response);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     public FileChunkResponse extractContent(File file) {
@@ -68,9 +77,9 @@ public class FileService {
         String extString = file.getName().substring(file.getName().lastIndexOf("."));
         String fileType = extString.toLowerCase().toLowerCase();
         if (fileType.equals(".xls")||fileType.equals(".xlsx")){
-            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
+//            return EasyExcelUtil.getChunkDocumentExcel(file,chunkSize);
         }else if (fileType.equals(".csv")){
-            return EasyExcelUtil.getChunkDocumentCsv(file);
+//            return EasyExcelUtil.getChunkDocumentCsv(file);
         }else if (fileType.equals(".jpeg")||fileType.equals(".png")||
                   fileType.equals(".gif")||fileType.equals(".bmp")||
                   fileType.equals(".webp")||fileType.equals(".jpg")){
@@ -83,23 +92,18 @@ public class FileService {
     }
 
     public static List<FileChunkResponse.Document> splitContentChunks(int chunkSize, String content) {
+        return splitContentChunks(chunkSize, content, false);
+    }
+
+    public static List<FileChunkResponse.Document> splitContentChunks(int chunkSize, String content, boolean lineSeparator) {
         List<FileChunkResponse.Document> result = new ArrayList<>();
-        int start = 0;
-        while (start < content.length()) {
-            int end = Math.min(start + chunkSize, content.length());
-            int lastSentenceEnd = Math.max(content.lastIndexOf('.', end), content.lastIndexOf('\n', end));
-            if (lastSentenceEnd != -1 && lastSentenceEnd > start) {
-                end = lastSentenceEnd + 1;
-            }
-            String text = content.substring(start, end).replaceAll("\\s+", " ");
+        StringSplitUtils.splitContentChunks(chunkSize, content, lineSeparator).forEach(text -> {
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
             doc.setText(text);
             result.add(doc);
-            start = end;
-        }
+        });
         return result;
     }
-
 
     public static List<FileChunkResponse.Document> getChunkDocumentImage(File file,Integer chunkSize) {
         List<FileChunkResponse.Document> result = new ArrayList<>();
@@ -315,8 +319,11 @@ public class FileService {
     public static String getString(String filePath) {
         StringBuilder content = new StringBuilder();
         try {
-            content.append(Files.lines(Paths.get(filePath))
-                    .collect(Collectors.joining("\n")));
+            BufferedReader reader = Files.newBufferedReader(Paths.get(filePath), Charset.forName("GBK"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

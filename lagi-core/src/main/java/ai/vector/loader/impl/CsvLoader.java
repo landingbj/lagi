@@ -13,19 +13,23 @@ import java.util.List;
 
 @Slf4j
 public class CsvLoader implements DocumentLoader {
-    
+    @Override
+    public List<List<FileChunkResponse.Document>> load(String path, SplitConfig splitConfig) {
+        List<List<FileChunkResponse.Document>> documents = csvLoad(path, splitConfig);
+        return documents;
+    }
 
-    public List<FileChunkResponse.Document> load(String path, SplitConfig splitConfig){
+    public List<List<FileChunkResponse.Document>> csvLoad(String path, SplitConfig splitConfig) {
         File file = new File(path);
-        if (ExcelSqlUtil.isSql(file.getPath())){
-            if (ExcelSqlUtil.isSqlietConnect()||ExcelSqlUtil.isConnect()){
+        if (ExcelSqlUtil.isSql(file.getPath())) {
+            if (ExcelSqlUtil.isSqlietConnect() || ExcelSqlUtil.isConnect()) {
                 try {
-                    ExcelSqlUtil.uploadSql(file.getPath(),(String) splitConfig.getExtra().get("filename"),(String) splitConfig.getExtra().get("file_id"));
+                    ExcelSqlUtil.uploadSql(file.getPath(), (String) splitConfig.getExtra().get("filename"), (String) splitConfig.getExtra().get("file_id"));
                 } catch (Exception e) {
                     log.error("excel: upload sql error", e);
                 }
             }
-        }else {
+        } else {
             try {
                 return EasyExcelUtil.getChunkDocumentCsv(file);
             } catch (Exception e) {
@@ -34,5 +38,4 @@ public class CsvLoader implements DocumentLoader {
         }
         return Collections.emptyList();
     }
-
 }

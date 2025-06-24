@@ -18,6 +18,7 @@ public class FileChunkResponse {
         private static final Gson gson = new Gson();
         private String text;
         private List<Image> images;
+        private String source;
         @Override
         public Document clone() {
             try {

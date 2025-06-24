@@ -13,28 +13,28 @@ import java.util.List;
 
 @Slf4j
 public class ExcelLoader implements DocumentLoader {
+    @Override
+    public List<List<FileChunkResponse.Document>> load(String path, SplitConfig splitConfig) {
+        return excelLoad(path, splitConfig);
+    }
 
-
-    // checked
-
-    public List<FileChunkResponse.Document> load(String path, SplitConfig splitConfig){
+    public List<List<FileChunkResponse.Document>> excelLoad(String path, SplitConfig splitConfig) {
         File file = new File(path);
-        if (ExcelSqlUtil.isSql(file.getPath())){
-            if (ExcelSqlUtil.isSqlietConnect()||ExcelSqlUtil.isConnect()){
+        if (ExcelSqlUtil.isSql(file.getPath())) {
+            if (ExcelSqlUtil.isSqlietConnect() || ExcelSqlUtil.isConnect()) {
                 try {
-                    ExcelSqlUtil.uploadSql(file.getPath(),(String) splitConfig.getExtra().get("filename"),(String) splitConfig.getExtra().get("file_id"));
+                    ExcelSqlUtil.uploadSql(file.getPath(), (String) splitConfig.getExtra().get("filename"), (String) splitConfig.getExtra().get("file_id"));
                 } catch (Exception e) {
                     log.error("excel: upload sql error", e);
                 }
             }
-        }else {
+        } else {
             try {
-                return EasyExcelUtil.getChunkDocumentExcel(file,splitConfig.getChunkSizeForText());
+                return EasyExcelUtil.getChunkDocumentExcel(file, splitConfig.getChunkSizeForText());
             } catch (Exception e) {
                 log.error("load excel file error", e);
             }
         }
         return Collections.emptyList();
     }
-
 }

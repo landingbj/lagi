@@ -18,7 +18,7 @@ import ai.vector.impl.BaseVectorStore;
 import ai.vector.loader.DocumentLoader;
 import ai.vector.loader.impl.*;
 import ai.vector.loader.pojo.SplitConfig;
-import ai.vector.loader.util.TextParse;
+import ai.vector.loader.util.DocQaExtractor;
 import ai.vector.pojo.QueryCondition;
 import ai.vector.pojo.IndexRecord;
 import ai.vector.pojo.UpsertRecord;
@@ -132,30 +132,19 @@ public class VectorStoreService {
 
         String suffix = file.getName().toLowerCase().split("\\.")[1];
         DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
-
-        List<FileChunkResponse.Document> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
-
-        docs = TextParse.parseText(file.getPath(),docs, category, metadatas);
-
-        List<FileInfo> fileList = new ArrayList<>();
-
-        String fileName = metadatas.get("filename").toString();
-        if (fileName != null) {
-            int dotIndex = fileName.lastIndexOf(".");
-            if (dotIndex != -1) {
-                fileName = fileName.substring(0, dotIndex);
-            }
-            FileInfo fi1 = new FileInfo();
-            String e1 = UUID.randomUUID().toString().replace("-", "");
-            fi1.setEmbedding_id(e1);
-            fi1.setText(fileName);
-            Map<String, Object> t1 = new HashMap<>(metadatas);
-            t1.remove("parent_id");
-            fi1.setMetadatas(t1);
-            fileList.add(fi1);
+        List<List<FileChunkResponse.Document>> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
+        String fileName = file.getName();
+        if (fileName.endsWith(".docx") || fileName.endsWith(".doc") || fileName.endsWith(".txt") || fileName.endsWith(".pdf")) {
+            docs = DocQaExtractor.parseText(docs);
         }
-
-        for (FileChunkResponse.Document doc : docs) {
+        for (List<FileChunkResponse.Document> docList : docs) {
+            List<FileInfo> fileList = getFileInfoList(metadatas, docList);
+            upsertFileVectors(fileList, category);
+        }
+    }
+    private List<FileInfo> getFileInfoList(Map<String, Object> metadatas, List<FileChunkResponse.Document> docList) {
+        List<FileInfo> fileList = new ArrayList<>();
+        for (FileChunkResponse.Document doc : docList) {
             FileInfo fileInfo = new FileInfo();
             String embeddingId = UUID.randomUUID().toString().replace("-", "");
             fileInfo.setEmbedding_id(embeddingId);
@@ -164,10 +153,13 @@ public class VectorStoreService {
             if (doc.getImages() != null) {
                 tmpMetadatas.put("image", gson.toJson(doc.getImages()));
             }
+            if (doc.getSource() != null) {
+                tmpMetadatas.put("source", doc.getSource());
+            }
             fileInfo.setMetadatas(tmpMetadatas);
             fileList.add(fileInfo);
         }
-        upsertFileVectors(fileList, category);
+        return fileList;
     }
 
     public void upsertCustomVectors(List<UpsertRecord> upsertRecords, String category) {
@@ -509,6 +501,7 @@ public class VectorStoreService {
         indexSearchData.setImage((String) indexRecord.getMetadata().get("image"));
         indexSearchData.setDistance(indexRecord.getDistance());
         indexSearchData.setParentId((String) indexRecord.getMetadata().get("parent_id"));
+        indexSearchData.setSource((String) indexRecord.getMetadata().get("source"));
         return indexSearchData;
     }
 
@@ -551,21 +544,31 @@ public class VectorStoreService {
     }
 
     public IndexSearchData extendText(int parentDepth, int childDepth, IndexSearchData data, String category) {
-        String text = data.getText().trim();
         String splitChar = "";
         if (data.getFilename() != null && data.getFilename().size() == 1
                 && data.getFilename().get(0).isEmpty()) {
             splitChar = "\n";
         }
 
+        String text = data.getText().trim();
+
+        if (data.getSource() != null) {
+            text = "";
+            childDepth = childDepth + 1;
+        }
+
         String parentId = data.getParentId();
         int parentCount = 0;
-        for (int i = 0; i < parentDepth; i++) {
+        int i = 0;
+        while (i < parentDepth) {
             IndexSearchData parentData = getParentIndex(parentId, category);
             if (parentData != null) {
-                text = parentData.getText() + splitChar + text;
+                if (parentData.getSource() == null) {
+                    text = parentData.getText() + splitChar + text;
+                    parentCount++;
+                    i++;
+                }
                 parentId = parentData.getParentId();
-                parentCount++;
             } else {
                 break;
             }
@@ -574,10 +577,14 @@ public class VectorStoreService {
             childDepth = childDepth + parentDepth - parentCount;
         }
         parentId = data.getId();
-        for (int i = 0; i < childDepth; i++) {
+        int j = 0;
+        while (j < childDepth) {
             IndexSearchData childData = getChildIndex(parentId, category);
             if (childData != null) {
-                text = text + splitChar + childData.getText();
+                if (childData.getSource() == null) {
+                    text = text + splitChar + childData.getText();
+                    j++;
+                }
                 parentId = childData.getId();
             } else {
                 break;
