@@ -1,7 +1,13 @@
 package ai.servlet.api;
 
 import ai.common.pojo.Response;
+import ai.llm.service.CompletionsService;
+import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
+import ai.vector.FileService;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -28,11 +34,22 @@ public class PinDiagramServlet extends BaseServlet {
     private static final String UPLOAD_DIR = "upload";
     private static final Logger logger = LoggerFactory.getLogger(PinDiagramServlet.class);
     private final Gson gson = new Gson();
+    private final FileService fileService = new FileService();
+    private final CompletionsService completionsService = new CompletionsService();
+    private static final int CHUNK_SIZE = 20000;
     private static final String[] KEYWORDS = {
-            "PIN CONFIGURATION",
-            "PIN DESCRIPTION",
+            "PIN CONFIGURATION", // 映射到 Pinout & Pin Function
+            "PIN DESCRIPTION",   // 映射到 Pinout & Pin Function
             "Typical Application Circuit",
             "ELECTRICAL CHARACTERISTICS"
+    };
+    private static final String[] SLIDE_TITLES = {
+            "Product Overview",
+            "Architecture (Block Diagram)",
+            "Pinout & Pin Function",
+            "Typical Application Circuit",
+            "EC SPEC",
+            "Package & Pad"
     };
 
     @Override
@@ -65,7 +82,10 @@ public class PinDiagramServlet extends BaseServlet {
         upload.setSizeMax(10 * 1024 * 1024);
 
         String keyword = null;
+        String pptType = null;
         File pdfFile = null;
+        File architectureImage = null;
+        File packagePadImage = null;
 
         try {
             List<FileItem> items = upload.parseRequest(req);
@@ -77,6 +97,8 @@ public class PinDiagramServlet extends BaseServlet {
                     String fieldValue = item.getString("UTF-8");
                     if ("keyword".equals(fieldName)) {
                         keyword = fieldValue;
+                    } else if ("pptType".equals(fieldName)) {
+                        pptType = fieldValue; // full 或 partial
                     }
                     logger.debug("Form field: {} = {}", fieldName, fieldValue);
                 } else {
@@ -84,16 +106,27 @@ public class PinDiagramServlet extends BaseServlet {
                     if (fileName != null && !fileName.isEmpty()) {
                         fileName = fileName.replaceAll("[^a-zA-Z0-9.-]", "_");
                         fileName = System.currentTimeMillis() + "_" + fileName;
-                        pdfFile = new File(uploadPath.toFile(), fileName);
-                        item.write(pdfFile);
-                        logger.info("Uploaded file saved: {} (size: {} bytes)", pdfFile.getAbsolutePath(), pdfFile.length());
+                        String fieldName = item.getFieldName();
+                        if ("pdfFile".equals(fieldName)) {
+                            pdfFile = new File(uploadPath.toFile(), fileName);
+                            item.write(pdfFile);
+                            logger.info("Uploaded PDF file saved: {} (size: {} bytes)", pdfFile.getAbsolutePath(), pdfFile.length());
+                        } else if ("architectureImage".equals(fieldName)) {
+                            architectureImage = new File(uploadPath.toFile(), fileName);
+                            item.write(architectureImage);
+                            logger.info("Uploaded Architecture image saved: {} (size: {} bytes)", architectureImage.getAbsolutePath(), architectureImage.length());
+                        } else if ("packagePadImage".equals(fieldName)) {
+                            packagePadImage = new File(uploadPath.toFile(), fileName);
+                            item.write(packagePadImage);
+                            logger.info("Uploaded Package & Pad image saved: {} (size: {} bytes)", packagePadImage.getAbsolutePath(), packagePadImage.length());
+                        }
                     }
                 }
             }
 
             if (pdfFile == null || !pdfFile.exists()) {
-                logger.warn("No file uploaded or file not saved");
-                Response response = Response.builder().status("failed").msg("No file uploaded").build();
+                logger.warn("No PDF file uploaded or file not saved");
+                Response response = Response.builder().status("failed").msg("No PDF file uploaded").build();
                 responsePrint(resp, gson.toJson(response));
                 return;
             }
@@ -101,31 +134,43 @@ public class PinDiagramServlet extends BaseServlet {
             if (keyword != null && !keyword.trim().isEmpty()) {
                 queryImage(pdfFile, keyword, resp);
             } else {
-                generatePPT(pdfFile, resp);
+                generatePPT(pdfFile, architectureImage, packagePadImage, pptType, resp);
             }
         } catch (Exception e) {
             logger.error("Request processing failed", e);
             Response response = Response.builder().status("failed").msg("Request processing failed: " + e.getMessage()).build();
             responsePrint(resp, gson.toJson(response));
         } finally {
+            // 保留临时文件用于调试
             if (pdfFile != null && pdfFile.exists()) {
-                logger.info("Temporary file retained for debugging: {}", pdfFile.getAbsolutePath());
+                logger.info("Temporary PDF file retained for debugging: {}", pdfFile.getAbsolutePath());
+            }
+            if (architectureImage != null && architectureImage.exists()) {
+                logger.info("Temporary Architecture image retained for debugging: {}", architectureImage.getAbsolutePath());
+            }
+            if (packagePadImage != null && packagePadImage.exists()) {
+                logger.info("Temporary Package & Pad image retained for debugging: {}", packagePadImage.getAbsolutePath());
             }
         }
     }
 
-    private void generatePPT(File pdfFile, HttpServletResponse resp) {
-        logger.info("Generating PPT for file: {}", pdfFile.getName());
+    private void generatePPT(File pdfFile, File architectureImage, File packagePadImage, String pptType, HttpServletResponse resp) {
+        logger.info("Generating PPT for file: {}, pptType: {}", pdfFile.getName(), pptType);
         List<String> imagePaths = new ArrayList<>();
         Path uploadPath = Paths.get(getServletContext().getRealPath("/") + File.separator + UPLOAD_DIR);
 
         try {
-            for (int i = 0; i < KEYWORDS.length; i++) {
-                String keyword = KEYWORDS[i];
+            // Step 1: 生成 Product Overview
+            String productOverview = generateProductOverview(pdfFile);
+            if (productOverview == null || productOverview.trim().isEmpty()) {
+                logger.warn("Failed to generate Product Overview");
+            }
+
+            // Step 2: 收集截图
+            for (String keyword : KEYWORDS) {
                 String imagePath = callPythonService(pdfFile, keyword);
                 if (imagePath != null && new File(imagePath).exists() && new File(imagePath).length() > 0) {
-                    // Use unique debug image name with index
-                    String debugImageName = "debug_" + i + "_" + keyword.replaceAll("[^a-zA-Z0-9]", "_") + ".png";
+                    String debugImageName = "debug_" + keyword.replaceAll("[^a-zA-Z0-9]", "_") + ".png";
                     Files.copy(Paths.get(imagePath), uploadPath.resolve(debugImageName), StandardCopyOption.REPLACE_EXISTING);
                     logger.info("Debug image saved: {}", uploadPath.resolve(debugImageName));
                     imagePaths.add(imagePath);
@@ -135,41 +180,148 @@ public class PinDiagramServlet extends BaseServlet {
                 }
             }
 
-            if (imagePaths.isEmpty()) {
-                logger.warn("No images generated for PPT");
-                Response response = Response.builder().status("failed").msg("No images generated").build();
-                responsePrint(resp, gson.toJson(response));
-                return;
-            }
-
+            // Step 3: 创建 PPT
             XMLSlideShow ppt = new XMLSlideShow();
             XSLFSlideMaster master = ppt.getSlideMasters().get(0);
             XSLFSlideLayout layout = master.getLayout(SlideLayout.TITLE_AND_CONTENT);
 
-            for (int i = 0; i < imagePaths.size(); i++) {
-                String imagePath = imagePaths.get(i);
-                String keyword = KEYWORDS[i];
-
+            // 添加 Product Overview 幻灯片
+            if (productOverview != null && !productOverview.trim().isEmpty()) {
                 XSLFSlide slide = ppt.createSlide(layout);
                 XSLFTextShape title = slide.getPlaceholder(0);
                 title.clearText();
                 XSLFTextParagraph titleP = title.addNewTextParagraph();
                 XSLFTextRun titleR = titleP.addNewTextRun();
-                titleR.setText(keyword);
+                titleR.setText(SLIDE_TITLES[0]);
                 titleR.setFontSize(28.0);
                 titleR.setFontColor(Color.BLACK);
 
-                File imageFile = new File(imagePath);
-                if (!imageFile.exists() || imageFile.length() == 0) {
-                    logger.warn("Image file invalid: {}", imagePath);
-                    continue;
+                XSLFTextShape content = slide.getPlaceholder(1);
+                content.clearText();
+                String[] lines = productOverview.split("\n");
+                for (String line : lines) {
+                    XSLFTextParagraph p = content.addNewTextParagraph();
+                    XSLFTextRun r = p.addNewTextRun();
+                    r.setText(line);
+                    r.setFontSize(20.0);
+                    r.setFontColor(Color.BLACK);
                 }
+                logger.debug("Added Product Overview slide");
+            }
 
-                byte[] imageData = Files.readAllBytes(imageFile.toPath());
+            // 添加 Architecture (Block Diagram) 幻灯片
+            if (architectureImage != null && architectureImage.exists() && architectureImage.length() > 0) {
+                XSLFSlide slide = ppt.createSlide(layout);
+                XSLFTextShape title = slide.getPlaceholder(0);
+                title.clearText();
+                XSLFTextParagraph titleP = title.addNewTextParagraph();
+                XSLFTextRun titleR = titleP.addNewTextRun();
+                titleR.setText(SLIDE_TITLES[1]);
+                titleR.setFontSize(28.0);
+                titleR.setFontColor(Color.BLACK);
+
+                byte[] imageData = Files.readAllBytes(architectureImage.toPath());
                 XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
                 XSLFPictureShape picture = slide.createPicture(pictureData);
                 picture.setAnchor(new Rectangle(50, 100, 500, 350));
-                logger.debug("Added slide for keyword '{}'", keyword);
+                logger.debug("Added Architecture (Block Diagram) slide");
+            }
+
+            // 如果是 full PPT，添加其他幻灯片
+            if ("full".equals(pptType)) {
+                // 添加 Pinout & Pin Function 幻灯片（合并 PIN CONFIGURATION 和 PIN DESCRIPTION）
+                if (imagePaths.size() >= 2 && new File(imagePaths.get(0)).exists() && new File(imagePaths.get(1)).exists()) {
+                    XSLFSlide slide = ppt.createSlide(layout);
+                    XSLFTextShape title = slide.getPlaceholder(0);
+                    title.clearText();
+                    XSLFTextParagraph titleP = title.addNewTextParagraph();
+                    XSLFTextRun titleR = titleP.addNewTextRun();
+                    titleR.setText(SLIDE_TITLES[2]); // Pinout & Pin Function
+                    titleR.setFontSize(28.0);
+                    titleR.setFontColor(Color.BLACK);
+
+                    // 添加 PIN CONFIGURATION 图片
+                    byte[] configImageData = Files.readAllBytes(new File(imagePaths.get(0)).toPath());
+                    XSLFPictureData configPictureData = ppt.addPicture(configImageData, XSLFPictureData.PictureType.PNG);
+                    XSLFPictureShape configPicture = slide.createPicture(configPictureData);
+                    configPicture.setAnchor(new Rectangle(50, 100, 500, 175)); // 上半部分
+
+                    // 添加 PIN DESCRIPTION 图片
+                    byte[] descImageData = Files.readAllBytes(new File(imagePaths.get(1)).toPath());
+                    XSLFPictureData descPictureData = ppt.addPicture(descImageData, XSLFPictureData.PictureType.PNG);
+                    XSLFPictureShape descPicture = slide.createPicture(descPictureData);
+                    descPicture.setAnchor(new Rectangle(50, 300, 500, 175)); // 下半部分
+                    logger.debug("Added Pinout & Pin Function slide");
+                } else {
+                    logger.warn("Missing images for Pinout & Pin Function");
+                }
+
+                // 添加 Typical Application Circuit 幻灯片
+                if (imagePaths.size() >= 3 && new File(imagePaths.get(2)).exists()) {
+                    XSLFSlide slide = ppt.createSlide(layout);
+                    XSLFTextShape title = slide.getPlaceholder(0);
+                    title.clearText();
+                    XSLFTextParagraph titleP = title.addNewTextParagraph();
+                    XSLFTextRun titleR = titleP.addNewTextRun();
+                    titleR.setText(SLIDE_TITLES[3]);
+                    titleR.setFontSize(28.0);
+                    titleR.setFontColor(Color.BLACK);
+
+                    byte[] imageData = Files.readAllBytes(new File(imagePaths.get(2)).toPath());
+                    XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
+                    XSLFPictureShape picture = slide.createPicture(pictureData);
+                    picture.setAnchor(new Rectangle(50, 100, 500, 350));
+                    logger.debug("Added Typical Application Circuit slide");
+                } else {
+                    logger.warn("Missing image for Typical Application Circuit");
+                }
+
+                // 添加 EC SPEC 幻灯片
+                if (imagePaths.size() >= 4 && new File(imagePaths.get(3)).exists()) {
+                    XSLFSlide slide = ppt.createSlide(layout);
+                    XSLFTextShape title = slide.getPlaceholder(0);
+                    title.clearText();
+                    XSLFTextParagraph titleP = title.addNewTextParagraph();
+                    XSLFTextRun titleR = titleP.addNewTextRun();
+                    titleR.setText(SLIDE_TITLES[4]);
+                    titleR.setFontSize(28.0);
+                    titleR.setFontColor(Color.BLACK);
+
+                    byte[] imageData = Files.readAllBytes(new File(imagePaths.get(3)).toPath());
+                    XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
+                    XSLFPictureShape picture = slide.createPicture(pictureData);
+                    picture.setAnchor(new Rectangle(50, 100, 500, 350));
+                    logger.debug("Added EC SPEC slide");
+                } else {
+                    logger.warn("Missing image for EC SPEC");
+                }
+
+                // 添加 Package & Pad 幻灯片
+                if (packagePadImage != null && packagePadImage.exists() && packagePadImage.length() > 0) {
+                    XSLFSlide slide = ppt.createSlide(layout);
+                    XSLFTextShape title = slide.getPlaceholder(0);
+                    title.clearText();
+                    XSLFTextParagraph titleP = title.addNewTextParagraph();
+                    XSLFTextRun titleR = titleP.addNewTextRun();
+                    titleR.setText(SLIDE_TITLES[5]);
+                    titleR.setFontSize(28.0);
+                    titleR.setFontColor(Color.BLACK);
+
+                    byte[] imageData = Files.readAllBytes(packagePadImage.toPath());
+                    XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
+                    XSLFPictureShape picture = slide.createPicture(pictureData);
+                    picture.setAnchor(new Rectangle(50, 100, 500, 350));
+                    logger.debug("Added Package & Pad slide");
+                } else {
+                    logger.warn("Missing Package & Pad image");
+                }
+            }
+
+            if (ppt.getSlides().isEmpty()) {
+                logger.warn("No slides generated for PPT");
+                Response response = Response.builder().status("failed").msg("No slides generated").build();
+                responsePrint(resp, gson.toJson(response));
+                return;
             }
 
             File tempPpt = new File(uploadPath.toFile(), "temp_ppt_" + System.currentTimeMillis() + ".pptx");
@@ -179,7 +331,7 @@ public class PinDiagramServlet extends BaseServlet {
             }
 
             resp.setContentType("application/vnd.openxmlformats-officedocument.presentationml.presentation");
-            resp.setHeader("Content-Disposition", "attachment; filename=PinDiagrams.pptx");
+            resp.setHeader("Content-Disposition", "attachment; filename=" + ("full".equals(pptType) ? "FullPinDiagrams.pptx" : "PartialPinDiagrams.pptx"));
 
             try (OutputStream out = resp.getOutputStream()) {
                 ppt.write(out);
@@ -209,6 +361,126 @@ public class PinDiagramServlet extends BaseServlet {
                 }
             });
         }
+    }
+
+    private String generateProductOverview(File pdfFile) {
+        logger.info("Generating Product Overview for file: {}", pdfFile.getName());
+        try {
+            Response markdownResponse = fileService.toMarkdown(pdfFile);
+            if (markdownResponse == null || !"success".equals(markdownResponse.getStatus())) {
+                String errorMsg = markdownResponse != null ? markdownResponse.getMsg() : "未知错误";
+                logger.error("PDF 转换 Markdown 失败: {}", errorMsg);
+                return null;
+            }
+            String markdownContent = markdownResponse.getData().toString();
+            logger.info("Markdown 内容长度: {}", markdownContent.length());
+
+            String prompt = "Extract the following information from the provided content and return it in plain text format with exactly the following structure, with no additional text, headings, or Markdown formatting. If any information is missing, use 'N/A'.:\n" +
+                    "1. Device: [Device Name]\n" +
+                    "2. Part No.: [Part Number]\n" +
+                    "3. Process: [Process]\n" +
+                    "4. Power supply: [Power Supply]\n" +
+                    "5. Die Size (including scribe line 60 um): [Die Size]\n" +
+                    "6. Temperature Range: [Temperature Range]\n" +
+                    "7. Estimated Gross Die per wafer: [Gross Die]\n" +
+                    "8. Package: [Package]\n" +
+                    "9. Auto or Non-Auto: [Auto Grade]\n" +
+                    "10. ISO26262 ASIL: [ASIL Level]";
+
+            List<String> chunks = splitContentIntoChunks(markdownContent);
+            List<List<String>> history = new ArrayList<>();
+            StringBuilder finalSummary = new StringBuilder();
+
+            for (int i = 0; i < chunks.size(); i++) {
+                String chunkPrompt = "This is chunk " + (i + 1) + " of " + chunks.size() + ":\n" +
+                        "-------------------------------------\n" +
+                        chunks.get(i) +
+                        "-------------------------------------\n" +
+                        (i == chunks.size() - 1 ? "This is the final chunk. Return the complete Product Overview in plain text format, strictly following the specified structure with no additional text or formatting." : "Analyze this chunk and provide insights or a partial summary.");
+
+                ChatCompletionResult result = callLLm(prompt, history, chunkPrompt);
+                if (result == null || result.getChoices() == null || result.getChoices().isEmpty()) {
+                    logger.error("AI 处理第 {}/{} 块分块失败", i + 1, chunks.size());
+                    return null;
+                }
+
+                String aiResponse = result.getChoices().get(0).getMessage().getContent();
+                history.add(Lists.newArrayList(chunkPrompt, aiResponse));
+
+                if (i == chunks.size() - 1) {
+                    // 清理可能的 Markdown 格式或多余内容
+                    String cleanedResponse = aiResponse.replaceAll("(?m)^#.*$|^-.*$|^\\*.*$|^\\s*\\n", "").trim();
+                    // 确保只保留 10 项格式
+                    StringBuilder filteredResponse = new StringBuilder();
+                    String[] lines = cleanedResponse.split("\n");
+                    for (String line : lines) {
+                        if (line.matches("^\\d+\\.\\s*[^:]+:.*$")) {
+                            filteredResponse.append(line).append("\n");
+                        }
+                    }
+                    finalSummary.append(filteredResponse);
+                }
+            }
+
+            return finalSummary.toString().trim();
+        } catch (Exception e) {
+            logger.error("Product Overview generation failed", e);
+            return null;
+        }
+    }
+
+    private List<String> splitContentIntoChunks(String content) {
+        List<String> chunks = new ArrayList<>();
+        int start = 0;
+        while (start < content.length()) {
+            int end = Math.min(start + CHUNK_SIZE, content.length());
+            if (end < content.length()) {
+                while (end > start && content.charAt(end) != '\n' && content.charAt(end) != '.') {
+                    end--;
+                }
+                if (end == start) {
+                    end = Math.min(start + CHUNK_SIZE, content.length());
+                }
+            }
+            String chunk = content.substring(start, end).trim();
+            chunks.add(chunk);
+            start = end + 1;
+        }
+        return chunks;
+    }
+
+    private ChatCompletionResult callLLm(String prompt, List<List<String>> history, String userMsg) {
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        List<ChatMessage> chatMessages = new ArrayList<>();
+
+        ChatMessage systemMessage = new ChatMessage();
+        systemMessage.setContent(prompt);
+        systemMessage.setRole("system");
+        chatMessages.add(systemMessage);
+
+        for (List<String> entry : history) {
+            ChatMessage userMessage = new ChatMessage();
+            userMessage.setRole("user");
+            userMessage.setContent(entry.get(0));
+
+            ChatMessage assistantMessage = new ChatMessage();
+            assistantMessage.setRole("assistant");
+            assistantMessage.setContent(entry.get(1));
+
+            chatMessages.add(userMessage);
+            chatMessages.add(assistantMessage);
+        }
+
+        ChatMessage userMessage = new ChatMessage();
+        userMessage.setRole("user");
+        userMessage.setContent(userMsg);
+        chatMessages.add(userMessage);
+
+        request.setMax_tokens(16384);
+        request.setTemperature(0.2);
+        request.setMessages(chatMessages);
+
+        return completionsService.completions(request);
     }
 
     private void queryImage(File pdfFile, String keyword, HttpServletResponse resp) {
