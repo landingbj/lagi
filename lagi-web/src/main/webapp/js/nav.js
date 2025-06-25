@@ -303,6 +303,15 @@ let promptNavs = [
                 exampleVedioSrc: '../video/safetyMechanism.mp4',
                 prompt: '上传 PNG 或 JPEG 图片文件，接口将分析图像内容并生成安全机制表（DOCX 格式）。文件大小限制为 10MB。',
                 operation: '选择一张图片文件，点击提交按钮，接口将生成并下载安全机制表（DOCX 格式）。'
+            },
+            {
+                id: 15.8,
+                key: 'hsrDetail',
+                title: 'HSR 详情生成',
+                exampleImgSrc: '../images/hsrDetail.png',
+                exampleVedioSrc: '../video/hsrDetail.mp4',
+                prompt: '上传一张 PNG 或 JPEG 格式的 BD 图和一个 PDF 格式的 datasheet 文件，接口将分析图像和 PDF 内容，生成硬件安全需求（HSR）详情（DOCX 格式）。文件大小限制为 10MB。',
+                operation: '选择一张图片文件和一个 PDF 文件，点击提交按钮，接口将生成并下载 HSR 详情文档（DOCX 格式）。'
             }
         ]
     }
@@ -791,6 +800,55 @@ async function submitSafetyMechanismFile(fileInputId, statusId, buttonId) {
     }
 }
 
+async function submitHsrDetailFile(imageInputId, pdfInputId, statusId, buttonId) {
+    const imageInput = document.getElementById(imageInputId);
+    const pdfInput = document.getElementById(pdfInputId);
+    const imageFile = imageInput.files[0];
+    const pdfFile = pdfInput.files[0];
+
+    if (!imageFile || !pdfFile) {
+        updateStatus(statusId, '请上传一张图片文件和一个 PDF 文件', '错误');
+        return;
+    }
+
+    const isLargeImage = checkFileSize(imageFile, 10, statusId);
+    const isLargePdf = checkFileSize(pdfFile, 10, statusId);
+    toggleButton(buttonId, true);
+    updateStatus(statusId, (isLargeImage || isLargePdf) ? '正在上传并处理大文件，请耐心等待...' : '正在上传并处理文件...', '信息');
+
+    const formData = new FormData();
+    formData.append('imageFile', imageFile);
+    formData.append('pdfFile', pdfFile);
+
+    try {
+        const response = await fetch('/hsrdetail/generateHsrDetail', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || '请求失败');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'HsrDetail.docx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        updateStatus(statusId, '文件生成成功，已下载', '成功');
+    } catch (error) {
+        updateStatus(statusId, '错误：' + error.message, '错误');
+    } finally {
+        toggleButton(buttonId, false);
+    }
+}
+
 // 处理引脚图生成与PPT导出
 async function submitPinDiagramFile(fileInputId, architectureInputId, packagePadInputId, statusId, buttonId, pptType) {
     const fileInput = document.getElementById(fileInputId);
@@ -1040,7 +1098,20 @@ function createFileUploadUI(nav, containerId) {
                 <div id="${statusId}" class="status"></div>
             </div>
         `;
-        }
+        }else if (nav.key === 'hsrDetail') {
+        html = `
+            <div class="section" id="${sectionId}">
+                <h2>${nav.title}</h2>
+                <div class="description">${nav.prompt}</div>
+                <label>BD 图 (PNG/JPEG):</label>
+                <input type="file" id="${fileInputId}" accept="image/png,image/jpeg">
+                <label>Datasheet (PDF):</label>
+                <input type="file" id="${nav.key}-pdfInput" accept=".pdf">
+                <button id="${submitButtonId}">提交</button>
+                <div id="${statusId}" class="status"></div>
+            </div>
+        `;
+    }
 
     container.innerHTML = html;
 
@@ -1059,6 +1130,8 @@ function createFileUploadUI(nav, containerId) {
                 submitRuleTxtToExcel(fileInputId, statusId, submitButtonId);
             }else if (nav.key === 'safetyMechanism') {
                 submitSafetyMechanismFile(fileInputId, statusId, submitButtonId);
+            }else if (nav.key === 'hsrDetail') {
+                submitHsrDetailFile(fileInputId, `${nav.key}-pdfInput`, statusId, submitButtonId);
             }
         });
     }
@@ -1259,7 +1332,7 @@ function getPromptDialog(id) {
     currentAppId = nav.agentId;
 
     // 如果是高级功能中心的子菜单，直接触发文件上传和接口调用
-    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagram', 'dxAnalyzeImage', 'ruleTxtToExcel','safetyMechanism'].includes(nav.key)) {
+    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagram', 'dxAnalyzeImage', 'ruleTxtToExcel','safetyMechanism', 'hsrDetail'].includes(nav.key)) {
         // 隐藏首页内容
         hideHelloContent();
 

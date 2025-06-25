@@ -401,4 +401,14 @@
         <url-pattern>/safetymechanism/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>HsrDetailApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.HsrDetailApiServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>HsrDetailApiServlet</servlet-name>
+        <url-pattern>/hsrdetail/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
