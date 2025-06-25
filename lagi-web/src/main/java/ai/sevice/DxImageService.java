@@ -5,6 +5,7 @@ import ai.ocr.OcrService;
 import ai.ocr.pojo.AlibabaOcrDocument;
 import ai.utils.ImageUtil;
 import ai.utils.LRUCache;
+import ai.utils.LagiGlobal;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
@@ -114,18 +115,26 @@ public class DxImageService {
         }
         List<String> ocrResults = getImageOcr(expandedImageList);
 //        List<String> ocrResults = readAllJsonFiles("E:\\Desktop\\络明芯规则\\bd_1_ocr");
-        List<DxDiagnosis> results = parseOcrResults(ocrResults);
+        List<DxDiagnosis> results = parseOcrResults(ocrResults, rectangles);
         if (!results.isEmpty()) {
             CACHE.put(md5Hash, results);
         }
-        return parseOcrResults(ocrResults);
+        return results;
     }
 
-    private List<DxDiagnosis> parseOcrResults(List<String> ocrResults) {
+    private List<DxDiagnosis> parseOcrResults(List<String> ocrResults, List<Rectangle> rectangles) {
         List<DxDiagnosis> diagnoses = new ArrayList<>();
-        for (String ocrResult : ocrResults) {
+        for (int i = 0; i < ocrResults.size(); i++) {
+            String ocrResult = ocrResults.get(i);
+            ai.dto.Rectangle rect = new ai.dto.Rectangle(
+                    rectangles.get(i).x, rectangles.get(i).y,
+                    rectangles.get(i).x + rectangles.get(i).width, rectangles.get(i).y + rectangles.get(i).height
+            );
             AlibabaOcrDocument ocrDocument = gson.fromJson(ocrResult, AlibabaOcrDocument.class);
             List<DxDiagnosis> dxDiagnosis = parseOcrResult(ocrDocument);
+            for (DxDiagnosis diagnosis : dxDiagnosis) {
+                diagnosis.setRectangle(rect);
+            }
             diagnoses.addAll(dxDiagnosis);
         }
         diagnoses.sort(Comparator.comparing(DxDiagnosis::getId));
@@ -275,7 +284,7 @@ public class DxImageService {
     }
 
     public static void main(String[] args) {
-//        Configuration config = LagiGlobal.getConfig();
+        LagiGlobal.getConfig();
         DxImageService dxImageService = new DxImageService();
 
         try {

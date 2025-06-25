@@ -7,4 +7,5 @@ public class DxDiagnosis {
     private String id;
     private String shortDesc;
     private String detailDesc;
+    private Rectangle rectangle;
 }

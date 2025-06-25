@@ -72,7 +72,6 @@ public class ImageBlockService {
         fileList.add(new File(imagePath));
         Map<String, String> headers = new HashMap<>();
         String returnStr = HttpUtil.multipartUpload(BLOCKS_URL, filePramName, fileList, formParmMap, headers);
-        System.out.println("Response: " + returnStr);
         if (returnStr == null || returnStr.isEmpty()) {
             return result;
         }
@@ -109,7 +108,6 @@ public class ImageBlockService {
         for (int i = 0; i < bdBlocks.size(); i++) {
             BdBlock bdBlock = bdBlocks.get(i);
             BlockDesc blockDesc = analyzeBdImage(imagePath, bdBlock, i);
-            System.out.println(i + " " + blockDesc);
             blockDescList.add(blockDesc);
         }
         blockDescList.sort(Comparator.comparing(BlockDesc::getId));
@@ -130,7 +128,10 @@ public class ImageBlockService {
 
         String id = extractId(idImage);
         BlockDesc blockDesc = extractBlockText(blockImage);
-        blockDesc.setId(id);
+        if (id == null || id.isEmpty() || blockDesc == null || blockDesc.getBlock() == null || blockDesc.getBlock().isEmpty()) {
+            return null;
+        }
+        blockDesc.setId(Integer.parseInt(id));
         blockDesc.setRectangle(bdBlock.getRectangle());
         return blockDesc;
     }
@@ -272,8 +273,11 @@ public class ImageBlockService {
         LagiGlobal.getConfig();
         ImageBlockService imageBlockService = new ImageBlockService();
 
-        String imagePath = "E:\\Desktop\\络明芯规则\\bd_2.png";
+        String imagePath = "E:\\Desktop\\络明芯规则\\bd_1.png";
 //        List<Rectangle> rectangles = imageBlockService.getBdRectFromImage(imagePath);
-        imageBlockService.analyzeBdImage(imagePath);
+        List<BlockDesc> blockDescList = imageBlockService.analyzeBdImage(imagePath);
+        for (BlockDesc blockDesc : blockDescList) {
+            System.out.println(blockDesc.getId() + " " + blockDesc.getBlock() + " " + blockDesc.getRectangle());
+        }
     }
 }
