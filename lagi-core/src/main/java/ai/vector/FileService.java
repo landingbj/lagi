@@ -159,16 +159,17 @@ public class FileService {
             list.add(image);
 
             String content = pdfContent.get(i);
-
-            int start = 0;
-            while (start < content.length()) {
-                int end = Math.min(start + chunkSize, content.length());
-                String text = content.substring(start, end).replaceAll("\\s+", " ");
-                FileChunkResponse.Document doc =  new FileChunkResponse.Document();
-                doc.setText(text);
-                doc.setImages(list);
-                result.add(doc);
-                start = end;
+            if (content != null){
+                int start = 0;
+                while (start < content.length()) {
+                    int end = Math.min(start + chunkSize, content.length());
+                    String text = content.substring(start, end).replaceAll("\\s+", " ");
+                    FileChunkResponse.Document doc =  new FileChunkResponse.Document();
+                    doc.setText(text);
+                    doc.setImages(list);
+                    result.add(doc);
+                    start = end;
+                }
             }
         }
         return result;
