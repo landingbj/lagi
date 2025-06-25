@@ -1,5 +1,6 @@
 package ai.sevice;
 
+import ai.dto.BlockDesc;
 import ai.dto.DxDiagnosis;
 import ai.ocr.OcrService;
 import ai.ocr.pojo.AlibabaOcrDocument;
@@ -286,10 +287,12 @@ public class DxImageService {
     public static void main(String[] args) {
         LagiGlobal.getConfig();
         DxImageService dxImageService = new DxImageService();
-
         try {
-            String result = dxImageService.getAnalyzeImageResult("E:\\Desktop\\络明芯规则\\bd_1.png");
-            System.out.println(result);
+            String imagePath = "C:\\Users\\24175\\Pictures\\TST.png";
+            List<DxDiagnosis> dxDiagnoses = dxImageService.analyzeImage(imagePath);
+            for (DxDiagnosis dxDiagnosis : dxDiagnoses) {
+                System.out.println(dxDiagnosis.getId() + " " + dxDiagnosis.getShortDesc() + " " + dxDiagnosis.getDetailDesc() + " " + dxDiagnosis.getRectangle());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

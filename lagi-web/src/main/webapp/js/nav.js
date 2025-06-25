@@ -294,6 +294,15 @@ let promptNavs = [
                 exampleVedioSrc: '../video/ruleTxtToExcel.mp4',
                 prompt: '上传 TXT 文件以生成规则汇总 Excel 文件。文件大小限制为 10MB，若文件较大或数据行数过多，处理可能需要较长时间。',
                 operation: '选择一个 TXT 文件，点击提交按钮，接口将生成并下载 Excel 文件（XLSX 格式）。'
+            },
+            {
+                id: 15.7,
+                key: 'safetyMechanism',
+                title: '安全机制表生成',
+                exampleImgSrc: '../images/safetyMechanism.png',
+                exampleVedioSrc: '../video/safetyMechanism.mp4',
+                prompt: '上传 PNG 或 JPEG 图片文件，接口将分析图像内容并生成安全机制表（DOCX 格式）。文件大小限制为 10MB。',
+                operation: '选择一张图片文件，点击提交按钮，接口将生成并下载安全机制表（DOCX 格式）。'
             }
         ]
     }
@@ -738,6 +747,50 @@ async function submitImage(fileInputId, statusId, buttonId, resultId) {
     }
 }
 
+async function submitSafetyMechanismFile(fileInputId, statusId, buttonId) {
+    const fileInput = document.getElementById(fileInputId);
+    const file = fileInput.files[0];
+    if (!file) {
+        updateStatus(statusId, '请选择一张图片文件', 'error');
+        return;
+    }
+
+    const isLargeFile = checkFileSize(file, 10, statusId);
+    toggleButton(buttonId, true);
+    updateStatus(statusId, isLargeFile ? '正在上传并处理大文件，请稍候...' : '正在上传并处理文件...', 'info');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/safetymechanism/generateSafetyMechanismTable', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || '请求失败');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'SafetyMechanism.docx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        updateStatus(statusId, '文件生成成功，已下载', 'success');
+    } catch (error) {
+        updateStatus(statusId, '错误：' + error.message, 'error');
+    } finally {
+        toggleButton(buttonId, false);
+    }
+}
+
 // 处理引脚图生成与PPT导出
 async function submitPinDiagramFile(fileInputId, architectureInputId, packagePadInputId, statusId, buttonId, pptType) {
     const fileInput = document.getElementById(fileInputId);
@@ -976,7 +1029,18 @@ function createFileUploadUI(nav, containerId) {
                 <div id="${statusId}" class="status"></div>
             </div>
         `;
-    }
+    }else if (nav.key === 'safetyMechanism') {
+        acceptType = 'image/png, image/jpeg';
+        html = `
+            <div class="section" id="${sectionId}">
+                <h2>${nav.title}</h2>
+                <div class="description">${nav.prompt}</div>
+                <input type="file" id="${fileInputId}" accept="${acceptType}">
+                <button id="${submitButtonId}">提交</button>
+                <div id="${statusId}" class="status"></div>
+            </div>
+        `;
+        }
 
     container.innerHTML = html;
 
@@ -993,6 +1057,8 @@ function createFileUploadUI(nav, containerId) {
                 submitPinDiagramFile(fileInputId, `${nav.key}-architectureInput`, `${nav.key}-packagePadInput`, statusId, submitButtonId, 'full');
             }else if (nav.key === 'ruleTxtToExcel') {
                 submitRuleTxtToExcel(fileInputId, statusId, submitButtonId);
+            }else if (nav.key === 'safetyMechanism') {
+                submitSafetyMechanismFile(fileInputId, statusId, submitButtonId);
             }
         });
     }
@@ -1193,7 +1259,7 @@ function getPromptDialog(id) {
     currentAppId = nav.agentId;
 
     // 如果是高级功能中心的子菜单，直接触发文件上传和接口调用
-    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagram', 'dxAnalyzeImage', 'ruleTxtToExcel'].includes(nav.key)) {
+    if (['padCoordinate', 'hsrSummary', 'analyzeImage', 'pinDiagram', 'dxAnalyzeImage', 'ruleTxtToExcel','safetyMechanism'].includes(nav.key)) {
         // 隐藏首页内容
         hideHelloContent();
 

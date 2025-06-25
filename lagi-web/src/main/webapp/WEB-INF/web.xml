@@ -391,4 +391,14 @@
         <url-pattern>/ruleTxtToExcel/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>SafetyMechanismApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.SafetyMechanismApiServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>SafetyMechanismApiServlet</servlet-name>
+        <url-pattern>/safetymechanism/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>

@@ -65,7 +65,8 @@ public class ImageBlockService {
 
     private List<BdBlock> getBlocksFromImage(String imagePath) {
         List<BdBlock> result = new ArrayList<>();
-        String BLOCKS_URL = "http://0.0.0.0:8123/getBlocks";
+//        String BLOCKS_URL = "http://0.0.0.0:8123/getBlocks";
+        String BLOCKS_URL = "http://127.0.0.1:8123/getBlocks";
         String filePramName = "file";
         Map<String, String> formParmMap = new HashMap<>();
         List<File> fileList = new ArrayList<>();
@@ -272,9 +273,7 @@ public class ImageBlockService {
     public static void main(String[] args) throws IOException {
         LagiGlobal.getConfig();
         ImageBlockService imageBlockService = new ImageBlockService();
-
-        String imagePath = "E:\\Desktop\\络明芯规则\\bd_1.png";
-//        List<Rectangle> rectangles = imageBlockService.getBdRectFromImage(imagePath);
+        String imagePath = "C:\\Users\\24175\\Pictures\\TST.png";
         List<BlockDesc> blockDescList = imageBlockService.analyzeBdImage(imagePath);
         for (BlockDesc blockDesc : blockDescList) {
             System.out.println(blockDesc.getId() + " " + blockDesc.getBlock() + " " + blockDesc.getRectangle());
