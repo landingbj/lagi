@@ -1,0 +1,146 @@
+[
+    {
+        "block": "bias",
+        "description": "To provide the basic voltage reference and current bias for analog block"
+    },
+    {
+        "block": "Regulator",
+        "description": "To provide kinds of power for analog and digital block"
+    },
+    {
+        "block": "e-Fuse",
+        "description": "Trimming for bandgap voltage"
+    },
+    {
+        "block": "Digital",
+        "description": "Through decode command from MCU, output a PWM signal with programmable freqeuncy and duty cycle. Also report fault when some error happens"
+    },
+    {
+        "block": "Communication",
+        "description": "Communication block to receive UART or SPI data and transmit data to the related Register"
+    },
+    {
+        "block": "Bypass switch",
+        "description": "Though PWM signal to control bypass switch on/off to dimming the parallel LED. Also feedback some information of bypass switch"
+    },
+    {
+        "block": "FaultB flag",
+        "description": "Fault report output when error happens"
+    },
+    {
+        "block": "Auxiliary block",
+        "description": "Read EEPROM data for host and synchronization PWM dimming for serial application"
+    },
+    {
+        "block": "ADC",
+        "description": "Convert some analog input to digital data"
+    },
+    {
+        "block": "Clock",
+        "description": "Output 3 types of clock signal: 1. CLK_SYS=32MHz; 2.CLK_PWM=32MHz spread spectrum optional;  3. 8MHz"
+    },
+    {
+        "block": "Lumi-Bus trancievor",
+        "description": "Receive diff signal DH/DL to UART signal and transmitt UART singal to diff signal"
+    },
+    {
+        "block": "reset circuit",
+        "description": "Power-on-reset (POR), internal reset condition or external reset command to set MCU to initial state"
+    },
+    {
+        "block": "Generous purpose I/O (GPIO)",
+        "description": "General purpose I/O multiplexer with IOPAD including input/output buffers and internal pull up/down resistors"
+    },
+    {
+        "block": "8051 Core",
+        "description": "1-Cycle 8051 CPU core with interrupt controller"
+    },
+    {
+        "block": "FLASH Controller",
+        "description": "The flash controller connects the CPU to the on-chip embedded FLASH memory"
+    },
+    {
+        "block": "SRAM with SRAM controller",
+        "description": "SRAM macro of 2K x 16 for data storage.  The SRAM controller include the ECC encode/decode and error detection/correction for CPU access"
+    },
+    {
+        "block": "LIN",
+        "description": "LIN-capable 16550-like EUART2 is an enhanced UART controller (EUART) with separate transmit and receive FIFO"
+    },
+    {
+        "block": "I2C",
+        "description": "One master controller and one slave controller"
+    },
+    {
+        "block": "SPI",
+        "description": "Serial Peripheral Interface (SPI) is an enhanced synchronous serial hardware which is compatible with most SPI specifications.  It also includes separate transmit and receive FIFO"
+    },
+    {
+        "block": "EUART1",
+        "description": "An enhanced UART controller (EUART) with separate transmit and receive FIFO"
+    },
+    {
+        "block": "TCC",
+        "description": "Timer/Compare/Capture unit is based on a 16-bit counter with pre-scalable system clock as counting clock"
+    },
+    {
+        "block": "TIMER",
+        "description": "Timer 0-4 are 16-bit timers/counters.  Timer 5 is a 24-Bit timer which has selectable clock sources and can serve as wakeup source from stop/sleep modes"
+    },
+    {
+        "block": "Low Supply Detector",
+        "description": "Low supply detector with control logic"
+    },
+    {
+        "block": "IOSC",
+        "description": "16MHz/32MHz system clock +/- 2% accuracy"
+    },
+    {
+        "block": "WDT",
+        "description": "Watchdog timers that can be used by a system supervisor or as an event timer.  WDT3 is clocked by an independent SIOSC 128KHz clock"
+    },
+    {
+        "block": "SIOSC",
+        "description": "128KHz slow clock for sleep mode and for WDT"
+    },
+    {
+        "block": "ACMP",
+        "description": "Four analog comparators with programmable threshold and inputs through GPIO"
+    },
+    {
+        "block": "PWM",
+        "description": "Programmable 6 channels 12/10/8 bit PWM duty with center-aligned outputs"
+    },
+    {
+        "block": "Melody Controller",
+        "description": "A simple tone melody generator with multi-octave note capability"
+    },
+    {
+        "block": "QED",
+        "description": "Quadrature encoder has three external inputs through GPIO multi-functions typically used for motor position detection"
+    },
+    {
+        "block": "TOUCH KEY Controller",
+        "description": "Detection of minute capacitance change of finger touch action typically used for touch key HMI interface"
+    },
+    {
+        "block": "CRC Accelerator",
+        "description": "Hardware CRC accelerator"
+    },
+    {
+        "block": "Fail-safe",
+        "description": "Automatically enter a safe state in case of system failure to minimize risks"
+    },
+    {
+        "block": "Fault report",
+        "description": "Record and notify the system of any errors or abnormal situations that occur"
+    },
+    {
+        "block": "Current setting",
+        "description": "The current configured parameters or operating values in the device or system"
+    },
+    {
+        "block": "Output channel",
+        "description": "The physical or logical path of system output signals or data"
+    }
+]

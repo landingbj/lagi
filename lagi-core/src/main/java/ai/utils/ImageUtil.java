@@ -186,6 +186,16 @@ public class ImageUtil {
         );
     }
 
+    public static BufferedImage cropImageByRect(BufferedImage src, Rectangle rectangle) {
+        List<Rectangle> rectangles = new ArrayList<>();
+        rectangles.add(rectangle);
+        List<BufferedImage> rectImages = cropImageByRect(src, rectangles);
+        if (rectImages.isEmpty()) {
+            return null;
+        }
+        return rectImages.get(0);
+    }
+
     public static List<BufferedImage> cropImageByRect(BufferedImage src, List<Rectangle> rectangles) {
         List<BufferedImage> result = new ArrayList<>();
         for (Rectangle rect : rectangles) {

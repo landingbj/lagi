@@ -1,5 +1,7 @@
 package ai.utils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,15 +19,15 @@ public class Base64Util {
     public Base64Util() {
     }
 
-    public static String fileToBase64( String filepath){
+    public static String fileToBase64(String filepath) {
         InputStream in = null;
         byte[] data = null;
-        try{
+        try {
             in = Files.newInputStream(Paths.get(filepath));
             data = new byte[in.available()];
             in.read(data);
             in.close();
-        }catch (IOException e){
+        } catch (IOException e) {
             return null;
         }
         return Base64.getEncoder().encodeToString(data);
@@ -80,9 +82,9 @@ public class Base64Util {
         return to.toString();
     }
 
-    public static File toFile(String dstFilePath, String base64Str)  {
-        File file  = new File(dstFilePath);
-        try (FileOutputStream fileOutputStream = new FileOutputStream(file)){
+    public static File toFile(String dstFilePath, String base64Str) {
+        File file = new File(dstFilePath);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
             byte[] decode = Base64.getDecoder().decode(base64Str);
             fileOutputStream.write(decode);
         } catch (IOException e) {
@@ -91,4 +93,70 @@ public class Base64Util {
         return file;
     }
 
+
+    public static String convertImageToBase64(File imageFile) throws IOException {
+        if (!imageFile.exists()) {
+            throw new IllegalArgumentException("文件不存在: " + imageFile.getPath());
+        }
+
+        if (!imageFile.isFile()) {
+            throw new IllegalArgumentException("路径不是一个文件: " + imageFile.getPath());
+        }
+
+        String fileName = imageFile.getName();
+        String format = getImageFormat(fileName);
+
+        if (format == null) {
+            throw new IllegalArgumentException("不支持的图片格式: " + fileName);
+        }
+
+        byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+
+        String base64String = Base64.getEncoder().encodeToString(imageBytes);
+
+        return String.format("data:image/%s;base64,%s", format, base64String);
+    }
+
+    public static String convertImageToBase64(BufferedImage image, String format) throws IOException {
+        if (image == null) {
+            throw new IllegalArgumentException("图片不能为空");
+        }
+
+        if (format == null || format.isEmpty()) {
+            throw new IllegalArgumentException("图片格式不能为空");
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, format, outputStream);
+        byte[] imageBytes = outputStream.toByteArray();
+
+        String base64String = Base64.getEncoder().encodeToString(imageBytes);
+
+        return String.format("data:image/%s;base64,%s", format, base64String);
+    }
+
+    private static String getImageFormat(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return null;
+        }
+
+        String lowerCaseFileName = fileName.toLowerCase();
+
+        if (lowerCaseFileName.endsWith(".jpg") || lowerCaseFileName.endsWith(".jpeg")) {
+            return "jpeg";
+        } else if (lowerCaseFileName.endsWith(".png")) {
+            return "png";
+        } else if (lowerCaseFileName.endsWith(".gif")) {
+            return "gif";
+        } else if (lowerCaseFileName.endsWith(".bmp")) {
+            return "bmp";
+        } else if (lowerCaseFileName.endsWith(".webp")) {
+            return "webp";
+        } else if (lowerCaseFileName.endsWith(".svg")) {
+            return "svg+xml";
+        } else if (lowerCaseFileName.endsWith(".ico")) {
+            return "x-icon";
+        }
+        return null;
+    }
 }

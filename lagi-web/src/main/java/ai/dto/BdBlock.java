@@ -19,14 +19,4 @@ public class BdBlock {
         private int y;
         private int radius;
     }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Rectangle {
-        private int x0;
-        private int y0;
-        private int x1;
-        private int y1;
-    }
 }

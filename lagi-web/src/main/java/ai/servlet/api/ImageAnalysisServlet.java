@@ -2,12 +2,14 @@ package ai.servlet.api;
 
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Response;
+import ai.dto.BlockDesc;
 import ai.dto.BlockItem;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
+import ai.sevice.ImageBlockService;
 import ai.utils.MigrateGlobal;
 import ai.vector.FileService;
 import ai.vector.VectorStoreService;
@@ -37,6 +39,7 @@ public class ImageAnalysisServlet extends BaseServlet {
     private final CompletionsService completionsService = new CompletionsService();
     private final Gson gson = new Gson();
     private final VectorStoreService vectorStoreService = new VectorStoreService();
+    private final ImageBlockService imageBlockService = new ImageBlockService();
 
     // Background information constant remains unchanged
     private static final String BACKGROUND_INFO = "Bias\n" +
@@ -148,21 +151,11 @@ public class ImageAnalysisServlet extends BaseServlet {
             try {
                 File imageFile = files.get(0);
                 logger.info("Processing image file: {}", imageFile.getName());
-                String imageAnalysisResult = uploadImageToProcessEndpoint(imageFile);
-                if (imageAnalysisResult.trim().isEmpty()) {
+                String formattedOutput = analyzeImage(imageFile.getAbsolutePath());
+                if (formattedOutput.trim().isEmpty()) {
                     throw new RuntimeException("Image processing failed: Empty response from endpoint");
                 }
-                logger.info("Image analysis result received, length: {}", imageAnalysisResult.length());
-                logger.info("Image analysis result received: {}", imageAnalysisResult);
-
-                // Step 2: Combine with background and call LLM
-                String formattedOutput = searchVectorDb(imageAnalysisResult);
-                if (formattedOutput == null || formattedOutput.trim().isEmpty()) {
-                    throw new RuntimeException("Failed to generate formatted output");
-                }
-                logger.info("Formatted output generated, length: {}", formattedOutput.length());
-
-                // Step 3: Return the result
+                logger.info("Image analysis result received: {}", formattedOutput);
                 Response response = Response.builder()
                         .status("success")
                         .data(formattedOutput)
@@ -188,6 +181,15 @@ public class ImageAnalysisServlet extends BaseServlet {
         }
     }
 
+    private String analyzeImage(String imageFilePath) throws IOException {
+        List<BlockDesc> blockDescList = imageBlockService.analyzeBdImage(imageFilePath);
+        StringBuilder sb = new StringBuilder();
+        for (BlockDesc blockDesc : blockDescList) {
+            sb.append(blockDesc.getId()).append(". ").append(blockDesc.getBlock()).append("\n");
+            sb.append(blockDesc.getDescription()).append("\n");
+        }
+        return sb.toString();
+    }
 
     private String searchVectorDb(String imageAnalysisResult) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -219,7 +221,7 @@ public class ImageAnalysisServlet extends BaseServlet {
         double similarity1 = getMinSimilarity(searchResults1);
         double similarity2 = getMinSimilarity(searchResults2);
         List<List<IndexSearchData>> searchResults;
-        if (similarity1 < similarity2)  {
+        if (similarity1 < similarity2) {
             searchResults = searchResults1;
         } else {
             searchResults = searchResults2;
