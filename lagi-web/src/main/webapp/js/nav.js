@@ -274,8 +274,8 @@ let promptNavs = [
                 title: '引脚图生成与PPT导出',
                 exampleImgSrc: '', // 可替换为实际图片路径
                 exampleVedioSrc: '', // 可替换为实际视频路径
-                prompt: '上传 PDF 文件以生成引脚图或导出 PPT。支持查询特定关键词的引脚图，文件大小限制为 10MB。',
-                operation: '选择一个 PDF 文件，点击“下载PPT”生成并下载 PPT，或输入关键词点击“查询”查看引脚图。'
+                prompt: '上传 PDF 文件及Architecture (Block Diagram)和Package & Pad图片以生成引脚图或导出 PPT。支持查询特定关键词的引脚图，文件大小限制为 10MB。',
+                operation: '选择一个 PDF 文件和两张图片，点击“下载完整 PPT”生成包含所有内容的 PPT，或点击“下载部分 PPT”生成仅包含 Product Overview 和 Architecture 的 PPT，或输入关键词点击“查询”查看引脚图。'
             },
             {
                 id: 15.5,
@@ -739,20 +739,32 @@ async function submitImage(fileInputId, statusId, buttonId, resultId) {
 }
 
 // 处理引脚图生成与PPT导出
-async function submitPinDiagramFile(fileInputId, statusId, buttonId) {
+async function submitPinDiagramFile(fileInputId, architectureInputId, packagePadInputId, statusId, buttonId, pptType) {
     const fileInput = document.getElementById(fileInputId);
-    const file = fileInput.files[0];
-    if (!file) {
+    const architectureInput = document.getElementById(architectureInputId);
+    const packagePadInput = document.getElementById(packagePadInputId);
+    const pdfFile = fileInput.files[0];
+    const architectureFile = architectureInput.files[0];
+    const packagePadFile = packagePadInput.files[0];
+
+    if (!pdfFile) {
         updateStatus(statusId, '请选择一个 PDF 文件', 'error');
         return;
     }
 
-    const isLargeFile = checkFileSize(file, 10, statusId);
+    const formData = new FormData();
+    formData.append('pdfFile', pdfFile);
+    if (architectureFile) {
+        formData.append('architectureImage', architectureFile);
+    }
+    if (packagePadFile) {
+        formData.append('packagePadImage', packagePadFile);
+    }
+    formData.append('pptType', pptType);
+
+    const isLargeFile = checkFileSize(pdfFile, 10, statusId);
     toggleButton(buttonId, true);
     updateStatus(statusId, isLargeFile ? '正在上传并生成 PPT，请耐心等待...' : '正在上传并生成 PPT...', 'info');
-
-    const formData = new FormData();
-    formData.append('file', file);
 
     try {
         const response = await fetch('/pinDiagramGenerate', {
@@ -769,7 +781,7 @@ async function submitPinDiagramFile(fileInputId, statusId, buttonId) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'PinDiagrams.pptx';
+        a.download = pptType === 'full' ? 'FullPinDiagrams.pptx' : 'PartialPinDiagrams.pptx';
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -932,14 +944,23 @@ function createFileUploadUI(nav, containerId) {
         const keywordInputId = `${nav.key}-keywordInput`;
         const queryButtonId = `${nav.key}-queryBtn`;
         const imageId = `${nav.key}-image`;
+        const partialButtonId = `${nav.key}-partialBtn`;
+        const architectureInputId = `${nav.key}-architectureInput`;
+        const packagePadInputId = `${nav.key}-packagePadInput`;
         html = `
             <div class="section" id="${sectionId}">
                 <h2>${nav.title}</h2>
                 <div class="description">${nav.prompt}</div>
+                <label>PDF 文件:</label>
                 <input type="file" id="${fileInputId}" accept="${acceptType}">
+                <label>Architecture (Block Diagram) 图片:</label>
+                <input type="file" id="${architectureInputId}" accept="image/png,image/jpeg">
+                <label>Package & Pad 图片:</label>
+                <input type="file" id="${packagePadInputId}" accept="image/png,image/jpeg">
                 <input type="text" id="${keywordInputId}" placeholder="请输入关键词（如 Pin Configuration）">
                 <button id="${queryButtonId}">查询</button>
-                <button id="${submitButtonId}">下载 PPT</button>
+                <button id="${submitButtonId}">下载完整 PPT</button>
+                <button id="${partialButtonId}">下载部分 PPT</button>
                 <div id="${statusId}" class="status"></div>
                 <img id="${imageId}" style="display: none; max-width: 100%; margin-top: 20px; border-radius: 8px;" alt="引脚图">
             </div>
@@ -969,7 +990,7 @@ function createFileUploadUI(nav, containerId) {
             } else if (nav.key === 'analyzeImage' || nav.key === 'dxAnalyzeImage') {
                 submitImage(fileInputId, statusId, submitButtonId, resultId);
             } else if (nav.key === 'pinDiagram') {
-                submitPinDiagramFile(fileInputId, statusId, submitButtonId);
+                submitPinDiagramFile(fileInputId, `${nav.key}-architectureInput`, `${nav.key}-packagePadInput`, statusId, submitButtonId, 'full');
             }else if (nav.key === 'ruleTxtToExcel') {
                 submitRuleTxtToExcel(fileInputId, statusId, submitButtonId);
             }
@@ -981,6 +1002,12 @@ function createFileUploadUI(nav, containerId) {
         if (queryButton) {
             queryButton.addEventListener('click', () => {
                 queryPinDiagramImage(fileInputId, `${nav.key}-keywordInput`, statusId, `${nav.key}-queryBtn`, `${nav.key}-image`);
+            });
+        }
+        const partialButton = document.getElementById(`${nav.key}-partialBtn`);
+        if (partialButton) {
+            partialButton.addEventListener('click', () => {
+                submitPinDiagramFile(fileInputId, `${nav.key}-architectureInput`, `${nav.key}-packagePadInput`, statusId, `${nav.key}-partialBtn`, 'partial');
             });
         }
     }
@@ -1111,6 +1138,13 @@ function injectDemoStyles() {
             max-height: 400px;
             overflow-y: auto;
             color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #333;
+            font-weight: 500;
         }
         @media (max-width: 600px) {
             .section {
