@@ -1,5 +1,5 @@
 // mobile debug console
-// @ 调试插件  
+// @ 调试插件
 // var vConsole = new window.VConsole();
 var lastFilePath = "";
 let mediaRecorder = null;
@@ -254,7 +254,7 @@ fileUploadButton.addEventListener("click", function () {
                 fileType === "csv") {
                 question = "您所上传的文档文件名称为：" + selectedFile.name;
                 formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
-                serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;
+                serverEndpoint = "/uploadFile/asynchronousUpload?category=" + window.category;
                 fileStatus = "doc";
             } else if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "heic") {
                 question = "您所上传的图片是：" + selectedFile.name;
@@ -324,18 +324,67 @@ fileUploadButton.addEventListener("click", function () {
                                 }
                             } else if (fileStatus == "doc") {
                                 if (json.status == "success") {
+                                        const task_id = json.task_id; // 从响应中提取 task_id
+                                        const startTime = new Date().getTime();
+                                        const getProgress = async () => {
+                                            return new Promise((resolve, reject) => {
+                                                const xhr = new XMLHttpRequest();
+                                                xhr.open('GET', `/training/getProgress?task_id=${task_id}`, true); // 使用 task_id 构建 URL
+                                                xhr.onload = function () {
+                                                    if (xhr.status === 200) {
+                                                        try {
+                                                            const response = JSON.parse(xhr.responseText);
+                                                            resolve(response);
+                                                        } catch (e) {
+                                                            reject(e);
+                                                        }
+                                                    } else {
+                                                        reject(new Error('获取进度失败'));
+                                                    }
+                                                };
+                                                xhr.onerror = function () {
+                                                    reject(new Error('网络错误'));
+                                                };
+                                                xhr.send();
+                                            });
+                                        };
 
-                                    // var question = "您所上传的文档文件名称为：" + selectedFile.name;
-                                    // var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。"
-                                    // textQuery1(question, result, fileStatus);
-                                    var question = "您所上传的文档文件名称为：" + selectedFile.name;
-                                    var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。"
-                                    lastFilePath = json.filePath;
-                                    console.log("文件为" + lastFilePath)
-                                    textQuery1(question, result, fileStatus);
+                                        const pollProgress = async () => {
+                                            let progress = 0;
+                                            let update = "上传中";
+                                            while (progress < 100) {
+                                                const { msg, progress: currentProgress, status } = await getProgress();
+                                                if (status === 'success') {
+                                                    progress = currentProgress;
+                                                    const endTime = new Date().getTime();
+                                                    const duration = endTime - startTime;
+                                                    if (progress === 100) {
+                                                        res = `已经收到您的资料文档，上传总耗时：${duration/1000}秒，您可以在新的会话中，询问与资料中内容相关问题。如果您想生成指令集，请输入\"生成指令集\"。`;
+                                                    }else {
+                                                        res = `当前上传进度：${progress}%,上传状态：${update},上传耗时：${duration/1000}秒`;
+                                                    }
+                                                    textQuery1("文件上传结果", res, "doc");
+                                                    if (progress === 100) {
+                                                        break;
+                                                    }
+                                                } else {
+                                                    textQuery1("文件上传结果", "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。", "doc");
+                                                    break;
+                                                }
+
+                                                // 每隔3秒请求一次
+                                                await new Promise(resolve => setTimeout(resolve, 3000));
+                                            }
+                                        };
+                                        // 开始轮询获取进度
+                                        pollProgress();
+
+                                        // var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。"
+                                        lastFilePath = json.filePath;
+                                        console.log("文件为" + lastFilePath)
                                 } else {
-                                    alert("上传失败")
-                                    return;
+                                        alert("上传失败")
+                                        return;
                                 }
                             } else if (fileStatus == "voice") {
                                 if (json.status == "success") {

@@ -103,26 +103,9 @@ public class VectorStoreService {
 
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
-        List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
         Integer wenben_type = 512;
         Integer biaoge_type = 512;
         Integer tuwen_type = 512;
-        if (userList != null) {
-            for (UserRagSetting user : userList) {
-                if ("wenben_type".equals(user.getFileType())) {
-                    wenben_type = user.getChunkSize();
-                    break;  // 找到后直接退出循环
-                }
-                if ("biaoge_type".equals(user.getFileType())) {
-                    biaoge_type = user.getChunkSize();
-                    break;  // 找到后直接退出循环
-                }
-                if ("tuwen_type".equals(user.getFileType())) {
-                    tuwen_type = user.getChunkSize();
-                    break;  // 找到后直接退出循环
-                }
-            }
-        }
         String suffix = file.getName().toLowerCase().split("\\.")[1];
         DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
         List<List<FileChunkResponse.Document>> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
@@ -130,9 +113,24 @@ public class VectorStoreService {
         if (fileName.endsWith(".docx") || fileName.endsWith(".doc") || fileName.endsWith(".txt") || fileName.endsWith(".pdf")) {
             docs = DocQaExtractor.parseText(docs);
         }
+        List<Future<?>> futures = new ArrayList<>();
         for (List<FileChunkResponse.Document> docList : docs) {
-            List<FileInfo> fileList = getFileInfoList(metadatas, docList);
-            upsertFileVectors(fileList, category);
+            futures.add(executor.submit(() -> {
+                try {
+                    List<FileInfo> fileList = getFileInfoList(metadatas, docList);
+                    upsertFileVectors(fileList, category);
+                } catch (IOException e) {
+                    log.error("Error processing document chunk", e);
+                }
+            }));
+        }
+
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error waiting for task completion", e);
+            }
         }
     }
 
