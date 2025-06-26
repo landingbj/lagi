@@ -153,10 +153,22 @@ public class SafetyMechanismApiServlet extends BaseServlet {
     }
 
     private boolean isRectangleContained(Rectangle inner, Rectangle outer) {
-        return inner.getX0() >= outer.getX0() &&
-                inner.getY0() >= outer.getY0() &&
-                inner.getX1() <= outer.getX1() &&
-                inner.getY1() <= outer.getY1();
+        boolean isStrictlyInside = inner.getX0() >= outer.getX0()
+                && inner.getY0() >= outer.getY0()
+                && inner.getX1() <= outer.getX1()
+                && inner.getY1() <= outer.getY1();
+
+        double x0 = Math.max(inner.getX0(), outer.getX0());
+        double y0 = Math.max(inner.getY0(), outer.getY0());
+        double x1 = Math.min(inner.getX1(), outer.getX1());
+        double y1 = Math.min(inner.getY1(), outer.getY1());
+
+        double intersectionArea = (x1 > x0 && y1 > y0) ? (x1 - x0) * (y1 - y0) : 0;
+        double innerArea = (inner.getX1() - inner.getX0()) * (inner.getY1() - inner.getY0());
+
+        double ratio = intersectionArea / innerArea;
+
+        return isStrictlyInside || ratio >= 0.5;
     }
 
     private File generateWordFile(List<Map<String, String>> tableData) throws IOException {
