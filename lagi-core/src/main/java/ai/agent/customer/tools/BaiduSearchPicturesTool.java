@@ -15,7 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 public class BaiduSearchPicturesTool extends AbstractTool {
 
-    private static final String API_ADDRESS = "https://zj.v.api.aa1.cn/api/so-baidu-img/?page=1";
+//    private static final String API_ADDRESS = "https://zj.v.api.aa1.cn/api/so-baidu-img/?page=10";
+    private static final String API_ADDRESS = "https://api.52vmy.cn/api/img/baidu";
 
     public BaiduSearchPicturesTool() {
         init();
@@ -32,7 +33,7 @@ public class BaiduSearchPicturesTool extends AbstractTool {
     private String search(String msg) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        String post = ApiInvokeUtil.post(API_ADDRESS+"&msg="+msg, headers, "", 15, TimeUnit.SECONDS);
+        String post = ApiInvokeUtil.post(API_ADDRESS+"?msg="+msg, headers, "", 15, TimeUnit.SECONDS);
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
         Map<String, Object> map = gson.fromJson(post, type);

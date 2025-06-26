@@ -77,11 +77,17 @@ public class HighSpeedTicketTool extends AbstractTool {
             tickets.forEach(ticket -> {
                 int seatinventory = ((Double) ticket.get("seatinventory")).intValue();
                 if (seatinventory <= 0) {
+                    tb.append("\t无票");
                     return;
                 }
                 tb.append(StrUtil.format("\t坐次:{} 剩余车牌数量:{} 车票价格:{} ", ticket.get("seatname"), ticket.get("seatinventory"), ticket.get("seatprice")));
             });
-            if (tb.toString().isEmpty()) break;
+            if (tb.toString().isEmpty()){
+                String ss = StrUtil.format("列车编号:{} 起始车站:{} 结束车站:{} 出发时间: {} 到达时间： {}", item.get("trainumber"), item.get("departstation"), item.get("arrivestation"), item.get("departtime"), item.get("arrivetime"));
+                tb.append(ss).append("\n");
+                break;
+            }
+
             String msg = StrUtil.format("列车编号:{} 起始车站:{} 结束车站:{} 出发时间: {} 到达时间： {} 路程耗时: {} 车票信息: {}", item.get("trainumber"), item.get("departstation"), item.get("arrivestation"), item.get("departtime"), item.get("arrivetime"), item.get("runtime"), tb.toString());
             sb.append(msg).append("\n");
             count++;
@@ -97,7 +103,7 @@ public class HighSpeedTicketTool extends AbstractTool {
 
     public static void main(String[] args) {
         HighSpeedTicketTool highSpeedTicketTool = new HighSpeedTicketTool();
-//        System.out.println(highSpeedTicketTool.search("武汉", "深圳", "2024-12-10"));
+        System.out.println(highSpeedTicketTool.search("重庆", "北京", "2025-7-10"));
     }
 
 }

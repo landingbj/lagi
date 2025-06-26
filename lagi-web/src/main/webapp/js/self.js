@@ -1,5 +1,5 @@
 // mobile debug console
-// @ 调试插件  
+// @ 调试插件
 // var vConsole = new window.VConsole();
 var lastFilePath = "";
 let mediaRecorder = null;
@@ -221,12 +221,19 @@ function checkFileSizeLimit(selectedFile) {
 
 let conversation1 = null;
 let robootAnswerJq1 = null;
-//   上传文件功能的实现：
+
+
+// 定义支持批量上传的文件类型
+const batchSupportedTypes = ["pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx", "csv"];
 var voiceResponse = "";
+
+// 绑定文件上传按钮点击事件
 const fileUploadButton = document.getElementById("addButton");
 fileUploadButton.addEventListener("click", function () {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
+    // 允许选择多个文件
+    fileInput.multiple = true;
     fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
     fileInput.style.display = "none";
 
@@ -237,163 +244,535 @@ fileUploadButton.addEventListener("click", function () {
     fileInput.click();
 
     // 监听文件选择事件
-    fileInput.addEventListener("change", async function () {
+    fileInput.addEventListener("change", function () {
         disableQueryBtn();
 
-        const selectedFile = fileInput.files[0];
-        if (selectedFile) {
-            // 获取文件类型
-            let fileType = selectedFile.name.split('.').pop();
-            fileType = fileType.toLowerCase();
+        const selectedFiles = fileInput.files;
+        if (selectedFiles.length > 0) {
+            const batchFormData = new FormData();
+            let hasBatchFiles = false;
+            let hasValidFiles = false;
 
-            // 创建 FormData 对象
-            const formData = new FormData();
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const selectedFile = selectedFiles[i];
+                if (selectedFile) {
+                    // 获取文件类型
+                    let fileType = selectedFile.name.split('.').pop();
+                    fileType = fileType.toLowerCase();
 
-            var question = "";
-            // 设置服务器端点URL
-            let serverEndpoint = "";
-            var fileStatus = "";
-            if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
-                fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx" || fileType === "csv") {
-                question = "您所上传的文档文件名称为：" + selectedFile.name;
-                formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
-                if(globalUserId) {
-                    serverEndpoint = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}`;
-                } else {
-                    serverEndpoint = "/uploadFile/uploadLearningFile?category=" + window.category;
-                }
-                fileStatus = "doc";
-            } else if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "heic") {
-                question = "您所上传的图片是：" + selectedFile.name;
-                serverEndpoint = "/uploadFile/uploadImageFile";
-                formData.append("file", selectedFile);
-                fileStatus = "pic";
-            } else if (fileType === "mp3" || fileType === "wav" || fileType === "pcm") {
-                question = "您所上传的音频文件名称为：" + selectedFile.name;
-                formData.append("files", selectedFile);
-                formData.append("category", "selectedFile");
-                formData.append("total_epoch", 20);
-                formData.append("batch_size", 4);
-                serverEndpoint = "/audio/audioTrain";
-                fileStatus = "voice";
-            } else if (fileType === "avi" || fileType === "mp4") {
-                formData.append("file", selectedFile);
-                question = "您所上传的视频解析为：";
-                serverEndpoint = "/uploadFile/uploadVideoFile";
-                formData.append("file", selectedFile);
-                fileStatus = "video";
-                // alert("暂不支持视频文件的上传");
-                // return;
-            }
+                    if (!checkFileSizeLimit(selectedFile)) {
+                        hideHelloContent();
+                        let conversation = {
+                            user: { question: "您所上传的文件 " + selectedFile.name },
+                            robot: { answer: '鉴于当前资源有限，请适当缩减文件大小，敬请您的谅解！' }
+                        };
+                        newConversation(conversation);
+                        addConv(conversation);
+                        continue;
+                    }
 
-            if (!checkFileSizeLimit(selectedFile)) {
-                // hideHelloContent();
-                let conversation1 = {
-                    user: {question: question},
-                    robot: {answer: '鉴于当前资源有限，请适当缩减文件大小，敬请您的谅解！'}
-                }
-                newConversation(conversation1);
-                addConv(conversation1);
-                return;
-            }
-
-            if (fileStatus == "") {
-                alert("请选择指定的文件类型")
-                return;
-            }
-            // hideHelloContent();
-
-            let conversation1 = {user: {question: question}, robot: {answer: ''}}
-            let robootAnswerJq1 = await newConversation(conversation1);
-
-
-            // 发送 AJAX 请求
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", serverEndpoint, true);
-            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 标识为 AJAX 请求
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        // 请求成功，可以在这里处理服务器的响应
-                        responseText = xhr.responseText;
-                        if (responseText != "") {
-                            var json = JSON.parse(responseText);
-                            if (fileStatus == 'pic') {
-                                if (json.status === "success") {
-                                    var question = "您所上传的图片名称为：" + selectedFile.name;
-                                    var result = "已经收到您上传的图片。" +
-                                        "如果您想增强图片，请输入\"图像增强\"。如果您想使用AI描述图片，请输入\"看图说话\"。";
-                                    lastFilePath = json.filePath;
-                                    textQuery1(question, result, fileStatus);
-                                } else {
-                                    alert("上传失败");
-                                    return;
-                                }
-                            } else if (fileStatus == "doc") {
-                                if (json.status == "success") {
-
-                                    // var question = "您所上传的文档文件名称为：" + selectedFile.name;
-                                    // var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。"
-                                    // textQuery1(question, result, fileStatus);
-                                    var question = "您所上传的文档文件名称为：" + selectedFile.name;
-                                    var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。"
-                                    lastFilePath = json.filePath;
-                                    console.log("文件为" + lastFilePath)
-                                    textQuery1(question, result, fileStatus);
-                                } else {
-                                    alert("上传失败")
-                                    return;
-                                }
-                            } else if (fileStatus == "voice") {
-                                if (json.status == "success") {
-                                    var question = "您所上传的音频文件名称为：" + selectedFile.name;
-                                    var voiceToTxtResult = voiceToTxt(selectedFile);
-                                    var voiceResult = "";
-                                    if (voiceToTxtResult != '') {
-                                        var voiceToTxtJson = JSON.parse(voiceResponse);
-
-                                        voiceResult = voiceToTxtJson.msg;
-
-                                    }
-                                    var result = `
-                    已将您的语音素材用于训练声音，稍后积累足够时间，可以模仿您所提供的口音发声。<br><br>
-                    你发送的音频文件的内容为： ${voiceResult}
-                    `
-                                    textQuery1(question, result, fileStatus);
-                                } else {
-                                    alert("上传失败");
-                                    return;
-                                }
-                            } else if (fileStatus == "video") {
-                                if (json.status == "success") {
-                                    var question = "您所上传的视频文件名称为：" + selectedFile.name;
-                                    var result = "已经收到您上传的视频。如果您想视频追踪，请输入\"视频追踪\"。" +
-                                        "如果您想视频增强，请输入\"视频增强\"。";
-                                    lastFilePath = json.filePath;
-                                    textQuery1(question, result, fileStatus);
-                                } else {
-                                    alert("视频解析失败")
-                                    return;
-                                }
-                            }
-                        }
+                    if (batchSupportedTypes.includes(fileType)) {
+                        // 支持批量上传的文件添加到批量上传的 FormData 中
+                        batchFormData.append("files", selectedFile);
+                        hasBatchFiles = true;
+                        hasValidFiles = true;
                     } else {
-                        // 请求失败，处理上传失败的情况
-                        textQuery1("文件上传结果", "上传文件失败", "doc");
-                        return;
+                        // 不支持批量上传的文件单独处理
+                        singleFileUpload(selectedFile, fileType);
+                        hasValidFiles = true;
                     }
                 }
-            };
+            }
 
-            // 发送 FormData
-            xhr.send(formData);
+            if (hasBatchFiles) {
+                // 进行批量上传
+                batchUpload(batchFormData);
+            }
+
+            if (!hasValidFiles) {
+                // 如果没有有效的文件，不创建会话
+                enableQueryBtn();
+            }
         } else {
             console.log("没有选中文件");
+            enableQueryBtn();
         }
         // 移除文件输入元素
         document.body.removeChild(fileInput);
     });
 });
+
+function singleFileUpload(selectedFile, fileType) {
+    // 创建 FormData 对象
+    const formData = new FormData();
+
+    var question = "";
+    // 设置服务器端点URL
+    let serverEndpoint = "";
+    var fileStatus = "";
+    if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
+        fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx" ||
+        fileType === "csv") {
+        question = "您所上传的文档文件名称为：" + selectedFile.name;
+        formData.append("file", selectedFile);
+        serverEndpoint = "/uploadFile/asynchronousUpload?category=" + window.category;
+        fileStatus = "doc";
+    } else if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "heic") {
+        question = "您所上传的图片是：" + selectedFile.name;
+        serverEndpoint = "/uploadFile/uploadImageFile";
+        formData.append("file", selectedFile);
+        fileStatus = "pic";
+    } else if (fileType === "mp3" || fileType === "wav" || fileType === "pcm") {
+        question = "您所上传的音频文件名称为：" + selectedFile.name;
+        formData.append("files", selectedFile);
+        formData.append("category", "selectedFile");
+        formData.append("total_epoch", 20);
+        formData.append("batch_size", 4);
+        serverEndpoint = "/audio/audioTrain";
+        fileStatus = "voice";
+    } else if (fileType === "avi" || fileType === "mp4") {
+        formData.append("file", selectedFile);
+        question = "您所上传的视频解析为：";
+        serverEndpoint = "/uploadFile/uploadVideoFile";
+        formData.append("file", selectedFile);
+        fileStatus = "video";
+    }
+
+    if (fileStatus == "") {
+        alert("请选择指定的文件类型");
+        enableQueryBtn();
+        return;
+    }
+    // hideHelloContent();
+
+    let conversation = { user: { question: question }, robot: { answer: '' } };
+    let robootAnswerJq = newConversation(conversation);
+
+    // 发送 AJAX 请求
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", serverEndpoint, true);
+    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                // 请求成功，可以在这里处理服务器的响应
+                responseText = xhr.responseText;
+                if (responseText != "") {
+                    var json = JSON.parse(responseText);
+                    handleUploadResponse(json, fileStatus, selectedFile);
+                }
+            } else {
+                // 请求失败，处理上传失败的情况
+                textQuery1("文件上传结果", "上传文件失败", "doc");
+                enableQueryBtn();
+                return;
+            }
+        }
+    };
+
+    // 发送 FormData
+    xhr.send(formData);
+}
+
+
+
+function batchUpload(batchFormData) {
+    let serverEndpoint = "/uploadFile/asynchronousUpload?category=" + window.category;
+     if(globalUserId) {
+         serverEndpoint = `/uploadFile/asynchronousUpload?category=${window.category}&userId=${globalUserId}`;
+     }
+
+    let fileNames = [];
+    // 遍历 FormData 中的所有文件，获取文件名
+    for (let i = 0; i < batchFormData.getAll('files').length; i++) {
+        fileNames.push(batchFormData.getAll('files')[i].name);
+    }
+    let question = "";
+    // 拼接包含文件名的问题描述
+    if (fileNames.length > 1){
+        question = "你上传的文档包含：\n" + fileNames.map(file => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + file).join('<br>');
+    }else {
+        question = "你上传的文档包含：" + fileNames.map(file => '&nbsp;&nbsp;' + file).join('<br>');
+    }
+    // let question = "上传文档：" + fileNames.join(', ');
+    let fileStatus = "doc";
+
+    // hideHelloContent();
+
+    let conversation = { user: { question: question }, robot: { answer: '' } };
+    let robootAnswerJq = newConversation(conversation);
+
+    // 发送 AJAX 请求
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", serverEndpoint, true);
+    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                // 请求成功，可以在这里处理服务器的响应
+                responseText = xhr.responseText;
+                if (responseText != "") {
+                    var json = JSON.parse(responseText);
+                    handleUploadResponse(json, fileStatus);
+                }
+            } else {
+                // 请求失败，处理上传失败的情况
+                textQuery1("文件上传结果", "上传文件失败", "doc");
+                enableQueryBtn();
+                return;
+            }
+        }
+    };
+
+    // 发送 FormData
+    xhr.send(batchFormData);
+}
+
+function handleUploadResponse(json, fileStatus, selectedFile) {
+    if (fileStatus == 'pic') {
+        if (json.status === "success") {
+            var question = selectedFile ? "您所上传的图片名称为：" + selectedFile.name : "您批量上传的图片";
+            var result = "已经收到您上传的图片。如果您想生成视频，请输入\"视频生成\"。" +
+                "如果您想增强图片，请输入\"图像增强\"。如果您想使用AI描述图片，请输入\"看图说话\"。";
+            lastFilePath = json.filePath;
+            textQuery1(question, result, fileStatus);
+        } else {
+            alert("上传失败");
+            enableQueryBtn();
+            return;
+        }
+    } else if (fileStatus == "doc") {
+        if (json.status == "success") {
+            const task_id = json.task_id;
+            const startTime = new Date().getTime();
+            const getProgress = async () => {
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', `/training/getProgress?task_id=${task_id}`, true);
+                    xhr.onload = function () {
+                        if (xhr.status === 200) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                resolve(response);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        } else {
+                            reject(new Error('获取进度失败'));
+                        }
+                    };
+                    xhr.onerror = function () {
+                        reject(new Error('网络错误'));
+                    };
+                    xhr.send();
+                });
+            };
+
+            const pollProgress = async () => {
+                let progress = 0;
+                let update = "上传中";
+                while (progress < 100) {
+                    const { msg, progress: currentProgress, status } = await getProgress();
+                    if (status === 'success') {
+                        progress = currentProgress;
+                        const endTime = new Date().getTime();
+                        const duration = endTime - startTime;
+                        let res = "上传中";
+                        if (progress === 100) {
+                            res = `当前上传进度：${progress}%,上传耗时：${duration / 1000}秒`;
+                            textQuery1("文件上传结果", res, "doc");
+                            await sleep(3000);
+                            addRobotDialog(`恭喜您，系统已接收到您的文档。</br>`);
+                            await sleep(3000);
+                            addRobotDialog(`正在分析您的文档，进行语料注入...</br>`);
+                        } else {
+                            res = `当前上传进度：${progress}%,上传状态：${update},上传耗时：${duration / 1000}秒`;
+                            textQuery1("文件上传结果", res, "doc");
+                        }
+                        if (progress === 100) {
+                            await sleep(3000);
+                            addRobotDialog(`恭喜您，私有语料分析顺利完成已注入，您可以在新的会话中，询问与资料中内容相关问题。如果您想生成指令集，请输入\"生成指令集\"。</br>`);
+                            enableQueryBtn();
+                            break;
+                        }
+                    } else {
+                        textQuery1("文件上传结果", "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。", "doc");
+                        enableQueryBtn();
+                        break;
+                    }
+
+                    // 每隔3秒请求一次
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            };
+            // 开始轮询获取进度
+            pollProgress();
+
+            lastFilePath = json.filePath;
+            console.log("文件为" + lastFilePath);
+        } else {
+            alert("上传失败");
+            enableQueryBtn();
+            return;
+        }
+    } else if (fileStatus == "voice") {
+        if (json.status == "success") {
+            var question = selectedFile ? "您所上传的音频文件名称为：" + selectedFile.name : "您批量上传的音频文件";
+            var voiceToTxtResult = voiceToTxt(selectedFile);
+            var voiceResult = "";
+            if (voiceToTxtResult != '') {
+                var voiceToTxtJson = JSON.parse(voiceResponse);
+                voiceResult = voiceToTxtJson.msg;
+            }
+            var result = `
+                已将您的语音素材用于训练声音，稍后积累足够时间，可以模仿您所提供的口音发声。<br><br>
+                你发送的音频文件的内容为： ${voiceResult}
+            `;
+            textQuery1(question, result, fileStatus);
+        } else {
+            alert("上传失败");
+            enableQueryBtn();
+            return;
+        }
+    } else if (fileStatus == "video") {
+        if (json.status == "success") {
+            var question = selectedFile ? "您所上传的视频文件名称为：" + selectedFile.name : "您批量上传的视频文件";
+            var result = "已经收到您上传的视频。如果您想视频追踪，请输入\"视频追踪\"。" +
+                "如果您想视频增强，请输入\"视频增强\"。";
+            lastFilePath = json.filePath;
+            textQuery1(question, result, fileStatus);
+        } else {
+            alert("视频解析失败");
+            enableQueryBtn();
+            return;
+        }
+    }
+}
+
+
+//
+// //   上传文件功能的实现：
+// var voiceResponse = "";
+// const fileUploadButton = document.getElementById("addButton");
+// fileUploadButton.addEventListener("click", function () {
+//     const fileInput = document.createElement("input");
+//     fileInput.type = "file";
+//     fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
+//     fileInput.style.display = "none";
+//
+//     // 将文件输入元素添加到页面
+//     document.body.appendChild(fileInput);
+//
+//     // 模拟点击文件输入元素
+//     fileInput.click();
+//
+//     // 监听文件选择事件
+//     fileInput.addEventListener("change", async function () {
+//         disableQueryBtn();
+//
+//         const selectedFile = fileInput.files[0];
+//         if (selectedFile) {
+//             // 获取文件类型
+//             let fileType = selectedFile.name.split('.').pop();
+//             fileType = fileType.toLowerCase();
+//
+//             // 创建 FormData 对象
+//             const formData = new FormData();
+//
+//             var question = "";
+//             // 设置服务器端点URL
+//             let serverEndpoint = "";
+//             var fileStatus = "";
+//             if (fileType === "pdf" || fileType === "doc" || fileType === "docx" || fileType === "txt" ||
+//                 fileType === "xls" || fileType === "xlsx" || fileType === "ppt" || fileType === "pptx" || fileType === "csv") {
+//                 question = "您所上传的文档文件名称为：" + selectedFile.name;
+//                 formData.append("file", selectedFile); // 使用 "file" 作为文件字段的名称
+//                 if(globalUserId) {
+//                     serverEndpoint = `/uploadFile/asynchronousUpload?category=${window.category}&userId=${globalUserId}`;
+//                 } else {
+//                     serverEndpoint = "/uploadFile/asynchronousUpload?category=" + window.category;
+//                 }
+//                 fileStatus = "doc";
+//             } else if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "heic") {
+//                 question = "您所上传的图片是：" + selectedFile.name;
+//                 serverEndpoint = "/uploadFile/uploadImageFile";
+//                 formData.append("file", selectedFile);
+//                 fileStatus = "pic";
+//             } else if (fileType === "mp3" || fileType === "wav" || fileType === "pcm") {
+//                 question = "您所上传的音频文件名称为：" + selectedFile.name;
+//                 formData.append("files", selectedFile);
+//                 formData.append("category", "selectedFile");
+//                 formData.append("total_epoch", 20);
+//                 formData.append("batch_size", 4);
+//                 serverEndpoint = "/audio/audioTrain";
+//                 fileStatus = "voice";
+//             } else if (fileType === "avi" || fileType === "mp4") {
+//                 formData.append("file", selectedFile);
+//                 question = "您所上传的视频解析为：";
+//                 serverEndpoint = "/uploadFile/uploadVideoFile";
+//                 formData.append("file", selectedFile);
+//                 fileStatus = "video";
+//                 // alert("暂不支持视频文件的上传");
+//                 // return;
+//             }
+//
+//             if (!checkFileSizeLimit(selectedFile)) {
+//                 // hideHelloContent();
+//                 let conversation1 = {
+//                     user: {question: question},
+//                     robot: {answer: '鉴于当前资源有限，请适当缩减文件大小，敬请您的谅解！'}
+//                 }
+//                 newConversation(conversation1);
+//                 addConv(conversation1);
+//                 return;
+//             }
+//
+//             if (fileStatus == "") {
+//                 alert("请选择指定的文件类型")
+//                 return;
+//             }
+//             // hideHelloContent();
+//
+//             let conversation1 = {user: {question: question}, robot: {answer: ''}}
+//             let robootAnswerJq1 = await newConversation(conversation1);
+//
+//
+//             // 发送 AJAX 请求
+//             const xhr = new XMLHttpRequest();
+//             xhr.open("POST", serverEndpoint, true);
+//             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 标识为 AJAX 请求
+//             xhr.onreadystatechange = function () {
+//                 if (xhr.readyState === 4) {
+//                     if (xhr.status === 200) {
+//                         // 请求成功，可以在这里处理服务器的响应
+//                         responseText = xhr.responseText;
+//                         if (responseText != "") {
+//                             var json = JSON.parse(responseText);
+//                             if (fileStatus == 'pic') {
+//                                 if (json.status === "success") {
+//                                     var question = "您所上传的图片名称为：" + selectedFile.name;
+//                                     var result = "已经收到您上传的图片。" +
+//                                         "如果您想增强图片，请输入\"图像增强\"。如果您想使用AI描述图片，请输入\"看图说话\"。";
+//                                     lastFilePath = json.filePath;
+//                                     textQuery1(question, result, fileStatus);
+//                                 } else {
+//                                     alert("上传失败");
+//                                     return;
+//                                 }
+//                             } else if (fileStatus == "doc") {
+//                                 if (json.status == "success") {
+//                                     const task_id = json.task_id; // 从响应中提取 task_id
+//                                     const startTime = new Date().getTime();
+//                                     const getProgress = async () => {
+//                                         return new Promise((resolve, reject) => {
+//                                             const xhr = new XMLHttpRequest();
+//                                             xhr.open('GET', `/training/getProgress?task_id=${task_id}`, true); // 使用 task_id 构建 URL
+//                                             xhr.onload = function () {
+//                                                 if (xhr.status === 200) {
+//                                                     try {
+//                                                         const response = JSON.parse(xhr.responseText);
+//                                                         resolve(response);
+//                                                     } catch (e) {
+//                                                         reject(e);
+//                                                     }
+//                                                 } else {
+//                                                     reject(new Error('获取进度失败'));
+//                                                 }
+//                                             };
+//                                             xhr.onerror = function () {
+//                                                 reject(new Error('网络错误'));
+//                                             };
+//                                             xhr.send();
+//                                         });
+//                                     };
+//
+//                                     const pollProgress = async () => {
+//                                         let progress = 0;
+//                                         let update = "上传中";
+//                                         while (progress < 100) {
+//                                             const { msg, progress: currentProgress, status } = await getProgress();
+//                                             if (status === 'success') {
+//                                                 progress = currentProgress;
+//                                                 const endTime = new Date().getTime();
+//                                                 const duration = endTime - startTime;
+//                                                 if (progress === 100) {
+//                                                     res = `已经收到您的资料文档，上传总耗时：${duration/1000}秒，您可以在新的会话中，询问与资料中内容相关问题。如果您想生成指令集，请输入\"生成指令集\"。`;
+//                                                 }else {
+//                                                     res = `当前上传进度：${progress}%,上传状态：${update},上传耗时：${duration/1000}秒`;
+//                                                 }
+//                                                 textQuery1("文件上传结果", res, "doc");
+//                                                 if (progress === 100) {
+//                                                     break;
+//                                                 }
+//                                             } else {
+//                                                 textQuery1("文件上传结果", "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。", "doc");
+//                                                 break;
+//                                             }
+//
+//                                             // 每隔3秒请求一次
+//                                             await new Promise(resolve => setTimeout(resolve, 3000));
+//                                         }
+//                                     };
+//                                     // 开始轮询获取进度
+//                                     pollProgress();
+//
+//                                     // var result = "已经收到您的资料文档，您可以在新的会话中，询问与资料中内容相关的问题。如果您想生成指令集，请输入\"生成指令集\"。"
+//                                     lastFilePath = json.filePath;
+//                                     console.log("文件为" + lastFilePath)
+//                                 } else {
+//                                     alert("上传失败")
+//                                     return;
+//                                 }
+//                             } else if (fileStatus == "voice") {
+//                                 if (json.status == "success") {
+//                                     var question = "您所上传的音频文件名称为：" + selectedFile.name;
+//                                     var voiceToTxtResult = voiceToTxt(selectedFile);
+//                                     var voiceResult = "";
+//                                     if (voiceToTxtResult != '') {
+//                                         var voiceToTxtJson = JSON.parse(voiceResponse);
+//
+//                                         voiceResult = voiceToTxtJson.msg;
+//
+//                                     }
+//                                     var result = `
+//                     已将您的语音素材用于训练声音，稍后积累足够时间，可以模仿您所提供的口音发声。<br><br>
+//                     你发送的音频文件的内容为： ${voiceResult}
+//                     `
+//                                     textQuery1(question, result, fileStatus);
+//                                 } else {
+//                                     alert("上传失败");
+//                                     return;
+//                                 }
+//                             } else if (fileStatus == "video") {
+//                                 if (json.status == "success") {
+//                                     var question = "您所上传的视频文件名称为：" + selectedFile.name;
+//                                     var result = "已经收到您上传的视频。如果您想视频追踪，请输入\"视频追踪\"。" +
+//                                         "如果您想视频增强，请输入\"视频增强\"。";
+//                                     lastFilePath = json.filePath;
+//                                     textQuery1(question, result, fileStatus);
+//                                 } else {
+//                                     alert("视频解析失败")
+//                                     return;
+//                                 }
+//                             }
+//                         }
+//                     } else {
+//                         // 请求失败，处理上传失败的情况
+//                         textQuery1("文件上传结果", "上传文件失败", "doc");
+//                         return;
+//                     }
+//                 }
+//             };
+//
+//             // 发送 FormData
+//             xhr.send(formData);
+//         } else {
+//             console.log("没有选中文件");
+//         }
+//         // 移除文件输入元素
+//         document.body.removeChild(fileInput);
+//     });
+// });
 
 
 function textQuery1(questionRel, answerRel, fileStatus) {
@@ -410,7 +789,7 @@ function textQuery1(questionRel, answerRel, fileStatus) {
             $('#queryBox textarea').val('');
             return;
         }
-        
+
         // 隐藏非对话内容
         // hideHelloContent();
 
@@ -430,8 +809,8 @@ function textQuery1(questionRel, answerRel, fileStatus) {
     } catch(error) {
         console.log("An error occurred: " + error);
     } finally {
-            queryLock = false;
-            
+        queryLock = false;
+
     }
 }
 

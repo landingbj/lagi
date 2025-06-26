@@ -18,17 +18,21 @@ public enum IntentTypeEnum {
     IMAGE("image", new String[]{"生成.*?图$",
             "生成.*?图片$",
             "生成.*?图像$",
+            "生成.*?头像$",
             "画1张.*?图$",
             "画1张.*?图片$",
             "画1张.*?图像$",
             "画一张.*?图$",
+            "画一只.*?图$",
             "画一张.*?图片$",
             "画一张.*?图像$",
             "画.*?张.*?图$",
             "画.*?张.*?图片$",
             "画.*?张.*?图像$",
-            "请?(帮忙|帮|帮助|帮我|帮助我)?(生成|画|绘制).*?(画|图像|图片|图|肖像|板报)$",
-            "请?(帮忙|帮|帮助)?.+(生成|画|绘制|给出).*?(张|副|幅).*?(画|图像|图片|图|肖像|板报)"}),
+            "画.*?个.*?图像$",
+            "请?(帮忙|帮|帮助|帮我|帮助我)?(生成|画|绘制).*?(画|图像|图片|图|肖像|板报|头像)$",
+            "请?(帮忙|帮|帮助)?.+(生成|画|绘制|给出).*?(张|副|幅).*?(画|图像|图片|图|肖像|板报|头像)"}),
+
     VIDEO("svd_by_text", new String[]{"生成.*?视频$",
             "生成.*?视屏",
             "生成视频.*?",
@@ -91,7 +95,7 @@ public enum IntentTypeEnum {
     public static void main(String[] args) {
         String ins = "Please help write a poem";
         List<String> ls = new ArrayList<>();
-        ls.add("帮我画一只小狗在草地上玩耍");
+        ls.add("帮我生成一张头像");
         for(IntentTypeEnum e : IntentTypeEnum.values()) {
             if(e.matches(ls)) {
                 System.out.println(e.name);

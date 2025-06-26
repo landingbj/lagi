@@ -25,7 +25,8 @@ public class BellePicturesTool extends AbstractTool {
     private void init() {
         name = "belle_pictures";
         toolInfo = ToolInfo.builder().name("belle_pictures")
-                .description("这是一个头像随机生成工具,调用这个工具可以随机生成一张头像, 因为并不需要任何参数所以生成的头像是不可控的")
+//                .description("这是一个头像随机生成工具,调用这个工具可以随机生成一张头像, 因为并不需要任何参数所以生成的头像是不可控的")
+                .description("这是一个头像生成的工具,调用这个工具可以随机生成一张头像")
                 .args(Lists.newArrayList()).build();
         register(this);
     }
@@ -33,10 +34,10 @@ public class BellePicturesTool extends AbstractTool {
     private String search() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        String post = ApiInvokeUtil.post(API_ADDRESS, headers, "", 15, TimeUnit.SECONDS);
+        String post = ApiInvokeUtil.post(API_ADDRESS, headers, "", 30, TimeUnit.SECONDS);
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        Map<String, Object> map = gson.fromJson(post, type);
+         Map<String, Object> map = gson.fromJson(post, type);
         if (map == null) {
             return "图片生成失败！";
         }
