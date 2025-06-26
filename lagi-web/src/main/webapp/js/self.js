@@ -386,7 +386,13 @@ function batchUpload(batchFormData) {
         fileNames.push(batchFormData.getAll('files')[i].name);
     }
     // 拼接包含文件名的问题描述
-    let question = "你上传的文档包含：\n\n" + fileNames.join('\n');
+    let question = "";
+    // 拼接包含文件名的问题描述
+    if (fileNames.length > 1){
+        question = "你上传的文档包含：\n" + fileNames.map(file => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + file).join('<br>');
+    }else {
+        question = "你上传的文档包含：" + fileNames.map(file => '&nbsp;&nbsp;' + file).join('<br>');
+    }
     // let question = "上传文档：" + fileNames.join(', ');
     let fileStatus = "doc";
 
@@ -475,7 +481,7 @@ function handleUploadResponse(json, fileStatus, selectedFile) {
                             res = `当前上传进度：${progress}%,上传耗时：${duration / 1000}秒`;
                             textQuery1("文件上传结果", res, "doc");
                             await sleep(3000);
-                            addRobotDialog(`恭喜您，系统已接收到您的文档</br>`);
+                            addRobotDialog(`恭喜您，系统已接收到您的文档。</br>`);
                             await sleep(3000);
                             addRobotDialog(`正在分析您的文档，进行语料注入...</br>`);
                         } else {
