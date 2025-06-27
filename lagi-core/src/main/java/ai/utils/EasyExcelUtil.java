@@ -371,11 +371,15 @@ public class EasyExcelUtil {
 
     public static List<List<FileChunkResponse.Document>> getChunkDocumentExcel(File file, Integer pageSize) {
         List<List<FileChunkResponse.Document>> result = new ArrayList<>();
+        Set<List<FileChunkResponse.Document>> visited = new HashSet<>();
         try {
             ExcelReader reader = ExcelUtil.getReader(file);
             List<String> sheetNames = reader.getSheetNames();
             for (int i = 0; i < sheetNames.size(); i++) {
                 List<List<JSONObject>> rowJsons = readMergeExcel(file.getPath(), i, 0, 0);
+                if (rowJsons.isEmpty()) {
+                    continue;
+                }
                 List<JSONObject> headerRow = rowJsons.get(0);
                 List<String> headers = new ArrayList<>();
                 for (JSONObject cell : headerRow) {
@@ -383,7 +387,10 @@ public class EasyExcelUtil {
                 }
                 for (int j = 1; j < rowJsons.size(); j++) {
                     List<JSONObject> rowJson = rowJsons.get(j);
-                    List<FileChunkResponse.Document> docs = mergeExcelColumn(rowJson, headers);
+                    List<FileChunkResponse.Document> docs = mergeExcelColumn(rowJson, headers, visited);
+                    if (docs.isEmpty()) {
+                        continue;
+                    }
                     result.add(docs);
                 }
             }
@@ -393,16 +400,30 @@ public class EasyExcelUtil {
         return result;
     }
 
-    private static List<FileChunkResponse.Document> mergeExcelColumn(List<JSONObject> rowJson, List<String> headers) {
+    private static List<FileChunkResponse.Document> mergeExcelColumn(List<JSONObject> rowJson, List<String> headers, Set<List<FileChunkResponse.Document>> visited) {
         List<FileChunkResponse.Document> docs = new ArrayList<>();
         for (int k = 0; k < rowJson.size(); k++) {
-            String header = k < headers.size() ? headers.get(k) + ": " : "";
             JSONObject cell = rowJson.get(k);
             String cellValue = cell.getStr("cellValue");
+            if (cellValue == null || cellValue.isEmpty()) {
+                continue;
+            }
+            String header = "";
             FileChunkResponse.Document doc = new FileChunkResponse.Document();
+            if (k < headers.size() && !headers.get(k).isEmpty()) {
+                header = headers.get(k) + ": ";
+            }
             doc.setText(header + cellValue + "\n");
             docs.add(doc);
         }
+        if (docs.isEmpty() || visited.contains(docs)) {
+            return Collections.emptyList();
+        }
+        visited.add(docs);
+//        for (FileChunkResponse.Document doc : docs) {
+//            System.out.print(doc.getText());
+//        }
+//        System.out.println("-------------------------------------------------");
         return docs;
     }
 
@@ -524,7 +545,9 @@ public class EasyExcelUtil {
                     // 判断是否具有合并单元格
                     if (isMerge) {
                         JSONObject rs = getMergedRegionJsonValue(sheet, row.getRowNum(), c.getColumnIndex());
-                        values.putAll(rs);
+                        if (rs != null) {
+                            values.putAll(rs);
+                        }
                     } else {
                         values.put("cellValue", getCellValue(c, formulaEvaluator));
                     }
@@ -539,7 +562,7 @@ public class EasyExcelUtil {
     }
 
     public static JSONObject getMergedRegionJsonValue(Sheet sheet, int row, int column) {
-        JSONObject values = new JSONObject();
+        JSONObject values = null;
         int sheetMergeCount = sheet.getNumMergedRegions();
         for (int i = 0; i < sheetMergeCount; i++) {
             CellRangeAddress ca = sheet.getMergedRegion(i);
@@ -548,7 +571,8 @@ public class EasyExcelUtil {
             int firstRow = ca.getFirstRow();
             int lastRow = ca.getLastRow();
             if (row >= firstRow && row <= lastRow) {
-                if (column >= firstColumn && column <= lastColumn) {
+                if (column == firstColumn) {
+                    values = new JSONObject();
                     Row fRow = sheet.getRow(firstRow);
                     Cell fCell = fRow.getCell(firstColumn);
                     values.put("cellValue", getCellValue(fCell));
@@ -571,7 +595,7 @@ public class EasyExcelUtil {
             return "";
         }
         if (cell.getCellType() == CellType.STRING) {
-            return cell.getStringCellValue();
+            return cell.getStringCellValue().trim();
         }
         if (cell.getCellType() == CellType.BOOLEAN) {
             return String.valueOf(cell.getBooleanCellValue());
