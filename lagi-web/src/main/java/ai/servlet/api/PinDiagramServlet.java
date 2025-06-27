@@ -7,11 +7,13 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.servlet.BaseServlet;
 import ai.vector.FileService;
+import com.amazonaws.util.IOUtils;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.poi.xslf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -32,14 +35,15 @@ import java.util.List;
 
 public class PinDiagramServlet extends BaseServlet {
     private static final String UPLOAD_DIR = "upload";
+    private static final String TEMPLATE_DIR = "templates";
     private static final Logger logger = LoggerFactory.getLogger(PinDiagramServlet.class);
     private final Gson gson = new Gson();
     private final FileService fileService = new FileService();
     private final CompletionsService completionsService = new CompletionsService();
     private static final int CHUNK_SIZE = 20000;
     private static final String[] KEYWORDS = {
-            "PIN CONFIGURATION", // 映射到 Pinout & Pin Function
-            "PIN DESCRIPTION",   // 映射到 Pinout & Pin Function
+            "PIN CONFIGURATION",
+            "PIN DESCRIPTION",
             "Typical Application Circuit",
             "ELECTRICAL CHARACTERISTICS"
     };
@@ -141,7 +145,6 @@ public class PinDiagramServlet extends BaseServlet {
             Response response = Response.builder().status("failed").msg("Request processing failed: " + e.getMessage()).build();
             responsePrint(resp, gson.toJson(response));
         } finally {
-            // 保留临时文件用于调试
             if (pdfFile != null && pdfFile.exists()) {
                 logger.info("Temporary PDF file retained for debugging: {}", pdfFile.getAbsolutePath());
             }
@@ -160,13 +163,67 @@ public class PinDiagramServlet extends BaseServlet {
         Path uploadPath = Paths.get(getServletContext().getRealPath("/") + File.separator + UPLOAD_DIR);
 
         try {
-            // Step 1: 生成 Product Overview
+/*            // 1. 加载封面模板
+            String coverTemplateName = "full".equals(pptType) ? "designreview_cover.pptx" : "kickoff_cover.pptx";
+            InputStream coverInputStream = getClass().getClassLoader().getResourceAsStream("templates/" + coverTemplateName);*/
+
+            // 2. 创建新PPT并设置目标尺寸
+            XMLSlideShow ppt = new XMLSlideShow();
+            Dimension targetSize = new Dimension(1280, 720); // 目标尺寸
+            ppt.setPageSize(targetSize);
+
+            /*// 在generatePPT方法中修改封面页处理部分
+            if (coverInputStream != null) {
+                XMLSlideShow coverPPT = new XMLSlideShow(coverInputStream);
+                XSLFSlide coverSlide = coverPPT.getSlides().get(0);
+
+                Dimension originalSize = coverPPT.getPageSize();
+                double widthRatio = targetSize.getWidth() / originalSize.getWidth();
+                double heightRatio = targetSize.getHeight() / originalSize.getHeight();
+
+                XSLFSlide importedCover = ppt.createSlide();
+
+                // 加载并应用封面背景图
+                InputStream coverBgInputStream = getClass().getClassLoader().getResourceAsStream("templates/Cover_image.png");
+                if (coverBgInputStream == null) {
+                    logger.error("Cover background image not found: templates/Cover_image.png");
+                    throw new IOException("Cover background image not found");
+                }
+                byte[] coverBgImageData = IOUtils.toByteArray(coverBgInputStream);
+                coverBgInputStream.close();
+                XSLFPictureData coverBgPictureData = ppt.addPicture(coverBgImageData, XSLFPictureData.PictureType.PNG);
+                applyBackground(importedCover, coverBgPictureData); // 使用优化后的 applyBackground
+
+                importedCover.importContent(coverSlide); // 在背景图后导入文字内容
+                resizeSlideContent(importedCover, widthRatio, heightRatio);
+                coverInputStream.close();
+                coverPPT.close();
+            }*/
+
+            // 2. 设置PPT尺寸为宽屏（16:9比例）
+            ppt.setPageSize(new java.awt.Dimension(1280, 720)); // 宽度1280，高度720
+
+            // 3. 加载背景图片（用于内容页）
+            InputStream backgroundInputStream = getClass().getClassLoader().getResourceAsStream("templates/background.png");
+            if (backgroundInputStream == null) {
+                logger.error("Background image not found in resources: templates/background.png");
+                throw new IOException("Background image not found");
+            }
+            byte[] bgImageData = IOUtils.toByteArray(backgroundInputStream);
+            backgroundInputStream.close();
+            XSLFPictureData bgPictureData = ppt.addPicture(bgImageData, XSLFPictureData.PictureType.PNG);
+
+            // 获取母版和布局
+            XSLFSlideMaster master = ppt.getSlideMasters().get(0);
+            XSLFSlideLayout layout = master.getLayout(SlideLayout.TITLE_AND_CONTENT);
+
+            // 生成 Product Overview
             String productOverview = generateProductOverview(pdfFile);
             if (productOverview == null || productOverview.trim().isEmpty()) {
                 logger.warn("Failed to generate Product Overview");
             }
 
-            // Step 2: 收集截图
+            // 收集截图
             for (String keyword : KEYWORDS) {
                 String imagePath = callPythonService(pdfFile, keyword);
                 if (imagePath != null && new File(imagePath).exists() && new File(imagePath).length() > 0) {
@@ -180,24 +237,24 @@ public class PinDiagramServlet extends BaseServlet {
                 }
             }
 
-            // Step 3: 创建 PPT
-            XMLSlideShow ppt = new XMLSlideShow();
-            XSLFSlideMaster master = ppt.getSlideMasters().get(0);
-            XSLFSlideLayout layout = master.getLayout(SlideLayout.TITLE_AND_CONTENT);
-
             // 添加 Product Overview 幻灯片
             if (productOverview != null && !productOverview.trim().isEmpty()) {
                 XSLFSlide slide = ppt.createSlide(layout);
-                XSLFTextShape title = slide.getPlaceholder(0);
-                title.clearText();
+                applyBackground(slide, bgPictureData);
+                clearPlaceholders(slide);
+
+                XSLFTextShape title = slide.createTextBox();
+                title.setAnchor(new Rectangle(50, 40, 800, 50)); // 调整标题位置
                 XSLFTextParagraph titleP = title.addNewTextParagraph();
                 XSLFTextRun titleR = titleP.addNewTextRun();
                 titleR.setText(SLIDE_TITLES[0]);
-                titleR.setFontSize(28.0);
+                titleR.setFontFamily("Calibri");
+                titleR.setFontSize(24.0);
                 titleR.setFontColor(Color.BLACK);
+                titleR.setBold(true);
 
-                XSLFTextShape content = slide.getPlaceholder(1);
-                content.clearText();
+                XSLFTextShape content = slide.createTextBox();
+                content.setAnchor(new Rectangle(50, 100, 1000, 500)); // 调整内容区域宽度
                 String[] lines = productOverview.split("\n");
                 for (String line : lines) {
                     XSLFTextParagraph p = content.addNewTextParagraph();
@@ -206,117 +263,133 @@ public class PinDiagramServlet extends BaseServlet {
                     r.setFontSize(20.0);
                     r.setFontColor(Color.BLACK);
                 }
-                logger.debug("Added Product Overview slide");
+                addSlideNumber(slide, ppt.getSlides().size());
             }
 
             // 添加 Architecture (Block Diagram) 幻灯片
             if (architectureImage != null && architectureImage.exists() && architectureImage.length() > 0) {
                 XSLFSlide slide = ppt.createSlide(layout);
-                XSLFTextShape title = slide.getPlaceholder(0);
-                title.clearText();
+                applyBackground(slide, bgPictureData);
+                clearPlaceholders(slide);
+
+                XSLFTextShape title = slide.createTextBox();
+                title.setAnchor(new Rectangle(50, 40, 800, 50));
                 XSLFTextParagraph titleP = title.addNewTextParagraph();
                 XSLFTextRun titleR = titleP.addNewTextRun();
                 titleR.setText(SLIDE_TITLES[1]);
-                titleR.setFontSize(28.0);
+                titleR.setFontFamily("Calibri");
+                titleR.setFontSize(24.0);
                 titleR.setFontColor(Color.BLACK);
+                titleR.setBold(true);
 
                 byte[] imageData = Files.readAllBytes(architectureImage.toPath());
                 XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
                 XSLFPictureShape picture = slide.createPicture(pictureData);
-                picture.setAnchor(new Rectangle(50, 100, 500, 350));
-                logger.debug("Added Architecture (Block Diagram) slide");
+                picture.setAnchor(new Rectangle(50, 100, 1000, 500)); // 调整图片区域宽度
+                addSlideNumber(slide, ppt.getSlides().size());
             }
 
             // 如果是 full PPT，添加其他幻灯片
             if ("full".equals(pptType)) {
-                // 添加 Pinout & Pin Function 幻灯片（合并 PIN CONFIGURATION 和 PIN DESCRIPTION）
+                // 添加 Pinout & Pin Function 幻灯片
                 if (imagePaths.size() >= 2 && new File(imagePaths.get(0)).exists() && new File(imagePaths.get(1)).exists()) {
                     XSLFSlide slide = ppt.createSlide(layout);
-                    XSLFTextShape title = slide.getPlaceholder(0);
-                    title.clearText();
+                    applyBackground(slide, bgPictureData);
+                    clearPlaceholders(slide);
+
+                    XSLFTextShape title = slide.createTextBox();
+                    title.setAnchor(new Rectangle(50, 40, 800, 50));
                     XSLFTextParagraph titleP = title.addNewTextParagraph();
                     XSLFTextRun titleR = titleP.addNewTextRun();
-                    titleR.setText(SLIDE_TITLES[2]); // Pinout & Pin Function
-                    titleR.setFontSize(28.0);
+                    titleR.setText(SLIDE_TITLES[2]);
+                    titleR.setFontFamily("Calibri");
+                    titleR.setFontSize(24.0);
                     titleR.setFontColor(Color.BLACK);
+                    titleR.setBold(true);
 
-                    // 添加 PIN CONFIGURATION 图片
                     byte[] configImageData = Files.readAllBytes(new File(imagePaths.get(0)).toPath());
                     XSLFPictureData configPictureData = ppt.addPicture(configImageData, XSLFPictureData.PictureType.PNG);
                     XSLFPictureShape configPicture = slide.createPicture(configPictureData);
-                    configPicture.setAnchor(new Rectangle(50, 100, 500, 175)); // 上半部分
+                    configPicture.setAnchor(new Rectangle(50, 100, 1000, 250));
 
-                    // 添加 PIN DESCRIPTION 图片
                     byte[] descImageData = Files.readAllBytes(new File(imagePaths.get(1)).toPath());
                     XSLFPictureData descPictureData = ppt.addPicture(descImageData, XSLFPictureData.PictureType.PNG);
                     XSLFPictureShape descPicture = slide.createPicture(descPictureData);
-                    descPicture.setAnchor(new Rectangle(50, 300, 500, 175)); // 下半部分
-                    logger.debug("Added Pinout & Pin Function slide");
-                } else {
-                    logger.warn("Missing images for Pinout & Pin Function");
+                    descPicture.setAnchor(new Rectangle(50, 360, 1000, 250));
+                    addSlideNumber(slide, ppt.getSlides().size());
                 }
 
                 // 添加 Typical Application Circuit 幻灯片
                 if (imagePaths.size() >= 3 && new File(imagePaths.get(2)).exists()) {
                     XSLFSlide slide = ppt.createSlide(layout);
-                    XSLFTextShape title = slide.getPlaceholder(0);
-                    title.clearText();
+                    applyBackground(slide, bgPictureData);
+                    clearPlaceholders(slide);
+
+                    XSLFTextShape title = slide.createTextBox();
+                    title.setAnchor(new Rectangle(50, 40, 800, 50));
                     XSLFTextParagraph titleP = title.addNewTextParagraph();
                     XSLFTextRun titleR = titleP.addNewTextRun();
                     titleR.setText(SLIDE_TITLES[3]);
-                    titleR.setFontSize(28.0);
+                    titleR.setFontFamily("Calibri");
+                    titleR.setFontSize(24.0);
                     titleR.setFontColor(Color.BLACK);
+                    titleR.setBold(true);
 
                     byte[] imageData = Files.readAllBytes(new File(imagePaths.get(2)).toPath());
                     XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
                     XSLFPictureShape picture = slide.createPicture(pictureData);
-                    picture.setAnchor(new Rectangle(50, 100, 500, 350));
-                    logger.debug("Added Typical Application Circuit slide");
-                } else {
-                    logger.warn("Missing image for Typical Application Circuit");
+                    picture.setAnchor(new Rectangle(50, 100, 1000, 500));
+                    addSlideNumber(slide, ppt.getSlides().size());
                 }
 
                 // 添加 EC SPEC 幻灯片
                 if (imagePaths.size() >= 4 && new File(imagePaths.get(3)).exists()) {
                     XSLFSlide slide = ppt.createSlide(layout);
-                    XSLFTextShape title = slide.getPlaceholder(0);
-                    title.clearText();
+                    applyBackground(slide, bgPictureData);
+                    clearPlaceholders(slide);
+
+                    XSLFTextShape title = slide.createTextBox();
+                    title.setAnchor(new Rectangle(50, 40, 800, 50));
                     XSLFTextParagraph titleP = title.addNewTextParagraph();
                     XSLFTextRun titleR = titleP.addNewTextRun();
                     titleR.setText(SLIDE_TITLES[4]);
-                    titleR.setFontSize(28.0);
+                    titleR.setFontFamily("Calibri");
+                    titleR.setFontSize(24.0);
                     titleR.setFontColor(Color.BLACK);
+                    titleR.setBold(true);
 
                     byte[] imageData = Files.readAllBytes(new File(imagePaths.get(3)).toPath());
                     XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
                     XSLFPictureShape picture = slide.createPicture(pictureData);
-                    picture.setAnchor(new Rectangle(50, 100, 500, 350));
-                    logger.debug("Added EC SPEC slide");
-                } else {
-                    logger.warn("Missing image for EC SPEC");
+                    picture.setAnchor(new Rectangle(50, 100, 1000, 500));
+                    addSlideNumber(slide, ppt.getSlides().size());
                 }
 
                 // 添加 Package & Pad 幻灯片
                 if (packagePadImage != null && packagePadImage.exists() && packagePadImage.length() > 0) {
                     XSLFSlide slide = ppt.createSlide(layout);
-                    XSLFTextShape title = slide.getPlaceholder(0);
-                    title.clearText();
+                    applyBackground(slide, bgPictureData);
+                    clearPlaceholders(slide);
+
+                    XSLFTextShape title = slide.createTextBox();
+                    title.setAnchor(new Rectangle(50, 40, 800, 50));
                     XSLFTextParagraph titleP = title.addNewTextParagraph();
                     XSLFTextRun titleR = titleP.addNewTextRun();
                     titleR.setText(SLIDE_TITLES[5]);
-                    titleR.setFontSize(28.0);
+                    titleR.setFontFamily("Calibri");
+                    titleR.setFontSize(24.0);
                     titleR.setFontColor(Color.BLACK);
+                    titleR.setBold(true);
 
                     byte[] imageData = Files.readAllBytes(packagePadImage.toPath());
                     XSLFPictureData pictureData = ppt.addPicture(imageData, XSLFPictureData.PictureType.PNG);
                     XSLFPictureShape picture = slide.createPicture(pictureData);
-                    picture.setAnchor(new Rectangle(50, 100, 500, 350));
-                    logger.debug("Added Package & Pad slide");
-                } else {
-                    logger.warn("Missing Package & Pad image");
+                    picture.setAnchor(new Rectangle(50, 100, 1000, 500));
+                    addSlideNumber(slide, ppt.getSlides().size());
                 }
             }
 
+            // 输出PPT文件
             if (ppt.getSlides().isEmpty()) {
                 logger.warn("No slides generated for PPT");
                 Response response = Response.builder().status("failed").msg("No slides generated").build();
@@ -361,6 +434,93 @@ public class PinDiagramServlet extends BaseServlet {
                 }
             });
         }
+    }
+
+    /**
+     * 调整幻灯片中所有元素的大小和位置
+     */
+    private void resizeSlideContent(XSLFSlide slide, double widthRatio, double heightRatio) {
+        for (XSLFShape shape : slide.getShapes()) {
+            // 获取原始位置和大小
+            Rectangle2D originalAnchor = shape.getAnchor();
+
+            // 创建新的位置和大小（使用XSLFShape.setAnchor()的正确替代方案）
+            Rectangle2D newAnchor = new Rectangle2D.Double(
+                    originalAnchor.getX() * widthRatio,
+                    originalAnchor.getY() * heightRatio,
+                    originalAnchor.getWidth() * widthRatio,
+                    originalAnchor.getHeight() * heightRatio
+            );
+
+            // 正确的设置方法（根据形状类型处理）
+            if (shape instanceof XSLFTextBox) {
+                ((XSLFTextBox)shape).setAnchor(newAnchor);
+            }
+            else if (shape instanceof XSLFPictureShape) {
+                ((XSLFPictureShape)shape).setAnchor(newAnchor);
+            }
+            else if (shape instanceof XSLFAutoShape) {
+                ((XSLFAutoShape)shape).setAnchor(newAnchor);
+            }
+            // 其他形状类型...
+
+            // 处理文本框字体大小
+            if (shape instanceof XSLFTextShape) {
+                XSLFTextShape textShape = (XSLFTextShape) shape;
+                for (XSLFTextParagraph paragraph : textShape.getTextParagraphs()) {
+                    for (XSLFTextRun textRun : paragraph.getTextRuns()) {
+                        double originalSize = textRun.getFontSize();
+                        if (originalSize > 0) {  // 只调整已设置的字体大小
+                            textRun.setFontSize(originalSize * Math.min(widthRatio, heightRatio));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 应用背景图片到幻灯片
+    private void applyBackground(XSLFSlide slide, XSLFPictureData bgPictureData) {
+        // 清除原有背景
+        XSLFBackground bg = slide.getBackground();
+        bg.setFillColor(Color.WHITE);
+
+        // 创建背景图片并覆盖整个幻灯片
+        XSLFPictureShape bgPicture = slide.createPicture(bgPictureData);
+        Dimension pageSize = slide.getSlideShow().getPageSize();
+        bgPicture.setAnchor(new Rectangle(0, 0, pageSize.width, pageSize.height));
+
+        // 替代moveToBack()的方案：确保背景是第一个添加的形状（默认会在最底层）
+        // 不需要额外操作，因为createPicture()新创建的形状默认在现有形状之上
+        // 但由于我们先添加背景，再添加其他内容，所以背景自然会在最底层
+    }
+
+    // 清除幻灯片上的占位符文本
+    private void clearPlaceholders(XSLFSlide slide) {
+        for (XSLFShape shape : slide.getShapes()) {
+            if (shape instanceof XSLFTextShape) {
+                XSLFTextShape textShape = (XSLFTextShape) shape;
+                // 修改判断方式，使用更可靠的方法检测占位符
+                if (textShape.getPlaceholder() != null) {
+                    textShape.clearText();
+                }
+            }
+        }
+    }
+
+    private void addSlideNumber(XSLFSlide slide, int slideNumber) {
+//        if (slideNumber > 1) {
+            XSLFTextBox textBox = slide.createTextBox();
+            textBox.setAnchor(new Rectangle(1128, 650, 100, 40)); // 右下角位置
+            XSLFTextParagraph paragraph = textBox.addNewTextParagraph();
+            paragraph.setTextAlign(TextParagraph.TextAlign.RIGHT);
+            XSLFTextRun textRun = paragraph.addNewTextRun();
+            textRun.setText(String.valueOf(slideNumber));
+            textRun.setFontFamily("Arial");
+            textRun.setFontSize(9.0);
+            textRun.setFontColor(Color.BLACK);
+            textRun.setBold(false);
+//        }
     }
 
     private String generateProductOverview(File pdfFile) {
@@ -408,9 +568,7 @@ public class PinDiagramServlet extends BaseServlet {
                 history.add(Lists.newArrayList(chunkPrompt, aiResponse));
 
                 if (i == chunks.size() - 1) {
-                    // 清理可能的 Markdown 格式或多余内容
                     String cleanedResponse = aiResponse.replaceAll("(?m)^#.*$|^-.*$|^\\*.*$|^\\s*\\n", "").trim();
-                    // 确保只保留 10 项格式
                     StringBuilder filteredResponse = new StringBuilder();
                     String[] lines = cleanedResponse.split("\n");
                     for (String line : lines) {
