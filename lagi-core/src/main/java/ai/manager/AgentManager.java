@@ -27,8 +27,8 @@ public class AgentManager {
             Constructor<?> constructor = clazz.getConstructor(AgentConfig.class);
             Object o = constructor.newInstance(conf);
             agentsMap.put(name, (Agent<?, ?>) o);
-        } catch (Exception e) {
-            log.error("Failed to register agent: {} with driver: {}", name, driver, e);
+        } catch (Exception ignored) {
+//            log.error("Failed to register agent: {} with driver: {}", name, driver, e);
         }
         });
     }
