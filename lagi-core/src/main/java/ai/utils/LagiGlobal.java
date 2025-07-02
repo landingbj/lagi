@@ -4,7 +4,6 @@ import java.util.List;
 
 import ai.common.pojo.Backend;
 import ai.config.ContextLoader;
-import ai.config.pojo.AgentConfig;
 
 import ai.common.pojo.Configuration;
 
@@ -34,7 +33,6 @@ public class LagiGlobal {
         ContextLoader.loadContext();
         config = ContextLoader.configuration.transformToConfiguration();
         setLandingApikey(config);
-        setAgentApiKey(config);
         setDefaultCategory(config);
         return config;
     }
@@ -62,23 +60,6 @@ public class LagiGlobal {
     private static void setDefaultCategory(Configuration config) {
         if (config.getVectorStores() != null && !config.getVectorStores().isEmpty()){
             DEFAULT_CATEGORY = config.getVectorStores().get(0).getDefaultCategory();
-        }
-    }
-
-    public static String getAgentApiKey() {
-        return AGENT_API_KEY;
-    }
-
-    private static void setAgentApiKey(Configuration config) {
-        List<AgentConfig> agents = config.getAgents();
-        if(agents == null) {
-            return;
-        }
-        for (AgentConfig agent : agents) {
-            if (agent.getApiKey() != null) {
-                AGENT_API_KEY = agent.getApiKey();
-                break;
-            }
         }
     }
 

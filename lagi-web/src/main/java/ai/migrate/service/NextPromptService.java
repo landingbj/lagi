@@ -1,9 +1,9 @@
 package ai.migrate.service;
 
-import ai.agent.pojo.ChannelUser;
-import ai.agent.pojo.ChannelUserResponse;
-import ai.agent.pojo.GetAppListResponse;
-import ai.agent.service.RpaService;
+import ai.pnps.pojo.ChannelUser;
+import ai.pnps.pojo.ChannelUserResponse;
+import ai.pnps.pojo.GetAppListResponse;
+import ai.pnps.service.RpaService;
 import ai.servlet.dto.NextPromptRequest;
 import ai.servlet.dto.NextPromptResponse;
 

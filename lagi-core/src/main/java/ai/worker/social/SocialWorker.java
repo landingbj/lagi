@@ -1,7 +1,7 @@
 package ai.worker.social;
 
-import ai.agent.Agent;
-import ai.agent.social.SocialAgent;
+import ai.pnps.Pnp;
+import ai.pnps.social.SocialPnp;
 import ai.llm.service.CompletionsService;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class SocialWorker extends Worker<Boolean, Boolean> {
-    protected SocialAgent agent;
+    protected SocialPnp agent;
 
     protected CompletionsService completionsService = new CompletionsService();
 
@@ -40,7 +40,7 @@ public abstract class SocialWorker extends Worker<Boolean, Boolean> {
         return chatCompletionRequest;
     }
 
-    public Agent getAgent() {
+    public Pnp getAgent() {
         return agent;
     }
 

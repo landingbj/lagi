@@ -1,0 +1,10 @@
+pnps:
+  # Pnp for WeChat chat application automation, supporting social interactions and message management.
+  - name: wechat
+    api_key: your-api-key
+    driver: ai.pnps.social.WechatPnp
+
+  # Pnp for DingTalk chat application automation, providing work collaboration and information exchange services.
+  - name: ding
+    api_key: your-api-key
+    driver: ai.pnps.social.DingPnp

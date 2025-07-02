@@ -1,12 +1,12 @@
 package ai.worker.social;
 
-import ai.agent.AgentFactory;
-import ai.agent.AgentGlobal;
-import ai.agent.pojo.SocialAgentParam;
-import ai.agent.pojo.SocialReceiveData;
-import ai.agent.pojo.SocialSendData;
-import ai.agent.social.SocialAgent;
-import ai.config.pojo.AgentConfig;
+import ai.config.pojo.PnpConfig;
+import ai.pnps.SocialPnpFactory;
+import ai.pnps.PnpGlobal;
+import ai.pnps.pojo.SocialPnpParam;
+import ai.pnps.pojo.SocialReceiveData;
+import ai.pnps.pojo.SocialSendData;
+import ai.pnps.social.SocialPnp;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -16,20 +16,20 @@ public class RobotWorker extends SocialWorker {
     private AtomicBoolean running = new AtomicBoolean(false);
     private final String username;
 
-    public RobotWorker(AgentConfig agentConfig) {
-        this.username = agentConfig.getApiKey();
-        SocialAgentParam param = SocialAgentParam.builder()
+    public RobotWorker(PnpConfig pnpConfig) {
+        this.username = pnpConfig.getApiKey();
+        SocialPnpParam param = SocialPnpParam.builder()
                 .username(username)
-                .robotFlag(AgentGlobal.ENABLE_FLAG)
-                .timerFlag(AgentGlobal.DISABLE_FLAG)
-                .repeaterFlag(AgentGlobal.DISABLE_FLAG)
-                .guideFlag(AgentGlobal.DISABLE_FLAG)
+                .robotFlag(PnpGlobal.ENABLE_FLAG)
+                .timerFlag(PnpGlobal.DISABLE_FLAG)
+                .repeaterFlag(PnpGlobal.DISABLE_FLAG)
+                .guideFlag(PnpGlobal.DISABLE_FLAG)
                 .build();
-        this.agent = AgentFactory.getAgent(agentConfig, param);
+        this.agent = SocialPnpFactory.getPnp(pnpConfig, param);
     }
 
-    public RobotWorker(SocialAgent agent) {
-        SocialAgentParam param = agent.getParam();
+    public RobotWorker(SocialPnp agent) {
+        SocialPnpParam param = agent.getParam();
         this.username = param.getUsername();
         this.agent = agent;
     }
@@ -41,7 +41,7 @@ public class RobotWorker extends SocialWorker {
 
         while (running.get()) {
             SocialReceiveData receiveData = (SocialReceiveData) agent.receive();
-            if (receiveData.getStatus().equals(AgentGlobal.SUCCESS)) {
+            if (receiveData.getStatus().equals(PnpGlobal.SUCCESS)) {
                 String text = getCompletionResult(receiveData.getData());
                 SocialSendData sendData = new SocialSendData();
                 sendData.setChannelUser(username);
