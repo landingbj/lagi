@@ -223,7 +223,6 @@ functions:
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.
-
 agents:
   # Agent for stock queries, providing stock market information, analysis, and related services.
   - name: stock
@@ -239,6 +238,7 @@ agents:
 
 include_agents: agent.yml
 
+
 mcps:
   # set default driver
   servers:
@@ -247,13 +247,15 @@ mcps:
 
 include_mcps: mcp.yml
 
+
 pnps:
-  # Agent for QQ chat application automation, enabling social interactions and services.
+  # pnp for QQ chat application automation, enabling social interactions and services.
   - name: qq
     api_key: your-api-key
     driver: ai.pnps.social.QQPnp
 
 include_pnps: pnp.yml
+
 
 # The following is the configuration of workers, name is the name of the worker,
 # agent is the agent used by the worker, class is the implement class of the worker.
