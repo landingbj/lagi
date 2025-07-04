@@ -201,7 +201,8 @@ public class LlmApiServlet extends BaseServlet {
         Map<Integer, Boolean> haveABalance = paidAgentByUser.getData().stream().collect(Collectors.toMap(AgentConfig::getId, agentConfig -> {
             BigDecimal balance = agentConfig.getBalance();
             BigDecimal pricePerReq = agentConfig.getPricePerReq();
-            return balance.doubleValue() >= pricePerReq.doubleValue();
+            // 使用compareTo代替doubleValue比较，避免精度问题
+            return balance.compareTo(pricePerReq) >= 0;
         }));
         Map<Integer, PaidLagiAgent> paidLagiAgentMap = paidAgentByUser.getData().stream().collect(Collectors.toMap(AgentConfig::getId, agentConfig -> agentConfig));
 
@@ -211,7 +212,9 @@ public class LlmApiServlet extends BaseServlet {
             List<AgentConfig> agentConfigs = lagiAgentList.getData();
             agents = convert2AgentList(agentConfigs, haveABalance);
             work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
-            deductExpense(work, lLmRequest, agentConfigs);
+            if (work != null) {
+                deductExpense(work, lLmRequest, agentConfigs);
+            }
         } else {
             LagiAgentResponse lagiAgent = agentService.getLagiAgent(null, String.valueOf(lLmRequest.getAgentId()));
             AgentConfig agentConfig = lagiAgent.getData();
@@ -228,7 +231,9 @@ public class LlmApiServlet extends BaseServlet {
                     boolean isPreDuctExpense = preDuctExpense(paidLagiAgentMap.get(agentConfig.getId()));
                     if (isPreDuctExpense) {
                         work = defaultWorker.work(lLmRequest.getWorker(), agents, lLmRequest);
-                        deductExpense(work, lLmRequest, agentConfigs);
+                        if (work != null) {
+                            deductExpense(work, lLmRequest, agentConfigs);
+                        }
                     } else {
                         work = noExpenseResult(lagiAgent);
                     }
@@ -250,7 +255,9 @@ public class LlmApiServlet extends BaseServlet {
             if (lLmRequest.getAgentId() != null) {
                 resultWithSource.setSourceId(lLmRequest.getAgentId());
                 try {
-                    agentLRUCache.put(lLmRequest.getSessionId(), new Pair<>(lLmRequest.getMessages().size() - 1, (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(lLmRequest.getAgentId())));
+                    if (lLmRequest.getSessionId() != null && AgentManager.getInstance().get(lLmRequest.getAgentId()) != null) {
+                        agentLRUCache.put(lLmRequest.getSessionId(), new Pair<>(lLmRequest.getMessages().size() - 1, (Agent<ChatCompletionRequest, ChatCompletionResult>) AgentManager.getInstance().get(lLmRequest.getAgentId())));
+                    }
                 } catch (Exception ignored) {
                 }
             }
@@ -280,7 +287,13 @@ public class LlmApiServlet extends BaseServlet {
             return;
         }
         if (work instanceof ChatCompletionResultWithSource) {
-            Map<Integer, Boolean> feedMap = agentConfigs.stream().collect(Collectors.toMap(AgentConfig::getId, AgentConfig::getIsFeeRequired));
+            // 使用 (existingValue, replacementValue) -> existingValue 来解决冲突
+            Map<Integer, Boolean> feedMap = agentConfigs.stream()
+                    .collect(Collectors.toMap(
+                            AgentConfig::getId,
+                            AgentConfig::getIsFeeRequired,
+                            (existingValue, replacementValue) -> existingValue
+                    ));
             Integer sourceId = ((ChatCompletionResultWithSource) work).getSourceId();
             if (feedMap.containsKey(sourceId) && feedMap.get(sourceId)) {
                 deductExpense(sourceId, lLmRequest.getUserId());

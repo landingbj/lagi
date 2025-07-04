@@ -143,12 +143,21 @@ public class AgentScoreDao {
     }
 
     public void insertAgentKeywordLog(int agentId, String keyword) {
-        String sql = "INSERT INTO agent_keyword_log(agent_id, keyword) VALUES(?, ?)";
+        String checkSql = "SELECT COUNT(*) FROM agent_keyword_log WHERE agent_id = ? AND keyword = ?";
+        String insertSql = "INSERT INTO agent_keyword_log(agent_id, keyword) VALUES(?, ?)";
+
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, agentId);
-            pstmt.setString(2, keyword);
-            pstmt.executeUpdate();
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+             PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+            checkStmt.setInt(1, agentId);
+            checkStmt.setString(2, keyword);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next() && rs.getInt(1) == 0) {
+                insertStmt.setInt(1, agentId);
+                insertStmt.setString(2, keyword);
+                insertStmt.executeUpdate();
+            }
         } catch (Exception e) {
             log.error("Error inserting into agent_keyword_log", e);
         }

@@ -37,6 +37,17 @@ public class QwenAdapter extends ModelService implements ILlmAdapter {
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
+        // 检查请求参数是否为空或无效
+        if (chatCompletionRequest == null || chatCompletionRequest.getMessages() == null || chatCompletionRequest.getMessages().isEmpty()) {
+            log.error("聊天补全请求参数为空或消息列表为空");
+            throw new RRException(400, "QWEN_API_INVALID_PARAM: 请求参数为空或消息列表为空，请检查输入内容");
+        }
+        List<ChatMessage> messages = chatCompletionRequest.getMessages();
+        List<ChatMessage> filteredMessages = messages.stream()
+                .filter(message -> message != null && message.getContent() != null && !message.getContent().isEmpty())
+                .collect(Collectors.toList());
+
+        chatCompletionRequest.setMessages(filteredMessages);
         Generation gen = new Generation();
         GenerationParam param = convertRequest(chatCompletionRequest);
         GenerationResult result;
