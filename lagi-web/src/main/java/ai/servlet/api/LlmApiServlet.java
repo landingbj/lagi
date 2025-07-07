@@ -698,6 +698,7 @@ public class LlmApiServlet extends BaseServlet {
             }
             if (indexSearchDataList == null) {
                 try {
+                    // TODO 2025/7/7 RAG查询: 添加用户自定义参数影响查询: indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest, userSelectedParams);
                     indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
                 } catch (Exception e) {
                     logger.error("vector search failed : ", e);

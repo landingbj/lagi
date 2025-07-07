@@ -60,7 +60,8 @@ public class VectorDbService {
         List<IndexSearchData> search = vectorStoreService.search(request);
         return PriorityWordUtil.sortByPriorityWord(search);
     }
-
+    
+    // TODO 2025/7/7 RAG查询: 重写该函数增加用户选项
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<IndexSearchData> search = vectorStoreService.searchByContext(request);
         String lastMessage = ChatCompletionUtil.getLastMessage(request);

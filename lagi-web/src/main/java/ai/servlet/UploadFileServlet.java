@@ -228,6 +228,7 @@ public class UploadFileServlet extends HttpServlet {
     private void deleteFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("utf-8");
         resp.setContentType("application/json;charset=utf-8");
+        // TODO 2025/7/7 RAG删除:  这里的库为当前文件所在的用户库， 或则不在用户库, 则使用系统库
         String category = req.getParameter("category");
         List<String> idList = gson.fromJson(requestToJson(req), new TypeToken<List<String>>() {
         }.getType());
@@ -519,7 +520,7 @@ public class UploadFileServlet extends HttpServlet {
         out.close();
     }
 
-
+    // TODO 2025/7/7 RAG上传: 改造, 添加 userSelectedParams 属性
     public class AddDocIndex extends Thread {
         private final VectorDbService vectorDbService = new VectorDbService(config);
         private final File file;
@@ -555,6 +556,7 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("file_id", fileId);
             metadatas.put("userId", userId);
             List<UserRagSetting> settingList = null;
+            // TODO 2025/7/7 RAG 上传: 原来的 setting  category 等参数由 userSelectedParams 传进来
             try {
                 settingList = uploadFileService.getTextBlockSize(category, userId);
             } catch (SQLException e) {
@@ -573,7 +575,7 @@ public class UploadFileServlet extends HttpServlet {
                     tracker.setProgress(50);
                     LRUCacheUtil.put(taskId, tracker);
                 }
-
+                // TODO 2025/7/7 RAG 上传
                 vectorDbService.addFileVectors(this.file, metadatas, category);
 
                 if (tracker != null) {

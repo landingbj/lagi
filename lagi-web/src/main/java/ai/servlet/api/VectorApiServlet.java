@@ -138,6 +138,8 @@ public class VectorApiServlet extends BaseServlet {
 
     private void query(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
+        // TODO 2025/7/7 RAG查询: 这里是向量数据库检索的地方， 替换为 search 具体的方法 参数来自于用户或系统 public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
+        //                                        Map<String, String> where, String category)
         VectorQueryRequest vectorQueryRequest = reqBodyToObj(req, VectorQueryRequest.class);
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setN(vectorQueryRequest.getN());

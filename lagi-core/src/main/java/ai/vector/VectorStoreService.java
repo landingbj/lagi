@@ -107,6 +107,7 @@ public class VectorStoreService {
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
         // todo 按页切割文件
+        // TODO 2025/7/7 RAG上傳: 直接根據重寫的 userSelectedParams 參數 修改 wenben_type biaoge_type tuwen_type category 等
 
 //        List<FileChunkResponse.Document> docs = new ArrayList<>();
         List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
@@ -217,6 +218,7 @@ public class VectorStoreService {
             data.setId(upsertRecord.getId());
             data.setText(upsertRecord.getDocument());
             data.setCategory(category);
+            // TODO 2025/7/7 RAG上传 根据 用户选择的 fulltext 来启用，  读取配置文件里的 fulltext 来启用
             bigdataService.upsert(data);
         }
         this.vectorStore.upsert(upsertRecords, category);
@@ -343,6 +345,8 @@ public class VectorStoreService {
         }
         return search(question, request.getCategory(),request.getUserId());
     }
+
+    // TODO 2025/7/7 RAG查询: 重写该函数增加选项
     public List<IndexSearchData> searchByContext(ChatCompletionRequest request) {
         List<ChatMessage> messages = request.getMessages();
         IntentResult intentResult = intentService.detectIntent(request);
@@ -373,6 +377,7 @@ public class VectorStoreService {
         if (question == null) {
             question = ChatCompletionUtil.getLastMessage(request);
         }
+        // TODO 2025/7/7 RAG查询: 使用重写的增加选项的  search(question, userSelectedParams)
         return search(question, request.getCategory());
     }
     public List<IndexSearchData> search(String question, String category,String usr) {
@@ -423,12 +428,13 @@ public class VectorStoreService {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
     public List<IndexSearchData> search(String question, String category) {
-
+        // TODO 2025/7/7 RAG查询: category similarity_top_k similarity_cutoff 都来自userSelectedParams， 如果 userSelectedParams 这些参数为空 保持原代码不变
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
         double similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
         Map<String, String> where = new HashMap<>();
         category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
         List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+        // TODO 2025/7/7 RAG查询: 这里查询 es 同理 为fulltext 的配置
         Set<String> esIds = bigdataService.getIds(question, category);
         if (esIds != null && !esIds.isEmpty()) {
             Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
