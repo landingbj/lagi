@@ -240,21 +240,21 @@
 
 .train-args-list {
     width: 100%;
-    height: 240px;
+    /* height: 240px; */
     border: 1px rgb(184, 184, 184) solid;
     margin-top: 20px;
 }
 
-.train-args-list div {
+.train-args-list .train-args-row {
     padding: 12px 10px;
     height: 60px;
 }
 
-.train-args-list div:nth-child(odd) {
+.train-args-list .train-args-row:nth-child(odd) {
     background-color: hsl(0deg 0% 94.9%);
 }
 
-.train-args-list div:nth-child(even) {
+.train-args-list .train-args-row:nth-child(even) {
     /* background-color: white; */
 }
 
