@@ -1,0 +1,14 @@
+package ai.paas.beidian.pojo.response;
+
+import lombok.*;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class ModelSftConfirmResponse{
+    private Integer code;
+    private String msg;
+    private String id;
+}
