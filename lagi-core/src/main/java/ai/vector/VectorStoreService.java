@@ -115,7 +115,7 @@ public class VectorStoreService {
         DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
         List<List<FileChunkResponse.Document>> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
         String fileName = file.getName();
-        if (fileName.endsWith(".docx") || fileName.endsWith(".doc") || fileName.endsWith(".txt") || fileName.endsWith(".pdf")) {
+        if (fileName.endsWith(".docx") || fileName.endsWith(".doc") || fileName.endsWith(".txt") || fileName.endsWith(".pdf") || fileName.endsWith(".md") || fileName.endsWith(".html")) {
             docs = DocQaExtractor.parseText(docs);
         }
         List<Future<?>> futures = new ArrayList<>();
