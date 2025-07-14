@@ -333,13 +333,69 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
+
+
+    /**
+ * 将JSON字符串解析后与目标对象进行深度合并
+ * @param {string} jsonString - 要解析的JSON字符串
+ * @param {Object} target - 目标对象，合并后的结果将保存在此对象
+ * @param {boolean} [deep=false] - 是否执行深度合并，默认为false
+ * @returns {Object} 合并后的目标对象
+ */
+function mergeJson(jsonString, target, deep = false) {
+    try {
+        // 解析JSON字符串
+        const source = JSON.parse(jsonString);
+        
+        // 合并对象属性
+        return mergeObjects(source, target, deep);
+    } catch (error) {
+        console.error('JSON解析错误:', error);
+        return target;
+    }
+}
+    
+/**
+ * 合并两个对象的属性
+ * @param {Object} source - 源对象
+ * @param {Object} target - 目标对象
+ * @param {boolean} deep - 是否执行深度合并
+ * @returns {Object} 合并后的目标对象
+ */
+function mergeObjects(source, target, deep) {
+    for (const key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+            const sourceValue = source[key];
+            const targetValue = target[key];
+            
+            if (deep && typeof sourceValue === 'object' && sourceValue !== null && 
+                typeof targetValue === 'object' && targetValue !== null) {
+                // 递归合并子对象
+                target[key] = mergeObjects(sourceValue, targetValue, true);
+            } else {
+                // 直接赋值
+                target[key] = sourceValue;
+            }
+        }
+    }
+    return target;
+}
+
+    
 async function doTrain(el) {
     disabledTrain(el);
     // await sleep(6000);
     let userId = getCookie('userId');
     const inputValues = {};
     $('#train-form input').each(function(){
-        inputValues[$(this).attr('name')] = $(this).val();
+        const $this = $(this);
+        const name = $this.attr('name');
+        const value = $this.val();
+        if ($this.is(':checkbox') && !$this.is(':checked')) {
+            return; // 跳过未选中的checkbox
+        }
+        inputValues[name] = value;
     });
     let datasets = $('#sel-datasets input[type="checkbox"]:checked').map(function() {
         return this.value;
@@ -348,19 +404,21 @@ async function doTrain(el) {
     $('#train-form select').each(function(){
         selectValues[$(this).attr('name')] = $(this).val();
     });
+    let stage = selectValues["stage"];
+    let finetuning_type = selectValues["finetuning_type"];
     let params = {
         "userId":userId,
         "fineTuneArgs" : {
-            "stage" :"sft",
+            "stage" :stage,
             "model_name" : selectValues["sel-model"],
-            "finetuning_type" : "lora",
+            "finetuning_type" : finetuning_type,
             "template" : inputValues["template"], //"qwen",
             "lora_target":"all",
             "dataset" : datasets,
             "cutoff_len" : inputValues["cutoff-length"], //1024,
             "max_samples": inputValues["max-samples"], //1000,
             "overwrite_cache" : true,
-            "preprocessing_num_workers" : 16,
+            // "preprocessing_num_workers" : 16,
             "logging_steps":10,
             "save_steps":500,
             "plot_loss":true,
@@ -381,6 +439,114 @@ async function doTrain(el) {
             "output_dir": inputValues["output-dir"]
         }
     }
+    // extra arguments
+    let logging_steps =  inputValues["logging_steps"];
+    let save_steps =  inputValues["save_steps"];
+    let warmup_steps =  inputValues["warmup_steps"];
+    let NEFTune_alpha =  inputValues["NEFTune_alpha"];
+    let extra_arguments =  inputValues["extra_arguments"];
+    let enable_thinking =  inputValues["enable_thinking"];
+    mergeJson(extra_arguments, params["fineTuneArgs"], true);
+    if(logging_steps && logging_steps.length > 0) {
+        params["fineTuneArgs"]["logging_steps"] = logging_steps;
+    }
+    if(save_steps && save_steps.length > 0) {
+        params["fineTuneArgs"]["save_steps"] = save_steps;
+    }
+    if(warmup_steps && warmup_steps.length > 0) {
+        params["fineTuneArgs"]["warmup_steps"] = warmup_steps;
+    }
+    if(enable_thinking && enable_thinking.length > 0) {
+        params["fineTuneArgs"]["enable_thinking"] = true;
+    }
+    // freeze 配置
+    if(finetuning_type == "freeze") {
+        let freeze_trainable_layers =  inputValues["freeze_trainable_layers"];
+        let freeze_trainable_modules =  inputValues["freeze_trainable_modules"];
+        let freeze_extra_modules =  inputValues["freeze_extra_modules"];
+        if(freeze_trainable_layers && freeze_trainable_layers.length > 0) {
+            params["fineTuneArgs"]["freeze_trainable_layers"] = freeze_trainable_layers;
+        }
+        if(freeze_trainable_modules && freeze_trainable_modules.length > 0) {
+            params["fineTuneArgs"]["freeze_trainable_modules"] = freeze_trainable_modules;
+        }
+        if(freeze_extra_modules && freeze_extra_modules.length > 0) {
+            params["fineTuneArgs"]["freeze_extra_modules"] = freeze_extra_modules;
+        }
+    }
+    
+    // lora 配置
+    if(finetuning_type == "lora") {
+        let lora_rank =  inputValues["lora_rank"];
+        let lora_alpha =  inputValues["lora_alpha"];
+        let lora_dropout =  inputValues["lora_dropout"];
+        let loraplus_lr_ratio =  inputValues["loraplus_lr_ratio"];
+        let create_new_adapter =  inputValues["create_new_adapter"];
+        if(lora_rank && lora_rank.length > 0) {
+            params["fineTuneArgs"]["lora_rank"] = lora_rank;
+        }
+        if(lora_alpha && lora_alpha.length > 0) {
+            params["fineTuneArgs"]["lora_alpha"] = lora_alpha;
+        }
+        if(lora_dropout && lora_dropout.length > 0) {
+            params["fineTuneArgs"]["lora_dropout"] = lora_dropout;
+        }
+        if(loraplus_lr_ratio && loraplus_lr_ratio.length > 0) {
+            params["fineTuneArgs"]["loraplus_lr_ratio"] = loraplus_lr_ratio;
+        }
+        if(create_new_adapter && create_new_adapter.length > 0) {
+            params["fineTuneArgs"]["create_new_adapter"] = true;
+        }
+        let use_rslora =  inputValues["use_rslora"];
+        let use_dora =  inputValues["use_dora"];
+        let pissa_init =  inputValues["pissa_init"];
+        let lora_target =  inputValues["lora_target"];
+        let additional_target =  inputValues["additional_target"];
+        if(use_rslora && use_rslora.length > 0) {
+            params["fineTuneArgs"]["use_rslora"] = true;
+        }
+        if(use_dora && use_dora.length > 0) {
+            params["fineTuneArgs"]["use_dora"] = true;
+        }
+        if(pissa_init && pissa_init.length > 0) {
+            params["fineTuneArgs"]["pissa_init"] = true;
+        }
+        if(lora_target && lora_target.length > 0) {
+            params["fineTuneArgs"]["lora_target"] = lora_target;
+        }
+        if(additional_target && additional_target.length > 0) {
+            params["fineTuneArgs"]["additional_target"] = additional_target;
+        }
+    }
+    console.log("params", params);
+    // RLHF 配置
+    if(stage == "rm") {
+        let pref_beta =  inputValues["pref_beta"];
+        let pref_ftx =  inputValues["pref_ftx"];
+        let pref_loss =  selectValues["pref_loss"];
+        let ref_model =  inputValues["ref_model"];
+        if(pref_beta && pref_beta.length > 0) {
+            params["fineTuneArgs"]["pref_beta"] = pref_beta;
+        }
+        if(pref_ftx && pref_ftx.length > 0) {
+            params["fineTuneArgs"]["pref_ftx"] = pref_ftx;
+        }
+        if(pref_loss && pref_loss.length > 0) {
+            params["fineTuneArgs"]["pref_loss"] = pref_loss;
+        }
+        if(ref_model && ref_model.length > 0) {
+            params["fineTuneArgs"]["ref_model"] = ref_model;
+        }
+        let ppo_score_norm =  inputValues["ppo_score_norm"];
+        let ppo_whiten_rewards =  inputValues["ppo_whiten_rewards"];
+        if(ppo_score_norm && ppo_score_norm.length > 0) {
+            params["fineTuneArgs"]["ppo_score_norm"] = ppo_score_norm;
+        }
+        if(ppo_whiten_rewards && ppo_whiten_rewards.length > 0) {
+            params["fineTuneArgs"]["ppo_whiten_rewards"] = ppo_whiten_rewards;
+        }
+    }
+
     try {
         checkTrainParams(params);
     } catch(error) {
@@ -557,7 +723,7 @@ function isNumeric(str) {
 function checkTrainParams(params) {
     let fineTuneArgs =  params["fineTuneArgs"];
     if( !(fineTuneArgs["dataset"]) || fineTuneArgs["dataset"].length == 0) {
-        throw new Error(`请选择一个训练的数据集`);
+        // throw new Error(`请选择一个训练的数据集`);
     }
     if(!(fineTuneArgs["template"])) {
         throw new Error(`template 不可为空`);
