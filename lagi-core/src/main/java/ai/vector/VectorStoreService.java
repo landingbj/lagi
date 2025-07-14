@@ -90,8 +90,13 @@ public class VectorStoreService {
 
         PdfLoader pdfLoader = new PdfLoader();
         loaderMap.put("pdf", pdfLoader);
-
         loaderMap.put("common", docLoader);
+
+        HtmlLoader htmlLoader = new HtmlLoader();
+        loaderMap.put("html", htmlLoader);
+
+        MarkdownLoader mdLoader = new MarkdownLoader();
+        loaderMap.put("md", mdLoader);
     }
 
     public VectorStoreConfig getVectorStoreConfig() {

@@ -220,6 +220,11 @@ functions:
     enable: true
     model: cascade
 
+  html2content:
+    - backend: landing
+      model: cascade
+      enable: true
+      priority: 10
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.

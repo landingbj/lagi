@@ -190,6 +190,8 @@ const FILE_SIZE_LIMIT = {
     "csv": EXCEL_FILE_SIZE_LIMIT,
     "xlsx": EXCEL_FILE_SIZE_LIMIT,
     "xls": EXCEL_FILE_SIZE_LIMIT,
+    "md": TXT_FILE_SIZE_LIMIT,
+    "html": TXT_FILE_SIZE_LIMIT,
     "ppt": PPT_FILE_SIZE_LIMIT,
     "pptx": PPT_FILE_SIZE_LIMIT,
     "jpg": IMAGE_FILE_SIZE_LIMIT,
@@ -227,7 +229,7 @@ fileUploadButton.addEventListener("click", function () {
     fileInput.type = "file";
     // 允许选择多个文件
     fileInput.multiple = true;
-    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm";
+    fileInput.accept = ".pdf, .doc, .docx, .txt, .csv, .xlsx, .xls, .ppt, .pptx, .jpg, .jpeg, .png, .heic, .mp3, .wav, .avi , .mp4, .pcm, .md,.html";
     fileInput.style.display = "none";
 
     // 将文件输入元素添加到页面
@@ -243,7 +245,7 @@ fileUploadButton.addEventListener("click", function () {
         const selectedFiles = fileInput.files;
         if (selectedFiles.length > 0) {
             // 支持批量上传的文件类型
-            const batchSupportedTypes = ["pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx", "csv"];
+            const batchSupportedTypes = ["pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx", "csv", "md","html"];
             const batchFormData = new FormData();
             let hasBatchFiles = false;
             let hasValidFiles = false;
