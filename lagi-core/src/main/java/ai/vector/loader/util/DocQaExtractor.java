@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class DocQaExtractor {
     private final static CompletionsService completionService = new CompletionsService(Text2QAManager.getInstance());
+    private static final int POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
     private static final Backend text2qaBackend = ContextLoader.configuration.getFunctions().getText2qa().get(0);
 
@@ -47,7 +48,7 @@ public class DocQaExtractor {
             "    }\n" +
             "]\n" +
             "需要拆分的内容:\n%s";
-    public static List<List<FileChunkResponse.Document>> parseText(List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
+    public static List<List<FileChunkResponse.Document>> parseText1(List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
         if (text2qaBackend == null || !text2qaBackend.getEnable()) {
             return docs;
         }
@@ -113,6 +114,77 @@ public class DocQaExtractor {
             executorService.shutdown();  // 关闭线程池
         }
     }
+    public static List<List<FileChunkResponse.Document>> parseText(List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
+        if (text2qaBackend == null || !text2qaBackend.getEnable()) {
+            return docs;
+        }
+
+        long startTimeMillis = System.currentTimeMillis();
+        List<List<FileChunkResponse.Document>> result = new ArrayList<>();
+        Integer count = POOL_SIZE!=0 ? 5 : POOL_SIZE;
+        ExecutorService executorService = Executors.newFixedThreadPool(count); // 控制线程池大小
+        List<CompletableFuture<List<FileChunkResponse.Document>>> futures = new ArrayList<>();
+
+        try {
+            for (List<FileChunkResponse.Document> documentList : docs) {
+                CompletableFuture<List<FileChunkResponse.Document>> future = CompletableFuture.supplyAsync(() -> {
+                    List<FileChunkResponse.Document> qaDocs = new ArrayList<>();
+                    List<CompletableFuture<Void>> innerFutures = new ArrayList<>();
+
+                    for (int i = 0; i < documentList.size(); i++) {
+                        FileChunkResponse.Document document = documentList.get(i);
+                        innerFutures.add(CompletableFuture.runAsync(() -> {
+                            String prompt = String.format(PROMPT_TEMPLATE, document.getText());
+                            String json = chat(prompt, null).replaceAll("```json|```", "").trim();
+                            if (json == null) {
+                                log.error("Extracted JSON is null, please check the prompt or backend configuration.");
+                                qaDocs.add(document);
+                            }else {
+                                ObjectMapper objectMapper = new ObjectMapper();
+                                try {
+                                    List<Map<String, String>> dataList = objectMapper.readValue(json, new TypeReference<List<Map<String, String>>>() {});
+                                    for (Map<String, String> map : dataList) {
+                                        String instruction = map.get("instruction");
+                                        FileChunkResponse.Document doc = new FileChunkResponse.Document();
+                                        doc.setText(instruction);
+                                        doc.setSource(VectorStoreConstant.FILE_CHUNK_SOURCE_LLM);
+                                        qaDocs.add(doc);
+                                    }
+                                    qaDocs.add(document);
+                                } catch (JsonProcessingException e) {
+//                                System.out.println(document + " JSON解析错误：" + json);
+                                    log.error(document + " JSON解析错误：" + json);
+                                    qaDocs.add(document);
+                                }
+                            }
+                        }, executorService));
+                    }
+
+                    // 等待所有子任务完成
+                    CompletableFuture.allOf(innerFutures.toArray(new CompletableFuture[0])).join();
+                    return qaDocs;
+                }, executorService);
+
+                futures.add(future);
+            }
+
+            // 等待所有任务完成并收集结果
+            for (CompletableFuture<List<FileChunkResponse.Document>> future : futures) {
+                result.add(future.get());
+            }
+
+            long endTimeMillis = System.currentTimeMillis();
+            long durationMillis = endTimeMillis - startTimeMillis;
+            System.out.println("上传文件总耗时（毫秒）： " + durationMillis);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return docs;
+        } finally {
+            executorService.shutdown();  // 关闭线程池
+        }
+    }
+
 
     //智能问答的方法
     public static String chat(String msg, List<ChatMessage> messages) {
