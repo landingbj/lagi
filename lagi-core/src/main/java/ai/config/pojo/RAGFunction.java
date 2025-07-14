@@ -16,4 +16,5 @@ public class RAGFunction {
     @JsonProperty("default")
     private String defaultText;
     private Boolean track;
+    private Boolean html;
 }

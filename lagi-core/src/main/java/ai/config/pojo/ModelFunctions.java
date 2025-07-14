@@ -53,8 +53,6 @@ public class ModelFunctions {
     private String filter;
     @JsonProperty("text2qa")
     private Backend text2qa;
-    @JsonProperty("html2content")
-    private List<Backend> html2content;
 
     @JsonCreator
     public ModelFunctions(
@@ -78,8 +76,7 @@ public class ModelFunctions {
             @JsonProperty("doc2ext") List<Backend> doc2ext,
             @JsonProperty("doc2struct") List<Backend> doc2struct,
             @JsonProperty("filter") String filter,
-            @JsonProperty("text2qa") Backend text2qa,
-            @JsonProperty("html2content") List<Backend> html2content
+            @JsonProperty("text2qa") Backend text2qa
     ) {
         this.embedding = embedding;
         this.chat = chat;
@@ -102,6 +99,5 @@ public class ModelFunctions {
         this.doc2struct = doc2struct;
         this.filter = filter;
         this.text2qa = text2qa;
-        this.html2content = html2content;
     }
 }

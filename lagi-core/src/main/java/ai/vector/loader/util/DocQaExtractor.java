@@ -96,7 +96,7 @@ public class DocQaExtractor {
 
         long startTimeMillis = System.currentTimeMillis();
         List<List<FileChunkResponse.Document>> result = new ArrayList<>();
-        Integer count = POOL_SIZE!=0 ? 5 : POOL_SIZE;
+        Integer count = POOL_SIZE!=0 ? POOL_SIZE : 5;
         ExecutorService executorService = Executors.newFixedThreadPool(count); // 控制线程池大小
         List<CompletableFuture<List<FileChunkResponse.Document>>> futures = new ArrayList<>();
 
