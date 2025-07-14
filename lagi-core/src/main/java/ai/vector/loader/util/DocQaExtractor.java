@@ -14,6 +14,7 @@ import ai.vector.VectorStoreConstant;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Slf4j
 public class DocQaExtractor {
     private static final Backend text2qaBackend = ContextLoader.configuration.getFunctions().getText2qa();
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final int POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
     private static final String PROMPT_TEMPLATE = "请将长文本分割成更易于管理和处理的较小段落，以适应模型的输入限制，同时保持文本的连贯性和上下文信息。" +
             "将提供的需要拆分的内容拆分成多个问答对，以指定格式生成一个 JSON 文件，" +
@@ -83,7 +88,7 @@ public class DocQaExtractor {
         }
         return result;
     }
-//并行处理
+    //并行处理
     public static List<List<FileChunkResponse.Document>> parseText(List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
         if (text2qaBackend == null || !text2qaBackend.getEnable()) {
             return docs;
@@ -91,7 +96,8 @@ public class DocQaExtractor {
 
         long startTimeMillis = System.currentTimeMillis();
         List<List<FileChunkResponse.Document>> result = new ArrayList<>();
-        ExecutorService executorService = Executors.newFixedThreadPool(20); // 控制线程池大小
+        Integer count = POOL_SIZE!=0 ? 5 : POOL_SIZE;
+        ExecutorService executorService = Executors.newFixedThreadPool(count); // 控制线程池大小
         List<CompletableFuture<List<FileChunkResponse.Document>>> futures = new ArrayList<>();
 
         try {
@@ -106,22 +112,25 @@ public class DocQaExtractor {
                             String prompt = String.format(PROMPT_TEMPLATE, document.getText());
                             String json = extract(prompt);
                             if (json == null) {
-                                throw new RuntimeException("Extracted JSON is null, please check the prompt or backend configuration.");
-                            }
-                            ObjectMapper objectMapper = new ObjectMapper();
-                            try {
-                                List<Map<String, String>> dataList = objectMapper.readValue(json, new TypeReference<List<Map<String, String>>>() {});
-                                for (Map<String, String> map : dataList) {
-                                    String instruction = map.get("instruction");
-                                    FileChunkResponse.Document doc = new FileChunkResponse.Document();
-                                    doc.setText(instruction);
-                                    doc.setSource(VectorStoreConstant.FILE_CHUNK_SOURCE_LLM);
-                                    qaDocs.add(doc);
+                                log.error("Extracted JSON is null, please check the prompt or backend configuration.");
+                                qaDocs.add(document);
+                            }else {
+                                ObjectMapper objectMapper = new ObjectMapper();
+                                try {
+                                    List<Map<String, String>> dataList = objectMapper.readValue(json, new TypeReference<List<Map<String, String>>>() {});
+                                    for (Map<String, String> map : dataList) {
+                                        String instruction = map.get("instruction");
+                                        FileChunkResponse.Document doc = new FileChunkResponse.Document();
+                                        doc.setText(instruction);
+                                        doc.setSource(VectorStoreConstant.FILE_CHUNK_SOURCE_LLM);
+                                        qaDocs.add(doc);
+                                    }
+                                    qaDocs.add(document);
+                                } catch (JsonProcessingException e) {
+//                                System.out.println(document + " JSON解析错误：" + json);
+                                    log.error(document + " JSON解析错误：" + json);
+                                    qaDocs.add(document);
                                 }
-                                qaDocs.add(document);
-                            } catch (JsonProcessingException e) {
-                                System.out.println(document + " JSON解析错误：" + json);
-                                qaDocs.add(document);
                             }
                         }, executorService));
                     }
@@ -149,6 +158,56 @@ public class DocQaExtractor {
         } finally {
             executorService.shutdown();  // 关闭线程池
         }
+    }
+
+    public static List<List<FileChunkResponse.Document>> parseText2(List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
+        if (text2qaBackend == null || !text2qaBackend.getEnable()) {
+            return docs;
+        }
+
+        ExecutorService executorService = Executors.newFixedThreadPool(POOL_SIZE);
+
+        List<CompletableFuture<List<FileChunkResponse.Document>>> futures = new ArrayList<>();
+
+        for (List<FileChunkResponse.Document> documentList : docs) {
+            CompletableFuture<List<FileChunkResponse.Document>> future = CompletableFuture.supplyAsync(() -> {
+                List<FileChunkResponse.Document> qaDocs = new ArrayList<>();
+                for (FileChunkResponse.Document document : documentList) {
+                    String prompt = String.format(PROMPT_TEMPLATE, document.getText());
+                    String json = extract(prompt);
+                    if (json == null) {
+                        log.error("Extracted JSON is null, prompt: {}", prompt);
+                        qaDocs.add(document);
+                        continue;
+                    }
+                    try {
+                        List<Map<String, String>> dataList = OBJECT_MAPPER.readValue(json, new TypeReference<List<Map<String, String>>>() {});
+                        for (Map<String, String> map : dataList) {
+                            FileChunkResponse.Document doc = new FileChunkResponse.Document();
+                            doc.setText(map.get("instruction"));
+                            doc.setSource(VectorStoreConstant.FILE_CHUNK_SOURCE_LLM);
+                            qaDocs.add(doc);
+                        }
+                        qaDocs.add(document);
+                    } catch (JsonProcessingException e) {
+                        log.error("JSON解析错误，原文内容：{}", document.getText(), e);
+                        qaDocs.add(document);
+                    }
+                }
+                return qaDocs;
+            }, executorService);
+
+            futures.add(future);
+        }
+
+        List<List<FileChunkResponse.Document>> result = new ArrayList<>();
+        for (CompletableFuture<List<FileChunkResponse.Document>> future : futures) {
+            result.add(future.join());
+        }
+
+        executorService.shutdown();
+
+        return result;
     }
 
     public static String extract(String prompt) {
