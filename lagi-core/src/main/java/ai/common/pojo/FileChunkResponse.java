@@ -2,6 +2,7 @@ package ai.common.pojo;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class FileChunkResponse {
     private String msg;
 
     @Data
+    @EqualsAndHashCode
     public static class Document {
         private String text;
         private List<Image> images;

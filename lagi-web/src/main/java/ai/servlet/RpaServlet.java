@@ -1,13 +1,11 @@
 package ai.servlet;
 
-import ai.agent.pojo.*;
-import ai.agent.service.RpaService;
-import ai.agent.social.SocialAgent;
+import ai.pnps.service.RpaService;
 import ai.migrate.service.NextPromptService;
+import ai.pnps.pojo.*;
 import ai.servlet.dto.NextPromptRequest;
 import ai.servlet.dto.NextPromptResponse;
 import ai.servlet.dto.StandardTimeRequest;
-import ai.worker.social.RobotWorker;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

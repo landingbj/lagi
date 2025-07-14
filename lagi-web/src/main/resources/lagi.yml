@@ -223,9 +223,7 @@ functions:
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.
-
 agents:
-
   # Agent for stock queries, providing stock market information, analysis, and related services.
   - name: stock
     wrong_case: 抱歉
@@ -239,6 +237,24 @@ agents:
     driver: ai.agent.customer.WeatherAgent
 
 include_agents: agent.yml
+
+
+mcps:
+  # set default driver
+  servers:
+    - name: amap_mcp
+      url: https://mcp.amap.com/sse?key=your-key
+
+include_mcps: mcp.yml
+
+
+pnps:
+  # pnp for QQ chat application automation, enabling social interactions and services.
+  - name: qq
+    api_key: your-api-key
+    driver: ai.pnps.social.QQPnp
+
+include_pnps: pnp.yml
 
 
 # The following is the configuration of workers, name is the name of the worker,
@@ -287,13 +303,7 @@ routers:
     # if just % is given, % would be decided by parameter at calling time.
 
 
-mcps:
-  # set default driver
-  servers:
-    - name: amap_mcp
-      url: https://mcp.amap.com/sse?key=your-key
 
-include_mcps: mcp.yml
 
 
 # Filter rules for sensitive words or sentence, with priority and etc.

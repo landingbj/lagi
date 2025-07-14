@@ -29,6 +29,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private StoreConfig stores;
     private ModelFunctions functions;
     private List<AgentConfig> agents;
+    private List<PnpConfig> pnps;
 
     private List<WorkerConfig> workers;
     private List<RouterConfig> routers;
@@ -40,6 +41,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private String includeStores;
     private String includeAgents;
     private String includeMcps;
+    private String includePnps;
 
     @Override
     public void init() {
@@ -56,6 +58,7 @@ public class GlobalConfigurations extends AbstractConfiguration {
         Routers.getInstance().register(functions, routers);
         WorkerManager.getInstance().register(workers);
         McpManager.getInstance().register(mcps);
+        PnpManager.getInstance().register(pnps);
         registerFilter();
     }
 
@@ -127,6 +130,21 @@ public class GlobalConfigurations extends AbstractConfiguration {
                 mcps.setServers(mcpBackends.stream().filter(vector -> mcpServerNames.contains(vector.getName())).collect(Collectors.toList()));
             }
         }catch (Exception ignored) {}
+
+        try {
+            if(pnps == null) {
+                pnps = YmlPropertiesLoader.loaderProperties(getIncludePnps(), "pnps", new cn.hutool.core.lang.TypeReference<List<PnpConfig>>(){});
+            } else {
+                List<PnpConfig> pnps2 = YmlPropertiesLoader.loaderProperties(getIncludePnps(), "pnps", new cn.hutool.core.lang.TypeReference<List<PnpConfig>>(){});
+                if (pnps2 != null && pnps != null) {
+                    pnps.addAll(pnps2);
+                }
+            }
+            if(pnps != null) {
+                Set<String> pnpNames = pnps.stream().map(PnpConfig::getName).collect(Collectors.toSet());
+                pnps = pnps.stream().filter(model -> pnpNames.contains(model.getName())).collect(Collectors.toList());
+            }
+        } catch (Exception ignored) {}
     }
 
 
