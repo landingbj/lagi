@@ -5,7 +5,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-  <title>chatai</title>
+  <title>智算网综合评测平台</title>
   <meta name="next-head-count" content="3">
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="icon" type="image/png" sizes="32x32" href="images/rj.png">
