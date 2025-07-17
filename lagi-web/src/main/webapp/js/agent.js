@@ -865,7 +865,8 @@ function orchestrationAgent(agentId) {
     // nodes = [];
     // connections = [];
     // updateCanvas();
-    window.open(`http://localhost:3000/?agentId=${agentId}`, '_blank');
+    // window.open(`http://localhost:3000/?agentId=${agentId}`, '_blank');
+    window.open(`/ui/workflow/index.html?agentId=${agentId}`, '_blank');
 }
 
 // Close Orchestration Editor

@@ -375,4 +375,13 @@
         <servlet-name>intent</servlet-name>
         <url-pattern>/intent/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>workflow</servlet-name>
+        <servlet-class>ai.servlet.api.WorkflowApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>workflow</servlet-name>
+        <url-pattern>/workflow/*</url-pattern>
+    </servlet-mapping>
 </web-app>

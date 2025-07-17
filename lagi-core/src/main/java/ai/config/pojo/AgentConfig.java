@@ -33,4 +33,5 @@ public class AgentConfig {
     private String describe;
     private String character;
     private String mcps;
+    private String schema;
 }

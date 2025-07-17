@@ -1,0 +1,384 @@
+{
+    "nodes": [
+        {
+            "id": "start_0",
+            "type": "start",
+            "meta": {
+                "position": {
+                    "x": 180,
+                    "y": 543.05
+                }
+            },
+            "data": {
+                "title": "开始",
+                "outputs": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "default": "Hello Flow."
+                        },
+                        "enable": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "array_obj": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "int": {
+                                        "type": "number"
+                                    },
+                                    "str": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": "condition_0",
+            "type": "condition",
+            "meta": {
+                "position": {
+                    "x": 640,
+                    "y": 479.34999999999997
+                }
+            },
+            "data": {
+                "title": "条件",
+                "conditions": [
+                    {
+                        "value": {
+                            "type": "expression",
+                            "content": "",
+                            "left": {
+                                "type": "ref",
+                                "content": [
+                                    "start_0",
+                                    "enable"
+                                ]
+                            },
+                            "operator": "eq",
+                            "right": {
+                                "type": "constant",
+                                "content": true
+                            }
+                        },
+                        "key": "if_lhcoc9"
+                    },
+                    {
+                        "value": {
+                            "type": "expression",
+                            "content": "",
+                            "left": {
+                                "type": "ref",
+                                "content": [
+                                    "start_0",
+                                    "enable"
+                                ]
+                            },
+                            "operator": "eq"
+                        },
+                        "key": "if_le493Z"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "end_0",
+            "type": "end",
+            "meta": {
+                "position": {
+                    "x": 2086.8,
+                    "y": 543.05
+                }
+            },
+            "data": {
+                "title": "结束",
+                "inputs": {
+                    "type": "object",
+                    "properties": {
+                        "result": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": "159623",
+            "type": "comment",
+            "meta": {
+                "position": {
+                    "x": 180,
+                    "y": 724.75
+                }
+            },
+            "data": {
+                "size": {
+                    "width": 240,
+                    "height": 150
+                },
+                "note": "嗨~\n\n这是一个注释节点\n\n- Linkmind"
+            }
+        },
+        {
+            "id": "llm_8--A3",
+            "type": "llm",
+            "meta": {
+                "position": {
+                    "x": 1363.4,
+                    "y": 668.8999999999999
+                }
+            },
+            "data": {
+                "title": "大语言模型_1",
+                "inputsValues": {
+                    "modelName": {
+                        "type": "constant",
+                        "content": "gpt-3.5-turbo"
+                    },
+                    "apiKey": {
+                        "type": "constant",
+                        "content": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    },
+                    "apiHost": {
+                        "type": "constant",
+                        "content": "https://mock-ai-url/api/v3"
+                    },
+                    "temperature": {
+                        "type": "constant",
+                        "content": 0.5
+                    },
+                    "systemPrompt": {
+                        "type": "constant",
+                        "content": "# 角色\n你是一个AI助手。\n"
+                    },
+                    "prompt": {
+                        "type": "constant",
+                        "content": "# 用户输入\n查询:{{start_0.query}}\n启用:{{start_0.enable}}"
+                    }
+                },
+                "inputs": {
+                    "type": "object",
+                    "required": [
+                        "modelName",
+                        "apiKey",
+                        "apiHost",
+                        "temperature",
+                        "prompt"
+                    ],
+                    "properties": {
+                        "modelName": {
+                            "type": "string"
+                        },
+                        "apiKey": {
+                            "type": "string"
+                        },
+                        "apiHost": {
+                            "type": "string"
+                        },
+                        "temperature": {
+                            "type": "number"
+                        },
+                        "systemPrompt": {
+                            "type": "string",
+                            "extra": {
+                                "formComponent": "prompt-editor"
+                            }
+                        },
+                        "prompt": {
+                            "type": "string",
+                            "extra": {
+                                "formComponent": "prompt-editor"
+                            }
+                        }
+                    }
+                },
+                "outputs": {
+                    "type": "object",
+                    "properties": {
+                        "result": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": "loop_ANNyh",
+            "type": "loop",
+            "meta": {
+                "position": {
+                    "x": 1020.0000000000001,
+                    "y": 94.14999999999998
+                }
+            },
+            "data": {
+                "title": "循环_1",
+                "batchFor": {
+                    "type": "ref",
+                    "content": [
+                        "start_0",
+                        "array_obj"
+                    ]
+                },
+                "batchOutputs": {
+                    "result": {
+                        "type": "ref",
+                        "content": [
+                            "llm_6aSyo",
+                            "result"
+                        ]
+                    }
+                }
+            },
+            "blocks": [
+                {
+                    "id": "llm_6aSyo",
+                    "type": "llm",
+                    "meta": {
+                        "position": {
+                            "x": 343.4,
+                            "y": 0
+                        }
+                    },
+                    "data": {
+                        "title": "大语言模型_3",
+                        "inputsValues": {
+                            "modelName": {
+                                "type": "constant",
+                                "content": "gpt-3.5-turbo"
+                            },
+                            "apiKey": {
+                                "type": "constant",
+                                "content": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            },
+                            "apiHost": {
+                                "type": "constant",
+                                "content": "https://mock-ai-url/api/v3"
+                            },
+                            "temperature": {
+                                "type": "constant",
+                                "content": 0.5
+                            },
+                            "systemPrompt": {
+                                "type": "constant",
+                                "content": "# 角色\n你是一个AI助手。\n"
+                            },
+                            "prompt": {
+                                "type": "constant",
+                                "content": ""
+                            }
+                        },
+                        "inputs": {
+                            "type": "object",
+                            "required": [
+                                "modelName",
+                                "apiKey",
+                                "apiHost",
+                                "temperature",
+                                "prompt"
+                            ],
+                            "properties": {
+                                "modelName": {
+                                    "type": "string"
+                                },
+                                "apiKey": {
+                                    "type": "string"
+                                },
+                                "apiHost": {
+                                    "type": "string"
+                                },
+                                "temperature": {
+                                    "type": "number"
+                                },
+                                "systemPrompt": {
+                                    "type": "string",
+                                    "extra": {
+                                        "formComponent": "prompt-editor"
+                                    }
+                                },
+                                "prompt": {
+                                    "type": "string",
+                                    "extra": {
+                                        "formComponent": "prompt-editor"
+                                    }
+                                }
+                            }
+                        },
+                        "outputs": {
+                            "type": "object",
+                            "properties": {
+                                "result": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "block_start_loop_ANNyh",
+                    "type": "block-start",
+                    "meta": {
+                        "position": {
+                            "x": 31.7,
+                            "y": 162.75
+                        }
+                    },
+                    "data": {}
+                },
+                {
+                    "id": "block_end_loop_ANNyh",
+                    "type": "block-end",
+                    "meta": {
+                        "position": {
+                            "x": 655.1,
+                            "y": 162.75
+                        }
+                    },
+                    "data": {}
+                }
+            ],
+            "edges": [
+                {
+                    "sourceNodeID": "block_start_loop_ANNyh",
+                    "targetNodeID": "llm_6aSyo"
+                },
+                {
+                    "sourceNodeID": "llm_6aSyo",
+                    "targetNodeID": "block_end_loop_ANNyh"
+                }
+            ]
+        }
+    ],
+    "edges": [
+        {
+            "sourceNodeID": "start_0",
+            "targetNodeID": "condition_0"
+        },
+        {
+            "sourceNodeID": "condition_0",
+            "targetNodeID": "loop_ANNyh",
+            "sourcePortID": "if_lhcoc9"
+        },
+        {
+            "sourceNodeID": "condition_0",
+            "targetNodeID": "llm_8--A3",
+            "sourcePortID": "if_le493Z"
+        },
+        {
+            "sourceNodeID": "loop_ANNyh",
+            "targetNodeID": "end_0"
+        },
+        {
+            "sourceNodeID": "llm_8--A3",
+            "targetNodeID": "end_0"
+        }
+    ]
+}

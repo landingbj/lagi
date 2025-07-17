@@ -189,7 +189,6 @@ public class AgentService {
         return lagiAgentResponse;
     }
 
-
     public LagiAgentExpenseListResponse getPaidAgentByUser(String lagiUserId, String pageNumber, String pageSize) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("lagiUserId", lagiUserId);
