@@ -1,22 +1,14 @@
 system_title: LinkMind
 
 models:
-
-  # qwen (TongyiQianwen) is an advanced large-scale language model developed by Alibaba Cloud
-  - name: qwen
-    type: Alibaba
+  - name: chengtouyun
+    type: ChengTouYun
     enable: true
-    model:  qwen-turbo,
-            qwen-plus,qwen-max,qwen-max-1201,qwen-max-longcontext,
-            asr,
-            vision,
-            ocr
-    # Options for default, llm, voice, vision and ocr, line by line above.
-    driver: ai.wrapper.impl.AlibabaAdapter
-    # help document https://help.aliyun.com/document_detail/2712195.html?spm=a2c4g.2712576.0.0.733b3374np40s0
-    api_key: your-api-key # url address  https://bailian.console.aliyun.com/#/home
-    access_key_id: your-access-key-id
-    access_key_secret: your-access-key-secret
+    drivers:
+      - model: chengtouyunasr
+        driver: ai.audio.adapter.impl.ChengTouYunAudioAdapter
+    api_key: your-api-key
+    access_token: your-access-key-secret
 
   # DeepSeek is an open source large language model launched by DeepSeek.
   - name: deepseek
@@ -55,7 +47,7 @@ stores:
     enable: false
     priority: 10
     track: true
-    html: true
+    html: false
     default: "Please give prompt more precisely"
 
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
@@ -123,8 +115,8 @@ functions:
       priority: 10
 
   speech2text:
-    - backend: qwen
-      model: asr
+    - backend: chengtouyun
+      model: chengtouyunasr
       enable: true
       priority: 10
 
