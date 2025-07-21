@@ -114,11 +114,21 @@ public class VectorStoreService {
             UpsertRecord record = new UpsertRecord();
             record.setId(fileInfo.getEmbedding_id());
             record.setDocument(fileInfo.getText());
-            record.setMetadata(fileInfo.getMetadatas());
+
+            // 将 Map<String, Object> 转成 Map<String, String>
+            Map<String, String> metadataStringMap = new HashMap<>();
+            if (fileInfo.getMetadatas() != null) {
+                for (Map.Entry<String, Object> entry : fileInfo.getMetadatas().entrySet()) {
+                    metadataStringMap.put(entry.getKey(), String.valueOf(entry.getValue()));
+                }
+            }
+            record.setMetadata(metadataStringMap);
+
             upsertRecords.add(record);
         }
         vectorStore.upsert(upsertRecords, category);
     }
+
 
     public void upsert(List<UpsertRecord> upsertRecords, String category) {
         String userId = (String) upsertRecords.get(0).getMetadata().get("userId");

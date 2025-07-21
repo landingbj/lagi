@@ -23,7 +23,7 @@ public class FileInfo {
         this.embedding_id = embedding_id;
     }
 
-    public Map<String, String> getMetadatas() {
+    public Map<String, Object> getMetadatas() {
         return metadatas;
     }
 
