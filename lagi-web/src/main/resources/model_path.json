@@ -53,7 +53,8 @@
     {
       "name":"DeepSeek-R1-Distill-Qwen-32B",
       "path":"models/deepseek/DeepSeek-R1-Distill-Qwen-32B",
-      "template":"deepseek3"
+      "template":"deepseek3",
+      "modelId": "585282639053901824"
     },
     {
       "name":"DeepSeek-R1-Distill-Llama-70B",

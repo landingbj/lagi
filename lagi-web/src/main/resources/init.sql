@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS model_develop_info (
   adapter_path varchar(200),
   finetuning_type varchar(64),
   port varchar(20),
-  running INTEGER
+  running INTEGER,
+  inference_id varchar(64)
 );
 
 CREATE TABLE IF NOT EXISTS model_manager (

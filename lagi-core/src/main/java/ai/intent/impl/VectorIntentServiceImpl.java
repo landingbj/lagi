@@ -66,7 +66,7 @@ public class VectorIntentServiceImpl extends SampleIntentServiceImpl {
             List<Float> embedding1 = embeddings.createEmbedding(chatMessage.getContent());
             double v1 = CosineSimilarityUtil.calculateCosineSimilarity(embedding1, embedding2);
             log.info("lQ: {}\n lastQ: {} \n v1:{}", chatMessage.getContent(), lastQ, v1);
-            if(v1 > 0.55) {
+            if(v1 > 0.80) {
                 intentResult.setStatus(IntentStatusEnum.CONTINUE.getName());
                 intentResult.setContinuedIndex(lIndex);
                 return;

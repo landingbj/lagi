@@ -21,6 +21,9 @@ window.highlightWordIndex = -1;
 window.stopRotation = false;
 window.maxScale = -1;
 
+
+
+
 function loadBall() {
     // 检测设备类型：是否为手机
     const isMobile = window.innerWidth <= 900;
@@ -57,7 +60,6 @@ function loadBall() {
     //      :
     //     ["股票助手", "汇率助手", "文心助手", "元器助手"]
     // ;
-
 
     let radius = 0;
     const dtr = Math.PI / 180;
@@ -291,6 +293,8 @@ function loadBall() {
         const containerWidth = oDiv.offsetWidth;
         const containerHeight = oDiv.offsetHeight;
         radius = Math.min(containerWidth, containerHeight) * 0.45;
+        console.log("radius: ", radius);
+        restBallCover(radius);
         mcList.forEach((tag, i) => {
             const phi = Math.acos(-1 + (2 * (i + 1) - 1) / mcList.length);
             const theta = Math.sqrt(mcList.length * Math.PI) * phi;
@@ -342,4 +346,11 @@ function loadBall() {
     window.highlightWord = highlightWord;
 
     window.getHighWord = getHighWord;
+}
+
+function restBallCover(radius) {
+    const element1 = document.getElementById('ball-corner-container');
+    const element2 = document.getElementById('ball-container');
+    element1.style.setProperty('--ball-radius',  `${radius}px`);
+    element2.style.setProperty('--ball-radius',  `${radius}px`); 
 }

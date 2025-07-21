@@ -1,21 +1,45 @@
-package ai.dao;
-import ai.dto.ModelDevelopInfo;
-import ai.migrate.db.Conn;
+package ai.deploy.dao;
+import ai.deploy.pojo.DeployInfo;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ModelDevelopInfoDao {
+    private static final String DB_URL = "jdbc:sqlite:saas.db";
 
+    static  {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            // 创建数据库连接
+            Connection conn = DriverManager.getConnection(DB_URL);
+            String sql = "CREATE TABLE IF NOT EXISTS model_develop_info (\n" +
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+                    "  user_id varchar(64),\n" +
+                    "  model_path varchar(200),\n" +
+                    "  template varchar(64),\n" +
+                    "  adapter_path varchar(200),\n" +
+                    "  finetuning_type varchar(64),\n" +
+                    "  port varchar(20),\n" +
+                    "  running INTEGER\n" +
+                    "  inference_id varchar(64)\n" +
+                    "  api_address varchar(200)\n" +
+                    ");";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.executeUpdate();
+            conn.close();
+        } catch (Exception e) {
+
+        }
+    }
 
     // 插入数据
-    public int insert(ModelDevelopInfo modelDevelopInfo) {
-        String sql = "INSERT INTO model_develop_info (user_id, model_path, template, adapter_path, finetuning_type, port, running) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public int insert(DeployInfo modelDevelopInfo) {
+        String sql = "INSERT INTO model_develop_info (user_id, model_path, template, adapter_path, finetuning_type, port, running, inference_id, api_address) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)";
 
-        try ( Conn conn = new Conn();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, modelDevelopInfo.getUserId());
             pstmt.setString(2, modelDevelopInfo.getModelPath());
             pstmt.setString(3, modelDevelopInfo.getTemplate());
@@ -23,7 +47,16 @@ public class ModelDevelopInfoDao {
             pstmt.setString(5, modelDevelopInfo.getFinetuningType());
             pstmt.setString(6, modelDevelopInfo.getPort());
             pstmt.setInt(7, modelDevelopInfo.getRunning());
-            return pstmt.executeUpdate();
+            pstmt.setString(8, modelDevelopInfo.getInferenceId());
+            pstmt.setString(8, modelDevelopInfo.getApiAddress());
+
+            pstmt.executeUpdate();
+
+            // 获取生成的主键
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1); // 返回生成的 id
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -31,11 +64,11 @@ public class ModelDevelopInfoDao {
     }
 
     // 更新数据
-    public int update(ModelDevelopInfo modelDevelopInfo) {
+    public int update(DeployInfo modelDevelopInfo) {
         String sql = "UPDATE model_develop_info SET " +
-                "user_id = ?, model_path = ?, template = ?, adapter_path = ?, finetuning_type = ?, port = ?, running = ? " +
-                "WHERE id = ?";
-        try ( Conn conn = new Conn();
+                "user_id = ?, model_path = ?, template = ?, adapter_path = ?, finetuning_type = ?, port = ?, running = ? , inference_id = ?, api_address = ? " +
+                " WHERE id = ?";
+        try ( Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, modelDevelopInfo.getUserId());
             pstmt.setString(2, modelDevelopInfo.getModelPath());
@@ -44,7 +77,9 @@ public class ModelDevelopInfoDao {
             pstmt.setString(5, modelDevelopInfo.getFinetuningType());
             pstmt.setString(6, modelDevelopInfo.getPort());
             pstmt.setInt(7, modelDevelopInfo.getRunning());
-            pstmt.setInt(8, modelDevelopInfo.getId());
+            pstmt.setString(8, modelDevelopInfo.getInferenceId());
+            pstmt.setString(9, modelDevelopInfo.getApiAddress());
+            pstmt.setInt(10, modelDevelopInfo.getId());
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,7 +90,7 @@ public class ModelDevelopInfoDao {
     // 删除数据
     public int delete(int id) {
         String sql = "DELETE FROM model_develop_info WHERE id = ?";
-        try ( Conn conn = new Conn();
+        try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             return pstmt.executeUpdate();
@@ -66,14 +101,14 @@ public class ModelDevelopInfoDao {
     }
 
     // 查询所有数据
-    public List<ModelDevelopInfo> findAll() {
+    public List<DeployInfo> findAll() {
         String sql = "SELECT * FROM model_develop_info";
-        List<ModelDevelopInfo> modelDevelopInfos = new ArrayList<>();
-        try ( Conn conn = new Conn();
+        List<DeployInfo> modelDevelopInfos = new ArrayList<>();
+        try ( Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                ModelDevelopInfo modelDevelopInfo = new ModelDevelopInfo();
+                DeployInfo modelDevelopInfo = new DeployInfo();
                 modelDevelopInfo.setId(rs.getInt("id"));
                 modelDevelopInfo.setUserId(rs.getString("user_id"));
                 modelDevelopInfo.setModelPath(rs.getString("model_path"));
@@ -82,6 +117,8 @@ public class ModelDevelopInfoDao {
                 modelDevelopInfo.setFinetuningType(rs.getString("finetuning_type"));
                 modelDevelopInfo.setPort(rs.getString("port"));
                 modelDevelopInfo.setRunning(rs.getInt("running"));
+                modelDevelopInfo.setInferenceId(rs.getString("inference_id"));
+                modelDevelopInfo.setApiAddress(rs.getString("api_address"));
                 modelDevelopInfos.add(modelDevelopInfo);
             }
         } catch (SQLException e) {
@@ -91,15 +128,15 @@ public class ModelDevelopInfoDao {
     }
 
     // 根据ID查询数据
-    public List<ModelDevelopInfo> findByUserId(String  userId) {
+    public List<DeployInfo> findByUserId(String  userId) {
         String sql = "SELECT * FROM model_develop_info WHERE user_id = ?";
-        List<ModelDevelopInfo> modelDevelopInfos = new ArrayList<>();
-        try ( Conn conn = new Conn();
+        List<DeployInfo> modelDevelopInfos = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(DB_URL);
               PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                ModelDevelopInfo modelDevelopInfo = new ModelDevelopInfo();
+                DeployInfo modelDevelopInfo = new DeployInfo();
                 modelDevelopInfo.setId(rs.getInt("id"));
                 modelDevelopInfo.setUserId(rs.getString("user_id"));
                 modelDevelopInfo.setModelPath(rs.getString("model_path"));
@@ -108,6 +145,8 @@ public class ModelDevelopInfoDao {
                 modelDevelopInfo.setFinetuningType(rs.getString("finetuning_type"));
                 modelDevelopInfo.setPort(rs.getString("port"));
                 modelDevelopInfo.setRunning(rs.getInt("running"));
+                modelDevelopInfo.setInferenceId(rs.getString("inference_id"));
+                modelDevelopInfo.setApiAddress(rs.getString("api_address"));
                 modelDevelopInfos.add(modelDevelopInfo);
             }
         } catch (SQLException e) {
@@ -116,15 +155,15 @@ public class ModelDevelopInfoDao {
         return modelDevelopInfos;
     }
 
-    public ModelDevelopInfo findById(Integer id) {
+    public DeployInfo findById(Integer id) {
         String sql = "SELECT * FROM model_develop_info WHERE id = ?";
-        ModelDevelopInfo modelDevelopInfo = null;
-        try ( Conn conn = new Conn();
+        DeployInfo modelDevelopInfo = null;
+        try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                modelDevelopInfo = new ModelDevelopInfo();
+                modelDevelopInfo = new DeployInfo();
                 modelDevelopInfo.setId(rs.getInt("id"));
                 modelDevelopInfo.setUserId(rs.getString("user_id"));
                 modelDevelopInfo.setModelPath(rs.getString("model_path"));
@@ -132,6 +171,8 @@ public class ModelDevelopInfoDao {
                 modelDevelopInfo.setAdapterPath(rs.getString("adapter_path"));
                 modelDevelopInfo.setFinetuningType(rs.getString("finetuning_type"));
                 modelDevelopInfo.setPort(rs.getString("port"));
+                modelDevelopInfo.setInferenceId(rs.getString("inference_id"));
+                modelDevelopInfo.setApiAddress(rs.getString("api_address"));
                 modelDevelopInfo.setRunning(rs.getInt("running"));
             }
         } catch (SQLException e) {
@@ -143,7 +184,7 @@ public class ModelDevelopInfoDao {
     public int countPort(String port) {
         String sql = "SELECT count(1) FROM model_develop_info WHERE port = ? and running=1";
         int count = 0;
-        try ( Conn conn = new Conn();
+        try (Connection conn = DriverManager.getConnection(DB_URL);
               PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, port);
             ResultSet rs = pstmt.executeQuery();
@@ -160,7 +201,7 @@ public class ModelDevelopInfoDao {
     public List<String> runningPort(String port) {
         String sql = "SELECT port FROM model_develop_info WHERE port = ? and running= 1";
         List<String> ports = new ArrayList<>();
-        try ( Conn conn = new Conn();
+        try (Connection conn = DriverManager.getConnection(DB_URL);
               PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, port);
             ResultSet rs = pstmt.executeQuery();

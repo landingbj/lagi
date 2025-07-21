@@ -3,7 +3,7 @@ package ai.finetune;
 import ai.common.utils.ObservableList;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.ContextLoader;
-import ai.config.pojo.FineTuneConfig;
+import ai.config.pojo.LlamaFactoryConfig;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import lombok.*;
@@ -47,15 +47,20 @@ public class LocalLlamaFactoryService {
     private static final ExecutorService executor;
 
     public LocalLlamaFactoryService() {
-        FineTuneConfig fineTune = ContextLoader.configuration.getFineTune();
-        if(fineTune != null) {
-            this.condaPath = fineTune.getEnvPath();
-            this.condaEnv = fineTune.getEnv();
-            this.llamaFactoryDir = fineTune.getLlamaFactoryDir();
-            String devices = StrUtil.isBlank(fineTune.getDevices()) ? "0" : fineTune.getDevices();
-            this.runEnv = StrUtil.format(runEnv, devices);
-            this.masterPort = fineTune.getMasterPort() == null ? "7007" : fineTune.getMasterPort();
+        try {
+            LlamaFactoryConfig llamaFactoryConfig = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig().getLlamaFactoryConfig();
+            if(llamaFactoryConfig != null) {
+                this.condaPath = llamaFactoryConfig.getEnvPath();
+                this.condaEnv = llamaFactoryConfig.getEnv();
+                this.llamaFactoryDir = llamaFactoryConfig.getLlamaFactoryDir();
+                String devices = StrUtil.isBlank(llamaFactoryConfig.getDevices()) ? "0" : llamaFactoryConfig.getDevices();
+                this.runEnv = StrUtil.format(runEnv, devices);
+                this.masterPort = llamaFactoryConfig.getMasterPort() == null ? "7007" : llamaFactoryConfig.getMasterPort();
+            }
+        } catch (Exception e) {
+            log.error("init LocalLlamaFactoryService error", e);
         }
+
     }
 
     static {

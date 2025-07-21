@@ -3,8 +3,16 @@ package ai.paas.beidian.utils;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Maps;
 import okhttp3.*;
+import org.apache.hadoop.util.Lists;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -12,18 +20,54 @@ public class BaseHttpRequestUtil {
 
     private static final ConnectionPool connectionPool = new ConnectionPool(5, 1, TimeUnit.MINUTES);
 
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            .connectionPool(connectionPool)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .build();
+    private static OkHttpClient client;
+
+    static {
+        try {
+            // 创建信任所有证书的 TrustManager
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[]{};
+                        }
+                    }
+            };
+
+            // 创建 SSLContext 并初始化
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            // 创建 HostnameVerifier 验证所有主机名
+            HostnameVerifier allHostsValid = (hostname, session) -> true;
+
+            client = new OkHttpClient.Builder()
+                    .followRedirects(false)
+                    .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustAllCerts[0])
+                    .hostnameVerifier(allHostsValid)
+                    .connectionPool(connectionPool)
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public static Map<String, String> toHeader(String traceId, String spaceId, String authorization, String acceptLanguage) {
         Map<String, String> headers = Maps.newHashMap();
         headers.put("traceId", traceId);
         headers.put("spaceId", spaceId);
-        headers.put("authorization", authorization);
+        headers.put("authorization", "Bearer " +authorization);
         headers.put("accept-language", acceptLanguage);
         return headers;
     }
@@ -44,6 +88,50 @@ public class BaseHttpRequestUtil {
             }
         }
         return urlBuilder.build().toString();
+    }
+
+    public static List<String> getResponseAndCookie(String apiUrl, Map<String, String> query, Map<String, String> headers) throws IOException {
+        String url = buildUrlWithQuery(apiUrl, query);
+
+        Request.Builder requestBuilder = new Request.Builder().url(url);
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                requestBuilder.addHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        try (Response response = client.newCall(requestBuilder.build()).execute()) {
+            ResponseBody responseBody = response.body();
+            if (response.isSuccessful() && responseBody != null) {
+                List<String> setCookies = response.headers("Set-Cookie");
+                String realCookieValue = setCookies.get(1).split(";")[0].split("=")[1];
+                return Lists.newArrayList(responseBody.string(), realCookieValue);
+            } else {
+                throw new IOException("Request failed: " + response.message());
+            }
+        }
+    }
+
+
+    public static List<String> getResponseAndHeader(String apiUrl, Map<String, String> query, Map<String, String> headers, String resHeaderName) throws IOException {
+        String url = buildUrlWithQuery(apiUrl, query);
+
+        Request.Builder requestBuilder = new Request.Builder().url(url);
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                requestBuilder.addHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        try (Response response = client.newCall(requestBuilder.build()).execute()) {
+            ResponseBody responseBody = response.body();
+            int code = response.code();
+            if(code != 301) {
+                throw new IOException("code:" + code);
+            }
+            String header = response.header(resHeaderName);
+            return Lists.newArrayList(responseBody.string(), header);
+        }
     }
 
     // GET 请求
@@ -78,6 +166,7 @@ public class BaseHttpRequestUtil {
 
     // POST 请求
     public static String post(String apiUrl, Map<String, String> query, Map<String, String> headers, String body) throws IOException {
+
         String url = buildUrlWithQuery(apiUrl, query);
 
         RequestBody requestBody = RequestBody.create(body, MediaType.get("application/json"));

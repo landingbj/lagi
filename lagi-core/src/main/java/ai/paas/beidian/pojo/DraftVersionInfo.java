@@ -21,6 +21,6 @@ public class DraftVersionInfo {
     private String createUserDisplayName;
     private Integer pavoStatus;
     private Integer isPavoModify;
-    private Integer logicalSize;
-    private Integer realSize;
+    private long logicalSize;
+    private long realSize;
 }

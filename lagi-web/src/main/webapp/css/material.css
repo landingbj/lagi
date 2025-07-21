@@ -28,13 +28,14 @@
 .drop-area {
     border: 2px dashed #ccc;
     border-radius: 20px;
-    width: 96%;
+    width: 100%;
     padding: 20px;
     text-align: center;
     color: #555;
     transition: all 0.3s ease;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 1rem;
 }
 .drop-area.highlight {
     border-color: #2e7d32;

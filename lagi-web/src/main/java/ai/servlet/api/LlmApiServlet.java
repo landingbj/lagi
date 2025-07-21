@@ -680,7 +680,11 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest.getUserId());
+        String userId = req.getHeader("userId");
+        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest.getUserId() == null ? userId : chatCompletionRequest.getUserId());
+        if(!userLlmAdapters.isEmpty()) {
+            chatCompletionRequest.setModel( ((ModelService) userLlmAdapters.get(0)).getModel());
+        }
         long count = userLlmAdapters.stream().map(adapter -> ((ModelService) adapter).getModel())
                 .filter(model -> Objects.equals(model, chatCompletionRequest.getModel())).count();
         Integer maxContext = null;

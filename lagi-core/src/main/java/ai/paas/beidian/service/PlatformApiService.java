@@ -9,10 +9,17 @@ import ai.paas.beidian.pojo.request.*;
 import ai.paas.beidian.pojo.response.*;
 import ai.paas.beidian.utils.BaseHttpRequestUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +28,7 @@ public class PlatformApiService {
 
     private final Map<String, String> headers;
     private final String baseUrl;
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     public PlatformApiService(String baseUrl, String traceId, String spaceId, String authorization, String acceptLanguage) {
         this.baseUrl = baseUrl;
@@ -59,6 +66,102 @@ public class PlatformApiService {
         } catch (Exception e) {
             throw new RRException(500, e.getMessage());
         }
+    }
+
+    public String auth(PasswordLoginRequest request) throws IOException {
+        Map<String, Object> body = new HashMap<>();
+        body.put("identifier", request.getPhone());
+        body.put("credential", request.getPassword());
+        body.put("client_id", "8y0yIwTp1h152XmZ");
+        Map<String, Object> metadata = Maps.newHashMap();
+        metadata.put("skip_verify", true);
+        body.put("metadata", metadata);
+        body.put("type", "username");
+        String post = BaseHttpRequestUtil.post("https://iam.bncic.com.cn/api/iam/v1/authenticate", null, null, gson.toJson(body));
+        Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
+        Map<String, Object> authenticate = gson.fromJson(post, type);
+        double code = (double) authenticate.get("code");
+        if(code != 200.0) {
+            throw new RuntimeException("登录失败");
+        }
+        Map<String, Object> data = (Map<String, Object>) authenticate.get("data");
+        String idToken = (String) data.get("id_token");
+        Map<String, String> header = new HashMap<>();
+        header.put("Authorization", idToken);
+        String authorizeBody = "{\n" +
+                "            \"response_type\": \"code\",\n" +
+                "            \"client_id\": \"8y0yIwTp1h152XmZ\",\n" +
+                "            \"scope\": \"openid\",\n" +
+                "            \"state\": \"1234\",\n" +
+                "            \"redirect_uri\": \"//portal.behcyun.com:31443/gemini_web/identification/type=portal_login\"\n" +
+                "        }";
+        post = BaseHttpRequestUtil.post("https://iam.bncic.com.cn/api/iam/v1/authorize", null, header, authorizeBody);
+        Map<String, Object> authorize = gson.fromJson(post, type);
+        code = (double) authorize.get("code");
+        if(code != 200.0) {
+            throw new RuntimeException("授权失败");
+        }
+        header.remove("Authorization");
+        String globalCode =  (String) authorize.get("data");
+        List<String> gets = BaseHttpRequestUtil.getResponseAndCookie("https:///portal.behcyun.com:31443/region_portal/v1/sso/getToken?ticket=" + globalCode, null, null);
+        Map<String, Object> getToken = gson.fromJson(gets.get(0), type);
+        code = (double) getToken.get("code");
+        if(code != 0.0) {
+            throw new RuntimeException("get xtoken 失败");
+        }
+        String xToken = gets.get(1);
+        header.put("Cookie", "x_token="+xToken);
+        String get = BaseHttpRequestUtil.get("https://portal.behcyun.com:31443/region_portal/v1/regions?sortOrder=desc&sortField=space_count", null, header);
+        Map<String, Object> regionRes = gson.fromJson(get, type);
+        code =(double) regionRes.get("code");
+        if(code != 0.0) {
+            throw new RuntimeException("获取空间列表失败");
+        }
+        Map<String, Object> regionData = (Map<String, Object>) regionRes.get("data");
+        List<Map<String, String>> regions =  (List<Map<String, String>>)regionData.get("list");
+        Map<String, String> region = regions.get(0);
+        String firstEndpoint = region.get("endpoint");
+        String firstRegionName = region.get("regionName");
+        region.put("firstEndpoint", firstEndpoint);
+        region.put("firstRegionName", firstRegionName);
+        String url = "https://portal.behcyun.com:31443/region_portal/v1/sso/authorization?clientId={firstRegionName}&state=1234&redirectUri=//{firstEndpoint}/gemini_web/identification?type=region_login";
+        url = StrUtil.format(url, region);
+        List<String> location = BaseHttpRequestUtil.getResponseAndHeader(url, null, header, "Location");
+        String redirectUrl = "http://" +location.get(1);
+        Map<String, String> queryParams = getQueryParams(redirectUrl);
+        String ticket = queryParams.get("ticket");
+        region.put("ticket", ticket);
+        url = "https://{firstEndpoint}/gemini/v1/gemini_userauth/sso/region/accessToken?clientId={firstRegionName}&state=1234&ticket={ticket}";
+        url = StrUtil.format(url, region);
+        get = BaseHttpRequestUtil.get(url, null, header);
+        Map<String, Object> gTokenData = gson.fromJson(get, type);
+        code = (double) gTokenData.get("code");
+        if(code != 0.0) {
+            throw new RuntimeException("获取 gtoken 失败");
+        }
+        Map<String, Object> dataMap = (Map<String, Object>)gTokenData.get("data");
+        return (String) dataMap.get("token");
+    }
+
+    public static Map<String, String> getQueryParams(String url) {
+        Map<String, String> queryParams = new HashMap<>();
+        try {
+            URI uri = new URI(url);
+            String query = uri.getQuery();
+            if (query != null) {
+                String[] pairs = query.split("&");
+                for (String pair : pairs) {
+                    String[] keyValue = pair.split("=");
+                    String key = keyValue[0];
+                    String value = keyValue.length > 1 ? keyValue[1] : null;
+                    queryParams.put(key, value);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return queryParams;
     }
 
     // image
@@ -765,13 +868,25 @@ public class PlatformApiService {
     public String INFERENCE_UPGRADE = "/user/inference/upgrade/{inferenceId}";
 
     // TODO 2025/7/10 接口请求 示例和 Schema 不一致
-    public Response<InferenceUpgradeData> inferenceUpgrade(String inferenceId, InferenceUpgradeRequest request) {
+    public Response<InferenceData> inferenceUpgrade(String inferenceId, InferenceRequest request) {
         try {
             Map<String, String> pathParams =new HashMap<>();
             pathParams.put("inferenceId", inferenceId);
             String formatUrl = BaseHttpRequestUtil.pathUrl(INFERENCE_UPGRADE, pathParams);
-            String put = BaseHttpRequestUtil.put(baseUrl + formatUrl, null, headers, gson.toJson(request));
-            return gson.fromJson(put, new TypeToken<Response<InferenceUpgradeData>>(){}.getType());
+            String post = BaseHttpRequestUtil.post(baseUrl + formatUrl, null, headers, gson.toJson(request));
+            return gson.fromJson(post, new TypeToken<Response<InferenceData>>(){}.getType());
+        } catch (Exception e) {
+            throw new RRException(500, e.getMessage());
+        }
+    }
+
+    public Response<InferenceData> inferenceUpgrade(String inferenceId, String body) {
+        try {
+            Map<String, String> pathParams =new HashMap<>();
+            pathParams.put("inferenceId", inferenceId);
+            String formatUrl = BaseHttpRequestUtil.pathUrl(INFERENCE_UPGRADE, pathParams);
+            String post = BaseHttpRequestUtil.post(baseUrl + formatUrl, null, headers, body);
+            return gson.fromJson(post, new TypeToken<Response<InferenceData>>(){}.getType());
         } catch (Exception e) {
             throw new RRException(500, e.getMessage());
         }
@@ -863,7 +978,7 @@ public class PlatformApiService {
     }
 
     public String INFERENCE_UPGRADE_CHECK = "/user/inference/upgradeCheck/{inferenceId}";
-    public Response<InferenceUpgradeCheckData> inferenceUpgradeCheck(String inferenceId, InferenceUpgradeRequest request) {
+    public Response<InferenceUpgradeCheckData> inferenceUpgradeCheck(String inferenceId, InferenceRequest request) {
         try {
             Map<String, String> pathParams =new HashMap<>();
             pathParams.put("inferenceId", inferenceId);
@@ -902,12 +1017,12 @@ public class PlatformApiService {
     }
 
     public String INFERENCE_START = "/user/inference/start/{inferenceId}";
-    public Response<Object> inferenceStart(String inferenceId, InferenceUpgradeRequest request) {
+    public Response<Object> inferenceStart(String inferenceId) {
         try {
             Map<String, String> pathParams =new HashMap<>();
             pathParams.put("inferenceId", inferenceId);
             String formatUrl = BaseHttpRequestUtil.pathUrl(INFERENCE_START, pathParams);
-            String post = BaseHttpRequestUtil.post(baseUrl + formatUrl, null, headers, gson.toJson(request));
+            String post = BaseHttpRequestUtil.post(baseUrl + formatUrl, null, headers, "{}");
             return gson.fromJson(post, new TypeToken<Response<Object>>(){}.getType());
         } catch (Exception e) {
             throw new RRException(500, e.getMessage());
@@ -1022,7 +1137,7 @@ public class PlatformApiService {
 
     public String INFERENCE_NEW = "/user/inference/new";
 
-    public Response<InferenceNewData> inferenceNew(InferenceUpgradeRequest request) {
+    public Response<InferenceData> inferenceNew(InferenceRequest request) {
         try {
             String post = BaseHttpRequestUtil.post(baseUrl + INFERENCE_NEW, null, headers, gson.toJson(request));
             return gson.fromJson(post, new TypeToken<Response<InferenceNewData>>(){}.getType());
@@ -1031,15 +1146,172 @@ public class PlatformApiService {
         }
     }
 
+    public String PROJECT_NEW = "/user/project/new";
+
+//    {
+//        "spaceId": "wikqnvcuhpkw",
+//            "projectId": "600600342136717312",
+//            "datasetInData": [],
+//        "preInData": [
+//        {
+//            "modelId": "583909969893396480",
+//                "modelName": "DeepSeek-R1-Distill-Qwen-7B",
+//                "description": "DeepSeek发布的7B参数蒸馏模型，基于Qwen架构，性能优异。",
+//                "coverPagePath": "https://oss.behcyun.com:9000/gemini-workspace/public/coverpage/4.webp",
+//                "modelType": "SaveModel",
+//                "dataType": 4,
+//                "source": 1,
+//                "accessType": 3,
+//                "modelSize": 15238354109,
+//                "createUserId": 0,
+//                "createDisplayName": "北电云小助手",
+//                "updateUserId": 0,
+//                "updateDisplayName": "",
+//                "ownerUserEmail": "",
+//                "sizeSync": 2,
+//                "spaceName": "",
+//                "permissions": 0,
+//                "createTime": 1748674185000,
+//                "updateTime": 1749796080000,
+//                "projectId": "",
+//                "projectName": "",
+//                "pavoStatus": 0,
+//                "status": 1,
+//                "labels": [],
+//            "shareSpaces": null,
+//                "versionCount": 0,
+//                "allVersionCount": 1,
+//                "lastVersionId": "latest",
+//                "lastVersionInfo": {
+//            "publishDataInfo": {}
+//        },
+//            "draftVersionInfo": {
+//            "version": "latest",
+//                    "versionId": "latest",
+//                    "createTime": 1748674185000,
+//                    "createUserDisplayName": "北电云小助手",
+//                    "logicalSize": 15238354109,
+//                    "realSize": 15238354109
+//        },
+//            "channelId": 0,
+//                "sftpPodType": 0,
+//                "isUnzip": false,
+//                "unzipPath": "",
+//                "unzipFile": "",
+//                "cloneInfo": {},
+//            "versionId": "latest",
+//                "version": "latest",
+//                "dataId": "583909969893396480",
+//                "dataPath": "",
+//                "dataBucket": ""
+//        }
+//  ],
+//        "mountCode": true,
+//            "imageId": 85,
+//            "specInstanceId": 11,
+//            "tools": [
+//        "jupyterlab"
+//  ],
+//        "services": [
+//        {
+//            "targetPort": 8000,
+//                "protocol": "TCP",
+//                "remark": "推理 api 端口"
+//        }
+//  ],
+//        "sshEnable": false,
+//            "startJobenv": false,
+//            "maxRunHour": -1
+//    }
+    public Response<ProjectNewData> projectNew(ProjectNewRequest request) {
+        try {
+
+            String post = BaseHttpRequestUtil.post(baseUrl + PROJECT_NEW, null, headers, gson.toJson(request));
+            return gson.fromJson(post, new TypeToken<Response<ProjectNewData>>(){}.getType());
+        } catch (Exception e) {
+            throw new RRException(500, e.getMessage());
+        }
+    }
+
+    public String PROJECT_DELETE = "/user/project/delete/{projectId}";
+
+    public Response<Object> projectDelete(String projectId) {
+        try {
+            Map<String, String> pathParams =new HashMap<>();
+            pathParams.put("projectId", projectId);
+            String formatUrl = BaseHttpRequestUtil.pathUrl(PROJECT_DELETE, pathParams);
+            String delete = BaseHttpRequestUtil.delete(baseUrl + formatUrl, null, headers);
+            return gson.fromJson(delete, new TypeToken<Response<Object>>(){}.getType());
+        } catch (Exception e) {
+            throw new RRException(500, e.getMessage());
+        }
+    }
+
+    public String PROJECT_LIST = "/user/project/job/list/{projectId}";
+
+    public Response<ProjectListData> projectList(String projectId) {
+        try {
+            Map<String, String> pathParams =new HashMap<>();
+            pathParams.put("projectId", projectId);
+            String formatUrl = BaseHttpRequestUtil.pathUrl(PROJECT_LIST, pathParams);
+            String get = BaseHttpRequestUtil.get(baseUrl + formatUrl, null, headers);
+            return gson.fromJson(get, new TypeToken<Response<ProjectListData>>(){}.getType());
+        } catch (Exception e) {
+            throw new RRException(500, e.getMessage());
+        }
+    }
 
 
+    public String PROJECT_DETAIL = "/user/project/detail/{projectId}";
 
-    public static void main(String[] args) {
-        String path = "/user/imageRepository/info/update/{imageId}";
-        HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("imageId", "1");
-        String format = StrUtil.format(path, stringStringHashMap);
-        System.out.println( format);
+    public Response<ProjectDetailData> projectDetail(String projectId) {
+        try {
+            Map<String, String> pathParams =new HashMap<>();
+            pathParams.put("projectId", projectId);
+            String formatUrl = BaseHttpRequestUtil.pathUrl(PROJECT_DETAIL, pathParams);
+            String get = BaseHttpRequestUtil.get(baseUrl + formatUrl, null, headers);
+            return gson.fromJson(get, new TypeToken<Response<ProjectDetailData>>(){}.getType());
+        } catch (Exception e) {
+            throw new RRException(500, e.getMessage());
+        }
+    }
+
+    public String PROJECT_LISTS = "/user/project/list";
+
+//    public Response<ProjectListData> projectLists(Integer accessType, String keyWords, List<Integer> labelElementIds, String sortOrder,
+//    String sortField, Integer pageNum, Integer pageSize) {
+//        try {
+//            Map<String, String> query = new HashMap<>();
+//            query.put("accessType", accessType);
+//            query.put("keyWords", keyWords);
+//            query.put("labelElementIds", labelElementIds);
+//            query.put("sortOrder", sortOrder);
+//            query.put("sortField", sortField);
+//            query.put("pageNum", pageNum);
+//            query.put("pageSize", pageSize);
+//            String get = BaseHttpRequestUtil.get(baseUrl + PROJECT_LISTS, null, headers);
+//            return gson.fromJson(get, new TypeToken<Response<ProjectListData>>(){}.getType());
+//        } catch (Exception e) {
+//            throw new RRException(500, e.getMessage());
+//        }
+//    }
+
+
+    public String PROJECT_FAST_NEW = "/user/project/fastNew";
+
+
+    public static void main(String[] args) throws IOException {
+        PlatformApiService platformApiService = new PlatformApiService("https://console-region1.behcyun.com:31443/gemini/v1/gemini_api/gemini_api",
+                "94cf9c1f614f11f0909f80665545e196",
+                "wikqnvcuhpkw",
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDQ3NywidXNlck5hbWUiOiIxODIwNzEzNTY0OSIsInVzZXJSb2xlSWRzIjpbXSwibG9naW5UeXBlIjoxLCJleHAiOjE3NTI2ODg3NTUsImlzcyI6ImdlbWluaS11c2VyYXV0aCJ9.QezN99RNpEG57nhH-3_R0VqUbmY2dAuKD-8w9hcvruQ",
+                "zh-Hans");
+        String auth = platformApiService.auth(PasswordLoginRequest.builder().phone("18207135649").password("Lz283541784%").build());
+        System.out.println(auth);
+//        Response<InferenceDetailData> inferenceDetailDataResponse = platformApiService.inferenceDetail("598778806694236160");
+//        System.out.println(inferenceDetailDataResponse);
+//        Response<Object> inferenceCancel = platformApiService.inferenceCancel("598778806694236160");
+//        System.out.println(inferenceCancel);
     }
 
 

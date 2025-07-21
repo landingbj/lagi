@@ -384,4 +384,17 @@
         <servlet-name>workflow</servlet-name>
         <url-pattern>/workflow/*</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>modelUploadServlet</servlet-name>
+        <servlet-class>ai.servlet.ModelUploadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>modelUploadServlet</servlet-name>
+        <url-pattern>/upload/model</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>modelUploadServlet</servlet-name>
+        <url-pattern>/upload/model/merge</url-pattern>
+    </servlet-mapping>
 </web-app>

@@ -447,8 +447,8 @@ select {
 
 h1 {
     /* font-size: 1.875rem; */
-    font-size: 3.75rem;
-    line-height: 2.25rem
+    font-size: 2.7rem;
+    line-height: 2.25rem;
 }
 
 h1,
@@ -627,7 +627,17 @@ h3 {
     --gray-700: #40414f;
     --gray-800: #343541;
     --gray-900: #202123;
-    --gray-950: #050509
+    --gray-950: #050509;
+    --primary: #165DFF;
+    --secondary: #0FC6C2;
+    --neutral-100: #F5F7FA;
+    --neutral-200: #E5E6EB;
+    --neutral-300: #C9CDD4;
+    --neutral-400: #86909C;
+    --neutral-500: #4E5969;
+    --neutral-600: #272E3B;
+    --neutral-700: #1D2129;
+    --neutral-1000: #000;
 }
 
 html {
@@ -740,6 +750,160 @@ textarea:focus {
     .container {
         max-width: 1536px
     }
+}
+
+.navigation_bar {
+    background-color: #fff;
+    border-right: #d1d5db 1px solid;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 260px;
+}
+
+.nav_header {
+    height: 80px;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 5px 5px;
+}
+
+.logo_container {
+    width: 70%;
+    height: 70%;
+    background-image: url('../images/linkMind_logo.png'); /* 示例图片 */
+    background-size: 100% 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.nav_body {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 16px 16px 32px;
+}
+
+/* 方法1: 使用伪元素实现上下横线 */
+.decorated-heading {
+    position: relative;
+    /* text-align: center; */
+}
+
+.decorated-heading::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 2px;
+    width: 80%; /* 宽度小于元素本身 */
+    background-color: #bababe;
+    top: 1px;
+}
+
+
+
+.nav_foot {
+    width: 100%;
+    height: 130px;
+    color: rgb(0, 0, 0);
+    display: flex;
+    /* align-items: center; */
+    /* justify-content: center; */
+    padding: 16px;
+}
+
+.user-box{
+    width: 100%;
+    display: block;
+}
+
+.share {
+    width: 100%;
+    height: 36px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.share span {
+    float: right;
+    margin-right: 24px;
+}
+
+.share span img{
+    width: 30px;
+    height: 30px;
+}
+
+.user-info {
+    width: 100%;
+    padding: 0 16px;
+    display: flex;
+}
+
+.user-left {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+  
+.user-middle {
+    flex: 1;
+    padding-left: 8px;
+}
+
+.user-right {
+    width: 24px;
+}
+
+.avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid black;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-indicator {
+    position: absolute;
+    top: 0px; /* 调整到右上角 */
+    right: 0px;
+    width: 20px;
+    height: 20px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #2ecc71;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}
+
+.center-title-box {
+    width: 300px;
+    margin-left: auto; margin-right: auto;
+    padding-top: 40px;
+    height: 80px;
+    text-align: center;
 }
 
 .prose {
@@ -8357,7 +8521,7 @@ button[data-state=open] .toggle-item-button-open {
     }
 
     .xl\:max-w-3xl {
-        max-width: 48rem
+        max-width: 42rem
     }
 
     .xl\:max-w-4xl {

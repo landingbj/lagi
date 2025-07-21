@@ -138,23 +138,13 @@ function txtTovoice(txt, emotion) {
                     console.log(json.data);
 
                     voice_url = json.data;
-                    const audioElement = document.getElementsByClassName('myAudio1')[len - 1];
+                    // const audioElement = document.getElementsByClassName('myAudio1')[len - 1];
                     $(".myAudio1")[len-  1].src = json.data
-                    const playButton = document.getElementsByClassName('playIcon1')[len - 1];
-                    const audioSource = document.getElementById("audioSource");
-                    // 添加点击事件处理程序来控制音频的播放和暂停
-                    playButton.addEventListener('click', function () {
-                        console.log("点击了")
-                        if (audioElement.paused) {
-                            // 如果音频暂停，播放音频
-                            audioElement.play();
-
-                        } else {
-                            // 如果音频正在播放，暂停音频
-                            audioElement.pause();
-
-                        }
-                    });
+                    // const playButton = document.getElementsByClassName('playIcon1')[len - 1];
+                    // const audioSource = document.getElementById("audioSource");
+                    const audioplay =  document.getElementsByClassName('audioplay')[len-1];
+                    audioplay.removeAttribute('disabled');
+                    audioplay.innerHTML = AUDIO_PLAY_ICON
                 }
                 console.log('响应数据:', responseText);
             } else {
@@ -846,12 +836,19 @@ async function voiceToTxt(selectedFile) {
 }
 
 function textToVoice(emotionSelect) {
-    var text = $(emotionSelect).parent().parent().parent().find('.result-streaming').text().replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    var emotion = $(emotionSelect).find("option:selected").val();
+    
+    let text = CONVERSATION_CONTEXT[ $(emotionSelect).closest('.robot-return').data('index')].content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    let emotion = $(emotionSelect).find("option:selected").val();
 
-    const audioElement = $(emotionSelect).parent().find('.myAudio1')[0];
-    const playButton = $(emotionSelect).parent().find('.playIcon1')[0];
-    const audioSource = $(emotionSelect).parent().find("audioSource1")[0];
+    // const audioElement = $(emotionSelect).parent().find('.myAudio1')[0];
+    // const playButton = $(emotionSelect).parent().find('.playIcon1')[0];
+
+    const audioElement = $(emotionSelect).closest('.appendVoice').find('.myAudio1')[0];
+    const audioplay = $(emotionSelect).closest('.appendVoice').find('.audioplay')[0];
+    audioplay.innerHTML = MUTE_ICON;
+    audioplay.disabled = true;
+
+    // const audioSource = $(emotionSelect).parent().find("audioSource1")[0];
     audioElement.src = "";
 
     $.ajax({
@@ -867,19 +864,22 @@ function textToVoice(emotionSelect) {
             if (res.status == "success") {
                 console.log(res.data);
                 audioElement.src = res.data;
+                audioElement.load();
+                audioplay.disabled = false;
+                audioplay.innerHTML = AUDIO_PLAY_ICON;
                 // 添加点击事件处理程序来控制音频的播放和暂停
-                playButton.addEventListener('click', function () {
-                    console.log("点击了")
-                    if (audioElement.paused) {
-                        // 如果音频暂停，播放音频
-                        audioElement.play();
+                // playButton.addEventListener('click', function () {
+                //     console.log("点击了")
+                //     if (audioElement.paused) {
+                //         // 如果音频暂停，播放音频
+                //         audioElement.play();
 
-                    } else {
-                        // 如果音频正在播放，暂停音频
-                        audioElement.pause();
+                //     } else {
+                //         // 如果音频正在播放，暂停音频
+                //         audioElement.pause();
 
-                    }
-                });
+                //     }
+                // });
             }
         },
         error: function (res) {

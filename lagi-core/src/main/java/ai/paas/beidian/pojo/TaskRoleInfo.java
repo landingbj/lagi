@@ -14,12 +14,12 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class TaskRoleInfo {
-    private long taskroleId;
+    private Long taskroleId;
     private String jobId;
     private String taskroleName;
     private String runScript;
     private int instance;
-    private String specInstanceId;
+    private Long specInstanceId;
     private SpecInstanceInfo specInstanceInfo;
     private List<InstanceInfo> instanceList;
 }

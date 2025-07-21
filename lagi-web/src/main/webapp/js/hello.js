@@ -102,16 +102,39 @@ function addTr(ls) {
     let html = '';
     for (let i = 0; i < ls.length; i++) {
         const col = ls[i];
+        // html += `
+        // <div data-projection-id="1" style="opacity: 1; transform: none;">
+        // <button type="button" data-content="${col.content}" data-agent ="${col.agentId ? col.agentId: ""}"   onclick="fillQueryText(this)" class="btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal" as="button">
+        //         <div class="flex w-full gap-2 items-center justify-center">
+        //             <div class="flex w-full items-center justify-between">
+        //                 <div class="flex flex-col overflow-hidden">
+        //                     <div class="truncate font-semibold">
+        //                         ${col.title}</div>
+        //                     <div class="truncate opacity-50 item-column">
+        //                         <p>to ${col.content}</p>
+        //                     </div>
+        //                 </div>
+        //                 <div class="absolute bottom-0 right-0 top-0 flex items-center rounded-xl bg-gradient-to-l from-gray-100 from-[60%] pl-6 pr-3 text-gray-700 opacity-0 group-hover:opacity-100 dark:from-gray-700 dark:text-gray-200">
+        //                     <span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="icon-sm">
+        //                             <path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor">
+        //                             </path>
+        //                         </svg></span></div>
+        //             </div>
+        //         </div>
+        //     </button>
+        // </div>
+        // `
         html += `
         <div data-projection-id="1" style="opacity: 1; transform: none;">
         <button type="button" data-content="${col.content}" data-agent ="${col.agentId ? col.agentId: ""}"   onclick="fillQueryText(this)" class="btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal" as="button">
                 <div class="flex w-full gap-2 items-center justify-center">
                     <div class="flex w-full items-center justify-between">
                         <div class="flex flex-col overflow-hidden">
-                            <div class="truncate font-semibold">
-                                ${col.title}</div>
-                            <div class="truncate opacity-50 item-column">
-                                <p>to ${col.content}</p>
+                            <div class="truncate  item-column">
+                                <p style="display: flex;" >
+                                    <span style="display: inline !important;white-space: nowrap;width: 14px;" ><svg t="1752916211531" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5079" width="14" height="20" data-spm-anchor-id="a313x.search_index.0.i12.40f03a81CmvggW"><path d="M512 512m-170.666667 0a170.666667 170.666667 0 1 0 341.333334 0 170.666667 170.666667 0 1 0-341.333334 0Z" fill="#2196F3" p-id="5080"></path></svg></span>
+                                    <span style="display: inline !important;white-space: nowrap; padding-left: 21px"> ${col.content}</span>
+                                </p>
                             </div>
                         </div>
                         <div class="absolute bottom-0 right-0 top-0 flex items-center rounded-xl bg-gradient-to-l from-gray-100 from-[60%] pl-6 pr-3 text-gray-700 opacity-0 group-hover:opacity-100 dark:from-gray-700 dark:text-gray-200">
@@ -202,26 +225,29 @@ function initTopTile() {
             url : "user/getDefaultTitle",
             success : function(res) {
                 if (res.status === 'success') {
+                    $('#centerTitleBox h1').html(res.data);
                     // $('#topTitle h1 span').html(res.data);
-                    const a = parseInt($('#title-canvas')[0].style.width);
-                    const b = parseInt($('#title-canvas')[0].style.height);
-                    topTile = res.data;
-                    drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
-                    finishedLoadTitle = true;
+                    // const a = parseInt($('#title-canvas')[0].style.width);
+                    // const b = parseInt($('#title-canvas')[0].style.height);
+                    // topTile = res.data;
+                    // drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+                    // finishedLoadTitle = true;
                 }
             },
             error: function(res) {
-                $('#topTitle h1 span').html(topTile);
-                const a = parseInt($('#title-canvas')[0].style.width);
-                const b = parseInt($('#title-canvas')[0].style.height);
-                drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
-                finishedLoadTitle = true;
+                $('#centerTitleBox h1').html(topTile);
+                // $('#topTitle h1 span').html(topTile);
+                // const a = parseInt($('#title-canvas')[0].style.width);
+                // const b = parseInt($('#title-canvas')[0].style.height);
+                // drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+                // finishedLoadTitle = true;
             }
         });
     } else {
-        const a = parseInt($('#title-canvas')[0].style.width);
-        const b = parseInt($('#title-canvas')[0].style.height);
-        drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
+        $('#centerTitleBox h1').html(topTile);
+        // const a = parseInt($('#title-canvas')[0].style.width);
+        // const b = parseInt($('#title-canvas')[0].style.height);
+        // drawTitle('title-canvas', a, b, 16, 64, 16, topTile);
     }
 }
 
@@ -469,7 +495,7 @@ function setDivSize() {
     const no_content = document.getElementById('not-content');
     const intro = document.getElementById('introduces');
     // todo margin-top + 1个字符大小
-    const title = document.getElementById('title-canvas');
+    const title = document.getElementById('centerTitleBox');
     const titleBox = document.getElementById('topTitle');
     const ball = document.getElementById('ball-div');
     const left_nav_bar = document.getElementById('navigation_bar');
@@ -548,25 +574,25 @@ function setDivSize() {
 
 
 function replaceConversationAttached() {
-    if($('.robot-return').length > 0) {
-        console.log("replaceConversationAttached");
-        let text_width =  $('.text-area')[0].offsetWidth;
-        let robot_width =  $('.robot-return')[0].offsetWidth;
-        let convs_width = 0;
-        for(let i = 0; i < $('.conv-attached').length; i ++) {
-            let dom = $('.conv-attached')[i];
-            convs_width = $('.conv-attached')[i].offsetWidth;
-            if(robot_width >= text_width + convs_width) {
-                dom.classList.remove('justify-end');
-                dom.classList.add('justify-between');
-                $(dom).find('.appendVoice')[0].classList.add( "self-end", "lg:self-center", "justify-center", "mt-2", "gap-3", "md:gap-4", "lg:gap-1", "lg:absolute", "lg:top-0", "lg:translate-x-full", "lg:right-0", "lg:mt-0", "lg:pl-2", "visible");
-            } else {
-                dom.classList.remove('justify-between');
-                dom.classList.add('justify-end');
-                $(dom).find('.appendVoice')[0].classList.remove( "self-end", "lg:self-center", "justify-center", "mt-2", "gap-3", "md:gap-4", "lg:gap-1", "lg:absolute", "lg:top-0", "lg:translate-x-full", "lg:right-0", "lg:mt-0", "lg:pl-2", "visible");
-            }
-        }
-    }
+    // if($('.robot-return').length > 0) {
+    //     console.log("replaceConversationAttached");
+    //     let text_width =  $('.text-area')[0].offsetWidth;
+    //     let robot_width =  $('.robot-return')[0].offsetWidth;
+    //     let convs_width = 0;
+    //     for(let i = 0; i < $('.conv-attached').length; i ++) {
+    //         let dom = $('.conv-attached')[i];
+    //         convs_width = $('.conv-attached')[i].offsetWidth;
+    //         if(robot_width >= text_width + convs_width) {
+    //             dom.classList.remove('justify-end');
+    //             dom.classList.add('justify-between');
+    //             $(dom).find('.appendVoice')[0].classList.add( "self-end", "lg:self-center", "justify-center", "mt-2", "gap-3", "md:gap-4", "lg:gap-1", "lg:absolute", "lg:top-0", "lg:translate-x-full", "lg:right-0", "lg:mt-0", "lg:pl-2", "visible");
+    //         } else {
+    //             dom.classList.remove('justify-between');
+    //             dom.classList.add('justify-end');
+    //             $(dom).find('.appendVoice')[0].classList.remove( "self-end", "lg:self-center", "justify-center", "mt-2", "gap-3", "md:gap-4", "lg:gap-1", "lg:absolute", "lg:top-0", "lg:translate-x-full", "lg:right-0", "lg:mt-0", "lg:pl-2", "visible");
+    //         }
+    //     }
+    // }
     
     // let convs =  $('.conv-attached');
 }
@@ -653,44 +679,86 @@ function generateColorGradient(steps, count) {
 }
 
 function gentRankLi(el) {
-    return `<li class="ball-describe-item"> ${el.name}  <a class="hot-tag">${el.count}</a></li>`;
+    return `<li class="ball-describe-item"> <span>${el.icon}</span> <span class="scroll-text" style="display:inline-block; overflow:hidden; width:72px; white-space: nowrap;" > ${el.name} </span> <a class="hot-tag">(${el.count})</a></li>`;
 }
 
 
 function freshRankDom(ulJq, list, colors) {
+    // ulJq.empty();
+    // let lastHeight = 1.3;
+    // let lastFontSize = 0.9;
+    // let bottomMargin = 0.5;
+    // for(let i = 0; i < list.length; i++) {
+    //     let el = list[i];
+    //     let html =  gentRankLi(el);
+    //     ulJq.append(html);
+    //     let li = ulJq.find('li').eq(i);
+    //     let hotTag = li.find('.hot-tag');
+    //     li.css('background-color', colors[i]);
+    //     if (i > 0) {
+    //         lastFontSize = lastFontSize * 0.85;
+    //         bottomMargin = bottomMargin * 0.8;
+    //     }
+    //     li.css('height', `${lastHeight}em`);
+    //     li.css('line-height', `${lastHeight}em`);
+    //     li.css('font-size', `${lastFontSize}em`);
+    //     li.css('margin-bottom', `${bottomMargin}em`);
+    // }
+
     ulJq.empty();
-    let lastHeight = 1.3;
-    let lastFontSize = 0.9;
-    let bottomMargin = 0.5;
+
     for(let i = 0; i < list.length; i++) {
         let el = list[i];
         let html =  gentRankLi(el);
         ulJq.append(html);
         let li = ulJq.find('li').eq(i);
-        let hotTag = li.find('.hot-tag');
         li.css('background-color', colors[i]);
-        if (i > 0) {
-            lastFontSize = lastFontSize * 0.85;
-            bottomMargin = bottomMargin * 0.8;
-        }
-        li.css('height', `${lastHeight}em`);
-        li.css('line-height', `${lastHeight}em`);
-        li.css('font-size', `${lastFontSize}em`);
-        li.css('margin-bottom', `${bottomMargin}em`);
     }
 }
 
 function freshLeftRankDom(list) {
-    const colors = generateColorGradient(100, list.length);
+    // const colors = generateColorGradient(100, list.length);
+    const colors = [
+        '#b29aff',
+        '#d4e9ff',
+        '#ffa7a7',
+        '#d5d6d8',
+        '#a0b5ff',
+    ];
     freshRankDom($('.ball-left-top ul'), list, colors);
 }
 
 
 function freshRightRankDom(list) {
-    const colors = generateColorGradient(100, list.length);
+    // const colors = generateColorGradient(100, list.length);
+    const colors = [
+        '#9adaff',
+        '#d4ffea',
+        '#ffdfa7',
+        '#a8ff9a',
+        '#ffbda0',
+    ];
     freshRankDom($('.ball-right-top ul'), list, colors);
 }
 
+const defaultModelIcon= '<svg t="1752984421534" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="16726" width="26" height="26"><path d="M79.11424 270.67904l116.2496 66.9952a97.1776 97.1776 0 0 0-4.87424 30.57664v268.7232a97.53088 97.53088 0 0 0 47.39584 83.72736l219.42784 131.31264a97.28 97.28 0 0 0 15.4112 7.45984v153.84576a97.6384 97.6384 0 0 1-11.06944-5.70368L120.32 803.34848a97.51552 97.51552 0 0 1-47.44704-83.62496v-414.72c0-11.89376 2.19648-23.5008 6.2464-34.32448z m871.4752 34.32448v414.67392a97.52576 97.52576 0 0 1-47.44704 83.67104L561.8176 1007.6672c-3.6096 2.0992-7.31648 3.99872-11.06944 5.6576v-157.6448c2.28864-1.1264 4.5312-2.34496 6.72768-3.6608l219.42784-131.31264a97.53088 97.53088 0 0 0 47.44192-83.72736V368.25088a97.07008 97.07008 0 0 0-1.36192-16.384l124.3904-71.68c2.0992 7.99744 3.2256 16.3328 3.2256 24.81664zM561.8176 17.06496l336.59904 201.39008-118.2464 68.11648c-1.0752-0.70144-2.16576-1.3824-3.26656-2.048l-219.42784-131.31264a97.52576 97.52576 0 0 0-100.15744 0L248.32 278.28224l-113.76128-65.536L461.65504 17.06496a97.52576 97.52576 0 0 1 100.15744 0z" p-id="16727" fill="#1296db"></path><path d="M264.60672 365.22496L483.84 491.0336v275.98848a97.34144 97.34144 0 0 1-31.7952-12.09344L304.7936 667.1616a97.52576 97.52576 0 0 1-47.54432-83.77344V402.3808c0-12.96896 2.5856-25.5488 7.31136-37.15584h0.0512z m482.10944 37.15584v181.00736c0 34.3552-18.07872 66.18112-47.5904 83.77344l-147.21536 87.76704c-2.58048 1.51552-5.21728 2.92864-7.90016 4.2496V499.6608l201.04704-115.27168c1.11104 5.9392 1.664 11.9552 1.65888 17.99168z m-194.80576-171.54048l147.26144 87.77216a97.536 97.536 0 0 1 17.26464 13.16352l-193.39264 110.83776h-3.21536L304.29696 318.90432l0.49152-0.34304L452.0448 230.78912a97.52576 97.52576 0 0 1 99.86048 0v0.0512z" p-id="16728" fill="#1296db"></path></svg>';
+const defaultAgentIcon= '<svg t="1752986414845" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="18795" width="26" height="26"><path d="M880.896 328.448c15.274667 32.768 26.197333 65.536 30.549333 109.226667 39.253333 8.789333 69.888 43.690667 69.888 85.333333v43.605333c0 41.557333-30.549333 76.544-69.973333 85.248-4.266667 43.690667-13.056 76.458667-30.464 109.226667-21.845333 41.557333-54.613333 76.544-98.304 98.389333-37.12 19.626667-76.458667 28.416-131.072 32.768a86.698667 86.698667 0 0 1-85.162667 67.754667H478.976c-41.472 0-76.458667-28.416-85.162667-67.754667-54.613333-2.218667-93.866667-13.141333-131.072-32.768A225.024 225.024 0 0 1 164.437333 761.173333a320.512 320.512 0 0 1-30.549333-109.312A88.746667 88.746667 0 0 1 64 566.613333v-43.690666c0-41.557333 30.549333-76.458667 72.106667-85.248 4.266667-43.690667 13.056-76.458667 30.549333-109.226667 21.845333-41.557333 54.613333-76.544 98.304-98.389333 45.824-26.197333 96.085333-34.986667 176.896-34.986667h37.12V107.776c0-24.064 19.626667-43.690667 43.690667-43.690667 24.064 0 43.690667 19.626667 43.690666 43.690667v87.466667h37.12c80.810667 0 131.072 8.704 179.114667 34.986666 41.472 21.76 76.458667 54.613333 98.304 98.304z m-30.634667 253.44h-4.352v-74.24c0-78.677333-10.922667-115.797333-26.197333-146.432q-26.197333-45.909333-72.106667-72.106667c-30.549333-15.36-67.669333-26.197333-146.346666-26.197333H439.637333c-78.592 0-115.712 10.922667-146.346666 26.197333q-45.824 26.197333-72.021334 72.106667c-15.36 30.634667-26.197333 67.754667-26.197333 146.432v74.24c0 80.896 10.922667 115.882667 28.330667 148.650667q26.282667 45.909333 72.106666 72.106666c30.549333 15.36 67.669333 26.197333 146.346667 26.197334h161.621333c80.810667 0 115.712-10.922667 148.48-28.330667 30.634667-17.493333 54.613333-41.557333 72.106667-72.192 15.36-30.549333 26.197333-67.669333 26.197333-146.346667zM347.904 457.386667c0-23.893333 19.626667-43.605333 43.690667-43.605334 24.064 0 43.690667 19.626667 43.690666 43.690667v174.848c0 23.978667-19.626667 43.690667-43.690666 43.690667a43.861333 43.861333 0 0 1-43.690667-43.690667v-174.933333z m262.144 0c0-23.893333 19.626667-43.605333 43.690667-43.605334 23.978667 0 43.690667 19.626667 43.690666 43.690667v174.848c0 23.978667-19.626667 43.690667-43.690666 43.690667a43.861333 43.861333 0 0 1-43.690667-43.690667v-174.933333z" p-id="18796" fill="#1296db"></path></svg>';
+
+const defaultLeftRank = [
+    {name:'通义千问', count: 90, icon: defaultModelIcon},
+    {name:'文心一言', count: 55, icon: defaultModelIcon},
+    {name:'智谱清言', count: 54, icon: defaultModelIcon},
+    {name:'Moonshot', count: 11, icon: defaultModelIcon},
+    {name:'星火', count: 50, icon: defaultModelIcon}
+];
+
+const defaultRightRank = [
+    {name:'天气助手', count: 90, icon: defaultAgentIcon},
+    {name:'油价助手', count: 72, icon: defaultAgentIcon},
+    {name:'高铁助手', count: 11, icon: defaultAgentIcon},
+    {name:'翻译助手', count: 11, icon: defaultAgentIcon},
+    {name:'历史今日', count: 9, icon: defaultAgentIcon}
+]
 
 function loadLeftRank() {
     fetch(`/rank/llmHotRanking?limit=5`)
@@ -699,11 +767,16 @@ function loadLeftRank() {
     })
     .then(data => {
         if (data.status === 'success') {
+            for(let el of data.data) {
+                if(!el.icon) {
+                    el.icon = defaultModelIcon;
+                }
+            }
             freshLeftRankDom(data.data);
         }
     })
     .catch((error)=>{
-        freshLeftRankDom([{name:'通义千问', count: 99}, {name:'文心一言', count: 55}, {name:'智谱清言', count: 54}, {name:'Moonshot', count: 50}, {name:'星火', count: 31}, {name:'腾讯混元', count: 30}]);
+        freshLeftRankDom(defaultLeftRank);
         console.log("loadLeftRank error:", error);
     });
 }
@@ -716,10 +789,15 @@ function loadRightRank() {
     })
     .then(data => {
         if (data.status === 'success') {
+            for(let el of data.data) {
+                if(!el.icon) {
+                    el.icon = defaultAgentIcon;
+                }
+            }
             freshRightRankDom(data.data);
         }
     }).catch((error)=>{
-        freshRightRankDom([{name:'天气助手', count: 90}, {name:'油价助手', count: 72}, {name:'高铁助手', count: 11},{name:'翻译助手', count: 11}, {name:'历史今日', count: 9}, {name:'失信查询', count: 7}]);
+        freshRightRankDom(defaultRightRank);
         console.log("loadRightRank error:", error);
     });
 }

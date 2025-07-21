@@ -31,8 +31,10 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private List<WorkerConfig> workers;
     private List<RouterConfig> routers;
     private List<FilterConfig> filters;
-    @JsonProperty("fine_tune")
-    private FineTuneConfig fineTune;
+//    @JsonProperty("fine_tune")
+//    private FineTuneConfig fineTune;
+    @JsonProperty("model_platform")
+    private ModelPlatformConfig modelPlatformConfig;
     @JsonProperty("agent_general_config")
     private Backend agentGeneralConfiguration;
 

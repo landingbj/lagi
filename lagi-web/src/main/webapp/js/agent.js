@@ -508,9 +508,9 @@ async function handleSelect(selectedItem, userQuestion) {
         return;
     }
     const selectedValue = selectedItem.value;
-    const selectedOption = selectedItem.options[selectedItem.selectedIndex];
-    const pricePerReq = selectedOption.getAttribute('data-priceperreq');
-    const agentName = selectedOption.textContent.trim();
+    // const selectedOption = selectedItem.options[selectedItem.selectedIndex];
+    const pricePerReq = selectedItem.getAttribute('data-priceperreq');
+    const agentName = selectedItem.textContent.trim();
     if (selectedValue === 'default') {
         return;
     }

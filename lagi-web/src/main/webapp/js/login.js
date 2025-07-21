@@ -20,24 +20,28 @@ $(document).ready(function () {
 });
 
 document.addEventListener('click', function (event) {
-    const userMenu = document.getElementById('userMenu');
-    // const userMenu_sm = document.getElementById('userMenu-sm');
-    const button = document.getElementById('headlessui-menu-button-:rc:');
-    if (!button.contains(event.target)) {
-        userMenu.classList.add('login-hidden');
-        // userMenu_sm.classList.toggle('login-hidden');
-    }
+    // const userMenu = document.getElementById('userMenu');
+    // // const userMenu_sm = document.getElementById('userMenu-sm');
+    // const button = document.getElementById('headlessui-menu-button-:rc:');
+    // if (!button.contains(event.target)) {
+    //     userMenu.classList.add('login-hidden');
+    //     // userMenu_sm.classList.toggle('login-hidden');
+    // }
 });
 
 function toggleUserMenu(e) {
     // 获取相对于整个文档的坐标
     let auth = getCookie('lagi-auth');
+    const userimgStatus = document.querySelector('#user-img span');
+    const userImg = document.querySelector('#user-img img');
     // let auth = true;
     if (!auth) {
         openModal(e);
     } else {
         const userMenu = document.getElementById('userMenu');
         const userMenu_sm = document.getElementById('userMenu-sm');
+        userImg.src = 'images/avatar.jpg';
+        userimgStatus.style.visibility ='visible';
         userMenu.classList.toggle('login-hidden');
         userMenu_sm.classList.toggle('login-hidden');
     }
@@ -128,6 +132,10 @@ function authLoginCookie() {
                 if (data.status === 'success') {
                     localStorage.setItem('userId', data.data.userId);
                     $('#user_box').html(data.data.username);
+                    const userimgStatus = document.querySelector('#user-img span');
+                    const userImg = document.querySelector('#user-img img');
+                    userImg.src = 'images/avatar.jpg';
+                    userimgStatus.style.visibility ='visible';
                 }
             },
             error: function (data) {

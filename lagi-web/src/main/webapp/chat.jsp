@@ -16,6 +16,7 @@
   <meta name="react-scroll-to-bottom:version" content="4.2.0">
   <style data-emotion="react-scroll-to-bottom--css-ncqif" data-s=""></style>
   <link rel="stylesheet" href="css/pagev2.css?ver=${initParam.version}">
+  <link rel="stylesheet" href="css/folder.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/chat.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/login.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/agent.css?ver=${initParam.version}">
@@ -71,140 +72,40 @@
     <!-- scrollbar-trigger flex h-full w-full flex-1 items-start border-white/20 -->
     <!-- dark hidden bg-gray-900 md:fixed md:inset-y-0 md:flex md:w-[260px] md:flex-col -->
     <div id="navigation_bar"
-         class="flex-shrink-0 overflow-x-hidden dark hidden bg-gray-900 md:fixed md:inset-y-0 md:flex md:w-[260px]  md:flex-col"
-         style="background-color: #023f63;">
-      <div class="h-full w-[260px]">
-        <div class="flex h-full min-h-0 flex-col ">
-          <div class="scrollbar-trigger relative h-full w-full flex-1 items-start border-white/20">
-            <h2
-                    style="position: absolute; border: 0px; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; overflow-wrap: normal;">
-              历史对话</h2>
-            <nav class="flex h-full w-full flex-col p-2" aria-label="Chat history">
-              <div class="mb-1 flex flex-row gap-2">
-                <a onclick="backToHello()"
-                   class="flex px-3 min-h-[44px] border py-1 items-center gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm rounded-md dark:border-white/20 hover:bg-gray-500/10 h-11 bg-white dark:bg-transparent flex-grow overflow-hidden">
-                  <!-- <svg
-                stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
-                stroke-linejoin="round" class="icon-sm shrink-0" height="1em" width="1em"
-                xmlns="http://www.w3.org/2000/svg">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg> -->
-                  <svg t="1697600043545" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                       xmlns="http://www.w3.org/2000/svg" p-id="4283" width="20" height="20">
-                    <path
-                            d="M927.999436 531.028522a31.998984 31.998984 0 0 0-31.998984 31.998984c0 51.852948-10.147341 102.138098-30.163865 149.461048a385.47252 385.47252 0 0 1-204.377345 204.377345c-47.32295 20.016524-97.6081 30.163865-149.461048 30.163865s-102.138098-10.147341-149.461048-30.163865a385.47252 385.47252 0 0 1-204.377345-204.377345c-20.016524-47.32295-30.163865-97.6081-30.163865-149.461048s10.147341-102.138098 30.163865-149.461048a385.47252 385.47252 0 0 1 204.377345-204.377345c47.32295-20.016524 97.6081-30.163865 149.461048-30.163865a387.379888 387.379888 0 0 1 59.193424 4.533611l-56.538282 22.035878A31.998984 31.998984 0 1 0 537.892156 265.232491l137.041483-53.402685a31.998984 31.998984 0 0 0 18.195855-41.434674L639.723197 33.357261a31.998984 31.998984 0 1 0-59.630529 23.23882l26.695923 68.502679a449.969005 449.969005 0 0 0-94.786785-10.060642c-60.465003 0-119.138236 11.8488-174.390489 35.217667a449.214005 449.214005 0 0 0-238.388457 238.388457c-23.361643 55.252253-35.22128 113.925486-35.22128 174.390489s11.8488 119.138236 35.217668 174.390489a449.214005 449.214005 0 0 0 238.388457 238.388457c55.252253 23.368867 113.925486 35.217667 174.390489 35.217667s119.138236-11.8488 174.390489-35.217667A449.210393 449.210393 0 0 0 924.784365 737.42522c23.368867-55.270316 35.217667-113.925486 35.217667-174.390489a31.998984 31.998984 0 0 0-32.002596-32.006209z"
-                            fill="#e6e6e6" p-id="4284"></path>
-                  </svg>
-                  <span class="truncate">返回欢迎页</span>
-                </a>
-                <span
-                        class="mb-1 flex flex-row gap-2 rounded-md border dark:text-white dark:border-white/20 dark:bg-transparent"
-                        data-state="closed">
-                      <a
-                              class="flex px-3 min-h-[44px] py-1 gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm rounded-md dark:border-white/20 hover:bg-gray-500/10 h-11 w-11 flex-shrink-0 items-center justify-center bg-white dark:bg-transparent"><svg
-                              stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
-                              stroke-linejoin="round" class="icon-sm" height="1em" width="1em"
-                              xmlns="http://www.w3.org/2000/svg">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <line x1="9" y1="3" x2="9" y2="21"></line>
-                        </svg><span
-                              style="position: absolute; border: 0px; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; overflow-wrap: normal;">Close
-                          sidebar</span></a></span>
-              </div>
-              <div
-                      class="absolute left-0 top-14 z-20 overflow-hidden transition-all duration-500 invisible max-h-0">
-                <div class="bg-gray-900 px-4 py-3">
-                  <div class="p-1 text-sm text-gray-100">Chat History is off for this browser.
-                  </div>
-                  <div class="p-1 text-xs text-gray-500">When history is turned off, new chats on
-                    this browser won't appear in your history on any of your devices, be used to
-                    train our models, or stored for longer than 30 days. <strong>This setting
-                      does not sync across browsers or devices.</strong> <a
-                            href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline"
-                            rel="noreferrer">Learn more</a></div>
-                  <button class="btn relative btn-primary mt-4 w-full">
-                    <div class="flex w-full gap-2 items-center justify-center">
-                      <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                           stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em"
-                           xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                        <line x1="12" y1="2" x2="12" y2="12"></line>
-                      </svg>
-                      Enable chat history
-                    </div>
-                  </button>
-                </div>
-                <div class="h-24 bg-gradient-to-t from-gray-900/0 to-gray-900"></div>
-              </div>
-              <div class="flex-col flex-1 transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto">
-                <div id="conversationsNav"
-                     class="flex flex-col gap-2 pb-2 dark:text-gray-100 text-gray-800 text-sm">
-                </div>
-              </div>
-              <div class="border-t border-black/20 pt-2 empty:hidden dark:border-white/20">
-                <a id="forwardButton"
-                   class="flex px-3 min-h-[44px] py-1 items-center gap-3 transition-colors duration-200 dark:text-white cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"><span
-                        class="flex w-full flex-row flex-wrap-reverse justify-between"><span
-                        class="gold-new-button flex items-center gap-3"><svg stroke="currentColor" fill="none"
-                                                                             stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"
-                                                                             class="icon-sm shrink-0" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                          </svg>分享给朋友</span>
-                  <!-- bg-yellow-200 -->
-                        <div class="rounded-md  px-1.5 py-0.5 text-xs font-medium uppercase text-gray-800 relative">
-                          <div
-                                  class=" absolute inset-y-0 right-0 w-8 z-10 bg-gradient-to-l dark:from-default-900 from-gray-50 group-hover:from-gray-100 dark:group-hover:from-[#2A2B32]">
-                            <img src="images/forward.png" style="width: 100%; height: 100%;" alt="">
-                          </div>
-                        </div>
-                      </span>
-                </a>
-
-                <div class="group relative" data-headlessui-state="">
-                  <div id="userMenu"
-                       class="absolute right-0 bottom-full mb-2 w-48 bg-white login-hidden border border-gray-200 rounded-md shadow-lg">
-                    <ul>
-                      <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">
-                        退出登录
-                      </li>
-                    </ul>
-                  </div>
-                  <button onclick="toggleUserMenu(event)"
-                          class="flex w-full items-center gap-3 rounded-md px-3 py-3 text-sm transition-colors duration-200 hover:bg-gray-100 group-ui-open:bg-gray-100 dark:hover:bg-gray-800 dark:group-ui-open:bg-gray-800"
-                          type="button" aria-haspopup="true" aria-expanded="false" data-state="closed"
-                          id="headlessui-menu-button-:rc:" data-headlessui-state="">
-                    <div class="flex-shrink-0">
-                      <div class="flex items-center justify-center rounded">
-                        <div class="relative flex">
-                          <img alt="User" loading="lazy" width="36" height="36" decoding="async" data-nimg="1"
-                               class="rounded-sm" srcset="" src="images/rj.png" style="color: transparent;">
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                            class="grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-gray-700 dark:text-white">
-                      <!-- <div class="font-semibold">游客</div> -->
-                      <div id="user_box" class="font-semibold">
-                        登录
-                      </div>
-                      <div class="text-xs text-gray-500"></div>
-                    </div>
-                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                         stroke-linecap="round" stroke-linejoin="round" class="icon-sm flex-shrink-0 text-gray-500"
-                         height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="1"></circle>
-                      <circle cx="19" cy="12" r="1"></circle>
-                      <circle cx="5" cy="12" r="1"></circle>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </nav>
+         class="navigation_bar flex-shrink-0 overflow-x-hidden dark hidden  md:fixed md:inset-y-0 md:flex md:w-[260px]  md:flex-col">
+        <div class="nav_header w-full">
+          <div class="logo_container" onclick="backToHello()">
           </div>
         </div>
-      </div>
+        <div id="nav_body" class="nav_body w-full decorated-heading">
+        </div>
+        <div class="nav_foot w-full decorated-heading">
+          <div class="user-box">
+            <div id="forwardButton" class="share">
+              <span>分享</span>
+              <span ><img src="images/share.png"  ></span>
+           </div>
+           <div class="user-info" onclick="toggleUserMenu(event)">
+            
+              <div class="user-left avatar-container" id="user-img">
+                <img src="images/rj.png" alt="用户头像" class="avatar">
+                <span class="status-indicator" style="visibility: hidden;"></span>
+              </div>
+              <div class="user-middle" id="user_box">登录</div>
+              <div class="user-right relative" id="user-more">
+                <div id="userMenu"  
+                    class="absolute right-0 bottom-full mb-2 w-48 bg-white login-hidden border border-gray-200 rounded-md shadow-lg">
+                  <ul>
+                    <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">
+                      退出登录
+                    </li>
+                  </ul>
+                </div>
+                <svg t="1752903400975" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3997" width="24" height="24"><path d="M512 298.6496a85.3504 85.3504 0 1 0 0-170.6496 85.3504 85.3504 0 0 0 0 170.6496z" fill="#5A5A68" p-id="3998"></path><path d="M512 512m-85.3504 0a85.3504 85.3504 0 1 0 170.7008 0 85.3504 85.3504 0 1 0-170.7008 0Z" fill="#5A5A68" p-id="3999"></path><path d="M512 896a85.3504 85.3504 0 1 0 0-170.7008 85.3504 85.3504 0 0 0 0 170.7008z" fill="#5A5A68" p-id="4000"></path></svg>
+              </div>
+           </div>
+          </div>
+        </div>
     </div>
 
     <!-- 左边导航条 -->
@@ -275,8 +176,8 @@
             <div id="hello-page" class="flex-1 h-full">
               <div id="mytab" class="hidden">
                 <!-- 我的发布列表开始 -->
-                <div class="agent-list-container tab" class="w-full" id="agent-list-container">
-                  <div class="user-material-head">
+                <div class="agent-list-container tab my-table" class="w-full" id="agent-list-container">
+                  <div class="user-material-head ">
                     <span>我的发布</span>
                     <a onclick="backToChat()" style="float: right; padding-top: 2px;">
                       <svg t="1740019605102" class="icon" viewBox="0 0 1024 1024" version="1.1"
@@ -320,7 +221,7 @@
                 <!-- 我的发布列表结束 -->
 
                 <!-- 我的订阅列表开始 -->
-                <div class="paid-agent-list-container w-full tab" id="paid-agent-list-container">
+                <div class="paid-agent-list-container w-full tab my-table" id="paid-agent-list-container">
                   <div class="user-material-head">
                     <span>我的订阅</span>
                     <a onclick="backToChat()" style="float: right; padding-top: 2px;">
@@ -389,29 +290,56 @@
 
                   <div id="upload-file-list">
                     <div id="my-corpus" class="material-item">
+                      <div class="corpus-list corpus-container">
+                        <!-- 创建知识库卡片 -->
+                        <div id="addCorpus" class="corpus-card">
+                            <i class="fa fa-plus-circle"></i>
+                            <span>创建知识库</span>
+                        </div>
+            
+                        <!-- 知识库卡片示例 -->
+                        <div class="corpus-card corpus-activate">
+                            <div class="corpus-card-title">默认知识库</div>
+                            <div class="corpus-card-info">
+                                <span><i class="fa fa-file-text-o"></i> 文件数: 128</span>
+                                <span><i class="fa fa-calendar-o"></i> 创建时间: 2023-05-15</span>
+                            </div>
+                            <div class="corpus-operation">
+                                <button class="edit-btn" onclick="enterCorpus(1, this)" title="进入知识库">
+                                    进入
+                                </button>
+                                <button class="delete-btn" onclick="deleteCorpus(1)" title="删除知识库">
+                                    删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="corpus-detail corpus-container" style="display:none">
+                      <span style="font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 1rem;">${detail.name}</span>
                       <div class="drop-area" id="dropArea">
-                        <p>将文件拖放到这里或点击选择文件</p>
-                        <input type="file" id="fileInput" />
-                        <button class="button" onclick="document.getElementById('fileInput').click()">选择文件</button>
+                          <p>将文件拖放到这里或点击选择文件</p>
+                          <input type="file" id="fileInput" />
+                          <button class="button" onclick="document.getElementById('fileInput').click()">选择文件</button>
                       </div>
                       <div id="loadingSpinner" class="hidden"></div> <!-- 加载圈圈 -->
-                      <div id="results_file">
-                        <table id="upload-file-list1" class="" border="1">
+                      <div id="results_file" class="my-table">
+                          <table id="upload-file-list1" class="" border="1">
                           <thead>
                           <tr>
-                            <th>文件名称</th>
-                            <th>文件</th>
-                            <th>更新时间</th>
-                            <th>操作</th>
+                              <th>文件名称</th>
+                              <th>文件</th>
+                              <th>更新时间</th>
+                              <th>操作</th>
                           </tr>
                           </thead>
                           <tbody>
                           <!-- 动态生成已上传文件数据 -->
                           </tbody>
-                        </table>
+                          </table>
                       </div>
                       <div class="pagination" id="file-upload-pagination">
-                        <!-- 分页按钮将动态添加到这里 -->
+                          <!-- 分页按钮将动态添加到这里 -->
+                      </div>
                       </div>
                     </div>
                     <div id="chat-settings" class="material-item chat-settings" style="display: none;">
@@ -583,6 +511,11 @@
                     <button class="model-modules-title model-modules-nav-not-active"
                             onclick="loadUserModule(this, 'user-manager', 'loadDevelopManagerData')">
                       模型管理
+                    </button>
+
+                    <button class="model-modules-title model-modules-nav-not-active"
+                            onclick="loadUserModule(this, 'user-upload-model', 'loadUserUploadModelData')">
+                      模型上传
                     </button>
 
                     <a onclick="backToChat()">
@@ -892,7 +825,7 @@
                       </div>
                     </div>
                     <div class="model-module manager hidden" id="user-manager">
-                      <div class="modal-container">
+                      <div class="modal-container my-table">
                         <button id="addModelBtn" class="develop-btn">
                           <img src="images/add.png" alt="addDevelop">
                           <strong>添加模型</strong>
@@ -954,6 +887,61 @@
                         </div>
                       </div>
                     </div>
+
+                    <div class="model-module user-upload-model hidden" id="user-upload-model">
+                      <div class="upload-container">
+                        <div class="file-drop-area" id="file-drop-area">
+                          <div class="file-drop-icon">
+                            <i class="fa fa-file-o"></i>
+                          </div>
+                          <h3 class="file-drop-title">拖放文件到此处上传</h3>
+                          <p class="file-drop-or">或</p>
+                          <label class="file-drop-button">
+                            <i class="fa fa-plus mr-2"></i>选择文件
+                            <input type="file" id="file-input" class="hidden" multiple>
+                          </label>
+                          <p class="file-drop-note">支持断点续传</p>
+                        </div>
+
+                        <div class="upload-queue" id="upload-queue">
+                          <div class="upload-queue-empty">
+                            <i class="fa fa-folder-open-o"></i>
+                            <p>暂无上传任务</p>
+                          </div>
+                        </div>
+
+                        <div class="upload-settings">
+                          <div class="upload-settings-title">
+                            <i class="fa fa-cog"></i>上传设置
+                          </div>
+                          <div class="upload-settings-fields">
+                            <div class="upload-settings-field">
+                              <label class="upload-settings-label" for="chunk-size">分片大小</label>
+                              <select id="chunk-size" class="upload-settings-select">
+                                <option value="1">1MB</option>
+                                <option value="2" selected>2MB</option>
+                                <option value="5">5MB</option>
+                                <option value="10">10MB</option>
+                                <option value="20">20MB</option>
+                                <option value="50">50MB</option>
+                                <option value="100">100MB</option>
+                              </select>
+                            </div>
+                            <div class="upload-settings-field">
+                              <label class="upload-settings-label" for="concurrency">并发上传数</label>
+                              <select id="concurrency" class="upload-settings-select">
+                                <option value="1">1个</option>
+                                <option value="2" selected>2个</option>
+                                <option value="3">3个</option>
+                                <option value="5">5个</option>
+                                <option value="10">10个</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -968,15 +956,18 @@
                           <div class="absolute right-2 top-2 text-gray-600 text-sm sm:none">
                             内容由AI协助
                           </div>
-                          <div id="centerTitleBox" class="" style="margin-left: auto; margin-right: auto;">
-                            <canvas id="title-canvas"
-                                    style="width: 300px; height: 120px; margin-top: 10px;"></canvas>
+                          <div id="centerTitleBox" class="center-title-box" style="margin-left: auto; margin-right: auto;">
+                            <h1 class="w-full">
+
+                            </h1>
+                            <!-- <canvas id="title-canvas"
+                                    style="width: 300px; height: 120px; margin-top: 10px;"></canvas> -->
                           </div>
                         </div>
-                        <div class="relative">
+                        <div id="ball-container" class="relative ball-container">
                           <div class="ball-mask"
                                style="width: min(47em, 90%); height: 0px; position: relative; margin-left: auto; margin-right: auto;">
-                            <div class="ball-corner-container"
+                            <div class="ball-corner-container" id ="ball-corner-container"
                                  style=" z-index: 5; width: 100%;position: absolute; margin-left: auto; margin-right: auto;">
                               <div class="ball-left-top absolute ball-corner">
                                 <ul>
@@ -993,7 +984,7 @@
                           </div>
                         </div>
 
-                        <!-- ***********************输入框前form******************************** -->
+                        <!-- ***********************介绍框 start******************************** -->
                         <div id="introduces" class="relative">
                           <div class="h-full flex gap-0 md:gap-2 justify-center">
                             <div class="grow">
@@ -1004,7 +995,9 @@
                             </div>
                           </div>
                         </div>
-                        <!-- ***********************输入框前form end******************************** -->
+                        <!-- ***********************介绍框 end******************************** -->
+
+                    </div>
                       </div>
                     </div>
                   </div>
@@ -1013,80 +1006,63 @@
             </div>
             <div id="not-content"
                  class="absolute bottom-0 left-0  border-t md:border-t-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:bg-vert-light-gradient bg-white dark:bg-gray-800 md:!bg-transparent dark:md:bg-vert-dark-gradient pt-2 md:w-[calc(100%-.5rem)]">
+              
+              
               <form
                       class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
                 <div class="relative flex h-full flex-1 items-stretch md:flex-col">
+                  
                   <!-- ***********************输入框******************************** -->
-                  <div class="flex w-full " id="queryBox">
-                    <div id="agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
-                      <div id="agentList" class="absolute right-1 z-50 agent-pannel w-32 ">
-                        <div id="agent-head" class="agent-head  pt-2 pb-1 text-center">智能体
-                        </div>
-                        <!-- <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto"> -->
-                        <ul id="agent-tools" class="pb-2">
-                          <li class=" pl-5  not-available " onclick="openAgentModal(event)">发布智能体</li>
-                          <li class=" pl-5  not-available " onclick="openCreateAgent()">创建智能体</li>
-                        </ul>
-                      </div>
-                    </div>
+                  <div class="flex w-full " id="queryBox" class="border border-black/10">
+                    <!-- 智能体功能列表 -->
 
-                    <div class="flex-col-reverse w-10 m-0 relative">
 
-                      <div class="absolute top-0  ml-2" style="display: none;" id="textareaScretch"
-                           onclick="showTextareaMask()">
-                        <svg style="width: 24px;height: 24px;" t="1703232823101" class="icon"
-                             viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6337"
-                             width="200" height="200">
-                          <path
-                                  d="M838.116 732.779 877.7 693.195 511.979 327.549 146.3 693.195 185.883 732.779 512.003 406.652Z"
-                                  p-id="6338" fill="#1296db"></path>
-                        </svg>
-                        <!-- 向下 -->
-                        <!-- <svg t="1703233241892" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7345" width="200" height="200"><path d="M185.884 327.55 146.3 367.133 512.021 732.779 877.7 367.133 838.117 327.55 511.997 653.676Z" p-id="7346" data-spm-anchor-id="a313x.search_index.0.i2.13b03a81EFSaRX" class="selected" fill="#1296db"></path></svg> -->
-                      </div>
-                      <div id="voiceIcon" class="absolute bottom-0 ml-2">
-                        <svg id="voiceSvg" style="width: 24px;height: 24px;" t="1694870288752"
-                             class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                             p-id="4046" width="200" height="200">
-                          <path
-                                  d="M446.2 705.9c-99.1 0-180.2-81.1-180.2-180.2V245.4c0-99.1 81.1-180.2 180.2-180.2s180.2 81.1 180.2 180.2v280.3c0 99.1-81.1 180.2-180.2 180.2z"
-                                  fill="#D6F3FA" p-id="4047"></path>
-                          <path
-                                  d="M443.7 832.1c-3 12.8-16.3 20.2-28.9 16.4-132.1-41-224.8-158-234.6-296.2-0.9-13.1 9.3-24.4 22.5-24.4 11.7 0 21.5 8.9 22.3 20.6 8.3 120.1 88.9 221.8 203.8 257.2 11.1 3.4 17.6 15 14.9 26.4zM820.8 528c-11.6 0-21.5 8.9-22.3 20.5-10.4 148.1-132.3 265.7-282 269.8-0.5 0-1-0.3-1.5-0.3-0.9 0-1.7 0.4-2.5 0.5-1.3 0-2.6 0.2-3.9 0.2v0.6c-9.2 2.8-16 11.1-16 21.2v98.4c0 12.4 10.1 22.5 22.5 22.5s22.5-10.1 22.5-22.5v-76.6c163.5-14 294-145.7 305.8-309.8 0.8-13.2-9.5-24.5-22.6-24.5z m-503.3 35.3v-267C317.5 187.5 406 99 514.8 99s197.3 88.5 197.3 197.3v267c0 108.8-88.5 197.3-197.3 197.3s-197.3-88.5-197.3-197.3z m51.5 0c0 80.4 65.4 145.8 145.8 145.8s145.8-65.4 145.8-145.8v-267c0-80.4-65.4-145.8-145.8-145.8S369 215.9 369 296.3v267z m45.6-157.7h75.2c12.4 0 22.5-10.1 22.5-22.5s-10.1-22.5-22.5-22.5h-75.2c-12.4 0-22.5 10.1-22.5 22.5 0.1 12.4 10.2 22.5 22.5 22.5z m75.2 68.6c12.4 0 22.5-10.1 22.5-22.5s-10.1-22.5-22.5-22.5h-75.2c-12.4 0-22.5 10.1-22.5 22.5s10.1 22.5 22.5 22.5h75.2z"
-                                  fill="#18BAE5" p-id="4048"></path>
-                        </svg>
-                      </div>
-
-                    </div>
 
                     <div
-                            class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">
+                            class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative  bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">
                           <textarea id="queryContent" data-agent="" tabindex="0" data-id="root" rows="1"
                                     placeholder="请输入文字..."
                                     class=" m-0 w-full resize-none border-0 bg-transparent p-0 pl-2 pr-7 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pl-0"
-                                    style="max-height: 200px; height: 24px;  width: 98%;float: left;"></textarea>
+                                    style="max-height: 200px; height: 170px;  width: 98%;float: left;"></textarea>
 
                       <!-- <svg style="width:30px;height:24px" t="1694769456924" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8678" width="200" height="200"><path d="M801.171 483.589H544V226.418c0-17.673-14.327-32-32-32s-32 14.327-32 32v257.171H222.83c-17.673 0-32 14.327-32 32s14.327 32 32 32H480v257.17c0 17.673 14.327 32 32 32s32-14.327 32-32v-257.17h257.171c17.673 0 32-14.327 32-32s-14.327-32-32-32z" fill="" p-id="8679"></path></svg> -->
                       <!-- ******************发送按钮开始 ***************************** -->
                       <!-- bg-gray-900 -->
+                      <button  type="button" id="addButton" style="left: 0.75rem;"
+                        class="absolute p-1 rounded-md text-gray-500   hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
+                      <img style="position: relative;" src="images/upload.png">
+                      </button>
+                      <button  type="button" id="agentButton" style="left: 3.25rem;"
+                        class="absolute p-1 rounded-md text-gray-500   hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
+                        <div id="agent-container" class="absolute flex w-full flex-1 items-stretch md:flex-col hidden">
+                          <div id="agentList" class="absolute left-0 z-50 agent-pannel w-32 ">
+                            <div id="agent-head" class="agent-head  pt-2 pb-1 text-center">智能体
+                            </div>
+                            <!-- <ul id = "agent-tools" class="pb-2" style="max-height: 100px; overflow: auto"> -->
+                            <ul id="agent-tools" class="pb-2">
+                              <li class=" pl-5  not-available " onclick="openAgentModal(event)">发布智能体</li>
+                              <li class=" pl-5  not-available " onclick="openCreateAgent()">创建智能体</li>
+                            </ul>
+                          </div>
+                        </div>
+                        <img style="position: relative;" src="images/agent_btn.png">
+                      </button>
+                      <!-- <button  type="button" id="agentButton"
+                        class="absolute p-1 rounded-md text-gray-500 bottom-1.5 right-1 md:bottom-2.5  hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
+                      <img style="position: relative;width: 25px;height: 25px;" src="images/rj.png">
+                      </button> -->
+                      <button  type="button" id="voiceIcon"
+                        class="absolute p-1 rounded-md text-gray-500  right-16  hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
+                        <img style="position: relative;" src="images/vioce.png">
+                      </button>
+                      
                       <button onclick="textQuery()" type="button" id="queryBtn"
-                              class="absolute p-1 rounded-md text-gray-500 bottom-1.5 right-1 md:bottom-2.5 md:right-2 hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
-                        <img style="position: relative;height: 25px;top: 1px;" src="images/rj.png">
+                              class="absolute p-1 rounded-md text-gray-500  right-1  hover:bg-gray-100 dark:hover:text-gray-400 dark:hover:bg-ldbj-900 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent">
+                        <img style="position: relative;" src="images/send.png">
                       </button>
                       <!-- ******************发送按钮关闭***************************** -->
                     </div>
 
-                    <div id="agentButton" class=" flex-col-reverse m-2 flex-bottom">
-                      <img
-                              style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 0px;"
-                              t="1694871462493" class=" icon" alt="agent" src="images/agent.png" />
-                    </div>
-
-                    <div id="addButton" class=" flex-col-reverse m-2 flex-bottom">
-                      <img
-                              style="width: 28px;height: 28px; float: left;right: 100px; object-fit: contain; margin-bottom: 0px;"
-                              t="1694871462493" class=" icon" alt="agent" src="images/wjsc.png" />
-                    </div>
                   </div>
                   <!-- ***********************输入框end******************************** -->
                 </div>
@@ -1375,6 +1351,60 @@
 </div>
 <!-- 编排智能体弹窗结束 -->
 
+<!-- 创建/编辑知识库模态框 -->
+<div id="corpusModal" class="corpus-modal">
+  <div class="corpus-modal-content">
+      <div class="corpus-modal-header">
+          <h3 id="modalTitle">创建知识库</h3>
+          <button class="corpus-modal-close" onclick="closeCorpusModal()">
+              <i class="fa fa-times"></i>
+          </button>
+      </div>
+      <div class="corpus-modal-body">
+          <form id="corpusForm">
+              <input type="hidden" id="corpusId" value="">
+              <div class="form-group">
+                  <label for="corpusName">知识库名称</label>
+                  <input type="text" id="corpusName" class="form-control" placeholder="请输入知识库名称" required>
+              </div>
+              <div class="form-group">
+                  <label for="corpusDesc">知识库描述</label>
+                  <textarea id="corpusDesc" class="form-control" rows="3" placeholder="请输入知识库描述"></textarea>
+              </div>
+          </form>
+      </div>
+      <div class="corpus-modal-footer">
+          <button class="btn btn-secondary" onclick="closeCorpusModal()">取消</button>
+          <button class="btn btn-primary" onclick="saveCorpus()">保存</button>
+      </div>
+  </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div id="deleteModal" class="corpus-modal">
+  <div class="corpus-modal-content">
+      <div class="corpus-modal-header">
+          <h3>删除知识库</h3>
+          <button class="corpus-modal-close" onclick="closeDeleteModal()">
+              <i class="fa fa-times"></i>
+          </button>
+      </div>
+      <div class="corpus-modal-body">
+          <p>确定要删除这个知识库吗？此操作不可撤销，所有相关文件和数据都将被永久删除。</p>
+          <input type="hidden" id="deleteCorpusId" value="">
+      </div>
+      <div class="corpus-modal-footer">
+          <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+          <button class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+      </div>
+  </div>
+</div>
+
+<!-- 通知消息 -->
+<div id="notification" class="notification">
+  <i id="notificationIcon" class="fa fa-check-circle"></i>
+  <span id="notificationMessage"></span>
+</div>
 
 <!-- mobile debug 插件 -->
 <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
@@ -1396,6 +1426,7 @@
 <script src="js/self.js?ver=${initParam.version}"></script>
 <script src="js/query.js?ver=${initParam.version}"></script>
 <script src="js/ball.js?ver=${initParam.version}"></script>
+<script src="js/corpus.js?ver=${initParam.version}"></script>
 <script src="js/agent.js?ver=${initParam.version}"></script>
 <script src="js/model.js?ver=${initParam.version}"></script>
 <script src="js/vector_settings.js?ver=${initParam.version}"></script>

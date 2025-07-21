@@ -3,8 +3,15 @@ package ai.servlet;
 import ai.common.utils.ObservableList;
 import ai.config.ContextLoader;
 import ai.config.pojo.FineTuneConfig;
+import ai.config.pojo.LlamaFactoryConfig;
+import ai.config.pojo.ModelPlatformConfig;
 import ai.dao.ManagerDao;
-import ai.dao.ModelDevelopInfoDao;
+import ai.deploy.dao.ModelDevelopInfoDao;
+import ai.deploy.impl.BeiDianDeployImpl;
+import ai.deploy.impl.LocalLlamaFactoryImpl;
+import ai.deploy.pojo.DeployInfo;
+import ai.deploy.pojo.DeployResult;
+import ai.deploy.pojo.UnDeployResult;
 import ai.dto.*;
 import ai.finetune.TrainArgsParser;
 import ai.finetune.LocalLlamaFactoryService;
@@ -51,14 +58,17 @@ public class ModelManagerServlet extends RestfulServlet{
     private final ModelDevelopInfoDao modelDevelopInfoDao = new ModelDevelopInfoDao();
     private final ManagerDao managerDao = new ManagerDao();
 
+    private BeiDianDeployImpl beiDianDeployImpl = new BeiDianDeployImpl(ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getBeiDianPaasConfig());
+    private LocalLlamaFactoryImpl localLlamaFactory = new LocalLlamaFactoryImpl(ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getLlamaFactoryConfig());
+
     protected boolean needForward() {
-        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
-        return Boolean.TRUE.equals(fineTuneConfig.getRemote());
+        ModelPlatformConfig modelPlatformConfig = ContextLoader.configuration.getModelPlatformConfig();
+        return Boolean.TRUE.equals(modelPlatformConfig.getRemote());
     }
 
     protected void forwardRequest(HttpServletRequest request, HttpServletResponse response, String method) throws IOException {
-        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
-        String remoteServiceUrl = fineTuneConfig.getRemoteServiceUrl();
+        ModelPlatformConfig modelPlatformConfig = ContextLoader.configuration.getModelPlatformConfig();
+        String remoteServiceUrl = modelPlatformConfig.getRemoteServiceUrl();
         if(StrUtil.isBlank(remoteServiceUrl)) {
            throw new RRException("Remote service url is not set");
         }
@@ -121,7 +131,7 @@ public class ModelManagerServlet extends RestfulServlet{
             resp.getWriter().write("{\"error\": \"No files uploaded\"}");
             return;
         }
-        String datasetDir = ContextLoader.configuration.getFineTune().getDatasetDir();
+        String datasetDir = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig().getLlamaFactoryConfig().getDatasetDir();
         String UPLOAD_DIR = datasetDir + "/" + userId;
         Map<String, Map<String, String>> dataSetInfo = createOrGetDataSetInfo(UPLOAD_DIR, "dataset_info.json");
         for (Part part : parts) {
@@ -207,9 +217,15 @@ public class ModelManagerServlet extends RestfulServlet{
         if(StrUtil.isBlank(userId)) {
             throw new RRException("You need to log in first");
         }
-        String datasetDir = ContextLoader.configuration.getFineTune().getDatasetDir();
-        String UPLOAD_DIR = datasetDir + "/" + userId;
-        return createOrGetDataSetInfo(UPLOAD_DIR, "dataset_info.json");
+        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig();
+        if("llamafactory".equals(fineTuneConfig.getPlatformName())) {
+            String datasetDir = fineTuneConfig.getLlamaFactoryConfig().getDatasetDir();
+            String UPLOAD_DIR = datasetDir + "/" + userId;
+            return createOrGetDataSetInfo(UPLOAD_DIR, "dataset_info.json");
+        } else if("beidianpaas".equals(fineTuneConfig.getPlatformName())) {
+            return Collections.emptyMap();
+        }
+        return Collections.emptyMap();
     }
 
 
@@ -218,34 +234,40 @@ public class ModelManagerServlet extends RestfulServlet{
         if(StrUtil.isBlank(userDatasetRequest.getUserId())) {
             throw new RRException("You need to log in first");
         }
-        String datasetDir = ContextLoader.configuration.getFineTune().getDatasetDir();
-        String UPLOAD_DIR = datasetDir + "/" + userDatasetRequest.getUserId();
-        Map<String, Map<String, String>> orGetDataSetInfo = createOrGetDataSetInfo(UPLOAD_DIR, "dataset_info.json");
-        List<String> datasetNames = userDatasetRequest.getDatasetNames();
-        for (String datasetName : datasetNames) {
-            Map<String, String> map = orGetDataSetInfo.get(datasetName);
-            String path = map.get("file_name");
-            Path path1 = Paths.get(UPLOAD_DIR, path);
-            boolean delete = path1.toFile().delete();
-            if(delete) {
-                orGetDataSetInfo.remove(datasetName);
-            } else {
-                return Boolean.FALSE;
+        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig();
+        if("llamafactory".equals(fineTuneConfig.getPlatformName())) {
+            String datasetDir = fineTuneConfig.getLlamaFactoryConfig().getDatasetDir();
+            String UPLOAD_DIR = datasetDir + "/" + userDatasetRequest.getUserId();
+            Map<String, Map<String, String>> orGetDataSetInfo = createOrGetDataSetInfo(UPLOAD_DIR, "dataset_info.json");
+            List<String> datasetNames = userDatasetRequest.getDatasetNames();
+            for (String datasetName : datasetNames) {
+                Map<String, String> map = orGetDataSetInfo.get(datasetName);
+                String path = map.get("file_name");
+                Path path1 = Paths.get(UPLOAD_DIR, path);
+                boolean delete = path1.toFile().delete();
+                if(delete) {
+                    orGetDataSetInfo.remove(datasetName);
+                } else {
+                    return Boolean.FALSE;
+                }
             }
+            write2DatasetInfo(UPLOAD_DIR, "dataset_info.json", orGetDataSetInfo);
+            return Boolean.TRUE;
+        } else if ("beidianpaas".equals(fineTuneConfig.getPlatformName())) {
+            return Boolean.FALSE;
         }
-        write2DatasetInfo(UPLOAD_DIR, "dataset_info.json", orGetDataSetInfo);
-        return Boolean.TRUE;
+        return Boolean.FALSE;
     }
 
     private String buildUsersSaveDir(String userId) {
-        String saveDir = ContextLoader.configuration.getFineTune().getSaveDir();
+        String saveDir = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig().getLlamaFactoryConfig().getSaveDir();
         return saveDir + "/user/" + userId;
     }
 
     @Post("train")
     public void train(@Body TrainConfig trainConfig, HttpServletResponse resp) throws IOException {
         resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
+        LlamaFactoryConfig llamaFactoryConfig = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig().getLlamaFactoryConfig();
         String userId = trainConfig.getUserId();
         FineTuneArgs fineTuneArgs = trainConfig.getFineTuneArgs();
 //        //  Validate  fineTuneArgs
@@ -256,12 +278,12 @@ public class ModelManagerServlet extends RestfulServlet{
 //        }
         Map<String, SupportModel> nameMap = getModelSupportMap();
         SupportModel supportModel = nameMap.get(fineTuneArgs.getModel_name());
-        fineTuneArgs.setModel_path(fineTuneConfig.getLlamaFactoryDir() + File.separator + supportModel.getPath());
+        fineTuneArgs.setModel_path(llamaFactoryConfig.getLlamaFactoryDir() + File.separator + supportModel.getPath());
         fineTuneArgs.setTemplate(supportModel.getTemplate());
-        String trainDir = ContextLoader.configuration.getFineTune().getTrainDir();
+        String trainDir = llamaFactoryConfig.getTrainDir();
         String trainYamlPath = Paths.get(trainDir , userId, "train.yaml").toFile().getAbsolutePath();
         String savePath = buildUsersSaveDir(userId);
-        String dateSetDir = Paths.get(fineTuneConfig.getDatasetDir(), userId).toFile().getAbsolutePath();
+        String dateSetDir = Paths.get(llamaFactoryConfig.getDatasetDir(), userId).toFile().getAbsolutePath();
         fineTuneArgs.setDataset_dir(dateSetDir);
         fineTuneArgs.setOutput_dir(savePath + File.separator + fineTuneArgs.getOutput_dir());
 
@@ -270,7 +292,7 @@ public class ModelManagerServlet extends RestfulServlet{
         TrainArgsParser trainArgsParser = new TrainArgsParser(fineTuneArgs);
         trainArgsParser.saveMapToYaml(trainYamlPath);
 
-        // run train
+        // run trains
         ObservableList<String> train = localLlamaFactoryService.train(trainYamlPath);
         streamOutput(resp, train);
     }
@@ -281,8 +303,8 @@ public class ModelManagerServlet extends RestfulServlet{
         String savePath = buildUsersSaveDir(trainConfig.getUserId());
         FineTuneArgs fineTuneArgs = trainConfig.getFineTuneArgs();
         String outputDir = fineTuneArgs.getOutput_dir();
-        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
-        File file = Paths.get(fineTuneConfig.getLlamaFactoryDir(), savePath, outputDir, "training_loss.png").toFile();
+        LlamaFactoryConfig llamaFactoryConfig = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig().getLlamaFactoryConfig();
+        File file = Paths.get(llamaFactoryConfig.getLlamaFactoryDir(), savePath, outputDir, "training_loss.png").toFile();
         if(file.exists()) {
             try {
                 return ImageUtil.getFileContentAsBase64(file.getAbsolutePath());
@@ -292,28 +314,7 @@ public class ModelManagerServlet extends RestfulServlet{
         return null;
     }
 
-    @Post("abort")
-    public void abort() {
 
-    }
-
-
-    // test
-    @Post("load")
-    public void load() {
-
-    }
-
-    @Post("unload")
-    public void unload() {
-
-    }
-
-
-    @Post("chat")
-    public void chat() {
-
-    }
 
     @Post("export")
     public void export(@Body ExportConfig exportConfig, HttpServletResponse resp) throws IOException {
@@ -356,42 +357,46 @@ public class ModelManagerServlet extends RestfulServlet{
 
 
     @Get("getDevelop")
-    public List<ModelDevelopInfo> getDevelop(@Param("userId") String userId) {
-        return modelDevelopInfoDao.findByUserId(userId);
+    public List<DeployInfo> getDevelop(@Param("userId") String userId) {
+        String platformName = ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getPlatformName();
+        if("llamafactory".equals(platformName)) {
+            return localLlamaFactory.getDeploys(userId);
+        } else if("beidian".equals(platformName)) {
+            return beiDianDeployImpl.getDeploys(userId);
+        }
+        return Collections.emptyList();
     }
 
     @Post("addDevelop")
-    public Boolean addDevelop(@Body ModelDevelopInfo modelDevelopInfo) {
-        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
-        Map<String, SupportModel> nameMap = getModelSupportMap();
-        SupportModel supportModel = nameMap.get(modelDevelopInfo.getModelPath());
-        if(supportModel != null) {
-            modelDevelopInfo.setTemplate(supportModel.getTemplate());
+    public Boolean addDevelop(@Body DeployInfo modelDevelopInfo) {
+        String platformName = ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getPlatformName();
+        if("llamafactory".equals(platformName)) {
+            return localLlamaFactory.newDeploy(modelDevelopInfo);
+        } else if("beidian".equals(platformName)) {
+            return beiDianDeployImpl.newDeploy(modelDevelopInfo);
         }
-        modelDevelopInfo.setRunning(0);
-        modelDevelopInfoDao.insert(modelDevelopInfo);
-        return Boolean.TRUE;
+        return Boolean.FALSE;
     }
 
     @Post("delDevelop")
-    public Boolean delDevelop(@Body ModelDevelopInfo modelDevelopInfo) {
-        ModelDevelopInfo developInfo = modelDevelopInfoDao.findById(modelDevelopInfo.getId());
-        try {
-            stop(developInfo);
-        } catch (Exception e) {
+    public Boolean delDevelop(@Body DeployInfo modelDevelopInfo) {
+        String platformName = ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getPlatformName();
+        if("llamafactory".equals(platformName)) {
+            return localLlamaFactory.deleteDeploy(modelDevelopInfo);
+        } else if("beidian".equals(platformName)) {
+            return beiDianDeployImpl.deleteDeploy(modelDevelopInfo);
         }
-        int delete = modelDevelopInfoDao.delete(modelDevelopInfo.getId());
-        return delete  > 0;
+        return Boolean.FALSE;
     }
 
     @Get("getDevelopedAddress")
     public String getDevelop(@Param("id") Integer id, HttpServletRequest req) {
-        ModelDevelopInfo developInfo = modelDevelopInfoDao.findById(id);
+        DeployInfo developInfo = modelDevelopInfoDao.findById(id);
         Integer running = developInfo.getRunning();
         if(running == 0) {
             throw new RRException("模型未运行");
         }
-        return req.getScheme() + "://" + req.getServerName() + ":" + developInfo.getPort() + "/v1/chat/completions";
+        return developInfo.getApiAddress();
     }
 
     private Map<String, SupportModel> getModelSupportMap() {
@@ -400,13 +405,18 @@ public class ModelManagerServlet extends RestfulServlet{
     }
 
     @Post("start")
-    public Boolean start(@Body ModelDevelopInfo modelDevelopInfo) {
+    public Boolean start(@Body DeployInfo modelDevelopInfo) {
+        String platformName = ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getPlatformName();
+        if("beidian".equals(platformName)) {
+            DeployResult deploy = beiDianDeployImpl.deploy(modelDevelopInfo);
+            return deploy.getCode() == 200;
+        }
         modelDevelopInfo = modelDevelopInfoDao.findById(modelDevelopInfo.getId());
         if(modelDevelopInfo.getRunning() == 1) {
             throw new RRException("模型已在运行中");
         }
-        FineTuneConfig fineTuneConfig = ContextLoader.configuration.getFineTune();
-        List<String> ports = fineTuneConfig.getPorts();
+        LlamaFactoryConfig llamaFactoryConfig = ContextLoader.configuration.getModelPlatformConfig().getFineTuneConfig().getLlamaFactoryConfig();
+        List<String> ports = llamaFactoryConfig.getPorts();
         if(ports == null || ports.isEmpty()) {
             throw new RRException("无可用端口");
         }
@@ -427,7 +437,7 @@ public class ModelManagerServlet extends RestfulServlet{
         String path = buildUsersSaveDir(modelDevelopInfo.getUserId());
         String modelPath = null;
         if(supportModel != null) {
-            modelPath = fineTuneConfig.getLlamaFactoryDir() + File.separator + supportModel.getPath();
+            modelPath = llamaFactoryConfig.getLlamaFactoryDir() + File.separator + supportModel.getPath();
         } else {
             modelPath = path + File.separator + modelDevelopInfo.getModelPath();
         }
@@ -448,12 +458,17 @@ public class ModelManagerServlet extends RestfulServlet{
     }
 
     @Post("stop")
-    public Boolean stop(@Body ModelDevelopInfo modelDevelopInfo) {
+    public Boolean stop(@Body DeployInfo modelDevelopInfo) {
+        String platformName = ContextLoader.configuration.getModelPlatformConfig().getDeployConfig().getPlatformName();
+        if("beidian".equals(platformName)) {
+            UnDeployResult undeploy = beiDianDeployImpl.undeploy(modelDevelopInfo);
+            return undeploy.getCode() == 200;
+        }
         int count = modelDevelopInfoDao.countPort(modelDevelopInfo.getPort());
         if(count > 0) {
             throw new RRException("服务已经停止");
         }
-        ModelDevelopInfo byUserId = modelDevelopInfoDao.findById(modelDevelopInfo.getId());
+        DeployInfo byUserId = modelDevelopInfoDao.findById(modelDevelopInfo.getId());
         if(!Objects.equals(byUserId.getUserId(), modelDevelopInfo.getUserId())) {
             throw new RRException("不可以关闭其他用户的服务");
         }

@@ -23,7 +23,7 @@ public class ModelInfoData {
     private String modelType;
     private int source;
     private long modelSize;
-    private int createUserId;
+    private Long createUserId;
     private String createDisplayName;
     private String createUserEmail;
     private long createTime;

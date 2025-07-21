@@ -17,5 +17,6 @@ public class AZInfo {
     private String clusterName;
     private String azId;
     private String azName;
+    private String azDisplayName;
     private String azShowColor;
 }

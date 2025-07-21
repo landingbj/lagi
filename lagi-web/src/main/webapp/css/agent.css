@@ -308,18 +308,33 @@
 /* 确保表格和整体布局与图片保持一致 */
 #agent-list {
     width: 100%;
-    border-collapse: collapse;
+    /* border-collapse: collapse; */
     margin-top: 10px;
 }
 
 #agent-list th,
 #agent-list td {
-    padding: 8px;
-    text-align: center;
-    border: 1px solid #ddd;
+    /* padding: 8px;
+    text-align: center; */
+    /* border: 1px solid #ddd; */
 }
 
 #agent-list th {
-    background-color: #f5f5f5;
-    font-weight: bold;
+    /* background-color: #f5f5f5;
+    font-weight: bold; */
+}
+
+.my-table table{
+    background-color: #f5f5f5 !important;
+    border-collapse: collapse !important; /* 合并相邻边框 */
+    border: 1px solid #ddd !important;/* 保留外边框 */
+}
+
+.my-table table th {
+    color: #666 !important;
+    font-weight: 500 !important;
+}
+
+.my-table table th, td{
+    border: none !important; /* 清除单元格边框 */
 }

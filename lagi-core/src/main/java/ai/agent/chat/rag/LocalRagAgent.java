@@ -11,6 +11,7 @@ import ai.llm.utils.OpenAiApiUtil;
 import ai.llm.utils.convert.GptConvert;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.router.pojo.LLmRequest;
 import ai.utils.OkHttpUtil;
 import com.google.gson.Gson;
 import io.reactivex.Observable;
@@ -46,13 +47,24 @@ public class LocalRagAgent extends BaseChatAgent {
         return gson.fromJson(responseJson, ChatCompletionResult.class);
     }
 
+    private String toBody(ChatCompletionRequest data) {
+        String body;
+        if(data instanceof LLmRequest) {
+            LLmRequest o =  (LLmRequest) data;
+            body = gson.toJson(o);
+        } else {
+            body = gson.toJson(data);
+        }
+        return body;
+    }
+
     @Override
     public Observable<ChatCompletionResult> stream(ChatCompletionRequest data) {
         String endpoint = agentConfig.getEndpoint();
         if (agentGeneralConfiguration.getEndpoint() != null) {
             endpoint = agentGeneralConfiguration.getEndpoint();
         }
-        LlmApiResponse completions = OpenAiApiUtil.streamCompletions("", endpoint + "/v1/chat/completions", HTTP_TIMEOUT, data,
+        LlmApiResponse completions = OpenAiApiUtil.streamCompletions("", endpoint + "/v1/chat/completions", HTTP_TIMEOUT, (LLmRequest) data,
                 this::convertSteamLine2ChatCompletionResult, GptConvert::convertByResponse);
         if (completions.getCode() != 200) {
             log.error("LocalRagAgent  stream api : code {}  error  {}", completions.getCode(), completions.getMsg());

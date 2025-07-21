@@ -1,5 +1,6 @@
 package ai.config.pojo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.List;
@@ -10,18 +11,15 @@ import java.util.List;
 @Builder
 @ToString
 public class FineTuneConfig {
-    private Boolean remote;
-    private String remoteServiceUrl;
-    private String env;
-    private String envPath;
-    private String datasetDir;
-    private String saveAdapterDir;
-    private String saveModelDir;
-    private String saveFineTuneDir;
-    private String llamaFactoryDir;
-    private String trainDir;
-    private String saveDir;
-    private List<String> ports;
-    private String masterPort;
-    private String devices;
+
+    // local llamafactory
+    @JsonProperty("llama_factory")
+    private LlamaFactoryConfig llamaFactoryConfig;
+
+    // 1. llamafactory  2. beidian
+    private String platformName;
+
+    // beidian pass
+    @JsonProperty("beidian_paas")
+    private BeiDianPaasConfig beiDianPaasConfig;
 }

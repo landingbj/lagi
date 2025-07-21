@@ -1264,3 +1264,629 @@ function toggleApiKey(el, index) {
     currentModelIndex = -1;
     $('#modelModal').hide();
 }
+
+
+/*************************stop model manager************************************/
+
+/*************************start model upload************************************/
+function loadUserUploadModelData() {
+    // alert('加载模型管理数据');
+    // renderModelType();
+    // getManagerModels();
+
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 上传配置 - 针对百GB文件进行优化
+    const config = {
+      chunkSize: 100 * 1024 * 1024, // 默认100MB分片，适合百GB文件
+      concurrency: 5, // 默认并发上传5个分片
+      uploadUrl: '/upload/model', // 上传API地址
+      checkUrl: '/upload/model/check', // 检查文件API地址
+      maxRetries: 5, // 最大重试次数
+      retryDelay: 2000, // 初始重试延迟(ms)
+      maxFileSize: 100 * 1024 * 1024 * 1024 // 100GB文件大小限制
+    };
+
+    // 更新配置
+    document.getElementById('chunk-size').addEventListener('change', (e) => {
+      config.chunkSize = parseInt(e.target.value) * 1024 * 1024;
+    });
+
+    document.getElementById('concurrency').addEventListener('change', (e) => {
+      config.concurrency = parseInt(e.target.value);
+    });
+
+    // 文件上传队列
+    const uploadQueue = [];
+    let activeUploads = 0;
+
+    // 文件拖放区域
+    const fileDropArea = document.getElementById('file-drop-area');
+    const fileInput = document.getElementById('file-input');
+
+    // 拖放事件
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      fileDropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      fileDropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      fileDropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+      fileDropArea.classList.add('file-drop-active');
+    }
+
+    function unhighlight() {
+      fileDropArea.classList.remove('file-drop-active');
+    }
+
+    // 处理拖放文件
+    fileDropArea.addEventListener('drop', handleDrop, false);
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      handleFiles(files);
+    }
+
+    // 处理选择文件
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    // 处理文件
+    function handleFiles(files) {
+      if (files.length === 0) return;
+
+      Array.from(files).forEach(file => {
+        // 检查文件大小限制
+        if (file.size > config.maxFileSize) {
+          alert(`文件 "${file.name}" 超过${formatFileSize(config.maxFileSize)}大小限制，无法上传`);
+          return;
+        }
+
+        addFileToQueue(file);
+      });
+    }
+
+    // 添加文件到上传队列
+    function addFileToQueue(file) {
+      // 检查文件是否已在队列中
+      if (uploadQueue.some(item => item.file.name === file.name && item.file.size === file.size)) {
+        alert(`文件 "${file.name}" 已在上传队列中`);
+        return;
+      }
+
+      // 创建文件上传项
+      const fileItem = {
+        file,
+        fileId: generateFileId(file),
+        chunks: [],
+        uploadedChunks: new Set(),
+        progress: 0,
+        status: 'pending', // pending, uploading, paused, completed, failed
+        abortController: null,
+        element: createFileElement(file),
+        stats: {
+          startTime: null,
+          lastUpdateTime: null,
+          bytesUploaded: 0,
+          speed: 0,
+          estimatedTime: 0
+        }
+      };
+
+      // 计算分片
+      calculateChunks(fileItem);
+
+      // 添加到队列
+      uploadQueue.push(fileItem);
+
+      // 添加到DOM
+      const uploadQueueElement = document.getElementById('upload-queue');
+      if (uploadQueueElement.querySelector('.upload-queue-empty')) {
+        uploadQueueElement.innerHTML = '';
+      }
+      uploadQueueElement.appendChild(fileItem.element);
+
+      // 开始上传
+      setTimeout(() => {
+        startUpload(fileItem);
+      }, 500);
+    }
+
+    // 生成文件唯一标识
+    function generateFileId(file) {
+      // 使用文件名、大小和修改时间生成唯一ID
+      return `${file.name}-${file.size}-${file.lastModified}`;
+    }
+
+    // 计算文件分片
+    function calculateChunks(fileItem) {
+      const { file, fileId } = fileItem;
+      const totalChunks = Math.ceil(file.size / config.chunkSize);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * config.chunkSize;
+        const end = Math.min(start + config.chunkSize, file.size);
+
+        fileItem.chunks.push({
+          index: i,
+          start,
+          end,
+          size: end - start,
+          fileId,
+          fileName: file.name,
+          status: 'pending', // pending, uploading, completed, failed
+          retryCount: 0
+        });
+      }
+    }
+
+    // 创建文件元素
+    function createFileElement(file) {
+      const fileSize = formatFileSize(file.size);
+      const fileItem = document.createElement('div');
+      fileItem.className = 'upload-item animate-fadeIn';
+      fileItem.innerHTML = `
+        <div class="upload-item-header">
+          <div class="upload-item-icon">
+            <i class="fa fa-file-text-o"></i>
+          </div>
+          <div class="upload-item-info">
+            <div class="upload-item-title">
+              <div class="upload-item-filename">${file.name}</div>
+              <div class="upload-item-filesize">${fileSize}</div>
+            </div>
+            <div class="upload-item-progress">
+              <div class="upload-item-progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="speed-indicator hidden">
+              <div class="speed-wave"></div>
+            </div>
+            <div class="upload-item-details">
+              <div class="upload-item-speed">速度: -- MB/s</div>
+              <div class="upload-item-eta">剩余时间: 计算中...</div>
+            </div>
+          </div>
+        </div>
+        <div class="upload-item-footer">
+          <div class="upload-item-status pending">等待中</div>
+          <div class="upload-item-actions">
+            <button class="upload-item-action pause upload-pause-btn hidden">
+              <i class="fa fa-pause"></i>
+            </button>
+            <button class="upload-item-action resume upload-resume-btn hidden">
+              <i class="fa fa-play"></i>
+            </button>
+            <button class="upload-item-action cancel upload-cancel-btn">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // 添加事件监听
+      const pauseBtn = fileItem.querySelector('.upload-pause-btn');
+      const resumeBtn = fileItem.querySelector('.upload-resume-btn');
+      const cancelBtn = fileItem.querySelector('.upload-cancel-btn');
+
+      pauseBtn.addEventListener('click', () => {
+        const fileId = generateFileId(file);
+        pauseUpload(fileId);
+      });
+
+      resumeBtn.addEventListener('click', () => {
+        const fileId = generateFileId(file);
+        resumeUpload(fileId);
+      });
+
+      cancelBtn.addEventListener('click', () => {
+        const fileId = generateFileId(file);
+        cancelUpload(fileId);
+      });
+
+      return fileItem;
+    }
+
+    // 更新文件状态
+    function updateFileStatus(fileId, status, progress = 0) {
+      const fileItem = uploadQueue.find(item => item.fileId === fileId);
+      if (!fileItem) return;
+
+      fileItem.status = status;
+      fileItem.progress = progress;
+
+      const element = fileItem.element;
+      const progressBar = element.querySelector('.upload-item-progress-bar');
+      const statusText = element.querySelector('.upload-item-status');
+      const pauseBtn = element.querySelector('.upload-pause-btn');
+      const resumeBtn = element.querySelector('.upload-resume-btn');
+      const speedIndicator = element.querySelector('.speed-indicator');
+      const speedText = element.querySelector('.upload-item-speed');
+      const etaText = element.querySelector('.upload-item-eta');
+
+      // 更新进度条
+      progressBar.style.width = `${progress}%`;
+
+      // 更新状态文本和按钮显示
+      statusText.className = `upload-item-status ${status}`;
+      switch (status) {
+        case 'pending':
+          statusText.textContent = '等待中';
+          pauseBtn.classList.add('hidden');
+          resumeBtn.classList.add('hidden');
+          speedIndicator.classList.add('hidden');
+          break;
+        case 'uploading':
+          statusText.textContent = '上传中';
+          pauseBtn.classList.remove('hidden');
+          resumeBtn.classList.add('hidden');
+          speedIndicator.classList.remove('hidden');
+          updateSpeedStats(fileItem);
+          break;
+        case 'paused':
+          statusText.textContent = '已暂停';
+          pauseBtn.classList.add('hidden');
+          resumeBtn.classList.remove('hidden');
+          speedIndicator.classList.add('hidden');
+          break;
+        case 'completed':
+          statusText.textContent = '已完成';
+          pauseBtn.classList.add('hidden');
+          resumeBtn.classList.add('hidden');
+          speedIndicator.classList.add('hidden');
+          speedText.textContent = '速度: -- MB/s';
+          etaText.textContent = '剩余时间: --';
+          break;
+        case 'failed':
+          statusText.textContent = '上传失败';
+          pauseBtn.classList.add('hidden');
+          resumeBtn.classList.add('hidden');
+          speedIndicator.classList.add('hidden');
+          break;
+      }
+    }
+
+    // 更新速度统计
+    function updateSpeedStats(fileItem) {
+      const element = fileItem.element;
+      const speedText = element.querySelector('.upload-item-speed');
+      const etaText = element.querySelector('.upload-item-eta');
+      
+      // 第一次更新
+      if (!fileItem.stats.startTime) {
+        fileItem.stats.startTime = Date.now();
+        fileItem.stats.lastUpdateTime = fileItem.stats.startTime;
+        fileItem.stats.bytesUploaded = 0;
+      }
+      
+      const now = Date.now();
+      const timeElapsed = (now - fileItem.stats.lastUpdateTime) / 1000; // 秒
+      const bytesSinceLastUpdate = Array.from(fileItem.uploadedChunks).length * config.chunkSize - fileItem.stats.bytesUploaded;
+      
+      // 计算速度 (MB/s)
+      if (timeElapsed > 0) {
+        fileItem.stats.speed = (bytesSinceLastUpdate / (1024 * 1024)) / timeElapsed;
+        fileItem.stats.bytesUploaded = Array.from(fileItem.uploadedChunks).length * config.chunkSize;
+        fileItem.stats.lastUpdateTime = now;
+      }
+      
+      // 计算估计剩余时间
+      const bytesRemaining = fileItem.file.size - fileItem.stats.bytesUploaded;
+      if (fileItem.stats.speed > 0) {
+        fileItem.stats.estimatedTime = bytesRemaining / (fileItem.stats.speed * 1024 * 1024); // 秒
+      }
+      
+      // 更新显示
+      speedText.textContent = `速度: ${fileItem.stats.speed.toFixed(2)} MB/s`;
+      etaText.textContent = `剩余时间: ${formatTime(fileItem.stats.estimatedTime)}`;
+      
+      // 继续更新
+      if (fileItem.status === 'uploading') {
+        requestAnimationFrame(() => updateSpeedStats(fileItem));
+      }
+    }
+
+    // 格式化时间
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds === Infinity) return '--';
+      
+      if (seconds < 60) {
+        return `${Math.round(seconds)} 秒`;
+      } else if (seconds < 3600) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.round(seconds % 60);
+        return `${minutes} 分 ${remainingSeconds} 秒`;
+      } else {
+        const hours = Math.floor(seconds / 3600);
+        const remainingMinutes = Math.floor((seconds % 3600) / 60);
+        return `${hours} 小时 ${remainingMinutes} 分`;
+      }
+    }
+
+    // 格式化文件大小
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // 开始上传
+    async function startUpload(fileItem) {
+      try {
+        // 初始化统计信息
+        fileItem.stats = {
+          startTime: null,
+          lastUpdateTime: null,
+          bytesUploaded: 0,
+          speed: 0,
+          estimatedTime: 0
+        };
+        
+        // 检查文件是否已上传
+        const existingUpload = await checkExistingUpload(fileItem);
+        if (existingUpload.completed) {
+          updateFileStatus(fileItem.fileId, 'completed', 100);
+          return;
+        }
+
+        // 更新已上传的分片
+        fileItem.uploadedChunks = new Set(existingUpload.uploadedChunks || []);
+
+        // 更新进度
+        const progress = calculateProgress(fileItem);
+        updateFileStatus(fileItem.fileId, 'uploading', progress);
+
+        // 开始上传分片
+        uploadChunks(fileItem);
+      } catch (error) {
+        console.error('检查文件失败:', error);
+        updateFileStatus(fileItem.fileId, 'failed');
+      }
+    }
+
+    // 检查文件是否已部分上传
+    async function checkExistingUpload(fileItem) {
+      try {
+        const response = await fetch(`${config.checkUrl}?fileId=${fileItem.fileId}`);
+        if (!response.ok) {
+          throw new Error(`检查文件状态失败: ${response.statusText}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('检查文件状态网络错误:', error);
+        // 网络错误时假设没有已上传的分片
+        return { completed: false, uploadedChunks: [] };
+      }
+    }
+
+    // 上传分片
+    async function uploadChunks(fileItem) {
+      // 如果文件不是上传状态，不继续
+      if (fileItem.status !== 'uploading') return;
+
+      // 获取待上传的分片
+      const pendingChunks = fileItem.chunks
+        .filter(chunk => !fileItem.uploadedChunks.has(chunk.index) && chunk.status !== 'uploading');
+
+      // 如果没有待上传的分片，检查是否全部完成
+      if (pendingChunks.length === 0) {
+        checkUploadCompletion(fileItem);
+        return;
+      }
+
+      // 控制并发上传数量
+      const chunksToUpload = pendingChunks.slice(0, Math.max(0, config.concurrency - activeUploads));
+      
+      // 上传每个分片
+      for (const chunk of chunksToUpload) {
+        // 如果文件状态不再是上传中，停止上传
+        if (fileItem.status !== 'uploading') break;
+        
+        uploadChunk(fileItem, chunk);
+      }
+    }
+
+    // 上传单个分片
+    async function uploadChunk(fileItem, chunk) {
+      // 更新分片状态
+      chunk.status = 'uploading';
+      activeUploads++;
+
+      // 创建新的AbortController
+      fileItem.abortController = new AbortController();
+      const signal = fileItem.abortController.signal;
+
+      try {
+        // 准备表单数据
+        const formData = new FormData();
+        const chunkBlob = fileItem.file.slice(chunk.start, chunk.end);
+        
+        formData.append('file', chunkBlob);
+        formData.append('fileName', chunk.fileName);
+        formData.append('fileId', chunk.fileId);
+        formData.append('chunkIndex', chunk.index);
+        formData.append('totalChunks', fileItem.chunks.length);
+        formData.append('chunkSize', chunk.size);
+        formData.append('totalSize', fileItem.file.size);
+
+        // 记录开始时间
+        const startTime = Date.now();
+        
+        // 上传分片
+        const response = await fetch(config.uploadUrl, {
+          method: 'POST',
+          body: formData,
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`上传失败: ${response.statusText}`);
+        }
+
+        // 记录上传时间
+        const uploadTime = (Date.now() - startTime) / 1000;
+        console.log(`分片 ${chunk.index} 上传完成，耗时: ${uploadTime.toFixed(2)}s，大小: ${formatFileSize(chunk.size)}`);
+
+        // 标记分片为已上传
+        fileItem.uploadedChunks.add(chunk.index);
+        chunk.status = 'completed';
+
+        // 更新进度
+        const progress = calculateProgress(fileItem);
+        updateFileStatus(fileItem.fileId, 'uploading', progress);
+
+        // 继续上传其他分片
+        uploadChunks(fileItem);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          // 上传被中止
+          chunk.status = 'pending';
+        } else {
+          // 上传失败，重试
+          console.error(`分片 ${chunk.index} 上传失败:`, error);
+          chunk.status = 'failed';
+          chunk.retryCount++;
+
+          if (chunk.retryCount <= config.maxRetries) {
+            // 指数退避重试策略
+            const delay = config.retryDelay * Math.pow(2, chunk.retryCount - 1);
+            setTimeout(() => {
+              uploadChunk(fileItem, chunk);
+            }, delay);
+          } else {
+            // 重试次数过多，标记整个文件上传失败
+            updateFileStatus(fileItem.fileId, 'failed');
+          }
+        }
+      } finally {
+        activeUploads--;
+      }
+    }
+
+    // 计算上传进度
+    function calculateProgress(fileItem) {
+      const uploadedChunks = fileItem.uploadedChunks.size;
+      const totalChunks = fileItem.chunks.length;
+      return Math.round((uploadedChunks / totalChunks) * 100);
+    }
+
+    // 检查上传是否完成
+    function checkUploadCompletion(fileItem) {
+      const uploadedChunks = fileItem.uploadedChunks.size;
+      const totalChunks = fileItem.chunks.length;
+
+      if (uploadedChunks === totalChunks) {
+        // 所有分片都已上传完成，触发合并请求
+        mergeChunks(fileItem);
+      }
+    }
+
+    // 合并分片
+    async function mergeChunks(fileItem) {
+      try {
+        const response = await fetch(`${config.uploadUrl}/merge`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fileId: fileItem.fileId,
+            fileName: fileItem.file.name,
+            totalChunks: fileItem.chunks.length,
+            totalSize: fileItem.file.size
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`合并分片失败: ${response.statusText}`);
+        }
+
+        // 记录总上传时间
+        const totalTime = (Date.now() - fileItem.stats.startTime) / 1000;
+        console.log(`文件 ${fileItem.file.name} 上传完成，总耗时: ${formatTime(totalTime)}`);
+        
+        // 更新状态为完成
+        updateFileStatus(fileItem.fileId, 'completed', 100);
+      } catch (error) {
+        console.error('合并分片失败:', error);
+        updateFileStatus(fileItem.fileId, 'failed');
+      }
+    }
+
+    // 暂停上传
+    function pauseUpload(fileId) {
+      const fileItem = uploadQueue.find(item => item.fileId === fileId);
+      if (!fileItem || fileItem.status !== 'uploading') return;
+
+      // 中止当前上传
+      if (fileItem.abortController) {
+        fileItem.abortController.abort();
+      }
+
+      // 更新状态
+      fileItem.status = 'paused';
+      updateFileStatus(fileId, 'paused', fileItem.progress);
+    }
+
+    // 恢复上传
+    function resumeUpload(fileId) {
+      const fileItem = uploadQueue.find(item => item.fileId === fileId);
+      if (!fileItem || fileItem.status !== 'paused') return;
+
+      // 更新状态
+      fileItem.status = 'uploading';
+      updateFileStatus(fileId, 'uploading', fileItem.progress);
+
+      // 继续上传
+      uploadChunks(fileItem);
+    }
+
+    // 取消上传
+    function cancelUpload(fileId) {
+      const fileItemIndex = uploadQueue.findIndex(item => item.fileId === fileId);
+      if (fileItemIndex === -1) return;
+
+      const fileItem = uploadQueue[fileItemIndex];
+
+      // 中止当前上传
+      if (fileItem.abortController) {
+        fileItem.abortController.abort();
+      }
+
+      // 从DOM中移除
+      if (fileItem.element && fileItem.element.parentNode) {
+        fileItem.element.parentNode.removeChild(fileItem.element);
+      }
+
+      // 从队列中移除
+      uploadQueue.splice(fileItemIndex, 1);
+
+      // 如果队列为空，显示空状态
+      const uploadQueueElement = document.getElementById('upload-queue');
+      if (uploadQueue.length === 0) {
+        uploadQueueElement.innerHTML = `
+          <div class="upload-queue-empty">
+            <i class="fa fa-folder-open-o"></i>
+            <p>暂无上传任务</p>
+          </div>
+        `;
+      }
+    }
+  });

@@ -302,7 +302,8 @@ public class AgentService {
         Map<Integer, Agent<ChatCompletionRequest, ChatCompletionResult>> agentMap = agents.stream()
                 .collect(Collectors.toMap(
                         agent -> agent.getAgentConfig().getId(),
-                        agent -> agent
+                        agent -> agent,
+                        (existing, replacement) -> existing
                 ));
         return agentIds.stream()
                 .map(agentMap::get)

@@ -14,7 +14,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class InferenceUpgradeData {
+public class InferenceData {
     /**
      * 推理服务 ID
      */

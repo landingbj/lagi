@@ -234,6 +234,8 @@ function changeMaterialPage(el) {
             material.hide();
         }
     }
+    showCorpusList();
+    hideCorpusDetail();
 }
 
 $(document).ready(function() {
