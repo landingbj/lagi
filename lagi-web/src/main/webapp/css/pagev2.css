@@ -828,6 +828,9 @@ textarea:focus {
 
 .share span {
     float: right;
+}
+
+.share .share-text {
     margin-right: 24px;
 }
 

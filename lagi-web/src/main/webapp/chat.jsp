@@ -82,7 +82,7 @@
         <div class="nav_foot w-full decorated-heading">
           <div class="user-box">
             <div id="forwardButton" class="share">
-              <span>分享</span>
+              <span class='share-text'>分享</span>
               <span ><img src="images/share.png"  ></span>
            </div>
            <div class="user-info" onclick="toggleUserMenu(event)">

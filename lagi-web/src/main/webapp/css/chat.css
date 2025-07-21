@@ -198,8 +198,7 @@ pre .key {
 
 
 .agent-head {
-    background-color: var(--system-bg-color);
-    color: rgb(248, 248, 248);
+    color: #292727;
     border-bottom: 1px solid #4d4d4d;
 }
 
@@ -1628,12 +1627,13 @@ pre .key {
 .ball-corner-container::before {
     width: calc(var(--ball-radius)  * 3 );
     height: calc(var(--ball-radius) * 2);
-    left: calc(var(--ball-radius) * 0.6);
+    left: 50%;
+    transform: translateX(-50%);
 
     position: absolute;
-    top: 0;
+    top: 7px;
     right: 0;
-    /* background-color: rgb(255, 0, 0); */
+     /*background-color: rgb(255, 0, 0);*/
     background-color: rgb(255, 255, 255);
     /* 匹配页面背景色 */
     z-index: 0;
