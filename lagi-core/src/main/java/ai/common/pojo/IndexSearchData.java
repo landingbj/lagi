@@ -11,6 +11,7 @@ public class IndexSearchData {
     private String id;
     private String text;
     private String category;
+    private String content;
     private Long seq;
     private String fileId;
     private List<String> filename;
@@ -21,4 +22,5 @@ public class IndexSearchData {
     private String level;
     private String parentId;
     private String source;
+
 }
