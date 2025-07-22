@@ -264,6 +264,7 @@ public class UploadFileServlet extends HttpServlet {
 
         String category = req.getParameter("category");
         String userId = req.getParameter("lagiUserId");
+        String knowledgeBaseId = req.getParameter("knowledgeBaseId");
 
         if (req.getParameter("pageNumber") != null) {
             pageSize = Integer.parseInt(req.getParameter("pageSize"));
@@ -274,8 +275,8 @@ public class UploadFileServlet extends HttpServlet {
         List<UploadFile> result = null;
         int totalRow = 0;
         try {
-            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category, userId);
-            totalRow = uploadFileService.getTotalRow(category, userId);
+            result = uploadFileService.getUploadFileList(pageNumber, pageSize, category, userId, knowledgeBaseId);
+            totalRow = uploadFileService.getTotalRow(category, userId, knowledgeBaseId);
         } catch (SQLException e) {
             e.printStackTrace();
         }

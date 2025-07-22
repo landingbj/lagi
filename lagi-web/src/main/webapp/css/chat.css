@@ -1838,6 +1838,23 @@ pre .key {
     border-color: #165DFF;
 }
 
+/* 默认标识 */
+.corpus-card .default-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: #165DFF;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    display: none;
+}
+
+.corpus-card.is-default .default-badge {
+    display: block;
+}
+
 #addCorpus {
     border: 2px dashed #ddd;
     background-color: #f9fafb;
@@ -1919,6 +1936,10 @@ pre .key {
 
 .corpus-operation .delete-btn:hover {
     color: #F53F3F;
+}
+
+.corpus-operation .default-btn:hover {
+    color: #165DFF;
 }
 
 /* 模态框 */
@@ -2113,34 +2134,62 @@ pre .key {
     }
 }
 
-
-
-/* .scroll-text {
-    display: inline-block !important;
-
-    width: 76px !important;
-
-    white-space: nowrap !important;
-
-    overflow: hidden !important;
+/* 检索设置表单 */
+.search-settings-form {
+    margin: 1rem 0 1rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
 }
 
-
-.scroll-text {
-    animation: scroll 10s linear infinite; 
-
-  @keyframes scroll {
-    0% {
-    
-      transform: translateX(0);
-    }
-    100% {
-     
-      transform: translateX(calc(-76px));
-    }
-  }
+.search-settings-form form {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
-.scroll-text:hover {
-    animation-play-state: paused;
-} */
+.search-settings-form form > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-settings-form label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.search-settings-form input[type="number"] {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.search-settings-form input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.search-settings-save {
+    margin-left: auto;
+}
+
+.search-save-btn {
+    background-color: #165DFF;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.search-save-btn:hover {
+    background-color: #0e4bb3;
+}

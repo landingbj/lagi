@@ -56,18 +56,18 @@ public class UploadFileService {
         return result;
     }
 
-    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category, String userId) throws SQLException {
+    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category, String userId, String knowledgeBaseId) throws SQLException {
         if (category == null && userId == null) {
             return uploadFileDao.getUploadFileList(pageNumber, pageSize);
         }
-        return uploadFileDao.getUploadFileList(pageNumber, pageSize, category, userId);
+        return uploadFileDao.getUploadFileList(pageNumber, pageSize, category, userId, knowledgeBaseId);
     }
     
-    public int getTotalRow(String category, String userId) throws SQLException {
+    public int getTotalRow(String category, String userId, String knowledgeBaseId) throws SQLException {
         if (category == null && userId == null) {
             return uploadFileDao.getTotalRow();
         }
-        return uploadFileDao.getTotalRow(category, userId);
+        return uploadFileDao.getTotalRow(category, userId, knowledgeBaseId);
     }
     public List<UserRagSetting> getTextBlockSize(String category, String userId) throws SQLException {
         return uploadFileDao.getTextBlockSize(category, userId);

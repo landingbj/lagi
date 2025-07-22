@@ -3,7 +3,8 @@ function loadUploadFileList(pageNumber, category) {
     if(category) {
         c = category;
     }
-    fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&category=${window.category}&pageSize=10`)
+    let currentCategory =  window.knowledgeBaseMap[window.currentKbId].category;
+    fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&category=${currentCategory}&pageSize=10&knowledgeBaseId=${window.currentKbId}`)
     .then(response => {
         if(response.status == 200) {
             return response.json();
@@ -263,94 +264,54 @@ $(document).ready(function() {
 });
 
 function submitSettings(type) {
-    let chunkSizeValue;
-    let temperature;
-
-    // 获取相应输入框中的值
-    if (type === 'wenben_type') {
-        chunkSizeValue = $('#wenben_type').val();
-    } else if (type === 'biaoge_type') {
-        chunkSizeValue = $('#biaoge_type').val();
-    } else if (type === 'tuwen_type') {
-        chunkSizeValue = $('#tuwen_type').val();
-    } else if (type === 'wendu_type') {
-        temperature = $('#wendu_type').val();
-    } else if (type === 'vector-max-top') {
-        chunkSizeValue = $('#vector-max-top').val();
-    } else if (type === 'distance'){
-        temperature = $('#distance').val();
+    if (!window.currentKbId) {
+        alert('请先选择一个知识库');
+        return;
     }
-
-    $.ajax({
-        url: '/v1/vector/updateTextBlockSize',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            "userId": String(globalUserId),
-            "fileType": type,  // 传递相应的type
-            "category": window.category,
-            "chunkSize": chunkSizeValue,  // 传递相应的chunkSize
-            "temperature": temperature
-        }),
-        success: function(response) {
-            if (response.status === 'success') {
-                alert('请求成功');
-            } else {
-                alert('请求失败，返回状态不正确');
-            }
-        },
-        error: function() {
-            alert('请求失败，请重试');
+    
+    // 先获取当前知识库信息
+    KnowledgeBaseAPI.getKnowledgeBase(window.currentKbId).then(data => {
+        if (data.code !== 0) {
+            alert('获取知识库信息失败');
+            return;
         }
+        
+        const kb = data.data;
+        
+        // 根据type更新不同的设置
+        if (type === 'distance') {
+            const distanceValue = document.getElementById('distance').value;
+            kb.similarityCutoff = parseFloat(distanceValue);
+        } else if (type === 'vector-max-top') {
+            const maxTopValue = document.getElementById('vector-max-top').value;
+            kb.similarityTopK = parseInt(maxTopValue);
+        }
+        
+        // 调用更新接口
+        KnowledgeBaseAPI.updateKnowledge(kb).then(updateData => {
+            if (updateData.code !== 0) {
+                alert('更新设置失败');
+                return;
+            }
+            
+            alert('设置更新成功');
+        }).catch(err => {
+            console.error('更新失败：', err);
+            alert('更新设置失败');
+        });
+    }).catch(err => {
+        console.error('获取知识库信息失败：', err);
+        alert('获取知识库信息失败');
     });
-
 }
 
 function resetSlice(type) {
-    let chunkSizeValue;
-    let temperature;
-
-    // 获取相应输入框中的值
-    if (type === 'wenben_type') {
-        chunkSizeValue = $('#wenben_type').val();
-    } else if (type === 'biaoge_type') {
-        chunkSizeValue = $('#biaoge_type').val();
-    } else if (type === 'tuwen_type') {
-        chunkSizeValue = $('#tuwen_type').val();
-    } else if (type === 'wendu_type') {
-        temperature = $('#wendu_type').val();
-        window.myTemperature = temperature;
+    if (type === 'distance') {
+        document.getElementById('distance').value = '0.8';
+        document.getElementById('distance_value').textContent = '0.8';
     } else if (type === 'vector-max-top') {
-        chunkSizeValue = $('#vector-max-top').val();
-    } else if (type === 'distance'){
-        temperature = $('#distance').val();
+        document.getElementById('vector-max-top').value = '30';
     }
-
-    $.ajax({
-        url: 'v1/vector/resetBlockSize',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            "userId": String(globalUserId),
-            "fileType": type,  // 传递相应的type
-            "category": window.category,
-            "chunkSize": chunkSizeValue,  // 传递相应的chunkSize
-            "temperature": temperature
-        }),
-        success: function(response) {
-            if (response.status === 'success') {
-                alert('请求成功');
-            } else {
-                alert('请求失败，返回状态不正确');
-            }
-        },
-        error: function() {
-            alert('请求失败，请重试');
-        }
-    });
-    // 为刷新按钮添加点击事件
-        location.reload();  // 刷新页面
-
 }
 
 // 使用 jQuery 监听滑动条变化，更新显示的值
@@ -400,16 +361,87 @@ function handleDrop(e) {
 
 fileInput.addEventListener('change', () => {
     handleFiles(fileInput.files);
+    fileInput.value = '';
 }, false);
 
 function handleFiles(files) {
     ([...files]).forEach(uploadFile);
 }
 
+// 触发文件输入框点击事件
+function triggerFileInput() {
+    fileInput.value = '';
+    fileInput.click();
+}
+
+// 知识库选择事件处理
+function onKnowledgeBaseSelect() {
+    const select = document.getElementById('knowledge-base-select');
+    const selectedValue = select.value;
+    
+    // 隐藏所有设置容器
+    const containers = [
+        'vector-settings-container',
+        'vector-max-top-container', 
+        'vector-search-container'
+    ];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.style.display = 'none';
+        }
+    });
+    
+    // 如果选择了知识库，显示设置并加载对应数据
+    if (selectedValue && selectedValue !== '') {
+        window.currentKbId = parseInt(selectedValue);
+        
+        // 显示设置容器
+        containers.forEach(containerId => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.style.display = 'block';
+            }
+        });
+        
+        // 加载选中知识库的设置
+        loadKnowledgeBaseSettings(selectedValue);
+    } else {
+        window.currentKbId = null;
+    }
+}
+
+// 加载知识库设置
+function loadKnowledgeBaseSettings(knowledgeBaseId) {
+    KnowledgeBaseAPI.getKnowledgeBase(knowledgeBaseId).then(data => {
+        if (data.code !== 0) {
+            console.error('获取知识库设置失败:', data.message);
+            return;
+        }
+        
+        const kb = data.data;
+        
+        // 加载文档相似度阈值
+        if (kb.similarityCutoff !== undefined) {
+            document.getElementById('distance').value = kb.similarityCutoff;
+            document.getElementById('distance_value').textContent = kb.similarityCutoff;
+        }
+        
+        // 加载向量上下文最大条数
+        if (kb.similarityTopK !== undefined) {
+            document.getElementById('vector-max-top').value = kb.similarityTopK;
+        }
+        
+    }).catch(error => {
+        console.error('加载知识库设置失败:', error);
+    });
+}
+
 function uploadFile(file) {
     $('#loadingSpinner').removeClass('hidden');
-    console.log(file.name);
-    let url = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}&knowledgeBaseId=${currentKbId}`;
+    let category =  window.knowledgeBaseMap[window.currentKbId].category;
+    let url = `/uploadFile/uploadLearningFile?category=${category}&userId=${globalUserId}&knowledgeBaseId=${window.currentKbId}`;
     const formData = new FormData();
     formData.append('file', file);
 

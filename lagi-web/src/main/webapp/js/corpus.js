@@ -9,13 +9,41 @@ let corpuses = [
 document.addEventListener('DOMContentLoaded', function() {
     // 绑定创建知识库按钮事件
     document.getElementById('addCorpus').addEventListener('click', openCreateModal);
-    
 });
 
+// 全局变量，供其他JS文件使用
+window.currentKbId = null;
 
+// 全局知识库对象映射，以ID为key
+window.knowledgeBaseMap = {};
 
-
-let current_kb_id = null;
+// 加载知识库选择下拉框
+function loadKnowledgeBaseSelect() {
+    let userId = globalUserId;
+    const select = document.getElementById('knowledge-base-select');
+    if (!select) return;
+    
+    // 清空现有选项，保留默认选项
+    select.innerHTML = '<option value="">请选择知识库</option>';
+    
+    // 调用API获取知识库列表
+    KnowledgeBaseAPI.getKnowledgeList(userId, region).then(data => {
+        if (data.code !== 0) {
+            console.error('获取知识库列表失败:', data.message);
+            return;
+        }
+        
+        let knowledgeBases = data.data;
+        knowledgeBases.forEach(kb => {
+            const option = document.createElement('option');
+            option.value = kb.id;
+            option.textContent = kb.name;
+            select.appendChild(option);
+        });
+    }).catch(error => {
+        console.error('加载知识库列表失败:', error);
+    });
+}
 
 // 加载知识库列表
 function loadCorpusList() {
@@ -28,16 +56,27 @@ function loadCorpusList() {
     
     // 添加知识库卡片
     KnowledgeBaseAPI.getKnowledgeList(userId, region).then(data=>{
-        if(data.code != 0) {
+        if(data.code !== 0) {
             throw new Error('读取知识库列表失败');
         }
         let ls =  data.data;
+        
+        // 清空并重新构建全局知识库映射
+        window.knowledgeBaseMap = {};
+        
         ls.forEach(corpus => {
             const card = document.createElement('div');
-            card.className = `corpus-card ${corpus.isPublic ? 'corpus-activate' : ''}`;
+            card.className = `corpus-card`;
             const now = new Date(corpus.createTime);
             const dateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            
+            // 根据isPublic字段设置默认状态
+            const isDefault = corpus.isPublic;
+            const defaultBtnText = isDefault ? '取消默认' : '设为默认';
+            const defaultBtnTitle = isDefault ? '取消默认' : '设为默认';
+            
             card.innerHTML = `
+                <div class="default-badge">默认</div>
                 <div class="corpus-card-title">${corpus.name}</div>
                 <div class="corpus-card-info">
                     <span><i class="fa fa-file-text-o"></i> 文件数: ${corpus.fileCount}</span>
@@ -50,13 +89,27 @@ function loadCorpusList() {
                     <button class="delete-btn" onclick="deleteCorpus(${corpus.id})" title="删除知识库">
                         删除
                     </button>
+                    <button class="default-btn" onclick="setAsDefault(${corpus.id}, this)" title="${defaultBtnTitle}">
+                        ${defaultBtnText}
+                    </button>
                 </div>
             `;
+            
+            // 如果是默认知识库，添加is-default类
+            if (isDefault) {
+                card.classList.add('is-default');
+            }
+            
             container.appendChild(card);
+            
+            // 将知识库对象添加到全局映射中
+            window.knowledgeBaseMap[corpus.id] = corpus;
         });
+        
+        // 同时更新知识库选择下拉框
+        loadKnowledgeBaseSelect();
     })
 }
-
 
 // 打开创建知识库模态框
 function openCreateModal() {
@@ -85,23 +138,175 @@ function closeDeleteModal() {
 // 确认删除
 function confirmDelete() {
     const id = parseInt(document.getElementById('deleteCorpusId').value);
-    corpuses = corpuses.filter(corpus => corpus.id !== id);
-    loadCorpusList();
-    closeDeleteModal();
-    showNotification('success', '知识库删除成功');
+    
+    // 调用真实的删除接口
+    KnowledgeBaseAPI.deleteKnowledge(id).then(data => {
+        if (data.code !== 0) {
+            showNotification('error', '删除知识库失败: ' + (data.message || '未知错误'));
+            return;
+        }
+        
+        // 删除成功，重新加载知识库列表
+        loadCorpusList();
+        closeDeleteModal();
+        showNotification('success', '知识库删除成功');
+        
+        // 如果删除的是当前选中的知识库，清空当前选择
+        if (window.currentKbId === id) {
+            window.currentKbId = null;
+            hideCorpusDetail();
+        }
+    }).catch(error => {
+        console.error('删除知识库失败:', error);
+        showNotification('error', '删除知识库失败，请重试');
+    });
+}
+
+// 保存检索设置
+function saveSearchSettings() {
+    if (!window.currentKbId) {
+        showNotification('error', '请先选择一个知识库');
+        return;
+    }
+    
+    // 获取表单数据
+    const similarityThreshold = document.getElementById('similarity-threshold').value;
+    const similarityTopK = document.getElementById('similarity-topk').value;
+    const fullTextSearch = document.getElementById('full-text-search').checked;
+    const llmAssistant = document.getElementById('llm-assistant').checked;
+    
+    // 验证数据
+    if (similarityThreshold < 0 || similarityThreshold > 1) {
+        showNotification('error', '文档相似度阈值必须在0-1之间');
+        return;
+    }
+    
+    if (similarityTopK < 1 || similarityTopK > 100) {
+        showNotification('error', '文档相似度TopK必须在1-100之间');
+        return;
+    }
+    
+    // 先获取当前知识库信息
+    KnowledgeBaseAPI.getKnowledgeBase(currentKbId).then(data => {
+        if (data.code !== 0) {
+            showNotification('error', '获取知识库信息失败');
+            return;
+        }
+        
+        const kb = data.data;
+        
+        // 更新知识库设置
+        kb.similarityCutoff = parseFloat(similarityThreshold);
+        kb.similarityTopK = parseInt(similarityTopK);
+        kb.enableFulltext = fullTextSearch;
+        kb.enableText2qa = llmAssistant;
+        
+        // 调用更新接口
+        KnowledgeBaseAPI.updateKnowledge(kb).then(updateData => {
+            if (updateData.code !== 0) {
+                showNotification('error', '保存设置失败');
+                return;
+            }
+            
+            showNotification('success', '检索设置保存成功');
+        }).catch(err => {
+            console.error('更新失败：', err);
+            showNotification('error', '保存设置失败');
+        });
+    }).catch(err => {
+        console.error('获取知识库信息失败：', err);
+        showNotification('error', '获取知识库信息失败');
+    });
+}
+
+// 设为默认知识库
+function setAsDefault(id, element) {
+    const card = element.closest('.corpus-card');
+    const isCurrentlyDefault = card.classList.contains('is-default');
+    
+    if (isCurrentlyDefault) {
+        // 如果当前已经是默认，则取消默认
+        // 先获取知识库详情，然后更新isPublic为false
+        KnowledgeBaseAPI.getKnowledgeBase(id).then(data => {
+            if (data.code !== 0) {
+                showNotification('error', '获取知识库信息失败');
+                return;
+            }
+            
+            const kb = data.data;
+            kb.isPublic = false;
+            
+            KnowledgeBaseAPI.updateKnowledge(kb).then(updateData => {
+                if (updateData.code !== 0) {
+                    showNotification('error', '取消默认状态失败');
+                    return;
+                }
+                
+                card.classList.remove('is-default');
+                element.textContent = '设为默认';
+                element.title = '设为默认';
+                let name = $(card).find('.corpus-card-title').html();
+                showNotification('info', `已取消 "${name}" 的默认状态`);
+            }).catch(err => {
+                console.error('更新失败：', err);
+                showNotification('error', '取消默认状态失败');
+            });
+        }).catch(err => {
+            console.error('获取知识库信息失败：', err);
+            showNotification('error', '获取知识库信息失败');
+        });
+    } else {
+        // 如果当前不是默认，则设为默认
+        // 先获取知识库详情，然后更新isPublic为true
+        KnowledgeBaseAPI.getKnowledgeBase(id).then(data => {
+            if (data.code !== 0) {
+                showNotification('error', '获取知识库信息失败');
+                return;
+            }
+            
+            const kb = data.data;
+            kb.isPublic = true;
+            
+            KnowledgeBaseAPI.updateKnowledge(kb).then(updateData => {
+                if (updateData.code !== 0) {
+                    showNotification('error', '设置默认状态失败');
+                    return;
+                }
+                
+                // 移除所有卡片的默认状态
+                document.querySelectorAll('.corpus-card').forEach(card => {
+                    card.classList.remove('is-default');
+                });
+                
+                // 移除所有按钮的"取消默认"状态
+                document.querySelectorAll('.default-btn').forEach(btn => {
+                    btn.textContent = '设为默认';
+                    btn.title = '设为默认';
+                });
+                
+                // 设置当前卡片为默认状态
+                card.classList.add('is-default');
+                element.textContent = '取消默认';
+                element.title = '取消默认';
+                
+                let name = $(card).find('.corpus-card-title').html();
+                showNotification('success', `已将 "${name}" 设为默认知识库`);
+            }).catch(err => {
+                console.error('更新失败：', err);
+                showNotification('error', '设置默认状态失败');
+            });
+        }).catch(err => {
+            console.error('获取知识库信息失败：', err);
+            showNotification('error', '获取知识库信息失败');
+        });
+    }
 }
 
 // 进入知识库
 function enterCorpus(id, element) {
-    current_kb_id = id;
-    // 移除所有激活状态
-    document.querySelectorAll('.corpus-card').forEach(card => {
-        card.classList.remove('corpus-activate');
-    });
-    
+    currentKbId = id;
     // 设置当前知识库为激活状态
     const card = element.closest('.corpus-card');
-    card.classList.add('corpus-activate');
     let name =  $(card).find('.corpus-card-title').html();
     hideCorpusList();
     showNotification('info', `已进入 "${name}" 知识库`);
@@ -132,6 +337,7 @@ function loadCorpusDetail(id) {
         console.log(kb)
         detailEl.find('span').html(kb.name);
         renderSettings(kb);
+        loadSearchSettings(kb);
         loadUploadFileList(1, kb.category);
     });
     // return {'name': '知识库名字', 'createTime': '1111', 'category': category, 'setting': {}, 'uploads': {data:[]}};
@@ -140,6 +346,18 @@ function loadCorpusDetail(id) {
 
 function renderSettings(kb) {
     console.log('渲染设置');
+}
+
+// 加载检索设置到表单
+function loadSearchSettings(kb) {
+    const similarityCutoff = kb.similarityCutoff || 0.8;
+    document.getElementById('similarity-threshold').value = similarityCutoff;
+    const similarityTopK = kb.similarityTopK || 10;
+    document.getElementById('similarity-topk').value = similarityTopK;
+    const enableFulltext = kb.enableFulltext || false;
+    document.getElementById('full-text-search').checked = enableFulltext;
+    const enableText2qa = kb.enableText2qa || false;
+    document.getElementById('llm-assistant').checked = enableText2qa;
 }
 
 
@@ -221,10 +439,9 @@ function saveCorpus() {
                 return;
             }
             showNotification('success', '创建知识库成功');
+            loadCorpusList();
         })
-        
     }
-    loadCorpusList();
     closeCorpusModal();
 }
 

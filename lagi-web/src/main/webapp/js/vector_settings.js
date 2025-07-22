@@ -46,17 +46,22 @@ function closeVectorDetailModal() {
 function search() {
     let searchText = $('#searchText').val().trim();
     let vectorMaxTop = $('#vector-max-top').val().trim() || 30;
+    let currentKbId = $('#knowledge-base-select').val();
     // 如果输入框为空，提示用户输入内容
     if (!searchText) {
         alert('请输入查询内容');
         return;
     }
+    if(window.knowledgeBaseMap[currentKbId] == undefined) {
+        return;
+    }
+    let category =  window.knowledgeBaseMap[currentKbId].category;
 
     const requestData = {
         text: searchText,
         n: vectorMaxTop,
         where: {},
-        category: window.category
+        category: category
     };
 
     $.ajax({

@@ -105,8 +105,9 @@ public class CorpusApiServlet extends RestfulServlet {
             if(knowledgeBaseList != null) {
                 for(KnowledgeBase kb : knowledgeBaseList) {
                     String category = kb.getCategory();
+                    String kbId = kb.getId().toString();
                     try {
-                        int totalRow = uploadFileService.getTotalRow(category, userId);
+                        int totalRow = uploadFileService.getTotalRow(category, userId, kbId);
                         kb.setFileCount(totalRow);
                     } catch (Exception e) {
                         kb.setFileCount(0);

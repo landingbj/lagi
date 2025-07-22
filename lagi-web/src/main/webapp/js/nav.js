@@ -1263,7 +1263,7 @@ function goToUserTabV2(navId, subNavId, e) {
     }
 
     if (id == 668) {
-        loadCorpusList();
+        // loadCorpusList();
         // loadUploadFileList(1);
         return;
     }

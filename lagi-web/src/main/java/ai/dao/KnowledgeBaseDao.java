@@ -182,15 +182,15 @@ public class KnowledgeBaseDao {
             sql.append("is_public = ?, ");
             params.add(kb.isPublic() ? 1 : 0);
         }
-        if (kb.getEnableFulltext()) {
+        if (kb.getEnableFulltext() != null) {
             sql.append("enable_fulltext = ?, ");
             params.add(kb.getEnableFulltext() ? 1 : 0);
         }
-        if (kb.getEnableGraph()) {
+        if (kb.getEnableGraph() != null) {
             sql.append("enable_graph = ?, ");
             params.add(kb.getEnableGraph() ? 1 : 0);
         }
-        if (kb.getEnableText2qa()) {
+        if (kb.getEnableText2qa() != null) {
             sql.append("enable_text2qa = ?, ");
             params.add(kb.getEnableText2qa() ? 1 : 0);
         }

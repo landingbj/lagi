@@ -119,7 +119,7 @@ public class UploadFileDao {
     }
 
 
-    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category, String userId) throws SQLException {
+    public List<UploadFile> getUploadFileList(int pageNumber, int pageSize, String category, String userId, String knowledgeBaseId) throws SQLException {
         IConn conn = new Conn();
         List<UploadFile> result = new ArrayList<>();
         StringBuilder stringBuilder = new StringBuilder();
@@ -129,6 +129,9 @@ public class UploadFileDao {
         }
         if(userId != null) {
             stringBuilder.append("and  user_id=? ");
+        }
+        if(knowledgeBaseId != null) {
+            stringBuilder.append("and  knowledge_base_id=? ");
         }
         stringBuilder.append("limit ?,?");
         String sql = stringBuilder.toString();
@@ -141,6 +144,9 @@ public class UploadFileDao {
         }
         if(userId != null) {
             ps.setString(i++, userId);
+        }
+        if(knowledgeBaseId != null) {
+            ps.setString(i++, knowledgeBaseId);
         }
         ps.setInt(i++, (pageNumber - 1) * pageSize);
         ps.setInt(i, pageSize);
@@ -175,7 +181,7 @@ public class UploadFileDao {
         return result;
     }
     
-    public int getTotalRow(String category, String userId) throws SQLException {
+    public int getTotalRow(String category, String userId, String knowledgeBaseId) throws SQLException {
         Conn conn = new Conn();
         int result = -1;
         StringBuilder stringBuilder = new StringBuilder();
@@ -185,6 +191,9 @@ public class UploadFileDao {
         }
         if(userId != null) {
             stringBuilder.append("and  user_id=? ");
+        }
+        if(knowledgeBaseId != null) {
+            stringBuilder.append("and  knowledge_base_id=? ");
         }
         String sql = stringBuilder.toString();
         PreparedStatement ps = null;
@@ -196,6 +205,9 @@ public class UploadFileDao {
         }
         if(userId != null) {
             ps.setString(i++, userId);
+        }
+        if(knowledgeBaseId != null) {
+            ps.setString(i++, knowledgeBaseId);
         }
         rs = ps.executeQuery();
         while (rs.next()) {
