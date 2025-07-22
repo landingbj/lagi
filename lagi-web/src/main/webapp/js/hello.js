@@ -561,11 +561,10 @@ function setDivSize() {
         ball_d = d2;
     }
 
-    ball_d -= 10;
-    // console.log("ball_d", ball_d);
+    ball_d = 360;
+    console.log("ball_d", ball_d);
     ball.style.width = ball_d + 'px';
     ball.style.height = ball_d + 'px';
-    ball.style.marginLeft = (item_widht - ball_d) / 2  + marginDelta+ 'px';
 
     // alert(content_h  - title_h - intro_h -ball_m_t - ball_m_b - ball_d);
     initTopTile();
@@ -615,7 +614,7 @@ window.addEventListener('load', function(){
 
 const debouncedHandleResize = function() {
     // setDivSize();
-    debounce(setDivSize, 50)();
+    // debounce(setDivSize, 50)();
 };
 
 // 监听窗口大小变化事件，并重新设置 div 的大小

@@ -112,11 +112,17 @@ public class QwenAudioAdapter extends ModelService implements IAudioAdapter {
         headers.put("Authorization", "Bearer " + getApiKey());
         headers.put("Content-Type", "application/json");
 
+        String text = param.getText();
+
+        if (text.length() > 512) {
+            text = text.substring(0, 512);
+        }
+
         QwenTTSRequest body = QwenTTSRequest.builder()
                 .model(TTS_MODEL)
-                .input(QwenTTSInput.builder().text(param.getText()).voice(param.getEmotion()).build())
+                .input(QwenTTSInput.builder().text(text).voice(param.getEmotion()).build())
                 .build();
-        String post = ApiInvokeUtil.post(ENDPOINT, headers, gson.toJson(body), 15, TimeUnit.SECONDS);
+        String post = ApiInvokeUtil.post(ENDPOINT, headers, gson.toJson(body), 60, TimeUnit.SECONDS);
         Map<String, Object> ttsResult = gson.fromJson(post, new TypeToken<Map<String, Object>>() {
         });
         if (ttsResult == null || ttsResult.get("output") == null) {

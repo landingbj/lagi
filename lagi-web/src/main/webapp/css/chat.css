@@ -386,12 +386,8 @@ pre .key {
     /* 禁止选中文本 */
     width: var(--radius);
     height: var(--radius);
-    margin-left: calc((100% - var(--radius)) / 2 + 16px);
-    /* margin-right: auto; */
-    margin-top: var(--ball-m-top);
-    margin-bottom: var(--ball-m-bottom);
+    margin: 0 auto 0;
     display: var(--ball-display);
-
 }
 
 @media (max-width: 900px) {
@@ -518,7 +514,8 @@ pre .key {
    /* background-color: red;  */
    overflow: hidden;
    width: 100%;
-   height: calc(var(--ball-radius) * 2 + 20px);
+   /*height: calc(var(--ball-radius) * 2 + 20px);*/
+    height: 360px;
    margin-bottom: 30px;
 }
 
@@ -1625,13 +1622,13 @@ pre .key {
 
 
 .ball-corner-container::before {
-    width: calc(var(--ball-radius)  * 3 );
-    height: calc(var(--ball-radius) * 2);
+    width: 360px;
+    height: 360px;
     left: 50%;
     transform: translateX(-50%);
 
     position: absolute;
-    top: 7px;
+    top: -15px;
     right: 0;
      /*background-color: rgb(255, 0, 0);*/
     background-color: rgb(255, 255, 255);
@@ -1639,10 +1636,8 @@ pre .key {
     z-index: 0;
     clip-path: circle(50%);
     pointer-events: none;
-    /* 确保遮罩不会干扰鼠标事件 */
     content: '';
     overflow: visible;
-    /* 确保内容超出容器时仍然可见 */
 }
 
 /* ==============创建智能体CSS开始===================== */

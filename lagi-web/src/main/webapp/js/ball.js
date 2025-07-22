@@ -292,7 +292,7 @@ function loadBall() {
     function positionAll() {
         const containerWidth = oDiv.offsetWidth;
         const containerHeight = oDiv.offsetHeight;
-        radius = Math.min(containerWidth, containerHeight) * 0.42;
+        radius = Math.min(containerWidth, containerHeight) * 0.40;
         console.log("radius: ", radius);
         restBallCover(radius);
         mcList.forEach((tag, i) => {
@@ -302,19 +302,19 @@ function loadBall() {
             tag.cy = radius * Math.sin(theta) * Math.sin(phi);
             tag.cz = radius * Math.cos(phi);
 
-            aA[i].style.left = tag.cx + containerWidth / 2 - tag.offsetWidth / 2 + 'px';
-            aA[i].style.top = tag.cy + containerHeight / 2 - tag.offsetHeight / 2 + 'px';
+            aA[i].style.left = tag.cx + 'px';
+            aA[i].style.top = tag.cy + 'px';
         });
     }
 
     function doPosition() {
-        const l = oDiv.offsetWidth * 0.47;
-        const t = oDiv.offsetHeight * 0.42;
+        const l = oDiv.offsetWidth * 0.42;
+        const t = oDiv.offsetHeight * 0.43;
         for(let i = 0; i < mcList.length; i++) {
             let tag = mcList[i];
             aA[i].style.fontSize = Math.ceil(12 * tag.scale / 2) + 8 + 'px';
-            aA[i].style.left = tag.cx + l - tag.offsetWidth / 2 + 'px';
-            aA[i].style.top = tag.cy + t - tag.offsetHeight / 2 + 'px';
+            aA[i].style.left = tag.cx + l + 'px';
+            aA[i].style.top = tag.cy + t + 'px';
             aA[i].style.opacity = tag.alpha;
         }
     }
