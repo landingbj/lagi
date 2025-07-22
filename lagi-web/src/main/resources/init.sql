@@ -18,6 +18,7 @@ create table if not exists lagi_upload_file
     filepath varchar(250) not null,
     category varchar(50)  not null,
     create_time int(20)    not null,
+    knowledge_base_id int(20)   null,
     user_id varchar(20)    not null
 );
 
@@ -99,4 +100,26 @@ CREATE TABLE IF NOT EXISTS user_rag_vector (
     similarity_cutoff DOUBLE,
     parent_depth INT,
     child_depth INT
+);
+
+
+CREATE TABLE IF NOT EXISTS knowledge_base (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    region TEXT,
+    category TEXT,
+    settings_id INTEGER,
+    is_public INTEGER CHECK(is_public IN (0,1)) NOT NULL DEFAULT 0,
+    enable_fulltext INTEGER CHECK(enable_fulltext IN (0,1)) NOT NULL DEFAULT 0,
+    enable_graph INTEGER CHECK(enable_graph IN (0,1)) NOT NULL DEFAULT 0,
+    enable_text2qa INTEGER CHECK(enable_text2qa IN (0,1)) NOT NULL DEFAULT 0,
+    wenben_chunk_size INTEGER NOT NULL DEFAULT 500,
+    biaoge_chunk_size INTEGER NOT NULL DEFAULT 200,
+    tuwen_chunk_size INTEGER NOT NULL DEFAULT 300,
+    similarity_top_k INTEGER NOT NULL DEFAULT 5,
+    similarity_cutoff REAL NOT NULL DEFAULT 0.7,
+    create_time INTEGER NOT NULL,
+    update_time INTEGER NOT NULL
 );

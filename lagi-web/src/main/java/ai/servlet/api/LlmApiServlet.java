@@ -4,10 +4,7 @@ import ai.agent.Agent;
 import ai.agent.chat.rag.LocalRagAgent;
 import ai.common.ModelService;
 import ai.common.exception.RRException;
-import ai.common.pojo.Configuration;
-import ai.common.pojo.IndexSearchData;
-import ai.common.pojo.Medusa;
-import ai.common.pojo.Response;
+import ai.common.pojo.*;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
 import ai.config.pojo.RAGFunction;
@@ -48,6 +45,7 @@ import ai.servlet.dto.LagiAgentExpenseListResponse;
 import ai.servlet.dto.LagiAgentListResponse;
 import ai.servlet.dto.LagiAgentResponse;
 import ai.servlet.dto.PaidLagiAgent;
+import ai.sevice.KnowledgeBaseService;
 import ai.utils.*;
 import ai.utils.qa.ChatCompletionUtil;
 import ai.vector.VectorCacheLoader;
@@ -702,6 +700,9 @@ public class LlmApiServlet extends BaseServlet {
             }
             if (indexSearchDataList == null) {
                 try {
+                    KnowledgeBaseService knowledgeBaseService = new KnowledgeBaseService();
+                    KnowledgeBase latestPublicKnowledgeBase = knowledgeBaseService.getLatestPublicKnowledgeBase(userId, knowledgeBaseService.getRegion());
+                    chatCompletionRequest.setKnowledgeBase(latestPublicKnowledgeBase);
                     // TODO 2025/7/7 RAG查询: 添加用户自定义参数影响查询: indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest, userSelectedParams);
                     indexSearchDataList = vectorDbService.searchByContext(chatCompletionRequest);
                 } catch (Exception e) {

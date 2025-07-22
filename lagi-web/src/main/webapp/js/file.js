@@ -1,4 +1,8 @@
-function loadUploadFileList(pageNumber) {
+function loadUploadFileList(pageNumber, category) {
+    let c = window.category;
+    if(category) {
+        c = category;
+    }
     fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&category=${window.category}&pageSize=10`)
     .then(response => {
         if(response.status == 200) {
@@ -25,37 +29,37 @@ function loadUploadFileList(pageNumber) {
 
         renderFileUploadPagination(data.totalPage, pageNumber);  // 渲染分页
     });
-        // 初始化接口调用
-        $.ajax({
-            url: `/v1/vector/getTextBlockSize?lagiUserId=${globalUserId}&category=${window.category}`,
-            method: 'GET',
-            success: function(response) {
-                if (response.status === 'success') {
-                    // 遍历返回的数据，根据 fileType 回填相应的值
-                    response.data.forEach(function(item) {
-                        if (item.fileType === 'wenben_type') {
-                            $('#wenben_type').val(item.chunkSize);
-                        } else if (item.fileType === 'biaoge_type') {
-                            $('#biaoge_type').val(item.chunkSize);
-                        } else if (item.fileType === 'tuwen_type') {
-                            $('#tuwen_type').val(item.chunkSize);
-                        } else if (item.fileType === 'wendu_type') {
-                            $('#wendu_type').val(item.temperature);
-                            window.myTemperature = item.temperature;
-                        }  else if (item.fileType === 'vector-max-top') {
-                            $('#vector-max-top').val(item.chunkSize);
-                        } else if (item.fileType === 'distance'){
-                            $('#distance').val(item.temperature);
-                            $('#distance_value').text(item.temperature);
-                        }
+    // 初始化接口调用
+    $.ajax({
+        url: `/v1/vector/getTextBlockSize?lagiUserId=${globalUserId}&category=${window.category}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.status === 'success') {
+                // 遍历返回的数据，根据 fileType 回填相应的值
+                response.data.forEach(function(item) {
+                    if (item.fileType === 'wenben_type') {
+                        $('#wenben_type').val(item.chunkSize);
+                    } else if (item.fileType === 'biaoge_type') {
+                        $('#biaoge_type').val(item.chunkSize);
+                    } else if (item.fileType === 'tuwen_type') {
+                        $('#tuwen_type').val(item.chunkSize);
+                    } else if (item.fileType === 'wendu_type') {
+                        $('#wendu_type').val(item.temperature);
+                        window.myTemperature = item.temperature;
+                    }  else if (item.fileType === 'vector-max-top') {
+                        $('#vector-max-top').val(item.chunkSize);
+                    } else if (item.fileType === 'distance'){
+                        $('#distance').val(item.temperature);
+                        $('#distance_value').text(item.temperature);
+                    }
 
-                    });
-                }
-            },
-            error: function() {
-                alert('初始化失败，请重试');
+                });
             }
-        });
+        },
+        error: function() {
+            alert('初始化失败，请重试');
+        }
+    });
 }
 
 
@@ -405,7 +409,7 @@ function handleFiles(files) {
 function uploadFile(file) {
     $('#loadingSpinner').removeClass('hidden');
     console.log(file.name);
-    let url = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}`;
+    let url = `/uploadFile/uploadLearningFile?category=${window.category}&userId=${globalUserId}&knowledgeBaseId=${currentKbId}`;
     const formData = new FormData();
     formData.append('file', file);
 

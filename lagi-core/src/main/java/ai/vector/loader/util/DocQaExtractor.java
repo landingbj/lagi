@@ -2,6 +2,7 @@ package ai.vector.loader.util;
 
 import ai.common.pojo.Backend;
 import ai.common.pojo.FileChunkResponse;
+import ai.common.pojo.KnowledgeBase;
 import ai.config.ContextLoader;
 import ai.llm.service.CompletionsService;
 import ai.manager.Text2QAManager;
@@ -114,8 +115,13 @@ public class DocQaExtractor {
             executorService.shutdown();  // 关闭线程池
         }
     }
-    public static List<List<FileChunkResponse.Document>> parseText(List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
-        if (text2qaBackend == null || !text2qaBackend.getEnable()) {
+    public static List<List<FileChunkResponse.Document>> parseText(KnowledgeBase knowledgeBase,  List<List<FileChunkResponse.Document>> docs) throws JsonProcessingException {
+        if(knowledgeBase == null) {
+            if (text2qaBackend == null || !text2qaBackend.getEnable()) {
+                return docs;
+            }
+        }
+        if(knowledgeBase != null && (!Boolean.TRUE.equals(knowledgeBase.getEnableText2qa()))) {
             return docs;
         }
 

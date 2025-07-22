@@ -21,6 +21,7 @@ import ai.medusa.MedusaService;
 import ai.medusa.pojo.InstructionData;
 import ai.medusa.pojo.InstructionPairRequest;
 import ai.migrate.service.UploadFileService;
+import ai.sevice.KnowledgeBaseService;
 import ai.utils.ExcelSqlUtil;
 import ai.utils.LRUCacheUtil;
 import ai.vector.VectorCacheLoader;
@@ -53,6 +54,7 @@ public class UploadFileServlet extends HttpServlet {
     private final VectorStoreService vectorStoreService = new VectorStoreService();
     private final MedusaService medusaService = new MedusaService();
     private static final String UPLOAD_DIR = "/upload";
+    private final KnowledgeBaseService knowledgeBaseService = new KnowledgeBaseService();
 
     private static final ExecutorService uploadExecutorService = Executors.newFixedThreadPool(5);
 
@@ -90,6 +92,12 @@ public class UploadFileServlet extends HttpServlet {
         String category = req.getParameter("category");
         String level = req.getParameter("level");
         String userId = req.getParameter("userId");
+        KnowledgeBase knowledgeBase = null;
+        String knowledgeBaseId = req.getParameter("knowledgeBaseId");
+        if(knowledgeBaseId != null) {
+            Long id = Long.valueOf(knowledgeBaseId);
+            knowledgeBase = knowledgeBaseService.getById(id);
+        }
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "success");
         DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -139,7 +147,7 @@ public class UploadFileServlet extends HttpServlet {
             for (File file : files) {
                 if (file.exists() && file.isFile()) {
                     String filename = realNameMap.get(file.getName());
-                    Future<?> future =uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, userId, taskId));
+                    Future<?> future =uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, userId, taskId, knowledgeBase));
                     futures.add(future);
                     JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("filename", filename);
@@ -418,6 +426,13 @@ public class UploadFileServlet extends HttpServlet {
         String category = req.getParameter("category");
         String level = req.getParameter("level");
         String userId = req.getParameter("userId");
+        KnowledgeBase knowledgeBase = null;
+        String knowledgeBaseId = req.getParameter("knowledgeBaseId");
+        if(knowledgeBaseId != null) {
+            Long id = Long.valueOf(knowledgeBaseId);
+            knowledgeBase = knowledgeBaseService.getById(id);
+        }
+
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("status", "success");
         tracker.setProgress(10);
@@ -470,7 +485,7 @@ public class UploadFileServlet extends HttpServlet {
                 for (File file : files) {
                     if (file.exists() && file.isFile()) {
                         String filename = realNameMap.get(file.getName());
-                        Future<?> future = uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, userId, taskId));
+                        Future<?> future = uploadExecutorService.submit(new AddDocIndex(file, category, filename, level, userId, taskId, knowledgeBase));
                         futures.add(future);
                         JsonObject jsonObject = new JsonObject();
                         jsonObject.addProperty("filename", filename);
@@ -529,14 +544,16 @@ public class UploadFileServlet extends HttpServlet {
         private final String level;
         private final String userId;
         private final String taskId;
+        private final KnowledgeBase knowledgeBase;
 
-        public AddDocIndex(File file, String category, String filename, String level, String userId, String taskId) {
+        public AddDocIndex(File file, String category, String filename, String level, String userId, String taskId, KnowledgeBase knowledgeBase) {
             this.file = file;
             this.category = category;
             this.filename = filename;
             this.level = level;
             this.userId = userId;
             this.taskId = taskId;
+            this.knowledgeBase = knowledgeBase;
         }
 
         public void run() {
@@ -556,7 +573,8 @@ public class UploadFileServlet extends HttpServlet {
             metadatas.put("file_id", fileId);
             metadatas.put("userId", userId);
             List<UserRagSetting> settingList = null;
-            // TODO 2025/7/7 RAG 上传: 原来的 setting  category 等参数由 userSelectedParams 传进来
+            metadatas.put("knowledgeBase", knowledgeBase);
+            // TODO 弃用
             try {
                 settingList = uploadFileService.getTextBlockSize(category, userId);
             } catch (SQLException e) {
@@ -590,6 +608,9 @@ public class UploadFileServlet extends HttpServlet {
                 entity.setFileId(fileId);
                 entity.setUserId(userId);
                 entity.setCreateTime(new Date().getTime());
+                if(knowledgeBase != null) {
+                    entity.setKnowledgeBaseId(knowledgeBase.getId());
+                }
                 uploadFileService.addUploadFile(entity);
 
                 if (tracker != null) {

@@ -10,12 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // 绑定创建知识库按钮事件
     document.getElementById('addCorpus').addEventListener('click', openCreateModal);
     
-    // 加载知识库列表
-    loadCorpusList();
 });
+
+
+
+
+let current_kb_id = null;
 
 // 加载知识库列表
 function loadCorpusList() {
+    let userId = globalUserId
     const container = document.querySelector('.corpus-list');
     // 清空现有列表，保留创建按钮
     const addButton = container.querySelector('#addCorpus');
@@ -23,27 +27,36 @@ function loadCorpusList() {
     if (addButton) container.appendChild(addButton);
     
     // 添加知识库卡片
-    corpuses.forEach(corpus => {
-        const card = document.createElement('div');
-        card.className = `corpus-card ${corpus.isActive ? 'corpus-activate' : ''}`;
-        card.innerHTML = `
-            <div class="corpus-card-title">${corpus.name}</div>
-            <div class="corpus-card-info">
-                <span><i class="fa fa-file-text-o"></i> 文件数: ${corpus.fileCount}</span>
-                <span><i class="fa fa-calendar-o"></i> 创建时间: ${corpus.createTime}</span>
-            </div>
-            <div class="corpus-operation">
-                <button class="edit-btn" onclick="enterCorpus(${corpus.id}, this)" title="进入知识库">
-                    进入
-                </button>
-                <button class="delete-btn" onclick="deleteCorpus(${corpus.id})" title="删除知识库">
-                    删除
-                </button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+    KnowledgeBaseAPI.getKnowledgeList(userId, region).then(data=>{
+        if(data.code != 0) {
+            throw new Error('读取知识库列表失败');
+        }
+        let ls =  data.data;
+        ls.forEach(corpus => {
+            const card = document.createElement('div');
+            card.className = `corpus-card ${corpus.isPublic ? 'corpus-activate' : ''}`;
+            const now = new Date(corpus.createTime);
+            const dateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            card.innerHTML = `
+                <div class="corpus-card-title">${corpus.name}</div>
+                <div class="corpus-card-info">
+                    <span><i class="fa fa-file-text-o"></i> 文件数: ${corpus.fileCount}</span>
+                    <span><i class="fa fa-calendar-o"></i> 创建时间: ${dateString}</span>
+                </div>
+                <div class="corpus-operation">
+                    <button class="edit-btn" onclick="enterCorpus(${corpus.id}, this)" title="进入知识库">
+                        进入
+                    </button>
+                    <button class="delete-btn" onclick="deleteCorpus(${corpus.id})" title="删除知识库">
+                        删除
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    })
 }
+
 
 // 打开创建知识库模态框
 function openCreateModal() {
@@ -80,6 +93,7 @@ function confirmDelete() {
 
 // 进入知识库
 function enterCorpus(id, element) {
+    current_kb_id = id;
     // 移除所有激活状态
     document.querySelectorAll('.corpus-card').forEach(card => {
         card.classList.remove('corpus-activate');
@@ -88,15 +102,10 @@ function enterCorpus(id, element) {
     // 设置当前知识库为激活状态
     const card = element.closest('.corpus-card');
     card.classList.add('corpus-activate');
-    
-    // 更新数据
-    corpuses.forEach(corpus => {
-        corpus.isActive = corpus.id === id;
-    });
+    let name =  $(card).find('.corpus-card-title').html();
     hideCorpusList();
-    showNotification('info', `已进入 "${corpuses.find(c => c.id === id).name}" 知识库`);
+    showNotification('info', `已进入 "${name}" 知识库`);
     const detail = loadCorpusDetail(id);
-    renderCorpusDetail(detail);
 }
 
 function hideCorpusList() {
@@ -111,8 +120,28 @@ function showCorpusList() {
 
 
 function loadCorpusDetail(id) {
-    return {'name': '知识库名字', 'createTime': '1111', 'category': category, 'setting': {}, 'uploads': {data:[]}};
+    $('.corpus-detail').show();
+    // load settings
+    const detailEl = $($('.corpus-detail')[0]);
+    detailEl.show();
+    KnowledgeBaseAPI.getKnowledgeBase(id).then(data=>{
+        if(data.code != 0) {
+            throw new Error("加载知识库详情失败");
+        }
+        const kb = data.data;
+        console.log(kb)
+        detailEl.find('span').html(kb.name);
+        renderSettings(kb);
+        loadUploadFileList(1, kb.category);
+    });
+    // return {'name': '知识库名字', 'createTime': '1111', 'category': category, 'setting': {}, 'uploads': {data:[]}};
 }
+
+
+function renderSettings(kb) {
+    console.log('渲染设置');
+}
+
 
 function renderCorpusDetail(detail) {
     // <div class="corpus-detail corpus-container" style="display:none">
@@ -142,9 +171,7 @@ function renderCorpusDetail(detail) {
     //     <!-- 分页按钮将动态添加到这里 -->
     // </div>
     // </div>
-    const detailEl = $($('.corpus-detail')[0]);
-    detailEl.show();
-    detailEl.find('h4').html(detail.name);
+    
 }
 
 function hideCorpusDetail() {
@@ -174,22 +201,29 @@ function saveCorpus() {
         }
     } else {
         // 创建新知识库
-        const newId = corpuses.length > 0 ? Math.max(...corpuses.map(c => c.id)) + 1 : 1;
-        const now = new Date();
-        const dateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        // const newId = corpuses.length > 0 ? Math.max(...corpuses.map(c => c.id)) + 1 : 1;
+        // const now = new Date();
+        // const dateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
-        corpuses.push({
-            id: newId,
+        let corpuse = {
+            // id: newId,
             name: name,
             description: desc,
-            fileCount: 0,
-            createTime: dateString,
-            isActive: false
-        });
+            region: region,
+            userId: globalUserId,
+            // fileCount: 0,
+            // createTime: dateString,
+            // isActive: false
+        };
+        KnowledgeBaseAPI.addKnowledge(corpuse).then(data=>{
+            if(data.code != 0 || !data.data) {
+                showNotification('error', '创建知识库失败');
+                return;
+            }
+            showNotification('success', '创建知识库成功');
+        })
         
-        showNotification('success', '知识库创建成功');
     }
-    
     loadCorpusList();
     closeCorpusModal();
 }
@@ -225,55 +259,74 @@ function showNotification(type, message) {
 }
 
 
+const KnowledgeBaseAPI = {
+    // 获取区域信息
+    getRegion() {
+        return $.ajax({
+            url: '/knowledge/region',
+            method: 'GET',
+        });
+    },
 
-const CorpusApi = {
-    // 添加知识库
-    addKnowledge(userId) {
-      return $.ajax({
-        url: '/api/add',
-        method: 'GET',
-        data: { userId },
-        dataType: 'json'
-      });
+    // 添加知识库条目
+    addKnowledge(knowledgeBase) {
+        return $.ajax({
+            url: '/knowledge/add',
+            method: 'POST',
+            data: JSON.stringify(knowledgeBase),
+            contentType: 'application/json',
+            dataType: 'json'
+        });
     },
-  
-    // 删除知识库
-    deleteKnowledge(userId, corpusId) {
-      return $.ajax({
-        url: '/api/delete',
-        method: 'POST',
-        data: JSON.stringify({ userId, corpusId }),
-        contentType: 'application/json',
-        dataType: 'json'
-      });
+
+    // 删除知识库条目
+    deleteKnowledge(knowledgeBaseId) {
+        return $.ajax({
+            url: '/knowledge/delete',
+            method: 'POST',
+            data: JSON.stringify({ id : knowledgeBaseId }),
+            contentType: 'application/json',
+            dataType: 'json'
+        });
     },
-  
+
+    // 更新知识库条目
+    updateKnowledge(knowledgeBase) {
+        return $.ajax({
+            url: '/knowledge/update',
+            method: 'POST',
+            data: JSON.stringify(knowledgeBase),
+            contentType: 'application/json',
+            dataType: 'json'
+        });
+    },
+
     // 获取知识库列表
-    getKnowledgeList(userId) {
-      return $.ajax({
-        url: '/api/getList',
-        method: 'GET',
-        data: { userId },
-        dataType: 'json'
-      });
+    getKnowledgeList(userId, region) {
+        return $.ajax({
+            url: `/knowledge/getList?userId=${userId}&region=${region}`,
+            method: 'GET',
+        });
     },
-  
-    // 获取单个知识库
-    getKnowledgeBase(userId, knowledgeId) {
-      return $.ajax({
-        url: '/api/getOne',
-        method: 'GET',
-        data: { userId, knowledgeId },
-        dataType: 'json'
-      });
+
+    // 获取单个知识库条目
+    getKnowledgeBase(knowledgeId) {
+        return $.ajax({
+            url: `/knowledge/getOne?knowledgeId=${knowledgeId}`,
+            method: 'GET',
+        });
     }
-  };
-  
-  // 使用示例
-//   CorpusApi.getKnowledgeList('user123')
-//     .done(response => {
-//         console.log('获取知识库列表成功:', response);
-//     })
-//     .fail(error => {
-//         console.error('获取知识库列表失败:', error);
-//     });
+};
+
+
+let region = null;
+
+$(document).ready(function() {
+    // 示例：调用getRegion
+    KnowledgeBaseAPI.getRegion()
+        .done(data => {
+            region = data.data;
+            console.log('区域信息：', region);
+        })
+        .fail(err => console.error('请求失败：', err));
+});

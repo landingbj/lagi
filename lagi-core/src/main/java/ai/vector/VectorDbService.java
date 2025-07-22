@@ -2,6 +2,7 @@ package ai.vector;
 
 import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
+import ai.common.pojo.KnowledgeBase;
 import ai.medusa.utils.LCS;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.utils.PriorityWordUtil;

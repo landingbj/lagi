@@ -16,5 +16,5 @@ public class UploadFile {
     private String category;
     private Long createTime;
     private String userId;
-
+    private Long knowledgeBaseId;
 }

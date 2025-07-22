@@ -37,7 +37,7 @@ public class UploadFileDao {
     public int addUploadFile(UploadFile entity) throws SQLException {
         IConn conn = new Conn();
         int result = -1;
-        String sql = "INSERT INTO lagi_upload_file (file_id, filename, filepath, category, create_time, user_id) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO lagi_upload_file (file_id, filename, filepath, category, create_time, user_id, knowledge_base_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setString(1, entity.getFileId());
         ps.setString(2, entity.getFilename());
@@ -45,6 +45,7 @@ public class UploadFileDao {
         ps.setString(4, entity.getCategory());
         ps.setLong(5, entity.getCreateTime());
         ps.setString(6, entity.getUserId());
+        ps.setLong(7, entity.getKnowledgeBaseId());
         result = ps.executeUpdate();
         BaseIndex.closeConnection(ps, conn);
         return result;

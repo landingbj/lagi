@@ -397,4 +397,15 @@
         <servlet-name>modelUploadServlet</servlet-name>
         <url-pattern>/upload/model/merge</url-pattern>
     </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>CorpusApiServlet</servlet-name>
+        <servlet-class>ai.servlet.api.CorpusApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CorpusApiServlet</servlet-name>
+        <url-pattern>/knowledge/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>

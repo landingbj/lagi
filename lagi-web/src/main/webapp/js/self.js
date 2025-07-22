@@ -305,7 +305,7 @@ function singleFileUpload(selectedFile, fileType) {
         fileType === "csv") {
         question = "您所上传的文档文件名称为：" + selectedFile.name;
         formData.append("file", selectedFile);
-        serverEndpoint = "/uploadFile/asynchronousUpload?category=" + window.category;
+        serverEndpoint = "/uploadFile/asynchronousUpload?category=" + window.category  + "&knowledgeBaseId=" + currentKbId;
         fileStatus = "doc";
     } else if (fileType === "jpg" || fileType === "jpeg" || fileType === "png" || fileType === "heic") {
         question = "您所上传的图片是：" + selectedFile.name;

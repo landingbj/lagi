@@ -13,6 +13,7 @@ public class VectorQueryRequest {
     private Integer n;
     private Map<String, String> where = new HashMap<>();
     private String category;
+    private Long knowledgeBaseId;
 
     @Override
     public String toString() {

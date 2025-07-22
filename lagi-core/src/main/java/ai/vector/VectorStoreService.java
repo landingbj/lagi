@@ -4,6 +4,7 @@ import ai.bigdata.BigdataService;
 import ai.bigdata.pojo.TextIndexData;
 import ai.common.pojo.*;
 import ai.common.utils.ThreadPoolManager;
+import ai.config.ContextLoader;
 import ai.intent.IntentService;
 import ai.intent.enums.IntentStatusEnum;
 import ai.intent.impl.SampleIntentServiceImpl;
@@ -106,42 +107,33 @@ public class VectorStoreService {
 
 
     public void addFileVectors(File file, Map<String, Object> metadatas, String category) throws IOException {
-        // todo 按页切割文件
-        // TODO 2025/7/7 RAG上傳: 直接根據重寫的 userSelectedParams 參數 修改 wenben_type biaoge_type tuwen_type category 等
 
 //        List<FileChunkResponse.Document> docs = new ArrayList<>();
-        List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
-        Integer wenben_type = 512;
-        Integer biaoge_type = 512;
-        Integer tuwen_type = 512;
-        if (userList!=null){
-            for (UserRagSetting user : userList) {
-                if ("wenben_type".equals(user.getFileType())) {
-                    wenben_type = user.getChunkSize();
-                    break;  // 找到后直接退出循环
-                }
-                if ("biaoge_type".equals(user.getFileType())) {
-                    biaoge_type = user.getChunkSize();
-                    break;  // 找到后直接退出循环
-                }
-                if ("tuwen_type".equals(user.getFileType())) {
-                    tuwen_type = user.getChunkSize();
-                    break;  // 找到后直接退出循环
-                }
-            }
+        // TODO 2025/7/21 弃用
+//        List<UserRagSetting> userList = (List<UserRagSetting>) metadatas.get("settingList");
+        KnowledgeBase knowledgeBase = (KnowledgeBase) metadatas.get("knowledgeBase");
+        int wenben_type = 512;
+        int biaoge_type = 512;
+        int tuwen_type = 512;
+        if(knowledgeBase !=null){
+            wenben_type = knowledgeBase.getWenbenChunkSize() != null ? knowledgeBase.getWenbenChunkSize() : 512;
+            biaoge_type = knowledgeBase.getBiaogeChunkSize() != null ? knowledgeBase.getBiaogeChunkSize() : 512;
+            tuwen_type = knowledgeBase.getTuwenChunkSize() != null ? knowledgeBase.getTuwenChunkSize() : 512;
         }
-
         String suffix = file.getName().toLowerCase().split("\\.")[1];
         DocumentLoader documentLoader = loaderMap.getOrDefault(suffix, loaderMap.get("common"));
         List<List<FileChunkResponse.Document>> docs = documentLoader.load(file.getPath(), new SplitConfig(wenben_type, tuwen_type, biaoge_type, category, metadatas));
         String fileName = file.getName();
         if (fileName.endsWith(".docx") || fileName.endsWith(".doc") || fileName.endsWith(".txt") || fileName.endsWith(".pdf")) {
-            docs = DocQaExtractor.parseText(docs);
+            docs = DocQaExtractor.parseText(knowledgeBase, docs);
         }
+        metadatas.remove("settingList");
+        metadatas.remove("knowledgeBase");
         for (List<FileChunkResponse.Document> docList : docs) {
             List<FileInfo> fileList = getFileInfoList(metadatas, docList);
             upsertFileVectors(fileList, category);
         }
+
     }
     private List<FileInfo> getFileInfoList(Map<String, Object> metadatas, List<FileChunkResponse.Document> docList) {
         List<FileInfo> fileList = new ArrayList<>();
@@ -378,7 +370,11 @@ public class VectorStoreService {
             question = ChatCompletionUtil.getLastMessage(request);
         }
         // TODO 2025/7/7 RAG查询: 使用重写的增加选项的  search(question, userSelectedParams)
-        return search(question, request.getCategory());
+        if(request.getKnowledgeBase() == null) {
+            return search(question, request.getCategory());
+        } else {
+            return search(question, request.getKnowledgeBase());
+        }
     }
     public List<IndexSearchData> search(String question, String category,String usr) {
         int similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
@@ -442,6 +438,58 @@ public class VectorStoreService {
             indexSearchDataList = indexSearchDataList.stream()
                     .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
                     .collect(Collectors.toList());
+        }
+        String finalCategory = category;
+        List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()
+                .map(indexSearchData -> executor.submit(() -> extendIndexSearchData(indexSearchData, finalCategory)))
+                .collect(Collectors.toList());
+        return futureResultList.stream().map(indexSearchDataFuture -> {
+            try {
+                return indexSearchDataFuture.get();
+            } catch (Exception e) {
+                log.error("indexData get error");
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+
+    public List<IndexSearchData> search(String question, KnowledgeBase knowledgeBase) {
+        int similarity_top_k;
+        double similarity_cutoff;
+        if(knowledgeBase.getSimilarityTopK() != null) {
+            similarity_top_k = knowledgeBase.getSimilarityTopK();
+        } else {
+            similarity_top_k = vectorStore.getConfig().getSimilarityTopK();
+        }
+        if(knowledgeBase.getSimilarityCutoff() != null) {
+            similarity_cutoff = knowledgeBase.getSimilarityCutoff();
+        } else {
+            similarity_cutoff = vectorStore.getConfig().getSimilarityCutoff();
+        }
+
+        Map<String, String> where = new HashMap<>();
+        String category = knowledgeBase.getCategory();
+        category = ObjectUtils.defaultIfNull(category, vectorStore.getConfig().getDefaultCategory());
+        List<IndexSearchData> indexSearchDataList = search(question, similarity_top_k, similarity_cutoff, where, category);
+        if(Boolean.TRUE.equals(knowledgeBase.getEnableFulltext())) {
+            Set<String> esIds = bigdataService.getIds(question, category);
+            if (esIds != null && !esIds.isEmpty()) {
+                Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
+                indexIds.retainAll(esIds);
+                indexSearchDataList = indexSearchDataList.stream()
+                        .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
+                        .collect(Collectors.toList());
+            }
+        } else if("elasticsearch".equals(ContextLoader.configuration.getStores().getRag().getFulltext())){
+            Set<String> esIds = bigdataService.getIds(question, category);
+            if (esIds != null && !esIds.isEmpty()) {
+                Set<String> indexIds = indexSearchDataList.stream().map(IndexSearchData::getId).collect(Collectors.toSet());
+                indexIds.retainAll(esIds);
+                indexSearchDataList = indexSearchDataList.stream()
+                        .filter(indexSearchData -> indexIds.contains(indexSearchData.getId()))
+                        .collect(Collectors.toList());
+            }
         }
         String finalCategory = category;
         List<Future<IndexSearchData>> futureResultList = indexSearchDataList.stream()

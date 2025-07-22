@@ -1,5 +1,6 @@
 package ai.openai.pojo;
 
+import ai.common.pojo.KnowledgeBase;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -21,4 +22,5 @@ public class ChatCompletionRequest implements Serializable {
     private Double presence_penalty;
     private Double frequency_penalty;
     private Double top_p;
+    private KnowledgeBase knowledgeBase;
 }

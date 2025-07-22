@@ -2,6 +2,7 @@ package ai.servlet.api;
 
 import ai.bigdata.BigdataService;
 import ai.common.pojo.IndexSearchData;
+import ai.common.pojo.KnowledgeBase;
 import ai.common.pojo.UserRagSetting;
 import ai.migrate.service.UploadFileService;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -9,6 +10,7 @@ import ai.servlet.BaseServlet;
 import ai.servlet.dto.VectorDeleteRequest;
 import ai.servlet.dto.VectorQueryRequest;
 import ai.servlet.dto.VectorUpsertRequest;
+import ai.sevice.KnowledgeBaseService;
 import ai.vector.VectorCacheLoader;
 import ai.vector.VectorDbService;
 import ai.vector.VectorStoreService;
@@ -141,6 +143,11 @@ public class VectorApiServlet extends BaseServlet {
         // TODO 2025/7/7 RAG查询: 这里是向量数据库检索的地方， 替换为 search 具体的方法 参数来自于用户或系统 public List<IndexSearchData> search(String question, int similarity_top_k, double similarity_cutoff,
         //                                        Map<String, String> where, String category)
         VectorQueryRequest vectorQueryRequest = reqBodyToObj(req, VectorQueryRequest.class);
+        KnowledgeBaseService knowledgeBaseService = new KnowledgeBaseService();
+        KnowledgeBase knowledgeBase = knowledgeBaseService.getById(vectorQueryRequest.getKnowledgeBaseId());
+        if(knowledgeBase != null) {
+            vectorQueryRequest.setCategory(knowledgeBase.getCategory());
+        }
         QueryCondition queryCondition = new QueryCondition();
         queryCondition.setN(vectorQueryRequest.getN());
         queryCondition.setText(vectorQueryRequest.getText());
