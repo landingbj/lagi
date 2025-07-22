@@ -544,6 +544,7 @@ $(document).ready(function() {
         .done(data => {
             region = data.data;
             console.log('区域信息：', region);
+            loadCorpusList();
         })
         .fail(err => console.error('请求失败：', err));
 });

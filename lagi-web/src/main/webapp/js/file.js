@@ -3,8 +3,8 @@ function loadUploadFileList(pageNumber, category) {
     if(category) {
         c = category;
     }
-    let currentCategory =  window.knowledgeBaseMap[window.currentKbId].category;
-    fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&category=${currentCategory}&pageSize=10&knowledgeBaseId=${window.currentKbId}`)
+    let tempCategory =  window.knowledgeBaseMap[window.currentKbId].category;
+    fetch(`/uploadFile/getUploadFileList?lagiUserId=${globalUserId}&pageNumber=${pageNumber}&category=${tempCategory}&pageSize=10&knowledgeBaseId=${window.currentKbId}`)
     .then(response => {
         if(response.status == 200) {
             return response.json();
