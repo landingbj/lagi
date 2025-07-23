@@ -1,11 +1,37 @@
 #queryBox {
-	border: 3px solid #51B4EF;
-	border-top: none;
-	border-bottom: none;
-	border-radius: 24px;
-	box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em
-		rgba(0, 0, 0, 0.3);
+    /* border: 3px solid #51B4EF; */
+    border-top: none;
+    border-bottom: none;
+    border-radius: 10px;
+    border: 1px solid #dddddd;
+    padding: 5px;
+    /* box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3); */
 }
+
+#queryBox textarea {
+    padding: 5px;
+}
+
+#queryBox button {
+    width: 40px;
+    height: 30px;
+    bottom: 0.5rem;
+}
+
+#queryBox button img {
+    width: 32px;
+    height: 32px;
+}
+
+#queryBtn::before {
+    content: "";
+    position: absolute;
+    left: -0.75rem;
+    top: 10px;
+    bottom: 0;
+    width: 1px; /* 竖线宽度 */
+    background-color: #cacaca; /* 竖线颜色 */
+  }
 
 /**
 @media screen and (max-width: 765px) {
@@ -21,108 +47,112 @@
 **/
 
 #topTitle {
-	margin: 3em 0 0 0;
+    /* margin: 3em 0 0 0; */
+    /* padding-top: 16px; */
+    /* height: 180px; */
+    z-index: 6;
 }
 
-
-
-#item-content {
-	--winow-height: 87vh;
-	height:  calc(var(--winow-height));
+#hello-page {
+    overflow-y: scroll;
 }
-
-@media (max-width: 768px) {
-	#item-content {
-		--winow-height: 75vh;
-		height:  calc(var(--winow-height));
-	}
-}
-
 
 .item-column {
-	/* height: 200px;
+    /* height: 200px;
 	width: 300px; */
-	overflow:hidden;
+    width: 100%;
+    padding: 0.25rem;
+    overflow: hidden;
 }
 
 /* 设置不换行 */
 .item-column>p {
-	white-space: nowrap;
+    white-space: nowrap;
 }
 
-.flex-bottom{
-	display: flex;
-	align-items: flex-end;
+#conversationsNav a {
+    padding-right: 1em;
 }
 
-.flex-top{
-	display: flex;
-	align-items: flex-start;
+.flex-bottom {
+    display: flex;
+    align-items: flex-end;
+}
+
+.flex-top {
+    display: flex;
+    align-items: flex-start;
 }
 
 /* 滚动速度，值越大越慢 */
 .scrollDiv {
-	position: relative;
-	animation: scroll 15s infinite linear;
+    position: relative;
+    animation: scroll 15s infinite linear;
 }
 
 /* 滚动范围 */
 @keyframes scroll {
-	0% { left: 5%; }
-	100% { left: -100%; }
+    0% {
+        left: 5%;
+    }
+
+    100% {
+        left: -100%;
+    }
 }
 
 #queryContent::-webkit-scrollbar {
-	display: none; /* Chrome Safari */
-  }
+    display: none;
+    /* Chrome Safari */
+}
 
 #demo {
-	scrollbar-width: none; /* firefox */
-	-ms-overflow-style: none; /* IE 10+ */
-	overflow-x: hidden;
-	overflow-y: auto;
+    scrollbar-width: none;
+    /* firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 
 pre {
-	padding: 5px;
-	margin: 5px;
-	text-wrap: wrap;
+    padding: 5px;
+    margin: 5px;
+    text-wrap: wrap;
 }
 
 pre .string {
-	color: green;
+    color: green;
 }
 
 pre .number {
-	color: darkorange;
+    color: darkorange;
 }
 
 pre .boolean {
-	color: blue;
+    color: blue;
 }
 
 pre .null {
-	color: magenta;
+    color: magenta;
 }
 
 pre .key {
-	color: red;
+    color: red;
 }
 
-.tooltip{
-	/* visibility: visible; */
-}
+
 
 .tooltip:before {
     content: attr(data-tooltip);
-	position: absolute;
+    position: absolute;
     left: 50%;
-	top: 0em;
+    top: 0em;
     display: block;
     /* font-size: 10px; */
-	color: #f7e9e9;
-	background-color: rgb(0, 0, 0);
+    color: #f7e9e9;
+    background-color: rgb(0, 0, 0);
     margin-top: 0.5em;
     width: 120px;
     border-radius: 6px;
@@ -139,139 +169,2027 @@ pre .key {
 
 .tooltip:hover:before {
     opacity: 1;
-  }
+}
 
-.agent-pannel{
-	background-color: white;
+.agent-pannel {
+    background-color: white;
     bottom: 0.5em;
-	border: 1px solid #51B4EF;
-	border-top: none;
-	border-bottom: none;
-	border-radius: 5px;
-	box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em
-		rgba(0, 0, 0, 0.3);
+    border: 1px solid #51B4EF;
+    border-top: none;
+    border-bottom: none;
+    border-radius: 5px;
+    box-shadow: 0 0 0 2px rgb(255, 255, 255), 0.3em 0.3em 1em rgba(0, 0, 0, 0.3);
 }
 
 .agent-pannel ul {
-	color: #292727;
+    color: #292727;
 }
 
 .agent-pannel ul li {
-	cursor: pointer;
-	font-size: 1em;
+    cursor: pointer;
+    font-size: 1em;
 
 }
 
 .agent-pannel ul li:hover {
-	background-color: #c7e6f8;
-	color: rgb(14, 13, 13);
+    background-color: #c7e6f8;
+    color: rgb(14, 13, 13);
 }
 
 
 .agent-head {
-	background-color: #023f63;
-	color: rgb(248, 248, 248);
-	border-bottom: 1px solid #4d4d4d;
+    color: #292727;
+    border-bottom: 1px solid #4d4d4d;
 }
 
 @media (max-width:900px) {
-	.agent-pannel{
-		bottom: 0.5em;
-	}
+    .agent-pannel {
+        bottom: 0.5em;
+    }
 }
 
-.not-available{
-	color: #888181;
+.not-available {
+    color: #888181;
 }
 
 .appType {
-	display: inline-block;
-	margin: 0.5em 0.5em 0 0;
+    display: inline-block;
+    margin: 0.5em 0.5em 0 0;
 }
 
 .appType img {
-	width: 3.5em;
+    width: 3.5em;
 }
 
 .appTypeName {
-	text-align: center;
-	font-size: 0.8em;
+    text-align: center;
+    font-size: 0.8em;
 }
 
 
 #model-prefences {
-	font-size: 1em;
+    font-size: 1em;
 }
 
-.model-selects{
-	width: 80%;
-	padding-left: 50px;
-	padding-top: 5px;
+.model-selects {
+    width: 80%;
+    padding-left: 50px;
+    padding-top: 5px;
 }
 
 .model-selects select {
-	/* height: 2em; */
+    /* height: 2em; */
 }
 
 .model-btns {
-	padding-top: 15px;
-	line-height: 1em;
+    padding-top: 15px;
+    line-height: 1em;
 }
 
-.model-btns button{
-	background-color: #348cbe;
-	width: 5em;
-	height: 1.5em;
-	border-radius: 5px;
-	color: white;
+.model-btns button {
+    background-color: #348cbe;
+    width: 5em;
+    height: 1.5em;
+    border-radius: 5px;
+    color: white;
 }
 
-.pdf-mask{
+.pdf-mask {
     width: 100%;
     height: 100%;
     position: fixed;
-    top:0;
+    top: 0;
     left: 0;
-	z-index: 9999;
+    z-index: 9999;
     display: none;
     background-color: rgba(0, 0, 0, 0.6);
 }
 
-.pdf-mask .pdf-box{
+.pdf-mask .pdf-box {
     width: 600px;
     height: 86%;
     background-color: #fff;
-    margin:80px auto;
+    margin: 80px auto;
 }
 
 
 
 .loading-box {
-	display: inline-block;
-	text-align: center;
-	font-size: 12px;
-	width: 120px;
-	height: 16px;
-	margin: 0px auto;
+    display: inline-block;
+    text-align: center;
+    font-size: 12px;
+    width: 120px;
+    height: 16px;
+    margin: 0px auto;
 }
 
 .loading-box>span {
-	animation: loader 1000ms infinite linear;
-	border-radius: 100%;
-	border: 3px solid #2dbb55;
-	border-left-color: transparent;
-	color: transparent;
-	display: inline-block;
-	line-height: 1.2;
-	width: 16px;
-	height: 16px;
-}
-@keyframes loader {
-	0% {  transform: rotate(0deg);  }
-	100% {transform: rotate(360deg);}
+    animation: loader 1000ms infinite linear;
+    border-radius: 100%;
+    border: 3px solid #2dbb55;
+    border-left-color: transparent;
+    color: transparent;
+    display: inline-block;
+    line-height: 1.2;
+    width: 16px;
+    height: 16px;
 }
 
-.agent-pannel .activate{
-	background-color: #07a4ff;
-	color: rgb(14, 13, 13);
+@keyframes loader {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.agent-pannel .activate {
+    background-color: #07a4ff;
+    color: rgb(14, 13, 13);
+}
+
+.chat-div {
+    /* line-height: 2em; */
+    word-wrap: break-word;
+    /* text-align: left; */
+    text-align: left;
+    /* text-align-last: right; */
+    display: inline-block;
+    width: 100%;
+    /* text-align: left; */
+    white-space: normal;
+}
+
+.chat-div br {
+    /* display: none; */
+}
+
+.chat-div ul>li,  .chat-div ol>li{
+    padding-left: 16px;
+}
+
+
+
+.better-result {
+    display: none;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.section-title {
+    margin: 1em 0 0 0;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+/* #introduces 设为相对宽度和高度 */
+#introduces {
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    height: 130px;
+    background-color: transparent;
+    width: min(47em, 90%);
+    margin-bottom: 0;
+    z-index: 5;
+}
+
+:root {
+    --system-bg-color: #1677ff;
+    /* --dynamic-height: calc(100% - 130px - 112px - 120px - 40px);
+    --zero: max(0,  var(--dynamic-height));
+    --dynamic-with: min(512px,  var(var(--dynamic-height))); */
+    --left-nav-width: 260px;
+    --no-content-height: 260px;
+    --radius: min(1000px, calc(100% - 130px - 112px - 120px));
+    --ball-m-top: 10px;
+    --ball-m-bottom: 70px;
+    --ball-display: block;
+    --intro-height: 130px;
+    --content-height: calc(100% - var(--no-content-height));
+    --title-height: 120px;
+    --ball-height: calc(var(--content-height) - var(--intro-height) - var(--title-height));
+
+
+    --rechage-color: var(--system-bg-color);
+    --rechage-color2: var(--system-bg-color);
+}
+
+#ball-div {
+    position: relative;
+    /* position: absolute; */
+    /* margin-right: auto; */
+    background-color: transparent;
+    user-select: none;
+    /* 禁止选中文本 */
+    width: var(--radius);
+    height: var(--radius);
+    margin: 0 auto 0;
+    display: var(--ball-display);
+}
+
+@media (max-width: 900px) {
+    :root {
+        --left-nav-width: 0px;
+    }
+
+    .ball-corner {
+        visibility: hidden
+    }
+}
+
+
+@media (min-height: 901px) and (min-width: 901px) {
+    :root {
+        --radius: min(512px, calc(100% - 130px - 112px - 120px));
+    }
+
+}
+
+
+@media (min-height: 800px) and (max-height: 900px) and (min-width:901px) {
+    :root {
+        --radius: 300px;
+    }
+}
+
+
+@media (min-height: 751px) and (max-height: 800px) and (min-width:901px) {
+    :root {
+        --radius: 250px;
+    }
+}
+
+
+@media (min-height: 700px) and (max-height: 750px) and (min-width:901px) {
+    :root {
+        --radius: 198px;
+    }
+}
+
+@media (min-height: 701px) and (max-height: 750px) and (min-width:901px) {
+    :root {
+        --radius: 198px;
+    }
+}
+
+@media (min-height: 650px) and (max-height: 700px) and (min-width:901px) {
+    :root {
+        --radius: 130px;
+    }
+}
+
+@media (min-height: 601px) and (max-height: 650px) and (min-width:901px) {
+    :root {
+        --radius: 100px;
+    }
+}
+
+@media (min-height: 500px) and (max-height: 600px) and (min-width:901px) {
+    :root {
+        --radius: 0px;
+        --ball-m-top: 50px;
+        --ball-m-bottom: 70px;
+    }
+}
+
+@media (min-height: 0px) and (max-height: 501px) and (min-width:901px) {
+    :root {
+        --radius: 0px;
+        /* --ball-m-top: 0px;
+        --ball-m-bottom: 0px; */
+        --ball-display: none;
+    }
+}
+
+
+
+@media (min-width: 400px) and (max-width:900px) and (min-height:901px) {
+    :root {
+        --radius: 300px;
+    }
+}
+
+@media (min-width: 400px) and (max-width:900px) and (max-height:900px) {
+    :root {
+        --radius: 500px;
+    }
+}
+
+
+
+.system-title {
+    /* border: 1px solid #ccc; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.text {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--system-title-font-size);
+}
+
+
+#top-nav {
+    height: 3rem;
+}
+
+#item-content {
+    z-index: 10;
+    height: calc(100% - var(--no-content-height));
+}
+
+#not-content {
+    height: var(--no-content-height);
+}
+
+.ball-container {
+    --ball-radius: 300px;
+   /* background-color: red;  */
+   overflow: hidden;
+   width: 100%;
+   /*height: calc(var(--ball-radius) * 2 + 20px);*/
+    height: 360px;
+   margin-bottom: 30px;
+}
+
+
+#ball-div:active {
+    cursor: grabbing;
+    /* 鼠标拖拽样式 */
+}
+
+#ball-div span {
+    position: absolute;
+    font-size: 2rem;
+    /* 使用 rem 单位，基于根字体大小 */
+    color: #838383;
+    text-decoration: none;
+    font-weight: bold;
+    user-select: none;
+    /* 禁止选中文本 */
+    display: inline-block;
+    width: auto;
+    height: auto;
+    text-align: center;
+    /* 确保文字在容器内居中 */
+    z-index: 6;
+}
+
+/* 当屏幕宽度小于 768px 时，调整字体大小 */
+@media (max-width: 768px) {
+    #ball-div span {
+        font-size: 1.5rem;
+        /* 在小屏幕下减小字体大小 */
+    }
+}
+
+/* 当屏幕宽度小于 480px 时，进一步减小字体 */
+@media (max-width: 480px) {
+    #ball-div span {
+        font-size: 1.2rem;
+        /* 在极小屏幕下减小字体大小 */
+    }
+}
+
+/*!* 添加 hover 效果 *!*/
+/*#ball-div a:hover {*/
+/*    border: 1px solid #eee;*/
+/*    background: #00bdfe;*/
+/*    color: white;*/
+/*    border-radius: 5px;*/
+/*    text-decoration: none;*/
+/*}*/
+
+/* 默认样式 */
+[data-projection-id="1"] {
+    /*height: auto;*/
+    /*padding: 20px;*/
+}
+
+/* 手机端样式 */
+@media (max-width: 768px) {
+    [data-projection-id="1"] {
+        /*height: 1vh; !* 缩小 div 高度 *!*/
+    }
+}
+
+
+
+/* 弹窗样式 */
+#agent-form-modal.modal {
+    display: none;
+    /* 默认隐藏 */
+    position: fixed;
+    z-index: 1;
+    width: 26rem;
+    left: calc(var(--left-nav-width) / 2 + (50% - 13rem));
+    top: 14%;
+    justify-content: center;
+    align-items: center;
+}
+
+#agent-form-modal .modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 26rem;
+    box-sizing: border-box;
+}
+
+#agent-form-modal .modal-content form {
+    display: flex;
+    flex-direction: column;
+}
+
+#agent-form-modal .modal-content label {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#agent-form-modal .modal-content input,
+#agent-form-modal .modal-content select {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#agent-form-modal .modal-content button {
+    margin-top: 15px;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    background-color: var(--system-bg-color);
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* agent-list-container 样式 */
+#agent-list-container {
+    /* display: none;
+    width: 100%;
+    height: 90%;
+    box-sizing: border-box;
+    background-color: white;
+    padding: 20px;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    position: relative; */
+    display: none;
+    width: 100%;
+    height: 90%;
+    box-sizing: border-box;
+    background-color: white;
+    padding: 52px 20px 20px 42px;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-size: 12px;
+}
+
+#agent-list th,
+#agent-list td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+#agent-list th:nth-child(1),
+#agent-list td:nth-child(1) {
+    max-width: 8em;
+}
+
+#agent-list th:nth-child(3),
+#agent-list td:nth-child(3) {
+    max-width: 12em;
+}
+
+#agent-list th:nth-child(4),
+#agent-list td:nth-child(4) {
+    max-width: 10em;
+}
+
+/* 禁止选中的样式 */
+#agent-list-container .no-select {
+    user-select: none;
+}
+
+/* 虚化效果 */
+#agent-list-container .blurred {
+    pointer-events: none;
+    /* 禁止与虚化区域的交互 */
+}
+
+/* 新增智能体按钮 */
+#agent-list-container button {
+    font-size: 12px;
+    border: none;
+    /* background-color: #1890ff; */
+    /* color: white; */
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* 收费金额输入框容器 */
+#agent-list-container #pricePerReqContainer {
+    margin-top: 10px;
+}
+
+#agent-list-container #pricePerReq {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#agent-list-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#agent-list-container th,
+#agent-list-container td {
+    padding: 10px;
+    text-align: center;
+}
+
+#agent-list-container button {
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.agent-list-container {}
+
+/* 禁止选中的样式 */
+.no-select {
+    user-select: none;
+}
+
+/* 虚化效果 */
+.blurred {
+    pointer-events: none;
+    /* 禁止与虚化区域的交互 */
+}
+
+/* 新增智能体按钮 */
+#agent-list-container button {
+    font-size: 16px;
+    border: none;
+    /* background-color: #ffffff; */
+    /* color: black; */
+    border-radius: 5px;
+    cursor: pointer;
+    /* border: 1px solid #cccccc; */
+    transition: background-color 0.3s;
+}
+
+#agent-list-container button:hover {
+    /* background-color: #1890ff; */
+    /* color: #ffffff; */
+}
+
+/* 收费金额输入框容器 */
+#pricePerReqContainer {
+    margin-top: 10px;
+}
+
+#pricePerReq {
+    padding: 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 仅影响 id 为 agent-list-container 下的表格 */
+#agent-list-container table {
+    width: 100%;
+    /* 表格宽度 100% */
+    border-collapse: collapse;
+    /* 合并边框 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的 th 和 td */
+#agent-list-container th,
+#agent-list-container td {
+    padding: 10px;
+    /* 设置单元格内边距 */
+    text-align: center;
+    /* 文字居中对齐 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的 button */
+#agent-list-container button {
+    padding: 5px 10px;
+    /* 按钮内边距 */
+    margin: 0px;
+    /* 按钮外边距 */
+    cursor: pointer;
+    /* 鼠标悬停时显示指针 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的分页容器 */
+.pagination {
+    display: flex;
+    /* 使用 flexbox 布局 */
+    justify-content: center;
+    /* 水平居中对齐分页按钮 */
+    margin-top: 50px;
+    /* 分页区域与表格之间的距离 */
+}
+
+/* 仅影响 id 为 agent-list-container 下的分页按钮 */
+.pagination button {
+    /*position: absolute;*/
+    bottom: 50px;
+    margin: 0 5px;
+    /* 按钮之间的间距 */
+    width: 26px;
+    height: 26px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    border: 1px solid gray;
+    color: gray;
+}
+
+
+/* 设置表格的整体样式 */
+#agent-list {
+    width: 100%;
+    /* 设置表格宽度为100% */
+    border-collapse: collapse;
+    /* 合并表格的边框 */
+    margin-top: 0.5em;
+    /* 给表格顶部加一点间距 */
+}
+
+/* 设置表头的样式 */
+#agent-list thead {
+    background-color: #e8e8e8;
+    /* 设置表头背景色 */
+    color: black;
+    /* 设置表头文字颜色为白色 */
+    text-align: center;
+    /* 表头文字居中 */
+    font-weight: bold;
+    /* 表头文字加粗 */
+}
+
+/* 设置表格单元格的样式 */
+#agent-list th,
+#agent-list td {
+    border: 1px solid #ddd;
+    /* 设置单元格边框 */
+    padding: 12px;
+    /* 设置单元格的内边距 */
+    text-align: center;
+    /* 内容居中 */
+}
+
+/* 设置表格奇偶行的背景色 */
+#agent-list tbody tr:nth-child(even) {
+    /* background-color: #f2f2f2; */
+    background-color: #fff;
+    /* 偶数行背景色 */
+}
+
+#agent-list tbody tr:nth-child(odd) {
+    background-color: #fff;
+    /* 奇数行背景色 */
+}
+
+/* 鼠标悬停行时的效果 */
+#agent-list tbody tr:hover {
+    background-color: #f1f1f1;
+    /* 鼠标悬停时背景色 */
+    cursor: pointer;
+    /* 鼠标悬停时显示为指针 */
+}
+
+/* 设置最后一列按钮的样式 */
+#agent-list .actions button {
+    background-color: #023f63;
+    /* 按钮背景色 */
+    color: white;
+    /* 按钮文字颜色 */
+    border: none;
+    /* 去除按钮边框 */
+    padding: 6px 12px;
+    /* 设置按钮内边距 */
+    border-radius: 4px;
+    /* 设置按钮圆角 */
+    cursor: pointer;
+    /* 鼠标悬停时显示为指针 */
+    margin: 2px;
+    /* 按钮之间有一点间隔 */
+}
+
+/* 鼠标悬停在按钮上时的效果 */
+#agent-list .actions button:hover {
+    background-color: #023f63;
+    /* 鼠标悬停时按钮颜色 */
+}
+
+/* CSS */
+.free-agent {
+    color: green;
+    /* 免费的智能体使用绿色 */
+}
+
+.paid-agent {
+    color: red;
+    /* 收费的智能体使用红色 */
+}
+
+/* CSS - 设置选中时的背景颜色 */
+.active-agent {
+    background-color: #c7e6f8;
+    /* 可以根据需要修改为任何颜色 */
+}
+
+/* 弹框背景覆盖全屏 */
+#wechat_pay_qr {
+    display: none;
+    /* 初始不显示 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 半透明背景 */
+    display: flex;
+    justify-content: center;
+    /* 水平居中 */
+    align-items: center;
+    /* 垂直居中 */
+    z-index: 9999;
+}
+
+/* 弹框内容 */
+.qrCodeDiv {
+    position: relative;
+    background: white;
+    padding: 20px;
+    width: auto;
+    max-width: 400px;
+    /* 最大宽度限制 */
+    min-width: 300px;
+    /* 最小宽度限制 */
+    text-align: center;
+    border-radius: 10px;
+    /* 圆角 */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    /* 添加阴影 */
+}
+
+/* 公司Logo样式 */
+.companyLogoDiv {
+    text-align: center;
+    margin-bottom: 15px;
+    /* 距离二维码的间距 */
+}
+
+.company_logo {
+    max-width: 150px;
+    /* 你可以根据需要调整宽度 */
+    height: auto;
+    display: inline-block;
+}
+
+/* 二维码图片样式 */
+#qrCode {
+    width: 100%;
+    height: 100%;
+    max-width: 300px;
+    /* 限制二维码最大宽度 */
+    margin-bottom: 20px;
+}
+
+/* 微信支付标题样式 */
+#wechatTitle {
+    text-align: center;
+    margin: 10px 0 0;
+}
+
+.wechat_logo {
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.wechat_label {
+    font-size: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#payAmount {
+    color: #FF8C00;
+}
+
+/* 取消支付按钮样式 */
+.paymentBtn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: var(--rechage-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.paymentBtn:hover {
+    background-color: var(--rechage-color2);
+}
+
+.closePayBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+}
+
+.closePayBtn:hover {
+    color: red;
+}
+
+/* 默认隐藏 paid-agent-list-container */
+.paid-agent-list-container {
+    /* display: none;
+    width: 100%;
+    height: 90%;
+    box-sizing: border-box;
+    background-color: white;
+    padding: 20px;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    position: relative; */
+    display: none;
+    width: 100%;
+    height: 90%;
+    box-sizing: border-box;
+    background-color: white;
+    padding: 52px 20px 20px 42px;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-size: 12px;
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的表格 */
+.paid-agent-list-container table {
+    width: 100%;
+    /* 表格宽度 100% */
+    border-collapse: collapse;
+    /* 合并边框 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的 th 和 td */
+.paid-agent-list-container th,
+.paid-agent-list-container td {
+    padding: 10px;
+    /* 设置单元格内边距 */
+    text-align: center;
+    /* 文字居中对齐 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的 button */
+.paid-agent-list-container button {
+    font-size: 16px;
+    border: none;
+    background-color: #023f63;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    /*position: absolute;*/
+    bottom: 50px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的分页容器 */
+.paid-agent-list-container .pagination {
+    display: flex;
+    /* 使用 flexbox 布局 */
+    justify-content: center;
+    /* 水平居中对齐分页按钮 */
+    margin-top: 20px;
+    /* 分页区域与表格之间的距离 */
+}
+
+/* 仅影响 id 为 paid-agent-list-container 下的分页按钮 */
+.paid-agent-list-container .pagination button {
+    margin: 0 5px;
+    /* 按钮之间的间距 */
+    padding: 5px 10px;
+}
+
+/* 设置表格的整体样式 */
+.paid-agent-list {
+    width: 100%;
+    /* 设置表格宽度为100% */
+    border-collapse: collapse;
+    /* 合并表格的边框 */
+    margin-top: 0.5em;
+    /* 给表格顶部加一点间距 */
+}
+
+/* 设置表头的样式 */
+.paid-agent-list thead {
+    background-color: #e8e8e8;
+    /* 设置表头背景色 */
+    color: black;
+    /* 设置表头文字颜色为白色 */
+    text-align: center;
+    /* 表头文字居中 */
+    font-weight: bold;
+    /* 表头文字加粗 */
+}
+
+/* 设置表格单元格的样式 */
+.paid-agent-list th,
+.paid-agent-list td {
+    border: 1px solid #ddd;
+    /* 设置单元格边框 */
+    padding: 12px;
+    /* 设置单元格的内边距 */
+    text-align: center;
+    /* 内容居中 */
+}
+
+/* 设置表格奇偶行的背景色 */
+.paid-agent-list tbody tr:nth-child(even) {
+    /* background-color: #f2f2f2; */
+    /* 偶数行背景色 */
+}
+
+.paid-agent-list tbody tr:nth-child(odd) {
+    /* background-color: #fff; */
+    /* 奇数行背景色 */
+}
+
+/* 鼠标悬停行时的效果 */
+.paid-agent-list tbody tr:hover {
+    background-color: #f1f1f1;
+    /* 鼠标悬停时背景色 */
+    cursor: pointer;
+    /* 鼠标悬停时显示为指针 */
+}
+
+/* 确保 logo 在标题前面 */
+.Small_logo {
+    width: 30px;
+    /* 设置 logo 的宽度 */
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+    /* 垂直居中对齐 logo */
+    margin-right: 10px;
+    /* 控制 logo 和标题的间距 */
+}
+
+/* =============查看收费智能体CSS============= */
+
+/* 遮罩层，默认隐藏 */
+.recharge-overlay {
+    display: none;
+    /* 默认不显示 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* 弹框 */
+.recharge-modal {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px 40px;
+    width: 400px;
+    position: relative;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    transition: transform 0.3s ease-out;
+}
+
+/* 关闭按钮 */
+.recharge-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 28px;
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.recharge-close-btn:hover {
+    color: var(--rechage-color);
+}
+
+/* 弹框头部 */
+.recharge-modal-header {
+    margin-bottom: 20px;
+}
+
+.recharge-agent-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 内容部分 */
+.recharge-modal-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    margin-bottom: 20px;
+    gap: 20px;
+    width: 100%;
+}
+
+/* 左侧 - 单次调用价格 */
+.recharge-left,
+.recharge-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 100%;
+    flex: 1;
+}
+
+.recharge-left {
+    text-align: left;
+}
+
+.recharge-right {
+    text-align: left;
+}
+
+/* 确保 p 和 label 垂直对齐 */
+.recharge-left p,
+.recharge-right label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+    text-align: left;
+    line-height: 1.5;
+}
+
+.recharge-price {
+    margin-top: 10px;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(----rechage-color);
+    text-align: left;
+}
+
+#recharge-call-count {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: border 0.3s;
+}
+
+#recharge-call-count:focus {
+    border-color: var(--rechage-color);
+    outline: none;
+}
+
+/* 底部部分 */
+.recharge-footer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+/* 底部按钮 */
+.recharge-footer .recharge-subscribe-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, var(--rechage-color), var(--rechage-color2));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.recharge-subscribe-btn:hover {
+    background: linear-gradient(90deg, var(--rechage-color), var(--rechage-color2));
+}
+
+.recharge-subscribe-btn span {
+    margin-right: 8px;
+}
+
+@font-face {
+    font-family: 'fangsong';
+    /* 你给字体起的名字 */
+    src: url('../font/fangsong_GB2312.TTF') format('truetype');
+    font-weight: normal;
+    /* 字体粗细 */
+    font-style: normal;
+    /* 字体样式（正常、斜体等） */
+}
+
+@media (max-width: 768px) {
+    .msg {
+        --msg-width: 20rem;
+        --msg-height: 12rem;
+        width: var(--msg-width);
+        height: var(--msg-height);
+    }
+}
+
+@media (min-width: 768px) {
+    .msg {
+        --msg-width: 20rem;
+        --msg-height: 12rem;
+        width: var(--msg-width);
+        height: var(--msg-height);
+    }
+}
+
+.msg {
+    position: fixed;
+    z-index: 999;
+    top: calc(50% - (var(--msg-height) / 2));
+    /* margin-top:-80px; */
+    left: calc(50% - var(--msg-width) / 2);
+    /* margin-left: calc(50% - var(--msg-width));; */
+    /* margin-left: auto;
+    margin-right: auto; */
+    background: #fff;
+    box-shadow: 5px 5px 8px #999;
+    font-size: 17px;
+    color: #666;
+    border: 1px solid #f8f8f8;
+    text-align: center;
+    line-height: 2rem;
+    display: inline-block;
+    padding-bottom: 20px;
+    border-radius: 2px;
+
+    /* display: flex;
+    flex-direction: column; */
+}
+
+.msg_top {
+    background: #f8f8f8;
+    padding: 5px 15px 5px 20px;
+    text-align: left;
+    flex: 1;
+}
+
+.msg_top span {
+    font-size: 22px;
+    float: right;
+    cursor: pointer;
+}
+
+.msg_cont {
+    padding: 15px 20px 20px;
+    text-align: left;
+    flex: 2;
+}
+
+.msg_clear {
+    display: inline-block;
+    color: #fff;
+    padding: 1px 15px;
+    background: #023f63;
+    ;
+    border-radius: 2px;
+    float: right;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+
+
+.msg-container {
+    text-align: justify;
+}
+
+.left,
+.right {
+    display: inline-block;
+    width: 30%;
+    vertical-align: top;
+    box-sizing: border-box;
+    padding: 1%;
+    text-align: center;
+    border-radius: 3px;
+}
+
+.left {
+    margin-left: 2%;
+    background-color: #263b7e;
+    color: white;
+}
+
+.right {
+    background-color: #002f64;
+    margin-left: 36%;
+    color: white;
+}
+
+.ball-corner {
+    width: 60%;
+    height: 50%;
+}
+
+
+.ball-left-top {
+    top: 0px;
+    left: 0px;
+}
+
+.ball-right-top {
+    top: 0px;
+    right: 0px;
+    display: block;
+}
+
+.ball-describe-item {
+    background: #023f63;
+    color: rgb(250, 250, 250);
+    padding: 0 0.7rem 0 0.7rem;
+    border-radius: 3px;
+    z-index: -5;
+}
+
+.ball-left-top ul li {
+    display: flex;
+    text-align: center;
+}
+
+.ball-right-top ul li {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.ball-right-top ul, .ball-left-top ul {
+    display: flex;
+    flex-direction: column;
+    line-height: 26px;
+    /* 设置主轴为垂直方向 */
+}
+
+.ball-right-top ul{
+    align-items: flex-end;
+}
+
+
+.ball-right-top ul li{
+    text-align: right;
+}
+
+.ball-right-top ul li:nth-child(1) {
+    margin-right: 10px;
+}
+
+.ball-right-top ul li:nth-child(2) {
+    margin-right: -20px;
+}
+
+.ball-right-top ul li:nth-child(3) {
+    margin-right: -50px;
+}
+
+.ball-right-top ul li:nth-child(4) {
+    margin-right: -20px;
+}
+
+.ball-right-top ul li:nth-child(5) {
+    margin-right: 10px;
+}
+
+
+
+
+.ball-left-top ul li:nth-child(1) {
+    margin-left: 20px;
+}
+
+.ball-left-top ul li:nth-child(2) {
+    margin-left: -10px;
+}
+
+.ball-left-top ul li:nth-child(3) {
+    margin-left: -40px;
+}
+
+.ball-left-top ul li:nth-child(4) {
+    margin-left: -10px;
+}
+
+.ball-left-top ul li:nth-child(5) {
+    margin-left: 20px;
+}
+
+
+.ball-left-top ul li span {
+    height: 26px;
+}
+
+.ball-left-top ul li span :nth-child(1){
+    width: 26px;
+    margin-right: 10px;
+}
+
+.ball-left-top ul li span :nth-child(2){
+    width: 26px;
+    margin-right: 10px;
+}
+
+.ball-left-top ul li span :nth-child(3){
+    width: 20px;
+}
+
+
+.ball-right-top ul li span {
+    height: 26px;
+}
+
+.ball-right-top ul li span :nth-child(1){
+    width: 26px;
+    margin-left: 10px;
+}
+
+.ball-right-top ul li span :nth-child(2){
+    width: 26px;
+    margin-left: 10px;
+}
+
+
+
+.ball-corner ul li {
+    width: 80%;
+    padding-top: 5px;
+    height: 36px;
+    border-radius: 36px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    color: black;
+}
+
+
+
+.hot-tag {
+    font-size: 0.7em;
+    color: #020202;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+/*.ball-corner-container:before{*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    left: -40%;*/
+/*    right: 0;*/
+/*    bottom: 0;*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    background-color: rgb(255, 255, 255); */
+/*    z-index: 1;*/
+/*    clip-path: circle(50% at 95% 50%);*/
+/*    pointer-events: none;*/
+/*    content:'';*/
+/*    overflow: visible; */
+/*}*/
+
+.ball-corner-container {
+    height: 450px;
+    /* --ball-radius: 300px; */
+}
+
+@media (max-width: 768px) {
+    .ball-corner-container {
+        height: 0;
+    }
+}
+
+
+.ball-corner-container::before {
+    width: 360px;
+    height: 360px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    position: absolute;
+    top: -15px;
+    right: 0;
+     /*background-color: rgb(255, 0, 0);*/
+    background-color: rgb(255, 255, 255);
+    /* 匹配页面背景色 */
+    z-index: 0;
+    clip-path: circle(50%);
+    pointer-events: none;
+    content: '';
+    overflow: visible;
+}
+
+/* ==============创建智能体CSS开始===================== */
+
+.create_LagiAgent {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    z-index: 1000;
+}
+
+.createLagiAgent-content {
+    background: #ffffff;
+    width: 90%;
+    max-width: 600px;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #ff4d4d;
+}
+
+.createLagiAgent-content h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+#createLagiAgentForm label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+    color: #555;
+}
+
+#createLagiAgentForm textarea {
+    height: 200px;
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    resize: none;
+}
+
+#createLagiAgentForm input[type="text"] {
+    height: auto;
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+
+#createLagiAgentForm input[type="text"]:focus,
+#createLagiAgentForm textarea:focus {
+    border-color: #023f63;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.create_LagiAgentButtons button {
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 20px;
+    background-color: #023f63;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.create_LagiAgentButtons button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.create_LagiAgentButtons button:hover:not(:disabled) {
+    background-color: #023f63;
+    transform: scale(1.02);
+}
+
+@media (max-width: 480px) {
+    .createLagiAgent-content {
+        padding: 15px;
+    }
+
+    .createLagiAgent-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .create_LagiAgentButtons button {
+        font-size: 0.9rem;
+    }
+}
+
+
+/* ==============创建智能体CSS结束===================== */
+.think {
+    background: rgba(0, 0, 0, 0.1);
+    color: rgb(55, 55, 55);
+    padding: 12px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+/* #voiceIcon {
+    border-radius: 5px;
+    z-index: 10;
+}
+
+#voiceIcon:hover {
+    background: rgb(238, 238, 238);
+    color: white;
+} */
+
+.selector {
+    background-color: white;
+    bottom: 0.5em;
+    border: 1px solid #8d8d8d;
+    border-radius: 5px;
+    min-height: 1rem;
+}
+
+.selector ul {
+    color: #292727;
+}
+
+.selector ul li {
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.selector ul li:hover {
+    background-color: #c7e6f8;
+    color: rgb(14, 13, 13);
+}
+
+
+
+
+
+/* 知识库列表容器 */
+.corpus-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* 知识库卡片 */
+.corpus-card {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    height: 180px;
+    position: relative;
+}
+
+.corpus-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+    border-color: #165DFF;
+}
+
+/* 默认标识 */
+.corpus-card .default-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: #165DFF;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    display: none;
+}
+
+.corpus-card.is-default .default-badge {
+    display: block;
+}
+
+#addCorpus {
+    border: 2px dashed #ddd;
+    background-color: #f9fafb;
+    color: #666;
+}
+
+#addCorpus:hover {
+    border-color: #165DFF;
+    background-color: #f3f4f6;
+    color: #165DFF;
+}
+
+#addCorpus i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.corpus-activate {
+    border-color: #165DFF;
+    background-color: rgba(22, 93, 255, 0.03);
+}
+
+.corpus-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    text-align: center;
+}
+
+.corpus-card-info {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.corpus-card-info span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.corpus-operation {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    position: absolute;
+    bottom: 1rem;
+}
+
+.corpus-card:hover .corpus-operation {
+    opacity: 1;
+}
+
+.corpus-operation button {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.corpus-operation button:hover {
+    background-color: #f3f4f6;
+}
+
+.corpus-operation .edit-btn:hover {
+    color: #165DFF;
+}
+
+.corpus-operation .delete-btn:hover {
+    color: #F53F3F;
+}
+
+.corpus-operation .default-btn:hover {
+    color: #165DFF;
+}
+
+/* 模态框 */
+.corpus-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.corpus-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.corpus-modal-content {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 90%;
+    max-width: 500px;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.corpus-modal.active .corpus-modal-content {
+    transform: scale(1);
+}
+
+.corpus-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.corpus-modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.corpus-modal-close {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.corpus-modal-close:hover {
+    color: #333;
+}
+
+.corpus-modal-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #165DFF;
+    box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.2);
+}
+
+.corpus-modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background-color: #165DFF;
+    color: white;
+    border: 1px solid #165DFF;
+}
+
+.btn-primary:hover {
+    background-color: #0e4fe6;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+    background-color: #f3f4f6;
+}
+
+.btn-danger {
+    background-color: #F53F3F;
+    color: white;
+    border: 1px solid #F53F3F;
+}
+
+.btn-danger:hover {
+    background-color: #e53935;
+}
+
+/* 通知消息 */
+.notification {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 300;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notification.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.success {
+    background-color: #00B42A;
+    color: white;
+}
+
+.notification.error {
+    background-color: #F53F3F;
+    color: white;
+}
+
+.notification.info {
+    background-color: #165DFF;
+    color: white;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-bar {
+        width: 100%;
+    }
+    
+    .corpus-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 检索设置表单 */
+.search-settings-form {
+    margin: 1rem 0 1rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.search-settings-form form {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.search-settings-form form > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-settings-form label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.search-settings-form input[type="number"] {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.search-settings-form input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.search-settings-save {
+    margin-left: auto;
+}
+
+.search-save-btn {
+    background-color: #165DFF;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.search-save-btn:hover {
+    background-color: #0e4bb3;
 }
