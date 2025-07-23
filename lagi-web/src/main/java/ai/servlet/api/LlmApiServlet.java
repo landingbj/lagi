@@ -104,6 +104,7 @@ public class LlmApiServlet extends BaseServlet {
         } else if(method.equals("isRAG")) {
             this.isRAG(req, resp);
         }
+
     }
 
     private void isRAG(HttpServletRequest req, HttpServletResponse resp) throws IOException{
@@ -159,7 +160,7 @@ public class LlmApiServlet extends BaseServlet {
         convert2streamAndOutput(firstAnswer, resp, work);
     }
 
-    
+
 
     private ChatCompletionResult convertResponse(String response) {
         String format = StrUtil.format("{\"created\":0,\"choices\":[{\"index\":0,\"message\":{\"content\":\"{}\"}}]}", response);

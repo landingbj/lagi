@@ -260,6 +260,10 @@
         <servlet-name>WorkerApiServlet</servlet-name>
         <url-pattern>/v1/worker/*</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>WorkerApiServlet</servlet-name>
+        <url-pattern>/worker/*</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>ocr</servlet-name>

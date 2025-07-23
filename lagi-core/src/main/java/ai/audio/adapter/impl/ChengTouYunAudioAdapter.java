@@ -20,7 +20,8 @@ import java.nio.file.Files;
 
 @ASR(company = "chengtouyun", modelNames = "chengtouyunasr")
 public class ChengTouYunAudioAdapter  extends ModelService implements IAudioAdapter {
-    private static final String ASRHOST = "http://218.109.64.68:11001/asr/api";
+//    private static final String ASRHOST = "http://218.109.64.68:11001/asr/api";
+private static final String ASRHOST = "http://20.17.39.241:8890/asr/api";
     private final Gson gson = new Gson();
     private UniversalOSS universalOSS;
 
@@ -49,10 +50,10 @@ public class ChengTouYunAudioAdapter  extends ModelService implements IAudioAdap
                     .url(ASRHOST)
                     .post(body)
                     .addHeader("Content-Type", "audio/mpeg")
-                    .addHeader("access_token", getAccessToken())
+//                    .addHeader("access_token", getAccessToken())
                     .addHeader("audio_format", param.getFormat())
-                    .addHeader("sample_rate", param.getSample_rate().toString());
-//                    .addHeader("domain", "common");
+                    .addHeader("sample_rate", param.getSample_rate().toString())
+                    .addHeader("domain", "common");
             Request request = requestBuilder.build();
             Response response = client.newCall(request).execute();
 
@@ -97,7 +98,7 @@ public class ChengTouYunAudioAdapter  extends ModelService implements IAudioAdap
         AudioRequestParam param = new AudioRequestParam();
         param.setModel("default_model");
         param.setAppkey("your_app_key");
-        param.setFormat("wav");
+        param.setFormat("mp3");
         param.setSample_rate(8000);
         param.setEnable_punctuation_prediction(true);
         param.setEnable_inverse_text_normalization(true);

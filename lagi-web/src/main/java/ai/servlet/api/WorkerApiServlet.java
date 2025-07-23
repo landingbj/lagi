@@ -7,8 +7,14 @@ import ai.servlet.BaseServlet;
 import ai.utils.SensitiveWordUtil;
 import ai.worker.DefaultWorker;
 import ai.worker.audio.Asr4FlightsWorker;
+import ai.worker.chengtouyun.SignUtil;
 import ai.worker.pojo.Asr4FlightData;
+import ai.worker.pojo.BatteryMonthlyReport;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.sun.xml.bind.v2.TODO;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletException;
@@ -19,15 +25,30 @@ import javax.servlet.http.Part;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 1024 * 1024 * 5, maxRequestSize = 1024 * 1024 * 5)
 public class WorkerApiServlet extends BaseServlet {
     private final Asr4FlightsWorker asr4FlightsWorker = new Asr4FlightsWorker();
     private final DefaultWorker defaultWorker = new DefaultWorker();
-
-
     private static final Gson gson = new Gson();
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        String url = req.getRequestURI();
+        String method = url.substring(url.lastIndexOf("/") + 1);
+        if (method.equals("tiredetail")) {
+            this.tiredetail(req, resp);
+        }else if (method.equals("vehicledetailsv")) {
+            this.vehicledetailsv(req, resp);
+        }else if (method.equals("vehiclepagedetailsv")) {
+            this.vehiclepagedetailsv(req, resp);
+        }
+
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -39,7 +60,168 @@ public class WorkerApiServlet extends BaseServlet {
             this.asr4flights(req, resp);
         } else if (method.equals("completions")) {
             this.completions(req, resp);
+        } else if (method.equals("setBatteryMonthlyReport")) {
+            this.setBatteryMonthlyReport(req, resp);
         }
+    }
+
+private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    req.setCharacterEncoding("UTF-8");
+    resp.setContentType("application/json;charset=utf-8");
+    Map<String, Object> responseMap = new HashMap<>();
+    try {
+        // 从请求中读取JSON数据
+        StringBuilder sb = new StringBuilder();
+        String line;
+        BufferedReader reader = req.getReader();
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+        }
+
+        // 将JSON数据转换为BatteryMonthlyReport对象
+        BatteryMonthlyReport report = gson.fromJson(sb.toString(), BatteryMonthlyReport.class);
+
+
+        //todo 这里可以添加业务逻辑处理
+        responseMap.put("code", 0);
+        responseMap.put("message", "success");
+        responseMap.put("status", HttpServletResponse.SC_OK);
+        responseMap.put("data", report);
+    } catch (Exception e) {
+        log.error("处理电池月报数据时发生错误", e);
+        responseMap.put("code", 1);
+        responseMap.put("message", "处理电池月报数据时发生错误: " + e.getMessage());
+        responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+        responseMap.put("data", null);
+        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+
+    }
+    // 返回处理后的对象
+    PrintWriter out = resp.getWriter();
+    out.print(gson.toJson(responseMap));
+    out.flush();
+    out.close();
+}
+
+
+    private void vehiclepagedetailsv(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
+        resp.setContentType("application/json;charset=utf-8");
+        String VEHICLE_PAGE_URL = "http://10.110.108.182:20088/maintenance/v1/zhiPu/busInfo/page";
+        String currentPage = req.getParameter("currentPage");
+        String pageSize = req.getParameter("pageSize");
+        Map<String, String> params = new HashMap<>();
+        params.put("currentPage", currentPage);
+        params.put("pageSize", pageSize);
+        long timestamp = System.currentTimeMillis() / 1000;
+        Map<String, String> signature = SignUtil.generateSign(params, timestamp);
+        params.put("signature", signature.get("signature"));
+        params.put("timestamp", signature.get("timestamp"));
+
+        Map<String, Object> responseMap = new HashMap<>();
+
+        try {
+            String jsonInputString = "{ \"currentPage\": "+currentPage+",\"pageSize\": "+pageSize+", \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
+            HttpResponse response = HttpRequest.get(VEHICLE_PAGE_URL)
+                    .header("Content-Type", "application/json")
+                    .body(jsonInputString)
+                    .execute();
+            responseMap.put("code", 0);
+            responseMap.put("message", "success");
+            responseMap.put("status", HttpServletResponse.SC_OK);
+            responseMap.put("data", response);
+        } catch (Exception e) {
+            log.error("处理电池月报数据时发生错误", e);
+            responseMap.put("code", 1);
+            responseMap.put("message", "错误: " + e.getMessage());
+            responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+            responseMap.put("data", null);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+        //todo 处理逻辑12345
+        System.out.println("处理逻辑12345");
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print(responseMap);
+        out.flush();
+        out.close();
+    }
+
+    private void vehicledetailsv(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException{
+        resp.setContentType("application/json;charset=utf-8");
+        String VEHICLE_PAGE_URL = "http://192.168.254.182:20088/maintenance/v1/zhiPu/busInfo/detail";
+        String busId = req.getParameter("busId");
+        Map<String, String> params = new HashMap<>();
+        params.put("busId", busId);
+        long timestamp = System.currentTimeMillis() / 1000;
+        Map<String, String> signature = SignUtil.generateSign(params, timestamp);
+        params.put("signature", signature.get("signature"));
+        params.put("timestamp", signature.get("timestamp"));
+        Map<String, Object> responseMap = new HashMap<>();
+        try {
+            String jsonInputString = "{ \"busId\": 1001000028, \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
+            HttpResponse response = HttpRequest.get(VEHICLE_PAGE_URL)
+                    .header("Content-Type", "application/json")
+                    .body(jsonInputString)
+                    .execute();
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            responseMap.put("code", 0);
+            responseMap.put("message", "success");
+            responseMap.put("status", HttpServletResponse.SC_OK);
+            responseMap.put("data", response);
+        } catch (Exception e) {
+            log.error("处理电池月报数据时发生错误", e);
+            responseMap.put("code", 1);
+            responseMap.put("message", "错误: " + e.getMessage());
+            responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+            responseMap.put("data", null);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+        //todo 调用报告的接口
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print(responseMap);
+        out.flush();
+        out.close();
+    }
+
+    private void tiredetail(HttpServletRequest req, HttpServletResponse resp)  throws IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String VEHICLE_PAGE_URL = "http://192.168.254.182:20088/maintenance/v1/zhiPu/tyre/detail";
+        String busId = req.getParameter("busId");
+        Map<String, String> params = new HashMap<>();
+        params.put("busId", busId);
+        long timestamp = System.currentTimeMillis() / 1000;
+        Map<String, String> signature = SignUtil.generateSign(params, timestamp);
+        params.put("signature", signature.get("signature"));
+        params.put("timestamp", signature.get("timestamp"));
+
+        Map<String, Object> responseMap = new HashMap<>();
+
+        try {
+            String jsonInputString = "{ \"busId\": "+busId+", \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
+            HttpResponse response = HttpRequest.get(VEHICLE_PAGE_URL)
+                    .header("Content-Type", "application/json")
+                    .body(jsonInputString)
+                    .execute();
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(response.body());
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            log.error("处理电池月报数据时发生错误", e);
+            responseMap.put("code", 1);
+            responseMap.put("message", "错误: " + e.getMessage());
+            responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+            responseMap.put("data", null);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+        //todo 调用报告的接口
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print(responseMap);
+        out.flush();
+        out.close();
     }
 
     public void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -66,7 +248,7 @@ public class WorkerApiServlet extends BaseServlet {
 
         File tempDir = new File(tempFolder);
         if (!tempDir.exists()) {
-            tempDir.mkdirs(); // 创建临时文件夹及其父文件夹（如果不存在）
+            tempDir.mkdirs();
         }
 
         String savePath = tempFolder;
@@ -82,7 +264,7 @@ public class WorkerApiServlet extends BaseServlet {
             Asr4FlightData build = Asr4FlightData.builder().resPath(resPath).build();
             result = asr4FlightsWorker.call(build);
         } catch (IOException e) {
-            result = new AsrResponse(1, "识别失败");
+            result = new AsrResponse(1, "返回错误");
             e.printStackTrace();
         }
         response.setHeader("Content-Type", "application/json;charset=utf-8");
