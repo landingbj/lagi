@@ -9,6 +9,7 @@
 	{"rule":"one-finger-refuse", "level": 2, "mask": ""},
 	{"rule":"```json", "level": 2, "mask": ""},
 	{"rule":"\"answer\": \"", "level": 2, "mask": ""},
-	{"rule":"```", "level": 2, "mask": ""}
+	{"rule":"```", "level": 2, "mask": ""},
+	{"rule":"---", "level": 2, "mask": ""}
   ]
 }

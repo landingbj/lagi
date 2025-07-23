@@ -55,6 +55,7 @@ stores:
     enable: false
     priority: 10
     track: true
+    html: true
     default: "Please give prompt more precisely"
 
   medusa: # Medusa is a caching tool designed to accelerate the response of large models.
@@ -219,7 +220,6 @@ functions:
   text2qa:
     enable: true
     model: cascade
-
 
 # The following is the configuration of agents, name is the name of the agent,
 # type is the type of the agent, class is the implement class of the agent.

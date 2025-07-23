@@ -265,7 +265,9 @@ public class FileService {
             case ".ppt":
                 content = PptUtil.getPptContent(file);
                 break;
-
+            case ".md":
+            case ".html":
+                content = getString(file.getPath());
             default:
                 System.out.println("无法识别该文件");
                 break;
