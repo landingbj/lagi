@@ -89,7 +89,8 @@
             
               <div class="user-left avatar-container" id="user-img">
                 <img src="images/rj.png" alt="用户头像" class="avatar">
-                <span class="status-indicator" style="visibility: hidden;"></span>
+                <span class="status-indicator" style="visibility: hidden; position: absolute;top: 0px; right: 0px;width: 20px;height: 20px;
+"></span>
               </div>
               <div class="user-middle" id="user_box">登录</div>
               <div class="user-right relative" id="user-more">
@@ -148,13 +149,16 @@
           <!-- <div  class="w-full h-full absolute">
       </div> -->
           <div>
-            <div id="model-prefences" class="w-full h-16 pl-10 absolute left-0 top-0" style="z-index:1000">
+            <div id="model-prefences" class="w-full h-16 absolute left-0 top-0" style="z-index:1000; display:none;">
               <div id="model-selects" class="inline-block model-selects float-left">
               </div>
               <div class="model-btns w-20 flex-1 inline-block">
-                <button id="modelClearBtn" class="inline-block" onclick="clearPreference()">重置所有
+                <button id="modelClearBtn" class="inline-block" onclick="clearPreference()" name="重置所有">
+                  <svg t="1753308468436" class="icon" viewBox="0 0 1088 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7237" width="24" height="24"><path d="M576 0a511.68 511.68 0 0 0-448 264.32V160a32 32 0 0 0-32-32h-64a32 32 0 0 0-32 32v320a32 32 0 0 0 32 32h320a32 32 0 0 0 32-32v-64a32 32 0 0 0-32-32H214.336A383.744 383.744 0 0 1 960 512a384 384 0 0 1-384 384c-166.976 0-307.584-107.2-360.512-256H80.768c56.896 220.736 256.704 384 495.232 384A512 512 0 0 0 576 0z" fill="#1E2330" p-id="7238"></path></svg>
                 </button>
-                <button id="modelSaveBtn" class="inline-block" onclick="savePerference()">保存</button>
+                <button id="modelSaveBtn" class="inline-block" onclick="savePerference()">
+                  <svg t="1753308531466" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8288" width="24" height="24"><path d="M925.248 356.928l-258.176-258.176a64 64 0 0 0-45.248-18.752H144a64 64 0 0 0-64 64v736a64 64 0 0 0 64 64h736a64 64 0 0 0 64-64V402.176a64 64 0 0 0-18.752-45.248zM288 144h192V256H288V144z m448 736H288V736h448v144z m144 0H800V704a32 32 0 0 0-32-32H256a32 32 0 0 0-32 32v176H144v-736H224V288a32 32 0 0 0 32 32h256a32 32 0 0 0 32-32V144h77.824l258.176 258.176V880z" p-id="8289"></path></svg>
+                </button>
               </div>
             </div>
           </div>

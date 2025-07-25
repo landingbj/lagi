@@ -91,11 +91,15 @@ public class SampleIntentServiceImpl implements IntentService {
         lastQ = StrFilterUtil.filterPunctuations(lastQ);
         complexQ = StrFilterUtil.filterPunctuations(complexQ);
         String finalLastQ = lastQ;
-
-
-        Future<List<IndexSearchData>> lastFuture = executor.submit(() -> vectorStoreService.search(finalLastQ, chatCompletionRequest.getCategory()));
+        String category;
+        if(chatCompletionRequest.getKnowledgeBase() != null) {
+            category = chatCompletionRequest.getKnowledgeBase().getCategory();
+        } else {
+            category = chatCompletionRequest.getCategory();
+        }
+        Future<List<IndexSearchData>> lastFuture = executor.submit(() -> vectorStoreService.search(finalLastQ,  category ));
         String finalComplexQ = complexQ;
-        Future<List<IndexSearchData>> complexFuture = executor.submit(() -> vectorStoreService.search(finalComplexQ, chatCompletionRequest.getCategory()));
+        Future<List<IndexSearchData>> complexFuture = executor.submit(() -> vectorStoreService.search(finalComplexQ,category));
         try {
             List<IndexSearchData> l = lastFuture.get();
             List<IndexSearchData> c = complexFuture.get();

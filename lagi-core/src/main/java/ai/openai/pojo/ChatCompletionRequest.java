@@ -23,4 +23,5 @@ public class ChatCompletionRequest implements Serializable {
     private Double frequency_penalty;
     private Double top_p;
     private KnowledgeBase knowledgeBase;
+    private Object userContext;
 }

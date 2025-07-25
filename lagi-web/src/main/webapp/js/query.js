@@ -371,6 +371,7 @@ async function getRequest(question, agentId) {
         "temperature": window.myTemperature || 0.8,
         "max_tokens": MODEL_MAX_TOKENS,
         "worker": "BestWorker",
+        "userContext": window.finger,
         // "stream": false,
         "stream": true,
         "userId": globalUserId,
@@ -696,6 +697,7 @@ function streamOutput(paras, question, robootAnswerJq, url = "chat/go/stream") {
                     CONVERSATION_CONTEXT.push({"role": "user", "content": question});
                     CONVERSATION_CONTEXT.push({"role": "assistant", "content": sourceContent});
                     flag = false;
+                    robootAnswerJq.append("<pre></pre>");
                     break;
                 }
                 if (chunk.length === 0 || !isJsonString(chunk)) {
@@ -748,8 +750,8 @@ function streamOutput(paras, question, robootAnswerJq, url = "chat/go/stream") {
                         ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : ""}                        
                         ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}
                         ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}
-                        ${json.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${json.source}</small></div></div><br>` : ""}`
-                // `;
+                `;
+                // ${json.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${json.source}</small></div></div><br>` : ""}`
                 if (chatMessage.contextChunkIds) {
                     if (chatMessage.contextChunkIds instanceof Array) {
                         getCropRect(chatMessage.contextChunkIds, fullText, robootAnswerJq);
@@ -802,7 +804,7 @@ async function filterChunk(filenames, filePaths, contextChunkIds, result, jqObj)
                 let data = res.data;
                 if (!(data instanceof Array)) {
                     console.log(data);
-                    jqObj.apppend(`<div style="float: left;">未获取到截图</div>`);
+                    jqObj.apppend(`<div style="float: left;">未获取到截图</div><pre></pre>`);
                     return;
                 }
                 let html = `<div  style="float: left;">${(function () {
@@ -1005,6 +1007,7 @@ async function retry(index) {
         "messages": preArr,
         "temperature": window.myTemperature || 0.8,
         "max_tokens": MODEL_MAX_TOKENS,
+        "userContext": window.finger,
         "stream": true
     };
     let question = preArr[preArr.length - 1]['content']

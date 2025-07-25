@@ -31,7 +31,7 @@ function initHelloPage() {
     initIntroduces();
     loadCorners();
     // initAgentTool();
-    $('#model-prefences').hide();
+    // $('#model-prefences').hide();
 }
 
 

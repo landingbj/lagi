@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProxyLlmAdapter extends ModelService implements ILlmAdapter {
 
+    @Getter
     private final ILlmAdapter llmAdapter;
 
 

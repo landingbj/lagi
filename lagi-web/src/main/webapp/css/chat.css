@@ -232,13 +232,13 @@ pre .key {
 }
 
 .model-selects {
-    width: 80%;
+    /* width: 80%; */
     padding-left: 50px;
     padding-top: 5px;
 }
 
-.model-selects select {
-    /* height: 2em; */
+.model-selects select{
+    border-radius: 15px;
 }
 
 .model-btns {
@@ -246,12 +246,14 @@ pre .key {
     line-height: 1em;
 }
 
+
 .model-btns button {
-    background-color: #348cbe;
+    /* background-color: #348cbe;
     width: 5em;
     height: 1.5em;
     border-radius: 5px;
-    color: white;
+    color: white; */
+    margin-left: 15px;
 }
 
 .pdf-mask {

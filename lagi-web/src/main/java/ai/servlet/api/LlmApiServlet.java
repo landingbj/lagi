@@ -34,6 +34,7 @@ import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptCacheTrigger;
 import ai.medusa.utils.PromptInputUtil;
+import ai.migrate.dao.UserModelPreferenceDao;
 import ai.migrate.service.AgentService;
 import ai.migrate.service.TraceService;
 import ai.openai.pojo.ChatCompletionRequest;
@@ -436,7 +437,11 @@ public class LlmApiServlet extends BaseServlet {
         IntentResponse intentDetect = getIntentResponse(llmRequest);
 
         if (think) {
-            out.println("data: " + gson.toJson(convertResponse("", "为用户选用智能体：" + outputAgent.getAgentConfig().getName() + "\n\n")) + "\n\n");
+            if(outputAgent instanceof LocalRagAgent) {
+                out.println("data: " + gson.toJson(convertResponse("", "为用户选用大模型：LLM" +   "\n\n")) + "\n\n");
+            } else {
+                out.println("data: " + gson.toJson(convertResponse("", "为用户选用智能体：" + outputAgent.getAgentConfig().getName() + "\n\n")) + "\n\n");
+            }
             out.flush();
             out.println("data: " + gson.toJson(convertResponse("", "</think>")) + "\n\n");
             out.flush();
@@ -678,8 +683,8 @@ public class LlmApiServlet extends BaseServlet {
         }
         boolean hasTruncate = false;
         GetRagContext context = null;
-        String userId = req.getHeader("userId");
-        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(chatCompletionRequest.getUserId() == null ? userId : chatCompletionRequest.getUserId());
+        String userId = chatCompletionRequest.getUserId() == null ? req.getHeader("userId") : chatCompletionRequest.getUserId();
+        List<ILlmAdapter> userLlmAdapters = getUserLlmAdapters(userId);
         if(!userLlmAdapters.isEmpty()) {
             chatCompletionRequest.setModel( ((ModelService) userLlmAdapters.get(0)).getModel());
         }
@@ -817,13 +822,17 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private EnhanceChatCompletionRequest setCustomerModel(HttpServletRequest req, HttpSession session) throws IOException {
-        ModelPreferenceDto preference = JSONUtil.toBean((String) session.getAttribute("preference"), ModelPreferenceDto.class);
         EnhanceChatCompletionRequest chatCompletionRequest = reqBodyToObj(req, EnhanceChatCompletionRequest.class);
-        if (chatCompletionRequest.getModel() == null
-                && preference != null
-                && preference.getLlm() != null) {
-            chatCompletionRequest.setModel(preference.getLlm());
+        if(chatCompletionRequest.getUserContext() != null) {
+            String finger = (String) chatCompletionRequest.getUserContext();
+            UserModelPreferenceDao userModelPreferenceDao = new  UserModelPreferenceDao();
+            ModelPreferenceDto preference = userModelPreferenceDao.getUserModelPreference( finger);
+            if(preference != null) {
+                chatCompletionRequest.setModel(preference.getLlm());
+                chatCompletionRequest.setUserContext(null);
+            }
         }
+
         String clientIpAddress = ClientIpAddressUtil.getClientIpAddress(req);
         chatCompletionRequest.setIp(clientIpAddress);
         return chatCompletionRequest;

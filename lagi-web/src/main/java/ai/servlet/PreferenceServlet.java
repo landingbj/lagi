@@ -13,6 +13,7 @@ import ai.servlet.annotation.Get;
 import ai.servlet.annotation.Param;
 import ai.servlet.annotation.Post;
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
 
@@ -30,7 +31,7 @@ public class PreferenceServlet extends RestfulServlet {
 
 
     public PreferenceServlet(){
-        List<ModelInfo> aLLMs = LlmManager.getInstance().getAllAdapters().stream().limit(1).map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, LLM.class).stream()).collect(Collectors.toList());
+        List<ModelInfo> aLLMs = LlmManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, LLM.class).stream()).collect(Collectors.toList());
         List<ModelInfo> aTTSs = TTSManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, TTS.class).stream()).collect(Collectors.toList());
         List<ModelInfo> aASRs = ASRManager.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, ASR.class).stream()).collect(Collectors.toList());
         List<ModelInfo> aImg2Texts = Image2TextManger.getInstance().getAllAdapters().stream().map(a-> (ModelService) a).flatMap(m->convert2ModelInfo(m, Img2Text.class).stream()).collect(Collectors.toList());
@@ -54,19 +55,18 @@ public class PreferenceServlet extends RestfulServlet {
     }
 
     private <A extends Annotation> List<ModelInfo> convert2ModelInfo(ModelService modelService, Class<A> annotationClass) {
+        if(modelService instanceof ProxyLlmAdapter) {
+            modelService =  (ModelService) ((ProxyLlmAdapter) modelService).getLlmAdapter();
+        }
         A annotation = modelService.getClass().getAnnotation(annotationClass);
         String [] modelNames;
-        if(annotation == null){
-            if(modelService instanceof ProxyLlmAdapter) {
-                modelNames = ((ProxyLlmAdapter) modelService).getModelNames();
-            }else {
-                return Collections.emptyList();
-            }
-        } else {
-            modelNames = AnnotationUtil.getAnnotationValue(modelService.getClass(), annotationClass, "modelNames");
+        if(annotation == null ){
+            return Collections.emptyList();
         }
+        modelNames = AnnotationUtil.getAnnotationValue(modelService.getClass(), annotationClass, "modelNames");
+        ModelService finalModelService = modelService;
         return Arrays.stream(modelNames)
-                .map(m-> ModelInfo.builder().model(m).enabled(modelService.getEnable()).company("").description("").build())
+                .map(m-> ModelInfo.builder().model(m).enabled(finalModelService.getEnable()).company("").description("").build())
                 .collect(Collectors.toList());
     }
 
@@ -79,7 +79,7 @@ public class PreferenceServlet extends RestfulServlet {
     }
 
     private String getModelName(String userModel, String defaultModel) {
-        return userModel == null  || (!CacheManager.getInstance().get(userModel))? defaultModel : userModel;
+        return( userModel == null  || (!CacheManager.getInstance().get(userModel)))? defaultModel : userModel;
     }
 
     private <T> String getModelService(AIManager<T> aiManager) {
@@ -101,10 +101,11 @@ public class PreferenceServlet extends RestfulServlet {
         ModelPreferenceDto preferenceRequest = loadUserPreference(userId, request);
         List<ModelInfo> orDefault = modelInfoMap.getOrDefault(type, Collections.emptyList()).stream()
                 .map(a->{
-                    a = ObjectUtil.cloneByStream(a);
-                    a.setEnabled(a.getEnabled() && CacheManager.getInstance().get(a.getModel()));
-                    return a;
-                })
+                    ModelInfo modelInfo = new ModelInfo();
+                    BeanUtil.copyProperties(a, modelInfo);
+                    modelInfo.setEnabled(a.getEnabled() && CacheManager.getInstance().get(a.getModel()));
+                    return modelInfo;
+                }).filter(ModelInfo::getEnabled)
                 .collect(Collectors.toList());
 
         if("llm".equals(type)) {
@@ -141,15 +142,11 @@ public class PreferenceServlet extends RestfulServlet {
     }
 
     private ModelPreferenceDto loadUserPreference(String fingerId, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Object preference = session.getAttribute("preference");
+
         ModelPreferenceDto userModelPreference = null;
-        if(preference == null) {
-            userModelPreference = userModelPreferenceDao.getUserModelPreference(fingerId);
-            session.setAttribute("preference", JSONUtil.toJsonStr(userModelPreference));
-        } else {
-            userModelPreference = JSONUtil.toBean((String) preference, ModelPreferenceDto.class);
-        }
+        userModelPreference = userModelPreferenceDao.getUserModelPreference(fingerId);
+        HttpSession session = request.getSession();
+        session.setAttribute("preference", JSONUtil.toJsonStr(userModelPreference));
         return userModelPreference;
     }
 
@@ -171,7 +168,7 @@ public class PreferenceServlet extends RestfulServlet {
 
     @Get("clearPreference")
     public Integer clearPreference(@Param("userId") String userId, HttpServletRequest request) {
-        Integer res = userModelPreferenceDao.remove(userId);
+        int res = userModelPreferenceDao.deleteByFinger(userId);
         if(res > 0) {
             HttpSession session = request.getSession();
             session.removeAttribute("preference");

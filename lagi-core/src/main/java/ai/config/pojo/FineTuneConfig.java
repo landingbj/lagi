@@ -17,6 +17,7 @@ public class FineTuneConfig {
     private LlamaFactoryConfig llamaFactoryConfig;
 
     // 1. llamafactory  2. beidian
+    @JsonProperty("platform")
     private String platformName;
 
     // beidian pass
