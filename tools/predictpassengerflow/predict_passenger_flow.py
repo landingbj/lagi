@@ -9,6 +9,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 import re
 import warnings
+import requests
 warnings.filterwarnings("ignore")
 
 # 配置日志
@@ -59,10 +60,41 @@ def generate_simulated_weather_data(start_date, end_date):
     logger.info("模拟天气数据生成完成，记录数: %d", len(weather_df))
     return weather_df
 
-# 预留实时天气API接口
+# 实时天气API接口
 def fetch_real_time_weather(start_date, end_date):
-    logger.warning("实时天气API未实现，使用模拟数据")
-    return generate_simulated_weather_data(start_date, end_date)
+    logger.info("从 Open-Meteo 获取实时天气数据...")
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": 30.27,  # 杭州纬度
+        "longitude": 120.15,  # 杭州经度
+        "hourly": "temperature_2m,precipitation,wind_speed_10m,weathercode",
+        "start_date": start_date,
+        "end_date": end_date
+    }
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        weather_df = pd.DataFrame({
+            'datetime': pd.to_datetime(data['hourly']['time']),
+            'temperature': data['hourly']['temperature_2m'],
+            'precipitation': data['hourly']['precipitation'],
+            'wind_speed': data['hourly']['wind_speed_10m'],
+            'weather_type': [map_weather_code(code) for code in data['hourly']['weathercode']]
+        })
+        logger.info("实时天气数据获取完成，记录数: %d", len(weather_df))
+        return weather_df
+    except Exception as e:
+        logger.error("获取天气数据失败: %s", str(e))
+        logger.warning("使用模拟数据作为后备")
+        return generate_simulated_weather_data(start_date, end_date)
+
+def map_weather_code(code):
+    # WMO 天气代码映射到类型
+    if code in [0, 1]: return 'sunny'
+    elif code in [2, 3]: return 'cloudy'
+    elif code in [51, 53, 55, 61, 63, 65, 80, 81, 82]: return 'rainy'
+    return 'cloudy'  # 默认
 
 # 数据提取
 def fetch_data_from_db():
@@ -120,7 +152,7 @@ def process_schedule_dates(schedule_data):
         return match.group(1) if match else '2025-06-01'
 
     schedule_data['date'] = schedule_data['assign_name'].apply(extract_date)
-    
+
     # 将 Timedelta 转换为 HH:MM:SS 格式的字符串
     def timedelta_to_time_str(td):
         if pd.isna(td):
@@ -133,10 +165,10 @@ def process_schedule_dates(schedule_data):
 
     schedule_data['departure_time_str'] = schedule_data['dispatch_departure_time'].apply(timedelta_to_time_str)
     schedule_data['end_time_str'] = schedule_data['dispatch_end_time'].apply(timedelta_to_time_str)
-    
+
     # 记录时间字符串
     logger.info("时间字符串样例: %s", schedule_data[['dispatch_departure_time', 'departure_time_str', 'dispatch_end_time', 'end_time_str']].head().to_dict())
-    
+
     # 拼接日期和时间
     schedule_data['plan_departure_time'] = pd.to_datetime(
         schedule_data['date'] + ' ' + schedule_data['departure_time_str'],
@@ -148,26 +180,26 @@ def process_schedule_dates(schedule_data):
         format='%Y-%m-%d %H:%M:%S',
         errors='coerce'
     )
-    
+
     # 过滤时间范围
     start_date = pd.to_datetime('2025-06-01 00:00:00')
     end_date = pd.to_datetime('2025-07-01 00:00:00')
     schedule_data = schedule_data[
-        (schedule_data['plan_departure_time'] >= start_date) & 
+        (schedule_data['plan_departure_time'] >= start_date) &
         (schedule_data['plan_departure_time'] < end_date)
-    ]
-    
+        ]
+
     # 确保 single_trip_duration 有效
     schedule_data['single_trip_duration'] = np.clip(schedule_data['single_trip_duration'], 5, 60)
     schedule_data['single_trip_duration'] = schedule_data['single_trip_duration'].fillna(10)
-    
+
     # 删除 plan_departure_time 无效的记录
     invalid_count = schedule_data['plan_departure_time'].isna().sum()
     if invalid_count > 0:
         logger.warning("发现 %d 条记录的 plan_departure_time 无效，将被删除", invalid_count)
         logger.info("无效 plan_departure_time 样例: %s", schedule_data[schedule_data['plan_departure_time'].isna()][['assign_name', 'dispatch_departure_time', 'departure_time_str']].head().to_dict())
     schedule_data.dropna(subset=['plan_departure_time'], inplace=True)
-    
+
     # 映射 route_name 到通道
     invalid_routes = []
     def map_to_channel(route_name):
@@ -182,18 +214,18 @@ def process_schedule_dates(schedule_data):
         return None
 
     schedule_data['channel'] = schedule_data['route_name'].apply(map_to_channel)
-    
+
     # 删除无法映射的记录
     invalid_channel_count = schedule_data['channel'].isna().sum()
     if invalid_channel_count > 0:
         logger.warning("发现 %d 条记录的 route_name 无法映射，将被删除", invalid_channel_count)
         logger.info("无法映射的 route_name 样例: %s", list(set(invalid_routes))[:10])
     schedule_data.dropna(subset=['channel'], inplace=True)
-    
+
     # 记录通道分配统计
     channel_counts = schedule_data['channel'].value_counts().to_dict()
     logger.info("通道分配统计: %s", channel_counts)
-    
+
     logger.info("调度数据日期拼接完成，样例: %s", schedule_data[['plan_departure_time', 'plan_end_time', 'single_trip_duration', 'terminal_id', 'route_name', 'channel']].head().to_dict())
     logger.info("过滤后调度数据记录数: %d", len(schedule_data))
     return schedule_data
@@ -235,20 +267,20 @@ def preprocess_data(trade_data, broadcast_data, schedule_data, weather_data):
 
     trade_data['channel'] = trade_data['route_name'].apply(map_to_channel)
     broadcast_data['channel'] = broadcast_data['route_name'].apply(map_to_channel)
-    
+
     # 删除无法映射的记录
     trade_invalid_count = trade_data['channel'].isna().sum()
     if trade_invalid_count > 0:
         logger.warning("交易数据中发现 %d 条记录的 route_name 无法映射，将被删除", trade_invalid_count)
         logger.info("交易数据无法映射的 route_name 样例: %s", list(set(invalid_routes))[:10])
     trade_data.dropna(subset=['channel'], inplace=True)
-    
+
     broadcast_invalid_count = broadcast_data['channel'].isna().sum()
     if broadcast_invalid_count > 0:
         logger.warning("报站数据中发现 %d 条记录的 route_name 无法映射，将被删除", broadcast_invalid_count)
         logger.info("报站数据无法映射的 route_name 样例: %s", list(set(invalid_routes))[:10])
     broadcast_data.dropna(subset=['channel'], inplace=True)
-    
+
     # 计算总客流
     trade_flow = trade_data.groupby(['time_slot', 'channel']).size().reset_index(name='total_flow')
     broadcast_flow = broadcast_data.groupby(['time_slot', 'channel']).agg({
@@ -374,7 +406,7 @@ def train_gpr_and_predict(data, scaler, enc):
             channel_data['class_interval'] = 30
             channel_data['class_frequency'] = 1
             channel_data['single_trip_duration'] = 10
-        
+
         X_channel = channel_data[features].values
         y_channel = channel_data['total_flow'].values
 
@@ -435,18 +467,18 @@ def train_gpr_and_predict(data, scaler, enc):
                 future_data['wind_speed'] = future_data['wind_speed'].fillna(data['wind_speed'].mean())
                 for col in enc.get_feature_names_out(['weather_type']):
                     future_data[col] = future_data[col].fillna(1 if 'sunny' in col else 0)
-            
+
             X_future = future_data[features].values
             if np.any(np.isnan(X_future)):
                 logger.warning("通道 %s 未来时间 %s 的特征矩阵包含NaN，尝试填充", channel, future_slot)
                 for i, col in enumerate(features):
                     if np.any(np.isnan(X_future[:, i])):
                         X_future[:, i] = np.nan_to_num(X_future[:, i], nan=data[col].median() if not data[col].isna().all() else 0)
-            
+
             gpr = gpr_models.get(channel, GaussianProcessRegressor(kernel=RBF(length_scale=1.0) + WhiteKernel(noise_level=1.0), random_state=42))
             total_flow_pred, _ = gpr.predict(X_future, return_std=True)
             channel_predictions[f'Channel {channels.index(channel) + 1}'] = total_flow_pred[0] * weights[channels.index(channel)]
-        
+
         predictions[t] = channel_predictions
         logger.info("未来时间 %s 通道客流预测: %s", t, predictions[t])
 
