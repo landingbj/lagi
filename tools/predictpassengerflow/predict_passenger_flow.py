@@ -8,6 +8,7 @@ from holidays import China
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import warnings
 import requests
 from flask import Flask, jsonify
@@ -174,11 +175,9 @@ def fetch_data_from_db(window_days):
 # 调度数据处理与通道映射
 def process_schedule_dates(schedule_data):
     logger.info("开始处理调度数据...")
-    # 确保时间字段为 datetime 类型
     schedule_data['plan_departure_time'] = pd.to_datetime(schedule_data['dispatch_departure_time'], errors='coerce')
     schedule_data['plan_end_time'] = pd.to_datetime(schedule_data['dispatch_end_time'], errors='coerce')
 
-    # 过滤时间范围
     start_date = (datetime.now() - timedelta(days=CONFIG['window_days'])).replace(hour=0, minute=0, second=0, microsecond=0)
     end_date = datetime.now().replace(hour=23, minute=59, second=59, microsecond=999999)
     schedule_data = schedule_data[
@@ -186,18 +185,15 @@ def process_schedule_dates(schedule_data):
         (schedule_data['plan_departure_time'] < end_date)
         ]
 
-    # 处理 single_trip_duration
     schedule_data['single_trip_duration'] = np.clip(schedule_data['single_trip_duration'], 5, 60)
     schedule_data['single_trip_duration'] = schedule_data['single_trip_duration'].fillna(10)
 
-    # 检查无效时间数据
     invalid_count = schedule_data['plan_departure_time'].isna().sum()
     if invalid_count > 0:
         logger.warning("发现 %d 条记录的 plan_departure_time 无效，将被删除", invalid_count)
         logger.info("无效 plan_departure_time 样例: %s", schedule_data[schedule_data['plan_departure_time'].isna()][['assign_name', 'dispatch_departure_time']].head().to_dict())
     schedule_data.dropna(subset=['plan_departure_time'], inplace=True)
 
-    # 通道映射
     invalid_routes = []
     def map_to_channel(route_name):
         if pd.isna(route_name) or route_name is None:
@@ -365,12 +361,30 @@ def preprocess_data(trade_data, broadcast_data, schedule_data, weather_data, tim
 
     return data, scaler, enc
 
-# 通道权重计算与客流预测
-def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity):
-    logger.info("开始训练GPR模型并预测通道客流，滑动窗口天数: %d", window_days)
+# 计算 MAPE
+def mean_absolute_percentage_error(y_true, y_pred):
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    non_zero = y_true != 0
+    if np.sum(non_zero) == 0:
+        logger.warning("MAPE 计算中所有真实值为0，返回0")
+        return 0.0
+    return np.mean(np.abs((y_true[non_zero] - y_pred[non_zero]) / y_true[non_zero])) * 100
+
+# 通道权重计算与客流预测（含验证逻辑）
+def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity, validate=False):
+    logger.info("开始训练GPR模型并预测通道客流，滑动窗口天数: %d, 验证模式: %s", window_days, validate)
     window_start = data['time_slot'].max() - timedelta(days=window_days)
-    train_data = data[data['time_slot'] >= window_start].copy()
-    logger.info("滑动窗口训练数据记录数: %d", len(train_data))
+
+    # 划分训练集和验证集
+    if validate:
+        train_end = data['time_slot'].max() - timedelta(days=1)  # 保留最后一天作为验证集
+        train_data = data[(data['time_slot'] >= window_start) & (data['time_slot'] < train_end)].copy()
+        valid_data = data[data['time_slot'] >= train_end].copy()
+        logger.info("训练数据记录数: %d, 验证数据记录数: %d", len(train_data), len(valid_data))
+    else:
+        train_data = data[data['time_slot'] >= window_start].copy()
+        valid_data = pd.DataFrame()  # 空验证集
+        logger.info("训练数据记录数: %d", len(train_data))
 
     channels = ['C1', 'C2', 'C3', 'C4', 'C5']
     initial_weights = np.array([0.2] * 5)
@@ -379,14 +393,19 @@ def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity):
     features = ['hour', 'minute', 'weekday', 'is_holiday', 'class_interval', 'class_frequency', 'single_trip_duration',
                 'temperature', 'precipitation', 'wind_speed', 'time_horizon'] + list(enc.get_feature_names_out(['weather_type']))
 
-    train_data['time_horizon'] = 0  # 历史数据默认时间跨度为 0
+    train_data['time_horizon'] = 0
+    if validate:
+        valid_data['time_horizon'] = 0
 
     channel_flows = []
     gpr_models = {}
+    valid_results = []
+
+    # 训练和验证
     for channel in channels:
         channel_data = train_data[train_data['channel'] == channel].copy()
         if channel_data.empty:
-            logger.warning("通道 %s 数据为空，使用默认特征", channel)
+            logger.warning("通道 %s 训练数据为空，使用默认特征", channel)
             channel_data = train_data.iloc[-1:].copy()
             channel_data['class_interval'] = 30
             channel_data['class_frequency'] = 1
@@ -396,8 +415,8 @@ def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity):
         X_channel = channel_data[features].values
         y_channel = channel_data['total_flow'].values
 
-        if len(y_channel) == 0 or len(y_channel) < 10:
-            logger.warning("通道 %s 数据不足（记录数: %d），使用默认预测值", channel, len(y_channel))
+        if len(y_channel) < 10:
+            logger.warning("通道 %s 训练数据不足（记录数: %d），使用默认预测值", channel, len(y_channel))
             channel_flows.append(10.0)
             continue
 
@@ -422,6 +441,30 @@ def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity):
             channel_flows.append(10.0)
             continue
 
+        # 验证集预测
+        if validate and not valid_data.empty:
+            valid_channel_data = valid_data[valid_data['channel'] == channel].copy()
+            if valid_channel_data.empty:
+                logger.warning("通道 %s 验证数据为空，跳过验证", channel)
+                continue
+            X_valid = valid_channel_data[features].values
+            y_valid = valid_channel_data['total_flow'].values
+            if np.any(np.isnan(X_valid)):
+                logger.warning("通道 %s 验证集特征矩阵包含NaN，尝试填充", channel)
+                for i, col in enumerate(features):
+                    if np.any(np.isnan(X_valid[:, i])):
+                        default_value = train_data[col].median() if not train_data[col].isna().all() else 0
+                        X_valid[:, i] = np.nan_to_num(X_valid[:, i], nan=default_value)
+            try:
+                y_pred_valid, _ = gpr.predict(X_valid, return_std=True)
+                valid_channel_data['predicted_flow'] = y_pred_valid
+                valid_channel_data['actual_flow'] = y_valid
+                valid_results.append(valid_channel_data[['time_slot', 'channel', 'actual_flow', 'predicted_flow']])
+                logger.info("通道 %s 验证集预测完成，记录数: %d", channel, len(valid_channel_data))
+            except Exception as e:
+                logger.error("通道 %s 验证集预测失败: %s", channel, str(e))
+                continue
+
     channel_flows = np.array(channel_flows)
     if np.all(channel_flows == 0):
         logger.warning("所有通道预测客流为0，使用初始权重")
@@ -432,6 +475,38 @@ def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity):
         weights = weights / np.sum(weights)
     logger.info("更新后的通道权重: %s", weights)
 
+    # 计算验证指标
+    metrics = {}
+    if validate and valid_results:
+        valid_results_df = pd.concat(valid_results, ignore_index=True)
+        if not valid_results_df.empty:
+            metrics['overall'] = {
+                'MSE': mean_squared_error(valid_results_df['actual_flow'], valid_results_df['predicted_flow']),
+                'MAE': mean_absolute_error(valid_results_df['actual_flow'], valid_results_df['predicted_flow']),
+                'MAPE': mean_absolute_percentage_error(valid_results_df['actual_flow'], valid_results_df['predicted_flow']),
+                'R2': r2_score(valid_results_df['actual_flow'], valid_results_df['predicted_flow'])
+            }
+            logger.info("整体验证指标: MSE=%.2f, MAE=%.2f, MAPE=%.2f%%, R2=%.2f",
+                        metrics['overall']['MSE'], metrics['overall']['MAE'], metrics['overall']['MAPE'], metrics['overall']['R2'])
+
+            # 按通道计算指标
+            metrics['by_channel'] = {}
+            for channel in channels:
+                channel_results = valid_results_df[valid_results_df['channel'] == channel]
+                if not channel_results.empty:
+                    metrics['by_channel'][channel] = {
+                        'MSE': mean_squared_error(channel_results['actual_flow'], channel_results['predicted_flow']),
+                        'MAE': mean_absolute_error(channel_results['actual_flow'], channel_results['predicted_flow']),
+                        'MAPE': mean_absolute_percentage_error(channel_results['actual_flow'], channel_results['predicted_flow']),
+                        'R2': r2_score(channel_results['actual_flow'], channel_results['predicted_flow'])
+                    }
+                    logger.info("通道 %s 验证指标: MSE=%.2f, MAE=%.2f, MAPE=%.2f%%, R2=%.2f",
+                                channel, metrics['by_channel'][channel]['MSE'], metrics['by_channel'][channel]['MAE'],
+                                metrics['by_channel'][channel]['MAPE'], metrics['by_channel'][channel]['R2'])
+    else:
+        valid_results_df = pd.DataFrame()
+
+    # 预测未来客流
     now = datetime.now()
     granularity_minutes = {'15min': 15, '30min': 30, '1h': 60}.get(time_granularity, 15)
     future_times = [now + timedelta(minutes=x) for x in [granularity_minutes, granularity_minutes*2, granularity_minutes*4]]
@@ -513,9 +588,9 @@ def train_gpr_and_predict(data, scaler, enc, window_days, time_granularity):
             })
 
     logger.info("通道客流预测结果: %s", result)
-    return result
+    return result, valid_results_df, metrics
 
-# Flask 接口
+# Flask 接口 - 预测
 @app.route('/station/passenger/forecast/passengewayList', methods=['GET'])
 def get_passenger_forecast():
     try:
@@ -524,7 +599,7 @@ def get_passenger_forecast():
         today = datetime.now().strftime('%Y-%m-%d')
         weather_data = fetch_real_time_weather(today, today, CONFIG['time_granularity'])
         data, scaler, enc = preprocess_data(trade_data, broadcast_data, schedule_data, weather_data, CONFIG['time_granularity'])
-        predictions = train_gpr_and_predict(data, scaler, enc, CONFIG['window_days'], CONFIG['time_granularity'])
+        predictions, _, _ = train_gpr_and_predict(data, scaler, enc, CONFIG['window_days'], CONFIG['time_granularity'], validate=False)
 
         response = {
             'code': '0',
@@ -538,6 +613,44 @@ def get_passenger_forecast():
         return jsonify({
             'code': '1',
             'data': [],
+            'message': f'Error: {str(e)}',
+            'status': 500
+        })
+
+# Flask 接口 - 验证
+@app.route('/station/passenger/forecast/validate', methods=['GET'])
+def validate_passenger_forecast():
+    try:
+        logger.info("接收到客流预测验证请求")
+        trade_data, broadcast_data, schedule_data = fetch_data_from_db(CONFIG['window_days'])
+        today = datetime.now().strftime('%Y-%m-%d')
+        weather_data = fetch_real_time_weather(today, today, CONFIG['time_granularity'])
+        data, scaler, enc = preprocess_data(trade_data, broadcast_data, schedule_data, weather_data, CONFIG['time_granularity'])
+        predictions, valid_results, metrics = train_gpr_and_predict(data, scaler, enc, CONFIG['window_days'], CONFIG['time_granularity'], validate=True)
+
+        response = {
+            'code': '0',
+            'data': {
+                'predictions': predictions,
+                'validation_results': valid_results[['time_slot', 'channel', 'actual_flow', 'predicted_flow']].to_dict(orient='records') if not valid_results.empty else [],
+                'metrics': {
+                    'overall': metrics.get('overall', {}),
+                    'by_channel': metrics.get('by_channel', {})
+                }
+            },
+            'message': '验证成功',
+            'status': 200
+        }
+        return jsonify(response)
+    except Exception as e:
+        logger.error("验证接口处理失败: %s", str(e), exc_info=True)
+        return jsonify({
+            'code': '1',
+            'data': {
+                'predictions': [],
+                'validation_results': [],
+                'metrics': {}
+            },
             'message': f'Error: {str(e)}',
             'status': 500
         })
