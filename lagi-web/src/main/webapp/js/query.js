@@ -78,18 +78,19 @@ async function textQuery() {
     let agentId = currentAppId;
 
     // 隐藏非对话内容
-    hideHelloContent();
+    // hideHelloContent();
 
     $('#queryBox textarea').val('');
     let conversation = {user: {question: question}, robot: {answer: ''}}
-    sleep(200).then(() => {
-        if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
-            socialAgentsConversation(question);
-        } else {
-            let robotAnswerJq = newConversation(conversation);
-            getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
-        }
-    })
+
+    await sleep(200);
+
+    if (currentPromptDialog !== undefined && currentPromptDialog.key === SOCIAL_NAV_KEY) {
+        let robotAnswerJq = await socialAgentsConversation(question);
+    } else {
+        let robotAnswerJq = await newConversation(conversation);
+        getTextResult(question.trim(), robotAnswerJq, conversation, agentId);
+    }
 }
 
 const GET_QR_CODE = "GET_QR_CODE";
@@ -466,8 +467,6 @@ function generalOutput(paras, question, robootAnswerJq) {
 }
 
 function streamOutput(paras, question, robootAnswerJq) {
-    console.log("paras.agentId: " + paras.agentId)
-
     function isJsonString(str) {
         try {
             JSON.parse(str);
@@ -491,23 +490,16 @@ function streamOutput(paras, question, robootAnswerJq) {
         });
 
         if (!response.ok) {
-            let msg = "调用失败！";
-            try {
-                const clonedResponse = response.clone();
-                const data = await clonedResponse.json();
-                if (data && data.message) {
-                    msg = data.message;
-                }
-            } catch (e) {
-            }
-            throw new Error(msg);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         const reader = response.body.getReader();
 
         let fullText = '';
         let flag = true;
-        let lastChunkPart = '';
-
+        let buffer = '';
+        let sourceContent = '';
+        let pageContent = '';
+        robootAnswerJq.html('<p></p>');
         while (flag) {
             const {value, done} = await reader.read();
             let res = new TextDecoder().decode(value);
@@ -515,25 +507,24 @@ function streamOutput(paras, question, robootAnswerJq) {
                 robootAnswerJq.html(res.replaceAll('error:', ''));
                 return;
             }
-            let chunkStr = lastChunkPart + new TextDecoder().decode(value).replaceAll('data: ', '').trim();
-            const chunkArray = chunkStr.split("\n\n");
+            buffer += res;
+            const chunkArray = buffer.split("\n\n");
 
-            let lastChunk = chunkArray[chunkArray.length - 1];
-            if (!isJsonString(chunkArray[chunkArray.length - 1]) && lastChunk !== "[DONE]") {
-                lastChunkPart = chunkArray.pop();
-            } else {
-                lastChunkPart = '';
-            }
-
-            for (let i = 0; i < chunkArray.length; i++) {
-                let chunk = chunkArray[i];
+            for (let chunk of chunkArray) {
+                chunk = chunk.replaceAll('data: ', '').trim();
                 if (chunk === "[DONE]") {
                     CONVERSATION_CONTEXT.push({"role": "user", "content": question});
-                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": fullText});
+                    CONVERSATION_CONTEXT.push({"role": "assistant", "content": sourceContent});
                     flag = false;
                     break;
                 }
-                var json = JSON.parse(chunk);
+                if (chunk.length === 0 || !isJsonString(chunk)) {
+                    buffer = chunk;
+                    break;
+                } else {
+                    buffer = '';
+                }
+                let json = JSON.parse(chunk);
                 if (json.choices === undefined) {
                     queryLock = false;
                     robootAnswerJq.html("调用失败！");
@@ -542,45 +533,33 @@ function streamOutput(paras, question, robootAnswerJq) {
                 if (json.choices.length === 0) {
                     continue;
                 }
-                var chatMessage = json.choices[0].message;
-
-                if (chatMessage.filename === undefined) {
-
-                } else {
-                    //var a = '<ul style="list-style:none;padding-left:5px;">';
-                    var a = '';
-                    let isFirst = true; // 标记是否是第一个文件名
-
+                let chatMessage = json.choices[0].message;
+                let a = '';
+                if (chatMessage.filename) {
                     for (let i = 0; i < chatMessage.filename.length; i++) {
-                        let marginLeft = isFirst ? '0' : '50px';
                         a += `<a class="filename" style="list-style:none;color: #666;text-decoration: none;display: inline-block; " href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a></br>`;
-                        isFirst = false;
-                        //console.log("这里的路径是："+chatMessage.filepath[i]);
-                        //a+=`<a style="color: #666;text-decoration: none;" href="uploadFile/downloadFile?filePath=${chatMessage.filepath[i]}&fileName=${chatMessage.filename[i]}">${chatMessage.filename[i]}</a><br>`;
                     }
-                    //a +='</ul>'
                 }
-
-                // var a = '<a style="color: #666;text-decoration: none;" ' +
-                //     'href="uploadFile/downloadFile?filePath=' + chatMessage.filepath + '&fileName=' +
-                //     chatMessage.filename + '">' + chatMessage.filename + '</a>';
-
                 if (chatMessage.content === undefined) {
                     continue;
                 }
-                var t = chatMessage.content;
-                t = t.replaceAll("\n", "<br>");
-                fullText += t;
+                // console.log("content:", chatMessage);
+                if(json.source) {
+                    sourceContent  +=  chatMessage.content;
+                }
+                pageContent += chatMessage.content;
+                let temp = pageContent;
+                temp = marked.parse(temp);
+                fullText = temp + '<br/>';
                 result = `
-                        ${fullText} <br>
-                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : "" }                        
-                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}<br>
-                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}<br>`
+                        ${fullText}
+                        ${chatMessage.imageList && chatMessage.imageList.length > 0 ? chatMessage.imageList.map(image => `<img src='${image}' alt='Image' style="max-width:100%; height:auto; margin-bottom:10px;">`).join('') : ""}                        
+                        ${chatMessage.filename !== undefined ? `<div style="display: flex;"><div style="width:50px;flex:1">附件:</div><div style="width:600px;flex:17 padding-left:5px">${a}</div></div>` : ""}
+                        ${chatMessage.context || chatMessage.contextChunkIds ? `<div class="context-box"><div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><a style="float: right; cursor: pointer; color:cornflowerblue" onClick="retry(${CONVERSATION_CONTEXT.length + 1})">更多通用回答</a></div>` : ""}
+                        ${json.source !== undefined ? `<div style="display: flex;"><div style="width:300px;flex:1"><small>来源:${json.source}</small></div></div><br>` : ""}`
                 // `;
                 if (chatMessage.contextChunkIds) {
                     if (chatMessage.contextChunkIds instanceof Array) {
-                        // filterChunk(chatMessage.filename, chatMessage.filepath, chatMessage.contextChunkIds, fullText, robootAnswerJq);
-                        // result += `<div class="loading-box">正在索引文档&nbsp;&nbsp;<span></span></div><br>`;
                         getCropRect(chatMessage.contextChunkIds, fullText, robootAnswerJq);
                     }
                 }
@@ -594,11 +573,15 @@ function streamOutput(paras, question, robootAnswerJq) {
         txtTovoice(lastAnswer, "default");
         enableQueryBtn();
         querying = false;
+        queryLock = false;
+        let betterResult = robootAnswerJq.parent().children('.better-result')
+        betterResult.show();
     }).catch((err) => {
         console.error(err);
-        if (robootAnswerJq.text().trim().length === 0) {
-            robootAnswerJq.html(err);
-        }
+        enableQueryBtn();
+        querying = false;
+        queryLock = false;
+        robootAnswerJq.html("系统繁忙，请稍后再试！");
     });
 }
 
@@ -673,17 +656,20 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                 let context_jq = jqObj.children('.context-box');
                 if (res.code !== 0) {
                     console.log(res);
-                    context_jq.apppend(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
+                    context_jq.append(`<div style="float: left; color:red; display:iniline-block;">未获取到文件截图</div><br>`);
+                    return;
+                }
+                if (!context_jq) {
                     return;
                 }
                 let data = res.data;
                 if (!(data instanceof Array)) {
-                    context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
+                    context_jq.append(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     console.log(data);
                     return;
                 }
                 if (data.length == 0) {
-                    context_jq.apppend(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
+                    context_jq.append(`<div style="float: left; display:iniline-block;">未获取到截图</div><br>`);
                     return;
                 }
                 let html = `<div class="context-link" style="float: left;"><span>内容定位:</span>${(function () {
@@ -707,6 +693,9 @@ async function getCropRect(contextChunkIds, result, jqObj) {
                     return h;
                 })()}</div><br>`;
                 context_jq.append(html);
+            },
+            error: function () {
+                jqObj.children('.context-box').children('.loading-box').remove();
             }
         });
     });

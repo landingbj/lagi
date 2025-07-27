@@ -30,7 +30,7 @@ function addOneChat(questionObj) {
 <div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group dark:bg-gray-800">
 <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
     <div class="w-[30px] flex flex-col relative items-end">
-        <div class="relative flex"><span style="box-sizing: border-box; display: inline-block; overflow: hidden; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; position: relative; max-width: 100%;"><span style="box-sizing: border-box; display: block; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; max-width: 100%;"><img aria-hidden="true" src="data:image/png;base64,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" alt="huamn" style="display: block; max-width: 100%; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px;"></span></span>
+        <div class="relative flex"><span style="box-sizing: border-box; display: inline-block; overflow: hidden; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; position: relative; max-width: 100%;"><span style="box-sizing: border-box; display: block; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; max-width: 100%;"><img aria-hidden="true" src="../images/yhtx.png" alt="huamn" style="display: block; max-width: 100%; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px;"></span></span>
         </div>
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
@@ -41,11 +41,11 @@ function addOneChat(questionObj) {
     </div>
 </div>
 </div>
-<div class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
-    <div class="text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
-        <div class="w-[30px] flex flex-col relative items-end">
-            <div class="relative h-[30px] w-[30px] p-1 rounded-sm text-white flex items-center justify-center" style="background-color: rgb(255, 255, 255);">
-                <img src ="images/rj.png" style = "width:30px;heigh:30px" alt = "logo"/>
+<div class="robot-return w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]">
+    <div class="text-area text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0">
+        <div class="w-[34px] flex flex-col relative items-end">
+            <div class="relative h-[34px] w-[34px] p-1 rounded-sm text-white flex items-center justify-center" style="">
+                <img src ="../images/Small_logo.png" style = "width:100;height:100% !important; object-fit: cover;" alt = "logo"/>
             </div>
         </div>
         <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
@@ -72,6 +72,7 @@ function addOneChat(questionObj) {
 </div>
     `;
     $('#chatFoot').before(chatHtml);
+    replaceConversationAttached();
     return  $($(' .markdown')[$('.markdown').length - 1]);
 }
 

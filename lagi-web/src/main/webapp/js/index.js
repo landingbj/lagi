@@ -5,17 +5,11 @@ window.finger = null;
 
 
 window.onload = function () {
-    window.category = getCookie("category");
-    var categoryTmp = window.category;
-    if (categoryTmp === "" || categoryTmp === undefined) {
-        getCategory("");
-    } else {
-        getCategory(categoryTmp);
-    }
     
     initHelloPage();
     loadTheme();
-    showPromptNav();
+    // showPromptNav();
+    loadNavBar();
     Fingerprint2.get(function(components) {
         const values = components.map(function(component,index) {
             if (index === 0) { //把微信浏览器里UA的wifi或4G等网络替换成空,不然切换网络会ID不一样
@@ -24,19 +18,21 @@ window.onload = function () {
             return component.value
         })
         // 生成最终id murmur
-        console.log(values)  //使用的浏览器信息
+        // console.log(values)  //使用的浏览器信息
         const murmur = Fingerprint2.x64hash128(values.join(''), 31)
-        console.log(murmur) //生成的标识码
+        // console.log(murmur) //生成的标识码
         window.finger = murmur;
     })
 }
+
+
 
 
 function setCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
     var expires = "expires=" + d.toGMTString();
-    document.cookie = "category=" + cvalue + "; " + expires;
+    document.cookie = `${cname}=${cvalue}; ${expires}`;
 }
 
 function getCookie(cname) {
@@ -58,27 +54,7 @@ function generateUUID() {
     });
 }
 
-function getCategory(currentCategory) {
-    $.ajax({
-        type: "GET",
-        url: "user/getRandomCategory?currentCategory=" + currentCategory,
-        success: function (res) {
-            var category = 'temp';
-            if (res.status === 'success') {
-                category = res.data.category;
-                setCookie("category", category, 180);
-            } else {
-                setCookie("category", category, 1);
-            }
-            window.category = category;
-        },
-        error: function (res) {
-            var category = 'temp';
-            setCookie("category", category, 1);
-            window.category = category;
-        }
-    });
-}
+
 
 // *******************************事件绑定 结束*****************************************************
 

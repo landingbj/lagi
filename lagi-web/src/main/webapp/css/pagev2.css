@@ -447,8 +447,8 @@ select {
 
 h1 {
     /* font-size: 1.875rem; */
-    font-size: 3.75rem;
-    line-height: 2.25rem
+    font-size: 2.7rem;
+    line-height: 2.25rem;
 }
 
 h1,
@@ -627,7 +627,17 @@ h3 {
     --gray-700: #40414f;
     --gray-800: #343541;
     --gray-900: #202123;
-    --gray-950: #050509
+    --gray-950: #050509;
+    --primary: #165DFF;
+    --secondary: #0FC6C2;
+    --neutral-100: #F5F7FA;
+    --neutral-200: #E5E6EB;
+    --neutral-300: #C9CDD4;
+    --neutral-400: #86909C;
+    --neutral-500: #4E5969;
+    --neutral-600: #272E3B;
+    --neutral-700: #1D2129;
+    --neutral-1000: #000;
 }
 
 html {
@@ -740,6 +750,164 @@ textarea:focus {
     .container {
         max-width: 1536px
     }
+}
+
+.navigation_bar {
+    background-color: #fff;
+    border-right: #d1d5db 1px solid;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 260px;
+}
+
+.nav_header {
+    height: 80px;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 5px 5px;
+}
+
+.logo_container {
+    width: 70%;
+    height: 70%;
+    background-image: url('../images/linkMind_logo.png'); /* 示例图片 */
+    background-size: 100% 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.nav_body {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 16px 16px 32px;
+}
+
+/* 方法1: 使用伪元素实现上下横线 */
+.decorated-heading {
+    position: relative;
+    /* text-align: center; */
+}
+
+.decorated-heading::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 2px;
+    width: 80%; /* 宽度小于元素本身 */
+    background-color: #bababe;
+    top: 1px;
+}
+
+
+
+.nav_foot {
+    width: 100%;
+    height: 130px;
+    color: rgb(0, 0, 0);
+    display: flex;
+    /* align-items: center; */
+    /* justify-content: center; */
+    padding: 16px;
+}
+
+.user-box{
+    width: 100%;
+    display: block;
+}
+
+.share {
+    width: 100%;
+    height: 36px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.share span {
+    float: right;
+}
+
+.share .share-text {
+    margin-right: 24px;
+}
+
+.share span img{
+    width: 30px;
+    height: 30px;
+}
+
+.user-info {
+    width: 100%;
+    padding: 0 16px;
+    display: flex;
+    cursor: pointer;
+}
+
+.user-left {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+  
+.user-middle {
+    flex: 1;
+    padding-left: 8px;
+}
+
+.user-right {
+    width: 24px;
+}
+
+.avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid black;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-indicator {
+    position: absolute;
+    top: 0px; /* 调整到右上角 */
+    right: 0px;
+    width: 20px;
+    height: 20px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #2ecc71;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}
+
+.center-title-box {
+    width: 300px;
+    margin-left: auto; margin-right: auto;
+    padding-top: 40px;
+    height: 80px;
+    text-align: center;
 }
 
 .prose {
@@ -3438,7 +3606,7 @@ textarea:focus {
 }
 
 .grid-cols-\[repeat\(auto-fit\2c minmax\(250px\2c 1fr\)\)\] {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr))
 }
 
 .grid-rows-\[minmax\(10px\2c _1fr\)_auto_minmax\(10px\2c _1fr\)\] {
@@ -5553,7 +5721,8 @@ html {
 
 .markdown h1,
 .markdown h2 {
-    font-weight: 600
+    font-weight: 600;
+    font-size: 1.5rem
 }
 
 .markdown h2 {
@@ -5562,7 +5731,8 @@ html {
 }
 
 .markdown h3 {
-    font-weight: 600
+    font-weight: 600;
+    font-size: 1.2rem
 }
 
 .markdown h3,
@@ -8355,7 +8525,7 @@ button[data-state=open] .toggle-item-button-open {
     }
 
     .xl\:max-w-3xl {
-        max-width: 48rem
+        max-width: 42rem
     }
 
     .xl\:max-w-4xl {
@@ -9581,7 +9751,7 @@ code[class*=language-],
 pre[class*=language-] {
     word-wrap: normal;
     background: none;
-    color: #fff;
+    color: #000000;
     -webkit-hyphens: none;
     hyphens: none;
     line-height: 1.5;
@@ -9880,7 +10050,7 @@ pre[class*=language-] {
 }
 
 .sub-nav-item {
-    margin: 8px 0;
+    margin: 0px 0;
 }
 
 .sub-nav-link {
@@ -9907,114 +10077,4 @@ a.active {
     background-color: #2a2b32; /* 加深的背景色 */
 }
 
-/* #introduces 设为相对宽度和高度 */
-#introduces {
-    width: 40vw;  /* 宽度占视口宽度的40% */
-    height: 15vh; /* 高度占视口高度的15% */
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 9vh; /* 上间距调整为10vh */
-    padding-bottom: 10vh;
-    position: relative;
-}
 
-/* #ball-div 使用相对单位 */
-#ball-div {
-    width: 48vw;  /* 屏幕宽度的48% */
-    height: 48vh; /* 屏幕高度的48% */
-    position: relative;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 2vh;
-    background-color: transparent;
-    user-select: none; /* 禁止选中文本 */
-    cursor: grab; /* 鼠标样式 */
-}
-
-/* 默认情况下，屏幕小于768px时进行调整 */
-@media (max-width: 768px) {
-    #introduces {
-        width: 80vw;  /* 更适合小屏幕的宽度 */
-        height: 20vh;
-        margin-top: 6vh;  /* 适配小屏幕时减少上边距 */
-    }
-
-    #ball-div {
-        width: 80vw;  /* 适配小屏幕，缩小球形容器的尺寸 */
-        height: 40vh;
-        margin-top: 2vh;
-    }
-}
-
-/* 超小屏幕（例如手机）适配 */
-@media (max-width: 480px) {
-    #introduces {
-        width: 90vw;  /* 更大宽度适配手机 */
-        height: 20vh;
-    }
-
-    #ball-div {
-        width: 90vw;  /* 更适合手机的宽度 */
-        height: 32vh;
-        margin-top: 2vh;
-    }
-
-    /* 在小屏幕上减少字体大小和间距 */
-    #topTitle h1 {
-        font-size: 3rem; /* 确保标题不超出屏幕 */
-    }
-}
-
-
-#ball-div:active {
-    cursor: grabbing; /* 鼠标拖拽样式 */
-}
-
-#ball-div span {
-    position: absolute;
-    font-size: 2rem;  /* 使用 rem 单位，基于根字体大小 */
-    color: #838383;
-    text-decoration: none;
-    font-weight: bold;
-    user-select: none; /* 禁止选中文本 */
-    display: inline-block;
-    width: auto;
-    height: auto;
-    text-align: center; /* 确保文字在容器内居中 */
-}
-
-/* 当屏幕宽度小于 768px 时，调整字体大小 */
-@media (max-width: 768px) {
-    #ball-div span {
-        font-size: 1.5rem;  /* 在小屏幕下减小字体大小 */
-    }
-}
-
-/* 当屏幕宽度小于 480px 时，进一步减小字体 */
-@media (max-width: 480px) {
-    #ball-div span {
-        font-size: 1.2rem;  /* 在极小屏幕下减小字体大小 */
-    }
-}
-
-/*!* 添加 hover 效果 *!*/
-/*#ball-div a:hover {*/
-/*    border: 1px solid #eee;*/
-/*    background: #00bdfe;*/
-/*    color: white;*/
-/*    border-radius: 5px;*/
-/*    text-decoration: none;*/
-/*}*/
-
-/* 默认样式 */
-[data-projection-id="1"] {
-    /*height: auto;*/
-    /*padding: 20px;*/
-}
-
-/* 手机端样式 */
-@media (max-width: 768px) {
-    [data-projection-id="1"] {
-        /*height: 1vh; !* 缩小 div 高度 *!*/
-    }
-}

@@ -1,0 +1,142 @@
+.folder-container {
+    background-color: var(--neutral-50);
+    border-radius: 0.5rem;
+}
+
+
+.folder-item {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.folder-item:hover {
+    background-color: var(--neutral-100);
+}
+
+.folder-item.active {
+    background-color: rgba(22, 93, 255, 0.1);
+    color: var(--primary);
+}
+
+.folder-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.folder-text {
+    font-size: 20px;
+    font-weight: 500;
+    margin-left: 1rem;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.file-item:hover {
+    background-color: var(--neutral-100);
+}
+
+.file-text {
+    font-size: 16px;
+    color: var(--neutral-600);
+}
+
+.file-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    color: var(--neutral-400);
+}
+
+/* 自定义实心三角形展开图标 */
+.expand-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.5rem;
+    margin-left: auto;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.expand-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+    width: 0;
+    height: 0;
+    border-top: 0.4rem solid transparent;
+    border-bottom: 0.4rem solid transparent;
+    border-left: 0.6rem solid var(--neutral-1000);
+    transition: transform 0.2s ease;
+}
+
+.expand-icon.expanded::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.folder-content {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.folder-content.expanded {
+    max-height: 1000px;
+}
+
+.info-text {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+}
+
+.tree-line {
+    border-left: 2px solid var(--neutral-200);
+    margin-left: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+/* 为每个文件夹和文件添加左侧连接线 */
+.folder-item, .file-item {
+    position: relative;
+}
+
+.folder-item::before, .file-item::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem; /* 与缩进匹配 */
+    top: 50%;
+    width: 1rem;
+    height: 1px;
+    background-color: var(--neutral-200);
+}
+
+/* 最后一个文件夹/文件的左侧连接线不延伸 */
+.tree-line > :last-child::before {
+    width: 0.75rem;
+}
+
+/* 确保连接线在折叠时正确显示 */
+.folder-content.expanded > .tree-line:last-child > :last-child::before {
+    width: 0.75rem;
+}
