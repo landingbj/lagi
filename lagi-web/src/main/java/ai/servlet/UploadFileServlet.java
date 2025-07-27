@@ -82,12 +82,69 @@ public class UploadFileServlet extends HttpServlet {
             this.asynchronousUpload(req, resp);
         } else if (method.equals("getProgress")) {
             this.getProgress(req, resp);
+        } else if (method.equals("uploadFile")) {
+            this.uploadFile(req, resp);
         }
+
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         this.doGet(req, resp);
+    }
+
+    private void uploadFile(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        JsonObject jsonResult = new JsonObject();
+        jsonResult.addProperty("status", "success");
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        upload.setFileSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        upload.setSizeMax(MigrateGlobal.DOC_FILE_SIZE_LIMIT);
+        String uploadDir = getServletContext().getRealPath(UPLOAD_DIR+"/report");
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
+        }
+
+        List<File> files = new ArrayList<>();
+        Map<String, Object> realNameMap = new HashMap<>();
+
+        try {
+            List<?> fileItems = upload.parseRequest(req);
+            JsonArray fileList = new JsonArray();
+            for (Object fileItem : fileItems) {
+                FileItem fi = (FileItem) fileItem;
+                if (!fi.isFormField()) {
+                    String fileName = fi.getName();
+                    File file;
+                    String newName;
+                    do {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+                        newName = sdf.format(new Date()) + ("" + Math.random()).substring(2, 6);
+                        newName = newName + fileName.substring(fileName.lastIndexOf("."));
+                        String lastFilePath = uploadDir + File.separator + newName;
+                        file = new File(lastFilePath);
+                    } while (file.exists());
+                    fi.write(file);
+                    files.add(file);
+                    realNameMap.put(file.getName(), fileName);
+                        if (file.exists() && file.isFile()) {
+                            JsonObject jsonObject = new JsonObject();
+//                            jsonObject.addProperty("filename", realNameMap.get(file.getName()).toString());
+//                            jsonObject.addProperty("filepath", UPLOAD_DIR+"/report"+file.getName());
+                            fileList.add(jsonObject);
+                        }
+                    jsonResult.addProperty("data", fileList.toString());
+                }
+
+            }
+        } catch (Exception ex) {
+            jsonResult.addProperty("msg", "解析文件出现错误");
+            ex.printStackTrace();
+        }
+        PrintWriter out = resp.getWriter();
+        out.write(gson.toJson(jsonResult));
+        out.flush();
+        out.close();
     }
 
     private void pairing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
