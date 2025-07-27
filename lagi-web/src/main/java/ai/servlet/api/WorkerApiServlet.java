@@ -1,9 +1,13 @@
 package ai.servlet.api;
 
 import ai.audio.pojo.AsrResponse;
+import ai.audio.service.AudioService;
+import ai.common.pojo.AsrResult;
+import ai.common.pojo.AudioRequestParam;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.servlet.BaseServlet;
+import ai.utils.FileUploadUtil;
 import ai.utils.SensitiveWordUtil;
 import ai.worker.DefaultWorker;
 import ai.worker.audio.Asr4FlightsWorker;
@@ -33,7 +37,11 @@ import java.util.Map;
 public class WorkerApiServlet extends BaseServlet {
     private final Asr4FlightsWorker asr4FlightsWorker = new Asr4FlightsWorker();
     private final DefaultWorker defaultWorker = new DefaultWorker();
+    private AudioService audioService = new AudioService();
     private static final Gson gson = new Gson();
+    private final static String HTTP_URL = "http://10.110.108.182:20088/";
+//    private final static String HTTP_URL = "http://192.168.254.182:20088/";
+    private final static String HTTP_RECOGNIZE = "http://20.17.127.16:8500/";
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -41,10 +49,21 @@ public class WorkerApiServlet extends BaseServlet {
         String url = req.getRequestURI();
         String method = url.substring(url.lastIndexOf("/") + 1);
         if (method.equals("tiredetail")) {
+            //轮胎详情
             this.tiredetail(req, resp);
         }else if (method.equals("vehicledetailsv")) {
+            //车辆详情
             this.vehicledetailsv(req, resp);
+        }else if (method.equals("careInformation")) {
+            //保养信息分页接口
+            //maintenance/v1/zhiPu/busMaintainRecord/page
+            this.careInformation(req, resp);
+        }else if (method.equals("maintenance")) {
+            //维修信息列表接口
+//            http://localhost:20091/maintenance/v1/zhiPu/warrantyInfo/page GET
+            this.maintenance(req, resp);
         }else if (method.equals("vehiclepagedetailsv")) {
+            //车辆分页查询
             this.vehiclepagedetailsv(req, resp);
         }
 
@@ -61,62 +80,193 @@ public class WorkerApiServlet extends BaseServlet {
         } else if (method.equals("completions")) {
             this.completions(req, resp);
         } else if (method.equals("setBatteryMonthlyReport")) {
+            //车辆月报表
             this.setBatteryMonthlyReport(req, resp);
+        } else if (method.equals("faultRecognize")) {
+            //车辆月报表
+            this.faultRecognize(req, resp);
         }
     }
 
-private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    req.setCharacterEncoding("UTF-8");
-    resp.setContentType("application/json;charset=utf-8");
-    Map<String, Object> responseMap = new HashMap<>();
-    try {
-        // 从请求中读取JSON数据
-        StringBuilder sb = new StringBuilder();
-        String line;
-        BufferedReader reader = req.getReader();
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
-
-        // 将JSON数据转换为BatteryMonthlyReport对象
-        BatteryMonthlyReport report = gson.fromJson(sb.toString(), BatteryMonthlyReport.class);
-
-
-        //todo 这里可以添加业务逻辑处理
-        responseMap.put("code", 0);
-        responseMap.put("message", "success");
-        responseMap.put("status", HttpServletResponse.SC_OK);
-        responseMap.put("data", report);
-    } catch (Exception e) {
-        log.error("处理电池月报数据时发生错误", e);
-        responseMap.put("code", 1);
-        responseMap.put("message", "处理电池月报数据时发生错误: " + e.getMessage());
-        responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
-        responseMap.put("data", null);
-        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-
-    }
-    // 返回处理后的对象
-    PrintWriter out = resp.getWriter();
-    out.print(gson.toJson(responseMap));
-    out.flush();
-    out.close();
-}
-
-
-    private void vehiclepagedetailsv(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
+    private void faultRecognize(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
         resp.setContentType("application/json;charset=utf-8");
-        String VEHICLE_PAGE_URL = "http://10.110.108.182:20088/maintenance/v1/zhiPu/busInfo/page";
+        AudioRequestParam audioRequestParam = postQueryToObj(req, AudioRequestParam.class);
+        String uploadDir = getServletContext().getRealPath("/upload");
+        if (!new File(uploadDir).isDirectory()) {
+            new File(uploadDir).mkdirs();
+        }
+        String extension = "wav";
+        if (audioRequestParam.getFormat() != null) {
+            extension = audioRequestParam.getFormat();
+        }
+        String audioFilePath = uploadDir + "/" + FileUploadUtil.generateRandomFileName(extension);
+        try (InputStream inputStream = req.getInputStream();
+             OutputStream outputStream = new FileOutputStream(audioFilePath)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        AsrResult result = audioService.asr(audioFilePath, audioRequestParam);
+        if (result.getStatus() == 20000000){
+            String jsonInputString = "{ \"text\": \""+result.getResult()+"\" }";
+            HttpResponse response = HttpRequest.post(HTTP_RECOGNIZE+"recognize")
+                    .header("Content-Type", "application/json")
+                    .body(jsonInputString)
+                    .execute();
+            responsePrint(resp, response.body());
+        }else {
+            responsePrint(resp, toJson(result));
+        }
+
+    }
+
+    private void maintenance(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String VEHICLE_PAGE_URL = HTTP_URL+"maintenance/v1/zhiPu/warrantyInfo/page";
         String currentPage = req.getParameter("currentPage");
         String pageSize = req.getParameter("pageSize");
+        String busId = req.getParameter("busId");
         Map<String, String> params = new HashMap<>();
+        params.put("busId", busId);
         params.put("currentPage", currentPage);
         params.put("pageSize", pageSize);
         long timestamp = System.currentTimeMillis() / 1000;
         Map<String, String> signature = SignUtil.generateSign(params, timestamp);
         params.put("signature", signature.get("signature"));
         params.put("timestamp", signature.get("timestamp"));
+        Map<String, Object> responseMap = new HashMap<>();
 
+        try {
+            String jsonInputString = "{\"busId\": "+busId+", \"currentPage\": "+currentPage+",\"pageSize\": "+pageSize+", \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
+            HttpResponse response = HttpRequest.get(VEHICLE_PAGE_URL)
+                    .header("Content-Type", "application/json")
+                    .body(jsonInputString)
+                    .execute();
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(response.body());
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            log.error("处理电池月报数据时发生错误", e);
+            responseMap.put("code", 1);
+            responseMap.put("message", "错误: " + e.getMessage());
+            responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+            responseMap.put("data", null);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(gson.toJson(responseMap));
+            out.flush();
+            out.close();
+        }
+        //todo 处理逻辑12345
+
+    }
+
+    private void careInformation(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        String VEHICLE_PAGE_URL = HTTP_URL+"maintenance/v1/zhiPu/busMaintainRecord/page";
+        String currentPage = req.getParameter("currentPage");
+        String pageSize = req.getParameter("pageSize");
+        String busId = req.getParameter("busId");
+        Map<String, String> params = new HashMap<>();
+        params.put("busId", busId);
+        params.put("currentPage", currentPage);
+        params.put("pageSize", pageSize);
+        long timestamp = System.currentTimeMillis() / 1000;
+        Map<String, String> signature = SignUtil.generateSign(params, timestamp);
+        params.put("signature", signature.get("signature"));
+        params.put("timestamp", signature.get("timestamp"));
+        Map<String, Object> responseMap = new HashMap<>();
+
+        try {
+            String jsonInputString = "{\"busId\": "+busId+", \"currentPage\": "+currentPage+",\"pageSize\": "+pageSize+", \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
+            HttpResponse response = HttpRequest.get(VEHICLE_PAGE_URL)
+                    .header("Content-Type", "application/json")
+                    .body(jsonInputString)
+                    .execute();
+            responseMap.put("code", 0);
+            responseMap.put("message", "success");
+            responseMap.put("status", HttpServletResponse.SC_OK);
+            responseMap.put("data", response.body());
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(response.body());
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            responseMap.put("code", 1);
+            responseMap.put("message", "错误: " + e.getMessage());
+            responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+            responseMap.put("data", null);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            System.out.println("处理逻辑12345");
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(gson.toJson(responseMap));
+            out.flush();
+            out.close();
+        }
+        //todo 处理逻辑12345
+
+    }
+    private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String, Object> responseMap = new HashMap<>();
+        try {
+            // 从请求中读取JSON数据
+            StringBuilder sb = new StringBuilder();
+            String line;
+            BufferedReader reader = req.getReader();
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+
+            // 将JSON数据转换为BatteryMonthlyReport对象
+            BatteryMonthlyReport report = gson.fromJson(sb.toString(), BatteryMonthlyReport.class);
+
+
+            //todo 这里可以添加业务逻辑处理
+            responseMap.put("code", 0);
+            responseMap.put("message", "success");
+            responseMap.put("status", HttpServletResponse.SC_OK);
+            responseMap.put("data", report);
+        } catch (Exception e) {
+            log.error("处理电池月报数据时发生错误", e);
+            responseMap.put("code", 1);
+            responseMap.put("message", "处理电池月报数据时发生错误: " + e.getMessage());
+            responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
+            responseMap.put("data", null);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+
+        }
+        // 返回处理后的对象
+        PrintWriter out = resp.getWriter();
+        out.print(gson.toJson(responseMap));
+        out.flush();
+        out.close();
+    }
+
+
+    private void vehiclepagedetailsv(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
+        resp.setContentType("application/json;charset=utf-8");
+        String VEHICLE_PAGE_URL = HTTP_URL+"maintenance/v1/zhiPu/busInfo/page";
+        String currentPage = req.getParameter("currentPage");
+        String pageSize = req.getParameter("pageSize");
+        Map<String, String> params = new HashMap<>();
+        params.put("currentPage", currentPage);
+        params.put("pageSize", pageSize);
+
+        long timestamp = System.currentTimeMillis() / 1000;
+        Map<String, String> signature = SignUtil.generateSign(params, timestamp);
+        params.put("signature", signature.get("signature"));
+        params.put("timestamp", signature.get("timestamp"));
         Map<String, Object> responseMap = new HashMap<>();
 
         try {
@@ -125,10 +275,12 @@ private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse
                     .header("Content-Type", "application/json")
                     .body(jsonInputString)
                     .execute();
-            responseMap.put("code", 0);
-            responseMap.put("message", "success");
-            responseMap.put("status", HttpServletResponse.SC_OK);
-            responseMap.put("data", response);
+            System.out.println("处理逻辑12345");
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(response.body());
+            out.flush();
+            out.close();
         } catch (Exception e) {
             log.error("处理电池月报数据时发生错误", e);
             responseMap.put("code", 1);
@@ -136,19 +288,20 @@ private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse
             responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
             responseMap.put("data", null);
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            System.out.println("处理逻辑12345");
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(responseMap);
+            out.flush();
+            out.close();
         }
         //todo 处理逻辑12345
-        System.out.println("处理逻辑12345");
-        resp.setHeader("Content-Type", "application/json;charset=utf-8");
-        PrintWriter out = resp.getWriter();
-        out.print(responseMap);
-        out.flush();
-        out.close();
+
     }
 
     private void vehicledetailsv(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException{
         resp.setContentType("application/json;charset=utf-8");
-        String VEHICLE_PAGE_URL = "http://192.168.254.182:20088/maintenance/v1/zhiPu/busInfo/detail";
+        String VEHICLE_PAGE_URL = HTTP_URL+"maintenance/v1/zhiPu/busInfo/detail";
         String busId = req.getParameter("busId");
         Map<String, String> params = new HashMap<>();
         params.put("busId", busId);
@@ -156,37 +309,39 @@ private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse
         Map<String, String> signature = SignUtil.generateSign(params, timestamp);
         params.put("signature", signature.get("signature"));
         params.put("timestamp", signature.get("timestamp"));
-        Map<String, Object> responseMap = new HashMap<>();
         try {
-            String jsonInputString = "{ \"busId\": 1001000028, \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
+
+            String jsonInputString = "{ \"busId\": "+busId+", \"signature\": \""+signature.get("signature")+"\", \"timestamp\": "+timestamp+" }";
             HttpResponse response = HttpRequest.get(VEHICLE_PAGE_URL)
                     .header("Content-Type", "application/json")
                     .body(jsonInputString)
                     .execute();
             resp.setHeader("Content-Type", "application/json;charset=utf-8");
-            responseMap.put("code", 0);
-            responseMap.put("message", "success");
-            responseMap.put("status", HttpServletResponse.SC_OK);
-            responseMap.put("data", response);
+            PrintWriter out = resp.getWriter();
+            out.print(response.body());
+            out.flush();
+            out.close();
         } catch (Exception e) {
+            Map<String, Object> responseMap = new HashMap<>();
             log.error("处理电池月报数据时发生错误", e);
             responseMap.put("code", 1);
             responseMap.put("message", "错误: " + e.getMessage());
             responseMap.put("status", HttpServletResponse.SC_BAD_REQUEST);
             responseMap.put("data", null);
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setHeader("Content-Type", "application/json;charset=utf-8");
+            PrintWriter out = resp.getWriter();
+            out.print(gson.toJson(responseMap));
+            out.flush();
+            out.close();
         }
         //todo 调用报告的接口
-        resp.setHeader("Content-Type", "application/json;charset=utf-8");
-        PrintWriter out = resp.getWriter();
-        out.print(responseMap);
-        out.flush();
-        out.close();
+
     }
 
     private void tiredetail(HttpServletRequest req, HttpServletResponse resp)  throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        String VEHICLE_PAGE_URL = "http://192.168.254.182:20088/maintenance/v1/zhiPu/tyre/detail";
+        String VEHICLE_PAGE_URL = HTTP_URL+"maintenance/v1/zhiPu/tyre/detail";
         String busId = req.getParameter("busId");
         Map<String, String> params = new HashMap<>();
         params.put("busId", busId);
@@ -217,11 +372,6 @@ private void setBatteryMonthlyReport(HttpServletRequest req, HttpServletResponse
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
         //todo 调用报告的接口
-        resp.setHeader("Content-Type", "application/json;charset=utf-8");
-        PrintWriter out = resp.getWriter();
-        out.print(responseMap);
-        out.flush();
-        out.close();
     }
 
     public void completions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
