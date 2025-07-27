@@ -338,4 +338,13 @@
         <url-pattern>/mcp/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>PassengerForecastServlet</servlet-name>
+        <servlet-class>ai.servlet.api.PassengerForecastServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PassengerForecastServlet</servlet-name>
+        <url-pattern>/passenger/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
