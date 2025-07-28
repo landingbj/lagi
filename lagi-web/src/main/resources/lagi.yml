@@ -17,10 +17,10 @@ models:
     model: deepseek-chat
     driver: ai.llm.adapter.impl.DeepSeekAdapter
     api_address: https://api.deepseek.com/chat/completions
-               # https://ark.cn-beijing.volces.com/api/v3/chat/completions
-               # https://dashscope.aliyuncs.com/compatible-mode/v1
-               # https://qianfan.baidubce.com/v2/chat/completions
-               # https://api.lkeap.cloud.tencent.com/v1
+      # https://ark.cn-beijing.volces.com/api/v3/chat/completions
+      # https://dashscope.aliyuncs.com/compatible-mode/v1
+      # https://qianfan.baidubce.com/v2/chat/completions
+    # https://api.lkeap.cloud.tencent.com/v1
     api_key: your-api-key # url address https://platform.deepseek.com/api_keys
 
 include_models: model.yml
@@ -332,3 +332,11 @@ filters:
   - name: continue
     rules: 'about,next,then,
             资料'
+
+
+gateway:
+  local_ip: your-ip
+  local_port: your-port
+  gateway_ip: your-gateway-ip
+  gateway_port: your-gateway-port
+  service_name: model-middleware-service
