@@ -29,7 +29,9 @@ import javax.servlet.http.Part;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -56,15 +58,22 @@ public class WorkerApiServlet extends BaseServlet {
             this.vehicledetailsv(req, resp);
         }else if (method.equals("careInformation")) {
             //保养信息分页接口
-            //maintenance/v1/zhiPu/busMaintainRecord/page
             this.careInformation(req, resp);
         }else if (method.equals("maintenance")) {
             //维修信息列表接口
-//            http://localhost:20091/maintenance/v1/zhiPu/warrantyInfo/page GET
             this.maintenance(req, resp);
         }else if (method.equals("vehiclepagedetailsv")) {
             //车辆分页查询
             this.vehiclepagedetailsv(req, resp);
+        }else if (method.equals("batteryHealthReport")) {
+            //电池健康报告
+            this.batteryHealthReport(req, resp);
+        }else if (method.equals("busAccidentReport")) {
+            //公交事故报告
+            this.busAccidentReport(req, resp);
+        }else if (method.equals("tireWearReport")) {
+            //轮胎磨损报告
+            this.tireWearReport(req, resp);
         }
 
     }
@@ -83,9 +92,69 @@ public class WorkerApiServlet extends BaseServlet {
             //车辆月报表
             this.setBatteryMonthlyReport(req, resp);
         } else if (method.equals("faultRecognize")) {
-            //车辆月报表
+            //故障id获取
             this.faultRecognize(req, resp);
         }
+    }
+
+    private void tireWearReport(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String, Object> responseMap = new HashMap<>();
+        List<Map<String, String>> list = new ArrayList();
+        Map<String, String> queryData = getQueryData(req);
+        String https = "http://20.17.127.16:8080/upload/report/轮胎磨耗度预警分析报告20250727.html";
+        queryData.put("filename", "轮胎磨耗度预警分析报告20250727");
+        queryData.put("filepath", https);
+        list.add(queryData);
+        responseMap.put("code", 0);
+        responseMap.put("message", "success");
+        responseMap.put("status", HttpServletResponse.SC_OK);
+        responseMap.put("data", list);
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print( gson.toJson(responseMap));
+        out.flush();
+        out.close();
+    }
+
+    private void busAccidentReport(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String, Object> responseMap = new HashMap<>();
+        List<Map<String, String>> list = new ArrayList();
+        Map<String, String> queryData = getQueryData(req);
+        String https = "http://20.17.127.16:8080/upload/report/公交事故分析报告20250727.html";
+        queryData.put("filename", "公交事故分析报告20250727");
+        queryData.put("filepath", https);
+        list.add(queryData);
+        responseMap.put("code", 0);
+        responseMap.put("message", "success");
+        responseMap.put("status", HttpServletResponse.SC_OK);
+        responseMap.put("data", list);
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print( gson.toJson(responseMap));
+        out.flush();
+        out.close();
+    }
+
+    private void batteryHealthReport(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String, Object> responseMap = new HashMap<>();
+        List<Map<String, String>> list = new ArrayList();
+        Map<String, String> queryData = getQueryData(req);
+        String https = "http://20.17.127.16:8080/upload/report/电池健康度预警分析报告20250727.html";
+        queryData.put("filename", "电池健康度预警分析报告20250727");
+        queryData.put("filepath", https);
+        list.add(queryData);
+        responseMap.put("code", 0);
+        responseMap.put("message", "success");
+        responseMap.put("status", HttpServletResponse.SC_OK);
+        responseMap.put("data", list);
+        resp.setHeader("Content-Type", "application/json;charset=utf-8");
+        PrintWriter out = resp.getWriter();
+        out.print( gson.toJson(responseMap));
+        out.flush();
+        out.close();
     }
 
     private void faultRecognize(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
