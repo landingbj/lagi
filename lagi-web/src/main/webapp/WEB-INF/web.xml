@@ -347,4 +347,13 @@
         <url-pattern>/passenger/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ZhipuModelServlet</servlet-name>
+        <servlet-class>ai.servlet.api.ZhipuModelServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ZhipuModelServlet</servlet-name>
+        <url-pattern>/model/*</url-pattern>
+    </servlet-mapping>
 </web-app>

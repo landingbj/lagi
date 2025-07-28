@@ -43,6 +43,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private String includeMcps;
     private String includePnps;
 
+    private NacosGateWayConfig gateway;
+
     @Override
     public void init() {
         loadFromPropertiesFromYaml();
