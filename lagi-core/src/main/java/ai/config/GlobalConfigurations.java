@@ -9,6 +9,7 @@ import ai.router.Routers;
 import ai.utils.*;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -44,6 +45,9 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private String includePnps;
 
     private NacosGateWayConfig gateway;
+
+    @JsonProperty("zhipu_agents")
+    private List<AgentConfig> zhipuAgents;
 
     @Override
     public void init() {

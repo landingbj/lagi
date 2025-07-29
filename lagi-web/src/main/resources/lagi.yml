@@ -336,7 +336,12 @@ filters:
 
 gateway:
   local_ip: your-ip
-  local_port: your-port
+  local_port: 8000
   gateway_ip: your-gateway-ip
-  gateway_port: your-gateway-port
+  gateway_port: 8000
   service_name: model-middleware-service
+
+
+zhipu_agents:
+  - name: travel
+    api_key: your-api-key

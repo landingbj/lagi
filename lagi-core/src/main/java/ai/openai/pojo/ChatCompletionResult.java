@@ -13,4 +13,5 @@ public class ChatCompletionResult implements Serializable {
     private List<ChatCompletionChoice> choices;
     private Usage usage;
     private String system_fingerprint;
+    private Object extra;
 }
