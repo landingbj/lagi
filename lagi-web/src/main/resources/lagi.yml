@@ -345,3 +345,5 @@ gateway:
 zhipu_agents:
   - name: travel
     api_key: your-api-key
+  - name: citizen
+    api_key: your-api-key

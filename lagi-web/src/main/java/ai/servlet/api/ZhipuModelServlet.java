@@ -1,5 +1,6 @@
 package ai.servlet.api;
 
+import ai.agent.carbus.impl.HangCitizenEngAgent;
 import ai.agent.carbus.impl.HangCityTravelAgent;
 import ai.agent.carbus.pojo.Request;
 import ai.agent.carbus.pojo.Travel;
@@ -25,6 +26,8 @@ import java.util.List;
 public class ZhipuModelServlet extends RestfulServlet {
 
     private static HangCityTravelAgent hangCityTravelAgent = null;
+    private static HangCitizenEngAgent hangCitizenEngAgent = null;
+
 
     static {
         try {
@@ -42,6 +45,8 @@ public class ZhipuModelServlet extends RestfulServlet {
                 for (AgentConfig agentConfig : zhipuAgents) {
                     if("travel".equals(agentConfig.getName())) {
                         hangCityTravelAgent = new HangCityTravelAgent(agentConfig);
+                    } else if("citizen".equals(agentConfig.getName())) {
+                        hangCitizenEngAgent = new HangCitizenEngAgent(agentConfig);
                     }
                 }
             }
@@ -99,6 +104,17 @@ public class ZhipuModelServlet extends RestfulServlet {
         } catch (Exception e) {
             log.error("流处理异常", e);
         }
+    }
+
+    @Post("citizenChat")
+    public void citizenChat(@Body Request request, HttpServletResponse resp) throws IOException {
+        if(hangCitizenEngAgent == null) {
+            throw new RRException("未配置该智能体");
+        }
+        PrintWriter out = resp.getWriter();
+        Observable<ChatCompletionResult> chat = hangCitizenEngAgent.chat(request);
+        resp.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+        streamOutPrint(chat, out);
     }
 
 }
