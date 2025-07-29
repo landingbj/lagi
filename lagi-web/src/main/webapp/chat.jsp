@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="css/material.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/model.css?ver=${initParam.version}">
   <link rel="stylesheet" href="css/collapsible.css?ver=${initParam.version}">
+  <link rel="stylesheet" href="css/responsive.css?ver=${initParam.version}">
 </head>
 <noscript>
   <strong>We're sorry but chatai doesn't work properly without JavaScript enabled. Please enable it to
@@ -114,8 +115,7 @@
       <div class="flex h-full max-w-full flex-1 flex-col">
         <!-- 上部导航条 -->
         <div id="top-nav"
-             class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden "
-             style="background-color: #023f63;">
+             class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden ">
           <div>
             <button type="button" onclick="toggleUserMenu()"
                     class="-ml-0.5 -mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white dark:hover:text-white">
@@ -138,7 +138,7 @@
           </button>
           <div id="userMenu-sm"
                class="absolute left-0 bottom-full login-hidden mb-2 w-48 top-11 border border-gray-200 rounded-md shadow-lg">
-            <ul style="background-color: #023f63;">
+            <ul>
               <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="logout()">退出登录</li>
             </ul>
           </div>
@@ -967,20 +967,14 @@
               <form
                       class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
                 <div class="relative flex h-full flex-1 items-stretch md:flex-col">
-                  
                   <!-- ***********************输入框******************************** -->
                   <div class="flex w-full " id="queryBox" class="border border-black/10">
                     <!-- 智能体功能列表 -->
-
-
-
                     <div
                             class="flex flex-col w-full py-2 flex-grow md:py-3 md:pl-4 relative  bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:shadow-[0_0_15px_rgba(0,0,0,0.10)]">
                           <textarea id="queryContent" data-agent="" tabindex="0" data-id="root" rows="1"
                                     placeholder="请输入文字..."
-                                    class=" m-0 w-full resize-none border-0 bg-transparent p-0 pl-2 pr-7 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pl-0"
-                                    style="max-height: 200px; height: 170px;  width: 98%;float: left;"></textarea>
-
+                                    class=" m-0 w-full resize-none border-0 bg-transparent p-0 pl-2 pr-7 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pl-0"></textarea>
                       <!-- <svg style="width:30px;height:24px" t="1694769456924" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8678" width="200" height="200"><path d="M801.171 483.589H544V226.418c0-17.673-14.327-32-32-32s-32 14.327-32 32v257.171H222.83c-17.673 0-32 14.327-32 32s14.327 32 32 32H480v257.17c0 17.673 14.327 32 32 32s32-14.327 32-32v-257.17h257.171c17.673 0 32-14.327 32-32s-14.327-32-32-32z" fill="" p-id="8679"></path></svg> -->
                       <!-- ******************发送按钮开始 ***************************** -->
                       <!-- bg-gray-900 -->

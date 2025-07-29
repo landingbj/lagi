@@ -1,0 +1,107 @@
+@media (max-width: 900px) {
+    :root {
+        --left-nav-width: 0px;
+    }
+
+    .ball-corner-container::before {
+        width: 240px;
+        height: 240px;
+    }
+
+    .ball-corner ul li {
+        width: 80%;
+        padding-top: 0;
+        height: 2em;
+        border-radius: 36px;
+        color: black;
+        margin: 20px 0 0 0;
+        font-size: 10px;
+    }
+
+    .ball-right-top ul li span {
+        height: unset;
+    }
+
+    .ball-left-top ul li span {
+        height: unset;
+    }
+
+    .ball-right-top ul li:nth-child(1) {
+        margin-right: 0px;
+    }
+
+    .ball-right-top ul li:nth-child(2) {
+        margin-right: -10px;
+    }
+
+    .ball-right-top ul li:nth-child(3) {
+        margin-right: -20px;
+    }
+
+    .ball-right-top ul li:nth-child(4) {
+        margin-right: -10px;
+    }
+
+    .ball-right-top ul li:nth-child(5) {
+        margin-right: 0px;
+    }
+
+    .ball-left-top ul li:nth-child(1) {
+        margin-left: 0px;
+    }
+
+    .ball-left-top ul li:nth-child(2) {
+        margin-left: -10px;
+    }
+
+    .ball-left-top ul li:nth-child(3) {
+        margin-left: -20px;
+    }
+
+    .ball-left-top ul li:nth-child(4) {
+        margin-left: -10px;
+    }
+
+    .ball-left-top ul li:nth-child(5) {
+        margin-left: 0px;
+    }
+
+    .ball-left-top ul li span .icon {
+        margin: 0 0 0 0;
+    }
+
+    .ball-right-top ul li span .icon {
+        margin: 0 0 0 0;
+    }
+
+    .ball-describe-item {
+        padding: 0 0 0 0;
+    }
+
+    .ball-describe-item .scroll-text {
+        width: unset;
+        height: unset;
+    }
+
+    .ball-describe-item span, .ball-describe-item .scroll-text {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .ball-describe-item span svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    :root {
+        --no-content-height: 200px;
+    }
+    #queryContent {
+        height: 90px;
+    }
+    .ball-container {
+        height: 280px;
+    }
+}
