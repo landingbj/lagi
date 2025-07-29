@@ -354,6 +354,6 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>ZhipuModelServlet</servlet-name>
-        <url-pattern>/model/*</url-pattern>
+        <url-pattern>/agent/*</url-pattern>
     </servlet-mapping>
 </web-app>

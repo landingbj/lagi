@@ -73,6 +73,10 @@ public class HangCityTravelAgent extends HangCityAgent {
         if("node_chunk".endsWith((String) out.get("event"))) {
             Result<ChatCompletionResult> chatCompletionResultResult = new Gson().fromJson(response, new TypeToken<Result<ChatCompletionResult>>() {
             });
+            Object o = out.get("session_id");
+            if(o != null) {
+                chatCompletionResultResult.getData().setSession_id((String) o);
+            }
 //            String resetName = (String) out.get("reset_name");
             chatCompletionResultResult.getData().getChoices().forEach(choice->{
                 ChatMessage delta = choice.getDelta();

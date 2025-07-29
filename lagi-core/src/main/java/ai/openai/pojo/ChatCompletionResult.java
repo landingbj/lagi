@@ -14,4 +14,5 @@ public class ChatCompletionResult implements Serializable {
     private Usage usage;
     private String system_fingerprint;
     private Object extra;
+    private String session_id;
 }
