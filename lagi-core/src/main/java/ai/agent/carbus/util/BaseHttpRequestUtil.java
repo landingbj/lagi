@@ -80,7 +80,7 @@ public class BaseHttpRequestUtil {
     }
 
     // 构建带查询参数的 URL
-    private static String buildUrlWithQuery(String baseUrl, Map<String, String> query) {
+    public static String buildUrlWithQuery(String baseUrl, Map<String, String> query) {
         HttpUrl.Builder urlBuilder = HttpUrl.get(baseUrl).newBuilder();
         if (query != null) {
             for (Map.Entry<String, String> entry : query.entrySet()) {

@@ -16,4 +16,6 @@ public class Request {
     private String query;
     private String session_id;
     private Boolean stream;
+    private Double longitude;
+    private Double latitude;
 }

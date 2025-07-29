@@ -7,7 +7,6 @@ import ai.common.exception.RRException;
 import ai.common.utils.ObservableList;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.pojo.AgentConfig;
-import ai.llm.utils.LLMErrorConstants;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.ApiInvokeUtil;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 public class HangCityTravelAgent extends HangCityAgent {
 
     private final String baseApiAddress = "http://20.17.127.24:11105/aicoapi/gateway/v2/chatbot/api_run/";
-    private Map<String,  String> headers;
     private  ExecutorService executor;
 
     private final String introAppId = "1753064009_dc12560c-1652-4a76-bef9-5b5dbf25610a";
@@ -36,10 +34,6 @@ public class HangCityTravelAgent extends HangCityAgent {
 
     public HangCityTravelAgent(AgentConfig config) {
         super(config);
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        headers.put("Authorization", "Bearer " + config.getApiKey());
-        this.headers = headers;
         ThreadPoolManager.registerExecutor("hangCityTravelAgent", new ThreadPoolExecutor(1, 1000, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(1000),
                 (r, executor)->{
@@ -77,7 +71,6 @@ public class HangCityTravelAgent extends HangCityAgent {
             if(o != null) {
                 chatCompletionResultResult.getData().setSession_id((String) o);
             }
-//            String resetName = (String) out.get("reset_name");
             chatCompletionResultResult.getData().getChoices().forEach(choice->{
                 ChatMessage delta = choice.getDelta();
                 choice.setMessage(delta);
@@ -221,23 +214,6 @@ public class HangCityTravelAgent extends HangCityAgent {
     public Map<String, Object> getSlot(Request request) {
         String url = baseApiAddress +  slotAppId;
         return getOutput(url, request, "获取提示槽失败");
-    }
-
-    private Map<String, Object> getOutput(String url,  Request request, String errorMsg) {
-        ObservableList<Result<Map<String, Object>>> sse = ApiInvokeUtil.sse(url,
-                headers, new Gson().toJson(request), 180, TimeUnit.SECONDS,
-                (a)-> new Gson().fromJson(a, new TypeToken<Result<Map<String, Object>>>(){})
-        );
-        List<Map<String, Object>> results = new ArrayList<>();
-        sse.getObservable().blockingForEach(r->{
-            if("node_finished".equals(r.getEvent())) {
-                results.add(r.getData());
-            }
-        });
-        if(results.isEmpty()) {
-            throw new RRException(LLMErrorConstants.OTHER_ERROR, errorMsg);
-        }
-        return results.get(0);
     }
 
 
