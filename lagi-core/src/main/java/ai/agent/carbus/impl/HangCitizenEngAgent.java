@@ -3,6 +3,7 @@ package ai.agent.carbus.impl;
 import ai.agent.carbus.HangCityAgent;
 import ai.agent.carbus.pojo.*;
 import ai.agent.carbus.util.ApiForCarBus;
+import ai.agent.carbus.util.RouteProcessor;
 import ai.common.exception.RRException;
 import ai.common.utils.ObservableList;
 import ai.config.pojo.AgentConfig;
@@ -20,6 +21,7 @@ import io.reactivex.Observable;
 import org.apache.hadoop.util.Lists;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -31,6 +33,7 @@ public class HangCitizenEngAgent extends HangCityAgent {
 
     private final String toolInvokeAppId = "1753063751_2e526302-73d7-4d6a-89a0-2943f31b9961";
     private final String answerAppId = "1753063785_720be409-2c96-4b21-8ea8-a1c25c726078";
+    private final int radius4BicycleStation = 300;
 
     public HangCitizenEngAgent(AgentConfig config) {
         super(config);
@@ -123,6 +126,7 @@ public class HangCitizenEngAgent extends HangCityAgent {
             return result;
         } else if("navigate".equals(intent)) { // 导航
             doNavigate(request, slotValues, result);
+
         } else if("bus_station".equals(intent) || "subway_station".equals(intent)) { // 公交车站查询
             doStations(request, slotValues, result);
         } else if("redcycle_station".equals(intent)) {
@@ -242,12 +246,16 @@ public class HangCitizenEngAgent extends HangCityAgent {
             return request.getLongitude() + "," + request.getLatitude();
         });
         CompletableFuture<String> dstFuture = CompletableFuture.supplyAsync(() -> this.getLocation(destination));
+        Map<String, Object> apiData =null;
         try {
             String originLocation = originFuture.get();
             String dstLocation = dstFuture.get();
-            Map<String, Object> apiData =null;
             if("cycling".equals(type)) {
                 apiData = ApiForCarBus.getBicyclingRoute(originLocation, dstLocation);
+                List<Map<String, Object>> nearbyBicycleStation = ApiForCarBus.getNearbyBicycleStation(originLocation, radius4BicycleStation);
+                if(!nearbyBicycleStation.isEmpty()) {
+                    apiData.put("nearbyBicycleStation", convert2Station(nearbyBicycleStation.get(0)));
+                }
             } else if("public_trans".equals(type)) {
                 apiData = ApiForCarBus.getBusRoute(originLocation, dstLocation);
             } else if("walking".equals(type)) {
@@ -262,18 +270,34 @@ public class HangCitizenEngAgent extends HangCityAgent {
                     apiData = ApiForCarBus.getWalkingRoute(originLocation, dstLocation);
                 } else {
                     // 300 - 1000
-                    List<Map<String, Object>> nearbyBicycleStation = ApiForCarBus.getNearbyBicycleStation(originLocation, 300);
+                    List<Map<String, Object>> nearbyBicycleStation = ApiForCarBus.getNearbyBicycleStation(originLocation, radius4BicycleStation);
                     if(nearbyBicycleStation.isEmpty()) {
                         apiData = ApiForCarBus.getWalkingRoute(originLocation, dstLocation);
                     } else {
                         apiData = ApiForCarBus.getBicyclingRoute(originLocation, dstLocation);
+                        apiData.put("nearbyBicycleStation", convert2Station(nearbyBicycleStation.get(0)));
                     }
                 }
             }
-            result.put("data", apiData);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        RouteProcessor.generateSummary(apiData);
+        result.put("data", apiData);
+    }
+
+    private Map<String, Object> convert2Station(Map<String, Object> map) {
+        Map<String, Object> station = new HashMap<>();
+        int totalCount = ((Double) map.get("posCount")).intValue();
+        int pileBikeCount = ((Double) map.getOrDefault("pileBikeCount", 0)).intValue();
+        int nopileBikeCount = ((Double) map.getOrDefault("nopileBikeCount", 0)).intValue();
+        station.put("totalCount", totalCount);
+        station.put("canReturn", totalCount - (pileBikeCount + nopileBikeCount));
+        station.put("canUse", pileBikeCount + nopileBikeCount);
+        station.put("stationName", map.get("stationName"));
+        station.put("latitude", map.get("latitude"));
+        station.put("longitude", map.get("longitude"));
+        return station;
     }
 
     /**

@@ -7,7 +7,6 @@ import ai.common.exception.RRException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,19 +14,19 @@ import java.util.Map;
 public class ApiForCarBus {
     public static final String BaseUrl = "http://200.200.1.119:9999";
 
-    public static ApiResponse<LocationData> getLocationData(String keywords) throws IOException {
+    public static ApiResponse<LocationData> getLocationData(String keywords)  {
         String url = BaseUrl + "/app/amap/GDApi?keywords=" + keywords + "&apiType=inputTips";
         String get = BaseHttpRequestUtil.get(url, null, null);
         return new Gson().fromJson(get, new TypeToken<ApiResponse<LocationData> >(){});
     }
 
-    public static ApiResponse<ScenicSpotData> getScenicArea(String name) throws IOException {
+    public static ApiResponse<ScenicSpotData> getScenicArea(String name)  {
         String url = BaseUrl + "/app/scenicArea/queryOne?name=" + name;
         String get = BaseHttpRequestUtil.get(url, null, null);
         return new Gson().fromJson(get, new TypeToken<ApiResponse<ScenicSpotData> >(){});
     }
 
-    public static Map<String, Object> getRoute (String type, String origin, String destination) throws IOException {
+    public static Map<String, Object> getRoute (String type, String origin, String destination)  {
         Map<String, String> query = new HashMap<>();
         query.put("origin", origin);
         query.put("destination", destination);
@@ -50,20 +49,20 @@ public class ApiForCarBus {
         return ( Map<String, Object>) o;
     }
 
-    public static Map<String, Object> getBicyclingRoute (String origin, String destination) throws IOException {
+    public static Map<String, Object> getBicyclingRoute (String origin, String destination)  {
         return getRoute("bicycling", origin, destination);
     }
 
-    public static Map<String, Object> getWalkingRoute (String origin, String destination) throws IOException {
+    public static Map<String, Object> getWalkingRoute (String origin, String destination)  {
         return getRoute("walking", origin, destination);
     }
 
-    public static Map<String, Object> getBusRoute (String origin, String destination) throws IOException {
+    public static Map<String, Object> getBusRoute (String origin, String destination)  {
         return getRoute("transit", origin, destination);
     }
 
 
-    public static Integer  getDistance(String origin, String destination) throws IOException {
+    public static Integer  getDistance(String origin, String destination)  {
         Map<String, String> query = new HashMap<>();
         query.put("origins", origin);
         query.put("destination", destination);
@@ -89,13 +88,15 @@ public class ApiForCarBus {
     }
 
 
-    public static List<Map<String, Object>>  getNearbyBicycleStation(String origin, Integer radius) throws IOException {
+    public static List<Map<String, Object>>  getNearbyBicycleStation(String origin, Integer radius) {
+//        转化高德坐标到小红车坐标(百度坐标)
         String[] split = origin.split(",");
+        double[] bdCoords = CoordinateConverter.gcj02ToBd09(Double.parseDouble(split[0]), Double.parseDouble(split[1]));
         Map<String, Object> body = new HashMap<>();
         body.put("apiType", "STATION_QUERY");
         Map<String, Object> data = new HashMap<>();
-        data.put("longitude", Double.parseDouble(split[0]));
-        data.put("latitude", Double.parseDouble(split[1]));
+        data.put("longitude", bdCoords[0]);
+        data.put("latitude", bdCoords[1]);
         data.put("radius", radius);
         body.put("requestData", data);
         String url = BaseUrl + "/app/JT/JTApi";
@@ -111,7 +112,7 @@ public class ApiForCarBus {
 
     }
 
-    public static Map<String, Object> getNearbyStation(String origin, String type, String radius) throws IOException {
+    public static Map<String, Object> getNearbyStation(String origin, String type, String radius)  {
         Map<String, String> query = new HashMap<>();
         query.put("origin", origin);
         query.put("radius", radius);
@@ -131,7 +132,7 @@ public class ApiForCarBus {
         return  data;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args)  {
 //        Map<String, Object> bicyclingRoute = ApiForCarBus.getBicyclingRoute("120.199524,30.289429", "120.191227,30.279547");
 //        System.out.println(bicyclingRoute);
 //        Map<String, Object> walkingRoute = ApiForCarBus.getWalkingRoute("120.199524,30.289429", "120.191227,30.279547");

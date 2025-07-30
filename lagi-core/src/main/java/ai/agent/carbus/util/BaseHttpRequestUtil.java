@@ -1,5 +1,6 @@
 package ai.agent.carbus.util;
 
+import ai.common.exception.RRException;
 import ai.utils.DelayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Maps;
@@ -91,52 +92,10 @@ public class BaseHttpRequestUtil {
         return urlBuilder.build().toString();
     }
 
-    public static List<String> getResponseAndCookie(String apiUrl, Map<String, String> query, Map<String, String> headers) throws IOException {
-        String url = buildUrlWithQuery(apiUrl, query);
-
-        Request.Builder requestBuilder = new Request.Builder().url(url);
-        if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                requestBuilder.addHeader(entry.getKey(), entry.getValue());
-            }
-        }
-
-        try (Response response = client.newCall(requestBuilder.build()).execute()) {
-            ResponseBody responseBody = response.body();
-            if (response.isSuccessful() && responseBody != null) {
-                List<String> setCookies = response.headers("Set-Cookie");
-                String realCookieValue = setCookies.get(1).split(";")[0].split("=")[1];
-                return Lists.newArrayList(responseBody.string(), realCookieValue);
-            } else {
-                throw new IOException("Request failed: " + response.message());
-            }
-        }
-    }
 
 
-    public static List<String> getResponseAndHeader(String apiUrl, Map<String, String> query, Map<String, String> headers, String resHeaderName) throws IOException {
-        String url = buildUrlWithQuery(apiUrl, query);
 
-        Request.Builder requestBuilder = new Request.Builder().url(url);
-        if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                requestBuilder.addHeader(entry.getKey(), entry.getValue());
-            }
-        }
-
-        try (Response response = client.newCall(requestBuilder.build()).execute()) {
-            ResponseBody responseBody = response.body();
-            int code = response.code();
-            if(code != 301) {
-                throw new IOException("code:" + code);
-            }
-            String header = response.header(resHeaderName);
-            return Lists.newArrayList(responseBody.string(), header);
-        }
-    }
-
-    // GET 请求
-    public static String get(String apiUrl, Map<String, String> query, Map<String, String> headers) throws IOException {
+    public static String get(String apiUrl, Map<String, String> query, Map<String, String> headers) {
         String url = buildUrlWithQuery(apiUrl, query);
 
         Request.Builder requestBuilder = new Request.Builder().url(url);
@@ -144,7 +103,7 @@ public class BaseHttpRequestUtil {
     }
 
     // PUT 请求
-    public static String put(String apiUrl, Map<String, String> query, Map<String, String> headers, String body) throws IOException {
+    public static String put(String apiUrl, Map<String, String> query, Map<String, String> headers, String body)  {
         String url = buildUrlWithQuery(apiUrl, query);
 
         RequestBody requestBody = RequestBody.create(body, MediaType.get("application/json"));
@@ -157,7 +116,7 @@ public class BaseHttpRequestUtil {
     }
 
     // DELETE 请求
-    public static String delete(String apiUrl, Map<String, String> query, Map<String, String> headers) throws IOException {
+    public static String delete(String apiUrl, Map<String, String> query, Map<String, String> headers) {
         String url = buildUrlWithQuery(apiUrl, query);
 
         Request.Builder requestBuilder = new Request.Builder().url(url).delete();
@@ -166,7 +125,7 @@ public class BaseHttpRequestUtil {
     }
 
     // POST 请求
-    public static String post(String apiUrl, Map<String, String> query, Map<String, String> headers, String body) throws IOException {
+    public static String post(String apiUrl, Map<String, String> query, Map<String, String> headers, String body) {
 
         String url = buildUrlWithQuery(apiUrl, query);
 
@@ -188,9 +147,9 @@ public class BaseHttpRequestUtil {
      * @param headers 请求头
      * @param body    请求体（JSON 字符串）
      * @return 响应内容
-     * @throws IOException IO 异常
+     * @ IO 异常
      */
-    public static String patch(String apiUrl, Map<String, String> query, Map<String, String> headers, String body) throws IOException {
+    public static String patch(String apiUrl, Map<String, String> query, Map<String, String> headers, String body)  {
         String url = buildUrlWithQuery(apiUrl, query);
 
         RequestBody requestBody = RequestBody.create(body, MediaType.get("application/json"));
@@ -203,7 +162,7 @@ public class BaseHttpRequestUtil {
     }
 
 
-    private static String request(Map<String, String> headers, Request.Builder requestBuilder) throws IOException {
+    private static String request(Map<String, String> headers, Request.Builder requestBuilder) {
         if (headers != null) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
                 requestBuilder.addHeader(entry.getKey(), entry.getValue());
@@ -218,10 +177,14 @@ public class BaseHttpRequestUtil {
                 if (response.isSuccessful() && responseBody != null) {
                     return responseBody.string();
                 }
+            } catch (IOException e) {
             }
             tryTime++;
             DelayUtil.delay(500);
         }
-        throw new IOException("Request failed: " + r.message());
+        if(r!=null) {
+            throw new RRException("Request failed: " + r.message());
+        }
+        throw new RRException("Request failed: ");
     }
 }
