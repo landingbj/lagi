@@ -200,7 +200,7 @@ public class ApiInvokeUtil {
     private static <R> ObservableList<R> sse(Function<String, R> convertResponseFunc, OkHttpClient client, Request request) {
         EventSource.Factory factory = EventSources.createFactory(client);
         ObservableList<R> res = new ObservableList<>();
-        RRException exception = new RRException();
+        RRException exception = new RRException(200, "");
         factory.newEventSource(request, new EventSourceListener() {
             @Override
             public void onOpen(@NotNull EventSource eventSource, @NotNull Response response) {
@@ -230,14 +230,8 @@ public class ApiInvokeUtil {
                     exception.setCode(LLMErrorConstants.TIME_OUT);
                     exception.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
                 } else {
-                    try {
-                        String bodyStr = response.body().string();
-                        exception.setCode(response.code());
-                        exception.setMsg(bodyStr);
-                    } catch (Exception e) {
-                        exception.setCode(LLMErrorConstants.OTHER_ERROR);
-                        exception.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
-                    }
+                    exception.setCode(LLMErrorConstants.OTHER_ERROR);
+                    exception.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
                 }
                 if(t != null) {
                     log.error("model request failed error {}", t.getMessage());
@@ -258,6 +252,9 @@ public class ApiInvokeUtil {
         });
         Iterable<R> iterable = res.getObservable().blockingIterable();
         iterable.iterator().hasNext();
+        if(exception.getCode() != 200) {
+            throw exception;
+        }
         return res;
     }
 

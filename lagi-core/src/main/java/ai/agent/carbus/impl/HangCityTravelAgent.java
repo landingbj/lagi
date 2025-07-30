@@ -4,12 +4,13 @@ import ai.agent.carbus.HangCityAgent;
 import ai.agent.carbus.pojo.*;
 import ai.agent.carbus.util.ApiForCarBus;
 import ai.common.exception.RRException;
-import ai.common.utils.ObservableList;
 import ai.common.utils.ThreadPoolManager;
 import ai.config.pojo.AgentConfig;
+import ai.llm.utils.LLMErrorConstants;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.ApiInvokeUtil;
+import ai.utils.DelayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -47,18 +48,30 @@ public class HangCityTravelAgent extends HangCityAgent {
     public Observable<ChatCompletionResult> chat(Request request) {
         Map<String, Object> output = getIntent(request);
         request.setQuery(new Gson().toJson(output));
-        ObservableList<ChatCompletionResult> sse1 = ApiInvokeUtil.sse(baseApiAddress + planeAppId,
-                headers, new Gson().toJson(request), 180, TimeUnit.SECONDS,
-                (a)->{
-                    ChatCompletionResult chatCompletionResult = this.convert2StreamResult(a);
-                    if(chatCompletionResult != null) {
-                        chatCompletionResult.setExtra(output);
-                    }
-                    return chatCompletionResult;
-                });
-        return sse1.getObservable();
+        return retryChat(request, output);
     }
 
+    private Observable<ChatCompletionResult> retryChat(Request request, Map<String, Object> output) {
+        int tryTime = 0;
+        while (tryTime < MAX_RETRY_TIME) {
+            try {
+                return ApiInvokeUtil.sse(baseApiAddress + planeAppId,
+                        headers, new Gson().toJson(request), 180, TimeUnit.SECONDS,
+                        (a)->{
+                            ChatCompletionResult chatCompletionResult = this.convert2StreamResult(a);
+                            if(chatCompletionResult != null) {
+                                chatCompletionResult.setExtra(output);
+                            }
+                            return chatCompletionResult;
+                        }).getObservable();
+            } catch (Exception e) {
+                log.error("chat error!", e);
+            }
+            tryTime++;
+            DelayUtil.delaySeconds(1);
+        }
+        throw new RRException(LLMErrorConstants.OTHER_ERROR, "get intent error!");
+    }
 
 
     private ChatCompletionResult convert2StreamResult(String response) {
@@ -84,15 +97,22 @@ public class HangCityTravelAgent extends HangCityAgent {
 
 
     public List<Travel> getSlotAndFillingWithApi(Request request) {
-        Map<String, Object> data = getSlot(request);
-        String output;
-        try {
-            Map<String, Object> out1 = (Map<String, Object>) data.get("output");
-            output =  (String)out1.get("output");
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            throw new RRException("提示词槽数据转化失败" + data);
+        int tryTime = 0;
+        String output = null;
+        while (tryTime < MAX_RETRY_TIME) {
+            try {
+                Map<String, Object> data = getSlot(request);
+                Map<String, Object> out1 = (Map<String, Object>) data.get("output");
+                output =  (String)out1.get("output");
+                break;
+            } catch (Exception e) {
+                log.error("get slot error!", e);
+            }
+            tryTime++;
+            DelayUtil.delaySeconds(1);
+        }
+        if(output == null) {
+            throw new RRException(LLMErrorConstants.OTHER_ERROR, "get slot error!");
         }
         return fillingWithApi(output);
     }
@@ -194,26 +214,41 @@ public class HangCityTravelAgent extends HangCityAgent {
 
     public String introduce(Request request) {
         String url = baseApiAddress +  introAppId;
-        Map<String, Object> res = getOutput(url, request, "获取介绍失败");
-        try {
-            return (String)((Map<String, Object>)res.get("output")).get("output");
-        } catch (Exception e) {
-            throw new RuntimeException("转化介绍结果失败");
+        int tryTime = 0;
+        while (tryTime < MAX_RETRY_TIME) {
+            Map<String, Object> res = getOutput(url, request, "获取介绍失败", 1);
+            try {
+                return (String)((Map<String, Object>)res.get("output")).get("output");
+            } catch (Exception e) {
+            }
+            tryTime++;
+            DelayUtil.delay(500);
         }
+        throw new RRException("转化介绍结果失败");
     }
 
     public Map<String, Object> getIntent(Request query) {
         String url = baseApiAddress +  intentAppId;
-        Map<String, Object> data = getOutput(url, query, "获取意图失败");
-        String out = (String)((Map<String, Object>) data.get("output")).get("output");
+        int retryTime = 0;
         Gson gson = new Gson();
-        return gson.fromJson(out, new TypeToken<Map<String, Object>>(){});
+        // 重试  处理大模型输出不稳定问题
+        while (retryTime < MAX_RETRY_TIME){
+            try {
+                Map<String, Object> data = getOutput(url, query, "获取意图失败", 1);
+                String out = (String)((Map<String, Object>) data.get("output")).get("output");
+                return gson.fromJson(out, new TypeToken<Map<String, Object>>(){});
+            } catch (RRException e) {
+            }
+            retryTime++;
+            DelayUtil.delaySeconds(1);
+        }
+        throw new RRException(LLMErrorConstants.OTHER_ERROR, "获取意图失败");
     }
 
 
     public Map<String, Object> getSlot(Request request) {
         String url = baseApiAddress +  slotAppId;
-        return getOutput(url, request, "获取提示槽失败");
+        return getOutput(url, request, "获取提示槽失败", 1);
     }
 
 

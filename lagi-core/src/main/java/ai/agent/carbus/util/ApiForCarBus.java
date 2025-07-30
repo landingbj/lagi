@@ -18,7 +18,6 @@ public class ApiForCarBus {
     public static ApiResponse<LocationData> getLocationData(String keywords) throws IOException {
         String url = BaseUrl + "/app/amap/GDApi?keywords=" + keywords + "&apiType=inputTips";
         String get = BaseHttpRequestUtil.get(url, null, null);
-        System.out.println(get);
         return new Gson().fromJson(get, new TypeToken<ApiResponse<LocationData> >(){});
     }
 
@@ -35,7 +34,6 @@ public class ApiForCarBus {
         query.put("apiType", type);
         String url = BaseUrl + "/app/amap/GDApi";
         String get = BaseHttpRequestUtil.get(url, query, null);
-        System.out.println(get);
         ApiResponse<Map<String, Object>> mapApiResponse = new Gson().fromJson(get, new TypeToken<ApiResponse<Map<String, Object>>>() {
         });
         if(mapApiResponse.getCode() != 0) {
@@ -72,7 +70,6 @@ public class ApiForCarBus {
         query.put("apiType", "distance");
         String url = BaseUrl + "/app/amap/GDApi";
         String get = BaseHttpRequestUtil.get(url, query, null);
-        System.out.println(get);
         ApiResponse<Map<String, Object>> mapApiResponse = new Gson().fromJson(get, new TypeToken<ApiResponse<Map<String, Object>>>() {
         });
         if(mapApiResponse.getCode() != 0) {

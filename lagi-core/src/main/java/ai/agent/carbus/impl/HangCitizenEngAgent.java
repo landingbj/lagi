@@ -1,5 +1,6 @@
 package ai.agent.carbus.impl;
 
+import ai.agent.carbus.HangCityAgent;
 import ai.agent.carbus.pojo.*;
 import ai.agent.carbus.util.ApiForCarBus;
 import ai.common.exception.RRException;
@@ -10,8 +11,10 @@ import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.ApiInvokeUtil;
+import ai.utils.DelayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import io.reactivex.Observable;
 import org.apache.hadoop.util.Lists;
@@ -22,9 +25,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class HangCitizenEngAgent extends HangCityTravelAgent{
+public class HangCitizenEngAgent extends HangCityAgent {
 
-    protected Map<String,  String> headers;
     private final String baseApiUrl = "http://20.17.127.24:11105/aicoapi/gateway/v2/chatbot/api_run/";
 
     private final String toolInvokeAppId = "1753063751_2e526302-73d7-4d6a-89a0-2943f31b9961";
@@ -36,10 +38,19 @@ public class HangCitizenEngAgent extends HangCityTravelAgent{
 
 
     public Observable<ChatCompletionResult> chat(Request request) {
+        long start = System.currentTimeMillis();
         Map<String, Object> map = toolInvoke(request);
+        long end = System.currentTimeMillis();
+        System.out.println((end - start) / 1000);
+        map.remove("slot_values");
         String intent = (String)map.get("intent");
         if("other".equals(intent)) {
-            String answer = (String)map.get("answer");
+            String answer;
+            if(map.containsKey("answer")) {
+                answer = (String)map.get("answer");
+            } else {
+                answer = "抱歉, 我无法为您回答该问题, 请提出更多市民出行相关的问题吧！";
+            }
             ObservableList<ChatCompletionResult> observableList = new ObservableList<>();
             ChatCompletionResult chatCompletionResult = new ChatCompletionResult();
             ChatCompletionChoice choice = new ChatCompletionChoice();
@@ -49,13 +60,35 @@ public class HangCitizenEngAgent extends HangCityTravelAgent{
             choice.setMessage(chatMessage);
             chatCompletionResult.setChoices(Lists.newArrayList(choice));
             observableList.add(chatCompletionResult);
+            chatCompletionResult.setExtra(map);
             return observableList.getObservable();
         }
         request.setQuery(new Gson().toJson(map));
-        ObservableList<ChatCompletionResult> sse1 = ApiInvokeUtil.sse(baseApiUrl + answerAppId,
-                headers, new Gson().toJson(request), 180, TimeUnit.SECONDS,
-                this::convert2StreamResult);
-        return sse1.getObservable();
+        return retryChat(request, map).getObservable();
+    }
+
+    private ObservableList<ChatCompletionResult> retryChat(Request request, Map<String, Object> data) {
+        int tryTimes = 0;
+        RRException exception = null;
+        ObservableList<ChatCompletionResult> sse1 = null;
+        while (tryTimes < MAX_RETRY_TIME) {
+            try {
+                return ApiInvokeUtil.sse(baseApiUrl + answerAppId,
+                        headers, new Gson().toJson(request), 180, TimeUnit.SECONDS,
+                        (a)->{
+                            ChatCompletionResult chatCompletionResult = this.convert2StreamResult(a);
+                            if(chatCompletionResult != null) {
+                                chatCompletionResult.setExtra(data);
+                            }
+                            return chatCompletionResult;
+                        });
+            } catch (RRException e) {
+                exception = e;
+            }
+            tryTimes++;
+            DelayUtil.delaySeconds(1);
+        }
+        throw exception;
     }
 
     private ChatCompletionResult convert2StreamResult(String response) {
@@ -80,18 +113,7 @@ public class HangCitizenEngAgent extends HangCityTravelAgent{
     }
 
     public Map<String, Object> toolInvoke(Request request) {
-        Map<String, Object> data = getOutput(baseApiUrl + toolInvokeAppId, request, "toolInvoke error");
-        if(!data.containsKey("output")) {
-            throw new RRException(LLMErrorConstants.OTHER_ERROR, "toolInvoke error!");
-        }
-        Map<String, Object> out1 = (Map<String, Object>) data.get("output");
-        if(!out1.containsKey("output")) {
-            throw new RRException(LLMErrorConstants.OTHER_ERROR, "toolInvoke error!!");
-        }
-        String outStr =  (String) out1.get("output");
-        Gson gson = new Gson();
-        Map<String, Object> result = gson.fromJson(outStr, new TypeToken<Map<String, Object>>() {
-        });
+        Map<String, Object> result = retryCitizenToolInvoke(request);
         String intent = (String) result.get("intent");
         Map<String, String> slotValues = Collections.emptyMap();
         if(result.get("slot_values") != null) {
@@ -115,6 +137,38 @@ public class HangCitizenEngAgent extends HangCityTravelAgent{
 
         }
         return result;
+    }
+
+    private Map<String, Object> retryCitizenToolInvoke(Request request) {
+        int tryTimes = 0;
+        while (tryTimes < MAX_RETRY_TIME) {
+            try {
+                return citizenToolInvoke(request);
+            } catch (Exception e) {
+            }
+            tryTimes++;
+            DelayUtil.delaySeconds(1);
+        }
+        throw new RRException(LLMErrorConstants.OTHER_ERROR, "toolInvoke error!!!!");
+    }
+
+    private Map<String, Object> citizenToolInvoke(Request request) {
+        try {
+            Map<String, Object> data = getOutput(baseApiUrl + toolInvokeAppId, request, "toolInvoke error", 1);
+            if(!data.containsKey("output")) {
+                throw new RRException(LLMErrorConstants.OTHER_ERROR, "toolInvoke error!");
+            }
+            Map<String, Object> out1 = (Map<String, Object>) data.get("output");
+            if(!out1.containsKey("output")) {
+                throw new RRException(LLMErrorConstants.OTHER_ERROR, "toolInvoke error!!");
+            }
+            String outStr =  (String) out1.get("output");
+            Gson gson = new Gson();
+            return gson.fromJson(outStr, new TypeToken<Map<String, Object>>() {
+            });
+        } catch (JsonSyntaxException e) {
+            throw new RRException(LLMErrorConstants.OTHER_ERROR, "toolInvoke error!!! \t" +  e.getMessage());
+        }
     }
 
     private void doArrival(Request request, Map<String, String> slotValues, String type, Map<String, Object> result) {
@@ -203,7 +257,7 @@ public class HangCitizenEngAgent extends HangCityTravelAgent{
                 // > 1000 公交导航
                 int distance = ApiForCarBus.getDistance(originLocation, dstLocation);
                 if(distance > 1000) {
-                    apiData = ApiForCarBus.getBicyclingRoute(originLocation, dstLocation);
+                    apiData = ApiForCarBus.getBusRoute(originLocation, dstLocation);
                 } else if(distance < 300) {
                     apiData = ApiForCarBus.getWalkingRoute(originLocation, dstLocation);
                 } else {
@@ -247,12 +301,14 @@ public class HangCitizenEngAgent extends HangCityTravelAgent{
         AgentConfig config = AgentConfig.builder().apiKey("").build();
 
         HangCitizenEngAgent hangCitizenEngAgent = new HangCitizenEngAgent(config);
-        Request request = Request.builder().longitude(120.191227).latitude(30.279547).query("导航去钱江世纪城").stream(true).build();
-        Map<String, Object> map = hangCitizenEngAgent.toolInvoke(request);
-        System.out.println( map);
+        Request request = Request.builder().longitude(120.191227).latitude(30.279547).query("从智普ai导航去钱江世纪城").stream(true).build();
+//        Map<String, Object> map = hangCitizenEngAgent.toolInvoke(request);
+//        System.out.println( map);
 
-        request.setQuery("你好");
+        request.setQuery("导航去钱江世纪城");
         Observable<ChatCompletionResult> chat = hangCitizenEngAgent.chat(request);
-        chat.subscribe(System.out::println);
+        chat.blockingSubscribe((d)->{
+            System.out.println(d.getChoices().get(0).getMessage().getContent());
+        });
     }
 }

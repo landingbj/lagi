@@ -14,11 +14,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
+import ai.common.exception.RRException;
 import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Get;
 import ai.servlet.annotation.Param;
 import ai.servlet.annotation.Post;
-import ai.servlet.exceptions.RRException;
 import ai.response.RestfulResponse;
 import ai.utils.StringUtils;
 import cn.hutool.core.convert.Convert;

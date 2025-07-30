@@ -1,5 +1,6 @@
 package ai.agent.carbus.util;
 
+import ai.utils.DelayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Maps;
 import okhttp3.*;
@@ -208,14 +209,19 @@ public class BaseHttpRequestUtil {
                 requestBuilder.addHeader(entry.getKey(), entry.getValue());
             }
         }
-
-        try (Response response = client.newCall(requestBuilder.build()).execute()) {
-            ResponseBody responseBody = response.body();
-            if (response.isSuccessful() && responseBody != null) {
-                return responseBody.string();
-            } else {
-                throw new IOException("Request failed: " + response.message());
+        int tryTime = 0;
+        Response r = null;
+        while (tryTime < 3) {
+            try (Response response = client.newCall(requestBuilder.build()).execute()) {
+                r = response;
+                ResponseBody responseBody = response.body();
+                if (response.isSuccessful() && responseBody != null) {
+                    return responseBody.string();
+                }
             }
+            tryTime++;
+            DelayUtil.delay(500);
         }
+        throw new IOException("Request failed: " + r.message());
     }
 }
