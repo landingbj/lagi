@@ -33,23 +33,8 @@
     background-color: #cacaca; /* 竖线颜色 */
 }
 
-/**
-@media screen and (max-width: 765px) {
-	#navigation_bar {
-		visibility: hidden;
-		clear: both;
-		float: left;
-		margin: 10px auto 5px 20px;
-		width: 28%;
-		display: none;
-	}
-}
-**/
 
 #topTitle {
-    /* margin: 3em 0 0 0; */
-    /* padding-top: 16px; */
-    /* height: 180px; */
     z-index: 6;
 }
 

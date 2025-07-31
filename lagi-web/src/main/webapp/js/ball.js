@@ -290,8 +290,8 @@ function loadBall() {
     }
 
     function positionAll() {
-        const containerWidth = oDiv.offsetWidth;
-        const containerHeight = oDiv.offsetHeight;
+        const containerWidth = oDiv.offsetWidth - 10;
+        const containerHeight = oDiv.offsetHeight - 10;
         radius = Math.min(containerWidth, containerHeight) * 0.40;
         console.log("radius: ", radius);
         restBallCover(radius);
@@ -308,11 +308,21 @@ function loadBall() {
     }
 
     function doPosition() {
-        const l = oDiv.offsetWidth * 0.42;
-        const t = oDiv.offsetHeight * 0.43;
+        const containerWidth = oDiv.offsetWidth - 10;
+        const containerHeight = oDiv.offsetHeight - 10;
+        let l = containerWidth * 0.42;
+        let t = containerHeight * 0.43;
+        if (isMobile) {
+            l = containerWidth * 0.40;
+            t = containerHeight * 0.41;
+        }
         for(let i = 0; i < mcList.length; i++) {
             let tag = mcList[i];
-            aA[i].style.fontSize = Math.ceil(12 * tag.scale / 2) + 8 + 'px';
+            if (isMobile) {
+                aA[i].style.fontSize = Math.ceil(8 * tag.scale / 2) + 8 + 'px';
+            } else {
+                aA[i].style.fontSize = Math.ceil(12 * tag.scale / 2) + 8 + 'px';
+            }
             aA[i].style.left = tag.cx + l + 'px';
             aA[i].style.top = tag.cy + t + 'px';
             aA[i].style.opacity = tag.alpha;

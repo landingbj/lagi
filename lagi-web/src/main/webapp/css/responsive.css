@@ -3,18 +3,47 @@
         --left-nav-width: 0px;
     }
 
+    #centerTitleBox h1 {
+        display: none;
+    }
+
+    .mobile_logo_container {
+        height: 100%;
+        background: no-repeat center/auto 80% url("../images/linkMind_logo.png");
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .center-title-box {
+        padding: 5em 0 1em 0;
+    }
+
+    #hello-page {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    #hello-page::-webkit-scrollbar {
+        display: none;
+    }
+
     .ball-corner-container::before {
-        width: 240px;
-        height: 240px;
+        width: 210px;
+        height: 210px;
+    }
+
+    .hot-tag {
+        margin-left: 3px;
+        margin-right: 3px;
     }
 
     .ball-corner ul li {
         width: 80%;
         padding-top: 0;
-        height: 2em;
+        height: 1.8em;
         border-radius: 36px;
         color: black;
-        margin: 20px 0 0 0;
+        margin: 1.5em 0 0 0;
         font-size: 10px;
     }
 
@@ -35,7 +64,7 @@
     }
 
     .ball-right-top ul li:nth-child(3) {
-        margin-right: -20px;
+        margin-right: -15px;
     }
 
     .ball-right-top ul li:nth-child(4) {
@@ -55,7 +84,7 @@
     }
 
     .ball-left-top ul li:nth-child(3) {
-        margin-left: -20px;
+        margin-left: -15px;
     }
 
     .ball-left-top ul li:nth-child(4) {
@@ -67,11 +96,13 @@
     }
 
     .ball-left-top ul li span .icon {
-        margin: 0 0 0 0;
+        margin: 0 0.2em 0 0.2em;
+        width: unset;
     }
 
     .ball-right-top ul li span .icon {
-        margin: 0 0 0 0;
+        margin: 0 0.2em 0 0.2em;
+        width: unset;
     }
 
     .ball-describe-item {
@@ -81,6 +112,9 @@
     .ball-describe-item .scroll-text {
         width: unset;
         height: unset;
+        font-size: 0.9em;
+        max-width: 7em;
+        text-overflow: ellipsis;
     }
 
     .ball-describe-item span, .ball-describe-item .scroll-text {
@@ -90,7 +124,6 @@
     }
 
     .ball-describe-item span svg {
-        width: 12px;
         height: 12px;
         flex-shrink: 0;
     }
@@ -98,9 +131,11 @@
     :root {
         --no-content-height: 200px;
     }
+
     #queryContent {
         height: 90px;
     }
+
     .ball-container {
         height: 280px;
     }

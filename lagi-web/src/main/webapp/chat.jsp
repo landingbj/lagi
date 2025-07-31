@@ -913,9 +913,8 @@
                             内容由AI协助
                           </div>
                           <div id="centerTitleBox" class="center-title-box" style="margin-left: auto; margin-right: auto;">
-                            <h1 class="w-full">
-
-                            </h1>
+                            <h1 class="w-full"></h1>
+                            <div class="mobile_logo_container"></div>
                             <!-- <canvas id="title-canvas"
                                     style="width: 300px; height: 120px; margin-top: 10px;"></canvas> -->
                           </div>

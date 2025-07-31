@@ -490,6 +490,7 @@ function notifyAvailable() {
 // 定义一个函数来设置 div 的大小
 function setDivSize() {
     replaceConversationAttached();
+    const isMobile = window.innerWidth <= 900;
     // 获取 div 元素
     const itemContent = document.getElementById('item-content');
     const no_content = document.getElementById('not-content');
@@ -499,31 +500,17 @@ function setDivSize() {
     const titleBox = document.getElementById('topTitle');
     const ball = document.getElementById('ball-div');
     const left_nav_bar = document.getElementById('navigation_bar');
-    // const top_nav_bar = document.getElementById('top-nav');
-    
     // 获取当前窗口的宽度和高度
     const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    
-
-    const item_widht= windowWidth - left_nav_bar.offsetWidth;
-    // ball
-    // let ballRadius = Math.min(windowWidth * 0.8, 512); 
     const intro_h =  intro.offsetHeight;
     let title_h =  titleBox.offsetHeight;
     const content_h =  itemContent.offsetHeight;
-    // let top_nav_h =  top_nav_bar.offsetHeight;
 
     const computedStyle = window.getComputedStyle(ball);
     const ball_m_t =  parseInt(computedStyle.marginTop);
     let ball_m_b =  parseInt(computedStyle.marginBottom);
-    // console.log(top_nav_h, ball_m_b)
-    // radius 最大 512
-    // top_nav_h =  20;
     let d1 =  Math.min(windowWidth * 0.8, 400) ;
     let d2 = content_h - intro_h - title_h  - ball_m_t - ball_m_b;
-    
-    let marginDelta = left_nav_bar.offsetWidth > 0 ? 39 : 12;
     if(d2 < 100) {
         // title / 2
         title.style.height = '60px';
@@ -540,6 +527,10 @@ function setDivSize() {
         titleBox.style.height = '130px';
         title_h =  titleBox.offsetHeight;
         // alert(title_h);
+    }
+    if (isMobile) {
+        title.style.height = '12em';
+        titleBox.style.height = '12em';
     }
     let temp = content_h - intro_h - title_h  - ball_m_t;
     let margin = 20;
