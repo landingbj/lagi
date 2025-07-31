@@ -54,7 +54,7 @@ public abstract class HangCityAgent {
                 if(results.isEmpty()) {
                     throw new RRException(LLMErrorConstants.OTHER_ERROR, errorMsg);
                 }
-                return results.get(0);
+                return results.get(results.size() -1);
             } catch (Exception e) {
                 log.error("getOutput error: {}", e.getMessage());
             }

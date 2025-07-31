@@ -263,6 +263,8 @@ public class ApiInvokeUtil {
                                                    Integer timeout, TimeUnit timeUnit, Function<String, R> convertResponseFunc) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeout, timeUnit)
+                .writeTimeout(timeout, timeUnit)
+                .readTimeout(timeout, timeUnit)
                 .connectionPool(CONNECTION_POOL)
                 .build();
         MediaType mediaType = MediaType.get("application/json");
