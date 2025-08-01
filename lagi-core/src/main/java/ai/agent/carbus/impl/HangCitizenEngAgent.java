@@ -41,10 +41,10 @@ public class HangCitizenEngAgent extends HangCityAgent {
 
 
     public Observable<ChatCompletionResult> chat(Request request) {
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
         Map<String, Object> map = toolInvoke(request);
-        long end = System.currentTimeMillis();
-        System.out.println((end - start) / 1000);
+//        long end = System.currentTimeMillis();
+//        System.out.println((end - start) / 1000);
         map.remove("slot_values");
         String intent = (String)map.get("intent");
         if("other".equals(intent)) {
@@ -98,6 +98,11 @@ public class HangCitizenEngAgent extends HangCityAgent {
     public Map<String, Object> toolInvoke(Request request) {
         Map<String, Object> result = retryCitizenToolInvoke(request);
         String intent = (String) result.get("intent");
+        String city = (String) result.get("city");
+        if(!"杭州市".contains(city)) {
+            result.put("intent", "other");
+            intent = "other";
+        }
         Map<String, String> slotValues = Collections.emptyMap();
         if(result.get("slot_values") != null) {
             slotValues = (Map<String, String>)result.get("slot_values");

@@ -335,15 +335,23 @@ filters:
 
 
 gateway:
-  local_ip: your-ip
-  local_port: 8000
-  gateway_ip: your-gateway-ip
-  gateway_port: 8000
+  local_ip: 127.0.0.1
+  local_port: 8082
+  gateway_ip: 127.0.0.1
+  gateway_port: 8081
   service_name: model-middleware-service
 
 
 zhipu_agents:
-  - name: travel
-    api_key: your-api-key
-  - name: citizen
-    api_key: your-api-key
+  - name: HDT
+    api_key: you-api-key
+    has_slot: true
+  - name: CM
+    api_key: you-api-key
+    has_slot: false
+
+
+apis:
+  - name: carbus
+    base_url: http://127.0.0.1:8888
+
