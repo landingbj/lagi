@@ -49,6 +49,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     @JsonProperty("zhipu_agents")
     private List<AgentConfig> zhipuAgents;
 
+    private List<Map<String, String>> Apis;
+
     @Override
     public void init() {
         loadFromPropertiesFromYaml();

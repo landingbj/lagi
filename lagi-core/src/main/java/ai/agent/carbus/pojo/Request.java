@@ -18,4 +18,5 @@ public class Request {
     private Boolean stream;
     private Double longitude;
     private Double latitude;
+    private String type;
 }
