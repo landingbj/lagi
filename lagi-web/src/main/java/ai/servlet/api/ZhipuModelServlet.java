@@ -2,8 +2,11 @@ package ai.servlet.api;
 
 import ai.agent.carbus.impl.HangCitizenEngAgent;
 import ai.agent.carbus.impl.HangCityTravelAgent;
+import ai.agent.carbus.pojo.ApiResponse;
 import ai.agent.carbus.pojo.Request;
+import ai.agent.carbus.pojo.ScenicSpotData;
 import ai.agent.carbus.pojo.Travel;
+import ai.agent.carbus.util.ApiForCarBus;
 import ai.common.exception.RRException;
 import ai.config.ContextLoader;
 import ai.config.pojo.AgentConfig;
@@ -14,6 +17,7 @@ import ai.servlet.RestfulServlet;
 import ai.servlet.annotation.Body;
 import ai.servlet.annotation.Post;
 import ai.utils.SensitiveWordUtil;
+import cn.hutool.core.util.StrUtil;
 import io.reactivex.Observable;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,7 +84,19 @@ public class ZhipuModelServlet extends RestfulServlet {
         if(hangCityTravelAgent == null) {
             throw new RRException("未配置该智能体");
         }
-        return hangCityTravelAgent.introduce(request);
+        ApiResponse<ScenicSpotData> scenicArea = ApiForCarBus.getScenicArea(request.getQuery());
+        if(scenicArea != null && scenicArea.getCode() == 0) {
+            String details = scenicArea.getData().getDetails();
+            if(!StrUtil.isBlank( details)) {
+                return details;
+            }
+        }
+        String introduce = hangCityTravelAgent.introduce(request);
+        try {
+            ApiForCarBus.saveScenicArea(ScenicSpotData.builder().name(request.getQuery()).details(introduce).build());
+        } catch (Exception ignored) {
+        }
+        return introduce;
     }
 
 

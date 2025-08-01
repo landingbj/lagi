@@ -15,4 +15,5 @@ public class AttractionInfo {
     private Double latitude;
     private String imageUrl;
     private String description;
+    private String details;
 }

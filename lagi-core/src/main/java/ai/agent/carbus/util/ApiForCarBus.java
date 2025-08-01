@@ -26,6 +26,13 @@ public class ApiForCarBus {
         return new Gson().fromJson(get, new TypeToken<ApiResponse<ScenicSpotData> >(){});
     }
 
+    public static ApiResponse<Object> saveScenicArea(ScenicSpotData data)  {
+        String url = BaseUrl + "/app/scenicArea/saveDetails";
+        String post = BaseHttpRequestUtil.post(url, null, null, new Gson().toJson(data));
+        return new Gson().fromJson(post, new TypeToken<ApiResponse<Object> >(){});
+    }
+
+
     public static Map<String, Object> getRoute (String type, String origin, String destination)  {
         Map<String, String> query = new HashMap<>();
         query.put("origin", origin);

@@ -18,4 +18,5 @@ public class ScenicSpotData {
     private String updateBy;
     private String updateTime;
     private String delFlag;
+    private String details;
 }

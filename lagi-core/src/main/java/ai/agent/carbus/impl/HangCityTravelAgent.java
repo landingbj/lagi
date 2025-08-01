@@ -184,6 +184,7 @@ public class HangCityTravelAgent extends HangCityAgent {
                         AttractionInfo attractionInfo = attractionInfoMap.get(address);
                         attractionInfo.setDescription(data.getDescription());
                         attractionInfo.setImageUrl(data.getImageUrl());
+                        attractionInfo.setDetails(data.getDetails());
                         return attractionInfo;
                     }
                 } catch (Exception e) {
