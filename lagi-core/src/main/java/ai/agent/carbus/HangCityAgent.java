@@ -7,6 +7,7 @@ import ai.common.utils.ObservableList;
 import ai.config.pojo.AgentConfig;
 import ai.llm.utils.LLMErrorConstants;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.pojo.ChatMessage;
 import ai.utils.ApiInvokeUtil;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -34,7 +35,7 @@ public abstract class HangCityAgent {
         this.headers = headers;
     }
 
-    protected abstract Observable<ChatCompletionResult> chat(Request request);
+    public abstract Observable<ChatCompletionResult> chat(Request request);
 
     protected Map<String, Object> getOutput(String url, Request request, String errorMsg, int retryTime) {
         retryTime = Math.max(retryTime, 1);
@@ -63,4 +64,25 @@ public abstract class HangCityAgent {
         throw new RRException(LLMErrorConstants.OTHER_ERROR, errorMsg);
     }
 
+
+    protected ChatCompletionResult convert2StreamResult(String response) {
+        Map<String, Object> out = new Gson().fromJson(response, new TypeToken<Map<String, Object>>() {
+        }.getType());
+        if("node_chunk".endsWith((String) out.get("event"))) {
+            Result<ChatCompletionResult> chatCompletionResultResult = new Gson().fromJson(response, new TypeToken<Result<ChatCompletionResult>>() {
+            });
+            Object o = out.get("session_id");
+            if(o != null) {
+                chatCompletionResultResult.getData().setSession_id((String) o);
+            }
+            chatCompletionResultResult.getData().getChoices().forEach(choice->{
+                ChatMessage delta = choice.getDelta();
+                choice.setMessage(delta);
+                choice.setDelta(null);
+            });
+            return chatCompletionResultResult.getData();
+        }
+        // 非流式 设为 null 被过滤
+        return null;
+    }
 }

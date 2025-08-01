@@ -19,4 +19,6 @@ public class AgentConfig {
     private String wrongCase;
     private String endpoint;
     private String mcps;
+    @JsonProperty("has_slot")
+    private Boolean hasSlot;
 }

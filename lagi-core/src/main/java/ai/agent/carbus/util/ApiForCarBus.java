@@ -6,13 +6,16 @@ import ai.agent.carbus.pojo.ScenicSpotData;
 import ai.common.exception.RRException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ApiForCarBus {
-    public static final String BaseUrl = "http://200.200.1.119:9999";
+
+    @Setter
+    public static String BaseUrl = "http://200.200.1.119:9999";
 
     public static ApiResponse<LocationData> getLocationData(String keywords)  {
         String url = BaseUrl + "/app/amap/GDApi?keywords=" + keywords + "&apiType=inputTips";

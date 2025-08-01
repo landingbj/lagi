@@ -71,6 +71,7 @@ public class HangCitizenEngAgent extends HangCityAgent {
     }
 
     private ObservableList<ChatCompletionResult> retryChat(Request request, Map<String, Object> data) {
+        data.put("hasSlot",  Boolean.TRUE.equals(config.getHasSlot()));
         int tryTimes = 0;
         RRException exception = null;
         ObservableList<ChatCompletionResult> sse1 = null;
@@ -94,39 +95,21 @@ public class HangCitizenEngAgent extends HangCityAgent {
         throw exception;
     }
 
-    private ChatCompletionResult convert2StreamResult(String response) {
-        Map<String, Object> out = new Gson().fromJson(response, new TypeToken<Map<String, Object>>() {
-        }.getType());
-        if("node_chunk".endsWith((String) out.get("event"))) {
-            Result<ChatCompletionResult> chatCompletionResultResult = new Gson().fromJson(response, new TypeToken<Result<ChatCompletionResult>>() {
-            });
-            Object o = out.get("session_id");
-            if(o != null) {
-                chatCompletionResultResult.getData().setSession_id((String) o);
-            }
-            chatCompletionResultResult.getData().getChoices().forEach(choice->{
-                ChatMessage delta = choice.getDelta();
-                choice.setMessage(delta);
-                choice.setDelta(null);
-            });
-            return chatCompletionResultResult.getData();
-        }
-        // 非流式 设为 null 被过滤
-        return null;
-    }
-
     public Map<String, Object> toolInvoke(Request request) {
         Map<String, Object> result = retryCitizenToolInvoke(request);
         String intent = (String) result.get("intent");
         Map<String, String> slotValues = Collections.emptyMap();
         if(result.get("slot_values") != null) {
             slotValues = (Map<String, String>)result.get("slot_values");
+            String radius = slotValues.get("radius");
+            if(StrUtil.isBlank(radius)) {
+                slotValues.put("radius", "5000");
+            }
         }
         if("other".equals(intent)) {
             return result;
         } else if("navigate".equals(intent)) { // 导航
             doNavigate(request, slotValues, result);
-
         } else if("bus_station".equals(intent) || "subway_station".equals(intent)) { // 公交车站查询
             doStations(request, slotValues, result);
         } else if("redcycle_station".equals(intent)) {

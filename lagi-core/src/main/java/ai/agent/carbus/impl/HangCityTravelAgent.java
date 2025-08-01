@@ -52,6 +52,7 @@ public class HangCityTravelAgent extends HangCityAgent {
     }
 
     private Observable<ChatCompletionResult> retryChat(Request request, Map<String, Object> output) {
+        output.put("hasSlot",  Boolean.TRUE.equals(config.getHasSlot()));
         int tryTime = 0;
         while (tryTime < MAX_RETRY_TIME) {
             try {
@@ -74,29 +75,9 @@ public class HangCityTravelAgent extends HangCityAgent {
     }
 
 
-    private ChatCompletionResult convert2StreamResult(String response) {
-        Map<String, Object> out = new Gson().fromJson(response, new TypeToken<Map<String, Object>>() {
-        }.getType());
-        if("node_chunk".endsWith((String) out.get("event"))) {
-            Result<ChatCompletionResult> chatCompletionResultResult = new Gson().fromJson(response, new TypeToken<Result<ChatCompletionResult>>() {
-            });
-            Object o = out.get("session_id");
-            if(o != null) {
-                chatCompletionResultResult.getData().setSession_id((String) o);
-            }
-            chatCompletionResultResult.getData().getChoices().forEach(choice->{
-                ChatMessage delta = choice.getDelta();
-                choice.setMessage(delta);
-                choice.setDelta(null);
-            });
-            return chatCompletionResultResult.getData();
-        }
-        // 非流式 设为 null 被过滤
-        return null;
-    }
 
 
-    public List<Travel> getSlotAndFillingWithApi(Request request) {
+    public Travels getSlotAndFillingWithApi(Request request) {
         int tryTime = 0;
         String output = null;
         while (tryTime < MAX_RETRY_TIME) {
@@ -117,14 +98,15 @@ public class HangCityTravelAgent extends HangCityAgent {
         return fillingWithApi(output);
     }
 
-    private List<Travel> fillingWithApi(String outputStr) {
+    private Travels fillingWithApi(String outputStr) {
         Gson gson = new Gson();
         Map<String, Object> output = gson.fromJson( outputStr, new TypeToken<Map<String, Object>>() {});
-        Set<String> days = output.keySet();
+        Map<String, Object> plan = (Map<String, Object>) output.get("Plan");
+        Set<String> days = plan.keySet();
         List<Travel> travels = new ArrayList<>();
         Map<String, AttractionInfo> attractionInfoMap = new ConcurrentHashMap<>();
         for (String day : days) {
-            Map<String, List<String>> dayPlanes = (Map<String, List<String>>) output.get(day);
+            Map<String, List<String>> dayPlanes = (Map<String, List<String>>) plan.get(day);
             List<String> morning = dayPlanes.get( "上午");
             List<String> afternoon = dayPlanes.get("中午");
             List<String> evening = dayPlanes.get("下午");
@@ -209,7 +191,19 @@ public class HangCityTravelAgent extends HangCityAgent {
                 e.printStackTrace();
             }
         });
-        return travels;
+
+        travels.sort((o1, o2) -> {
+            try {
+                String d1 = o1.getWitchDay().toLowerCase();
+                String d2 = o2.getWitchDay().toLowerCase();
+                int num1 = Integer.parseInt(d1.replace("day", ""));
+                int num2 = Integer.parseInt(d2.replace("day", ""));
+                return Integer.compare(num1, num2);
+            } catch (Exception e) {
+                return 0;
+            }
+        });
+        return Travels.builder().title((String) output.get("title")).summary((String) output.get("summary")).travels(travels).build();
     }
 
 
@@ -270,6 +264,7 @@ public class HangCityTravelAgent extends HangCityAgent {
         System.out.println(intro);
 
         System.out.println("Done");
+
     }
 
 }
