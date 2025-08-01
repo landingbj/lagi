@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sun.xml.bind.v2.TODO;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -138,7 +139,45 @@ public class WorkerApiServlet extends BaseServlet {
     }
 
     private void batteryHealthReport(HttpServletRequest req, HttpServletResponse resp)  throws ServletException, IOException {
+        String apiUrl = "http://20.17.127.25:11105/aicoapi/custom_coco/coco_api";
+        Map<String, Object> requestData = new HashMap<>();
+        String msg = req.getParameter("msg");
+
+        requestData.put("api_key", "1yOHmmgOkteUDkw3BTsdI09y4acxehj0");
+        StringBuilder queryBuilder = new StringBuilder();
+        queryBuilder.append("根据提供的数据进行分析总结并给出建议 要求如下：\n");
+        queryBuilder.append("1. 报告是html格式\n");
+        queryBuilder.append("2. 图表高大上\n");
+        queryBuilder.append("3. 显示的数据真实\n");
+        queryBuilder.append("4. 报告名称为电池健康度预警分析报告\n");
+        queryBuilder.append("5. 不能暴露CoCo分析团队\n");
+        queryBuilder.append("6. 不要有search_image图片\n");
+        queryBuilder.append("7. 可视化图片或图表直接嵌入到html报告文件里 不要引用其他文件\n");
+        if (msg != null && !msg.isEmpty()) {
+            queryBuilder.append("用户要求如下：").append(msg);
+        }
+        requestData.put("query", queryBuilder.toString());
+
+        requestData.put("config_id", "9b0f82a85e2f11f081555254004d7f01");
+        List<String> userFiles = new ArrayList<>();
+        userFiles.add("http://20.17.127.25:11105/aicoapi/fs/v1/api/download/2MNGS3H3KRVE5WIDHEL76AI4KI/aico/docs/e79a2b4e80506f58/车辆轮胎信息.xlsx");
+        requestData.put("user_files", userFiles);
+
+        String jsonInputString = gson.toJson(requestData);
+
+        HttpResponse response = HttpRequest.post(apiUrl)
+                .header("Content-Type", "application/json")
+                .body(jsonInputString)
+                .execute();
+
+        String result = response.body();
+
+
+
+
         resp.setContentType("application/json;charset=utf-8");
+
+
         Map<String, Object> responseMap = new HashMap<>();
         List<Map<String, String>> list = new ArrayList();
         Map<String, String> queryData = getQueryData(req);

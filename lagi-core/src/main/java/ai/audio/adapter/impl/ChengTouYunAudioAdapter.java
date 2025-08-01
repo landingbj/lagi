@@ -20,8 +20,8 @@ import java.nio.file.Files;
 
 @ASR(company = "chengtouyun", modelNames = "chengtouyunasr")
 public class ChengTouYunAudioAdapter  extends ModelService implements IAudioAdapter {
-//    private static final String ASRHOST = "http://218.109.64.68:11001/asr/api";
-private static final String ASRHOST = "http://20.17.39.241:8890/asr/api";
+    private static final String ASRHOST = "http://218.109.64.68:11001/asr/api";//本地
+//private static final String ASRHOST = "http://20.17.39.241:8890/asr/api";//远程
     private final Gson gson = new Gson();
     private UniversalOSS universalOSS;
 
@@ -47,7 +47,7 @@ private static final String ASRHOST = "http://20.17.39.241:8890/asr/api";
                 }
             }
             Request.Builder requestBuilder = new Request.Builder()
-                    .url(ASRHOST)
+                    .url(apiAddress)
                     .post(body)
                     .addHeader("Content-Type", "audio/mpeg")
 //                    .addHeader("access_token", getAccessToken())
