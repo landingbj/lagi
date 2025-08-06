@@ -42,22 +42,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 通道与 route_name 映射
+# 通道与 route_id 映射
 CHANNEL_MAPPING = {
-    'C1': ['黄龙体育中心至灵隐专线', '武林广场至灵隐专线'],
-    'C2': ['278M路', '319M路', '西溪路停车场至灵隐接驳线'],
-    'C3': ['505路'],
-    'C4': ['7路'],
-    'C5': ['龙翔桥至灵隐专线']
+    'C1': ['3301000100131008', '3301000100093210'],
+    'C2': ['3301000100117308', '3301000100161820', '3301000100143609'],
+    'C3': ['1001000535'],
+    'C4': ['1001000018'],
+    'C5': ['3301000100108408']
 }
 
 # 通道名称映射
 CHANNEL_NAME_MAPPING = {
     'C1': "'黄龙体育中心至灵隐专线', '武林广场至灵隐专线'",
     'C2': "'278M路', '319M路', '西溪路停车场至灵隐接驳线'",
-    'C3': "505路",
-    'C4': "7路",
-    'C5': "龙翔桥至灵隐专线"
+    'C3': "'505路'",
+    'C4': "'7路'",
+    'C5': "'龙翔桥至灵隐专线'"
 }
 
 # 模拟天气数据
@@ -136,7 +136,7 @@ def fetch_data_from_db(window_days):
 
         query_trade = """
         SELECT trade_time, stop_id, off_stop_id, route_id, direction, route_name
-        FROM ods.t_dm_trade_zhipu
+        FROM ods.trade
         WHERE (stop_id = '1001001154' OR off_stop_id = '1001001154')
         AND trade_time >= %s AND trade_time < %s
         """
@@ -145,8 +145,8 @@ def fetch_data_from_db(window_days):
         logger.info("提取交易数据记录数: %d", len(trade_data))
 
         query_broadcast = """
-        SELECT arrive_time, leave_time, board_amount, off_amount, on_bus_amount, stop_id, route_name
-        FROM ods.t_dm_sim_station_broacast_zhipu
+        SELECT arrive_time, leave_time, board_amount, off_amount, on_bus_amount, stop_id, route_id
+        FROM ods.sim_station
         WHERE stop_id = '1001001154'
         AND arrive_time >= %s AND arrive_time < %s
         """
@@ -155,10 +155,11 @@ def fetch_data_from_db(window_days):
         logger.info("提取报站数据记录数: %d", len(broadcast_data))
 
         query_schedule = """
-        SELECT assign_name, dispatch_departure_time, dispatch_end_time, single_trip_duration, terminal_id, route_name
-        FROM ods.dispatch_order_departure
+        SELECT assign_name, dispatch_departure_time, dispatch_end_time, single_trip_duration, terminal_id, route_name, route_id
+        FROM ods.assign_schedule
         WHERE (origin_id = '1001001154' OR terminal_id = '1001001154')
         AND dispatch_departure_time >= %s AND dispatch_departure_time < %s
+        AND assign_status = 'RELEASE' AND is_delete = false
         """
         cursor.execute(query_schedule, (start_date_str, end_date_str))
         schedule_data = pd.DataFrame([dict(row) for row in cursor.fetchall()])
@@ -193,21 +194,21 @@ def process_schedule_dates(schedule_data):
     schedule_data.dropna(subset=['plan_departure_time'], inplace=True)
 
     invalid_routes = []
-    def map_to_channel(route_name):
-        if pd.isna(route_name) or route_name is None:
+    def map_to_channel(route_id, route_name):
+        if pd.isna(route_id) or route_id is None:
             invalid_routes.append('None')
             return None
-        route_name = route_name.strip().replace('  ', ' ')
+        route_id = str(route_id).strip()
         for channel, routes in CHANNEL_MAPPING.items():
-            if route_name in [r.strip().replace('  ', ' ') for r in routes]:
+            if route_id in routes:
                 return channel
-        invalid_routes.append(route_name)
+        invalid_routes.append(f"{route_id}:{route_name}")
         return None
 
-    schedule_data['channel'] = schedule_data['route_name'].apply(map_to_channel)
+    schedule_data['channel'] = schedule_data.apply(lambda x: map_to_channel(x['route_id'], x['route_name']), axis=1)
     invalid_channel_count = schedule_data['channel'].isna().sum()
     if invalid_channel_count > 0:
-        logger.warning("发现 %d 条记录的 route_name 无法映射，将被删除", invalid_channel_count)
+        logger.warning("发现 %d 条记录的 route_id 无法映射，将被删除", invalid_channel_count)
     schedule_data.dropna(subset=['channel'], inplace=True)
 
     channel_counts = schedule_data['channel'].value_counts().to_dict()
@@ -219,9 +220,9 @@ def preprocess_data(trade_data, broadcast_data, schedule_data, weather_data, tim
     logger.info("开始数据清洗与特征工程，时间粒度: %s", time_granularity)
 
     # 去重
-    trade_data = trade_data.drop_duplicates(subset=['trade_time', 'stop_id', 'route_name'])
-    broadcast_data = broadcast_data.drop_duplicates(subset=['arrive_time', 'stop_id', 'route_name'])
-    schedule_data = schedule_data.drop_duplicates(subset=['dispatch_departure_time', 'route_name'])
+    trade_data = trade_data.drop_duplicates(subset=['trade_time', 'stop_id', 'route_id'])
+    broadcast_data = broadcast_data.drop_duplicates(subset=['arrive_time', 'stop_id', 'route_id'])
+    schedule_data = schedule_data.drop_duplicates(subset=['dispatch_departure_time', 'route_id'])
     logger.info("去重后数据量 - 交易: %d, 报站: %d, 调度: %d", len(trade_data), len(broadcast_data), len(schedule_data))
 
     # 时间转换
@@ -244,19 +245,19 @@ def preprocess_data(trade_data, broadcast_data, schedule_data, weather_data, tim
 
     # 通道映射
     invalid_routes = []
-    def map_to_channel(route_name):
-        if pd.isna(route_name) or route_name is None:
+    def map_to_channel(route_id):
+        if pd.isna(route_id) or route_id is None:
             invalid_routes.append('None')
             return None
-        route_name = route_name.strip().replace('  ', ' ')
+        route_id = str(route_id).strip()
         for channel, routes in CHANNEL_MAPPING.items():
-            if route_name in [r.strip().replace('  ', ' ') for r in routes]:
+            if route_id in routes:
                 return channel
-        invalid_routes.append(route_name)
+        invalid_routes.append(route_id)
         return None
 
-    trade_data['channel'] = trade_data['route_name'].apply(map_to_channel)
-    broadcast_data['channel'] = broadcast_data['route_name'].apply(map_to_channel)
+    trade_data['channel'] = trade_data['route_id'].apply(map_to_channel)
+    broadcast_data['channel'] = broadcast_data['route_id'].apply(map_to_channel)
     trade_data.dropna(subset=['channel'], inplace=True)
     broadcast_data.dropna(subset=['channel'], inplace=True)
     logger.info("无效通道 - 交易: %d, 报站: %d", trade_data['channel'].isna().sum(), broadcast_data['channel'].isna().sum())
@@ -328,7 +329,7 @@ def preprocess_data(trade_data, broadcast_data, schedule_data, weather_data, tim
     logger.info("天气数据列: %s", weather_data.columns.tolist())
     logger.info("降雨分类分布: %s", weather_data['rain_category'].value_counts().to_dict())
 
-    enc = OneHotEncoder(sparse_output=False)
+    enc = OneHotEncoder(sparse=False)
     rain_encoded = enc.fit_transform(weather_data[['rain_category']].fillna('no_rain'))
     rain_df = pd.DataFrame(rain_encoded, columns=enc.get_feature_names_out(['rain_category']))
     weather_data = pd.concat([weather_data, rain_df], axis=1)
@@ -495,7 +496,6 @@ def train_gpr_and_predict(data, scaler, enc, weather_data, window_days, time_gra
                 'temp_comfort': [1 if 15 <= weather_data['temperature'].mean() <= 25 else 0]
             })
             for col in enc.get_feature_names_out(['rain_category']):
-                # 使用默认值 'no_rain' 如果 weather_data['rain_category'] 不可用
                 rain_mode = weather_data['rain_category'].mode()[0] if 'rain_category' in weather_data.columns and not weather_data['rain_category'].isna().all() else 'no_rain'
                 future_data[col] = [1 if col == f'rain_category_{rain_mode}' else 0]
 
