@@ -88,7 +88,8 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         } catch (IllegalArgumentException e) {
             writeIntegrationError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (SQLException e) {
-            writeIntegrationError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "shared account database operation failed");
+            writeIntegrationError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Cuihua account service is temporarily unavailable");
         }
     }
 
@@ -182,6 +183,9 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         }
         LinkMindClientTokenService.AuthenticationResult keyAuthentication = clientTokenService.authenticate(apiKey);
         if (keyAuthentication.isTokenMatched()) {
+            if (keyAuthentication.isUnavailable()) {
+                return AdminAuthentication.unavailable("system administrator authentication is unavailable");
+            }
             if (!keyAuthentication.isAuthenticated()) {
                 return AdminAuthentication.unauthorized("system administrator API key is invalid");
             }
@@ -198,7 +202,7 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
                     ? AdminAuthentication.authorized(user)
                     : AdminAuthentication.forbidden("system_admin role is required");
         } catch (SQLException e) {
-            return AdminAuthentication.unauthorized("system administrator authentication is unavailable");
+            return AdminAuthentication.unavailable("system administrator authentication is unavailable");
         }
     }
 
@@ -358,6 +362,10 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
 
         private static AdminAuthentication forbidden(String message) {
             return new AdminAuthentication(null, HttpServletResponse.SC_FORBIDDEN, message);
+        }
+
+        private static AdminAuthentication unavailable(String message) {
+            return new AdminAuthentication(null, HttpServletResponse.SC_SERVICE_UNAVAILABLE, message);
         }
     }
 

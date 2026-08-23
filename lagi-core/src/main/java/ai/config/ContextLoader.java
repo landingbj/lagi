@@ -206,6 +206,7 @@ public class ContextLoader {
                 loadContextByFilePath(configPath.trim(), extensionJarFolder);
             } catch (Exception e) {
                 log.error("Failed to load configuration from command line path: {}", configPath, e);
+                throw new IllegalStateException("failed to load configured lagi.yml: " + configPath, e);
             }
         }
 

@@ -1,5 +1,7 @@
 package ai.account;
 
+import ai.common.db.CuihuaDataSource;
+import ai.config.pojo.CuihuaConfig;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 
@@ -7,11 +9,32 @@ import java.security.SecureRandom;
 import java.sql.SQLException;
 import java.util.Base64;
 
-/** Service for authenticating the shared Cuihua account without copying credentials into LinkMind. */
+/** Authenticates through the read-only Cuihua user view without copying credentials into LinkMind. */
 public class CuihuaAccountService {
+    private static final Object INITIALIZATION_LOCK = new Object();
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int SESSION_BYTES = 32;
+    private static volatile boolean initialized;
     private final CuihuaAccountDao accountDao = new CuihuaAccountDao();
+
+    public static void initialize(CuihuaConfig config) throws SQLException {
+        synchronized (INITIALIZATION_LOCK) {
+            CuihuaDataSource.initialize(config);
+            if (initialized) {
+                return;
+            }
+            new CuihuaAccountDao().initialize();
+            initialized = true;
+        }
+    }
+
+    public static void resetForTests() {
+        synchronized (INITIALIZATION_LOCK) {
+            initialized = false;
+            CuihuaAccountDao.resetSchemaForTests();
+            CuihuaDataSource.resetForTests();
+        }
+    }
 
     public LoginResult login(String usernameOrEmail, String password, long sessionLifetimeMillis) throws SQLException {
         return login(usernameOrEmail, password, sessionLifetimeMillis, false);
@@ -60,10 +83,6 @@ public class CuihuaAccountService {
         if (!isBlank(sessionToken)) {
             accountDao.deleteLoginSession(CuihuaAccountDao.sha256(sessionToken.trim()));
         }
-    }
-
-    public boolean isIntegrationAvailable() {
-        return accountDao.ensureSchema();
     }
 
     public boolean isSystemAdmin(CuihuaUser user) {

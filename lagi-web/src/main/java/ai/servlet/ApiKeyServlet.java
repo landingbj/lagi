@@ -17,6 +17,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,8 +267,11 @@ public class ApiKeyServlet extends BaseServlet {
         try {
             String sessionToken = readSessionCookie(req);
             user = accountService.resolveSession(sessionToken);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             log.warn("Unable to validate LinkMind management session: {}", e.getMessage());
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            writeAuthFailure(resp, "Cuihua account service is temporarily unavailable");
+            return false;
         }
         if (user == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

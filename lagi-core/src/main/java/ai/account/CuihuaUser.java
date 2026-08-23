@@ -5,7 +5,7 @@ import lombok.Data;
 
 /**
  * Read-only projection of the account owned by the Cuihua application.
- * LinkMind never creates or updates rows in the shared {@code users} table.
+ * LinkMind reads it from the configured view and never writes to Cuihua tables.
  */
 @Data
 @Builder

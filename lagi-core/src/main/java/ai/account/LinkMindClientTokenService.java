@@ -34,7 +34,7 @@ public class LinkMindClientTokenService {
             accountDao.touchClientToken(clientToken.getId());
             return AuthenticationResult.authenticated(user, clientToken);
         } catch (SQLException e) {
-            return AuthenticationResult.rejected("token validation failed");
+            return AuthenticationResult.unavailable("Cuihua account service is unavailable");
         }
     }
 
@@ -106,10 +106,6 @@ public class LinkMindClientTokenService {
         return accountDao.deleteClientToken(id, userId);
     }
 
-    public boolean isIntegrationAvailable() {
-        return accountDao.ensureSchema();
-    }
-
     private static String newToken() {
         byte[] raw = new byte[TOKEN_BYTES];
         RANDOM.nextBytes(raw);
@@ -123,29 +119,35 @@ public class LinkMindClientTokenService {
     public static final class AuthenticationResult {
         private final boolean tokenMatched;
         private final boolean authenticated;
+        private final boolean unavailable;
         private final String reason;
         private final CuihuaUser user;
         private final LinkMindClientToken clientToken;
 
-        private AuthenticationResult(boolean tokenMatched, boolean authenticated, String reason,
+        private AuthenticationResult(boolean tokenMatched, boolean authenticated, boolean unavailable, String reason,
                                      CuihuaUser user, LinkMindClientToken clientToken) {
             this.tokenMatched = tokenMatched;
             this.authenticated = authenticated;
+            this.unavailable = unavailable;
             this.reason = reason;
             this.user = user;
             this.clientToken = clientToken;
         }
 
         public static AuthenticationResult notMatched() {
-            return new AuthenticationResult(false, false, null, null, null);
+            return new AuthenticationResult(false, false, false, null, null, null);
         }
 
         public static AuthenticationResult rejected(String reason) {
-            return new AuthenticationResult(true, false, reason, null, null);
+            return new AuthenticationResult(true, false, false, reason, null, null);
+        }
+
+        public static AuthenticationResult unavailable(String reason) {
+            return new AuthenticationResult(true, false, true, reason, null, null);
         }
 
         public static AuthenticationResult authenticated(CuihuaUser user, LinkMindClientToken clientToken) {
-            return new AuthenticationResult(true, true, null, user, clientToken);
+            return new AuthenticationResult(true, true, false, null, user, clientToken);
         }
 
         public boolean isTokenMatched() {
@@ -154,6 +156,10 @@ public class LinkMindClientTokenService {
 
         public boolean isAuthenticated() {
             return authenticated;
+        }
+
+        public boolean isUnavailable() {
+            return unavailable;
         }
 
         public String getReason() {

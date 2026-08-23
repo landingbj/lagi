@@ -1,5 +1,6 @@
 package ai.account;
 
+import ai.common.db.CuihuaDataSource;
 import ai.common.db.HikariDS;
 import ai.utils.AiGlobal;
 import lombok.extern.slf4j.Slf4j;
@@ -13,21 +14,27 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
- * Database boundary for the shared Cuihua / LinkMind account model.
- * <p>
- * Cuihua owns {@code users}. LinkMind writes only its integration tables and
- * reads Cuihua users through views, so either application can evolve its own
- * data without duplicating accounts.
+ * Database boundary between the Cuihua-owned user view and LinkMind-owned
+ * sessions and client tokens. LinkMind never writes to the Cuihua database.
  */
 @Slf4j
 public class CuihuaAccountDao {
     private static final Object SCHEMA_LOCK = new Object();
     private static volatile boolean schemaReady;
+    private static final List<String> USER_VIEW_COLUMNS = Arrays.asList(
+            "user_id", "username", "email", "display_name", "password_hash",
+            "role", "status", "locked_until", "created_at");
+    private static final Pattern ARGON2ID_HASH = Pattern.compile(
+            "^\\$argon2id\\$v=\\d+\\$m=\\d+,t=\\d+,p=\\d+\\$[A-Za-z0-9+/]+\\$[A-Za-z0-9+/]+$");
 
-    /** Resets the schema cache after a test replaces the shared SQLite pool. */
+    /** Resets the local LinkMind schema cache after a test replaces its SQLite pool. */
     public static void resetSchemaForTests() {
         synchronized (SCHEMA_LOCK) {
             schemaReady = false;
@@ -57,63 +64,42 @@ public class CuihuaAccountDao {
             + " last_seen_at INTEGER"
             + ")";
 
-    /**
-     * Ensures LinkMind's non-user tables and views exist. Returns false until
-     * Cuihua has created the shared {@code users} table in the same database.
-     */
-    public boolean ensureSchema() {
+    /** Creates LinkMind-owned tables locally and validates the Cuihua-owned view. */
+    public void initialize() throws SQLException {
+        ensureLinkMindSchema();
+        validateCuihuaView();
+    }
+
+    private void ensureLinkMindSchema() throws SQLException {
         if (schemaReady) {
-            return true;
+            return;
         }
         synchronized (SCHEMA_LOCK) {
             if (schemaReady) {
-                return true;
+                return;
             }
-            try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB)) {
-                if (!hasUsersTable(conn)) {
-                    return false;
-                }
-                try (Statement statement = conn.createStatement()) {
-                    statement.executeUpdate(CREATE_CLIENT_TOKEN_TABLE);
-                    statement.executeUpdate(CREATE_LOGIN_SESSION_TABLE);
-                    statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_linkmind_client_api_key_user_id "
-                            + "ON linkmind_client_api_key(user_id)");
-                    statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_linkmind_login_session_user_id "
-                            + "ON linkmind_login_session(user_id)");
-                    statement.executeUpdate("CREATE VIEW IF NOT EXISTS linkmind_user_view AS "
-                            + "SELECT id AS user_id, username, email, display_name, role, status, first_login, "
-                            + "failed_attempts, locked_until, created_at FROM users");
-                    statement.executeUpdate("CREATE VIEW IF NOT EXISTS linkmind_user_auth_view AS "
-                            + "SELECT id AS user_id, username, email, display_name, password_hash, role, status, "
-                            + "locked_until, created_at FROM users");
-                    statement.executeUpdate("CREATE VIEW IF NOT EXISTS linkmind_user_token_usage_view AS "
-                            + "SELECT u.user_id, u.username, u.email, u.display_name, s.provider, s.model, "
-                            + "COUNT(s.id) AS request_count, "
-                            + "COALESCE(SUM(s.prompt_tokens), 0) AS prompt_tokens, "
-                            + "COALESCE(SUM(s.completion_tokens), 0) AS completion_tokens, "
-                            + "COALESCE(SUM(s.total_tokens), 0) AS total_tokens, "
-                            + "MIN(s.created_at) AS first_request_at, MAX(s.created_at) AS last_request_at "
-                            + "FROM linkmind_user_view u LEFT JOIN llm_token_statistics s ON s.user_id = u.user_id "
-                            + "GROUP BY u.user_id, u.username, u.email, u.display_name, s.provider, s.model");
-                }
+            try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+                 Statement statement = conn.createStatement()) {
+                statement.executeUpdate(CREATE_CLIENT_TOKEN_TABLE);
+                statement.executeUpdate(CREATE_LOGIN_SESSION_TABLE);
+                statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_linkmind_client_api_key_user_id "
+                        + "ON linkmind_client_api_key(user_id)");
+                statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_linkmind_login_session_user_id "
+                        + "ON linkmind_login_session(user_id)");
                 schemaReady = true;
-                return true;
-            } catch (SQLException e) {
-                log.error("initialize Cuihua account integration schema failed", e);
-                return false;
             }
         }
     }
 
     public CuihuaUser findActiveUserByLogin(String login) throws SQLException {
-        if (!ensureSchema() || isBlank(login)) {
+        if (isBlank(login)) {
             return null;
         }
         String sql = "SELECT user_id, username, email, display_name, password_hash, role, status, locked_until, created_at "
-                + "FROM linkmind_user_auth_view WHERE (username = ? OR email = ?) "
+                + "FROM " + CuihuaDataSource.getUserView() + " WHERE (username = ? OR email = ?) "
                 + "AND LOWER(status) = 'active' "
                 + "AND (locked_until IS NULL OR datetime(locked_until) <= datetime('now')) LIMIT 1";
-        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+        try (Connection conn = CuihuaDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, login.trim());
             ps.setString(2, login.trim());
@@ -124,13 +110,13 @@ public class CuihuaAccountDao {
     }
 
     public CuihuaUser findActiveUserById(String userId) throws SQLException {
-        if (!ensureSchema() || isBlank(userId)) {
+        if (isBlank(userId)) {
             return null;
         }
         String sql = "SELECT user_id, username, email, display_name, password_hash, role, status, locked_until, created_at "
-                + "FROM linkmind_user_auth_view WHERE user_id = ? AND LOWER(status) = 'active' "
+                + "FROM " + CuihuaDataSource.getUserView() + " WHERE user_id = ? AND LOWER(status) = 'active' "
                 + "AND (locked_until IS NULL OR datetime(locked_until) <= datetime('now')) LIMIT 1";
-        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+        try (Connection conn = CuihuaDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, userId.trim());
             try (ResultSet rs = ps.executeQuery()) {
@@ -140,9 +126,10 @@ public class CuihuaAccountDao {
     }
 
     public LinkMindClientToken findClientToken(String tokenHash) throws SQLException {
-        if (!ensureSchema() || isBlank(tokenHash)) {
+        if (isBlank(tokenHash)) {
             return null;
         }
+        ensureLinkMindSchema();
         String sql = "SELECT id, user_id, token_prefix, name, status, created_at, expires_at, last_used_at "
                 + "FROM linkmind_client_api_key WHERE token_hash = ? LIMIT 1";
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -155,9 +142,7 @@ public class CuihuaAccountDao {
     }
 
     public void insertClientToken(LinkMindClientToken token, String tokenHash) throws SQLException {
-        if (!ensureSchema()) {
-            throw new SQLException("shared Cuihua users table is not available");
-        }
+        ensureLinkMindSchema();
         String sql = "INSERT INTO linkmind_client_api_key(user_id, token_hash, token_prefix, name, status, created_at, expires_at) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -183,9 +168,10 @@ public class CuihuaAccountDao {
     }
 
     public List<LinkMindClientToken> listClientTokens(String userId) throws SQLException {
-        if (!ensureSchema() || isBlank(userId)) {
+        if (isBlank(userId)) {
             return new ArrayList<LinkMindClientToken>();
         }
+        ensureLinkMindSchema();
         String sql = "SELECT id, user_id, token_prefix, name, status, created_at, expires_at, last_used_at "
                 + "FROM linkmind_client_api_key WHERE user_id = ? ORDER BY id DESC";
         List<LinkMindClientToken> tokens = new ArrayList<LinkMindClientToken>();
@@ -202,9 +188,10 @@ public class CuihuaAccountDao {
     }
 
     public LinkMindClientToken findClientToken(long id, String userId) throws SQLException {
-        if (!ensureSchema() || id <= 0 || isBlank(userId)) {
+        if (id <= 0 || isBlank(userId)) {
             return null;
         }
+        ensureLinkMindSchema();
         String sql = "SELECT id, user_id, token_prefix, name, status, created_at, expires_at, last_used_at "
                 + "FROM linkmind_client_api_key WHERE id = ? AND user_id = ? LIMIT 1";
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -218,9 +205,10 @@ public class CuihuaAccountDao {
     }
 
     public boolean updateClientToken(LinkMindClientToken token) throws SQLException {
-        if (!ensureSchema() || token == null || token.getId() <= 0 || isBlank(token.getUserId())) {
+        if (token == null || token.getId() <= 0 || isBlank(token.getUserId())) {
             return false;
         }
+        ensureLinkMindSchema();
         String sql = "UPDATE linkmind_client_api_key SET name = ?, status = ?, expires_at = ? "
                 + "WHERE id = ? AND user_id = ?";
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -239,9 +227,10 @@ public class CuihuaAccountDao {
     }
 
     public boolean revokeClientToken(long id, String userId) throws SQLException {
-        if (!ensureSchema() || id <= 0 || isBlank(userId)) {
+        if (id <= 0 || isBlank(userId)) {
             return false;
         }
+        ensureLinkMindSchema();
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
              PreparedStatement ps = conn.prepareStatement(
                      "UPDATE linkmind_client_api_key SET status = 0 WHERE id = ? AND user_id = ?")) {
@@ -252,9 +241,10 @@ public class CuihuaAccountDao {
     }
 
     public boolean deleteClientToken(long id, String userId) throws SQLException {
-        if (!ensureSchema() || id <= 0 || isBlank(userId)) {
+        if (id <= 0 || isBlank(userId)) {
             return false;
         }
+        ensureLinkMindSchema();
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
              PreparedStatement ps = conn.prepareStatement(
                      "DELETE FROM linkmind_client_api_key WHERE id = ? AND user_id = ?")) {
@@ -265,7 +255,13 @@ public class CuihuaAccountDao {
     }
 
     public void touchClientToken(long id) {
-        if (id <= 0 || !ensureSchema()) {
+        if (id <= 0) {
+            return;
+        }
+        try {
+            ensureLinkMindSchema();
+        } catch (SQLException e) {
+            log.warn("prepare LinkMind client token schema failed: {}", e.getMessage());
             return;
         }
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -280,9 +276,7 @@ public class CuihuaAccountDao {
     }
 
     public void insertLoginSession(String userId, String sessionHash, long expiresAt) throws SQLException {
-        if (!ensureSchema()) {
-            throw new SQLException("shared Cuihua users table is not available");
-        }
+        ensureLinkMindSchema();
         String sql = "INSERT INTO linkmind_login_session(user_id, session_hash, expires_at, created_at, last_seen_at) "
                 + "VALUES (?, ?, ?, ?, ?)";
         long now = System.currentTimeMillis();
@@ -298,26 +292,34 @@ public class CuihuaAccountDao {
     }
 
     public CuihuaUser findActiveUserBySessionHash(String sessionHash) throws SQLException {
-        if (!ensureSchema() || isBlank(sessionHash)) {
+        if (isBlank(sessionHash)) {
             return null;
         }
-        String sql = "SELECT u.user_id, u.username, u.email, u.display_name, u.password_hash, u.role, u.status, "
-                + "u.locked_until, u.created_at FROM linkmind_login_session s "
-                + "JOIN linkmind_user_auth_view u ON u.user_id = s.user_id "
-                + "WHERE s.session_hash = ? AND s.expires_at > ? AND LOWER(u.status) = 'active' "
-                + "AND (u.locked_until IS NULL OR datetime(u.locked_until) <= datetime('now')) LIMIT 1";
+        ensureLinkMindSchema();
+        String userId = null;
+        String sql = "SELECT user_id FROM linkmind_login_session "
+                + "WHERE session_hash = ? AND expires_at > ? LIMIT 1";
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, sessionHash);
             ps.setLong(2, System.currentTimeMillis());
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? mapUser(rs) : null;
+                if (rs.next()) {
+                    userId = rs.getString("user_id");
+                }
             }
         }
+        return userId == null ? null : findActiveUserById(userId);
     }
 
     public void touchLoginSession(String sessionHash) {
-        if (isBlank(sessionHash) || !ensureSchema()) {
+        if (isBlank(sessionHash)) {
+            return;
+        }
+        try {
+            ensureLinkMindSchema();
+        } catch (SQLException e) {
+            log.warn("prepare LinkMind login session schema failed: {}", e.getMessage());
             return;
         }
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -332,9 +334,10 @@ public class CuihuaAccountDao {
     }
 
     public void deleteLoginSession(String sessionHash) throws SQLException {
-        if (isBlank(sessionHash) || !ensureSchema()) {
+        if (isBlank(sessionHash)) {
             return;
         }
+        ensureLinkMindSchema();
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
              PreparedStatement ps = conn.prepareStatement(
                      "DELETE FROM linkmind_login_session WHERE session_hash = ?")) {
@@ -357,12 +360,98 @@ public class CuihuaAccountDao {
         }
     }
 
-    private boolean hasUsersTable(Connection conn) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'users' LIMIT 1");
-             ResultSet rs = ps.executeQuery()) {
-            return rs.next();
+    private void validateCuihuaView() throws SQLException {
+        String view = CuihuaDataSource.getUserView();
+        try (Connection conn = CuihuaDataSource.getConnection()) {
+            validateWalMode(conn);
+            validateViewObject(conn, view);
+            validateViewColumns(conn, view);
+            validateViewRows(conn, view);
         }
+    }
+
+    private void validateWalMode(Connection conn) throws SQLException {
+        try (Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery("PRAGMA journal_mode")) {
+            if (!rs.next() || !"wal".equalsIgnoreCase(rs.getString(1))) {
+                throw new SQLException("Cuihua SQLite database must use WAL journal mode");
+            }
+        }
+    }
+
+    private void validateViewObject(Connection conn, String view) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT type FROM sqlite_master WHERE name = ? COLLATE BINARY LIMIT 1")) {
+            ps.setString(1, view);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next() || !"view".equalsIgnoreCase(rs.getString("type"))) {
+                    throw new SQLException("Cuihua user_view is missing or is not a view: " + view);
+                }
+            }
+        }
+    }
+
+    private void validateViewColumns(Connection conn, String view) throws SQLException {
+        List<String> actual = new ArrayList<String>();
+        try (Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery("PRAGMA table_info(" + view + ")")) {
+            while (rs.next()) {
+                actual.add(rs.getString("name"));
+            }
+        }
+        if (!USER_VIEW_COLUMNS.equals(actual)) {
+            throw new SQLException("Cuihua user_view columns must be exactly " + USER_VIEW_COLUMNS + ", actual " + actual);
+        }
+    }
+
+    private void validateViewRows(Connection conn, String view) throws SQLException {
+        String sql = "SELECT user_id, username, email, display_name, password_hash, role, status, locked_until, "
+                + "created_at, typeof(created_at) AS created_at_type, datetime(locked_until) AS parsed_locked_until "
+                + "FROM " + view;
+        Set<String> userIds = new HashSet<String>();
+        try (Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(sql)) {
+            while (rs.next()) {
+                String userId = requiredColumn(rs, "user_id", null);
+                requiredColumn(rs, "username", userId);
+                requiredColumn(rs, "email", userId);
+                requiredColumn(rs, "display_name", userId);
+                String passwordHash = requiredColumn(rs, "password_hash", userId);
+                if (!ARGON2ID_HASH.matcher(passwordHash).matches()) {
+                    throw invalidUser(userId, "password_hash must be a valid Argon2id encoded hash");
+                }
+                String role = requiredColumn(rs, "role", userId);
+                if (!"system_admin".equals(role) && !"user".equals(role)) {
+                    throw invalidUser(userId, "role must be system_admin or user");
+                }
+                if (!"active".equals(requiredColumn(rs, "status", userId))) {
+                    throw invalidUser(userId, "status must be active");
+                }
+                String lockedUntil = rs.getString("locked_until");
+                if (lockedUntil != null && rs.getString("parsed_locked_until") == null) {
+                    throw invalidUser(userId, "locked_until is not a SQLite datetime");
+                }
+                if (!"integer".equals(rs.getString("created_at_type")) || rs.getLong("created_at") <= 0L) {
+                    throw invalidUser(userId, "created_at must be a positive Unix millisecond integer");
+                }
+                if (!userIds.add(userId)) {
+                    throw invalidUser(userId, "user_id is duplicated");
+                }
+            }
+        }
+    }
+
+    private String requiredColumn(ResultSet rs, String column, String userId) throws SQLException {
+        String value = rs.getString(column);
+        if (isBlank(value)) {
+            throw invalidUser(userId, column + " is required");
+        }
+        return value;
+    }
+
+    private SQLException invalidUser(String userId, String message) {
+        return new SQLException("invalid Cuihua user_view row"
+                + (userId == null ? "" : " for user_id " + userId) + ": " + message);
     }
 
     private CuihuaUser mapUser(ResultSet rs) throws SQLException {

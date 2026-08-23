@@ -41,6 +41,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
     private ModelFunctions functions;
     private AgentsConfig agents;
 
+    private CuihuaConfig cuihua;
+
     private RoutersConfig routers;
 
     private SkillsConfig skills;

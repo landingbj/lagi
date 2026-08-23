@@ -6,7 +6,6 @@ import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.account.CuihuaAccountService;
-import ai.account.CuihuaUser;
 import ai.account.LinkMindClientTokenService;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
@@ -30,7 +29,6 @@ import ai.medusa.utils.PromptInputUtil;
 import ai.openai.pojo.*;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
-import ai.servlet.UserServlet;
 import ai.utils.AiGlobal;
 import ai.utils.ApikeyUtil;
 import ai.utils.ClientIpAddressUtil;
@@ -55,7 +53,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
@@ -79,7 +76,6 @@ public class LlmApiServlet extends BaseServlet {
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final LinkMindClientTokenService clientTokenService = new LinkMindClientTokenService();
-    private final CuihuaAccountService cuihuaAccountService = new CuihuaAccountService();
     private static MedusaMonitor medusaMonitor;
 
     static {
@@ -91,8 +87,10 @@ public class LlmApiServlet extends BaseServlet {
 
     @Override
     public void init() throws ServletException {
-        if (!clientTokenService.isIntegrationAvailable()) {
-            logger.info("Cuihua account integration is waiting for the shared users table");
+        try {
+            CuihuaAccountService.initialize(ContextLoader.configuration.getCuihua());
+        } catch (Exception e) {
+            throw new ServletException("Cuihua account integration initialization failed", e);
         }
         medusaService.init();
         super.init();
@@ -104,6 +102,11 @@ public class LlmApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         if (url.endsWith("/v1/models") || url.endsWith("/models")) {
+            LinkMindClientTokenService.AuthenticationResult authentication = authenticateRequestToken(req);
+            if (!authentication.isAuthenticated()) {
+                writeModelAuthenticationFailure(resp, authentication);
+                return;
+            }
             PrintWriter out = resp.getWriter();
             Map<String, Object> models = new LinkedHashMap<>();
             models.put("object", "list");
@@ -270,10 +273,17 @@ public class LlmApiServlet extends BaseServlet {
         ExtraBody extraBody = chatCompletionRequest.getExtraBody();
         String mateUrl = extraBody != null ? extraBody.getMateUrl() : null;
 
-        if (!authorizeClientRequest(req, chatCompletionRequest)) {
-            ChatCompletionResult chatCompletionResult = LLMErrorConstants.errorResponse(chatCompletionRequest);
+        LinkMindClientTokenService.AuthenticationResult authentication = authorizeClientRequest(chatCompletionRequest);
+        if (!authentication.isAuthenticated()) {
+            int status = authentication.isUnavailable()
+                    ? HttpServletResponse.SC_SERVICE_UNAVAILABLE : HttpServletResponse.SC_UNAUTHORIZED;
+            resp.setStatus(status);
+            String message = authentication.isUnavailable()
+                    ? "Cuihua account service is temporarily unavailable."
+                    : "A valid LinkMind client token is required.";
+            ChatCompletionResult chatCompletionResult = LLMErrorConstants.errorResponse(
+                    chatCompletionRequest, status, message);
             outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
-            ApikeyUtil.saveInvalidApiKey(apiKey);
             return;
         }
 
@@ -388,50 +398,45 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
-    /**
-     * LinkMind-issued client tokens identify a Cuihua account locally. Other
-     * tokens retain the existing Landing SaaS validation behaviour.
-     */
-    private boolean authorizeClientRequest(HttpServletRequest servletRequest, ChatCompletionRequest request) {
+    /** Only LinkMind client tokens bound to a current Cuihua user may call model APIs. */
+    private LinkMindClientTokenService.AuthenticationResult authorizeClientRequest(ChatCompletionRequest request) {
         String apiKey = request == null ? null : request.getApiKey();
         LinkMindClientTokenService.AuthenticationResult local = clientTokenService.authenticate(apiKey);
-        if (local.isTokenMatched()) {
-            if (!local.isAuthenticated()) {
-                logger.warn("Rejected LinkMind client token: {}", local.getReason());
-                return false;
-            }
+        if (!local.isTokenMatched()) {
+            return LinkMindClientTokenService.AuthenticationResult.rejected("client token was not recognized");
+        }
+        if (!local.isAuthenticated()) {
+            logger.warn("Rejected LinkMind client token: {}", local.getReason());
+            return local;
+        }
+        if (request != null) {
             request.setAccountUserId(local.getUser().getUserId());
-            return true;
         }
-        boolean accepted = ApikeyUtil.validateModelApiKey(apiKey);
-        if (accepted) {
-            attachBrowserSessionUser(servletRequest, request);
-        }
-        return accepted;
+        return local;
     }
 
-    private void attachBrowserSessionUser(HttpServletRequest servletRequest, ChatCompletionRequest request) {
-        if (servletRequest == null || request == null || request.getAccountUserId() != null) {
-            return;
+    private LinkMindClientTokenService.AuthenticationResult authenticateRequestToken(HttpServletRequest req) {
+        String token = ApikeyUtil.extractBearerToken(req.getHeader("Authorization"));
+        if (token == null || token.trim().isEmpty()) {
+            token = req.getHeader("x-api-key");
         }
-        Cookie[] cookies = servletRequest.getCookies();
-        if (cookies == null) {
-            return;
-        }
-        for (Cookie cookie : cookies) {
-            if (!UserServlet.SESSION_COOKIE_NAME.equals(cookie.getName())) {
-                continue;
-            }
-            try {
-                CuihuaUser user = cuihuaAccountService.resolveSession(cookie.getValue());
-                if (user != null) {
-                    request.setAccountUserId(user.getUserId());
-                }
-            } catch (Exception e) {
-                logger.debug("Unable to resolve browser account session for usage attribution: {}", e.getMessage());
-            }
-            return;
-        }
+        LinkMindClientTokenService.AuthenticationResult authentication = clientTokenService.authenticate(token);
+        return authentication.isTokenMatched()
+                ? authentication
+                : LinkMindClientTokenService.AuthenticationResult.rejected("client token was not recognized");
+    }
+
+    private void writeModelAuthenticationFailure(HttpServletResponse resp,
+                                                 LinkMindClientTokenService.AuthenticationResult authentication)
+            throws IOException {
+        int status = authentication.isUnavailable()
+                ? HttpServletResponse.SC_SERVICE_UNAVAILABLE : HttpServletResponse.SC_UNAUTHORIZED;
+        resp.setStatus(status);
+        Map<String, String> error = new LinkedHashMap<String, String>();
+        error.put("error", authentication.isUnavailable()
+                ? "Cuihua account service is temporarily unavailable"
+                : "A valid LinkMind client token is required");
+        responsePrint(resp, gson.toJson(error));
     }
 
     private void handleCompletionException(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest,
@@ -532,6 +537,9 @@ public class LlmApiServlet extends BaseServlet {
         }
         chatCompletionRequest.setModel(ModelNameUtil.normalizeOpenAiCompatibleModelName(chatCompletionRequest.getModel()));
         String apikey = ApikeyUtil.extractBearerToken(req.getHeader("Authorization"));
+        if (StrUtil.isBlank(apikey)) {
+            apikey = req.getHeader("x-api-key");
+        }
         chatCompletionRequest.setApiKey(apikey);
         if (chatCompletionRequest.getUserApiKey() == null) {
             chatCompletionRequest.setUserApiKey(apikey);
@@ -667,6 +675,11 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void embeddings(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        LinkMindClientTokenService.AuthenticationResult authentication = authenticateRequestToken(req);
+        if (!authentication.isAuthenticated()) {
+            writeModelAuthenticationFailure(resp, authentication);
+            return;
+        }
         OpenAIEmbeddingRequest request = gson.fromJson(requestToJson(req), OpenAIEmbeddingRequest.class);
         Embeddings embeddings = EmbeddingFactory.getEmbedding(config.getLLM().getEmbedding());
         List<List<Float>> embeddingDataList = embeddings.createEmbedding(request.getInput());

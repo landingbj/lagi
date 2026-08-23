@@ -1,6 +1,9 @@
 package ai.starter;
 
+import ai.account.CuihuaAccountService;
+import ai.common.db.CuihuaDataSource;
 import ai.config.ConfigUtil;
+import ai.config.ContextLoader;
 import ai.starter.config.ConfigSyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -29,6 +32,11 @@ public class Application {
             ConfigSyncService configSyncService = new ConfigSyncService(port, new String[] {"", deerFlowPath, "", openHumanPath});
             configSyncService.sync(configSyncService.getAll(), configSyncService.getAll());
         }
+
+        ContextLoader.loadContext();
+        CuihuaAccountService.initialize(ContextLoader.configuration.getCuihua());
+        log.info("Cuihua user view {} opened read-only from {}",
+                ContextLoader.configuration.getCuihua().getUserView(), CuihuaDataSource.getDatabasePath());
 
         Path webappDir = TomcatUtil.resolveWebappDir(Application.class);
         if (host.equals("0.0.0.0")) {

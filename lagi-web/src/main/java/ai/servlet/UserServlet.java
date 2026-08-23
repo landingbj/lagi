@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * LinkMind account endpoints backed by the shared Cuihua {@code users} table.
- * Cuihua remains the only writer of account and password data.
+ * LinkMind account endpoints backed by the configured read-only Cuihua user
+ * view. Cuihua remains the only writer of account and password data.
  */
 public class UserServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
@@ -91,8 +91,6 @@ public class UserServlet extends BaseServlet {
             String expectedCaptcha = (String) servletSession.getAttribute("captcha");
             if (expectedCaptcha == null || !expectedCaptcha.equalsIgnoreCase(captcha)) {
                 response = failedLogin("invalid captcha");
-            } else if (!accountService.isIntegrationAvailable()) {
-                response = failedLogin("shared Cuihua user database is unavailable");
             } else {
                 CuihuaAccountService.LoginResult login = accountService.loginSystemAdmin(
                         request == null ? null : request.getUsername(),
@@ -106,7 +104,8 @@ public class UserServlet extends BaseServlet {
                 }
             }
         } catch (SQLException e) {
-            response = failedLogin("shared account service is unavailable");
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response = failedLogin("Cuihua account service is unavailable");
         } catch (Exception e) {
             response = failedLogin("login failed");
         }
@@ -145,6 +144,9 @@ public class UserServlet extends BaseServlet {
                 response = successLogin(user);
                 addLoginCookies(req, resp, user, token);
             }
+        } catch (SQLException e) {
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response = failedLogin("Cuihua account service is unavailable");
         } catch (Exception e) {
             removeCookies(req, resp);
             response = failedLogin("session validation failed");
@@ -168,31 +170,31 @@ public class UserServlet extends BaseServlet {
     /** Lists only the current Cuihua user's LinkMind client tokens. */
     private void listTokens(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        CuihuaUser user = currentUser(req);
-        if (user == null) {
-            writeUnauthorized(resp);
-            return;
-        }
         try {
+            CuihuaUser user = currentUser(req);
+            if (user == null) {
+                writeUnauthorized(resp);
+                return;
+            }
             List<LinkMindClientToken> tokens = clientTokenService.list(user.getUserId());
             Map<String, Object> response = new HashMap<String, Object>();
             response.put("status", "success");
             response.put("data", tokens);
             responsePrint(resp, gson.toJson(response));
         } catch (SQLException e) {
-            writeFailure(resp, "list client tokens failed");
+            writeServiceUnavailable(resp);
         }
     }
 
     /** Issues a token once; the plaintext value is returned only by this endpoint. */
     private void issueToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        CuihuaUser user = currentUser(req);
-        if (user == null) {
-            writeUnauthorized(resp);
-            return;
-        }
         try {
+            CuihuaUser user = currentUser(req);
+            if (user == null) {
+                writeUnauthorized(resp);
+                return;
+            }
             IssueTokenRequest body = reqBodyToObj(req, IssueTokenRequest.class);
             LinkMindClientToken token = clientTokenService.issue(
                     user.getUserId(), body == null ? null : body.name, body == null ? null : body.expiresAt);
@@ -203,18 +205,18 @@ public class UserServlet extends BaseServlet {
         } catch (IllegalArgumentException e) {
             writeFailure(resp, e.getMessage());
         } catch (SQLException e) {
-            writeFailure(resp, "issue client token failed");
+            writeServiceUnavailable(resp);
         }
     }
 
     private void revokeToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
-        CuihuaUser user = currentUser(req);
-        if (user == null) {
-            writeUnauthorized(resp);
-            return;
-        }
         try {
+            CuihuaUser user = currentUser(req);
+            if (user == null) {
+                writeUnauthorized(resp);
+                return;
+            }
             RevokeTokenRequest body = reqBodyToObj(req, RevokeTokenRequest.class);
             boolean revoked = body != null && clientTokenService.revoke(body.id, user.getUserId());
             if (!revoked) {
@@ -226,16 +228,12 @@ public class UserServlet extends BaseServlet {
             response.put("status", "success");
             responsePrint(resp, gson.toJson(response));
         } catch (SQLException e) {
-            writeFailure(resp, "revoke client token failed");
+            writeServiceUnavailable(resp);
         }
     }
 
-    private CuihuaUser currentUser(HttpServletRequest req) {
-        try {
-            return accountService.resolveSession(readSessionCookie(req));
-        } catch (SQLException e) {
-            return null;
-        }
+    private CuihuaUser currentUser(HttpServletRequest req) throws SQLException {
+        return accountService.resolveSession(readSessionCookie(req));
     }
 
     private void addLoginCookies(HttpServletRequest req, HttpServletResponse resp, CuihuaUser user, String sessionToken) {
@@ -309,6 +307,11 @@ public class UserServlet extends BaseServlet {
         response.put("status", "failed");
         response.put("msg", message);
         responsePrint(resp, gson.toJson(response));
+    }
+
+    private void writeServiceUnavailable(HttpServletResponse resp) throws IOException {
+        resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        writeFailure(resp, "Cuihua account service is unavailable");
     }
 
     private void getRandomCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {

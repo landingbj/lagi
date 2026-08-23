@@ -41,7 +41,14 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
-        CuihuaUser user = resolveAuthenticatedUser(req);
+        CuihuaUser user;
+        try {
+            user = resolveAuthenticatedUser(req);
+        } catch (SQLException e) {
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            writeErrorJson(resp, "Cuihua account service is temporarily unavailable");
+            return;
+        }
         if (user == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             writeErrorJson(resp, "authentication required");
@@ -110,20 +117,19 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         writeJson(resp, gson.toJson(result));
     }
 
-    private CuihuaUser resolveAuthenticatedUser(HttpServletRequest req) {
+    private CuihuaUser resolveAuthenticatedUser(HttpServletRequest req) throws SQLException {
         String key = ApikeyUtil.extractBearerToken(req.getHeader("Authorization"));
         if (key == null || key.isEmpty()) {
             key = optionalText(req.getHeader("x-api-key"));
         }
         LinkMindClientTokenService.AuthenticationResult token = clientTokenService.authenticate(key);
         if (token.isTokenMatched()) {
+            if (token.isUnavailable()) {
+                throw new SQLException(token.getReason());
+            }
             return token.isAuthenticated() ? token.getUser() : null;
         }
-        try {
-            return accountService.resolveSession(readSessionCookie(req));
-        } catch (SQLException e) {
-            return null;
-        }
+        return accountService.resolveSession(readSessionCookie(req));
     }
 
     private String readSessionCookie(HttpServletRequest req) {
