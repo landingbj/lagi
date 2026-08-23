@@ -5,13 +5,13 @@ import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.pojo.TokenStatisticsRange;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -25,13 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CuihuaAccountIntegrationTest {
     private static final String USER_ID = "cuihua-user-1";
     private static final String SYSTEM_ADMIN_ID = "cuihua-system-admin-1";
+    private static String originalJdbcUrl;
 
     @BeforeAll
     static void createSharedDatabase() throws Exception {
         Path dataDir = Files.createTempDirectory("linkmind-cuihua-test-");
-        System.setProperty(HikariDS.DATA_DIR_PROPERTY, dataDir.toString());
-        Class.forName("org.sqlite.JDBC");
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dataDir.resolve("saas.db"));
+        originalJdbcUrl = HikariDS.getJdbcUrlForTests();
+        HikariDS.setJdbcUrlForTests("jdbc:sqlite:" + dataDir.resolve("saas.db").toAbsolutePath().toString().replace('\\', '/'));
+        CuihuaAccountDao.resetSchemaForTests();
+        try (Connection conn = HikariDS.getConnection("saas");
              Statement statement = conn.createStatement()) {
             statement.execute("CREATE TABLE users ("
                     + "id VARCHAR(64) NOT NULL PRIMARY KEY, username VARCHAR(128) NOT NULL, "
@@ -41,6 +43,11 @@ class CuihuaAccountIntegrationTest {
                     + "failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until DATETIME, created_at DATETIME NOT NULL)");
             statement.execute("CREATE UNIQUE INDEX ix_users_username ON users(username)");
             statement.execute("CREATE UNIQUE INDEX ix_users_email ON users(email)");
+            statement.execute("CREATE TABLE llm_token_statistics ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, created_at INTEGER NOT NULL, "
+                    + "prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, "
+                    + "total_tokens INTEGER NOT NULL, saved_tokens INTEGER NOT NULL, "
+                    + "provider TEXT, model TEXT, session_id TEXT, user_id TEXT)");
         }
 
         Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id);
@@ -51,12 +58,20 @@ class CuihuaAccountIntegrationTest {
         } finally {
             argon2.wipeArray(password);
         }
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dataDir.resolve("saas.db"));
+        try (Connection conn = HikariDS.getConnection("saas");
              PreparedStatement ps = conn.prepareStatement(
                      "INSERT INTO users(id, username, email, display_name, password_hash, role, status, created_at) "
                              + "VALUES (?, ?, ?, ?, ?, ?, 'active', datetime('now'))")) {
             insertUser(ps, USER_ID, "cuihua", "cuihua@example.test", "Cuihua User", hash, "user");
             insertUser(ps, SYSTEM_ADMIN_ID, "system-admin", "admin@example.test", "System Admin", hash, "system_admin");
+        }
+    }
+
+    @AfterAll
+    static void restoreSharedDatabase() {
+        CuihuaAccountDao.resetSchemaForTests();
+        if (originalJdbcUrl != null) {
+            HikariDS.setJdbcUrlForTests(originalJdbcUrl);
         }
     }
 

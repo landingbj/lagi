@@ -27,6 +27,13 @@ public class CuihuaAccountDao {
     private static final Object SCHEMA_LOCK = new Object();
     private static volatile boolean schemaReady;
 
+    /** Resets the schema cache after a test replaces the shared SQLite pool. */
+    public static void resetSchemaForTests() {
+        synchronized (SCHEMA_LOCK) {
+            schemaReady = false;
+        }
+    }
+
     private static final String CREATE_CLIENT_TOKEN_TABLE = ""
             + "CREATE TABLE IF NOT EXISTS linkmind_client_api_key ("
             + " id INTEGER PRIMARY KEY AUTOINCREMENT,"
