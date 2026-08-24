@@ -2,8 +2,7 @@ package ai.servlet.api;
 
 import ai.account.CuihuaAccountService;
 import ai.account.CuihuaUser;
-import ai.account.LinkMindClientToken;
-import ai.account.LinkMindClientTokenService;
+import ai.dto.ModelApiKey;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.pojo.TokenStatisticsGuardInfo;
 import ai.llm.pojo.TokenStatisticsOverview;
@@ -13,6 +12,7 @@ import ai.llm.pojo.TokenStatisticsSessionPageResult;
 import ai.llm.pojo.TokenStatisticsSummary;
 import ai.servlet.BaseServlet;
 import ai.servlet.UserServlet;
+import ai.migrate.service.ApiKeyService;
 import ai.utils.ApikeyUtil;
 
 import javax.servlet.ServletException;
@@ -24,19 +24,18 @@ import java.io.PrintWriter;
 import java.net.URLDecoder;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * Backend-to-backend API used by Cuihua to manage LinkMind client API keys and
+ * Backend-to-backend API used by Cuihua to manage existing Landing API keys and
  * inspect a designated user's model token usage. Every operation requires an
- * active {@code system_admin} account, authenticated by a LinkMind client key
+ * active {@code system_admin} account, authenticated by a Landing {@code sk-...} key
  * or a LinkMind management-console session.
  */
 public class CuihuaIntegrationApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
-    private final LinkMindClientTokenService clientTokenService = new LinkMindClientTokenService();
+    private final ApiKeyService apiKeyService = new ApiKeyService();
     private final CuihuaAccountService accountService = new CuihuaAccountService();
     private final TokenStatisticsDao tokenStatisticsDao = new TokenStatisticsDao();
 
@@ -76,8 +75,8 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         }
 
         try {
-            if (target.isClientApiKeyResource()) {
-                handleClientApiKey(req, resp, method, target);
+            if (target.isLandingApiKeyResource()) {
+                handleLandingApiKey(req, resp, method, target);
                 return;
             }
             if (target.isTokenUsageResource() && method == HttpMethod.GET) {
@@ -90,50 +89,58 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         } catch (SQLException e) {
             writeIntegrationError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     "Cuihua account service is temporarily unavailable");
+        } catch (IOException e) {
+            writeIntegrationError(resp, HttpServletResponse.SC_BAD_GATEWAY,
+                    "Landing API key service is temporarily unavailable");
         }
     }
 
-    private void handleClientApiKey(HttpServletRequest req, HttpServletResponse resp, HttpMethod method,
-                                    RequestTarget target) throws IOException, SQLException {
-        if (method == HttpMethod.GET && target.clientTokenId == null) {
-            List<LinkMindClientToken> keys = clientTokenService.list(target.userId);
+    private void handleLandingApiKey(HttpServletRequest req, HttpServletResponse resp, HttpMethod method,
+                                     RequestTarget target) throws IOException, SQLException {
+        if (method == HttpMethod.GET && target.apiKeyId == null && isBlank(target.apiKey)) {
+            java.util.List<ModelApiKey> keys = apiKeyService.getLandingApiKeys(target.userId);
             writeSuccess(resp, keys);
             return;
         }
-        if (method == HttpMethod.POST && target.clientTokenId == null) {
-            CreateClientApiKeyRequest body = reqBodyToObj(req, CreateClientApiKeyRequest.class);
-            LinkMindClientToken key = clientTokenService.issue(
-                    target.userId, body == null ? null : body.name, body == null ? null : body.expiresAt);
+        if (method == HttpMethod.POST && target.apiKeyId == null && isBlank(target.apiKey)) {
+            CreateLandingApiKeyRequest body = reqBodyToObj(req, CreateLandingApiKeyRequest.class);
+            String name = body == null ? null : body.name();
+            ModelApiKey key = apiKeyService.createLandingApiKey(name, target.userId);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             writeSuccess(resp, key);
             return;
         }
-        if (method == HttpMethod.PUT && target.clientTokenId != null) {
-            UpdateClientApiKeyRequest body = reqBodyToObj(req, UpdateClientApiKeyRequest.class);
-            LinkMindClientToken key = clientTokenService.update(target.clientTokenId, target.userId,
-                    body == null ? null : body.name,
-                    body == null ? null : body.enabled,
-                    body == null ? null : body.expiresAt,
-                    body != null && Boolean.TRUE.equals(body.clearExpiry));
-            if (key == null) {
-                writeIntegrationError(resp, HttpServletResponse.SC_NOT_FOUND, "client API key was not found");
+        if (method == HttpMethod.DELETE && (target.apiKeyId != null || !isBlank(target.apiKey))) {
+            String apiKey = resolveOwnedLandingApiKey(target);
+            if (apiKey == null) {
+                writeIntegrationError(resp, HttpServletResponse.SC_NOT_FOUND, "Landing API key was not found");
                 return;
             }
-            writeSuccess(resp, key);
-            return;
-        }
-        if (method == HttpMethod.DELETE && target.clientTokenId != null) {
-            if (!clientTokenService.delete(target.clientTokenId, target.userId)) {
-                writeIntegrationError(resp, HttpServletResponse.SC_NOT_FOUND, "client API key was not found");
-                return;
-            }
+            apiKeyService.deleteLandingApiKey(apiKey);
             Map<String, Object> data = new HashMap<String, Object>();
-            data.put("id", target.clientTokenId);
+            data.put("apiKey", apiKey);
             data.put("deleted", true);
             writeSuccess(resp, data);
             return;
         }
-        writeIntegrationError(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "method is not supported for client API keys");
+        writeIntegrationError(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                "Landing API keys support list, create, and delete; create a replacement key instead of updating one");
+    }
+
+    private String resolveOwnedLandingApiKey(RequestTarget target) throws IOException {
+        java.util.List<ModelApiKey> keys = apiKeyService.getLandingApiKeys(target.userId);
+        for (ModelApiKey key : keys) {
+            if (key == null || isBlank(key.getApiKey())) {
+                continue;
+            }
+            if (!isBlank(target.apiKey) && target.apiKey.equals(key.getApiKey())) {
+                return key.getApiKey();
+            }
+            if (target.apiKeyId != null && target.apiKeyId.equals(key.getId())) {
+                return key.getApiKey();
+            }
+        }
+        return null;
     }
 
     private void handleTokenUsage(HttpServletRequest req, HttpServletResponse resp, RequestTarget target) throws IOException {
@@ -181,17 +188,21 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         if (isBlank(apiKey)) {
             apiKey = optionalText(req.getHeader("x-api-key"));
         }
-        LinkMindClientTokenService.AuthenticationResult keyAuthentication = clientTokenService.authenticate(apiKey);
-        if (keyAuthentication.isTokenMatched()) {
-            if (keyAuthentication.isUnavailable()) {
-                return AdminAuthentication.unavailable("system administrator authentication is unavailable");
-            }
-            if (!keyAuthentication.isAuthenticated()) {
+        if (!isBlank(apiKey)) {
+            if (!ApikeyUtil.validateModelApiKey(apiKey)) {
                 return AdminAuthentication.unauthorized("system administrator API key is invalid");
             }
-            return accountService.isSystemAdmin(keyAuthentication.getUser())
-                    ? AdminAuthentication.authorized(keyAuthentication.getUser())
-                    : AdminAuthentication.forbidden("system_admin role is required");
+            try {
+                CuihuaUser user = accountService.findActiveUserById(apiKeyService.resolveLandingUserId(apiKey));
+                if (user == null) {
+                    return AdminAuthentication.unauthorized("system administrator account is unavailable");
+                }
+                return accountService.isSystemAdmin(user)
+                        ? AdminAuthentication.authorized(user)
+                        : AdminAuthentication.forbidden("system_admin role is required");
+            } catch (SQLException | IOException e) {
+                return AdminAuthentication.unavailable("system administrator authentication is unavailable");
+            }
         }
         try {
             CuihuaUser user = accountService.resolveSession(readSessionCookie(req));
@@ -226,12 +237,13 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         }
         if ("client-api-keys".equals(segments[1])) {
             if (segments.length == 2) {
-                return RequestTarget.clientApiKeys(userId, null);
+                String apiKey = optionalText(req.getParameter("apiKey"));
+                return RequestTarget.landingApiKeys(userId, null, apiKey);
             }
             if (segments.length == 3) {
                 try {
                     long id = Long.parseLong(segments[2]);
-                    return id > 0 ? RequestTarget.clientApiKeys(userId, id) : null;
+                    return id > 0 ? RequestTarget.landingApiKeys(userId, id, null) : null;
                 } catch (NumberFormatException e) {
                     return null;
                 }
@@ -315,24 +327,26 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
 
     private static final class RequestTarget {
         private final String userId;
-        private final Long clientTokenId;
+        private final Long apiKeyId;
+        private final String apiKey;
         private final String usageView;
 
-        private RequestTarget(String userId, Long clientTokenId, String usageView) {
+        private RequestTarget(String userId, Long apiKeyId, String apiKey, String usageView) {
             this.userId = userId;
-            this.clientTokenId = clientTokenId;
+            this.apiKeyId = apiKeyId;
+            this.apiKey = apiKey;
             this.usageView = usageView;
         }
 
-        private static RequestTarget clientApiKeys(String userId, Long clientTokenId) {
-            return new RequestTarget(userId, clientTokenId, null);
+        private static RequestTarget landingApiKeys(String userId, Long apiKeyId, String apiKey) {
+            return new RequestTarget(userId, apiKeyId, apiKey, null);
         }
 
         private static RequestTarget tokenUsage(String userId, String usageView) {
-            return new RequestTarget(userId, null, usageView);
+            return new RequestTarget(userId, null, null, usageView);
         }
 
-        private boolean isClientApiKeyResource() {
+        private boolean isLandingApiKeyResource() {
             return usageView == null;
         }
 
@@ -369,15 +383,12 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         }
     }
 
-    private static final class CreateClientApiKeyRequest {
+    private static final class CreateLandingApiKeyRequest {
+        private String remark;
         private String name;
-        private Long expiresAt;
-    }
 
-    private static final class UpdateClientApiKeyRequest {
-        private String name;
-        private Boolean enabled;
-        private Long expiresAt;
-        private Boolean clearExpiry;
+        private String name() {
+            return !isBlank(remark) ? remark : name;
+        }
     }
 }

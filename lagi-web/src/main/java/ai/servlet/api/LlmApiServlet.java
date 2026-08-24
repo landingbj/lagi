@@ -6,7 +6,6 @@ import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.account.CuihuaAccountService;
-import ai.account.LinkMindClientTokenService;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
 import ai.dto.ModelPreferenceDto;
@@ -27,6 +26,7 @@ import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptInputUtil;
 import ai.openai.pojo.*;
+import ai.migrate.service.ApiKeyService;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.utils.AiGlobal;
@@ -75,7 +75,7 @@ public class LlmApiServlet extends BaseServlet {
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final LinkMindClientTokenService clientTokenService = new LinkMindClientTokenService();
+    private final ApiKeyService apiKeyService = new ApiKeyService();
     private static MedusaMonitor medusaMonitor;
 
     static {
@@ -88,9 +88,9 @@ public class LlmApiServlet extends BaseServlet {
     @Override
     public void init() throws ServletException {
         try {
-            CuihuaAccountService.initialize(ContextLoader.configuration.getCuihua());
+            CuihuaAccountService.initialize(ContextLoader.configuration.getTokenlink());
         } catch (Exception e) {
-            throw new ServletException("Cuihua account integration initialization failed", e);
+            throw new ServletException("TokenLink account integration initialization failed", e);
         }
         medusaService.init();
         super.init();
@@ -102,7 +102,7 @@ public class LlmApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         if (url.endsWith("/v1/models") || url.endsWith("/models")) {
-            LinkMindClientTokenService.AuthenticationResult authentication = authenticateRequestToken(req);
+            ApiKeyAuthentication authentication = authenticateRequestToken(req);
             if (!authentication.isAuthenticated()) {
                 writeModelAuthenticationFailure(resp, authentication);
                 return;
@@ -273,14 +273,14 @@ public class LlmApiServlet extends BaseServlet {
         ExtraBody extraBody = chatCompletionRequest.getExtraBody();
         String mateUrl = extraBody != null ? extraBody.getMateUrl() : null;
 
-        LinkMindClientTokenService.AuthenticationResult authentication = authorizeClientRequest(chatCompletionRequest);
+        ApiKeyAuthentication authentication = authorizeClientRequest(chatCompletionRequest);
         if (!authentication.isAuthenticated()) {
             int status = authentication.isUnavailable()
                     ? HttpServletResponse.SC_SERVICE_UNAVAILABLE : HttpServletResponse.SC_UNAUTHORIZED;
             resp.setStatus(status);
             String message = authentication.isUnavailable()
-                    ? "Cuihua account service is temporarily unavailable."
-                    : "A valid LinkMind client token is required.";
+                    ? "Landing API key service is temporarily unavailable."
+                    : "A valid Landing API key is required.";
             ChatCompletionResult chatCompletionResult = LLMErrorConstants.errorResponse(
                     chatCompletionRequest, status, message);
             outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
@@ -398,44 +398,52 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
-    /** Only LinkMind client tokens bound to a current Cuihua user may call model APIs. */
-    private LinkMindClientTokenService.AuthenticationResult authorizeClientRequest(ChatCompletionRequest request) {
-        String apiKey = request == null ? null : request.getApiKey();
-        LinkMindClientTokenService.AuthenticationResult local = clientTokenService.authenticate(apiKey);
-        if (!local.isTokenMatched()) {
-            return LinkMindClientTokenService.AuthenticationResult.rejected("client token was not recognized");
-        }
-        if (!local.isAuthenticated()) {
-            logger.warn("Rejected LinkMind client token: {}", local.getReason());
-            return local;
-        }
-        if (request != null) {
-            request.setAccountUserId(local.getUser().getUserId());
-        }
-        return local;
+    /**
+     * All public model protocols use the existing Landing {@code sk-...} key.
+     * The key is validated by the Landing service and its owner is recorded on
+     * the request so token statistics remain scoped to that user.
+     */
+    private ApiKeyAuthentication authorizeClientRequest(ChatCompletionRequest request) {
+        return authenticateLandingApiKey(request == null ? null : request.getApiKey(), request);
     }
 
-    private LinkMindClientTokenService.AuthenticationResult authenticateRequestToken(HttpServletRequest req) {
+    private ApiKeyAuthentication authenticateRequestToken(HttpServletRequest req) {
         String token = ApikeyUtil.extractBearerToken(req.getHeader("Authorization"));
         if (token == null || token.trim().isEmpty()) {
             token = req.getHeader("x-api-key");
         }
-        LinkMindClientTokenService.AuthenticationResult authentication = clientTokenService.authenticate(token);
-        return authentication.isTokenMatched()
-                ? authentication
-                : LinkMindClientTokenService.AuthenticationResult.rejected("client token was not recognized");
+        return authenticateLandingApiKey(token, null);
+    }
+
+    private ApiKeyAuthentication authenticateLandingApiKey(String apiKey, ChatCompletionRequest request) {
+        if (apiKey == null || apiKey.trim().isEmpty() || !ApikeyUtil.validateModelApiKey(apiKey)) {
+            return ApiKeyAuthentication.rejected();
+        }
+        try {
+            String userId = apiKeyService.resolveLandingUserId(apiKey);
+            if (userId == null || userId.trim().isEmpty()) {
+                return ApiKeyAuthentication.rejected();
+            }
+            if (request != null) {
+                request.setAccountUserId(userId);
+            }
+            return ApiKeyAuthentication.authenticated();
+        } catch (IOException e) {
+            logger.warn("Could not resolve Landing API key owner: {}", e.getMessage());
+            return ApiKeyAuthentication.unavailable();
+        }
     }
 
     private void writeModelAuthenticationFailure(HttpServletResponse resp,
-                                                 LinkMindClientTokenService.AuthenticationResult authentication)
+                                                  ApiKeyAuthentication authentication)
             throws IOException {
         int status = authentication.isUnavailable()
                 ? HttpServletResponse.SC_SERVICE_UNAVAILABLE : HttpServletResponse.SC_UNAUTHORIZED;
         resp.setStatus(status);
         Map<String, String> error = new LinkedHashMap<String, String>();
         error.put("error", authentication.isUnavailable()
-                ? "Cuihua account service is temporarily unavailable"
-                : "A valid LinkMind client token is required");
+                ? "Landing API key service is temporarily unavailable"
+                : "A valid Landing API key is required");
         responsePrint(resp, gson.toJson(error));
     }
 
@@ -675,7 +683,7 @@ public class LlmApiServlet extends BaseServlet {
     }
 
     private void embeddings(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        LinkMindClientTokenService.AuthenticationResult authentication = authenticateRequestToken(req);
+        ApiKeyAuthentication authentication = authenticateRequestToken(req);
         if (!authentication.isAuthenticated()) {
             writeModelAuthenticationFailure(resp, authentication);
             return;
@@ -691,5 +699,35 @@ public class LlmApiServlet extends BaseServlet {
             result.put("data", embeddingDataList);
         }
         responsePrint(resp, toJson(result));
+    }
+
+    private static final class ApiKeyAuthentication {
+        private final boolean authenticated;
+        private final boolean unavailable;
+
+        private ApiKeyAuthentication(boolean authenticated, boolean unavailable) {
+            this.authenticated = authenticated;
+            this.unavailable = unavailable;
+        }
+
+        private static ApiKeyAuthentication authenticated() {
+            return new ApiKeyAuthentication(true, false);
+        }
+
+        private static ApiKeyAuthentication rejected() {
+            return new ApiKeyAuthentication(false, false);
+        }
+
+        private static ApiKeyAuthentication unavailable() {
+            return new ApiKeyAuthentication(false, true);
+        }
+
+        private boolean isAuthenticated() {
+            return authenticated;
+        }
+
+        private boolean isUnavailable() {
+            return unavailable;
+        }
     }
 }

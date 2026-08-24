@@ -145,6 +145,15 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>ssoLogin</servlet-name>
+        <servlet-class>ai.servlet.SsoLoginServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ssoLogin</servlet-name>
+        <url-pattern>/sso/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>llm</servlet-name>
         <servlet-class>ai.servlet.api.LlmApiServlet</servlet-class>
         <load-on-startup>1</load-on-startup>

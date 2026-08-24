@@ -2,7 +2,6 @@ package ai.servlet.api;
 
 import ai.account.CuihuaAccountService;
 import ai.account.CuihuaUser;
-import ai.account.LinkMindClientTokenService;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.pojo.TokenStatisticsGuardInfo;
 import ai.llm.pojo.TokenStatisticsOverview;
@@ -12,6 +11,7 @@ import ai.llm.pojo.TokenStatisticsSessionPageResult;
 import ai.llm.pojo.TokenStatisticsSummary;
 import ai.servlet.BaseServlet;
 import ai.servlet.UserServlet;
+import ai.migrate.service.ApiKeyService;
 import ai.utils.ApikeyUtil;
 
 import javax.servlet.ServletException;
@@ -26,14 +26,14 @@ import java.util.Map;
 
 /**
  * Per-user token usage API. The account is taken from an authenticated
- * LinkMind client token or LinkMind browser session; it is never accepted as
+ * Landing {@code sk-...} key or LinkMind browser session; it is never accepted as
  * a query parameter.
  */
 public class TokenStatisticsApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
     private final TokenStatisticsDao tokenStatisticsDao = new TokenStatisticsDao();
-    private final LinkMindClientTokenService clientTokenService = new LinkMindClientTokenService();
+    private final ApiKeyService apiKeyService = new ApiKeyService();
     private final CuihuaAccountService accountService = new CuihuaAccountService();
 
     @Override
@@ -44,9 +44,9 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         CuihuaUser user;
         try {
             user = resolveAuthenticatedUser(req);
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            writeErrorJson(resp, "Cuihua account service is temporarily unavailable");
+            writeErrorJson(resp, "account or Landing API key service is temporarily unavailable");
             return;
         }
         if (user == null) {
@@ -117,17 +117,17 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         writeJson(resp, gson.toJson(result));
     }
 
-    private CuihuaUser resolveAuthenticatedUser(HttpServletRequest req) throws SQLException {
+    private CuihuaUser resolveAuthenticatedUser(HttpServletRequest req) throws SQLException, IOException {
         String key = ApikeyUtil.extractBearerToken(req.getHeader("Authorization"));
         if (key == null || key.isEmpty()) {
             key = optionalText(req.getHeader("x-api-key"));
         }
-        LinkMindClientTokenService.AuthenticationResult token = clientTokenService.authenticate(key);
-        if (token.isTokenMatched()) {
-            if (token.isUnavailable()) {
-                throw new SQLException(token.getReason());
+        if (key != null) {
+            if (!ApikeyUtil.validateModelApiKey(key)) {
+                return null;
             }
-            return token.isAuthenticated() ? token.getUser() : null;
+            String userId = apiKeyService.resolveLandingUserId(key);
+            return accountService.findActiveUserById(userId);
         }
         return accountService.resolveSession(readSessionCookie(req));
     }

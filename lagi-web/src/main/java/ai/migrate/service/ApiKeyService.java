@@ -466,23 +466,7 @@ public class ApiKeyService {
         String nameTrimmed = name.trim();
 
         if (LANDING.equalsIgnoreCase(normalizedProvider)) {
-            if (isBlank(userId)) {
-                throw new IOException("userId is required for Landing");
-            }
-            ModelApiKey landingRequest = new ModelApiKey();
-            // Display label for SAAS; lagi.yml model "name" is never updated from this field.
-            landingRequest.setName(nameTrimmed);
-            landingRequest.setUserId(userId.trim());
-            ModelApiKey localLanding = addLandingApiKey(landingRequest);
-            if (isLocalApiKeyEditable()) {
-                localLanding.setStatus(0);
-                localLanding.setProvider(LANDING);
-                try {
-                    insertIfApiKeyNotExists(localLanding);
-                } catch (Exception e) {
-                    throw new IOException("sync Landing api key to local db failed: " + e.getMessage(), e);
-                }
-            }
+            createLandingApiKey(nameTrimmed, userId);
             return;
         }
         if (!isLocalApiKeyEditable()) {
@@ -602,6 +586,37 @@ public class ApiKeyService {
         String resultJson = OkHttpUtil.post(url, requestJson);
         ModelApiKey response = gson.fromJson(resultJson, ModelApiKey.class);
         return response;
+    }
+
+    /**
+     * Creates the existing Landing {@code sk-...} client key. LinkMind does
+     * not generate a second key format for callers or Cascade.
+     */
+    public ModelApiKey createLandingApiKey(String name, String userId) throws IOException {
+        if (isBlank(name)) {
+            throw new IOException("name is required");
+        }
+        if (isBlank(userId)) {
+            throw new IOException("userId is required for Landing");
+        }
+        ModelApiKey request = new ModelApiKey();
+        request.setName(name.trim());
+        request.setUserId(userId.trim());
+        ModelApiKey created = addLandingApiKey(request);
+        if (created == null || isBlank(created.getApiKey())) {
+            throw new IOException("Landing did not return an API key");
+        }
+        created.setProvider(LANDING);
+        created.setUserId(userId.trim());
+        if (isLocalApiKeyEditable()) {
+            created.setStatus(0);
+            try {
+                insertIfApiKeyNotExists(created);
+            } catch (Exception e) {
+                throw new IOException("sync Landing api key to local db failed: " + e.getMessage(), e);
+            }
+        }
+        return created;
     }
 
     /**
@@ -748,5 +763,17 @@ public class ApiKeyService {
         payload.put("apiKey", apiKey == null ? "" : apiKey.trim());
         String url = SAAS_BASE_URL + "/saas/api/apikey/getUserId";
         return OkHttpUtil.postJsonWithStatus(url, gson.toJson(payload));
+    }
+
+    /** Resolves the Cuihua/LinkMind user that owns an existing Landing {@code sk-...} key. */
+    public String resolveLandingUserId(String apiKey) throws IOException {
+        if (isBlank(apiKey)) {
+            throw new IOException("apiKey is required");
+        }
+        HttpPostResult result = getUserIdByApiKey(apiKey);
+        if (result.getCode() < 200 || result.getCode() >= 300) {
+            throw new IOException("Landing user ID lookup failed with HTTP " + result.getCode());
+        }
+        return LandingApiKeyIdentityResolver.extractUserId(result.getBody());
     }
 }

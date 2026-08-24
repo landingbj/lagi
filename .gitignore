@@ -47,3 +47,8 @@ build/
 /lagi-web/src/main/webapp/static/
 /lagi-examples/
 /lagi-web/dependency-reduced-pom.xml
+
+# Local SQLite runtime data
+/lagi-web/saas.db
+/lagi-web/saas.db-shm
+/lagi-web/saas.db-wal

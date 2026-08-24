@@ -1,7 +1,7 @@
 package ai.account;
 
-import ai.common.db.CuihuaDataSource;
-import ai.config.pojo.CuihuaConfig;
+import ai.common.db.TokenLinkDataSource;
+import ai.config.pojo.TokenLinkConfig;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 
@@ -9,7 +9,7 @@ import java.security.SecureRandom;
 import java.sql.SQLException;
 import java.util.Base64;
 
-/** Authenticates through the read-only Cuihua user view without copying credentials into LinkMind. */
+/** Coordinates Cuihua-owned users, LinkMind-owned keys, and LinkMind sessions. */
 public class CuihuaAccountService {
     private static final Object INITIALIZATION_LOCK = new Object();
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -17,9 +17,9 @@ public class CuihuaAccountService {
     private static volatile boolean initialized;
     private final CuihuaAccountDao accountDao = new CuihuaAccountDao();
 
-    public static void initialize(CuihuaConfig config) throws SQLException {
+    public static void initialize(TokenLinkConfig config) throws SQLException {
         synchronized (INITIALIZATION_LOCK) {
-            CuihuaDataSource.initialize(config);
+            TokenLinkDataSource.initialize(config);
             if (initialized) {
                 return;
             }
@@ -28,11 +28,15 @@ public class CuihuaAccountService {
         }
     }
 
+    public static void initialize() throws SQLException {
+        initialize(null);
+    }
+
     public static void resetForTests() {
         synchronized (INITIALIZATION_LOCK) {
             initialized = false;
             CuihuaAccountDao.resetSchemaForTests();
-            CuihuaDataSource.resetForTests();
+            TokenLinkDataSource.resetForTests();
         }
     }
 
@@ -47,6 +51,25 @@ public class CuihuaAccountService {
      */
     public LoginResult loginSystemAdmin(String usernameOrEmail, String password, long sessionLifetimeMillis) throws SQLException {
         return login(usernameOrEmail, password, sessionLifetimeMillis, true);
+    }
+
+    /**
+     * Creates a LinkMind session from the Alpha SSO redirect. Cuihua has
+     * already authenticated the browser; LinkMind verifies that the supplied
+     * account is a currently logged-in system administrator in tokenlink.db.
+     */
+    public LoginResult loginSystemAdminBySso(String userId, long sessionLifetimeMillis) throws SQLException {
+        if (isBlank(userId)) {
+            return null;
+        }
+        CuihuaUser user = accountDao.findLoggedInSystemAdminById(userId);
+        if (user == null) {
+            return null;
+        }
+        String sessionToken = newSessionToken();
+        long expiresAt = System.currentTimeMillis() + sessionLifetimeMillis;
+        accountDao.insertLoginSession(user.getUserId(), CuihuaAccountDao.sha256(sessionToken), expiresAt);
+        return new LoginResult(user, sessionToken, expiresAt);
     }
 
     private LoginResult login(String usernameOrEmail, String password, long sessionLifetimeMillis,
@@ -87,6 +110,11 @@ public class CuihuaAccountService {
 
     public boolean isSystemAdmin(CuihuaUser user) {
         return user != null && user.isSystemAdmin();
+    }
+
+    /** Looks up an active shared TokenLink user without modifying Cuihua-owned data. */
+    public CuihuaUser findActiveUserById(String userId) throws SQLException {
+        return accountDao.findActiveUserById(userId);
     }
 
     private boolean verifyPassword(String encodedHash, String password) {

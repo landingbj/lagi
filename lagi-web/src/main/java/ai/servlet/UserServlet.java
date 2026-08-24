@@ -2,8 +2,6 @@ package ai.servlet;
 
 import ai.account.CuihuaAccountService;
 import ai.account.CuihuaUser;
-import ai.account.LinkMindClientToken;
-import ai.account.LinkMindClientTokenService;
 import ai.common.pojo.Configuration;
 import ai.common.pojo.VectorStoreConfig;
 import ai.migrate.service.UserService;
@@ -27,7 +25,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,7 +41,6 @@ public class UserServlet extends BaseServlet {
     protected Gson gson = new Gson();
     private final UserService userService = new UserService();
     private final CuihuaAccountService accountService = new CuihuaAccountService();
-    private final LinkMindClientTokenService clientTokenService = new LinkMindClientTokenService();
     private static final Configuration config = MigrateGlobal.config;
 
     @Override
@@ -57,8 +53,6 @@ public class UserServlet extends BaseServlet {
             getDefaultTitle(resp);
         } else if ("getCaptcha".equals(method)) {
             getCaptcha(req, resp);
-        } else if ("tokens".equals(method)) {
-            listTokens(req, resp);
         }
     }
 
@@ -74,10 +68,6 @@ public class UserServlet extends BaseServlet {
             authLoginCookie(req, resp);
         } else if ("logout".equals(method)) {
             logout(req, resp);
-        } else if ("issueToken".equals(method)) {
-            issueToken(req, resp);
-        } else if ("revokeToken".equals(method)) {
-            revokeToken(req, resp);
         }
     }
 
@@ -165,75 +155,6 @@ public class UserServlet extends BaseServlet {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("status", "success");
         responsePrint(resp, gson.toJson(response));
-    }
-
-    /** Lists only the current Cuihua user's LinkMind client tokens. */
-    private void listTokens(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json;charset=utf-8");
-        try {
-            CuihuaUser user = currentUser(req);
-            if (user == null) {
-                writeUnauthorized(resp);
-                return;
-            }
-            List<LinkMindClientToken> tokens = clientTokenService.list(user.getUserId());
-            Map<String, Object> response = new HashMap<String, Object>();
-            response.put("status", "success");
-            response.put("data", tokens);
-            responsePrint(resp, gson.toJson(response));
-        } catch (SQLException e) {
-            writeServiceUnavailable(resp);
-        }
-    }
-
-    /** Issues a token once; the plaintext value is returned only by this endpoint. */
-    private void issueToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json;charset=utf-8");
-        try {
-            CuihuaUser user = currentUser(req);
-            if (user == null) {
-                writeUnauthorized(resp);
-                return;
-            }
-            IssueTokenRequest body = reqBodyToObj(req, IssueTokenRequest.class);
-            LinkMindClientToken token = clientTokenService.issue(
-                    user.getUserId(), body == null ? null : body.name, body == null ? null : body.expiresAt);
-            Map<String, Object> response = new HashMap<String, Object>();
-            response.put("status", "success");
-            response.put("data", token);
-            responsePrint(resp, gson.toJson(response));
-        } catch (IllegalArgumentException e) {
-            writeFailure(resp, e.getMessage());
-        } catch (SQLException e) {
-            writeServiceUnavailable(resp);
-        }
-    }
-
-    private void revokeToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json;charset=utf-8");
-        try {
-            CuihuaUser user = currentUser(req);
-            if (user == null) {
-                writeUnauthorized(resp);
-                return;
-            }
-            RevokeTokenRequest body = reqBodyToObj(req, RevokeTokenRequest.class);
-            boolean revoked = body != null && clientTokenService.revoke(body.id, user.getUserId());
-            if (!revoked) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                writeFailure(resp, "client token was not found");
-                return;
-            }
-            Map<String, Object> response = new HashMap<String, Object>();
-            response.put("status", "success");
-            responsePrint(resp, gson.toJson(response));
-        } catch (SQLException e) {
-            writeServiceUnavailable(resp);
-        }
-    }
-
-    private CuihuaUser currentUser(HttpServletRequest req) throws SQLException {
-        return accountService.resolveSession(readSessionCookie(req));
     }
 
     private void addLoginCookies(HttpServletRequest req, HttpServletResponse resp, CuihuaUser user, String sessionToken) {
@@ -386,12 +307,4 @@ public class UserServlet extends BaseServlet {
         return url.substring(url.lastIndexOf('/') + 1);
     }
 
-    private static class IssueTokenRequest {
-        String name;
-        Long expiresAt;
-    }
-
-    private static class RevokeTokenRequest {
-        long id;
-    }
 }

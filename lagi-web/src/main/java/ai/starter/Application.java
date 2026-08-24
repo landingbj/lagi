@@ -1,7 +1,7 @@
 package ai.starter;
 
 import ai.account.CuihuaAccountService;
-import ai.common.db.CuihuaDataSource;
+import ai.common.db.TokenLinkDataSource;
 import ai.config.ConfigUtil;
 import ai.config.ContextLoader;
 import ai.starter.config.ConfigSyncService;
@@ -34,9 +34,8 @@ public class Application {
         }
 
         ContextLoader.loadContext();
-        CuihuaAccountService.initialize(ContextLoader.configuration.getCuihua());
-        log.info("Cuihua user view {} opened read-only from {}",
-                ContextLoader.configuration.getCuihua().getUserView(), CuihuaDataSource.getDatabasePath());
+        CuihuaAccountService.initialize(ContextLoader.configuration.getTokenlink());
+        log.info("TokenLink shared database opened from {}", TokenLinkDataSource.getDatabasePath());
 
         Path webappDir = TomcatUtil.resolveWebappDir(Application.class);
         if (host.equals("0.0.0.0")) {
