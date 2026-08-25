@@ -475,6 +475,8 @@ const legacyFilterConfigSub = (legacyFeatureNav.subNavs || []).find(sub => sub.k
 // 控制 -> tokens使用情况、安全过滤记录
 // 设置 -> 安全过滤配置
 promptNavs = [
+    // Temporarily hidden from the console navigation; retain for restoration.
+    /*
     {
         id: MODEL_NAV_ID,
         key: 'integrationTest',
@@ -516,6 +518,7 @@ promptNavs = [
             },
         ]
     },
+    */
     {
         id: FEATURE_NAV_ID,
         key: 'control',
@@ -553,6 +556,8 @@ promptNavs = [
             }
         ]
     },
+    // Temporarily hidden from the console navigation; retain for restoration.
+    /*
     {
         id: INTERACTION_NAV_ID,
         key: 'interaction',
@@ -594,6 +599,7 @@ promptNavs = [
             }
         ]
     },
+    */
     {
         id: MINE_NAV_ID,
         key: 'setting',
