@@ -2,6 +2,7 @@ package ai.account;
 
 import ai.common.db.TokenLinkDataSource;
 import ai.config.pojo.TokenLinkConfig;
+import ai.llm.dao.ModelPriceDao;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 
@@ -24,6 +25,8 @@ public class CuihuaAccountService {
                 return;
             }
             new CuihuaAccountDao().initialize();
+            new LocalUserApiKeyService().initialize();
+            new ModelPriceDao().initialize();
             initialized = true;
         }
     }
@@ -36,6 +39,7 @@ public class CuihuaAccountService {
         synchronized (INITIALIZATION_LOCK) {
             initialized = false;
             CuihuaAccountDao.resetSchemaForTests();
+            LocalUserApiKeyDao.resetSchemaForTests();
             TokenLinkDataSource.resetForTests();
         }
     }

@@ -1,6 +1,7 @@
 package ai.llm.service;
 
 import ai.common.utils.LRUCache;
+import ai.account.LocalUserApiKeyService;
 import ai.config.ContextLoader;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
@@ -60,6 +61,10 @@ public class TokenUsageService {
         String effectiveApiKey = apiKey;
         if (isBlank(effectiveApiKey) && request != null) {
             effectiveApiKey = request.getApiKey();
+        }
+        // Local lmk_ keys are LinkMind admission credentials, never SaaS billing credentials.
+        if (LocalUserApiKeyService.isLocalUserKey(effectiveApiKey)) {
+            return;
         }
         ApikeyUtil.removeInvalidApiKey(effectiveApiKey);
         if (!isTokenChargeEnabled()) {

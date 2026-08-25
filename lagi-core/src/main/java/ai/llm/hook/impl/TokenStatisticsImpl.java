@@ -2,6 +2,7 @@ package ai.llm.hook.impl;
 
 import ai.annotation.Component;
 import ai.annotation.Order;
+import ai.common.ModelService;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.hook.AfterModel;
 import ai.llm.pojo.ModelContext;
@@ -71,7 +72,9 @@ public class TokenStatisticsImpl implements AfterModel {
         String model = resolveModel(context);
         String sessionId = resolveSessionId(context);
         String userId = resolveAccountUserId(context);
-        ASYNC_SAVE.execute(() -> tokenStatisticsDao.insert(prompt, completion, total, saved, provider, model, sessionId, userId));
+        Long userApiKeyId = resolveAccountUserApiKeyId(context);
+        ASYNC_SAVE.execute(() -> tokenStatisticsDao.insert(
+                prompt, completion, total, saved, provider, model, sessionId, userId, userApiKeyId));
     }
 
     private String resolveModel(ModelContext context) {
@@ -84,6 +87,12 @@ public class TokenStatisticsImpl implements AfterModel {
     private String resolveProvider(ModelContext context) {
         if (context == null || context.getAdapter() == null) {
             return null;
+        }
+        if (context.getAdapter() instanceof ModelService) {
+            String type = ((ModelService) context.getAdapter()).getType();
+            if (type != null && !type.trim().isEmpty()) {
+                return type.trim();
+            }
         }
         String name = context.getAdapter().getClass().getSimpleName();
         if (name == null || name.isEmpty()) {
@@ -107,5 +116,12 @@ public class TokenStatisticsImpl implements AfterModel {
             return null;
         }
         return context.getRequest().getAccountUserId();
+    }
+
+    private Long resolveAccountUserApiKeyId(ModelContext context) {
+        if (context == null || context.getRequest() == null) {
+            return null;
+        }
+        return context.getRequest().getAccountUserApiKeyId();
     }
 }

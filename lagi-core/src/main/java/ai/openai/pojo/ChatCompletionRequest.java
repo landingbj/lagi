@@ -58,6 +58,9 @@ public class ChatCompletionRequest {
      */
     @JsonIgnore
     private transient String accountUserId;
+    /** LinkMind local User Key identifier used to attribute token statistics. */
+    @JsonIgnore
+    private transient Long accountUserApiKeyId;
     /**
      * Server-side session identity used only for key-pool affinity. This is
      * deliberately separate from {@link #sessionId}, which some providers

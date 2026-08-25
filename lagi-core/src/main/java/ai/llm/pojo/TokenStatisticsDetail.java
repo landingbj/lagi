@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,4 +23,10 @@ public class TokenStatisticsDetail {
     private String model;
     private String sessionId;
     private String userId;
+    private Long userApiKeyId;
+    private BigDecimal inputCost;
+    private BigDecimal outputCost;
+    private BigDecimal totalCost;
+    private String currency;
+    private String priceSource;
 }

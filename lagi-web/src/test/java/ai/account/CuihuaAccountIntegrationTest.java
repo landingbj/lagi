@@ -4,6 +4,7 @@ import ai.common.db.HikariDS;
 import ai.common.db.TokenLinkDataSource;
 import ai.config.pojo.TokenLinkConfig;
 import ai.llm.dao.TokenStatisticsDao;
+import ai.llm.dao.ModelPriceDao;
 import ai.llm.pojo.TokenStatisticsRange;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,6 +46,7 @@ class CuihuaAccountIntegrationTest {
         TokenLinkConfig config = new TokenLinkConfig();
         config.setDatabasePath(dataDir.resolve("tokenlink.db").toAbsolutePath().toString());
         CuihuaAccountService.initialize(config);
+        assertDefaultCatalogPriceCount(104L);
         createLinkMindDatabase();
         createCuihuaUsers();
     }
@@ -85,13 +88,70 @@ class CuihuaAccountIntegrationTest {
 
         TokenStatisticsDao statisticsDao = new TokenStatisticsDao();
         statisticsDao.insert(11L, 7L, 18L, 0L, "Test", "test-model", "session-1", USER_ID);
-        assertEquals(18L, statisticsDao.summarize(TokenStatisticsRange.ALL, USER_ID).getTotalTokensConsumed());
+        assertTrue(statisticsDao.summarize(TokenStatisticsRange.ALL, USER_ID).getTotalTokensConsumed() >= 18L);
 
         assertTokenLinkSchema();
         assertLocalDatabaseHasNoTokenLinkKeyTable();
 
         accountService.revokeSession(login.getSessionToken());
         assertNull(accountService.resolveSession(login.getSessionToken()));
+    }
+
+    @Test
+    void localUserKeysSupportManyKeysAndDoNotDependOnUserLoginStatus() throws Exception {
+        LocalUserApiKeyService keyService = new LocalUserApiKeyService();
+        LocalUserApiKey first = keyService.create(USER_ID, "cuihua-default");
+        LocalUserApiKey second = keyService.create(USER_ID, "employee-laptop");
+
+        assertTrue(first.getApiKey().startsWith(LocalUserApiKeyService.KEY_PREFIX));
+        assertTrue(second.getApiKey().startsWith(LocalUserApiKeyService.KEY_PREFIX));
+        assertEquals(2L, keyService.count(USER_ID, "active"));
+        assertEquals(2, keyService.list(USER_ID, "all", 1, 20).size());
+
+        setUserLoginStatus(USER_ID, "logged_out");
+        assertNotNull(keyService.authenticate(first.getApiKey()));
+        LocalUserApiKey revoked = keyService.revoke(USER_ID, first.getId());
+        assertEquals("revoked", revoked.getStatus());
+        assertNull(keyService.authenticate(first.getApiKey()));
+        assertNotNull(keyService.authenticate(second.getApiKey()));
+        setUserLoginStatus(USER_ID, "logged_in");
+    }
+
+    @Test
+    void tokenStatisticsCalculateCostOnlyFromLocalConfiguredPrices() throws Exception {
+        ModelPriceDao priceDao = new ModelPriceDao();
+        priceDao.upsert("Test", "priced-model", new BigDecimal("10"), new BigDecimal("20"),
+                "CNY", System.currentTimeMillis() - 1L);
+
+        TokenStatisticsDao statisticsDao = new TokenStatisticsDao();
+        statisticsDao.insert(1_000_000L, 500_000L, 1_500_000L, 0L,
+                "Test", "priced-model", "priced-session", USER_ID, 99L);
+        assertEquals(0, new BigDecimal("20.00000000").compareTo(statisticsDao
+                .summarize(TokenStatisticsRange.ALL, USER_ID).getTotalCost()));
+        assertEquals("CNY", statisticsDao.summarize(TokenStatisticsRange.ALL, USER_ID).getCurrency());
+        assertTrue(statisticsDao.queryDetails(TokenStatisticsRange.ALL, 1, 20, USER_ID).getRecords().stream()
+                .anyMatch(record -> "priced-model".equals(record.getModel())
+                        && Long.valueOf(99L).equals(record.getUserApiKeyId())));
+    }
+
+    @Test
+    void officialPriceCatalogSeedsKnownModelsAndAllowsLaterOverrides() throws Exception {
+        ModelPriceDao priceDao = new ModelPriceDao();
+        assertEquals(0, new BigDecimal("0.90000000").compareTo(priceDao
+                .calculate("Landing", "qwen-flash", 1_000_000L, 500_000L).getTotalCost()));
+        assertEquals("CNY", priceDao.calculate("Landing", "qwen-flash", 1L, 1L).getCurrency());
+        assertNull(priceDao.calculate("Landing", "model-without-official-price", 1L, 1L));
+
+        priceDao.upsert("Alibaba", "qwen-flash", new BigDecimal("9"), new BigDecimal("18"),
+                "CNY", System.currentTimeMillis() - 1L);
+        assertEquals(0, new BigDecimal("18.00000000").compareTo(priceDao
+                .calculate("Alibaba", "qwen-flash", 1_000_000L, 500_000L).getTotalCost()));
+    }
+
+    @Test
+    void integrationRangeAliasesMatchTheDocumentedWeekAndMonthValues() {
+        assertEquals(TokenStatisticsRange.LAST_7_DAYS, TokenStatisticsRange.fromQueryParam("week"));
+        assertEquals(TokenStatisticsRange.LAST_30_DAYS, TokenStatisticsRange.fromQueryParam("month"));
     }
 
     private static void createLinkMindDatabase() throws SQLException {
@@ -102,6 +162,16 @@ class CuihuaAccountIntegrationTest {
                     + "prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, "
                     + "total_tokens INTEGER NOT NULL, saved_tokens INTEGER NOT NULL, "
                     + "provider TEXT, model TEXT, session_id TEXT, user_id TEXT)");
+        }
+    }
+
+    private static void assertDefaultCatalogPriceCount(long expected) throws SQLException {
+        try (Connection conn = HikariDS.getConnection("saas");
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM linkmind_model_prices WHERE effective_at = 0");
+             ResultSet rs = ps.executeQuery()) {
+            assertTrue(rs.next());
+            assertEquals(expected, rs.getLong(1));
         }
     }
 

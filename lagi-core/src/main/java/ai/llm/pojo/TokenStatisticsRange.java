@@ -43,10 +43,12 @@ public enum TokenStatisticsRange {
                 return TODAY;
             case "7d":
             case "7":
+            case "week":
             case "last_7_days":
                 return LAST_7_DAYS;
             case "30d":
             case "30":
+            case "month":
             case "last_30_days":
                 return LAST_30_DAYS;
             case "all":

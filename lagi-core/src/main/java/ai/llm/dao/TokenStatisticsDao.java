@@ -1,7 +1,7 @@
 package ai.llm.dao;
 
-import ai.common.db.Conn;
 import ai.common.db.HikariDS;
+import ai.llm.pojo.TokenStatisticsCurrencyCost;
 import ai.llm.pojo.TokenStatisticsDetail;
 import ai.llm.pojo.TokenStatisticsGuardInfo;
 import ai.llm.pojo.TokenStatisticsPageResult;
@@ -9,14 +9,15 @@ import ai.llm.pojo.TokenStatisticsRange;
 import ai.llm.pojo.TokenStatisticsSessionItem;
 import ai.llm.pojo.TokenStatisticsSessionPageResult;
 import ai.llm.pojo.TokenStatisticsSummary;
+import ai.llm.pojo.TokenUsageCost;
 import ai.utils.AiGlobal;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -40,7 +41,13 @@ public class TokenStatisticsDao {
             + " provider TEXT,"
             + " model TEXT,"
             + " session_id TEXT,"
-            + " user_id TEXT"
+            + " user_id TEXT,"
+            + " user_api_key_id INTEGER,"
+            + " input_cost DECIMAL(20,8),"
+            + " output_cost DECIMAL(20,8),"
+            + " total_cost DECIMAL(20,8),"
+            + " currency TEXT,"
+            + " price_source TEXT"
             + ");";
 
     private static final String INDEX_CREATED_AT = ""
@@ -65,6 +72,18 @@ public class TokenStatisticsDao {
                         "ALTER TABLE llm_token_statistics ADD COLUMN session_id TEXT");
                 ensureColumnExists(conn, "llm_token_statistics", "user_id",
                         "ALTER TABLE llm_token_statistics ADD COLUMN user_id TEXT");
+                ensureColumnExists(conn, "llm_token_statistics", "user_api_key_id",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN user_api_key_id INTEGER");
+                ensureColumnExists(conn, "llm_token_statistics", "input_cost",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN input_cost DECIMAL(20,8)");
+                ensureColumnExists(conn, "llm_token_statistics", "output_cost",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN output_cost DECIMAL(20,8)");
+                ensureColumnExists(conn, "llm_token_statistics", "total_cost",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN total_cost DECIMAL(20,8)");
+                ensureColumnExists(conn, "llm_token_statistics", "currency",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN currency TEXT");
+                ensureColumnExists(conn, "llm_token_statistics", "price_source",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN price_source TEXT");
                 try (PreparedStatement ps = conn.prepareStatement(INDEX_CREATED_AT)) {
                     ps.executeUpdate();
                 }
@@ -165,7 +184,15 @@ public class TokenStatisticsDao {
 
     public void insert(long promptTokens, long completionTokens, long totalTokens, long savedTokens,
                        String provider, String model, String sessionId, String userId) {
-        String sql = "INSERT INTO llm_token_statistics (created_at, prompt_tokens, completion_tokens, total_tokens, saved_tokens, provider, model, session_id, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        insert(promptTokens, completionTokens, totalTokens, savedTokens, provider, model, sessionId, userId, null);
+    }
+
+    public void insert(long promptTokens, long completionTokens, long totalTokens, long savedTokens,
+                       String provider, String model, String sessionId, String userId, Long userApiKeyId) {
+        TokenUsageCost cost = new ModelPriceDao().calculate(provider, model, promptTokens, completionTokens);
+        String sql = "INSERT INTO llm_token_statistics (created_at, prompt_tokens, completion_tokens, total_tokens, "
+                + "saved_tokens, provider, model, session_id, user_id, user_api_key_id, input_cost, output_cost, "
+                + "total_cost, currency, price_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         int retry = 0;
         while (retry <= MAX_INSERT_RETRY) {
             try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -179,6 +206,16 @@ public class TokenStatisticsDao {
                 ps.setString(7, model);
                 ps.setString(8, sessionId);
                 ps.setString(9, userId);
+                if (userApiKeyId == null) {
+                    ps.setNull(10, java.sql.Types.INTEGER);
+                } else {
+                    ps.setLong(10, userApiKeyId);
+                }
+                setNullableDecimal(ps, 11, cost == null ? null : cost.getInputCost());
+                setNullableDecimal(ps, 12, cost == null ? null : cost.getOutputCost());
+                setNullableDecimal(ps, 13, cost == null ? null : cost.getTotalCost());
+                ps.setString(14, cost == null ? null : cost.getCurrency());
+                ps.setString(15, cost == null ? null : cost.getPriceSource());
                 ps.executeUpdate();
                 return;
             } catch (SQLException e) {
@@ -205,7 +242,10 @@ public class TokenStatisticsDao {
         long start = bounds[0];
         long end = bounds[1];
         boolean scoped = hasUserId(userId);
-        String sql = "SELECT COUNT(1), COALESCE(SUM(total_tokens), 0), COALESCE(SUM(saved_tokens), 0) FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?"
+        String sql = "SELECT COUNT(1), COALESCE(SUM(total_tokens), 0), COALESCE(SUM(saved_tokens), 0), "
+                + "COALESCE(SUM(prompt_tokens), 0), COALESCE(SUM(completion_tokens), 0), "
+                + "COALESCE(SUM(CASE WHEN total_cost IS NOT NULL THEN 1 ELSE 0 END), 0) "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?"
                 + (scoped ? " AND user_id = ?" : "");
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -219,15 +259,27 @@ public class TokenStatisticsDao {
                     long recordCount = rs.getLong(1);
                     long totalConsumed = rs.getLong(2);
                     long totalSaved = rs.getLong(3);
+                    long promptTokens = rs.getLong(4);
+                    long completionTokens = rs.getLong(5);
+                    long pricedRecordCount = rs.getLong(6);
                     int days = range.getCalendarSpanDays();
                     long dailyAvg = days <= 0 ? 0 : Math.round((double) totalConsumed / (double) days);
-                    return TokenStatisticsSummary.builder()
+                    List<TokenStatisticsCurrencyCost> costs = summarizeCosts(start, end, userId);
+                    TokenStatisticsSummary.TokenStatisticsSummaryBuilder builder = TokenStatisticsSummary.builder()
                             .range(range)
                             .totalTokensConsumed(totalConsumed)
                             .totalSavedTokens(totalSaved)
                             .dailyAvgTokensConsumed(dailyAvg)
                             .recordCount(recordCount)
-                            .build();
+                            .totalPromptTokens(promptTokens)
+                            .totalCompletionTokens(completionTokens)
+                            .pricedRecordCount(pricedRecordCount)
+                            .unpricedRecordCount(recordCount - pricedRecordCount)
+                            .costsByCurrency(costs);
+                    if (costs.size() == 1) {
+                        builder.currency(costs.get(0).getCurrency()).totalCost(costs.get(0).getTotalCost());
+                    }
+                    return builder.build();
                 }
             }
         } catch (SQLException e) {
@@ -261,7 +313,9 @@ public class TokenStatisticsDao {
         }
         int offset = (p - 1) * size;
         boolean scoped = hasUserId(userId);
-        String sql = "SELECT id, created_at, prompt_tokens, completion_tokens, total_tokens, saved_tokens, provider, model, session_id, user_id FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?"
+        String sql = "SELECT id, created_at, prompt_tokens, completion_tokens, total_tokens, saved_tokens, provider, "
+                + "model, session_id, user_id, user_api_key_id, input_cost, output_cost, total_cost, currency, price_source "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?"
                 + (scoped ? " AND user_id = ?" : "") + " ORDER BY id DESC LIMIT ? OFFSET ?";
         List<TokenStatisticsDetail> list = new ArrayList<>();
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -287,6 +341,12 @@ public class TokenStatisticsDao {
                             .model(rs.getString("model"))
                             .sessionId(rs.getString("session_id"))
                             .userId(rs.getString("user_id"))
+                            .userApiKeyId(nullableLong(rs, "user_api_key_id"))
+                            .inputCost(rs.getBigDecimal("input_cost"))
+                            .outputCost(rs.getBigDecimal("output_cost"))
+                            .totalCost(rs.getBigDecimal("total_cost"))
+                            .currency(rs.getString("currency"))
+                            .priceSource(rs.getString("price_source"))
                             .build());
                 }
             }
@@ -356,6 +416,10 @@ public class TokenStatisticsDao {
                 "COALESCE(SUM(completion_tokens),0) AS completion_tokens, " +
                 "COALESCE(SUM(total_tokens),0) AS total_tokens, " +
                 "COALESCE(SUM(saved_tokens),0) AS saved_tokens, " +
+                "SUM(total_cost) AS total_cost, MIN(currency) AS currency, " +
+                "COUNT(DISTINCT CASE WHEN total_cost IS NOT NULL THEN currency END) AS currency_count, " +
+                "COALESCE(SUM(CASE WHEN total_cost IS NOT NULL THEN 1 ELSE 0 END),0) AS priced_record_count, " +
+                "COALESCE(SUM(CASE WHEN total_cost IS NULL THEN 1 ELSE 0 END),0) AS unpriced_record_count, " +
                 "MIN(created_at) AS first_request_at, MAX(created_at) AS last_request_at " +
                 "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ? " +
                 (scoped ? "AND user_id = ? " : "") +
@@ -382,7 +446,11 @@ public class TokenStatisticsDao {
                             .completionTokens(rs.getLong("completion_tokens"))
                             .totalTokens(totalTokens)
                             .savedTokens(rs.getLong("saved_tokens"))
-                            .estimatedCost(Double.parseDouble(String.format("%.4f", (totalTokens / 1000.0) * 0.002)))
+                            .estimatedCost(0D)
+                            .totalCost(rs.getLong("currency_count") == 1 ? rs.getBigDecimal("total_cost") : null)
+                            .currency(rs.getLong("currency_count") == 1 ? rs.getString("currency") : null)
+                            .pricedRecordCount(rs.getLong("priced_record_count"))
+                            .unpricedRecordCount(rs.getLong("unpriced_record_count"))
                             .firstRequestAt(rs.getLong("first_request_at"))
                             .lastRequestAt(rs.getLong("last_request_at"))
                             .build());
@@ -463,6 +531,49 @@ public class TokenStatisticsDao {
 
     private static boolean hasUserId(String userId) {
         return userId != null && !userId.trim().isEmpty();
+    }
+
+    private List<TokenStatisticsCurrencyCost> summarizeCosts(long start, long end, String userId) {
+        boolean scoped = hasUserId(userId);
+        String sql = "SELECT currency, SUM(total_cost) AS total_cost, COUNT(1) AS record_count "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ? "
+                + "AND total_cost IS NOT NULL AND currency IS NOT NULL"
+                + (scoped ? " AND user_id = ?" : "")
+                + " GROUP BY currency ORDER BY currency";
+        List<TokenStatisticsCurrencyCost> result = new ArrayList<TokenStatisticsCurrencyCost>();
+        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, start);
+            ps.setLong(2, end);
+            if (scoped) {
+                ps.setString(3, userId.trim());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(TokenStatisticsCurrencyCost.builder()
+                            .currency(rs.getString("currency"))
+                            .totalCost(rs.getBigDecimal("total_cost"))
+                            .recordCount(rs.getLong("record_count"))
+                            .build());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("summarize token costs failed", e);
+        }
+        return result;
+    }
+
+    private static void setNullableDecimal(PreparedStatement statement, int index, BigDecimal value) throws SQLException {
+        if (value == null) {
+            statement.setNull(index, java.sql.Types.DECIMAL);
+        } else {
+            statement.setBigDecimal(index, value);
+        }
+    }
+
+    private static Long nullableLong(ResultSet rs, String field) throws SQLException {
+        long value = rs.getLong(field);
+        return rs.wasNull() ? null : value;
     }
 
     private static boolean isSqliteBusy(SQLException e) {

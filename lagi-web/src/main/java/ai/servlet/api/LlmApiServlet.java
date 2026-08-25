@@ -6,6 +6,8 @@ import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.account.CuihuaAccountService;
+import ai.account.LocalUserApiKey;
+import ai.account.LocalUserApiKeyService;
 import ai.config.ContextLoader;
 import ai.config.pojo.RAGFunction;
 import ai.dto.ModelPreferenceDto;
@@ -26,7 +28,6 @@ import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptInputUtil;
 import ai.openai.pojo.*;
-import ai.migrate.service.ApiKeyService;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.utils.AiGlobal;
@@ -75,7 +76,7 @@ public class LlmApiServlet extends BaseServlet {
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ApiKeyService apiKeyService = new ApiKeyService();
+    private final LocalUserApiKeyService localUserApiKeyService = new LocalUserApiKeyService();
     private static MedusaMonitor medusaMonitor;
 
     static {
@@ -89,6 +90,7 @@ public class LlmApiServlet extends BaseServlet {
     public void init() throws ServletException {
         try {
             CuihuaAccountService.initialize(ContextLoader.configuration.getTokenlink());
+            localUserApiKeyService.initialize();
         } catch (Exception e) {
             throw new ServletException("TokenLink account integration initialization failed", e);
         }
@@ -275,12 +277,9 @@ public class LlmApiServlet extends BaseServlet {
 
         ApiKeyAuthentication authentication = authorizeClientRequest(chatCompletionRequest);
         if (!authentication.isAuthenticated()) {
-            int status = authentication.isUnavailable()
-                    ? HttpServletResponse.SC_SERVICE_UNAVAILABLE : HttpServletResponse.SC_UNAUTHORIZED;
+            int status = authentication.getStatus();
             resp.setStatus(status);
-            String message = authentication.isUnavailable()
-                    ? "Landing API key service is temporarily unavailable."
-                    : "A valid Landing API key is required.";
+            String message = authentication.getMessage();
             ChatCompletionResult chatCompletionResult = LLMErrorConstants.errorResponse(
                     chatCompletionRequest, status, message);
             outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
@@ -398,13 +397,9 @@ public class LlmApiServlet extends BaseServlet {
         }
     }
 
-    /**
-     * All public model protocols use the existing Landing {@code sk-...} key.
-     * The key is validated by the Landing service and its owner is recorded on
-     * the request so token statistics remain scoped to that user.
-     */
+    /** Public model protocols use local {@code lmk_} User Keys only. */
     private ApiKeyAuthentication authorizeClientRequest(ChatCompletionRequest request) {
-        return authenticateLandingApiKey(request == null ? null : request.getApiKey(), request);
+        return authenticateLocalUserKey(request == null ? null : request.getApiKey(), request);
     }
 
     private ApiKeyAuthentication authenticateRequestToken(HttpServletRequest req) {
@@ -412,24 +407,35 @@ public class LlmApiServlet extends BaseServlet {
         if (token == null || token.trim().isEmpty()) {
             token = req.getHeader("x-api-key");
         }
-        return authenticateLandingApiKey(token, null);
+        return authenticateLocalUserKey(token, null);
     }
 
-    private ApiKeyAuthentication authenticateLandingApiKey(String apiKey, ChatCompletionRequest request) {
-        if (apiKey == null || apiKey.trim().isEmpty() || !ApikeyUtil.validateModelApiKey(apiKey)) {
-            return ApiKeyAuthentication.rejected();
+    private ApiKeyAuthentication authenticateLocalUserKey(String apiKey, ChatCompletionRequest request) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            return ApiKeyAuthentication.required();
+        }
+        if (!LocalUserApiKeyService.isLocalUserKey(apiKey)) {
+            return ApiKeyAuthentication.invalid();
         }
         try {
-            String userId = apiKeyService.resolveLandingUserId(apiKey);
-            if (userId == null || userId.trim().isEmpty()) {
-                return ApiKeyAuthentication.rejected();
+            LocalUserApiKey key = localUserApiKeyService.find(apiKey);
+            if (key == null) {
+                return ApiKeyAuthentication.invalid();
+            }
+            if (!key.isActive()) {
+                return ApiKeyAuthentication.revoked();
+            }
+            key = localUserApiKeyService.authenticate(apiKey);
+            if (key == null) {
+                return ApiKeyAuthentication.invalid();
             }
             if (request != null) {
-                request.setAccountUserId(userId);
+                request.setAccountUserId(key.getUserId());
+                request.setAccountUserApiKeyId(key.getId());
             }
             return ApiKeyAuthentication.authenticated();
-        } catch (IOException e) {
-            logger.warn("Could not resolve Landing API key owner: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.warn("Could not resolve local User Key owner: {}", e.getMessage());
             return ApiKeyAuthentication.unavailable();
         }
     }
@@ -437,13 +443,11 @@ public class LlmApiServlet extends BaseServlet {
     private void writeModelAuthenticationFailure(HttpServletResponse resp,
                                                   ApiKeyAuthentication authentication)
             throws IOException {
-        int status = authentication.isUnavailable()
-                ? HttpServletResponse.SC_SERVICE_UNAVAILABLE : HttpServletResponse.SC_UNAUTHORIZED;
+        int status = authentication.getStatus();
         resp.setStatus(status);
         Map<String, String> error = new LinkedHashMap<String, String>();
-        error.put("error", authentication.isUnavailable()
-                ? "Landing API key service is temporarily unavailable"
-                : "A valid Landing API key is required");
+        error.put("code", authentication.getCode());
+        error.put("error", authentication.getMessage());
         responsePrint(resp, gson.toJson(error));
     }
 
@@ -704,30 +708,56 @@ public class LlmApiServlet extends BaseServlet {
     private static final class ApiKeyAuthentication {
         private final boolean authenticated;
         private final boolean unavailable;
+        private final int status;
+        private final String code;
+        private final String message;
 
-        private ApiKeyAuthentication(boolean authenticated, boolean unavailable) {
+        private ApiKeyAuthentication(boolean authenticated, boolean unavailable, int status, String code, String message) {
             this.authenticated = authenticated;
             this.unavailable = unavailable;
+            this.status = status;
+            this.code = code;
+            this.message = message;
         }
 
         private static ApiKeyAuthentication authenticated() {
-            return new ApiKeyAuthentication(true, false);
+            return new ApiKeyAuthentication(true, false, HttpServletResponse.SC_OK, null, null);
         }
 
-        private static ApiKeyAuthentication rejected() {
-            return new ApiKeyAuthentication(false, false);
+        private static ApiKeyAuthentication required() {
+            return new ApiKeyAuthentication(false, false, HttpServletResponse.SC_UNAUTHORIZED,
+                    "USER_KEY_REQUIRED", "A local User Key is required");
+        }
+
+        private static ApiKeyAuthentication invalid() {
+            return new ApiKeyAuthentication(false, false, HttpServletResponse.SC_UNAUTHORIZED,
+                    "USER_KEY_INVALID", "The local User Key is invalid");
+        }
+
+        private static ApiKeyAuthentication revoked() {
+            return new ApiKeyAuthentication(false, false, HttpServletResponse.SC_FORBIDDEN,
+                    "USER_KEY_REVOKED", "The local User Key is revoked");
         }
 
         private static ApiKeyAuthentication unavailable() {
-            return new ApiKeyAuthentication(false, true);
+            return new ApiKeyAuthentication(false, true, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "LOCAL_USER_KEY_STORAGE_UNAVAILABLE", "Local User Key storage is temporarily unavailable");
         }
 
         private boolean isAuthenticated() {
             return authenticated;
         }
 
-        private boolean isUnavailable() {
-            return unavailable;
+        private int getStatus() {
+            return status;
+        }
+
+        private String getCode() {
+            return code;
+        }
+
+        private String getMessage() {
+            return message;
         }
     }
 }
