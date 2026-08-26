@@ -1628,11 +1628,12 @@ Notes:
 
 | Route | Method | Required input | Purpose | Success payload |
 | --- | --- | --- | --- | --- |
-| `/credit/prepay` | POST | `lagiUserId`, `fee` | Start a prepay order. | `outTradeNo`, `qrCode`, `mWebUrl`, `totalFee`, `result` |
-| `/credit/getChargeDetail` | GET | `outTradeNo` | Read one charge record by payment order number. | `seq`, `userId`, `amount`, `time`, `status` |
-| `/credit/getChargeDetailByUserId` | GET | `userId` | List charge records of one user. | `data: ChargeDetail[]` |
-| `/credit/getCreditUserBalance` | GET | `userId` | Read the current balance of one user. | `data.userId`, `data.balance` |
-| `/credit/getChargeDetailBySeq` | GET | `seq` | Read one charge record by sequence number. | `data: ChargeDetail` |
+| `/credit/prepay` | POST | `fee` | Start a prepay order for the box's configured shared LinkMind account. | `outTradeNo`, `qrCode`, `mWebUrl`, `totalFee`, `result` |
+| `/credit/getSharedChargeDetails` | GET | None | List recharge records of the box shared account. | `data: ChargeDetail[]` |
+| `/credit/getSharedBalance` | GET | None | Read the balance of the box shared account. | `data.balance` |
+| `/credit/getChargeDetailBySeq` | GET | `seq` | Read one shared-account charge record by payment order number. | `data.seq`, `data.amount`, `data.time`, `data.status` |
+
+Prerequisite: the enabled Landing model configuration on a box must contain exactly one valid fixed `sk-...` key. It may be configured as `api_key` or `api_keys`; the same key is used for SaaS model calls and to locate the shared account for these billing APIs. Local `lmk_` Keys are not used for payment and only attribute local user usage.
 
 These billing routes are intentionally isolated from model routing and chat execution so enterprise deployments can replace the backing billing provider while keeping the same console and HTTP integration contract.
 

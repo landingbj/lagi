@@ -1628,11 +1628,12 @@ POST /uploadFile/deleteFile
 
 | 路径 | 方法 | 必要输入 | 用途 | 成功返回 |
 | --- | --- | --- | --- | --- |
-| `/credit/prepay` | POST | `lagiUserId`、`fee` | 发起预支付订单。 | `outTradeNo`、`qrCode`、`mWebUrl`、`totalFee`、`result` |
-| `/credit/getChargeDetail` | GET | `outTradeNo` | 按支付订单号读取一条计费记录。 | `seq`、`userId`、`amount`、`time`、`status` |
-| `/credit/getChargeDetailByUserId` | GET | `userId` | 按用户查询计费记录列表。 | `data: ChargeDetail[]` |
-| `/credit/getCreditUserBalance` | GET | `userId` | 查询用户当前余额。 | `data.userId`、`data.balance` |
-| `/credit/getChargeDetailBySeq` | GET | `seq` | 按流水号读取一条计费记录。 | `data: ChargeDetail` |
+| `/credit/prepay` | POST | `fee` | 为盒子配置的 LinkMind 共享账户发起预支付订单。 | `outTradeNo`、`qrCode`、`mWebUrl`、`totalFee`、`result` |
+| `/credit/getSharedChargeDetails` | GET | 无 | 查询盒子共享账户的充值记录。 | `data: ChargeDetail[]` |
+| `/credit/getSharedBalance` | GET | 无 | 查询盒子共享账户余额。 | `data.balance` |
+| `/credit/getChargeDetailBySeq` | GET | `seq` | 按支付订单号读取一条共享账户计费记录。 | `data.seq`、`data.amount`、`data.time`、`data.status` |
+
+前置条件：盒子启用的 Landing 模型配置中必须存在且仅存在一个有效的固定 `sk-...`。该 Key 可配置在 `api_key` 或 `api_keys`；它既是盒子调用 SaaS 模型服务的共享 Key，也是上述充值接口定位共享账户的依据。本地 `lmk_` Key 不参与充值，仅用于本地用户用量统计。
 
 这组接口被刻意放在模型路由与聊天执行之外，便于企业部署在保留控制台和 HTTP 合同不变的前提下，替换为自己的计费提供方。
 

@@ -27,14 +27,6 @@
         return Number(v || 0).toFixed(2);
     }
 
-    function getCreditsUserId() {
-        return (typeof getCookie === "function" ? getCookie("userId") : "") || "";
-    }
-
-    function isCreditsUserLoggedIn() {
-        return !!getCreditsUserId();
-    }
-
     /** Keeps at most two digits after the decimal point while typing. */
     function sanitizeCreditsAmountInput(str) {
         if (str === "" || str === ".") {
@@ -95,7 +87,7 @@
                         $("#creditsPurchaseMask").hide();
                         resetCreditsPrepayUi();
                         loadCreditUserBalance(false);
-                        loadChargeDetailsByUserId();
+                        loadSharedChargeDetails();
                     }
                 }
             });
@@ -103,11 +95,6 @@
     }
 
     function requestCreditsPrepay() {
-        var userId = getCreditsUserId();
-        if (!userId) {
-            alert(tTextOpenRouter("请先登录"));
-            return;
-        }
         const st = window.__creditsPageState;
         const amount = Number(st.purchaseAmount || 0);
         if (amount < 0.01) return;
@@ -119,7 +106,6 @@
             url: "/credit/prepay",
             contentType: "application/json;charset=utf-8",
             data: JSON.stringify({
-                lagiUserId: userId,
                 fee: feeStr
             }),
             success: function (res) {
@@ -178,20 +164,11 @@
         if (skipServerSync) {
             return;
         }
-        var userId = getCreditsUserId();
-        if (!userId) {
-            if (window.__creditsPageState) {
-                window.__creditsPageState.balance = 0;
-            }
-            $("#creditsBalanceDisplay").text(tTextOpenRouter("登录后显示余额"));
-            return;
-        }
         $("#creditsBalanceDisplay").text("¥ —");
         $.ajax({
             type: "GET",
             contentType: "application/json;charset=utf-8",
-            url: "/credit/getCreditUserBalance",
-            data: { userId: userId },
+            url: "/credit/getSharedBalance",
             success: function (res) {
                 var bal = 0;
                 if (res && res.status === "success" && res.data && res.data.balance != null) {
@@ -211,23 +188,12 @@
         });
     }
 
-    function loadChargeDetailsByUserId() {
-        var userId = getCreditsUserId();
-        if (!userId) {
-            $("#creditsTxnCount").text("—");
-            $("#creditsTxnTbody").html(
-                '<tr><td colspan="4" style="padding:24px;text-align:center;color:#6b7280;font-size:14px;line-height:1.6;">' +
-                tTextOpenRouter("登录后可查看交易记录") +
-                "</td></tr>"
-            );
-            return;
-        }
+    function loadSharedChargeDetails() {
         $("#creditsTxnTbody").html('<tr><td colspan="4" style="padding:24px;text-align:center;color:#9ca3af;">加载中...</td></tr>');
         $.ajax({
             type: "GET",
             contentType: "application/json;charset=utf-8",
-            url: "/credit/getChargeDetailByUserId",
-            data: { userId: userId },
+            url: "/credit/getSharedChargeDetails",
             success: function (res) {
                 if (!res || res.status !== "success" || !Array.isArray(res.data)) {
                     updateCreditsTxnTable([]);
@@ -252,7 +218,7 @@
     function ensureCreditsState() {
         if (!window.__creditsPageState) {
             window.__creditsPageState = {
-                account: "个人账户: 未登录",
+                account: "盒子共享账户",
                 balance: 0,
                 purchaseAmount: 5,
                 transactions: []
@@ -312,28 +278,17 @@
         hideChatPartsForStandalonePage();
         ensureCreditsState();
         const st = window.__creditsPageState;
-        st.account = isCreditsUserLoggedIn() ? "个人账户" : "个人账户: 未登录";
-        var userIdForBalance = getCreditsUserId();
-        var loggedIn = !!userIdForBalance;
+        st.account = "盒子共享账户";
         var initialBalanceDisplay;
         var balanceDisplayStyle = "font-size:40px;font-weight:700;letter-spacing:0.5px;";
-        if (!loggedIn) {
-            initialBalanceDisplay = tTextOpenRouter("登录后显示余额");
-            balanceDisplayStyle = "font-size:16px;font-weight:600;color:#6b7280;line-height:1.5;max-width:280px;";
-        } else if (!skipServerBalanceSync) {
+        if (!skipServerBalanceSync) {
             initialBalanceDisplay = "¥ —";
         } else {
             initialBalanceDisplay = "¥ " + formatCreditsMoney(st.balance);
         }
-        var txnTbodyHtml = loggedIn
-            ? renderCreditsTxnRows(st.transactions)
-            : '<tr><td colspan="4" style="padding:24px;text-align:center;color:#6b7280;font-size:14px;line-height:1.6;">' +
-              tTextOpenRouter("登录后可查看交易记录") +
-              "</td></tr>";
-        var txnCountText = loggedIn ? "共 0 条" : "—";
-        var addBtnStyle = loggedIn
-            ? "padding:10px 20px;border:none;border-radius:8px;background:#6366f1;color:#fff;font-size:14px;cursor:pointer;white-space:nowrap;"
-            : "display:none;";
+        var txnTbodyHtml = renderCreditsTxnRows(st.transactions);
+        var txnCountText = "共 0 条";
+        var addBtnStyle = "padding:10px 20px;border:none;border-radius:8px;background:#6366f1;color:#fff;font-size:14px;cursor:pointer;white-space:nowrap;";
         const html = `
             <div id="credits-container" style="padding:20px;min-height:100%;background:#fff;">
                 <div style="margin-bottom:14px;">
@@ -386,6 +341,6 @@
         $("#item-content").html(tHtmlOpenRouter(html));
         bindCreditsEvents();
         loadCreditUserBalance(skipServerBalanceSync);
-        loadChargeDetailsByUserId();
+        loadSharedChargeDetails();
     };
 })();
