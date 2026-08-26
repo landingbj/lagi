@@ -21,7 +21,6 @@ public class TokenStatisticsDetail {
     private long savedTokens;
     private String provider;
     private String model;
-    private String sessionId;
     private String userId;
     private Long userApiKeyId;
     private BigDecimal inputCost;

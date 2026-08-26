@@ -70,6 +70,18 @@
         return Number(row.createdAt != null ? row.createdAt : row.created_at) || 0;
     }
 
+    function formatCost(row) {
+        if (!row || row.totalCost == null || row.totalCost === "") {
+            return "—";
+        }
+        var cost = Number(row.totalCost);
+        if (!isFinite(cost)) {
+            return "—";
+        }
+        var value = cost.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+        return (row.currency ? String(row.currency) + " " : "") + value;
+    }
+
     function resolveLogsApiRange() {
         var range = getRangeMs();
         var days = (range.max - range.min) / 86400000;
@@ -255,31 +267,19 @@
             var tt = Number(row.totalTokens != null ? row.totalTokens : row.total_tokens) || (pt + ct);
             var provider = row.provider || "Unknown";
             var model = row.model || row.modelName || "Unknown";
-            var cachedTokens = Number(row.cachedTokens != null ? row.cachedTokens : row.cached_tokens);
-            if (!isFinite(cachedTokens)) {
-                cachedTokens = Number(row.savedTokens != null ? row.savedTokens : row.saved_tokens) || 0;
-            }
-            var speedRaw = row.outputSpeed != null ? row.outputSpeed
-                : (row.output_speed != null ? row.output_speed
-                : (row.speed != null ? row.speed : null));
-            var speed = "";
-            if (speedRaw == null || speedRaw === "") {
-                speed = (ct > 0 ? (ct / 1.5).toFixed(1) : "0.0") + " tps";
-            } else {
-                speed = String(speedRaw).indexOf("tps") >= 0 ? String(speedRaw) : (String(speedRaw) + " tps");
-            }
-            var cost = "¥ " + ((tt / 1000) * 0.002).toFixed(4);
+            var userId = row.userId || "—";
+            var cost = formatCost(row);
             var timeLabel = ts ? new Date(ts).toLocaleString() : "—";
 
             tbody.append(
                 '<tr>' +
                 '<td style="' + styleTd() + '">' + timeLabel + "</td>" +
+                '<td style="' + styleTd() + '">' + userId + "</td>" +
                 '<td style="' + styleTd() + '">' + provider + ' / <a style="color:#4f46e5;text-decoration:underline;cursor:pointer;">' + model + "</a></td>" +
                 '<td style="' + styleTd() + '">' + pt + "</td>" +
                 '<td style="' + styleTd() + '">' + ct + "</td>" +
-                '<td style="' + styleTd() + '">' + cachedTokens + "</td>" +
+                '<td style="' + styleTd() + '">' + tt + "</td>" +
                 '<td style="' + styleTd() + '">' + cost + "</td>" +
-                '<td style="' + styleTd() + '">' + speed + "</td>" +
                 "</tr>"
             );
         }
@@ -333,12 +333,12 @@
             '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">' +
             "<thead><tr>" +
             '<th style="' + styleTh() + '">时间</th>' +
+            '<th style="' + styleTh() + '">用户</th>' +
             '<th style="' + styleTh() + '">Provider / Model</th>' +
             '<th style="' + styleTh() + '">输入 Tokens</th>' +
             '<th style="' + styleTh() + '">输出 Tokens</th>' +
-            '<th style="' + styleTh() + '">Cached Tokens</th>' +
+            '<th style="' + styleTh() + '">总 Tokens</th>' +
             '<th style="' + styleTh() + '">费用</th>' +
-            '<th style="' + styleTh() + '">输出速度</th>' +
             "</tr></thead><tbody id='logsGenerationsTbody'></tbody></table></div>" +
             '<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;">' +
             '<button id="logsPrevBtn" type="button" style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;">‹</button>' +

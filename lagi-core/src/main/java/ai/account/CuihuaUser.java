@@ -16,4 +16,21 @@ public class CuihuaUser {
     public boolean isSystemAdmin() {
         return role != null && "system_admin".equalsIgnoreCase(role.trim());
     }
+
+    public boolean isAdmin() {
+        return role != null && "admin".equalsIgnoreCase(role.trim());
+    }
+
+    public boolean isUser() {
+        return role != null && "user".equalsIgnoreCase(role.trim());
+    }
+
+    /** Roles that are allowed to inspect usage across all shared users. */
+    public boolean canViewAllTokenUsage() {
+        return isAdmin() || isSystemAdmin();
+    }
+
+    public boolean hasRecognizedRole() {
+        return isUser() || isAdmin() || isSystemAdmin();
+    }
 }

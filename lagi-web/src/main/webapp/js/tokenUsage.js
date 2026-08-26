@@ -39,6 +39,39 @@ function pickRowTotalTokens(row) {
     return Number(v) || 0;
 }
 
+function pickRowCost(row) {
+    if (!row || row.totalCost == null || row.totalCost === '') {
+        return null;
+    }
+    const value = Number(row.totalCost);
+    return Number.isFinite(value) ? value : null;
+}
+
+function formatTokenCost(value, currency) {
+    if (value == null || value === '') {
+        return '—';
+    }
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+        return '—';
+    }
+    const text = numeric.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+    return (currency ? currency + ' ' : '') + text;
+}
+
+function formatOverviewCost(overview) {
+    if (overview && overview.totalCost != null) {
+        return formatTokenCost(overview.totalCost, overview.currency);
+    }
+    const costs = overview && Array.isArray(overview.costsByCurrency) ? overview.costsByCurrency : [];
+    if (!costs.length) {
+        return '—';
+    }
+    return costs.map(function(item) {
+        return formatTokenCost(item.totalCost, item.currency);
+    }).join(' / ');
+}
+
 function disposeTokenUsageChart() {
     if (!tokenUsageChart) {
         return;
@@ -84,8 +117,8 @@ function loadTokenUsagePage() {
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                     <div style="font-size: 13px; color: #374151; margin-right: 6px;">${tTextToken('时间范围')}</div>
                     <button type="button" class="token-range-btn" data-range="today" data-active="1" style="${tokenRangeBtnStyle(true)}">${tTextToken('今天')}</button>
-                    <button type="button" class="token-range-btn" data-range="7d" data-active="0" style="${tokenRangeBtnStyle(false)}">7d</button>
-                    <button type="button" class="token-range-btn" data-range="30d" data-active="0" style="${tokenRangeBtnStyle(false)}">30d</button>
+                    <button type="button" class="token-range-btn" data-range="week" data-active="0" style="${tokenRangeBtnStyle(false)}">${tTextToken('本周')}</button>
+                    <button type="button" class="token-range-btn" data-range="month" data-active="0" style="${tokenRangeBtnStyle(false)}">${tTextToken('本月')}</button>
                     <button type="button" class="token-range-btn" data-range="all" data-active="0" style="${tokenRangeBtnStyle(false)}">${tTextToken('全部')}</button>
                     <input id="tokenDateStart" type="date" value="${today}" style="padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;" />
                     <span style="color: #9ca3af;">${tTextToken('至')}</span>
@@ -97,15 +130,15 @@ function loadTokenUsagePage() {
                     <button type="button" id="tokenRefreshBtn" style="padding: 6px 12px; border: none; border-radius: 999px; background: #1296db; color: #fff; font-size: 12px; cursor: pointer;">${tTextToken('刷新')}</button>
                 </div>
                 <div style="margin-top: 8px; color: #9ca3af; font-size: 12px;">
-                    ${tTextToken('说明：费用为估算值（默认按 0.002 RMB / 1K Tokens）。自定义日期时按跨度映射为 today / 7d / 30d / all。')}
+                    ${tTextToken('费用按本机配置的模型价格计算；未配置官方价格的模型仅统计 Token，不展示成本。')}
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
                 ${tokenStatCardHtml(tTextToken('总 Tokens'), 'tokenTotalTokens', '—')}
-                ${tokenStatCardHtml(tTextToken('记录条数'), 'tokenTotalSessions', '—')}
-                ${tokenStatCardHtml(tTextToken('日均 Tokens'), 'tokenAvgDailyTokens', '—')}
-                ${tokenStatCardHtml(tTextToken('估算费用 (RMB)'), 'tokenEstimatedCost', '—')}
+                ${tokenStatCardHtml(tTextToken('模型成本'), 'tokenTotalCost', '—')}
+                ${tokenStatCardHtml(tTextToken('调用记录'), 'tokenRecordCount', '—')}
+                ${tokenStatCardHtml(tTextToken('已计费记录'), 'tokenPricedRecordCount', '—')}
             </div>
 
             <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
@@ -123,12 +156,12 @@ function loadTokenUsagePage() {
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                         <thead>
                             <tr style="background: #f9fafb;">
-                                <th style="${tokenThStyle()}">ID</th>
                                 <th style="${tokenThStyle()}">${tTextToken('时间')}</th>
+                                <th style="${tokenThStyle()}">${tTextToken('用户')}</th>
+                                <th style="${tokenThStyle()}">${tTextToken('模型')}</th>
                                 <th style="${tokenThStyle()}">${tTextToken('Prompt')}</th>
                                 <th style="${tokenThStyle()}">${tTextToken('Completion')}</th>
                                 <th style="${tokenThStyle()}">${tTextToken('Total')}</th>
-                                <th style="${tokenThStyle()}">${tTextToken('Saved')}</th>
                                 <th style="${tokenThStyle()}">${tTextToken('费用')}</th>
                             </tr>
                         </thead>
@@ -223,10 +256,11 @@ function applyTokenRange(range) {
     const now = new Date();
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let start = new Date(end);
-    if (range === '7d') {
-        start.setDate(end.getDate() - 6);
-    } else if (range === '30d') {
-        start.setDate(end.getDate() - 29);
+    if (range === 'week') {
+        const dayOfWeek = end.getDay() || 7;
+        start.setDate(end.getDate() - dayOfWeek + 1);
+    } else if (range === 'month') {
+        start.setDate(1);
     } else if (range === 'all') {
         start = new Date(2020, 0, 1);
     }
@@ -260,15 +294,19 @@ function deriveTokenApiRangeFromDateInputs() {
     }
     const s = new Date(startStr + 'T00:00:00');
     const e = new Date(endStr + 'T00:00:00');
+    const weekStart = new Date(e);
+    const endDayOfWeek = weekStart.getDay() || 7;
+    weekStart.setDate(weekStart.getDate() - endDayOfWeek + 1);
+    const monthStart = new Date(e.getFullYear(), e.getMonth(), 1);
+    if (s.getTime() === weekStart.getTime()) {
+        return 'week';
+    }
+    if (s.getTime() === monthStart.getTime()) {
+        return 'month';
+    }
     const diff = Math.round((e.getTime() - s.getTime()) / 86400000);
     if (diff < 0) {
         return 'all';
-    }
-    if (diff <= 6) {
-        return '7d';
-    }
-    if (diff <= 29) {
-        return '30d';
     }
     return 'all';
 }
@@ -288,13 +326,12 @@ function refreshTokenUsageData() {
         const det = firstResolvedPayload(detPack) || {};
         const totalTokens = Number(ov.totalTokens != null ? ov.totalTokens : 0);
         const recordCount = Number(ov.recordCount != null ? ov.recordCount : 0);
-        const dailyAvg = Number(ov.dailyAvgTokens != null ? ov.dailyAvgTokens : 0);
-        const estimatedCost = ((totalTokens / 1000) * 0.002).toFixed(4);
+        const pricedRecordCount = Number(ov.pricedRecordCount != null ? ov.pricedRecordCount : 0);
 
         $('#tokenTotalTokens').text(totalTokens.toLocaleString(locale));
-        $('#tokenTotalSessions').text(recordCount.toLocaleString(locale));
-        $('#tokenAvgDailyTokens').text(dailyAvg.toLocaleString(locale));
-        $('#tokenEstimatedCost').text(estimatedCost);
+        $('#tokenTotalCost').text(formatOverviewCost(ov));
+        $('#tokenRecordCount').text(recordCount.toLocaleString(locale));
+        $('#tokenPricedRecordCount').text(pricedRecordCount.toLocaleString(locale));
 
         const totalRows = Number(det.total != null ? det.total : 0);
         const ps = Number(det.pageSize != null ? det.pageSize : pageSize);
@@ -383,22 +420,23 @@ function renderTokenSessionTableFromApi(records, locale) {
     }
     for (let i = 0; i < records.length; i++) {
         const row = records[i] || {};
-        const id = row.id != null ? row.id : '';
         const createdAt = pickRowCreatedAt(row);
         const dateLabel = createdAt ? new Date(createdAt).toLocaleString(locale) : '—';
+        const userId = row.userId != null ? row.userId : '—';
+        const provider = row.provider || '—';
+        const model = row.model || '—';
         const pt = Number(row.promptTokens != null ? row.promptTokens : 0);
         const ct = Number(row.completionTokens != null ? row.completionTokens : 0);
         const tt = pickRowTotalTokens(row);
-        const st = Number(row.savedTokens != null ? row.savedTokens : 0);
-        const cost = ((tt / 1000) * 0.002).toFixed(4);
+        const cost = formatTokenCost(pickRowCost(row), row.currency);
         const tr = `
             <tr>
-                <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${id}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${dateLabel}</td>
+                <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${userId}</td>
+                <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${provider} / ${model}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${pt.toLocaleString(locale)}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${ct.toLocaleString(locale)}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${tt.toLocaleString(locale)}</td>
-                <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${st.toLocaleString(locale)}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${cost}</td>
             </tr>
         `;
@@ -422,6 +460,8 @@ function renderTokenUsageChart(rows, start, end, metric) {
     }
 
     const sumsByDay = {};
+    const costsByDay = {};
+    const costCurrencies = new Set();
     for (let r = 0; r < rows.length; r++) {
         const ca = pickRowCreatedAt(rows[r]);
         if (!ca) {
@@ -430,6 +470,23 @@ function renderTokenUsageChart(rows, start, end, metric) {
         const key = formatDayKeyFromMs(ca);
         const tt = pickRowTotalTokens(rows[r]);
         sumsByDay[key] = (sumsByDay[key] || 0) + tt;
+        const cost = pickRowCost(rows[r]);
+        if (cost != null) {
+            costsByDay[key] = (costsByDay[key] || 0) + cost;
+            if (rows[r].currency) {
+                costCurrencies.add(String(rows[r].currency));
+            }
+        }
+    }
+
+    if (metric === 'cost' && costCurrencies.size > 1) {
+        chartDom.style.display = 'none';
+        if (noDataDom) {
+            noDataDom.textContent = tTextToken('存在多种币种，请查看上方成本汇总');
+            noDataDom.style.display = 'block';
+        }
+        disposeTokenUsageChart();
+        return;
     }
 
     const points = [];
@@ -448,11 +505,11 @@ function renderTokenUsageChart(rows, start, end, metric) {
         points.push({
             label: label,
             tokens: dayTokens,
-            cost: Number(((dayTokens / 1000) * 0.002).toFixed(6))
+            cost: Number((costsByDay[key] || 0).toFixed(6))
         });
     }
 
-    const hasData = points.some(function(item) { return item.tokens > 0; });
+    const hasData = points.some(function(item) { return item.tokens > 0 || item.cost > 0; });
     if (!hasData) {
         chartDom.style.display = 'none';
         if (noDataDom) {
@@ -464,6 +521,7 @@ function renderTokenUsageChart(rows, start, end, metric) {
 
     chartDom.style.display = 'block';
     if (noDataDom) {
+        noDataDom.textContent = tTextToken('暂无趋势数据');
         noDataDom.style.display = 'none';
     }
 

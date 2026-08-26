@@ -262,7 +262,7 @@ public class TokenStatisticsDao {
                     long promptTokens = rs.getLong(4);
                     long completionTokens = rs.getLong(5);
                     long pricedRecordCount = rs.getLong(6);
-                    int days = range.getCalendarSpanDays();
+                    int days = calendarDayCount(start, end);
                     long dailyAvg = days <= 0 ? 0 : Math.round((double) totalConsumed / (double) days);
                     List<TokenStatisticsCurrencyCost> costs = summarizeCosts(start, end, userId);
                     TokenStatisticsSummary.TokenStatisticsSummaryBuilder builder = TokenStatisticsSummary.builder()
@@ -339,7 +339,6 @@ public class TokenStatisticsDao {
                             .savedTokens(rs.getLong("saved_tokens"))
                             .provider(rs.getString("provider"))
                             .model(rs.getString("model"))
-                            .sessionId(rs.getString("session_id"))
                             .userId(rs.getString("user_id"))
                             .userApiKeyId(nullableLong(rs, "user_api_key_id"))
                             .inputCost(rs.getBigDecimal("input_cost"))
@@ -478,10 +477,27 @@ public class TokenStatisticsDao {
         }
         ZoneId zone = ZoneId.systemDefault();
         LocalDate today = LocalDate.now(zone);
-        LocalDate first = today.minusDays(range.getCalendarSpanDays() - 1);
+        LocalDate first;
+        if (range == TokenStatisticsRange.THIS_WEEK) {
+            first = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+        } else if (range == TokenStatisticsRange.THIS_MONTH) {
+            first = today.withDayOfMonth(1);
+        } else {
+            first = today.minusDays(range.getCalendarSpanDays() - 1L);
+        }
         long startMs = first.atStartOfDay(zone).toInstant().toEpochMilli();
         long endMs = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli();
         return new long[]{startMs, endMs};
+    }
+
+    private static int calendarDayCount(long startMs, long endMsExclusive) {
+        if (endMsExclusive == Long.MAX_VALUE) {
+            return 0;
+        }
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate start = java.time.Instant.ofEpochMilli(startMs).atZone(zone).toLocalDate();
+        LocalDate end = java.time.Instant.ofEpochMilli(endMsExclusive).atZone(zone).toLocalDate();
+        return (int) Math.max(1L, ChronoUnit.DAYS.between(start, end));
     }
 
     private long countSessionsInRange(long startMs, long endMsExclusive, String userId) {

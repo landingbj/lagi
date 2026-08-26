@@ -9,7 +9,6 @@ import ai.llm.pojo.TokenStatisticsGuardInfo;
 import ai.llm.pojo.TokenStatisticsOverview;
 import ai.llm.pojo.TokenStatisticsPageResult;
 import ai.llm.pojo.TokenStatisticsRange;
-import ai.llm.pojo.TokenStatisticsSessionPageResult;
 import ai.llm.pojo.TokenStatisticsSummary;
 import ai.servlet.BaseServlet;
 import ai.servlet.UserServlet;
@@ -36,53 +35,54 @@ public class TokenStatisticsApiServlet extends BaseServlet {
     private final TokenStatisticsDao tokenStatisticsDao = new TokenStatisticsDao();
     private final CuihuaAccountService accountService = new CuihuaAccountService();
     private final LocalUserApiKeyService localUserApiKeyService = new LocalUserApiKeyService();
+    private final TokenUsageAuthorizationService authorizationService = new TokenUsageAuthorizationService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
-        CuihuaUser user;
+        CuihuaUser actor;
+        TokenUsageAuthorizationService.TokenUsageScope usageScope;
         try {
-            user = resolveAuthenticatedUser(req);
+            actor = resolveAuthenticatedUser(req);
+            usageScope = authorizationService.authorizeAuthenticatedUser(actor, req.getParameter("targetUserId"));
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            writeErrorJson(resp, "account or local User Key storage is temporarily unavailable");
+            writeErrorJson(resp, "LOCAL_STORAGE_UNAVAILABLE",
+                    "account or local User Key storage is temporarily unavailable");
             return;
-        }
-        if (user == null) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            writeErrorJson(resp, "authentication required");
+        } catch (TokenUsageAuthorizationService.TokenUsageAuthorizationException e) {
+            writeAuthorizationError(resp, e);
             return;
         }
 
         String uri = req.getRequestURI();
         try {
             if (uri.endsWith("/overview")) {
-                writeOverview(req, resp, user.getUserId());
+                writeOverview(req, resp, usageScope);
             } else if (uri.endsWith("/details")) {
-                writeDetails(req, resp, user.getUserId());
-            } else if (uri.endsWith("/sessions")) {
-                writeSessions(req, resp, user.getUserId());
+                writeDetails(req, resp, usageScope);
             } else if (uri.endsWith("/guard")) {
-                writeGuard(resp, user.getUserId());
+                writeGuard(resp, usageScope.getQueryUserId());
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 writeJson(resp, "{\"error\":\"not found\"}");
             }
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            writeErrorJson(resp, "invalid number: " + e.getMessage());
+            writeErrorJson(resp, "INVALID_REQUEST", "invalid number: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            writeErrorJson(resp, e.getMessage());
+            writeErrorJson(resp, "INVALID_REQUEST", e.getMessage());
         }
     }
 
-    private void writeOverview(HttpServletRequest req, HttpServletResponse resp, String userId) throws IOException {
+    private void writeOverview(HttpServletRequest req, HttpServletResponse resp,
+                               TokenUsageAuthorizationService.TokenUsageScope usageScope) throws IOException {
         String rangeParam = req.getParameter("range");
         TokenStatisticsRange range = TokenStatisticsRange.fromQueryParam(rangeParam);
-        TokenStatisticsSummary summary = tokenStatisticsDao.summarize(range, userId);
+        TokenStatisticsSummary summary = tokenStatisticsDao.summarize(range, usageScope.getQueryUserId());
         String echo = rangeParam == null || rangeParam.isEmpty() ? "today" : rangeParam.trim();
         TokenStatisticsOverview overview = TokenStatisticsOverview.builder()
                 .range(echo)
@@ -90,6 +90,15 @@ public class TokenStatisticsApiServlet extends BaseServlet {
                 .totalSavedTokens(summary.getTotalSavedTokens())
                 .dailyAvgTokens(summary.getDailyAvgTokensConsumed())
                 .recordCount(summary.getRecordCount())
+                .totalPromptTokens(summary.getTotalPromptTokens())
+                .totalCompletionTokens(summary.getTotalCompletionTokens())
+                .totalCost(summary.getTotalCost())
+                .currency(summary.getCurrency())
+                .pricedRecordCount(summary.getPricedRecordCount())
+                .unpricedRecordCount(summary.getUnpricedRecordCount())
+                .costsByCurrency(summary.getCostsByCurrency())
+                .scope(usageScope.getScope().getValue())
+                .targetUserId(usageScope.getTargetUserId())
                 .build();
         writeJson(resp, gson.toJson(overview));
     }
@@ -99,22 +108,15 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         writeJson(resp, gson.toJson(info));
     }
 
-    private void writeDetails(HttpServletRequest req, HttpServletResponse resp, String userId) throws IOException {
+    private void writeDetails(HttpServletRequest req, HttpServletResponse resp,
+                              TokenUsageAuthorizationService.TokenUsageScope usageScope) throws IOException {
         TokenStatisticsRange range = TokenStatisticsRange.fromQueryParam(req.getParameter("range"));
         int page = parsePositiveInt(req.getParameter("page"), 1);
         int pageSize = parsePositiveInt(req.getParameter("pageSize"), 20);
-        TokenStatisticsPageResult result = tokenStatisticsDao.queryDetails(range, page, pageSize, userId);
-        writeJson(resp, gson.toJson(result));
-    }
-
-    private void writeSessions(HttpServletRequest req, HttpServletResponse resp, String userId) throws IOException {
-        TokenStatisticsRange range = TokenStatisticsRange.fromQueryParam(req.getParameter("range"));
-        int page = parsePositiveInt(req.getParameter("page"), 1);
-        int pageSize = parsePositiveInt(req.getParameter("pageSize"), 20);
-        Long startMs = parseNullableLong(req.getParameter("startMs"));
-        Long endMs = parseNullableLong(req.getParameter("endMs"));
-        TokenStatisticsSessionPageResult result = tokenStatisticsDao.querySessions(
-                range, page, pageSize, startMs, endMs, userId);
+        TokenStatisticsPageResult result = tokenStatisticsDao.queryDetails(
+                range, page, pageSize, usageScope.getQueryUserId());
+        result.setScope(usageScope.getScope().getValue());
+        result.setTargetUserId(usageScope.getTargetUserId());
         writeJson(resp, gson.toJson(result));
     }
 
@@ -125,7 +127,7 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         }
         if (key != null) {
             LocalUserApiKey localKey = localUserApiKeyService.authenticate(key);
-            return localKey == null ? null : CuihuaUser.builder().userId(localKey.getUserId()).build();
+            return localKey == null ? null : accountService.findActiveUserById(localKey.getUserId());
         }
         return accountService.resolveSession(readSessionCookie(req));
     }
@@ -158,18 +160,38 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         return value;
     }
 
-    private static Long parseNullableLong(String raw) {
-        return raw == null || raw.isEmpty() ? null : Long.parseLong(raw.trim());
-    }
-
     private static void writeJson(HttpServletResponse resp, String json) throws IOException {
         PrintWriter out = resp.getWriter();
         out.print(json);
         out.flush();
     }
 
-    private void writeErrorJson(HttpServletResponse resp, String message) throws IOException {
+    private void writeAuthorizationError(HttpServletResponse resp,
+                                         TokenUsageAuthorizationService.TokenUsageAuthorizationException e)
+            throws IOException {
+        switch (e.getReason()) {
+            case AUTHENTICATION_REQUIRED:
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                writeErrorJson(resp, "AUTHENTICATION_REQUIRED", "authentication required");
+                return;
+            case TARGET_USER_NOT_FOUND:
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                writeErrorJson(resp, "TOKEN_USAGE_TARGET_USER_NOT_FOUND", "target user does not exist");
+                return;
+            case ACCESS_DENIED:
+            case ACTOR_ROLE_NOT_ALLOWED:
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                writeErrorJson(resp, "TOKEN_USAGE_ACCESS_DENIED", "token usage access is denied");
+                return;
+            default:
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                writeErrorJson(resp, "AUTHENTICATION_REQUIRED", "authentication required");
+        }
+    }
+
+    private void writeErrorJson(HttpServletResponse resp, String code, String message) throws IOException {
         Map<String, String> error = new HashMap<String, String>();
+        error.put("code", code);
         error.put("error", message);
         writeJson(resp, gson.toJson(error));
     }

@@ -6,7 +6,6 @@ import ai.account.LocalUserApiKeyService.UserKeyException;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.pojo.TokenStatisticsPageResult;
 import ai.llm.pojo.TokenStatisticsRange;
-import ai.llm.pojo.TokenStatisticsSessionPageResult;
 import ai.llm.pojo.TokenStatisticsSummary;
 import ai.servlet.BaseServlet;
 
@@ -33,6 +32,7 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
 
     private final LocalUserApiKeyService localKeyService = new LocalUserApiKeyService();
     private final TokenStatisticsDao tokenStatisticsDao = new TokenStatisticsDao();
+    private final TokenUsageAuthorizationService authorizationService = new TokenUsageAuthorizationService();
 
     @Override
     public void init() throws ServletException {
@@ -98,6 +98,8 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
             }
             writeError(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED",
                     "method is not supported for this resource");
+        } catch (TokenUsageAuthorizationService.TokenUsageAuthorizationException e) {
+            writeUsageAuthorizationError(resp, e);
         } catch (UserKeyException e) {
             writeUserKeyError(resp, e);
         } catch (IllegalArgumentException e) {
@@ -150,45 +152,36 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
     }
 
     private void handleTokenUsage(HttpServletRequest req, HttpServletResponse resp, RequestTarget target)
-            throws SQLException, UserKeyException, IOException {
-        // Resolving the key-list count deliberately verifies that the shared Cuihua user exists.
-        localKeyService.count(target.userId, "all");
+            throws SQLException, TokenUsageAuthorizationService.TokenUsageAuthorizationException, IOException {
+        TokenUsageAuthorizationService.TokenUsageScope usageScope = authorizationService.authorizeCuihuaActor(
+                req.getHeader(TokenUsageAuthorizationService.CUIHUA_ACTOR_HEADER), target.userId);
         String rangeParam = optionalText(req.getParameter("range"));
         String rangeEcho = rangeParam == null ? "month" : rangeParam;
         TokenStatisticsRange range = TokenStatisticsRange.fromQueryParam(rangeEcho);
         if ("overview".equals(target.usageView)) {
-            TokenStatisticsSummary summary = tokenStatisticsDao.summarize(range, target.userId);
-            writeSuccess(resp, overview(rangeEcho, summary));
+            TokenStatisticsSummary summary = tokenStatisticsDao.summarize(range, usageScope.getQueryUserId());
+            writeSuccess(resp, overview(rangeEcho, summary, usageScope));
             return;
         }
         int page = parsePage(req.getParameter("page"), 1);
         int pageSize = parsePageSize(req.getParameter("pageSize"));
         if ("details".equals(target.usageView)) {
-            TokenStatisticsPageResult result = tokenStatisticsDao.queryDetails(range, page, pageSize, target.userId);
+            TokenStatisticsPageResult result = tokenStatisticsDao.queryDetails(
+                    range, page, pageSize, usageScope.getQueryUserId());
             Map<String, Object> data = new LinkedHashMap<String, Object>();
             data.put("page", result.getPage());
             data.put("pageSize", result.getPageSize());
             data.put("total", result.getTotal());
             data.put("items", result.getRecords());
-            writeSuccess(resp, data);
-            return;
-        }
-        if ("sessions".equals(target.usageView)) {
-            TokenStatisticsSessionPageResult result = tokenStatisticsDao.querySessions(range, page, pageSize,
-                    parseNullableLong(req.getParameter("startMs")), parseNullableLong(req.getParameter("endMs")),
-                    target.userId);
-            Map<String, Object> data = new LinkedHashMap<String, Object>();
-            data.put("page", result.getPage());
-            data.put("pageSize", result.getPageSize());
-            data.put("total", result.getTotal());
-            data.put("items", result.getRecords());
+            putUsageScope(data, usageScope);
             writeSuccess(resp, data);
             return;
         }
         writeError(resp, HttpServletResponse.SC_NOT_FOUND, "RESOURCE_NOT_FOUND", "unknown token usage view");
     }
 
-    private Map<String, Object> overview(String range, TokenStatisticsSummary summary) {
+    private Map<String, Object> overview(String range, TokenStatisticsSummary summary,
+                                         TokenUsageAuthorizationService.TokenUsageScope usageScope) {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("range", range);
         data.put("totalPromptTokens", summary.getTotalPromptTokens());
@@ -200,7 +193,14 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         data.put("unpricedRecordCount", summary.getUnpricedRecordCount());
         data.put("recordCount", summary.getRecordCount());
         data.put("costsByCurrency", summary.getCostsByCurrency());
+        putUsageScope(data, usageScope);
         return data;
+    }
+
+    private static void putUsageScope(Map<String, Object> data,
+                                      TokenUsageAuthorizationService.TokenUsageScope usageScope) {
+        data.put("scope", usageScope.getScope().getValue());
+        data.put("targetUserId", usageScope.getTargetUserId());
     }
 
     private static List<Map<String, Object>> metadataList(List<LocalUserApiKey> keys) {
@@ -236,11 +236,19 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         if (contextPath != null && !contextPath.isEmpty() && path.startsWith(contextPath)) {
             path = path.substring(contextPath.length());
         }
-        String prefix = "/v1/integration/users/";
-        if (!path.startsWith(prefix)) {
+        String usersPrefix = "/v1/integration/users/";
+        String usagePrefix = "/v1/integration/token-usage/";
+        if (path.startsWith(usagePrefix)) {
+            String[] segments = path.substring(usagePrefix.length()).split("/", -1);
+            if (segments.length == 1 && !isBlank(segments[0])) {
+                return RequestTarget.usage(null, segments[0]);
+            }
             return null;
         }
-        String[] segments = path.substring(prefix.length()).split("/", -1);
+        if (!path.startsWith(usersPrefix)) {
+            return null;
+        }
+        String[] segments = path.substring(usersPrefix.length()).split("/", -1);
         if (segments.length < 2 || isBlank(segments[0])) {
             return null;
         }
@@ -327,10 +335,6 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         return value;
     }
 
-    private static Long parseNullableLong(String raw) {
-        return isBlank(raw) ? null : Long.parseLong(raw.trim());
-    }
-
     private void writeUserKeyError(HttpServletResponse resp, UserKeyException e) throws IOException {
         switch (e.getReason()) {
             case USER_NOT_FOUND:
@@ -350,6 +354,33 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
                 return;
             default:
                 writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "INVALID_REQUEST", "invalid local User Key request");
+        }
+    }
+
+    private void writeUsageAuthorizationError(HttpServletResponse resp,
+                                              TokenUsageAuthorizationService.TokenUsageAuthorizationException e)
+            throws IOException {
+        switch (e.getReason()) {
+            case CUIHUA_ACTOR_REQUIRED:
+                writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "CUIHUA_ACTOR_REQUIRED",
+                        "X-Cuihua-Actor-Id is required for token usage queries");
+                return;
+            case CUIHUA_ACTOR_NOT_FOUND:
+                writeError(resp, HttpServletResponse.SC_NOT_FOUND, "CUIHUA_ACTOR_NOT_FOUND",
+                        "Cuihua actor does not exist");
+                return;
+            case TARGET_USER_NOT_FOUND:
+                writeError(resp, HttpServletResponse.SC_NOT_FOUND, "TOKEN_USAGE_TARGET_USER_NOT_FOUND",
+                        "target user does not exist");
+                return;
+            case ACCESS_DENIED:
+            case ACTOR_ROLE_NOT_ALLOWED:
+                writeError(resp, HttpServletResponse.SC_FORBIDDEN, "TOKEN_USAGE_ACCESS_DENIED",
+                        "token usage access is denied");
+                return;
+            default:
+                writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "CUIHUA_ACTOR_REQUIRED",
+                        "Cuihua actor authentication is required");
         }
     }
 

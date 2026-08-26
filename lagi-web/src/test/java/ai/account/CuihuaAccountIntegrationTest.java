@@ -6,6 +6,7 @@ import ai.config.pojo.TokenLinkConfig;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.dao.ModelPriceDao;
 import ai.llm.pojo.TokenStatisticsRange;
+import ai.servlet.api.TokenUsageAuthorizationService;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import org.junit.jupiter.api.AfterAll;
@@ -26,9 +27,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CuihuaAccountIntegrationTest {
     private static final String USER_ID = "cuihua-user-1";
+    private static final String OTHER_USER_ID = "cuihua-user-2";
+    private static final String ADMIN_ID = "cuihua-admin-1";
     private static final String SYSTEM_ADMIN_ID = "cuihua-system-admin-1";
     private static final String PASSWORD = "correct-horse-battery-staple";
 
@@ -150,8 +154,43 @@ class CuihuaAccountIntegrationTest {
 
     @Test
     void integrationRangeAliasesMatchTheDocumentedWeekAndMonthValues() {
-        assertEquals(TokenStatisticsRange.LAST_7_DAYS, TokenStatisticsRange.fromQueryParam("week"));
-        assertEquals(TokenStatisticsRange.LAST_30_DAYS, TokenStatisticsRange.fromQueryParam("month"));
+        assertEquals(TokenStatisticsRange.THIS_WEEK, TokenStatisticsRange.fromQueryParam("week"));
+        assertEquals(TokenStatisticsRange.THIS_MONTH, TokenStatisticsRange.fromQueryParam("month"));
+        assertEquals(TokenStatisticsRange.LAST_7_DAYS, TokenStatisticsRange.fromQueryParam("7d"));
+        assertEquals(TokenStatisticsRange.LAST_30_DAYS, TokenStatisticsRange.fromQueryParam("30d"));
+    }
+
+    @Test
+    void tokenUsageScopeRestrictsUsersAndAllowsAdministratorsToInspectAllUsers() throws Exception {
+        TokenUsageAuthorizationService authorizationService = new TokenUsageAuthorizationService();
+
+        TokenUsageAuthorizationService.TokenUsageScope userDefault = authorizationService
+                .authorizeCuihuaActor(USER_ID, null);
+        assertEquals(TokenUsageAuthorizationService.Scope.SELF, userDefault.getScope());
+        assertEquals(USER_ID, userDefault.getQueryUserId());
+
+        TokenUsageAuthorizationService.TokenUsageAuthorizationException denied = assertThrows(
+                TokenUsageAuthorizationService.TokenUsageAuthorizationException.class,
+                () -> authorizationService.authorizeCuihuaActor(USER_ID, OTHER_USER_ID));
+        assertEquals(TokenUsageAuthorizationService.Reason.ACCESS_DENIED, denied.getReason());
+
+        TokenUsageAuthorizationService.TokenUsageScope adminDefault = authorizationService
+                .authorizeCuihuaActor(ADMIN_ID, null);
+        assertEquals(TokenUsageAuthorizationService.Scope.ALL, adminDefault.getScope());
+        assertNull(adminDefault.getQueryUserId());
+
+        TokenUsageAuthorizationService.TokenUsageScope adminUser = authorizationService
+                .authorizeCuihuaActor(ADMIN_ID, OTHER_USER_ID);
+        assertEquals(TokenUsageAuthorizationService.Scope.USER, adminUser.getScope());
+        assertEquals(OTHER_USER_ID, adminUser.getQueryUserId());
+
+        TokenUsageAuthorizationService.TokenUsageScope systemAdminDefault = authorizationService
+                .authorizeCuihuaActor(SYSTEM_ADMIN_ID, null);
+        assertEquals(TokenUsageAuthorizationService.Scope.ALL, systemAdminDefault.getScope());
+        TokenUsageAuthorizationService.TokenUsageAuthorizationException missingActor = assertThrows(
+                TokenUsageAuthorizationService.TokenUsageAuthorizationException.class,
+                () -> authorizationService.authorizeCuihuaActor(null, null));
+        assertEquals(TokenUsageAuthorizationService.Reason.CUIHUA_ACTOR_REQUIRED, missingActor.getReason());
     }
 
     private static void createLinkMindDatabase() throws SQLException {
@@ -184,6 +223,8 @@ class CuihuaAccountIntegrationTest {
             argon2.wipeArray(password);
         }
         insertUser(USER_ID, "user", "cuihua", "logged_in");
+        insertUser(OTHER_USER_ID, "user", "cuihua-user-2", "logged_in");
+        insertUser(ADMIN_ID, "admin", "cuihua-admin", "logged_in");
         insertUser(SYSTEM_ADMIN_ID, "system_admin", "system-admin", "logged_in");
     }
 

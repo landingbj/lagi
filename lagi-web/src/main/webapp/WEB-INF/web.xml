@@ -233,6 +233,10 @@
         <url-pattern>/v1/integration/users/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>cuihuaIntegration</servlet-name>
+        <url-pattern>/v1/integration/token-usage/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>tokenStatistics</servlet-name>
         <url-pattern>/v1/token-statistics/overview</url-pattern>
     </servlet-mapping>
@@ -244,11 +248,6 @@
         <servlet-name>tokenStatistics</servlet-name>
         <url-pattern>/v1/token-statistics/guard</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>tokenStatistics</servlet-name>
-        <url-pattern>/v1/token-statistics/sessions</url-pattern>
-    </servlet-mapping>
-
     <servlet>
         <servlet-name>asr</servlet-name>
         <servlet-class>ai.servlet.api.AudioApiServlet</servlet-class>
