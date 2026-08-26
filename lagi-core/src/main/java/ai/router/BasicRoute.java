@@ -110,6 +110,7 @@ public class BasicRoute extends Route {
         if (adapter != null && FreezingService.notFreezingAdapter(adapter)) {
             ChatCompletionRequest copy = new ChatCompletionRequest();
             BeanUtil.copyProperties(request, copy);
+            request.copyAccountAttributionTo(copy);
             try {
                 ChatCompletionResult result = SensitiveWordUtil.filter(adapter.completions(copy));
                 FreezingService.unfreezeAdapter(adapter);

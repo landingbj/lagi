@@ -71,6 +71,7 @@ public class McpAgent extends Agent<ChatCompletionRequest, ChatCompletionResult>
     public ChatCompletionResult communicate(ChatCompletionRequest data) {
         EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
         BeanUtil.copyProperties(data, chatCompletionRequest);
+        data.copyAccountAttributionTo(chatCompletionRequest);
         chatCompletionRequest.setStream(false);
         List<SyncMcpClient> mcpClients = this.mcpNames.stream().map(name -> McpManager.getInstance().getNewMcpClient(name))
                 .filter(Objects::nonNull)

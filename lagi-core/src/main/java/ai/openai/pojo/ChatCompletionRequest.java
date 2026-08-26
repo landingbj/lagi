@@ -102,4 +102,17 @@ public class ChatCompletionRequest {
         }
         return false;
     }
+
+    /**
+     * Copies the server-side account attribution used for local token usage
+     * statistics. These fields are transient by design and are therefore not
+     * copied by general-purpose bean mappers.
+     */
+    public void copyAccountAttributionTo(ChatCompletionRequest target) {
+        if (target == null) {
+            return;
+        }
+        target.setAccountUserId(accountUserId);
+        target.setAccountUserApiKeyId(accountUserApiKeyId);
+    }
 }

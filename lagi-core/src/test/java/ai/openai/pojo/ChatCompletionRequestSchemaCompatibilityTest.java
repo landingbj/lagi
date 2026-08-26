@@ -1,5 +1,7 @@
 package ai.openai.pojo;
 
+import ai.llm.pojo.EnhanceChatCompletionRequest;
+import cn.hutool.core.bean.BeanUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -51,5 +53,19 @@ class ChatCompletionRequestSchemaCompatibilityTest {
         Object patternProperties = env.getSchemaExtensions().get("patternProperties");
         assertTrue(patternProperties instanceof Map);
         assertEquals("string", ((Map<?, ?>) ((Map<?, ?>) patternProperties).get("^(.*)$")).get("type"));
+    }
+
+    @Test
+    void shouldPreserveAccountAttributionWhenCopyingForModelExecution() {
+        ChatCompletionRequest source = new ChatCompletionRequest();
+        source.setAccountUserId("cuihua-user-1");
+        source.setAccountUserApiKeyId(42L);
+
+        EnhanceChatCompletionRequest target = new EnhanceChatCompletionRequest();
+        BeanUtil.copyProperties(source, target);
+        source.copyAccountAttributionTo(target);
+
+        assertEquals("cuihua-user-1", target.getAccountUserId());
+        assertEquals(Long.valueOf(42L), target.getAccountUserApiKeyId());
     }
 }

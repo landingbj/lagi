@@ -358,6 +358,7 @@ public class LlmApiServlet extends BaseServlet {
                 .ip(ClientIpAddressUtil.getClientIpAddress(req))
                 .build();
         BeanUtil.copyProperties(chatCompletionRequest, enhance);
+        chatCompletionRequest.copyAccountAttributionTo(enhance);
         enhance.setKeyPoolSessionId(chatCompletionRequest.getKeyPoolSessionId());
         chatCompletionRequest = enhance;
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {

@@ -477,6 +477,7 @@ public class PromptCacheTrigger {
 
         EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
         BeanUtil.copyProperties(request, chatCompletionRequest);
+        request.copyAccountAttributionTo(chatCompletionRequest);
         chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
 
         ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
@@ -498,6 +499,7 @@ public class PromptCacheTrigger {
             ChatCompletionRequest request = completionsService.getCompletionsRequest(messages);
             EnhanceChatCompletionRequest chatCompletionRequest = new EnhanceChatCompletionRequest();
             BeanUtil.copyProperties(request, chatCompletionRequest);
+            request.copyAccountAttributionTo(chatCompletionRequest);
             chatCompletionRequest.setPriority(PriorityLock.LOW_PRIORITY);
             ChatCompletionResult result = completionsService.completions(chatCompletionRequest);
             answer = ChatCompletionUtil.getFirstAnswer(result);

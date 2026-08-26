@@ -55,6 +55,7 @@ public class LlmRouteService {
         for (ILlmAdapter adapter : ragAdapters) {
             ChatCompletionRequest copy = new ChatCompletionRequest();
             BeanUtil.copyProperties(chatCompletionRequest, copy);
+            chatCompletionRequest.copyAccountAttributionTo(copy);
             try {
                 ChatCompletionResult result = adapter.completions(copy);
                 FreezingService.unfreezeAdapter(adapter);
@@ -95,6 +96,7 @@ public class LlmRouteService {
             for (ILlmAdapter adapter : ragAdapters) {
                 ChatCompletionRequest copy = new ChatCompletionRequest();
                 BeanUtil.copyProperties(chatCompletionRequest, copy);
+                chatCompletionRequest.copyAccountAttributionTo(copy);
                 registerMapper(copy, adapter, contain);
             }
             IReducer qaReducer = new QaReducer();
@@ -124,6 +126,7 @@ public class LlmRouteService {
                 if (adapter != null && FreezingService.notFreezingAdapter(adapter)) {
                     ChatCompletionRequest copy = new ChatCompletionRequest();
                     BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    chatCompletionRequest.copyAccountAttributionTo(copy);
                     try {
                         ChatCompletionResult result = adapter.completions(copy);
                         FreezingService.unfreezeAdapter(adapter);
@@ -149,6 +152,7 @@ public class LlmRouteService {
                 if (appointAdapter != null && FreezingService.notFreezingAdapter(appointAdapter)) {
                     ChatCompletionRequest copy = new ChatCompletionRequest();
                     BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    chatCompletionRequest.copyAccountAttributionTo(copy);
                     try {
                         ChatCompletionResult result = appointAdapter.completions(copy);
                         FreezingService.unfreezeAdapter(appointAdapter);

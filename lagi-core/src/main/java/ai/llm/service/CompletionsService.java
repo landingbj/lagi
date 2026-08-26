@@ -169,6 +169,7 @@ public class CompletionsService implements ChatCompletion {
             for (ILlmAdapter adapter : adapters) {
                 ChatCompletionRequest copy = new ChatCompletionRequest();
                 BeanUtil.copyProperties(chatCompletionRequest, copy);
+                chatCompletionRequest.copyAccountAttributionTo(copy);
                 if (adapter != null) {
                     try {
                         Observable<ChatCompletionResult> result = adapter.streamCompletions(copy);
@@ -204,6 +205,7 @@ public class CompletionsService implements ChatCompletion {
                 if (adapter != null && notFreezingAdapter(adapter)) {
                     ChatCompletionRequest copy = new ChatCompletionRequest();
                     BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    chatCompletionRequest.copyAccountAttributionTo(copy);
                     try {
                         Observable<ChatCompletionResult> chatCompletionResultObservable = adapter.streamCompletions(copy);
                         unfreezeAdapter(adapter);
@@ -230,6 +232,7 @@ public class CompletionsService implements ChatCompletion {
                 if (appointAdapter != null && notFreezingAdapter(appointAdapter)) {
                     ChatCompletionRequest copy = new ChatCompletionRequest();
                     BeanUtil.copyProperties(chatCompletionRequest, copy);
+                    chatCompletionRequest.copyAccountAttributionTo(copy);
                     try {
                         Observable<ChatCompletionResult> result = appointAdapter.streamCompletions(copy);
                         unfreezeAdapter(appointAdapter);
