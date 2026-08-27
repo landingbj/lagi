@@ -13,7 +13,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -32,6 +37,7 @@ public class CuihuaAccountDao {
             + " id TEXT NOT NULL PRIMARY KEY,"
             + " role TEXT NOT NULL,"
             + " username TEXT NOT NULL,"
+            + " display_name TEXT,"
             + " password_hash TEXT NOT NULL,"
             + " user_login_status TEXT NOT NULL"
             + ")";
@@ -86,6 +92,52 @@ public class CuihuaAccountDao {
                 return rs.next() ? mapAvailableUser(rs) : null;
             }
         }
+    }
+
+    /** Resolves current display names for one page of shared TokenLink users. */
+    public Map<String, String> findUserDisplayNames(Collection<String> userIds) throws SQLException {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Set<String> normalizedIds = new LinkedHashSet<String>();
+        for (String userId : userIds) {
+            if (!isBlank(userId)) {
+                normalizedIds.add(userId.trim());
+            }
+        }
+        if (normalizedIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        StringBuilder sql = new StringBuilder("SELECT id, username, display_name FROM users WHERE id IN (");
+        for (int i = 0; i < normalizedIds.size(); i++) {
+            if (i > 0) {
+                sql.append(',');
+            }
+            sql.append('?');
+        }
+        sql.append(')');
+
+        Map<String, String> displayNames = new LinkedHashMap<String, String>();
+        try (Connection conn = TokenLinkDataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int index = 1;
+            for (String userId : normalizedIds) {
+                ps.setString(index++, userId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String displayName = rs.getString("display_name");
+                    if (isBlank(displayName)) {
+                        displayName = rs.getString("username");
+                    }
+                    if (!isBlank(displayName)) {
+                        displayNames.put(rs.getString("id"), displayName.trim());
+                    }
+                }
+            }
+        }
+        return displayNames;
     }
 
     /** The Alpha SSO rule: only a currently logged-in Cuihua system administrator may enter LinkMind. */

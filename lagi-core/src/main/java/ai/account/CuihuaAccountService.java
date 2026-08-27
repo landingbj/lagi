@@ -9,6 +9,8 @@ import de.mkammerer.argon2.Argon2Factory;
 import java.security.SecureRandom;
 import java.sql.SQLException;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.Map;
 
 /** Coordinates Cuihua-owned users, LinkMind-owned keys, and LinkMind sessions. */
 public class CuihuaAccountService {
@@ -119,6 +121,11 @@ public class CuihuaAccountService {
     /** Looks up an active shared TokenLink user without modifying Cuihua-owned data. */
     public CuihuaUser findActiveUserById(String userId) throws SQLException {
         return accountDao.findActiveUserById(userId);
+    }
+
+    /** Looks up current user-facing names without changing usage attribution. */
+    public Map<String, String> findUserDisplayNames(Collection<String> userIds) throws SQLException {
+        return accountDao.findUserDisplayNames(userIds);
     }
 
     private boolean verifyPassword(String encodedHash, String password) {

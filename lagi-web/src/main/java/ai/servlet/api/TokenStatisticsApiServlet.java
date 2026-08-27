@@ -5,6 +5,7 @@ import ai.account.CuihuaUser;
 import ai.account.LocalUserApiKey;
 import ai.account.LocalUserApiKeyService;
 import ai.llm.dao.TokenStatisticsDao;
+import ai.llm.pojo.TokenStatisticsDetail;
 import ai.llm.pojo.TokenStatisticsGuardInfo;
 import ai.llm.pojo.TokenStatisticsOverview;
 import ai.llm.pojo.TokenStatisticsPageResult;
@@ -13,6 +14,7 @@ import ai.llm.pojo.TokenStatisticsSummary;
 import ai.servlet.BaseServlet;
 import ai.servlet.UserServlet;
 import ai.utils.ApikeyUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -21,14 +23,19 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Per-user token usage API. The account is taken from an authenticated
  * local {@code lmk_} key or LinkMind browser session; it is never accepted as
  * a query parameter.
  */
+@Slf4j
 public class TokenStatisticsApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
@@ -115,9 +122,44 @@ public class TokenStatisticsApiServlet extends BaseServlet {
         int pageSize = parsePositiveInt(req.getParameter("pageSize"), 20);
         TokenStatisticsPageResult result = tokenStatisticsDao.queryDetails(
                 range, page, pageSize, usageScope.getQueryUserId());
+        populateUserDisplayNames(result.getRecords());
         result.setScope(usageScope.getScope().getValue());
         result.setTargetUserId(usageScope.getTargetUserId());
         writeJson(resp, gson.toJson(result));
+    }
+
+    private void populateUserDisplayNames(List<TokenStatisticsDetail> records) {
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+        Set<String> userIds = new LinkedHashSet<String>();
+        for (TokenStatisticsDetail record : records) {
+            if (record != null && optionalText(record.getUserId()) != null) {
+                userIds.add(record.getUserId().trim());
+            }
+        }
+
+        Map<String, String> displayNames = Collections.emptyMap();
+        try {
+            displayNames = accountService.findUserDisplayNames(userIds);
+        } catch (SQLException e) {
+            log.warn("read TokenLink user display names failed; falling back to user IDs", e);
+        }
+        applyUserDisplayNames(records, displayNames);
+    }
+
+    static void applyUserDisplayNames(List<TokenStatisticsDetail> records, Map<String, String> displayNames) {
+        if (records == null) {
+            return;
+        }
+        for (TokenStatisticsDetail record : records) {
+            if (record == null) {
+                continue;
+            }
+            String displayName = displayNames == null ? null : displayNames.get(record.getUserId());
+            String resolvedName = optionalText(displayName);
+            record.setUserDisplayName(resolvedName == null ? optionalText(record.getUserId()) : resolvedName);
+        }
     }
 
     private CuihuaUser resolveAuthenticatedUser(HttpServletRequest req) throws SQLException {

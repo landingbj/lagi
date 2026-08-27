@@ -47,6 +47,25 @@ function pickRowCost(row) {
     return Number.isFinite(value) ? value : null;
 }
 
+function pickTokenUsageUserName(row) {
+    if (!row) {
+        return '—';
+    }
+    const displayName = row.userDisplayName;
+    if (displayName != null && String(displayName).trim() !== '') {
+        return String(displayName).trim();
+    }
+    const userId = row.userId;
+    return userId != null && String(userId).trim() !== '' ? String(userId).trim() : '—';
+}
+
+function escapeTokenUsageHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 function formatTokenCost(value, currency) {
     if (value == null || value === '') {
         return 'CNY 0';
@@ -422,7 +441,7 @@ function renderTokenSessionTableFromApi(records, locale) {
         const row = records[i] || {};
         const createdAt = pickRowCreatedAt(row);
         const dateLabel = createdAt ? new Date(createdAt).toLocaleString(locale) : '—';
-        const userId = row.userId != null ? row.userId : '—';
+        const userName = pickTokenUsageUserName(row);
         const provider = row.provider || '—';
         const model = row.model || '—';
         const pt = Number(row.promptTokens != null ? row.promptTokens : 0);
@@ -432,7 +451,7 @@ function renderTokenSessionTableFromApi(records, locale) {
         const tr = `
             <tr>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${dateLabel}</td>
-                <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${userId}</td>
+                <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${escapeTokenUsageHtml(userName)}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${provider} / ${model}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${pt.toLocaleString(locale)}</td>
                 <td style="padding:10px;border-bottom:1px solid #f3f4f6;">${ct.toLocaleString(locale)}</td>

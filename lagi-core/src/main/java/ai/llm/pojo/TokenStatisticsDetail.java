@@ -22,6 +22,8 @@ public class TokenStatisticsDetail {
     private String provider;
     private String model;
     private String userId;
+    /** Current TokenLink display name, with username/user ID fallback applied by the API. */
+    private String userDisplayName;
     private Long userApiKeyId;
     private BigDecimal inputCost;
     private BigDecimal outputCost;

@@ -21,6 +21,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -99,6 +101,22 @@ class CuihuaAccountIntegrationTest {
 
         accountService.revokeSession(login.getSessionToken());
         assertNull(accountService.resolveSession(login.getSessionToken()));
+    }
+
+    @Test
+    void resolvesCurrentDisplayNamesAndFallsBackToUsernames() throws Exception {
+        setUserDisplayName(USER_ID, "  翠花  ");
+        setUserDisplayName(OTHER_USER_ID, "   ");
+        setUserDisplayName(ADMIN_ID, null);
+        setUserDisplayName(SYSTEM_ADMIN_ID, "");
+        Map<String, String> displayNames = new CuihuaAccountService().findUserDisplayNames(Arrays.asList(
+                USER_ID, OTHER_USER_ID, ADMIN_ID, SYSTEM_ADMIN_ID, "missing-user", USER_ID));
+
+        assertEquals("翠花", displayNames.get(USER_ID));
+        assertEquals("cuihua-user-2", displayNames.get(OTHER_USER_ID));
+        assertEquals("cuihua-admin", displayNames.get(ADMIN_ID));
+        assertEquals("system-admin", displayNames.get(SYSTEM_ADMIN_ID));
+        assertFalse(displayNames.containsKey("missing-user"));
     }
 
     @Test
@@ -280,21 +298,28 @@ class CuihuaAccountIntegrationTest {
         } finally {
             argon2.wipeArray(password);
         }
-        insertUser(USER_ID, "user", "cuihua", "logged_in");
-        insertUser(OTHER_USER_ID, "user", "cuihua-user-2", "logged_in");
-        insertUser(ADMIN_ID, "admin", "cuihua-admin", "logged_in");
-        insertUser(SYSTEM_ADMIN_ID, "system_admin", "system-admin", "logged_in");
+        insertUser(USER_ID, "user", "cuihua", "  翠花  ", "logged_in");
+        insertUser(OTHER_USER_ID, "user", "cuihua-user-2", "   ", "logged_in");
+        insertUser(ADMIN_ID, "admin", "cuihua-admin", null, "logged_in");
+        insertUser(SYSTEM_ADMIN_ID, "system_admin", "system-admin", "系统管理员", "logged_in");
     }
 
     private static void insertUser(String id, String role, String username, String loginStatus) throws SQLException {
+        insertUser(id, role, username, null, loginStatus);
+    }
+
+    private static void insertUser(String id, String role, String username, String displayName,
+                                   String loginStatus) throws SQLException {
         try (Connection conn = TokenLinkDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO users(id, role, username, password_hash, user_login_status) VALUES (?, ?, ?, ?, ?)")) {
+                     "INSERT INTO users(id, role, username, display_name, password_hash, user_login_status) "
+                             + "VALUES (?, ?, ?, ?, ?, ?)")) {
             ps.setString(1, id);
             ps.setString(2, role);
             ps.setString(3, username);
-            ps.setString(4, passwordHash);
-            ps.setString(5, loginStatus);
+            ps.setString(4, displayName);
+            ps.setString(5, passwordHash);
+            ps.setString(6, loginStatus);
             ps.executeUpdate();
         }
     }
@@ -303,6 +328,15 @@ class CuihuaAccountIntegrationTest {
         try (Connection conn = TokenLinkDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement("UPDATE users SET user_login_status = ? WHERE id = ?")) {
             ps.setString(1, status);
+            ps.setString(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    private static void setUserDisplayName(String userId, String displayName) throws SQLException {
+        try (Connection conn = TokenLinkDataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE users SET display_name = ? WHERE id = ?")) {
+            ps.setString(1, displayName);
             ps.setString(2, userId);
             ps.executeUpdate();
         }
