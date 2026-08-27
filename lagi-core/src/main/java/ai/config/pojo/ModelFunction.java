@@ -28,6 +28,8 @@ public class ModelFunction extends Backend {
     private Integer contextLength;
     @JsonProperty("token_charge")
     private Boolean tokenCharge;
+    @JsonProperty("input_compression")
+    private Boolean inputCompression;
     @JsonProperty("enable_auth")
     private Boolean enableAuth;
     @JsonProperty("enable_policy")
@@ -43,6 +45,7 @@ public class ModelFunction extends Backend {
             @JsonProperty("maxgen") Integer maxGen,
             @JsonProperty("context_length") Integer contextLength,
             @JsonProperty("token_charge") Boolean tokenCharge,
+            @JsonProperty("input_compression") Boolean inputCompression,
             @JsonProperty("enable_auth") Boolean enableAuth,
             @JsonProperty("enable_policy") Boolean enablePolicy,
             @JsonProperty("console_default_model") String consoleDefaultModel
@@ -53,6 +56,7 @@ public class ModelFunction extends Backend {
         this.maxGen = maxGen == null ? Integer.MAX_VALUE : maxGen ;
         this.contextLength = contextLength == null ? 4096 : contextLength;
         this.tokenCharge = tokenCharge != null && tokenCharge;
+        this.inputCompression = inputCompression == null || inputCompression;
         this.enableAuth = enableAuth != null && enableAuth;
         this.enablePolicy = enablePolicy == null || enablePolicy;
         this.consoleDefaultModel = consoleDefaultModel;

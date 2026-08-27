@@ -1,10 +1,10 @@
 package ai.llm.hook.impl;
 
 import ai.annotation.Component;
+import ai.annotation.ConditionalOnProperty;
 import ai.annotation.Order;
 import ai.common.ModelService;
 import ai.intent.impl.SampleIntentServiceImpl;
-import ai.intent.pojo.IntentResult;
 import ai.llm.hook.BeforeModel;
 import ai.llm.pojo.ModelContext;
 import ai.llm.responses.ResponseProtocolUtil;
@@ -17,12 +17,14 @@ import java.util.List;
 
 @Order
 @Component
+@ConditionalOnProperty(name = "functions.chat.input_compression", havingValue = "true")
 public class InputCompressionImpl implements BeforeModel {
 
     private final SampleIntentServiceImpl intentService = new SampleIntentServiceImpl();
 
     @Override
     public ChatCompletionRequest beforeModel(ModelContext context) {
+
         boolean responseProtocol = ResponseProtocolUtil.isResponseProtocol((ModelService) context.getAdapter());
         if(responseProtocol) {
             return context.getRequest();

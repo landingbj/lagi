@@ -91,6 +91,7 @@ functions:
   chat:
     route: best((landing&qwen),(kimi|chatgpt))
     filter: sensitive,priority,stopping,continue
+    input_compression: false
     backends:
       - backend: landing
         model: cascade
