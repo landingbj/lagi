@@ -72,14 +72,14 @@
 
     function formatCost(row) {
         if (!row || row.totalCost == null || row.totalCost === "") {
-            return "—";
+            return "CNY 0";
         }
         var cost = Number(row.totalCost);
         if (!isFinite(cost)) {
-            return "—";
+            return "CNY 0";
         }
         var value = cost.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
-        return (row.currency ? String(row.currency) + " " : "") + value;
+        return "CNY " + value;
     }
 
     function resolveLogsApiRange() {

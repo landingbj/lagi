@@ -144,12 +144,70 @@ class CuihuaAccountIntegrationTest {
         assertEquals(0, new BigDecimal("0.90000000").compareTo(priceDao
                 .calculate("Landing", "qwen-flash", 1_000_000L, 500_000L).getTotalCost()));
         assertEquals("CNY", priceDao.calculate("Landing", "qwen-flash", 1L, 1L).getCurrency());
-        assertNull(priceDao.calculate("Landing", "model-without-official-price", 1L, 1L));
+        assertEquals("CNY", priceDao.calculate("Landing", "model-without-official-price", 1L, 1L).getCurrency());
+        assertEquals("similar_model_estimate", priceDao
+                .calculate("Landing", "model-without-official-price", 1L, 1L).getPriceSource());
+        assertEquals(0, new BigDecimal("18.00000000").compareTo(priceDao
+                .calculate("openai", "gpt-5.4", 1_000_000L, 0L).getTotalCost()));
 
         priceDao.upsert("Alibaba", "qwen-flash", new BigDecimal("9"), new BigDecimal("18"),
                 "CNY", System.currentTimeMillis() - 1L);
         assertEquals(0, new BigDecimal("18.00000000").compareTo(priceDao
                 .calculate("Alibaba", "qwen-flash", 1_000_000L, 500_000L).getTotalCost()));
+    }
+
+    @Test
+    void historicalUsageCostsAreConvertedOrEstimatedInCny() throws Exception {
+        TokenStatisticsDao statisticsDao = new TokenStatisticsDao();
+        try (Connection conn = HikariDS.getConnection("saas");
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO llm_token_statistics (created_at, prompt_tokens, "
+                     + "completion_tokens, total_tokens, saved_tokens, provider, model, session_id, user_id, "
+                     + "input_cost, output_cost, total_cost, currency, price_source) "
+                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, System.currentTimeMillis());
+            ps.setLong(2, 1_000_000L);
+            ps.setLong(3, 0L);
+            ps.setLong(4, 1_000_000L);
+            ps.setLong(5, 0L);
+            ps.setString(6, "openai");
+            ps.setString(7, "gpt-5.4");
+            ps.setString(8, "legacy-usd-row");
+            ps.setString(9, USER_ID);
+            ps.setBigDecimal(10, new BigDecimal("2.5"));
+            ps.setBigDecimal(11, BigDecimal.ZERO);
+            ps.setBigDecimal(12, new BigDecimal("2.5"));
+            ps.setString(13, "USD");
+            ps.setString(14, "legacy");
+            ps.addBatch();
+
+            ps.setLong(1, System.currentTimeMillis());
+            ps.setLong(2, 1_000_000L);
+            ps.setLong(3, 0L);
+            ps.setLong(4, 1_000_000L);
+            ps.setLong(5, 0L);
+            ps.setString(6, "unlisted-provider");
+            ps.setString(7, "unlisted-mini-model");
+            ps.setString(8, "legacy-empty-row");
+            ps.setString(9, USER_ID);
+            ps.setNull(10, java.sql.Types.DECIMAL);
+            ps.setNull(11, java.sql.Types.DECIMAL);
+            ps.setNull(12, java.sql.Types.DECIMAL);
+            ps.setNull(13, java.sql.Types.VARCHAR);
+            ps.setNull(14, java.sql.Types.VARCHAR);
+            ps.addBatch();
+            ps.executeBatch();
+        }
+
+        assertTrue(statisticsDao.queryDetails(TokenStatisticsRange.ALL, 1, 100, USER_ID).getRecords().stream()
+                .anyMatch(record -> "gpt-5.4".equals(record.getModel())
+                        && "CNY".equals(record.getCurrency())
+                        && "usd_to_cny".equals(record.getPriceSource())
+                        && new BigDecimal("18.00000000").compareTo(record.getTotalCost()) == 0));
+        assertTrue(statisticsDao.queryDetails(TokenStatisticsRange.ALL, 1, 100, USER_ID).getRecords().stream()
+                .anyMatch(record -> "unlisted-mini-model".equals(record.getModel())
+                        && "CNY".equals(record.getCurrency())
+                        && "similar_model_estimate".equals(record.getPriceSource())
+                        && new BigDecimal("0.50000000").compareTo(record.getTotalCost()) == 0));
     }
 
     @Test

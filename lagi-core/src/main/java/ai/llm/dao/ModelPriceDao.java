@@ -14,6 +14,10 @@ import java.sql.Statement;
 
 /** Local model-price catalogue used for LinkMind usage estimates. */
 public class ModelPriceDao {
+    static final String CNY = "CNY";
+    /** Fixed reference exchange rate used to make local usage estimates comparable. */
+    static final BigDecimal CNY_PER_USD = new BigDecimal("7.20");
+    private static final BigDecimal MILLION = BigDecimal.valueOf(1_000_000L);
     private static final Object SCHEMA_LOCK = new Object();
     private static volatile boolean schemaReady;
 
@@ -22,27 +26,29 @@ public class ModelPriceDao {
     }
 
     public TokenUsageCost calculate(String provider, String model, long inputTokens, long outputTokens) {
-        if (isBlank(provider) || isBlank(model)) {
-            return null;
-        }
         try {
             ensureSchema();
-            ModelPrice price = findEffectivePrice(provider.trim(), model.trim());
+            String normalizedProvider = trimToEmpty(provider);
+            String normalizedModel = trimToEmpty(model);
+            ModelPrice price = !normalizedProvider.isEmpty() && !normalizedModel.isEmpty()
+                    ? findEffectivePrice(normalizedProvider, normalizedModel) : null;
+            String priceSource = "local_config";
             if (price == null || price.inputPricePerMillion == null) {
-                return null;
+                price = similarModelEstimate(normalizedModel);
+                priceSource = "similar_model_estimate";
             }
             BigDecimal inputCost = BigDecimal.valueOf(Math.max(0L, inputTokens))
                     .multiply(price.inputPricePerMillion)
-                    .divide(BigDecimal.valueOf(1_000_000L), 8, RoundingMode.HALF_UP);
+                    .divide(MILLION, 8, RoundingMode.HALF_UP);
             BigDecimal outputCost = BigDecimal.valueOf(Math.max(0L, outputTokens))
                     .multiply(price.outputPricePerMillion == null ? BigDecimal.ZERO : price.outputPricePerMillion)
-                    .divide(BigDecimal.valueOf(1_000_000L), 8, RoundingMode.HALF_UP);
+                    .divide(MILLION, 8, RoundingMode.HALF_UP);
             return TokenUsageCost.builder()
                     .inputCost(inputCost)
                     .outputCost(outputCost)
                     .totalCost(inputCost.add(outputCost).setScale(8, RoundingMode.HALF_UP))
-                    .currency(price.currency)
-                    .priceSource("local_config")
+                    .currency(CNY)
+                    .priceSource(priceSource)
                     .build();
         } catch (SQLException e) {
             return null;
@@ -67,13 +73,13 @@ public class ModelPriceDao {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, provider.trim());
             ps.setString(2, model.trim());
-            ps.setBigDecimal(3, inputPricePerMillion);
+            ps.setBigDecimal(3, toCny(inputPricePerMillion, currency));
             if (outputPricePerMillion == null) {
                 ps.setNull(4, java.sql.Types.DECIMAL);
             } else {
-                ps.setBigDecimal(4, outputPricePerMillion);
+                ps.setBigDecimal(4, toCny(outputPricePerMillion, currency));
             }
-            ps.setString(5, currency.trim().toUpperCase());
+            ps.setString(5, CNY);
             ps.setLong(6, effectiveAt);
             ps.setLong(7, now);
             ps.executeUpdate();
@@ -153,6 +159,7 @@ public class ModelPriceDao {
                 statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_linkmind_model_prices_lookup "
                         + "ON linkmind_model_prices(provider, model, effective_at)");
                 ModelPriceCatalog.seedDefaults(conn);
+                normalizeStoredPricesToCny(conn);
                 schemaReady = true;
             }
         }
@@ -160,6 +167,56 @@ public class ModelPriceDao {
 
     private static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    static BigDecimal toCny(BigDecimal amount, String currency) {
+        if (amount == null) {
+            return null;
+        }
+        String normalized = trimToEmpty(currency).toUpperCase();
+        if (normalized.isEmpty() || CNY.equals(normalized) || "RMB".equals(normalized)) {
+            return amount;
+        }
+        if ("USD".equals(normalized)) {
+            return amount.multiply(CNY_PER_USD).setScale(8, RoundingMode.HALF_UP);
+        }
+        throw new IllegalArgumentException("only CNY and USD prices are supported by the local price catalogue");
+    }
+
+    private static void normalizeStoredPricesToCny(Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE linkmind_model_prices SET input_price_per_million=input_price_per_million * ?, "
+                        + "output_price_per_million=CASE WHEN output_price_per_million IS NULL THEN NULL "
+                        + "ELSE output_price_per_million * ? END, currency=? "
+                        + "WHERE currency IS NOT NULL AND UPPER(currency)='USD'")) {
+            ps.setBigDecimal(1, CNY_PER_USD);
+            ps.setBigDecimal(2, CNY_PER_USD);
+            ps.setString(3, CNY);
+            ps.executeUpdate();
+        }
+    }
+
+    private static ModelPrice similarModelEstimate(String model) {
+        String normalized = trimToEmpty(model).toLowerCase();
+        if (normalized.contains("embedding") || normalized.contains("embed") || normalized.contains("bge")) {
+            return new ModelPrice(new BigDecimal("0.5"), BigDecimal.ZERO, CNY);
+        }
+        if (normalized.contains("nano") || normalized.contains("mini") || normalized.contains("lite")
+                || normalized.contains("flash") || normalized.contains("air")) {
+            return new ModelPrice(new BigDecimal("0.5"), new BigDecimal("2"), CNY);
+        }
+        if (normalized.contains("coder") || normalized.contains("code")) {
+            return new ModelPrice(new BigDecimal("1.5"), new BigDecimal("6"), CNY);
+        }
+        if (normalized.contains("opus") || normalized.contains("max") || normalized.contains("pro")
+                || normalized.contains("ultra")) {
+            return new ModelPrice(new BigDecimal("2.5"), new BigDecimal("10"), CNY);
+        }
+        return new ModelPrice(new BigDecimal("0.8"), new BigDecimal("3.2"), CNY);
+    }
+
+    private static String trimToEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private static final class ModelPrice {

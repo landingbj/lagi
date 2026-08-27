@@ -49,14 +49,14 @@ function pickRowCost(row) {
 
 function formatTokenCost(value, currency) {
     if (value == null || value === '') {
-        return '—';
+        return 'CNY 0';
     }
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) {
-        return '—';
+        return 'CNY 0';
     }
     const text = numeric.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
-    return (currency ? currency + ' ' : '') + text;
+    return 'CNY ' + text;
 }
 
 function formatOverviewCost(overview) {
@@ -65,7 +65,7 @@ function formatOverviewCost(overview) {
     }
     const costs = overview && Array.isArray(overview.costsByCurrency) ? overview.costsByCurrency : [];
     if (!costs.length) {
-        return '—';
+        return 'CNY 0';
     }
     return costs.map(function(item) {
         return formatTokenCost(item.totalCost, item.currency);
@@ -130,7 +130,7 @@ function loadTokenUsagePage() {
                     <button type="button" id="tokenRefreshBtn" style="padding: 6px 12px; border: none; border-radius: 999px; background: #1296db; color: #fff; font-size: 12px; cursor: pointer;">${tTextToken('刷新')}</button>
                 </div>
                 <div style="margin-top: 8px; color: #9ca3af; font-size: 12px;">
-                    ${tTextToken('费用按本机配置的模型价格计算；未配置官方价格的模型仅统计 Token，不展示成本。')}
+                    ${tTextToken('费用统一按人民币计算；未收录模型按同类模型价格估算。')}
                 </div>
             </div>
 

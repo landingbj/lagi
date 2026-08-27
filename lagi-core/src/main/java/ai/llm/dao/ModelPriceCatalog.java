@@ -12,16 +12,18 @@ import java.util.List;
  * Built-in reference prices for the models exposed by the SaaS catalogue.
  *
  * <p>Prices are the vendors' normal online, pay-as-you-go text prices per
- * million tokens, checked on 2026-08-25.  The current price table deliberately
+ * million tokens, checked on 2026-08-25. All amounts are persisted in CNY.
+ * USD source prices are converted at the fixed reference rate maintained by
+ * {@link ModelPriceDao#CNY_PER_USD}. The current price table deliberately
  * only has input and output columns.  It therefore does not represent cache
  * hits, long-context tiers, batch discounts, peak/off-peak rates, or
  * audio/image/video pricing.  The corresponding source URLs are maintained in
  * {@code docs/tokenlink_local_user_key_plan_and_api_zh.md}.</p>
  *
  * <p>Rows use {@code effective_at = 0} so a later operator-maintained row for
- * the same provider and model always takes precedence.  Missing rows are
- * intentionally not guessed: their token usage is still recorded without a
- * cost amount.</p>
+ * the same provider and model always takes precedence. Unknown models are
+ * priced separately by {@link ModelPriceDao} using a documented similar-model
+ * estimate, so usage records always have a CNY amount.</p>
  */
 final class ModelPriceCatalog {
     static final long BUILT_IN_EFFECTIVE_AT = 0L;
@@ -32,8 +34,12 @@ final class ModelPriceCatalog {
     }
 
     static void seedDefaults(Connection connection) throws SQLException {
-        String sql = "INSERT OR IGNORE INTO linkmind_model_prices(provider, model, input_price_per_million, "
-                + "output_price_per_million, currency, effective_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO linkmind_model_prices(provider, model, input_price_per_million, "
+                + "output_price_per_million, currency, effective_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) "
+                + "ON CONFLICT(provider, model, effective_at) DO UPDATE SET "
+                + "input_price_per_million=excluded.input_price_per_million, "
+                + "output_price_per_million=excluded.output_price_per_million, "
+                + "currency=excluded.currency, updated_at=excluded.updated_at";
         long now = System.currentTimeMillis();
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             for (Price price : DEFAULT_PRICES) {
@@ -163,9 +169,9 @@ final class ModelPriceCatalog {
         private Price(String provider, String model, String input, String output, String currency) {
             this.provider = provider;
             this.model = model;
-            this.inputPricePerMillion = new BigDecimal(input);
-            this.outputPricePerMillion = new BigDecimal(output);
-            this.currency = currency;
+            this.inputPricePerMillion = ModelPriceDao.toCny(new BigDecimal(input), currency);
+            this.outputPricePerMillion = ModelPriceDao.toCny(new BigDecimal(output), currency);
+            this.currency = ModelPriceDao.CNY;
         }
     }
 }

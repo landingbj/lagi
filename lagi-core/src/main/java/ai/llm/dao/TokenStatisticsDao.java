@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class TokenStatisticsDao {
     private static final int MAX_INSERT_RETRY = 3;
+    private static final Object COST_NORMALIZATION_LOCK = new Object();
 
     private static final String CREATE_SQL = ""
             + "CREATE TABLE IF NOT EXISTS llm_token_statistics ("
@@ -238,6 +239,7 @@ public class TokenStatisticsDao {
     }
 
     public TokenStatisticsSummary summarize(TokenStatisticsRange range, String userId) {
+        normalizeHistoricalCostsToCny();
         long[] bounds = millisBounds(range);
         long start = bounds[0];
         long end = bounds[1];
@@ -302,6 +304,7 @@ public class TokenStatisticsDao {
     }
 
     public TokenStatisticsPageResult queryDetails(TokenStatisticsRange range, int page, int pageSize, String userId) {
+        normalizeHistoricalCostsToCny();
         int p = Math.max(1, page);
         int size = Math.min(500, Math.max(1, pageSize));
         long[] bounds = millisBounds(range);
@@ -396,6 +399,7 @@ public class TokenStatisticsDao {
     }
 
     public TokenStatisticsSessionPageResult querySessions(TokenStatisticsRange range, int page, int pageSize, Long startMs, Long endMs, String userId) {
+        normalizeHistoricalCostsToCny();
         int p = Math.max(1, page);
         int size = Math.min(500, Math.max(1, pageSize));
         long[] bounds = millisBounds(range);
@@ -547,6 +551,106 @@ public class TokenStatisticsDao {
 
     private static boolean hasUserId(String userId) {
         return userId != null && !userId.trim().isEmpty();
+    }
+
+    /**
+     * Makes pre-existing statistics consistent with the local CNY-only price
+     * catalogue. Old USD rows retain their original amount and are converted
+     * at the configured reference rate; rows without an amount are repriced
+     * through the current catalogue or its similar-model fallback.
+     */
+    private void normalizeHistoricalCostsToCny() {
+        synchronized (COST_NORMALIZATION_LOCK) {
+            List<HistoricalCostRecord> records = new ArrayList<HistoricalCostRecord>();
+            String selectSql = "SELECT id, prompt_tokens, completion_tokens, provider, model, input_cost, output_cost, "
+                    + "total_cost, currency FROM llm_token_statistics "
+                    + "WHERE total_cost IS NULL OR currency IS NULL OR UPPER(currency) <> 'CNY'";
+            try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+                 PreparedStatement ps = conn.prepareStatement(selectSql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    records.add(new HistoricalCostRecord(
+                            rs.getLong("id"), rs.getLong("prompt_tokens"), rs.getLong("completion_tokens"),
+                            rs.getString("provider"), rs.getString("model"), rs.getBigDecimal("input_cost"),
+                            rs.getBigDecimal("output_cost"), rs.getBigDecimal("total_cost"), rs.getString("currency")));
+                }
+            } catch (SQLException e) {
+                log.error("query historical token costs for CNY normalization failed", e);
+                return;
+            }
+            if (records.isEmpty()) {
+                return;
+            }
+
+            ModelPriceDao priceDao = new ModelPriceDao();
+            try {
+                priceDao.initialize();
+                try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+                     PreparedStatement ps = conn.prepareStatement("UPDATE llm_token_statistics SET input_cost=?, "
+                             + "output_cost=?, total_cost=?, currency=?, price_source=? WHERE id=?")) {
+                    for (HistoricalCostRecord record : records) {
+                        TokenUsageCost normalized = record.isUsdPriced()
+                                ? record.convertUsdToCny()
+                                : priceDao.calculate(record.provider, record.model,
+                                        record.promptTokens, record.completionTokens);
+                        if (normalized == null) {
+                            log.warn("skip CNY normalization for token statistic {} because the price catalogue is unavailable",
+                                    record.id);
+                            continue;
+                        }
+                        setNullableDecimal(ps, 1, normalized.getInputCost());
+                        setNullableDecimal(ps, 2, normalized.getOutputCost());
+                        setNullableDecimal(ps, 3, normalized.getTotalCost());
+                        ps.setString(4, ModelPriceDao.CNY);
+                        ps.setString(5, normalized.getPriceSource());
+                        ps.setLong(6, record.id);
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            } catch (SQLException e) {
+                log.error("normalize historical token costs to CNY failed", e);
+            }
+        }
+    }
+
+    private static final class HistoricalCostRecord {
+        private final long id;
+        private final long promptTokens;
+        private final long completionTokens;
+        private final String provider;
+        private final String model;
+        private final BigDecimal inputCost;
+        private final BigDecimal outputCost;
+        private final BigDecimal totalCost;
+        private final String currency;
+
+        private HistoricalCostRecord(long id, long promptTokens, long completionTokens, String provider, String model,
+                                     BigDecimal inputCost, BigDecimal outputCost, BigDecimal totalCost, String currency) {
+            this.id = id;
+            this.promptTokens = promptTokens;
+            this.completionTokens = completionTokens;
+            this.provider = provider;
+            this.model = model;
+            this.inputCost = inputCost;
+            this.outputCost = outputCost;
+            this.totalCost = totalCost;
+            this.currency = currency;
+        }
+
+        private boolean isUsdPriced() {
+            return totalCost != null && currency != null && "USD".equalsIgnoreCase(currency.trim());
+        }
+
+        private TokenUsageCost convertUsdToCny() {
+            return TokenUsageCost.builder()
+                    .inputCost(ModelPriceDao.toCny(inputCost, currency))
+                    .outputCost(ModelPriceDao.toCny(outputCost, currency))
+                    .totalCost(ModelPriceDao.toCny(totalCost, currency))
+                    .currency(ModelPriceDao.CNY)
+                    .priceSource("usd_to_cny")
+                    .build();
+        }
     }
 
     private List<TokenStatisticsCurrencyCost> summarizeCosts(long start, long end, String userId) {
