@@ -9,6 +9,10 @@ import ai.llm.pojo.TokenStatisticsRange;
 import ai.llm.pojo.TokenStatisticsSessionItem;
 import ai.llm.pojo.TokenStatisticsSessionPageResult;
 import ai.llm.pojo.TokenStatisticsSummary;
+import ai.llm.pojo.TokenStatisticsTrendBucket;
+import ai.llm.pojo.TokenStatisticsUserTrend;
+import ai.llm.pojo.TokenStatisticsUserModelUsage;
+import ai.llm.pojo.TokenStatisticsUserUsage;
 import ai.llm.pojo.TokenUsageCost;
 import ai.utils.AiGlobal;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +27,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -294,6 +299,235 @@ public class TokenStatisticsDao {
                 .dailyAvgTokensConsumed(0)
                 .recordCount(0)
                 .build();
+    }
+
+    /** Aggregates usage by attributed user for an exact half-open time window. */
+    public List<TokenStatisticsUserUsage> queryUserUsage(long startMs, long endMsExclusive, String userId) {
+        return queryUserUsage(startMs, endMsExclusive, userId, null, Collections.<String>emptyList());
+    }
+
+    /** Aggregates usage by user after applying the configured platform selection. */
+    public List<TokenStatisticsUserUsage> queryUserUsage(long startMs, long endMsExclusive, String userId,
+                                                         String provider, List<String> configuredProviders) {
+        normalizeHistoricalCostsToCny();
+        boolean scoped = hasUserId(userId);
+        ProviderSqlFilter providerFilter = providerSqlFilter(provider, configuredProviders);
+        String normalizedUser = "CASE WHEN user_id IS NULL OR TRIM(user_id) = '' "
+                + "THEN NULL ELSE TRIM(user_id) END";
+        String sql = "SELECT " + normalizedUser + " AS usage_user_id, COUNT(1) AS request_count, "
+                + "COALESCE(SUM(prompt_tokens),0) AS prompt_tokens, "
+                + "COALESCE(SUM(completion_tokens),0) AS completion_tokens, "
+                + "COALESCE(SUM(total_tokens),0) AS total_tokens, "
+                + "SUM(CASE WHEN total_cost IS NOT NULL AND UPPER(currency) = 'CNY' THEN total_cost END) AS total_cost, "
+                + "COALESCE(SUM(CASE WHEN total_cost IS NOT NULL AND UPPER(currency) = 'CNY' "
+                + "THEN 1 ELSE 0 END),0) AS priced_record_count, "
+                + "COALESCE(SUM(CASE WHEN total_cost IS NULL OR currency IS NULL OR UPPER(currency) <> 'CNY' "
+                + "THEN 1 ELSE 0 END),0) AS unpriced_record_count "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ? AND total_tokens > 0"
+                + (scoped ? " AND user_id = ?" : "")
+                + providerFilter.getSql()
+                + " GROUP BY " + normalizedUser;
+        List<TokenStatisticsUserUsage> result = new ArrayList<TokenStatisticsUserUsage>();
+        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, startMs);
+            ps.setLong(2, endMsExclusive);
+            if (scoped) {
+                ps.setString(3, userId.trim());
+            }
+            providerFilter.bind(ps, scoped ? 4 : 3);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long pricedRecordCount = rs.getLong("priced_record_count");
+                    result.add(TokenStatisticsUserUsage.builder()
+                            .userId(rs.getString("usage_user_id"))
+                            .requestCount(rs.getLong("request_count"))
+                            .promptTokens(rs.getLong("prompt_tokens"))
+                            .completionTokens(rs.getLong("completion_tokens"))
+                            .totalTokens(rs.getLong("total_tokens"))
+                            .totalCost(rs.getBigDecimal("total_cost"))
+                            .currency(pricedRecordCount > 0L ? ModelPriceDao.CNY : null)
+                            .pricedRecordCount(pricedRecordCount)
+                            .unpricedRecordCount(rs.getLong("unpriced_record_count"))
+                            .build());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("query token statistics by user failed", e);
+        }
+        return result;
+    }
+
+    /** Aggregates exact-window usage by calendar bucket and user for later identity filtering. */
+    public List<TokenStatisticsUserTrend> queryUserTrend(long startMs, long endMsExclusive, String userId,
+                                                         TokenStatisticsTrendBucket bucket) {
+        return queryUserTrend(startMs, endMsExclusive, userId, bucket,
+                null, Collections.<String>emptyList());
+    }
+
+    /** Aggregates trend buckets after applying the configured platform selection. */
+    public List<TokenStatisticsUserTrend> queryUserTrend(long startMs, long endMsExclusive, String userId,
+                                                         TokenStatisticsTrendBucket bucket, String provider,
+                                                         List<String> configuredProviders) {
+        normalizeHistoricalCostsToCny();
+        boolean scoped = hasUserId(userId);
+        ProviderSqlFilter providerFilter = providerSqlFilter(provider, configuredProviders);
+        String normalizedUser = "CASE WHEN user_id IS NULL OR TRIM(user_id) = '' "
+                + "THEN NULL ELSE TRIM(user_id) END";
+        String bucketExpression = trendBucketExpression(bucket);
+        String sql = "SELECT " + bucketExpression + " AS usage_bucket, " + normalizedUser
+                + " AS usage_user_id, COUNT(1) AS request_count, "
+                + "COALESCE(SUM(total_tokens),0) AS total_tokens, "
+                + "SUM(CASE WHEN total_cost IS NOT NULL AND UPPER(currency) = 'CNY' THEN total_cost END) AS total_cost, "
+                + "COALESCE(SUM(CASE WHEN total_cost IS NOT NULL AND UPPER(currency) = 'CNY' "
+                + "THEN 1 ELSE 0 END),0) AS priced_record_count, "
+                + "COALESCE(SUM(CASE WHEN total_cost IS NULL OR currency IS NULL OR UPPER(currency) <> 'CNY' "
+                + "THEN 1 ELSE 0 END),0) AS unpriced_record_count "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ? AND total_tokens > 0"
+                + (scoped ? " AND user_id = ?" : "")
+                + providerFilter.getSql()
+                + " GROUP BY " + bucketExpression + ", " + normalizedUser
+                + " ORDER BY usage_bucket ASC";
+        List<TokenStatisticsUserTrend> result = new ArrayList<TokenStatisticsUserTrend>();
+        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, startMs);
+            ps.setLong(2, endMsExclusive);
+            if (scoped) {
+                ps.setString(3, userId.trim());
+            }
+            providerFilter.bind(ps, scoped ? 4 : 3);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long pricedRecordCount = rs.getLong("priced_record_count");
+                    result.add(TokenStatisticsUserTrend.builder()
+                            .bucket(rs.getString("usage_bucket"))
+                            .userId(rs.getString("usage_user_id"))
+                            .requestCount(rs.getLong("request_count"))
+                            .totalTokens(rs.getLong("total_tokens"))
+                            .totalCost(rs.getBigDecimal("total_cost"))
+                            .currency(pricedRecordCount > 0L ? ModelPriceDao.CNY : null)
+                            .pricedRecordCount(pricedRecordCount)
+                            .unpricedRecordCount(rs.getLong("unpriced_record_count"))
+                            .build());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("query token statistics trend by user failed", e);
+        }
+        return result;
+    }
+
+    /** Returns distinct non-blank models by raw user for accurate user and dashboard model counts. */
+    public List<TokenStatisticsUserModelUsage> queryUserModels(long startMs, long endMsExclusive, String userId,
+                                                               String provider,
+                                                               List<String> configuredProviders) {
+        boolean scoped = hasUserId(userId);
+        ProviderSqlFilter providerFilter = providerSqlFilter(provider, configuredProviders);
+        String normalizedUser = "CASE WHEN user_id IS NULL OR TRIM(user_id) = '' "
+                + "THEN NULL ELSE TRIM(user_id) END";
+        String sql = "SELECT " + normalizedUser + " AS usage_user_id, TRIM(model) AS usage_model "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?"
+                + " AND total_tokens > 0 AND model IS NOT NULL AND TRIM(model) <> ''"
+                + (scoped ? " AND user_id = ?" : "")
+                + providerFilter.getSql()
+                + " GROUP BY " + normalizedUser + ", TRIM(model)";
+        List<TokenStatisticsUserModelUsage> result = new ArrayList<TokenStatisticsUserModelUsage>();
+        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, startMs);
+            ps.setLong(2, endMsExclusive);
+            if (scoped) {
+                ps.setString(3, userId.trim());
+            }
+            providerFilter.bind(ps, scoped ? 4 : 3);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(TokenStatisticsUserModelUsage.builder()
+                            .userId(rs.getString("usage_user_id"))
+                            .model(rs.getString("usage_model"))
+                            .build());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("query token statistics models by user failed", e);
+        }
+        return result;
+    }
+
+    static ProviderSqlFilter providerSqlFilter(String provider, List<String> configuredProviders) {
+        String selected = normalizeText(provider);
+        if (selected == null) {
+            return new ProviderSqlFilter("", Collections.<String>emptyList());
+        }
+        if (!"__other__".equals(selected)) {
+            return new ProviderSqlFilter(" AND LOWER(TRIM(provider)) = LOWER(?)",
+                    Collections.singletonList(selected));
+        }
+        List<String> configured = new ArrayList<String>();
+        if (configuredProviders != null) {
+            for (String configuredProvider : configuredProviders) {
+                String normalized = normalizeText(configuredProvider);
+                if (normalized != null && !containsIgnoreCase(configured, normalized)) {
+                    configured.add(normalized);
+                }
+            }
+        }
+        if (configured.isEmpty()) {
+            return new ProviderSqlFilter("", Collections.<String>emptyList());
+        }
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < configured.size(); i++) {
+            if (i > 0) {
+                placeholders.append(',');
+            }
+            placeholders.append('?');
+        }
+        return new ProviderSqlFilter(" AND (provider IS NULL OR TRIM(provider) = '' "
+                + "OR LOWER(TRIM(provider)) NOT IN (" + placeholders + "))", configured);
+    }
+
+    private static boolean containsIgnoreCase(List<String> values, String candidate) {
+        for (String value : values) {
+            if (value.equalsIgnoreCase(candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String normalizeText(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    static final class ProviderSqlFilter {
+        private final String sql;
+        private final List<String> parameters;
+
+        private ProviderSqlFilter(String sql, List<String> parameters) {
+            this.sql = sql;
+            this.parameters = parameters;
+        }
+
+        String getSql() {
+            return sql;
+        }
+
+        void bind(PreparedStatement ps, int startIndex) throws SQLException {
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setString(startIndex + i, parameters.get(i));
+            }
+        }
+    }
+
+    private static String trendBucketExpression(TokenStatisticsTrendBucket bucket) {
+        if (bucket == TokenStatisticsTrendBucket.HOUR) {
+            return "strftime('%Y-%m-%dT%H:00:00', created_at / 1000, 'unixepoch', 'localtime')";
+        }
+        if (bucket == TokenStatisticsTrendBucket.MONTH) {
+            return "strftime('%Y-%m-01T00:00:00', created_at / 1000, 'unixepoch', 'localtime')";
+        }
+        return "strftime('%Y-%m-%dT00:00:00', created_at / 1000, 'unixepoch', 'localtime')";
     }
 
     /**

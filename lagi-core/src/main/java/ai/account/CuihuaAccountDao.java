@@ -96,6 +96,22 @@ public class CuihuaAccountDao {
 
     /** Resolves current display names for one page of shared TokenLink users. */
     public Map<String, String> findUserDisplayNames(Collection<String> userIds) throws SQLException {
+        Map<String, CuihuaUserIdentity> identities = findUserIdentities(userIds);
+        Map<String, String> displayNames = new LinkedHashMap<String, String>();
+        for (CuihuaUserIdentity identity : identities.values()) {
+            String displayName = identity.getDisplayName();
+            if (isBlank(displayName)) {
+                displayName = identity.getUsername();
+            }
+            if (!isBlank(displayName)) {
+                displayNames.put(identity.getUserId(), displayName.trim());
+            }
+        }
+        return displayNames;
+    }
+
+    /** Resolves current display name and login name for usage aggregation. */
+    public Map<String, CuihuaUserIdentity> findUserIdentities(Collection<String> userIds) throws SQLException {
         if (userIds == null || userIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -118,7 +134,7 @@ public class CuihuaAccountDao {
         }
         sql.append(')');
 
-        Map<String, String> displayNames = new LinkedHashMap<String, String>();
+        Map<String, CuihuaUserIdentity> identities = new LinkedHashMap<String, CuihuaUserIdentity>();
         try (Connection conn = TokenLinkDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int index = 1;
@@ -127,17 +143,16 @@ public class CuihuaAccountDao {
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    String displayName = rs.getString("display_name");
-                    if (isBlank(displayName)) {
-                        displayName = rs.getString("username");
-                    }
-                    if (!isBlank(displayName)) {
-                        displayNames.put(rs.getString("id"), displayName.trim());
-                    }
+                    String userId = rs.getString("id");
+                    identities.put(userId, CuihuaUserIdentity.builder()
+                            .userId(userId)
+                            .username(optionalText(rs.getString("username")))
+                            .displayName(optionalText(rs.getString("display_name")))
+                            .build());
                 }
             }
         }
-        return displayNames;
+        return identities;
     }
 
     /** The Alpha SSO rule: only a currently logged-in Cuihua system administrator may enter LinkMind. */
@@ -307,5 +322,9 @@ public class CuihuaAccountDao {
 
     private static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private static String optionalText(String value) {
+        return isBlank(value) ? null : value.trim();
     }
 }

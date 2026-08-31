@@ -242,6 +242,10 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>tokenStatistics</servlet-name>
+        <url-pattern>/v1/token-statistics/dashboard</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>tokenStatistics</servlet-name>
         <url-pattern>/v1/token-statistics/details</url-pattern>
     </servlet-mapping>
     <servlet-mapping>

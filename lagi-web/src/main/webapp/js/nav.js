@@ -37,10 +37,7 @@ const ALWAYS_LOGIN_REQUIRED_NAV_KEYS = [
 ];
 
 function isUserLoggedIn() {
-    if (typeof getCookie !== 'function') {
-        return false;
-    }
-    return !!getCookie('lagi-auth');
+    return !!(window.linkMindAuthState && window.linkMindAuthState.authenticated);
 }
 
 function promptLoginIfNotAuthenticated(event) {
@@ -529,12 +526,21 @@ promptNavs = [
         subNavs: [
             {
                 id: 14,
-                key: 'tokenUsage',
-                title: '用量概览',
+                key: 'costOverview',
+                title: '费用概览',
                 icon1: legacySocialSub.icon1 || '',
                 icon2: legacySocialSub.icon2 || '',
-                prompt: '用于查看当前平台的 tokens 使用情况与消耗趋势。',
-                operation: '点击后可查看 tokens 相关说明与使用引导。'
+                prompt: '用于查看平台和用户的估算费用及变化趋势。',
+                operation: '点击后可查看费用趋势与用户费用排行。'
+            },
+            {
+                id: 21,
+                key: 'usageStatistics',
+                title: '用量统计',
+                icon1: legacySocialSub.icon1 || '',
+                icon2: legacySocialSub.icon2 || '',
+                prompt: '用于查看平台和用户的模型调用与 Token 消耗。',
+                operation: '点击后可查看调用、模型与 Token 用量统计。'
             },
             {
                 id: 15,
@@ -1999,7 +2005,8 @@ function getPromptDialog(id, subId) {
     
     // 如果当前在特殊页面，且要切换到其他子菜单，先重置状态
     if ((isTokenUsagePage || isRequestLogsPage || isCreditsPage || isApiKeysPage || isFencePage || isFilterConfigPage)
-        && subId !== 14 && subId !== 15 && subId !== 16 && subId !== 18 && subId !== 19 && subId !== 20) {
+        && subId !== 14 && subId !== 15 && subId !== 16 && subId !== 18 && subId !== 19 && subId !== 20
+        && subId !== 21) {
         // 清空特殊页面状态
         $('#item-content').empty();
         // 重置所有可能被隐藏/修改的元素
@@ -2017,7 +2024,12 @@ function getPromptDialog(id, subId) {
     resetChatRouteState();
 
     if (subId === 14) {
-        loadTokenUsagePage();
+        loadCostOverviewPage();
+        setLeafNavActiveByNavId(subId);
+        return;
+    }
+    if (subId === 21) {
+        loadUsageStatisticsPage();
         setLeafNavActiveByNavId(subId);
         return;
     }

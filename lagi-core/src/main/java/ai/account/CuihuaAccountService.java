@@ -128,6 +128,11 @@ public class CuihuaAccountService {
         return accountDao.findUserDisplayNames(userIds);
     }
 
+    /** Looks up current display and login names without changing usage attribution. */
+    public Map<String, CuihuaUserIdentity> findUserIdentities(Collection<String> userIds) throws SQLException {
+        return accountDao.findUserIdentities(userIds);
+    }
+
     private boolean verifyPassword(String encodedHash, String password) {
         if (isBlank(encodedHash) || !encodedHash.startsWith("$argon2id$")) {
             return false;

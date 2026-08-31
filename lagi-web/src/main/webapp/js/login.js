@@ -1,3 +1,9 @@
+window.linkMindAuthState = window.linkMindAuthState || {
+    authenticated: false,
+    userId: '',
+    username: ''
+};
+
 $(document).ready(function () {
 
     document.getElementById('login-form').addEventListener('keydown', function(event) {
@@ -50,15 +56,41 @@ function setUserMenuVisible(visible) {
     }
 }
 
+function setAuthenticatedUser(user) {
+    const authenticated = !!(user && user.userId);
+    window.linkMindAuthState.authenticated = authenticated;
+    window.linkMindAuthState.userId = authenticated ? String(user.userId) : '';
+    window.linkMindAuthState.username = authenticated ? user.username : '';
+
+    const userimgStatus = document.querySelector('#user-img span');
+    const userImg = document.querySelector('#user-img img');
+    if (authenticated) {
+        localStorage.setItem('userId', window.linkMindAuthState.userId);
+        $('#user_box').text(window.linkMindAuthState.username);
+        userImg.src = 'images/avatar.jpg';
+        userimgStatus.style.visibility = 'visible';
+        setUserMenuVisible(true);
+        if (typeof window.registerInteractionUserOnLogin === 'function') {
+            window.registerInteractionUserOnLogin();
+        }
+        return;
+    }
+
+    localStorage.removeItem('userId');
+    $('#user_box').text('登录');
+    userImg.src = 'images/rj.png';
+    userimgStatus.style.visibility = 'hidden';
+    setUserMenuVisible(false);
+}
+
 function toggleUserMenu(e) {
     var ev = e || window.event;
     if (ev && ev.stopPropagation) {
         ev.stopPropagation();
     }
-    let auth = getCookie('lagi-auth');
     const userimgStatus = document.querySelector('#user-img span');
     const userImg = document.querySelector('#user-img img');
-    if (!auth) {
+    if (!window.linkMindAuthState.authenticated) {
         openModal(ev);
         return;
     }
@@ -143,41 +175,28 @@ function updateCaptcha(imageElement) {
 }
 
 function authLoginCookie(onComplete) {
-    const auth = getCookie('lagi-auth');
-    if (auth) {
-        $.ajax({
-            type: "POST",
-            contentType: "application/json;charset=utf-8",
-            url: "/user/authLoginCookie",
-            data: JSON.stringify({"cookieValue": auth}),
-            success: function (data) {
-                if (data.status === 'success') {
-                    localStorage.setItem('userId', data.data.userId);
-                    $('#user_box').html(data.data.username);
-                    const userimgStatus = document.querySelector('#user-img span');
-                    const userImg = document.querySelector('#user-img img');
-                    userImg.src = 'images/avatar.jpg';
-                    userimgStatus.style.visibility = 'visible';
-                    setUserMenuVisible(true);
-                    if (typeof window.registerInteractionUserOnLogin === 'function') {
-                        window.registerInteractionUserOnLogin();
-                    }
-                } else {
-                    setUserMenuVisible(false);
-                }
-                if (typeof onComplete === 'function') {
-                    onComplete(data);
-                }
-            },
-            error: function (data) {
-                if (typeof onComplete === 'function') {
-                    onComplete(data);
-                }
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/user/authLoginCookie",
+        data: JSON.stringify({}),
+        success: function (data) {
+            if (data.status === 'success') {
+                setAuthenticatedUser(data.data);
+            } else {
+                setAuthenticatedUser(null);
             }
-        });
-    } else if (typeof onComplete === 'function') {
-        onComplete();
-    }
+            if (typeof onComplete === 'function') {
+                onComplete(data);
+            }
+        },
+        error: function (data) {
+            setAuthenticatedUser(null);
+            if (typeof onComplete === 'function') {
+                onComplete(data);
+            }
+        }
+    });
 }
 
 
@@ -190,9 +209,8 @@ function getCategory() {
         currentCategory = categoryTmp;
     }
     let url = "user/getRandomCategory?currentCategory=" + currentCategory;
-    const auth = getCookie('lagi-auth');
-    if(auth) {
-        url +="&userId=" + getCookie('userId');
+    if (window.linkMindAuthState.authenticated && window.linkMindAuthState.userId) {
+        url += "&userId=" + encodeURIComponent(window.linkMindAuthState.userId);
     }
     $.ajax({
         type: "GET",
@@ -241,10 +259,9 @@ function submitLogin() {
         data: JSON.stringify({"username": username, "password": password, "captcha": captcha}),
         success: function (data) {
             if (data.status === 'success') {
-                $('#user_box').html(data.data.username);
+                setAuthenticatedUser(data.data);
                 closeModal();
-                location.reload(true);
-
+                getCategory();
             } else {
                 errorDiv.style.display = 'block';
                 if (data.msg !== undefined) {
@@ -263,15 +280,19 @@ function submitLogin() {
     });
 }
 
-function deleteCookie(cname) {
-    document.cookie = cname + '=; Max-Age=0; path=/; domain=' + location.hostname;
-}
-
 function logout() {
-    deleteCookie('lagi-auth');
-    deleteCookie('userId');
-    localStorage.removeItem('userId');
-    window.location.reload();
+    $.ajax({
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        url: "/user/logout",
+        data: JSON.stringify({}),
+        success: function (data) {
+            if (data.status === 'success') {
+                setAuthenticatedUser(null);
+                window.location.reload();
+            }
+        }
+    });
 }
 
 function validateRegisterForm() {

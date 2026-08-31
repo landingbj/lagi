@@ -6,6 +6,10 @@ import ai.config.pojo.TokenLinkConfig;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.dao.ModelPriceDao;
 import ai.llm.pojo.TokenStatisticsRange;
+import ai.llm.pojo.TokenStatisticsTrendBucket;
+import ai.llm.pojo.TokenStatisticsUserTrend;
+import ai.llm.pojo.TokenStatisticsUserModelUsage;
+import ai.llm.pojo.TokenStatisticsUserUsage;
 import ai.servlet.api.TokenUsageAuthorizationService;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
@@ -22,6 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -117,6 +122,65 @@ class CuihuaAccountIntegrationTest {
         assertEquals("cuihua-admin", displayNames.get(ADMIN_ID));
         assertEquals("system-admin", displayNames.get(SYSTEM_ADMIN_ID));
         assertFalse(displayNames.containsKey("missing-user"));
+
+        Map<String, CuihuaUserIdentity> identities = new CuihuaAccountService().findUserIdentities(
+                Arrays.asList(USER_ID, OTHER_USER_ID, "missing-user"));
+        assertEquals("翠花", identities.get(USER_ID).getDisplayName());
+        assertEquals("cuihua", identities.get(USER_ID).getUsername());
+        assertNull(identities.get(OTHER_USER_ID).getDisplayName());
+        assertEquals("cuihua-user-2", identities.get(OTHER_USER_ID).getUsername());
+        assertFalse(identities.containsKey("missing-user"));
+    }
+
+    @Test
+    void aggregatesExactWindowUsageByUserAndAdaptiveTrendBucket() throws Exception {
+        TokenStatisticsDao statisticsDao = new TokenStatisticsDao();
+        long start = 2_208_988_800_000L; // 2040-01-01T00:00:00Z
+        insertDashboardUsage(start + 3_600_000L, "dashboard-user", 100L, 20L, new BigDecimal("1.20"));
+        insertDashboardUsage(start + 3_900_000L, "dashboard-user", 200L, 40L, new BigDecimal("2.40"));
+        insertDashboardUsage(start + 7_200_000L, "dashboard-missing", 300L, 60L, new BigDecimal("3.60"));
+
+        List<TokenStatisticsUserUsage> users = statisticsDao.queryUserUsage(
+                start, start + 24L * 60L * 60L * 1000L, null);
+        TokenStatisticsUserUsage dashboardUser = users.stream()
+                .filter(row -> "dashboard-user".equals(row.getUserId()))
+                .findFirst().get();
+        assertEquals(2L, dashboardUser.getRequestCount());
+        assertEquals(360L, dashboardUser.getTotalTokens());
+        assertEquals(0, new BigDecimal("3.60").compareTo(dashboardUser.getTotalCost()));
+
+        List<TokenStatisticsUserTrend> trend = statisticsDao.queryUserTrend(
+                start, start + 24L * 60L * 60L * 1000L, null, TokenStatisticsTrendBucket.HOUR);
+        assertEquals(1, trend.stream().filter(row -> "dashboard-user".equals(row.getUserId())).count());
+        assertTrue(trend.stream().allMatch(row -> row.getBucket().endsWith(":00:00")));
+    }
+
+    @Test
+    void dashboardPlatformFilterUsesProviderAndGroupsUnknownProvidersAsOther() throws Exception {
+        TokenStatisticsDao statisticsDao = new TokenStatisticsDao();
+        long start = 2_240_611_200_000L; // 2041-01-01T00:00:00Z
+        insertDashboardUsage(start + 1_000L, "platform-user", 100L, 10L,
+                new BigDecimal("1.00"), "Alibaba", "model-a");
+        insertDashboardUsage(start + 2_000L, "platform-user", 200L, 20L,
+                new BigDecimal("2.00"), "Alibaba", "model-b");
+        insertDashboardUsage(start + 3_000L, "other-user", 300L, 30L,
+                new BigDecimal("3.00"), "LegacyProvider", "legacy-model");
+        insertDashboardUsage(start + 4_000L, "platform-user", 0L, 0L,
+                new BigDecimal("9.00"), "Alibaba", "invalid-empty-usage");
+        List<String> configured = Arrays.asList("Alibaba", "OpenAI");
+
+        List<TokenStatisticsUserUsage> alibaba = statisticsDao.queryUserUsage(
+                start, start + 60_000L, null, "Alibaba", configured);
+        List<TokenStatisticsUserModelUsage> models = statisticsDao.queryUserModels(
+                start, start + 60_000L, null, "Alibaba", configured);
+        List<TokenStatisticsUserUsage> other = statisticsDao.queryUserUsage(
+                start, start + 60_000L, null, "__other__", configured);
+
+        assertEquals(1, alibaba.size());
+        assertEquals(2L, alibaba.get(0).getRequestCount());
+        assertEquals(2, models.size());
+        assertEquals("other-user", other.get(0).getUserId());
+        assertEquals(330L, other.get(0).getTotalTokens());
     }
 
     @Test
@@ -277,6 +341,38 @@ class CuihuaAccountIntegrationTest {
                     + "prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, "
                     + "total_tokens INTEGER NOT NULL, saved_tokens INTEGER NOT NULL, "
                     + "provider TEXT, model TEXT, session_id TEXT, user_id TEXT)");
+        }
+    }
+
+    private static void insertDashboardUsage(long createdAt, String userId, long promptTokens,
+                                             long completionTokens, BigDecimal totalCost) throws SQLException {
+        insertDashboardUsage(createdAt, userId, promptTokens, completionTokens, totalCost,
+                "Test", "dashboard-model");
+    }
+
+    private static void insertDashboardUsage(long createdAt, String userId, long promptTokens,
+                                             long completionTokens, BigDecimal totalCost,
+                                             String provider, String model) throws SQLException {
+        try (Connection conn = HikariDS.getConnection("saas");
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO llm_token_statistics (created_at, "
+                     + "prompt_tokens, completion_tokens, total_tokens, saved_tokens, provider, model, session_id, "
+                     + "user_id, input_cost, output_cost, total_cost, currency, price_source) "
+                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, createdAt);
+            ps.setLong(2, promptTokens);
+            ps.setLong(3, completionTokens);
+            ps.setLong(4, promptTokens + completionTokens);
+            ps.setLong(5, 0L);
+            ps.setString(6, provider);
+            ps.setString(7, model);
+            ps.setString(8, "dashboard-session-" + createdAt);
+            ps.setString(9, userId);
+            ps.setBigDecimal(10, totalCost);
+            ps.setBigDecimal(11, BigDecimal.ZERO);
+            ps.setBigDecimal(12, totalCost);
+            ps.setString(13, "CNY");
+            ps.setString(14, "test");
+            ps.executeUpdate();
         }
     }
 
