@@ -123,6 +123,11 @@ public class CuihuaAccountService {
         return accountDao.findActiveUserById(userId);
     }
 
+    /** Looks up a currently logged-in Cuihua system administrator without creating a LinkMind session. */
+    public CuihuaUser findLoggedInSystemAdminById(String userId) throws SQLException {
+        return accountDao.findLoggedInSystemAdminById(userId);
+    }
+
     /** Looks up current user-facing names without changing usage attribution. */
     public Map<String, String> findUserDisplayNames(Collection<String> userIds) throws SQLException {
         return accountDao.findUserDisplayNames(userIds);

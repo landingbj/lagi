@@ -1,13 +1,17 @@
 package ai.servlet.api;
 
+import ai.account.CuihuaAccountService;
+import ai.account.CuihuaUser;
 import ai.account.LocalUserApiKey;
 import ai.account.LocalUserApiKeyService;
 import ai.account.LocalUserApiKeyService.UserKeyException;
+import ai.common.db.HikariDS;
 import ai.llm.dao.TokenStatisticsDao;
 import ai.llm.pojo.TokenStatisticsPageResult;
 import ai.llm.pojo.TokenStatisticsRange;
 import ai.llm.pojo.TokenStatisticsSummary;
 import ai.servlet.BaseServlet;
+import ai.utils.AiGlobal;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,7 +19,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLDecoder;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,10 +35,12 @@ import java.util.Map;
 public class CuihuaIntegrationApiServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
     private static final int MAX_PAGE_SIZE = 100;
+    private static final String INITIALIZATION_CONFIRMATION = "RESET_USAGE_AND_SESSIONS";
 
     private final LocalUserApiKeyService localKeyService = new LocalUserApiKeyService();
     private final TokenStatisticsDao tokenStatisticsDao = new TokenStatisticsDao();
     private final TokenUsageAuthorizationService authorizationService = new TokenUsageAuthorizationService();
+    private final CuihuaAccountService accountService = new CuihuaAccountService();
 
     @Override
     public void init() throws ServletException {
@@ -45,6 +53,11 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        RequestTarget target = parseTarget(req);
+        if (target != null && target.initialization && !"POST".equalsIgnoreCase(req.getMethod())) {
+            handle(req, resp, HttpMethod.OTHER);
+            return;
+        }
         if ("PATCH".equalsIgnoreCase(req.getMethod())) {
             handle(req, resp, HttpMethod.PATCH);
             return;
@@ -88,6 +101,15 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         }
 
         try {
+            if (target.initialization) {
+                if (method != HttpMethod.POST) {
+                    writeError(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED",
+                            "initialization requires POST");
+                    return;
+                }
+                handleInitialization(req, resp);
+                return;
+            }
             if (target.userApiKeys) {
                 handleUserApiKeys(req, resp, method, target);
                 return;
@@ -108,9 +130,69 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
             writeError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "LOCAL_DATABASE_UNAVAILABLE",
                     "local LinkMind storage is temporarily unavailable");
         } catch (Exception e) {
-            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "INTEGRATION_REQUEST_FAILED",
-                    "LinkMind could not process the integration request");
+            if (target.initialization) {
+                writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "INITIALIZATION_FAILED",
+                        "LinkMind could not complete initialization");
+            } else {
+                writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "INTEGRATION_REQUEST_FAILED",
+                        "LinkMind could not process the integration request");
+            }
         }
+    }
+
+    private void handleInitialization(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        String actorId = optionalText(req.getHeader(TokenUsageAuthorizationService.CUIHUA_ACTOR_HEADER));
+        if (actorId == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "CUIHUA_ACTOR_REQUIRED",
+                    "X-Cuihua-Actor-Id is required for initialization");
+            return;
+        }
+        CuihuaUser actor = accountService.findLoggedInSystemAdminById(actorId);
+        if (actor == null) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, "INITIALIZATION_ACCESS_DENIED",
+                    "initialization requires a logged-in system administrator");
+            return;
+        }
+        InitializationBody body;
+        try {
+            body = reqBodyToObj(req, InitializationBody.class);
+        } catch (RuntimeException e) {
+            body = null;
+        }
+        if (body == null || !INITIALIZATION_CONFIRMATION.equals(body.confirmation)) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "INVALID_INITIALIZATION_CONFIRMATION",
+                    "confirmation must be RESET_USAGE_AND_SESSIONS");
+            return;
+        }
+
+        Map<String, Object> data = resetUsageAndSessions();
+        writeSuccess(resp, data);
+    }
+
+    private Map<String, Object> resetUsageAndSessions() throws SQLException {
+        int deletedStatistics;
+        int deletedSessions;
+        try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB)) {
+            conn.setAutoCommit(false);
+            try (Statement statement = conn.createStatement()) {
+                deletedStatistics = statement.executeUpdate("DELETE FROM llm_token_statistics");
+                deletedSessions = statement.executeUpdate("DELETE FROM linkmind_login_session");
+                conn.commit();
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
+        }
+
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("deletedTokenStatistics", deletedStatistics);
+        data.put("deletedLoginSessions", deletedSessions);
+        data.put("initializedAt", System.currentTimeMillis());
+        return data;
     }
 
     private void handleUserApiKeys(HttpServletRequest req, HttpServletResponse resp, HttpMethod method,
@@ -238,6 +320,9 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         }
         String usersPrefix = "/v1/integration/users/";
         String usagePrefix = "/v1/integration/token-usage/";
+        if ("/v1/integration/initialize".equals(path)) {
+            return RequestTarget.initialization();
+        }
         if (path.startsWith(usagePrefix)) {
             String[] segments = path.substring(usagePrefix.length()).split("/", -1);
             if (segments.length == 1 && !isBlank(segments[0])) {
@@ -414,10 +499,14 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         return isBlank(value) ? null : value.trim();
     }
 
-    private enum HttpMethod { GET, POST, PATCH }
+    private enum HttpMethod { GET, POST, PATCH, OTHER }
 
     private static final class UserKeyBody {
         private String remark;
+    }
+
+    private static final class InitializationBody {
+        private String confirmation;
     }
 
     private static final class RequestTarget {
@@ -427,27 +516,33 @@ public class CuihuaIntegrationApiServlet extends BaseServlet {
         private final boolean userApiKeys;
         private final boolean legacyClientApiKeys;
         private final String usageView;
+        private final boolean initialization;
 
         private RequestTarget(String userId, Long keyId, boolean revoke, boolean userApiKeys,
-                              boolean legacyClientApiKeys, String usageView) {
+                              boolean legacyClientApiKeys, String usageView, boolean initialization) {
             this.userId = userId;
             this.keyId = keyId;
             this.revoke = revoke;
             this.userApiKeys = userApiKeys;
             this.legacyClientApiKeys = legacyClientApiKeys;
             this.usageView = usageView;
+            this.initialization = initialization;
         }
 
         private static RequestTarget keys(String userId, Long keyId, boolean revoke) {
-            return new RequestTarget(userId, keyId, revoke, true, false, null);
+            return new RequestTarget(userId, keyId, revoke, true, false, null, false);
         }
 
         private static RequestTarget legacy(String userId) {
-            return new RequestTarget(userId, null, false, false, true, null);
+            return new RequestTarget(userId, null, false, false, true, null, false);
         }
 
         private static RequestTarget usage(String userId, String usageView) {
-            return new RequestTarget(userId, null, false, false, false, usageView);
+            return new RequestTarget(userId, null, false, false, false, usageView, false);
+        }
+
+        private static RequestTarget initialization() {
+            return new RequestTarget(null, null, false, false, false, null, true);
         }
     }
 }

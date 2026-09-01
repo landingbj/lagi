@@ -340,7 +340,9 @@ class CuihuaAccountIntegrationTest {
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, created_at INTEGER NOT NULL, "
                     + "prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, "
                     + "total_tokens INTEGER NOT NULL, saved_tokens INTEGER NOT NULL, "
-                    + "provider TEXT, model TEXT, session_id TEXT, user_id TEXT)");
+                    + "provider TEXT, model TEXT, session_id TEXT, user_id TEXT, user_api_key_id INTEGER, "
+                    + "input_cost DECIMAL(20,8), output_cost DECIMAL(20,8), total_cost DECIMAL(20,8), "
+                    + "currency TEXT, price_source TEXT)");
         }
     }
 

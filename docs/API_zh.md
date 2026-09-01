@@ -1595,6 +1595,35 @@ POST /uploadFile/deleteFile
 - 在 `Agent Mate` 模式下，除 `runningMode` 和 `saveLastLoginUser` 外，其余社交接口都可以自动代理到配置好的级联上级节点。
 - `social-channel` Skill 通过这些接口复用社交能力，而不是把存储逻辑写入聊天 Adapter 主路径。
 
+## 盒子初始化集成接口
+
+`POST /v1/integration/initialize` 供同一盒子或 Docker 网络中的“缔智元企业文档管理”后端触发初始化。浏览器和其他局域网主机不应直接调用。请求必须携带 `X-Cuihua-Actor-Id`，对应共享账号表中同时满足 `role = system_admin` 和 `user_login_status = logged_in` 的用户。
+
+请求体必须显式确认不可恢复的清理操作：
+
+```json
+{
+  "confirmation": "RESET_USAGE_AND_SESSIONS"
+}
+```
+
+初始化会在一个数据库事务中删除全部 `llm_token_statistics` 和 `linkmind_login_session` 记录。任一步骤失败都会整体回滚。它不会修改共享用户的 `user_login_status`，也不会删除用户、`lmk_` API Key、模型价格、系统配置、知识库或其他业务数据。接口不暂停或等待在途模型请求；这些请求之后写入的统计属于初始化后的新用量。
+
+成功响应示例：
+
+```json
+{
+  "status": "success",
+  "data": {
+    "deletedTokenStatistics": 125,
+    "deletedLoginSessions": 3,
+    "initializedAt": 1788250000000
+  }
+}
+```
+
+接口是幂等的；没有可删除数据时仍返回成功，两个删除数量均为 `0`。错误响应沿用 `status`、`code`、`msg` 结构，可能的错误码包括 `INVALID_INITIALIZATION_CONFIRMATION`、`CUIHUA_ACTOR_REQUIRED`、`INTERNAL_NETWORK_REQUIRED`、`INITIALIZATION_ACCESS_DENIED`、`METHOD_NOT_ALLOWED`、`LOCAL_DATABASE_UNAVAILABLE` 和 `INITIALIZATION_FAILED`。
+
 ## 用户与认证接口
 
 | 路径 | 方法 | 必要输入 | 用途 | 成功返回 |
@@ -1648,4 +1677,3 @@ POST /uploadFile/deleteFile
 | `ChargeDetail` | `seq`、`userId`、`amount`、`time`、`status` |
 
 # 数据模型
-

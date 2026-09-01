@@ -237,6 +237,10 @@
         <url-pattern>/v1/integration/token-usage/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>cuihuaIntegration</servlet-name>
+        <url-pattern>/v1/integration/initialize</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>tokenStatistics</servlet-name>
         <url-pattern>/v1/token-statistics/overview</url-pattern>
     </servlet-mapping>

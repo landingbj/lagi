@@ -1595,6 +1595,35 @@ Notes:
 - In `Agent Mate` mode, all social endpoints except `runningMode` and `saveLastLoginUser` can proxy automatically to the configured cascade server address.
 - The `social-channel` skill consumes these routes instead of embedding storage logic into the chat adapter path.
 
+## Box Initialization Integration API
+
+`POST /v1/integration/initialize` lets the Digimeta Enterprise Document Management backend initialize LinkMind from the same box or Docker network. Browsers and other LAN hosts must not call it directly. The request must include `X-Cuihua-Actor-Id` for a shared user whose `role` is `system_admin` and whose `user_login_status` is `logged_in`.
+
+The request body must explicitly confirm the irreversible cleanup:
+
+```json
+{
+  "confirmation": "RESET_USAGE_AND_SESSIONS"
+}
+```
+
+Initialization deletes every `llm_token_statistics` and `linkmind_login_session` row in one database transaction. Any failure rolls back both deletes. It does not modify the shared user's `user_login_status`, and it preserves users, local `lmk_` API keys, model prices, system configuration, knowledge bases, and all other business data. The endpoint does not pause or wait for in-flight model requests; statistics written by those requests afterward count as post-initialization usage.
+
+Example success response:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "deletedTokenStatistics": 125,
+    "deletedLoginSessions": 3,
+    "initializedAt": 1788250000000
+  }
+}
+```
+
+The endpoint is idempotent. When both tables are already empty, it still succeeds with both deleted counts set to `0`. Errors use the existing `status`, `code`, and `msg` shape. Possible codes are `INVALID_INITIALIZATION_CONFIRMATION`, `CUIHUA_ACTOR_REQUIRED`, `INTERNAL_NETWORK_REQUIRED`, `INITIALIZATION_ACCESS_DENIED`, `METHOD_NOT_ALLOWED`, `LOCAL_DATABASE_UNAVAILABLE`, and `INITIALIZATION_FAILED`.
+
 ## User And Authentication APIs
 
 | Route | Method | Required input | Purpose | Success payload |
@@ -1648,4 +1677,3 @@ These billing routes are intentionally isolated from model routing and chat exec
 | `ChargeDetail` | `seq`, `userId`, `amount`, `time`, `status` |
 
 # Data Schema
-

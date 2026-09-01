@@ -65,6 +65,14 @@ class TokenUsageFrontendContractTest {
     }
 
     @Test
+    void initializationEndpointIsMappedToCuihuaIntegrationServlet() throws Exception {
+        Path path = Paths.get("src", "main", "webapp", "WEB-INF", "web.xml");
+        String source = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+
+        assertTrue(source.contains("<url-pattern>/v1/integration/initialize</url-pattern>"));
+    }
+
+    @Test
     void costChartIsCostOnlyWhileUsageChartUsesCallsAndTokensOnTwoAxes() throws Exception {
         String source = readWebAsset("tokenUsage.js");
         String costChart = functionBlock(source, "function buildCostChartOption");
