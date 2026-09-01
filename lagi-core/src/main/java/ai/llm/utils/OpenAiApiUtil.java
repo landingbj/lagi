@@ -4,6 +4,10 @@ import ai.common.utils.ObservableList;
 import ai.llm.pojo.LlmApiResponse;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import cn.hutool.core.text.StrFormatter;
 import com.google.gson.Gson;
 import io.reactivex.Observable;
@@ -27,6 +31,7 @@ import java.util.function.Function;
 public class OpenAiApiUtil {
 
     private static final Gson gson = new Gson();
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
     private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(
             10, // 最大空闲连接数
             60, // 保持连接的时间
@@ -61,7 +66,8 @@ public class OpenAiApiUtil {
                                              Function<String, ChatCompletionResult> convertResponseFunc,
                                              Function<Response, Integer> convertErrorFunc,
                                              Map<String, String> headers) {
-        return completions(apikey, apiUrl, timeout, gson.toJson(req), convertResponseFunc, convertErrorFunc, headers, null);
+        return completions(apikey, apiUrl, timeout, serializeChatCompletionRequest(req), convertResponseFunc,
+                convertErrorFunc, headers, null);
     }
 
     public static LlmApiResponse completions(String apikey, String apiUrl,
@@ -118,7 +124,70 @@ public class OpenAiApiUtil {
                                                    ChatCompletionRequest req,
                                                    Function<String, ChatCompletionResult> convertResponseFunc,
                                                    Function<Response, Integer> convertErrorFunc, Map<String, String> headers) {
-        return streamCompletions(apikey, apiUrl, timeout, gson.toJson(req), convertResponseFunc, convertErrorFunc, headers, null);
+        return streamCompletions(apikey, apiUrl, timeout, serializeChatCompletionRequest(req), convertResponseFunc,
+                convertErrorFunc, headers, null);
+    }
+
+    /**
+     * The public API stores multimodal message content as a JSON string so the
+     * internal request type can serve both text and image inputs. Gson does not
+     * honour {@code ContentSerializer}, so convert only recognised multimodal
+     * content back to an array before forwarding an OpenAI-compatible request.
+     */
+    static String serializeChatCompletionRequest(ChatCompletionRequest request) {
+        String payload = gson.toJson(request);
+        try {
+            JsonNode root = JSON_MAPPER.readTree(payload);
+            JsonNode messages = root.get("messages");
+            if (!messages.isArray()) {
+                return payload;
+            }
+            for (JsonNode message : messages) {
+                if (!(message instanceof ObjectNode)) {
+                    continue;
+                }
+                ObjectNode objectMessage = (ObjectNode) message;
+                JsonNode content = objectMessage.get("content");
+                if (content == null || !content.isTextual()) {
+                    continue;
+                }
+                try {
+                    JsonNode multimodal = JSON_MAPPER.readTree(content.asText());
+                    if (isMultimodalContent(multimodal)) {
+                        objectMessage.set("content", multimodal);
+                    }
+                } catch (Exception ignored) {
+                    // This message is ordinary text rather than multimodal JSON.
+                }
+            }
+            return JSON_MAPPER.writeValueAsString(root);
+        } catch (Exception ignored) {
+            // Plain text may look like JSON. Keep the original Gson payload if
+            // it is not a valid recognised multimodal message.
+            return payload;
+        }
+    }
+
+    private static boolean isMultimodalContent(JsonNode content) {
+        if (!(content instanceof ArrayNode) || content.isEmpty()) {
+            return false;
+        }
+        for (JsonNode part : content) {
+            if (!part.isObject()) {
+                return false;
+            }
+            String type = part.path("type").asText();
+            if ("text".equals(type) && part.path("text").isTextual()) {
+                continue;
+            }
+            if ("image_url".equals(type)
+                    && part.path("image_url").isObject()
+                    && part.path("image_url").path("url").isTextual()) {
+                continue;
+            }
+            return false;
+        }
+        return true;
     }
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,
