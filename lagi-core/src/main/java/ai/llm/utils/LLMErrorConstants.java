@@ -71,6 +71,45 @@ public class LLMErrorConstants {
         return CONTENT_SAFETY_BLOCKED.equals(errorCode);
     }
 
+    /**
+     * Converts LinkMind internal error codes to valid HTTP response statuses.
+     * Internal codes are retained in the response payload/header for callers
+     * that need the more specific failure reason.
+     */
+    public static int toHttpStatus(Integer errorCode) {
+        if (errorCode == null) {
+            return 500;
+        }
+        if (errorCode >= 100 && errorCode <= 599) {
+            return errorCode;
+        }
+        if (INVALID_REQUEST_ERROR.equals(errorCode) || CONTENT_SAFETY_BLOCKED.equals(errorCode)) {
+            return 400;
+        }
+        if (INVALID_AUTHENTICATION_ERROR.equals(errorCode)) {
+            return 401;
+        }
+        if (PERMISSION_DENIED_ERROR.equals(errorCode)) {
+            return 403;
+        }
+        if (RESOURCE_NOT_FOUND_ERROR.equals(errorCode)) {
+            return 404;
+        }
+        if (RATE_LIMIT_REACHED_ERROR.equals(errorCode)) {
+            return 429;
+        }
+        if (TIME_OUT.equals(errorCode)) {
+            return 504;
+        }
+        if (NO_AVAILABLE_MODEL.equals(errorCode)) {
+            return 503;
+        }
+        if (SERVER_ERROR.equals(errorCode) || OTHER_ERROR.equals(errorCode)) {
+            return 502;
+        }
+        return 500;
+    }
+
 
     public static ChatCompletionResult errorResponse(ChatCompletionRequest chatCompletionRequest) {
         return errorResponse(chatCompletionRequest, UNAUTHORIZED_CODE, UNAUTHORIZED_MESSAGE);

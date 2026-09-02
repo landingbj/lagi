@@ -209,12 +209,7 @@ public class OpenAiApiUtil {
 //                return new java.net.PasswordAuthentication("socks5", "digimeta".toCharArray());
 //            }
 //        });
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(timeout, TimeUnit.SECONDS)
-                .connectionPool(CONNECTION_POOL)
-//                .proxy(proxy)
-//                .proxyAuthenticator(proxyAuthenticator)
-                .build();
+        OkHttpClient client = createStreamingClient(timeout, proxy);
         MediaType mediaType = MediaType.get("application/json");
         RequestBody body = RequestBody.create(json, mediaType);
         Request.Builder requestBuilder = new Request.Builder()
@@ -236,18 +231,14 @@ public class OpenAiApiUtil {
             public void onOpen(@NotNull EventSource eventSource, @NotNull Response response) {
 //                log.info("ServerSentEventUtil streamCompletions onOpen: response = {}", response);
                 int code = response.code();
-                try {
-                    String bodyStr = response.body().string();
-                    if(code != 200) {
-                        result.setCode(convertErrorFunc.apply(response));
-                        result.setMsg(bodyStr);
-                        closeConnection(eventSource);
-                    } else {
-                        result.setCode(code);
-                        result.setMsg(bodyStr);
-                    }
-                } catch (IOException e) {
-
+                if (code != 200) {
+                    result.setCode(convertErrorFunc.apply(response));
+                    result.setMsg(readResponseBody(response));
+                    closeConnection(eventSource);
+                } else {
+                    // EventSource owns this body. Reading it here drains the SSE
+                    // stream before onEvent can receive any model chunks.
+                    result.setCode(code);
                 }
             }
             @Override
@@ -260,18 +251,15 @@ public class OpenAiApiUtil {
             }
             @Override
             public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-                if(t instanceof SocketTimeoutException) {
+                if (hasSocketTimeout(t)) {
                     result.setCode(LLMErrorConstants.TIME_OUT);
-                    result.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
+                    result.setMsg(errorMessage(t));
+                } else if (response != null) {
+                    result.setCode(convertErrorFunc.apply(response));
+                    result.setMsg(readResponseBody(response));
                 } else {
-                    try {
-                        String bodyStr = response.body().string();
-                        result.setCode(convertErrorFunc.apply(response));
-                        result.setMsg(bodyStr);
-                    } catch (Exception e) {
-                        result.setCode(LLMErrorConstants.OTHER_ERROR);
-                        result.setMsg(StrFormatter.format("{\"error\":\"{}\"}", t.getMessage()));
-                    }
+                    result.setCode(LLMErrorConstants.OTHER_ERROR);
+                    result.setMsg(errorMessage(t));
                 }
                 if(t != null) {
                     log.error("model request failed error {}", t.getMessage());
@@ -295,6 +283,45 @@ public class OpenAiApiUtil {
         result.setStreamData(Observable.fromIterable(iterable));
 //        result.setStreamData(res.getObservable());
         return result;
+    }
+
+    static OkHttpClient createStreamingClient(Integer timeout, Proxy proxy) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .connectTimeout(timeout, TimeUnit.SECONDS)
+                .readTimeout(timeout, TimeUnit.SECONDS)
+                .writeTimeout(timeout, TimeUnit.SECONDS)
+                .connectionPool(CONNECTION_POOL);
+        if (proxy != null) {
+            builder.proxy(proxy);
+        }
+        return builder.build();
+    }
+
+    private static boolean hasSocketTimeout(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof SocketTimeoutException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    private static String readResponseBody(Response response) {
+        if (response.body() == null) {
+            return "";
+        }
+        try {
+            return response.body().string();
+        } catch (IOException e) {
+            return errorMessage(e);
+        }
+    }
+
+    private static String errorMessage(Throwable throwable) {
+        String message = throwable == null ? "model request failed" : throwable.getMessage();
+        return StrFormatter.format("{\"error\":\"{}\"}", message == null ? "model request failed" : message);
     }
 
 

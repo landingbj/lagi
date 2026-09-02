@@ -381,7 +381,8 @@ public class LlmApiServlet extends BaseServlet {
     private void handleCompletionException(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest,
                                            String mateUrl, RRException e) throws IOException {
         if (mateUrl == null) {
-            resp.setStatus(e.getCode());
+            resp.setStatus(LLMErrorConstants.toHttpStatus(e.getCode()));
+            resp.setHeader("X-LinkMind-Error-Code", String.valueOf(e.getCode()));
             responsePrint(resp, e.getMsg());
             return;
         }
