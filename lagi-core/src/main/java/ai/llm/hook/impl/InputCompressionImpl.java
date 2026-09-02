@@ -10,6 +10,7 @@ import ai.llm.pojo.ModelContext;
 import ai.llm.responses.ResponseProtocolUtil;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
+import ai.openai.utils.MultiModalContentUtil;
 import ai.utils.LagiGlobal;
 
 import java.util.ArrayList;
@@ -25,12 +26,18 @@ public class InputCompressionImpl implements BeforeModel {
     @Override
     public ChatCompletionRequest beforeModel(ModelContext context) {
 //        System.out.println("enable InputCompressionImpl");
+        if (context == null || context.getRequest() == null) {
+            return null;
+        }
         boolean responseProtocol = ResponseProtocolUtil.isResponseProtocol((ModelService) context.getAdapter());
         if(responseProtocol) {
             return context.getRequest();
         }
         ChatCompletionRequest request = context.getRequest();
         if (Boolean.TRUE.equals(request.getPreserveInputMessages())) {
+            return request;
+        }
+        if (containsImageContent(request.getMessages())) {
             return request;
         }
         List<ChatMessage> merge = mergeConsecutiveMessages(request.getMessages());
@@ -40,9 +47,21 @@ public class InputCompressionImpl implements BeforeModel {
         return request;
     }
 
+    private boolean containsImageContent(List<ChatMessage> messages) {
+        if (messages == null) {
+            return false;
+        }
+        for (ChatMessage message : messages) {
+            if (message != null && MultiModalContentUtil.hasImageContent(message.getContent())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private List<ChatMessage> mergeConsecutiveMessages(List<ChatMessage> messages) {
         List<ChatMessage> mergedList = new ArrayList<>();
-        if (messages.isEmpty()) {
+        if (messages == null || messages.isEmpty()) {
             return mergedList;
         }
 
