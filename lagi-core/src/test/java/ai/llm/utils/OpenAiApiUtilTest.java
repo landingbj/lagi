@@ -1,16 +1,26 @@
 package ai.llm.utils;
 
 import ai.openai.pojo.ChatCompletionRequest;
+import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import com.sun.net.httpserver.HttpServer;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.Test;
 
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OpenAiApiUtilTest {
@@ -66,5 +76,82 @@ class OpenAiApiUtilTest {
 
         assertTrue(payload.path("messages").get(0).path("content").isArray());
         assertTrue(payload.path("messages").get(1).path("content").isTextual());
+    }
+
+    @Test
+    void forwardsTheMultiContentCompletionRequestShape() throws Exception {
+        String requestJson = "{"
+                + "\"model\":\"Alibaba/qwen3.7-plus\","
+                + "\"stream\":true,"
+                + "\"max_completion_tokens\":32768,"
+                + "\"store\":false,"
+                + "\"stream_options\":{\"include_usage\":true},"
+                + "\"messages\":[{\"role\":\"user\",\"content\":["
+                + "{\"type\":\"text\",\"text\":\"识别这张图片\"},"
+                + "{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,AAAA\"}}"
+                + "]}]}";
+        ChatCompletionRequest request = MAPPER.copy()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .readValue(requestJson, ChatCompletionRequest.class);
+
+        JsonNode payload = MAPPER.readTree(OpenAiApiUtil.serializeChatCompletionRequest(request));
+
+        assertEquals("Alibaba/qwen3.7-plus", payload.path("model").asText());
+        assertTrue(payload.path("stream").asBoolean());
+        assertEquals(32768, payload.path("max_completion_tokens").asInt());
+        assertFalse(payload.path("store").asBoolean());
+        assertTrue(payload.path("stream_options").path("include_usage").asBoolean());
+        assertTrue(payload.path("messages").get(0).path("content").isArray());
+        assertEquals("image_url", payload.path("messages").get(0).path("content").get(1).path("type").asText());
+    }
+
+    @Test
+    void configuresAllStreamingTimeouts() {
+        OkHttpClient client = OpenAiApiUtil.createStreamingClient(600, null);
+
+        assertEquals(600_000, client.connectTimeoutMillis());
+        assertEquals(600_000, client.readTimeoutMillis());
+        assertEquals(600_000, client.writeTimeoutMillis());
+    }
+
+    @Test
+    void receivesSseChunksWithoutDrainingTheSuccessResponseBody() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        server.createContext("/v1/chat/completions", exchange -> {
+            exchange.getRequestBody().close();
+            exchange.getResponseHeaders().set("Content-Type", "text/event-stream");
+            exchange.sendResponseHeaders(200, 0);
+            String payload = "data: {\"id\":\"vision-chunk\"}\n\n"
+                    + "data: [DONE]\n\n";
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write(payload.getBytes("UTF-8"));
+                output.flush();
+            }
+        });
+        server.start();
+
+        try {
+            int port = server.getAddress().getPort();
+            ChatCompletionResult expected = new ChatCompletionResult();
+            expected.setId("vision-chunk");
+            ai.llm.pojo.LlmApiResponse response = OpenAiApiUtil.streamCompletions(
+                    "test-key",
+                    "http://127.0.0.1:" + port + "/v1/chat/completions",
+                    2,
+                    "{\"model\":\"Alibaba/qwen3.7-plus\",\"stream\":true}",
+                    data -> data.contains("vision-chunk") ? expected : null,
+                    ignored -> LLMErrorConstants.OTHER_ERROR,
+                    new HashMap<>(),
+                    null);
+
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getStreamData());
+            assertEquals("vision-chunk", response.getStreamData()
+                    .timeout(2, TimeUnit.SECONDS)
+                    .blockingFirst()
+                    .getId());
+        } finally {
+            server.stop(0);
+        }
     }
 }
