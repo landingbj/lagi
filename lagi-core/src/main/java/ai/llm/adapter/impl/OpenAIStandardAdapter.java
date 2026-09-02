@@ -10,18 +10,23 @@ import ai.llm.responses.ResponseProtocolUtil;
 import ai.llm.responses.ResponseSessionContext;
 import ai.llm.responses.ResponseSessionManager;
 import ai.llm.responses.ResponsesChatCompletionConverter;
+import ai.llm.utils.LLMErrorConstants;
 import ai.llm.utils.OpenAiApiUtil;
 import ai.llm.utils.convert.GptConvert;
+import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.utils.AiGlobal;
 import cn.hutool.core.util.StrUtil;
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,6 +36,8 @@ public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(OpenAIStandardAdapter.class);
     private static final int HTTP_TIMEOUT = AiGlobal.LLM_TIME_OUT_SECONDS;
     private static final ResponseSessionManager SESSION_MANAGER = ResponseSessionManager.getInstance();
+    private static final String EMPTY_STREAM_RESPONSE_MESSAGE =
+            "{\"error\":\"The upstream model returned an empty response after one retry.\"}";
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
@@ -85,13 +92,90 @@ public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
                     })
                     .doOnComplete(() -> SESSION_MANAGER.onSuccess(sessionContext, responseId.get(), assistantMessage.get()));
         }
-        LlmApiResponse completions = OpenAiApiUtil.streamCompletions(reqApiKey, getApiAddress(), HTTP_TIMEOUT, chatCompletionRequest,
+        Observable<ChatCompletionResult> firstAttempt = bufferUntilMeaningfulOutput(
+                openStandardStream(reqApiKey, chatCompletionRequest));
+        return firstAttempt.switchIfEmpty(Observable.defer(() -> {
+            logger.warn("OpenAI-compatible model returned an empty stream; retrying once. model={}",
+                    chatCompletionRequest.getModel());
+            try {
+                return bufferUntilMeaningfulOutput(openStandardStream(reqApiKey, chatCompletionRequest))
+                        .switchIfEmpty(Observable.just(LLMErrorConstants.errorResponse(chatCompletionRequest,
+                                LLMErrorConstants.OTHER_ERROR, EMPTY_STREAM_RESPONSE_MESSAGE)));
+            } catch (RRException e) {
+                return Observable.just(LLMErrorConstants.errorResponse(chatCompletionRequest,
+                        e.getCode(), e.getMsg()));
+            }
+        }));
+    }
+
+    private Observable<ChatCompletionResult> openStandardStream(String apiKey, ChatCompletionRequest request) {
+        LlmApiResponse completions = OpenAiApiUtil.streamCompletions(apiKey, getApiAddress(), HTTP_TIMEOUT, request,
                 GptConvert::convertSteamLine2ChatCompletionResult, GptConvert::convertByResponse);
         if(completions.getCode() != 200) {
-            logger.error("openai  stream api : code{}  error  {}", completions.getCode(), completions.getMsg());
+            logger.error("openai stream api : code{} error {}", completions.getCode(), completions.getMsg());
             throw new RRException(completions.getCode(), completions.getMsg());
         }
         return completions.getStreamData();
+    }
+
+    /**
+     * Some OpenAI-compatible upstreams end a successful SSE request with only
+     * empty deltas and usage. Delay forwarding until a real model output is
+     * seen, so that a completely empty attempt can be safely retried.
+     */
+    private Observable<ChatCompletionResult> bufferUntilMeaningfulOutput(Observable<ChatCompletionResult> source) {
+        return Observable.create(emitter -> {
+            List<ChatCompletionResult> buffered = new ArrayList<>();
+            AtomicReference<Boolean> hasMeaningfulOutput = new AtomicReference<>(false);
+            Disposable subscription = source.subscribe(chunk -> {
+                if (Boolean.TRUE.equals(hasMeaningfulOutput.get())) {
+                    if (!emitter.isDisposed()) {
+                        emitter.onNext(chunk);
+                    }
+                    return;
+                }
+
+                buffered.add(chunk);
+                if (!hasMeaningfulOutput(chunk)) {
+                    return;
+                }
+
+                hasMeaningfulOutput.set(true);
+                if (!emitter.isDisposed()) {
+                    for (ChatCompletionResult bufferedChunk : buffered) {
+                        emitter.onNext(bufferedChunk);
+                    }
+                }
+                buffered.clear();
+            }, emitter::onError, () -> {
+                buffered.clear();
+                if (!emitter.isDisposed()) {
+                    emitter.onComplete();
+                }
+            });
+            emitter.setDisposable(subscription);
+        });
+    }
+
+    private boolean hasMeaningfulOutput(ChatCompletionResult result) {
+        if (result == null || result.getChoices() == null) {
+            return false;
+        }
+        for (ChatCompletionChoice choice : result.getChoices()) {
+            if (choice == null) {
+                continue;
+            }
+            if (hasMeaningfulMessage(choice.getDelta()) || hasMeaningfulMessage(choice.getMessage())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasMeaningfulMessage(ChatMessage message) {
+        return message != null && (StrUtil.isNotBlank(message.getContent())
+                || StrUtil.isNotBlank(message.getReasoning_content())
+                || (message.getTool_calls() != null && !message.getTool_calls().isEmpty()));
     }
 
     protected String getResponsesApiAddress() {
