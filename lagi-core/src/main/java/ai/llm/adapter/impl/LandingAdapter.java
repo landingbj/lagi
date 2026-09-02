@@ -6,6 +6,7 @@ import ai.config.ConfigUtil;
 import ai.llm.utils.ExtraBodyUtil;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.utils.MultimodalTraceUtil;
 import ai.openai.pojo.ExtraBody;
 import ai.utils.ApikeyUtil;
 import io.reactivex.Observable;
@@ -27,6 +28,7 @@ public class LandingAdapter extends OpenAIStandardAdapter {
                 chatCompletionRequest.setApiKey(ApikeyUtil.getModelKey(chatCompletionRequest.getModel()));
             }
         }
+        MultimodalTraceUtil.logRequest("landing-dispatch", chatCompletionRequest, getApiAddress());
         return super.completions(chatCompletionRequest);
     }
 
@@ -38,6 +40,7 @@ public class LandingAdapter extends OpenAIStandardAdapter {
                 chatCompletionRequest.setApiKey(ApikeyUtil.getModelKey(chatCompletionRequest.getModel()));
             }
         }
+        MultimodalTraceUtil.logRequest("landing-dispatch", chatCompletionRequest, getApiAddress());
         return super.streamCompletions(chatCompletionRequest);
     }
 
@@ -59,8 +62,8 @@ public class LandingAdapter extends OpenAIStandardAdapter {
     }
 
     private boolean isFinalServer() {
-        boolean flag = getApiAddress().startsWith(ConfigUtil.getBaseUrl());
-        return flag;
+        String baseUrl = ConfigUtil.getBaseUrl();
+        return baseUrl != null && !baseUrl.trim().isEmpty() && getApiAddress().startsWith(baseUrl);
     }
 
     @Override

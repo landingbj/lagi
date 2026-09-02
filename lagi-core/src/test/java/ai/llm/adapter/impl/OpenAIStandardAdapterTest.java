@@ -113,4 +113,5 @@ class OpenAIStandardAdapterTest {
                 + "data: {\"id\":\"successful-retry\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n"
                 + "data: [DONE]\n\n";
     }
+
 }

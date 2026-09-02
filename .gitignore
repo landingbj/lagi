@@ -47,3 +47,7 @@ build/
 /lagi-web/src/main/webapp/static/
 /lagi-examples/
 /lagi-web/dependency-reduced-pom.xml
+
+# Local runtime data
+/lagi-web/saas.db*
+__pycache__/
