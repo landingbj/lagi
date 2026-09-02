@@ -4,6 +4,7 @@ import ai.common.utils.ObservableList;
 import ai.llm.pojo.LlmApiResponse;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
+import ai.openai.utils.MultiModalContentUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -151,13 +152,9 @@ public class OpenAiApiUtil {
                 if (content == null || !content.isTextual()) {
                     continue;
                 }
-                try {
-                    JsonNode multimodal = JSON_MAPPER.readTree(content.asText());
-                    if (isMultimodalContent(multimodal)) {
-                        objectMessage.set("content", multimodal);
-                    }
-                } catch (Exception ignored) {
-                    // This message is ordinary text rather than multimodal JSON.
+                ArrayNode multimodal = MultiModalContentUtil.parseOpenAiContent(content.asText());
+                if (multimodal != null) {
+                    objectMessage.set("content", multimodal);
                 }
             }
             return JSON_MAPPER.writeValueAsString(root);
@@ -166,28 +163,6 @@ public class OpenAiApiUtil {
             // it is not a valid recognised multimodal message.
             return payload;
         }
-    }
-
-    private static boolean isMultimodalContent(JsonNode content) {
-        if (!(content instanceof ArrayNode) || content.isEmpty()) {
-            return false;
-        }
-        for (JsonNode part : content) {
-            if (!part.isObject()) {
-                return false;
-            }
-            String type = part.path("type").asText();
-            if ("text".equals(type) && part.path("text").isTextual()) {
-                continue;
-            }
-            if ("image_url".equals(type)
-                    && part.path("image_url").isObject()
-                    && part.path("image_url").path("url").isTextual()) {
-                continue;
-            }
-            return false;
-        }
-        return true;
     }
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,

@@ -31,4 +31,24 @@ class InputCompressionImplTest {
         assertEquals(4, result.getMessages().size());
         assertEquals("第一轮", result.getMessages().get(1).getContent());
     }
+
+    @Test
+    void beforeModelDoesNotMergeMessagesWhenTheRequestContainsAnImage() {
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setMessages(Arrays.asList(
+                ChatMessage.builder().role("user")
+                        .content("[{\"type\":\"text\",\"text\":\"识别图片\"},"
+                                + "{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,AAAA\"}}]")
+                        .build(),
+                ChatMessage.builder().role("user").content("补充说明").build()
+        ));
+
+        ChatCompletionRequest result = new InputCompressionImpl().beforeModel(ModelContext.builder()
+                .request(request)
+                .build());
+
+        assertSame(request, result);
+        assertEquals(2, result.getMessages().size());
+        assertEquals("补充说明", result.getMessages().get(1).getContent());
+    }
 }

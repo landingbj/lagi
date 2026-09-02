@@ -10,6 +10,7 @@ import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.openai.utils.MultiModalContentUtil;
 import ai.utils.LagiGlobal;
 import ai.utils.SensitiveWordUtil;
 import io.reactivex.Observable;
@@ -45,8 +46,21 @@ public class SecurityFilterImpl implements BeforeModel, AfterModel {
             return request;
         }
         String content = last.getContent();
-        boolean blocked = SensitiveWordUtil.isInputBlocked(content);
-        last.setContent(SensitiveWordUtil.filter(content, SensitiveWordUtil.INPUT_RULE_TYPE));
+        boolean blocked;
+        if (MultiModalContentUtil.parseOpenAiContent(content) != null) {
+            final boolean[] textPartBlocked = {false};
+            String filteredContent = MultiModalContentUtil.transformTextParts(content, text -> {
+                if (SensitiveWordUtil.isInputBlocked(text)) {
+                    textPartBlocked[0] = true;
+                }
+                return SensitiveWordUtil.filter(text, SensitiveWordUtil.INPUT_RULE_TYPE);
+            });
+            blocked = textPartBlocked[0];
+            last.setContent(filteredContent);
+        } else {
+            blocked = SensitiveWordUtil.isInputBlocked(content);
+            last.setContent(SensitiveWordUtil.filter(content, SensitiveWordUtil.INPUT_RULE_TYPE));
+        }
         if (blocked) {
             request.setEnableAfter(false);
             request.setLocalCompletionResult(buildInputBlockedResult(request));

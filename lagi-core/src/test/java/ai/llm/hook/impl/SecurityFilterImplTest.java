@@ -9,6 +9,8 @@ import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
 import ai.openai.pojo.Usage;
 import ai.utils.SensitiveWordUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Observable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SecurityFilterImplTest {
 
@@ -73,6 +76,51 @@ class SecurityFilterImplTest {
         assertEquals("content_filter", request.getLocalCompletionResult().getChoices().get(0).getFinish_reason());
         assertEquals("该问题触发安全过滤规则，已停止生成回答。请调整提问内容后重试。",
                 request.getLocalCompletionResult().getChoices().get(0).getMessage().getContent());
+    }
+
+    @Test
+    void beforeModelFiltersOnlyMultimodalTextAndKeepsImageDataUntouched() throws Exception {
+        SensitiveWordUtil.reloadInputRules(WordRules.builder()
+                .rules(Arrays.asList(
+                        rule("secret", 2, "***"),
+                        rule("DO[A-Z0-9]{32,64}", 3, "***")))
+                .build());
+        String imageUrl = "data:image/png;base64,DOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        ChatMessage message = ChatMessage.builder().role("user")
+                .content("[{\"type\":\"text\",\"text\":\"secret message\"},"
+                        + "{\"type\":\"image_url\",\"image_url\":{\"url\":\"" + imageUrl + "\"}}]")
+                .build();
+        request.setMessages(Collections.singletonList(message));
+
+        new SecurityFilterImpl().beforeModel(ModelContext.builder().request(request).build());
+
+        JsonNode parts = new ObjectMapper().readTree(message.getContent());
+        assertEquals("*** message", parts.get(0).path("text").asText());
+        assertEquals(imageUrl, parts.get(1).path("image_url").path("url").asText());
+        assertTrue(message.getContent().contains(imageUrl));
+    }
+
+    @Test
+    void beforeModelBlocksMultimodalTextWithoutRemovingTheImage() throws Exception {
+        SensitiveWordUtil.reloadInputRules(WordRules.builder()
+                .rules(Collections.singletonList(rule("blocked", 1, "***")))
+                .build());
+        String imageUrl = "data:image/png;base64,AAAA";
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setModel("test-model");
+        ChatMessage message = ChatMessage.builder().role("user")
+                .content("[{\"type\":\"text\",\"text\":\"blocked prompt\"},"
+                        + "{\"type\":\"image_url\",\"image_url\":{\"url\":\"" + imageUrl + "\"}}]")
+                .build();
+        request.setMessages(Collections.singletonList(message));
+
+        new SecurityFilterImpl().beforeModel(ModelContext.builder().request(request).build());
+
+        JsonNode parts = new ObjectMapper().readTree(message.getContent());
+        assertEquals("", parts.get(0).path("text").asText());
+        assertEquals(imageUrl, parts.get(1).path("image_url").path("url").asText());
+        assertEquals("content_filter", request.getLocalCompletionResult().getChoices().get(0).getFinish_reason());
     }
 
     @Test
