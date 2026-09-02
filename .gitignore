@@ -49,6 +49,5 @@ build/
 /lagi-web/dependency-reduced-pom.xml
 
 # Local SQLite runtime data
-/lagi-web/saas.db
-/lagi-web/saas.db-shm
-/lagi-web/saas.db-wal
+/lagi-web/saas.db*
+__pycache__/

@@ -106,6 +106,23 @@ class OpenAiApiUtilTest {
     }
 
     @Test
+    void removesStreamOptionsForNonStreamingRequests() throws Exception {
+        String requestJson = "{"
+                + "\"model\":\"Alibaba/qwen3.7-plus\","
+                + "\"stream\":false,"
+                + "\"stream_options\":{\"include_usage\":true},"
+                + "\"messages\":[{\"role\":\"user\",\"content\":\"describe the image\"}]}";
+        ChatCompletionRequest request = MAPPER.copy()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .readValue(requestJson, ChatCompletionRequest.class);
+
+        JsonNode payload = MAPPER.readTree(OpenAiApiUtil.serializeChatCompletionRequest(request));
+
+        assertFalse(payload.path("stream").asBoolean());
+        assertFalse(payload.has("stream_options"));
+    }
+
+    @Test
     void configuresAllStreamingTimeouts() {
         OkHttpClient client = OpenAiApiUtil.createStreamingClient(600, null);
 

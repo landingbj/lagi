@@ -139,6 +139,11 @@ public class OpenAiApiUtil {
         String payload = gson.toJson(request);
         try {
             JsonNode root = JSON_MAPPER.readTree(payload);
+            if (root instanceof ObjectNode && !Boolean.TRUE.equals(request.getStream())) {
+                // OpenAI-compatible providers reject stream_options on regular
+                // completions. Some clients send it unconditionally.
+                ((ObjectNode) root).remove("stream_options");
+            }
             JsonNode messages = root.get("messages");
             if (!messages.isArray()) {
                 return payload;

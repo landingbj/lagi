@@ -71,6 +71,9 @@ public class ChatCompletionRequest {
     /** The backend key chosen for this request; never part of the public API. */
     @JsonIgnore
     private transient String selectedBackendApiKey;
+    /** Correlates opt-in multimodal trace entries; never part of the public API. */
+    @JsonIgnore
+    private transient String traceId;
     @JsonAlias({"chat_template_kwargs"})
     private Map<String, Object> chat_template_kwargs;
 

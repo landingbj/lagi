@@ -7,6 +7,7 @@ import ai.llm.utils.ExtraBodyUtil;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ExtraBody;
+import ai.openai.utils.MultimodalTraceUtil;
 import ai.utils.ApikeyUtil;
 import io.reactivex.Observable;
 
@@ -28,6 +29,7 @@ public class LandingAdapter extends OpenAIStandardAdapter {
                 chatCompletionRequest.setApiKey(ApikeyUtil.getModelKey(chatCompletionRequest.getModel()));
             }
         }
+        MultimodalTraceUtil.logRequest("landing-dispatch", chatCompletionRequest, getApiAddress());
         return super.completions(chatCompletionRequest);
     }
 
@@ -40,6 +42,7 @@ public class LandingAdapter extends OpenAIStandardAdapter {
                 chatCompletionRequest.setApiKey(ApikeyUtil.getModelKey(chatCompletionRequest.getModel()));
             }
         }
+        MultimodalTraceUtil.logRequest("landing-dispatch", chatCompletionRequest, getApiAddress());
         return super.streamCompletions(chatCompletionRequest);
     }
 

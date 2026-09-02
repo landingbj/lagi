@@ -17,6 +17,7 @@ import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.openai.utils.MultimodalTraceUtil;
 import ai.utils.AiGlobal;
 import cn.hutool.core.util.StrUtil;
 import io.reactivex.Observable;
@@ -57,8 +58,10 @@ public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
                     extractAssistantMessage(response.getData()));
             return response.getData();
         }
+        MultimodalTraceUtil.logRequest("http-dispatch", chatCompletionRequest, getApiAddress());
         LlmApiResponse completions = OpenAiApiUtil.completions(reqApiKey, getApiAddress(), HTTP_TIMEOUT, chatCompletionRequest,
                 GptConvert::convert2ChatCompletionResult, GptConvert::convertByResponse);
+        MultimodalTraceUtil.logResult("http-result", chatCompletionRequest, getApiAddress(), completions.getCode());
         if(completions.getCode() != 200) {
             logger.error("openai api : code{}  error  {}", completions.getCode(), completions.getMsg());
             throw new RRException(completions.getCode(), completions.getMsg());
@@ -109,8 +112,10 @@ public class OpenAIStandardAdapter extends ModelService implements ILlmAdapter {
     }
 
     private Observable<ChatCompletionResult> openStandardStream(String apiKey, ChatCompletionRequest request) {
+        MultimodalTraceUtil.logRequest("http-dispatch", request, getApiAddress());
         LlmApiResponse completions = OpenAiApiUtil.streamCompletions(apiKey, getApiAddress(), HTTP_TIMEOUT, request,
                 GptConvert::convertSteamLine2ChatCompletionResult, GptConvert::convertByResponse);
+        MultimodalTraceUtil.logResult("http-result", request, getApiAddress(), completions.getCode());
         if(completions.getCode() != 200) {
             logger.error("openai stream api : code{} error {}", completions.getCode(), completions.getMsg());
             throw new RRException(completions.getCode(), completions.getMsg());

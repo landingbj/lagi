@@ -28,6 +28,7 @@ import ai.medusa.pojo.CacheItem;
 import ai.medusa.pojo.PromptInput;
 import ai.medusa.utils.PromptInputUtil;
 import ai.openai.pojo.*;
+import ai.openai.utils.MultimodalTraceUtil;
 import ai.router.pojo.LLmRequest;
 import ai.servlet.BaseServlet;
 import ai.utils.AiGlobal;
@@ -358,6 +359,7 @@ public class LlmApiServlet extends BaseServlet {
                 .ip(ClientIpAddressUtil.getClientIpAddress(req))
                 .build();
         BeanUtil.copyProperties(chatCompletionRequest, enhance);
+        enhance.setTraceId(chatCompletionRequest.getTraceId());
         chatCompletionRequest.copyAccountAttributionTo(enhance);
         enhance.setKeyPoolSessionId(chatCompletionRequest.getKeyPoolSessionId());
         chatCompletionRequest = enhance;
@@ -558,6 +560,7 @@ public class LlmApiServlet extends BaseServlet {
         if (chatCompletionRequest.getUserApiKey() == null) {
             chatCompletionRequest.setUserApiKey(apikey);
         }
+        MultimodalTraceUtil.logRequest("api-received", chatCompletionRequest, null);
         return chatCompletionRequest;
     }
 
