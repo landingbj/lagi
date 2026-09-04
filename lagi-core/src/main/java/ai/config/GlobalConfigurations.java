@@ -3,6 +3,7 @@ package ai.config;
 import ai.common.pojo.*;
 import ai.config.pojo.*;
 import ai.llm.adapter.impl.GPTAzureAdapter;
+import ai.llm.adapter.impl.MetaModelAdapter;
 import ai.llm.adapter.impl.OpenAIStandardAdapter;
 import ai.llm.adapter.impl.QwenAdapter;
 import ai.llm.responses.QwenResponseProtocolUtil;
@@ -198,7 +199,8 @@ public class GlobalConfigurations extends AbstractConfiguration {
                 throw new IllegalStateException("backend " + chatBackend.getBackend() + " model " + chatBackend.getModel()
                         + " does not support response protocol");
             }
-            if (StrUtil.equals(effectiveConfig.getDriver(), OpenAIStandardAdapter.class.getName())
+            if ((StrUtil.equals(effectiveConfig.getDriver(), OpenAIStandardAdapter.class.getName())
+                    || StrUtil.equals(effectiveConfig.getDriver(), MetaModelAdapter.class.getName()))
                     && !canResolveResponsesApiAddress(effectiveConfig.getApiAddress())) {
                 throw new IllegalStateException("backend " + chatBackend.getBackend() + " model " + chatBackend.getModel()
                         + " must configure api_address ending with /chat/completions or /responses");
