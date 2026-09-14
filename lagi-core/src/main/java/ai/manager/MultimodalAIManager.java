@@ -11,6 +11,7 @@ import ai.image.adapter.IImage2TextAdapter;
 import ai.image.adapter.IImageGenerationAdapter;
 import ai.image.adapter.ImageEnhanceAdapter;
 import ai.llm.adapter.ILlmAdapter;
+import ai.llm.routing.BringYourOwnKeyRouter;
 import ai.llm.responses.ResponseProtocolUtil;
 import ai.wrapper.IWrapper;
 import ai.ocr.IOcr;
@@ -256,7 +257,14 @@ public class MultimodalAIManager {
                     if(modelService == null) {
                         return false;
                     }
-                    return modelService.verify();
+                    // A DIY box deliberately ships without customer-owned
+                    // provider keys. Keep direct adapters available so a
+                    // request carrying its own original provider key can use
+                    // the stage-1 BYOK route. Other adapters still require
+                    // their normal configured credentials to register.
+                    return modelService.verify()
+                            || (modelService instanceof ILlmAdapter
+                            && BringYourOwnKeyRouter.isDirectProviderAdapter((ILlmAdapter) modelService));
                 }).collect(Collectors.toList());
     }
 

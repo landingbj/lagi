@@ -39,7 +39,10 @@ public class TokenStatisticsDao {
             + " saved_tokens INTEGER NOT NULL,"
             + " provider TEXT,"
             + " model TEXT,"
-            + " session_id TEXT"
+            + " session_id TEXT,"
+            + " user_id TEXT,"
+            + " local_key_id INTEGER,"
+            + " route_source TEXT"
             + ");";
 
     private static final String INDEX_CREATED_AT = ""
@@ -58,7 +61,18 @@ public class TokenStatisticsDao {
                         "ALTER TABLE llm_token_statistics ADD COLUMN model TEXT");
                 ensureColumnExists(conn, "llm_token_statistics", "session_id",
                         "ALTER TABLE llm_token_statistics ADD COLUMN session_id TEXT");
+                ensureColumnExists(conn, "llm_token_statistics", "user_id",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN user_id TEXT");
+                ensureColumnExists(conn, "llm_token_statistics", "local_key_id",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN local_key_id INTEGER");
+                ensureColumnExists(conn, "llm_token_statistics", "route_source",
+                        "ALTER TABLE llm_token_statistics ADD COLUMN route_source TEXT");
                 try (PreparedStatement ps = conn.prepareStatement(INDEX_CREATED_AT)) {
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "CREATE INDEX IF NOT EXISTS idx_llm_token_statistics_user_created_at "
+                                + "ON llm_token_statistics(user_id, created_at)")) {
                     ps.executeUpdate();
                 }
             }
@@ -136,7 +150,16 @@ public class TokenStatisticsDao {
 
     public void insert(long promptTokens, long completionTokens, long totalTokens, long savedTokens,
                        String provider, String model, String sessionId) {
-        String sql = "INSERT INTO llm_token_statistics (created_at, prompt_tokens, completion_tokens, total_tokens, saved_tokens, provider, model, session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        insert(promptTokens, completionTokens, totalTokens, savedTokens, provider, model, sessionId,
+                null, null, null);
+    }
+
+    public void insert(long promptTokens, long completionTokens, long totalTokens, long savedTokens,
+                       String provider, String model, String sessionId, String userId,
+                       Long localKeyId, String routeSource) {
+        String sql = "INSERT INTO llm_token_statistics (created_at, prompt_tokens, completion_tokens, total_tokens, "
+                + "saved_tokens, provider, model, session_id, user_id, local_key_id, route_source) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         int retry = 0;
         while (retry <= MAX_INSERT_RETRY) {
             try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
@@ -149,6 +172,13 @@ public class TokenStatisticsDao {
                 ps.setString(6, provider);
                 ps.setString(7, model);
                 ps.setString(8, sessionId);
+                ps.setString(9, userId);
+                if (localKeyId == null) {
+                    ps.setNull(10, java.sql.Types.INTEGER);
+                } else {
+                    ps.setLong(10, localKeyId);
+                }
+                ps.setString(11, routeSource);
                 ps.executeUpdate();
                 return;
             } catch (SQLException e) {
@@ -167,14 +197,25 @@ public class TokenStatisticsDao {
      * Aggregate: total token usage, total saved, daily average (total usage / calendar days in window), row count.
      */
     public TokenStatisticsSummary summarize(TokenStatisticsRange range) {
+        return summarize(range, null);
+    }
+
+    /** Aggregates a local box user's records when userId is supplied. */
+    public TokenStatisticsSummary summarize(TokenStatisticsRange range, String userId) {
         long[] bounds = millisBounds(range);
         long start = bounds[0];
         long end = bounds[1];
-        String sql = "SELECT COUNT(1), COALESCE(SUM(total_tokens), 0), COALESCE(SUM(saved_tokens), 0) FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?";
+        boolean scoped = userId != null && !userId.trim().isEmpty();
+        String sql = "SELECT COUNT(1), COALESCE(SUM(total_tokens), 0), COALESCE(SUM(saved_tokens), 0) "
+                + "FROM llm_token_statistics WHERE created_at >= ? AND created_at < ?"
+                + (scoped ? " AND user_id = ?" : "");
         try (Connection conn = HikariDS.getConnection(AiGlobal.DEFAULT_DB);
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, start);
             ps.setLong(2, end);
+            if (scoped) {
+                ps.setString(3, userId.trim());
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     long recordCount = rs.getLong(1);

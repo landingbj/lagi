@@ -6,6 +6,7 @@ import ai.common.pojo.Configuration;
 import ai.common.pojo.IndexSearchData;
 import ai.common.pojo.Medusa;
 import ai.config.ContextLoader;
+import ai.config.pojo.LocalKeyConfig;
 import ai.config.pojo.RAGFunction;
 import ai.dto.ModelPreferenceDto;
 import ai.embedding.EmbeddingFactory;
@@ -13,6 +14,9 @@ import ai.embedding.Embeddings;
 import ai.embedding.pojo.OpenAIEmbeddingRequest;
 import ai.llm.pojo.EnhanceChatCompletionRequest;
 import ai.llm.pojo.GetRagContext;
+import ai.llm.routing.BringYourOwnKeyRouter;
+import ai.localkey.LocalBoxKey;
+import ai.localkey.LocalBoxKeyService;
 import ai.llm.schedule.QueueSchedule;
 import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
@@ -74,6 +78,7 @@ public class LlmApiServlet extends BaseServlet {
     private final QueueSchedule queueSchedule = enableQueueHandle ? new QueueSchedule() : null;
     private final DefaultWorker defaultWorker = new DefaultWorker();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final LocalBoxKeyService localBoxKeyService = new LocalBoxKeyService();
     private static MedusaMonitor medusaMonitor;
 
     static {
@@ -95,20 +100,14 @@ public class LlmApiServlet extends BaseServlet {
         resp.setHeader("Content-Type", "application/json;charset=utf-8");
         String url = req.getRequestURI();
         if (url.endsWith("/v1/models") || url.endsWith("/models")) {
+            Set<String> modelIds = resolveModelsForRequest(req, resp);
+            if (modelIds == null) {
+                return;
+            }
             PrintWriter out = resp.getWriter();
             Map<String, Object> models = new LinkedHashMap<>();
             models.put("object", "list");
             List<Map<String, Object>> data = new ArrayList<>();
-            Set<String> modelIds = new LinkedHashSet<>();
-            LlmManager.getInstance().getAllAdapters().stream()
-                    .map(adapter -> (ModelService) adapter)
-                    .filter(adapter -> Boolean.TRUE.equals(adapter.getEnable()))
-                    .map(ModelService::getModel)
-                    .filter(Objects::nonNull)
-                    .forEach(configuredModels -> Arrays.stream(configuredModels.split(","))
-                            .map(String::trim)
-                            .filter(model -> !model.isEmpty())
-                            .forEach(modelIds::add));
             for (String modelId : modelIds) {
                 Map<String, Object> model = new LinkedHashMap<>();
                 model.put("id", modelId);
@@ -261,7 +260,49 @@ public class LlmApiServlet extends BaseServlet {
         ExtraBody extraBody = chatCompletionRequest.getExtraBody();
         String mateUrl = extraBody != null ? extraBody.getMateUrl() : null;
 
-        if (!ApikeyUtil.validateModelApiKey(apiKey)) {
+        LocalBoxKey localKey = authenticateLocalKey(apiKey, resp, chatCompletionRequest);
+        if (LocalBoxKeyService.isLocalKey(apiKey) && localKey == null) {
+            return;
+        }
+        if (localKey != null) {
+            if (!routeLocalKeyRequest(localKey, resp, chatCompletionRequest)) {
+                return;
+            }
+        }
+
+        // A LinkMind SaaS key is authoritative even when a client keeps an
+        // unprefixed model name. Resolve it to the configured cloud alias
+        // (qwen-plus -> Alibaba/qwen-plus) before considering local BYOK.
+        boolean landingKey = localKey == null && ApikeyUtil.isLandingKey(apiKey);
+        if (landingKey) {
+            String cloudModel = BringYourOwnKeyRouter.resolveCloudModelAlias(chatCompletionRequest.getModel());
+            if (cloudModel != null) {
+                chatCompletionRequest.setModel(cloudModel);
+            } else if (chatCompletionRequest.getModel() != null
+                    && !chatCompletionRequest.getModel().contains("/")) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                ChatCompletionResult chatCompletionResult = LLMErrorConstants.errorResponse(chatCompletionRequest,
+                        LLMErrorConstants.INVALID_REQUEST_ERROR,
+                        "This LinkMind API key requires a configured cloud model alias for the requested model.");
+                outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
+                return;
+            }
+            // Stage 2 is user-owned SaaS access: the submitted LinkMind key,
+            // not the box's configured Landing key, is forwarded to cloud.
+            // Stage 3 deliberately sets a different selected key below.
+            chatCompletionRequest.setSelectedBackendApiKey(apiKey);
+            chatCompletionRequest.setUseCallerProvidedApiKey(true);
+        }
+
+        BringYourOwnKeyRouter.Decision byok = localKey == null
+                ? BringYourOwnKeyRouter.resolve(chatCompletionRequest.getModel(), apiKey)
+                : BringYourOwnKeyRouter.Decision.notApplicable();
+        if (byok.isDirect()) {
+            // A direct-provider model keeps the caller's original key for this
+            // request only. It is never written to lagi.yml or a key pool.
+            chatCompletionRequest.setSelectedBackendApiKey(apiKey);
+            chatCompletionRequest.setUseCallerProvidedApiKey(true);
+        } else if (localKey == null && !landingKey && !ApikeyUtil.validateModelApiKey(apiKey)) {
             ChatCompletionResult chatCompletionResult = LLMErrorConstants.errorResponse(chatCompletionRequest);
             outPrintChatCompletion(resp, chatCompletionRequest, chatCompletionResult);
             ApikeyUtil.saveInvalidApiKey(apiKey);
@@ -342,6 +383,9 @@ public class LlmApiServlet extends BaseServlet {
         BeanUtil.copyProperties(chatCompletionRequest, enhance);
         enhance.setTraceId(chatCompletionRequest.getTraceId());
         enhance.setKeyPoolSessionId(chatCompletionRequest.getKeyPoolSessionId());
+        enhance.setSelectedBackendApiKey(chatCompletionRequest.getSelectedBackendApiKey());
+        enhance.setUseCallerProvidedApiKey(chatCompletionRequest.getUseCallerProvidedApiKey());
+        chatCompletionRequest.copyAccountAttributionTo(enhance);
         chatCompletionRequest = enhance;
         if (chatCompletionRequest.getStream() != null && chatCompletionRequest.getStream()) {
             try {
@@ -378,6 +422,133 @@ public class LlmApiServlet extends BaseServlet {
                 handleCompletionException(resp, chatCompletionRequest, mateUrl, e);
             }
         }
+    }
+
+    /**
+     * Models are deliberately selected from configuration rather than a
+     * hard-coded provider catalogue. A user-owned provider key sees direct
+     * models, a SaaS key sees cloud models, and a local box key sees the union
+     * of its local-first route names.
+     */
+    private Set<String> resolveModelsForRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String apiKey = ApikeyUtil.extractBearerToken(req.getHeader("Authorization"));
+        if (StrUtil.isBlank(apiKey)) {
+            // Preserve the historical no-auth discovery response for existing
+            // consoles and scripts. Key-aware filtering applies only when a
+            // caller actually supplies a credential.
+            return BringYourOwnKeyRouter.configuredModels();
+        }
+        LocalKeyConfig localConfig = localKeyConfig();
+        if (LocalBoxKeyService.isLocalKey(apiKey)) {
+            if (Boolean.FALSE.equals(localConfig.getEnable())) {
+                writeModelListError(resp, HttpServletResponse.SC_NOT_FOUND, "local key service is disabled");
+                return null;
+            }
+            try {
+                LocalBoxKey localKey = localBoxKeyService.authenticate(apiKey);
+                if (localKey == null) {
+                    writeModelListError(resp, HttpServletResponse.SC_UNAUTHORIZED,
+                            "The local LinkMind API key is invalid or revoked.");
+                    return null;
+                }
+            } catch (Exception e) {
+                logger.error("local box key lookup failed while listing models", e);
+                writeModelListError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                        "Local box key storage is unavailable.");
+                return null;
+            }
+            return BringYourOwnKeyRouter.configuredLocalKeyModels(localConfig.getCloudBackend());
+        }
+        if (ApikeyUtil.isLandingKey(apiKey)) {
+            return BringYourOwnKeyRouter.configuredCloudModels(localConfig.getCloudBackend());
+        }
+        return BringYourOwnKeyRouter.configuredDirectModels();
+    }
+
+    private void writeModelListError(HttpServletResponse resp, int status, String message) throws IOException {
+        resp.setStatus(status);
+        Map<String, String> error = new LinkedHashMap<>();
+        error.put("error", message);
+        resp.getWriter().print(gson.toJson(error));
+    }
+
+    /**
+     * Authenticates a box-issued lmk_ key. A non-lmk_ key returns null so the
+     * existing SaaS/BYOK paths can continue. An invalid lmk_ request is
+     * terminated at the edge and is never sent to a model provider.
+     */
+    private LocalBoxKey authenticateLocalKey(String apiKey, HttpServletResponse resp,
+                                             ChatCompletionRequest request) throws IOException {
+        if (!LocalBoxKeyService.isLocalKey(apiKey)) {
+            return null;
+        }
+        if (Boolean.FALSE.equals(localKeyConfig().getEnable())) {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            ChatCompletionResult error = LLMErrorConstants.errorResponse(request,
+                    LLMErrorConstants.INVALID_REQUEST_ERROR, "Local box key service is disabled.");
+            outPrintChatCompletion(resp, request, error);
+            return null;
+        }
+        try {
+            LocalBoxKey localKey = localBoxKeyService.authenticate(apiKey);
+            if (localKey != null) {
+                request.setAccountUserId(localKey.getSubjectId());
+                request.setAccountLocalKeyId(localKey.getId());
+                return localKey;
+            }
+        } catch (Exception e) {
+            logger.error("local box key lookup failed", e);
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            ChatCompletionResult error = LLMErrorConstants.errorResponse(request,
+                    LLMErrorConstants.SERVER_ERROR, "Local box key storage is unavailable.");
+            outPrintChatCompletion(resp, request, error);
+            return null;
+        }
+        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        ChatCompletionResult error = LLMErrorConstants.errorResponse(request,
+                LLMErrorConstants.INVALID_AUTHENTICATION_ERROR, "The local LinkMind API key is invalid or revoked.");
+        outPrintChatCompletion(resp, request, error);
+        return null;
+    }
+
+    /**
+     * Implements local-key routing: configured direct provider credentials
+     * win; otherwise the request is forwarded through the configured Landing
+     * backend with its box-owned credential.
+     */
+    private boolean routeLocalKeyRequest(LocalBoxKey localKey, HttpServletResponse resp,
+                                         ChatCompletionRequest request) throws IOException {
+        String requestedModel = request.getModel();
+        if (BringYourOwnKeyRouter.hasConfiguredDirectBackend(requestedModel)) {
+            request.setRouteSource("direct_provider");
+            return true;
+        }
+
+        String cloudBackend = localKeyConfig().getCloudBackend();
+        String cloudModel = BringYourOwnKeyRouter.resolveCloudModelAlias(requestedModel, cloudBackend);
+        String cloudApiKey = BringYourOwnKeyRouter.resolveConfiguredCloudApiKey(cloudModel, cloudBackend);
+        if (cloudModel != null && cloudApiKey != null) {
+            request.setModel(cloudModel);
+            request.setSelectedBackendApiKey(cloudApiKey);
+            request.setUseCallerProvidedApiKey(true);
+            request.setRouteSource("cloud_landing");
+            return true;
+        }
+
+        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        ChatCompletionResult error = LLMErrorConstants.errorResponse(request,
+                LLMErrorConstants.NO_AVAILABLE_MODEL,
+                "The requested model has no configured local provider or cloud Landing route.");
+        outPrintChatCompletion(resp, request, error);
+        return false;
+    }
+
+    private LocalKeyConfig localKeyConfig() {
+        if (ContextLoader.configuration == null || ContextLoader.configuration.getGeneral() == null
+                || ContextLoader.configuration.getGeneral().getLocalKey() == null) {
+            return new LocalKeyConfig();
+        }
+        return ContextLoader.configuration.getGeneral().getLocalKey();
     }
 
     private void handleCompletionException(HttpServletResponse resp, ChatCompletionRequest chatCompletionRequest,

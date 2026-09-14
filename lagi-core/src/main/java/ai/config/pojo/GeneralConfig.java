@@ -18,4 +18,7 @@ public class GeneralConfig {
 
     @JsonProperty("container_url")
     private String containerUrl;
+
+    @JsonProperty("local_key")
+    private LocalKeyConfig localKey = new LocalKeyConfig();
 }

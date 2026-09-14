@@ -233,6 +233,15 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>localBoxKey</servlet-name>
+        <servlet-class>ai.servlet.api.LocalBoxKeyApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>localBoxKey</servlet-name>
+        <url-pattern>/v1/local-keys/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>asr</servlet-name>
         <servlet-class>ai.servlet.api.AudioApiServlet</servlet-class>
     </servlet>

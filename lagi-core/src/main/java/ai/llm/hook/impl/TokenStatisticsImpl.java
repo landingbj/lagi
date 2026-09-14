@@ -70,7 +70,11 @@ public class TokenStatisticsImpl implements AfterModel {
         String provider = resolveProvider(context);
         String model = resolveModel(context);
         String sessionId = resolveSessionId(context);
-        ASYNC_SAVE.execute(() -> tokenStatisticsDao.insert(prompt, completion, total, saved, provider, model, sessionId));
+        String userId = resolveAccountUserId(context);
+        Long localKeyId = resolveLocalKeyId(context);
+        String routeSource = resolveRouteSource(context);
+        ASYNC_SAVE.execute(() -> tokenStatisticsDao.insert(prompt, completion, total, saved, provider, model,
+                sessionId, userId, localKeyId, routeSource));
     }
 
     private String resolveModel(ModelContext context) {
@@ -99,5 +103,17 @@ public class TokenStatisticsImpl implements AfterModel {
             return null;
         }
         return context.getRequest().getSessionId();
+    }
+
+    private String resolveAccountUserId(ModelContext context) {
+        return context == null || context.getRequest() == null ? null : context.getRequest().getAccountUserId();
+    }
+
+    private Long resolveLocalKeyId(ModelContext context) {
+        return context == null || context.getRequest() == null ? null : context.getRequest().getAccountLocalKeyId();
+    }
+
+    private String resolveRouteSource(ModelContext context) {
+        return context == null || context.getRequest() == null ? null : context.getRequest().getRouteSource();
     }
 }

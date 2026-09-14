@@ -89,6 +89,9 @@ public class CompletionsService implements ChatCompletion {
                     unfreezeAdapter(appointAdapter);
                     return result;
                 } catch (RRException e) {
+                    if (Boolean.TRUE.equals(chatCompletionRequest.getUseCallerProvidedApiKey())) {
+                        throw e;
+                    }
                     ApikeyUtil.saveInvalidApiKey(apiKey);
                     Policy policy = getPolicy();
                     if (LLMErrorConstants.isContentSafetyBlocked(e.getCode()) || !policy.getEnablePolicy()) {
@@ -139,6 +142,9 @@ public class CompletionsService implements ChatCompletion {
                     unfreezeAdapter(adapter);
                     return result;
                 } catch (RRException e) {
+                    if (Boolean.TRUE.equals(chatCompletionRequest.getUseCallerProvidedApiKey())) {
+                        throw e;
+                    }
                     ApikeyUtil.saveInvalidApiKey(apiKey);
                     Policy policy = getPolicy();
                     if (LLMErrorConstants.isContentSafetyBlocked(e.getCode()) || !policy.getEnablePolicy()) {

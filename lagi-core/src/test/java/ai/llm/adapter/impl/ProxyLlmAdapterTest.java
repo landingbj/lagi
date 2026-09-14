@@ -98,6 +98,36 @@ class ProxyLlmAdapterTest {
         assertEquals(Arrays.asList("key-1", "key-2"), delegate.completionKeys);
     }
 
+    @Test
+    void callerProvidedKeyBypassesConfiguredKeyPool() {
+        CountingAdapter delegate = new CountingAdapter();
+        delegate.setApiKeys(Arrays.asList("configured-1", "configured-2"));
+        delegate.setKeyRoute("polling");
+        ProxyLlmAdapter proxy = new ProxyLlmAdapter(delegate);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setSelectedBackendApiKey("caller-key");
+        request.setUseCallerProvidedApiKey(true);
+
+        proxy.completions(request);
+
+        assertEquals(Collections.singletonList("caller-key"), delegate.completionKeys);
+    }
+
+    @Test
+    void callerProvidedKeyBypassesConfiguredKeyPoolForStreams() {
+        CountingAdapter delegate = new CountingAdapter();
+        delegate.setApiKeys(Arrays.asList("configured-1", "configured-2"));
+        delegate.setKeyRoute("polling");
+        ProxyLlmAdapter proxy = new ProxyLlmAdapter(delegate);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setSelectedBackendApiKey("caller-key");
+        request.setUseCallerProvidedApiKey(true);
+
+        proxy.streamCompletions(request).blockingFirst();
+
+        assertEquals(Collections.singletonList("caller-key"), delegate.streamKeys);
+    }
+
     private static ChatCompletionResult messageResult(String content) {
         ChatCompletionChoice choice = new ChatCompletionChoice();
         choice.setMessage(ChatMessage.builder().content(content).build());

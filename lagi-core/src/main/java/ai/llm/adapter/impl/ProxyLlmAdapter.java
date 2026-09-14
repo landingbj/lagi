@@ -178,6 +178,9 @@ public class ProxyLlmAdapter extends ModelService implements ILlmAdapter {
 
     private ChatCompletionResult delegateCompletions(ChatCompletionRequest request) {
         ModelService inner = (ModelService) llmAdapter;
+        if (Boolean.TRUE.equals(request.getUseCallerProvidedApiKey())) {
+            return llmAdapter.completions(request);
+        }
         List<String> keys = inner.getApiKeys();
         RRException lastError = new RRException("No available API key in the key pool");
         if (keys == null || keys.isEmpty()) {
@@ -204,6 +207,9 @@ public class ProxyLlmAdapter extends ModelService implements ILlmAdapter {
 
     private Observable<ChatCompletionResult> delegateStreamCompletions(ChatCompletionRequest request) {
         ModelService inner = (ModelService) llmAdapter;
+        if (Boolean.TRUE.equals(request.getUseCallerProvidedApiKey())) {
+            return llmAdapter.streamCompletions(request);
+        }
         List<String> keys = inner.getApiKeys();
         RRException lastError = new RRException("No available API key in the key pool");
         if (keys == null || keys.isEmpty()) {

@@ -49,8 +49,19 @@ public class ChatCompletionRequest {
      */
     private transient Set<Class<?>> enabledHooks;
     private Boolean store;
-    private String apiKey;
-    private String userApiKey;
+    @JsonIgnore
+    private transient String apiKey;
+    @JsonIgnore
+    private transient String userApiKey;
+    /** Local box subject resolved from an admitted lmk_ key. */
+    @JsonIgnore
+    private transient String accountUserId;
+    /** Local box key id used for attribution without retaining its secret. */
+    @JsonIgnore
+    private transient Long accountLocalKeyId;
+    /** The resolved execution route: direct_provider or cloud_landing. */
+    @JsonIgnore
+    private transient String routeSource;
     /**
      * Server-side session identity used only for key-pool affinity. This is
      * deliberately separate from {@link #sessionId}, which some providers
@@ -61,6 +72,13 @@ public class ChatCompletionRequest {
     /** The backend key chosen for this request; never part of the public API. */
     @JsonIgnore
     private transient String selectedBackendApiKey;
+    /**
+     * True when the caller's API key is the one-time upstream credential.
+     * Proxy key-pool selection must not replace {@link #selectedBackendApiKey}
+     * in this case.
+     */
+    @JsonIgnore
+    private transient Boolean useCallerProvidedApiKey;
     /** Correlates opt-in multimodal trace entries; never part of the public API. */
     @JsonIgnore
     private transient String traceId;
@@ -94,5 +112,15 @@ public class ChatCompletionRequest {
             }
         }
         return false;
+    }
+
+    /** Preserve transient account metadata when a request is copied internally. */
+    public void copyAccountAttributionTo(ChatCompletionRequest target) {
+        if (target == null) {
+            return;
+        }
+        target.setAccountUserId(accountUserId);
+        target.setAccountLocalKeyId(accountLocalKeyId);
+        target.setRouteSource(routeSource);
     }
 }
