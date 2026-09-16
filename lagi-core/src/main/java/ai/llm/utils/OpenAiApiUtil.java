@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.Proxy;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -144,9 +145,14 @@ public class OpenAiApiUtil {
                 // completions. Some clients send it unconditionally.
                 ((ObjectNode) root).remove("stream_options");
             }
+            if (root instanceof ObjectNode && doesNotSupportTemperature(request.getModel())) {
+                // Claude's current OpenAI-compatible endpoint rejects this
+                // deprecated parameter, even when it has the default value.
+                ((ObjectNode) root).remove("temperature");
+            }
             JsonNode messages = root.get("messages");
-            if (!messages.isArray()) {
-                return payload;
+            if (messages == null || !messages.isArray()) {
+                return JSON_MAPPER.writeValueAsString(root);
             }
             for (JsonNode message : messages) {
                 if (!(message instanceof ObjectNode)) {
@@ -168,6 +174,16 @@ public class OpenAiApiUtil {
             // it is not a valid recognised multimodal message.
             return payload;
         }
+    }
+
+    private static boolean doesNotSupportTemperature(String model) {
+        if (model == null) {
+            return false;
+        }
+        String normalized = model.trim().toLowerCase(Locale.ROOT);
+        int providerSeparator = normalized.lastIndexOf('/');
+        String modelName = providerSeparator >= 0 ? normalized.substring(providerSeparator + 1) : normalized;
+        return modelName.startsWith("claude");
     }
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,

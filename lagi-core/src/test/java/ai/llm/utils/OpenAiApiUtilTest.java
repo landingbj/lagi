@@ -123,6 +123,28 @@ class OpenAiApiUtilTest {
     }
 
     @Test
+    void omitsTemperatureForClaudeModelsThatRejectTheDeprecatedParameter() throws Exception {
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setModel("anthropic/claude-haiku-4-5-20251001");
+        request.setTemperature(0.7D);
+
+        JsonNode payload = MAPPER.readTree(OpenAiApiUtil.serializeChatCompletionRequest(request));
+
+        assertFalse(payload.has("temperature"));
+    }
+
+    @Test
+    void keepsTemperatureForModelsThatSupportIt() throws Exception {
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setModel("Alibaba/qwen3.5-flash");
+        request.setTemperature(0.7D);
+
+        JsonNode payload = MAPPER.readTree(OpenAiApiUtil.serializeChatCompletionRequest(request));
+
+        assertEquals(0.7D, payload.path("temperature").asDouble());
+    }
+
+    @Test
     void configuresAllStreamingTimeouts() {
         OkHttpClient client = OpenAiApiUtil.createStreamingClient(600, null);
 
