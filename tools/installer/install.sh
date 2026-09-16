@@ -199,33 +199,11 @@ PY
 
 # export_val="false"
 # import_val="false"
-runtime_choice="mate"
 install_medusa="false"
 install_skills="false"
 inject_agent=0
 deer_flow_path=""
 openhuman_path=""
-
-read_runtime_choice() {
-    while true; do
-        echo "Runtime Choice:"
-        echo "  1) as Agent Mate"
-        echo "  2) as Agent Server"
-        printf "Please choose [1]: "
-        read -r answer < /dev/tty
-        answer=$(echo "$answer" | tr '[:upper:]' '[:lower:]' | xargs)
-        if [ -z "$answer" ] || [ "$answer" = "1" ] || [ "$answer" = "mate" ]; then
-            runtime_choice="mate"
-            return 0
-        elif [ "$answer" = "2" ] || [ "$answer" = "server" ]; then
-            runtime_choice="server"
-            return 0
-        fi
-        echo "Invalid choice. Please enter 1 or 2."
-    done
-}
-
-read_runtime_choice
 
 read_deer_flow_path() {
     while true; do
@@ -289,7 +267,7 @@ read_inject_agent_choice() {
     done
 }
 
-if [ "$runtime_choice" = "mate" ]; then
+if read_yes_no "Would you like to connect LinkMind to an installed Agent framework?" "no"; then
     read_inject_agent_choice
     if [ "$inject_agent" -eq $((1 << 1)) ]; then
         read_deer_flow_path
@@ -302,16 +280,15 @@ if [ "$runtime_choice" = "mate" ]; then
     fi
 fi
 
-if [ "$runtime_choice" = "server" ]; then
-    if read_yes_no "Would you like to install popular skills? This downloads the popular skills package" "yes"; then
-        install_skills="true"
-    fi
+if read_yes_no "Would you like to install popular skills? This downloads the popular skills package" "yes"; then
+    install_skills="true"
+fi
 
-    if read_yes_no "Would you like to install Medusa Accelerator? This downloads a large model file (100+ MB)"; then
-        install_medusa="true"
-    fi
+if read_yes_no "Would you like to install Medusa Accelerator? This downloads a large model file (100+ MB)"; then
+    install_medusa="true"
+fi
 
-    if [ "$install_skills" = "true" ]; then
+if [ "$install_skills" = "true" ]; then
         POPULAR_SKILLS_ZIP="$LINKMIND_DIR/popular_skills.zip"
         SKILLS_ROOT="$LINKMIND_DIR/skills/popular_skills"
         SKILLS_EXTRACT_DIR="$(mktemp -d "${TMPDIR:-/tmp}/LinkMindSkills_XXXXXXXXXX")"
@@ -355,11 +332,11 @@ if [ "$runtime_choice" = "server" ]; then
         rm -rf "$SKILLS_EXTRACT_DIR"
         SKILLS_EXTRACT_DIR=""
         echo "Popular skills installed into: $SKILLS_ROOT"
-    else
-        echo "Skipping popular skills installation."
-    fi
+else
+    echo "Skipping popular skills installation."
+fi
 
-    if [ "$install_medusa" = "true" ]; then
+if [ "$install_medusa" = "true" ]; then
         MEDUSA_MODEL_PATH="$LINKMIND_DIR/medusa.model"
         echo "Downloading $MEDUSA_MODEL_URL ..."
         if command -v curl >/dev/null 2>&1; then
@@ -381,7 +358,6 @@ if [ "$runtime_choice" = "server" ]; then
             exit 1
         fi
         echo "Medusa Accelerator model installed into: $JAR_PATH"
-    fi
 fi
 
 # if read_yes_no "Would you like to inject LinkMind into OpenClaw?"; then
@@ -396,7 +372,6 @@ echo "Running installer..."
 # "--export-to-openclaw=$export_val" \
 # "--import-from-openclaw=$import_val" \
 java -cp "$JAR_PATH" ai.starter.InstallerUtil \
-    "--runtime-choice=$runtime_choice" \
     "--skills-root=$SKILLS_ROOT" \
     "--install-medusa=$install_medusa" \
     "--inject-agent=$inject_agent" \

@@ -159,7 +159,7 @@ stores:
 
 如果你的本地工作流已经有 OpenClaw、Hermes Agent、DeerFlow 或 OpenHuman：
 
-1. 以 `Agent Mate` 模式重新安装或重启 LinkMind。
+1. 重新安装或重启统一的 LinkMind，并在安装器中按需选择 Agent 前端接入。
 2. 检查运行时配置路径是否正确。
 3. 让 LinkMind 充当统一中间层，而不是业务系统分别直连各个模型厂商。
 
@@ -300,20 +300,20 @@ functions:
 7. 演示文稿：按页处理文本与图片内容。
 8. 纯图片文件：通过 OCR 或图像理解转成可检索内容。
 
-## 第三部分：智能体客户端接入实操（Agent Mate）
+## 第三部分：智能体客户端接入实操
 
 本部分用于指导你把 LinkMind 接入 OpenClaw、Hermes Agent、DeerFlow、OpenHuman 四类智能体客户端，并完成从客户端对话到 LinkMind 用量记录的闭环验证。
 
 ### 3.1 接入路径总览
 
-四类客户端的整体逻辑一致：先准备客户端运行环境，再以 `Agent Mate` 模式安装 LinkMind，随后在 LinkMind 中配置额度、API Key 和路由，最后把客户端模型请求指向 LinkMind。
+四类客户端的整体逻辑一致：先准备客户端运行环境，再安装 LinkMind 并按需选择对应的 Agent 前端接入，随后在 LinkMind 中配置额度、API Key 和路由，最后把客户端模型请求指向 LinkMind。
 
 | 客户端 | 入口/地址 | LinkMind 安装选择 | 核心配置 | 验证方式 |
 | --- | --- | --- | --- | --- |
-| OpenClaw | Web UI：`127.0.0.1:18789` | `Agent Mate`，框架选择 `openclaw` | `lagi.yml`，OpenClaw UI 中选择 LinkMind 中间件 | 切换到 `linkmind-Pro` 后在 OpenClaw 对话 |
-| Hermes Agent | PowerShell/WSL 终端：`hermes` | `Agent Mate`，框架选择 `hermes` | `lagi.yml`，Hermes `config.yaml` | 在 Hermes 控制台直接输入消息 |
-| DeerFlow | 前端：`localhost:3000` 或 `make dev` 输出地址 | `Agent Mate`，框架选择 `deer-flow`，并输入项目绝对路径 | `lagi.yml`，DeerFlow `config.yaml`，`.env` | 在 DeerFlow Chat 页面选择 LinkMind 模型并对话 |
-| OpenHuman | 桌面应用 | `Agent Mate`，框架选择 `openhuman`，可选配置路径 | `lagi.yml`，OpenHuman `config.toml` | 在 OpenHuman 发消息，并确认 LinkMind 收到 `/v1/chat/completions` 请求 |
+| OpenClaw | Web UI：`127.0.0.1:18789` | 选择接入 `openclaw` | `lagi.yml`，OpenClaw UI 中选择 LinkMind 中间件 | 切换到 `linkmind-Pro` 后在 OpenClaw 对话 |
+| Hermes Agent | PowerShell/WSL 终端：`hermes` | 选择接入 `hermes` | `lagi.yml`，Hermes `config.yaml` | 在 Hermes 控制台直接输入消息 |
+| DeerFlow | 前端：`localhost:3000` 或 `make dev` 输出地址 | 选择接入 `deer-flow`，并输入项目绝对路径 | `lagi.yml`，DeerFlow `config.yaml`，`.env` | 在 DeerFlow Chat 页面选择 LinkMind 模型并对话 |
+| OpenHuman | 桌面应用 | 选择接入 `openhuman`，可选配置路径 | `lagi.yml`，OpenHuman `config.toml` | 在 OpenHuman 发消息，并确认 LinkMind 收到 `/v1/chat/completions` 请求 |
 
 ### 3.2 准备智能体客户端
 
@@ -413,14 +413,14 @@ macOS / Linux：
 curl -fsSL https://cdn.linkmind.top/install.sh | bash
 ```
 
-安装模式统一选择 `Agent Mate`；不同客户端只在 `Inject Agent Framework` 处选择不同框架：
+安装器不再选择运行模式；需要接入前端时，在 `Inject Agent Framework` 处选择对应框架：
 
 | 当前客户端 | Runtime Choice | Inject Agent Framework | 额外输入 |
 | --- | --- | --- | --- |
-| OpenClaw | `1) as Agent Mate` | `1) openclaw` | 无 |
-| DeerFlow | `1) as Agent Mate` | `2) deer-flow` | 输入 DeerFlow 项目绝对路径，例如 `D:\workspace\code\deer-flow` |
-| Hermes Agent | `1) as Agent Mate` | `3) hermes` | 无；若在 WSL 中使用，后续注意 `base_url` 地址 |
-| OpenHuman | `1) as Agent Mate` | `4) openhuman` | 可输入 OpenHuman 配置目录或 `config.toml`；留空则自动发现 |
+| OpenClaw | 选择接入 Agent 前端 | `1) openclaw` | 无 |
+| DeerFlow | 选择接入 Agent 前端 | `2) deer-flow` | 输入 DeerFlow 项目绝对路径，例如 `D:\workspace\code\deer-flow` |
+| Hermes Agent | 选择接入 Agent 前端 | `3) hermes` | 无；若在 WSL 中使用，后续注意 `base_url` 地址 |
+| OpenHuman | 选择接入 Agent 前端 | `4) openhuman` | 可输入 OpenHuman 配置目录或 `config.toml`；留空则自动发现 |
 
 安装完成后可以选择立即启动 LinkMind；如果选择暂不启动，后续进入 LinkMind 目录执行：
 

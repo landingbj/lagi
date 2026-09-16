@@ -20,16 +20,9 @@ This page treats the four installation paths as alternatives, not sequential ste
   curl -fsSL https://cdn.linkmind.top/install.sh | bash
   ```
 
-### Choose a Runtime Mode
+### Optional Installation Items
 
-During installation, LinkMind asks you to choose a runtime mode:
-
-| Mode | Choose this when |
-| --- | --- |
-| `Agent Mate` | OpenClaw, Hermes Agent, DeerFlow, or OpenHuman is already part of your local workflow and you want LinkMind to sit in the middle as the shared AI layer |
-| `Agent Server` | You want a standalone LinkMind service first, or you are evaluating the web console and API directly |
-
-If you are only trying LinkMind for the first time, start with `Agent Server`.
+LinkMind has one unified runtime. The installer independently offers optional Agent frontend integration for OpenClaw, Hermes Agent, DeerFlow, or OpenHuman; popular skills; and Medusa acceleration resources. These choices can be combined and no longer define a product version.
 
 ### What the Installer Does
 
@@ -37,10 +30,10 @@ The current installer does more than just download one file:
 
 1. Creates the LinkMind home directory, usually `%USERPROFILE%\\LinkMind` on Windows or `~/LinkMind` on macOS and Linux.
 2. Downloads `LinkMind.jar` into that directory.
-3. Asks whether LinkMind should run as `Agent Mate` or `Agent Server`.
-4. If you choose `Agent Mate`, it asks which runtime should be injected or synchronized: OpenClaw, DeerFlow, Hermes, or OpenHuman. DeerFlow asks for its install directory; OpenHuman accepts an optional config directory or `config.toml` path and can also auto-detect the default workspace.
-5. If you choose `Agent Server`, it downloads the bundled popular skills package and expands it under `skills/popular_skills`.
-6. Runs the runtime initializer so that the first startup already knows which runtime mode and skill settings to use.
+3. Optionally asks which installed Agent frontend to connect: OpenClaw, DeerFlow, Hermes, or OpenHuman. DeerFlow asks for its install directory; OpenHuman accepts an optional config directory or `config.toml` path and can also auto-detect the default workspace.
+4. Optionally downloads the bundled popular skills package and expands it under `skills/popular_skills`.
+5. Optionally downloads Medusa acceleration resources.
+6. Runs initialization for the selected Skills, Medusa, and Agent integration settings.
 
 ### First Launch
 
@@ -215,14 +208,6 @@ java -jar LinkMind.jar --host=0.0.0.0
   ```bash
   java -jar LinkMind.jar --config=/opt/linkmind/config --data-dir=/var/lib/linkmind/data
   ```
-
-### Preselect the Runtime Mode
-
-```bash
-java -jar LinkMind.jar --runtime-choice=server
-```
-
-Valid values are `mate` and `server`.
 
 ### Point DeerFlow Sync at a Custom Path
 

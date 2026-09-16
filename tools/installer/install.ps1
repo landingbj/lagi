@@ -236,23 +236,6 @@ function Install-LinkMind {
         }
     }
 
-    function Read-RuntimeChoice {
-        while ($true) {
-            Write-Host "Runtime Choice:"
-            Write-Host "  1) as Agent Mate"
-            Write-Host "  2) as Agent Server"
-            $answer = (Read-Host "Please choose [1]").Trim().ToLower()
-            if ([string]::IsNullOrEmpty($answer) -or $answer -eq "1" -or $answer -eq "mate") {
-                return "mate"
-            }
-            if ($answer -eq "2" -or $answer -eq "server") {
-                return "server"
-            }
-            Write-Host "Invalid choice. Please enter 1 or 2."
-        }
-    }
-
-    $runtimeChoice = Read-RuntimeChoice
     $skillsRoot = ""
     $installMedusa = $false
     $installSkills = $false
@@ -312,7 +295,7 @@ function Install-LinkMind {
         }
     }
 
-    if ($runtimeChoice -eq "mate") {
+    if (Read-YesNo "Would you like to connect LinkMind to an installed Agent framework?" "no") {
         $injectAgent = Read-InjectAgentChoice
         if ($injectAgent -eq (1 -shl 1)) {
             $deerFlowPath = Read-DeerFlowPath
@@ -325,11 +308,10 @@ function Install-LinkMind {
         }
     }
 
-    if ($runtimeChoice -eq "server") {
-        $installSkills = Read-YesNo "Would you like to install popular skills? This downloads the popular skills package" "yes"
-        $installMedusa = Read-YesNo "Would you like to install Medusa Accelerator? This downloads a large model file (100+ MB)"
+    $installSkills = Read-YesNo "Would you like to install popular skills? This downloads the popular skills package" "yes"
+    $installMedusa = Read-YesNo "Would you like to install Medusa Accelerator? This downloads a large model file (100+ MB)"
 
-        if ($installSkills) {
+    if ($installSkills) {
             $popularSkillsZip = Join-Path $linkMindDir "popular_skills.zip"
             $skillsRoot = Join-Path (Join-Path $linkMindDir "skills") "popular_skills"
             $skillsExtractDir = Join-Path ([System.IO.Path]::GetTempPath()) "LinkMindSkills_$([System.Guid]::NewGuid().ToString('N'))"
@@ -363,20 +345,19 @@ function Install-LinkMind {
                     Remove-Item -Path $skillsExtractDir -Recurse -Force -ErrorAction SilentlyContinue
                 }
             }
-        } else {
-            Write-Host "Skipping popular skills installation."
-        }
+    } else {
+        Write-Host "Skipping popular skills installation."
+    }
 
-        if ($installMedusa) {
-            $medusaModelPath = Join-Path $linkMindDir "medusa.model"
-            Write-Host "Downloading $medusaModelUrl ..."
-            Invoke-WebRequest -Uri $medusaModelUrl -OutFile $medusaModelPath -UseBasicParsing
+    if ($installMedusa) {
+        $medusaModelPath = Join-Path $linkMindDir "medusa.model"
+        Write-Host "Downloading $medusaModelUrl ..."
+        Invoke-WebRequest -Uri $medusaModelUrl -OutFile $medusaModelPath -UseBasicParsing
 
-            if (-not (Update-JarEntryFromFile $jarPath "medusa.model" $medusaModelPath)) {
-                return
-            }
-            Write-Host "Medusa Accelerator model installed into: $jarPath"
+        if (-not (Update-JarEntryFromFile $jarPath "medusa.model" $medusaModelPath)) {
+            return
         }
+        Write-Host "Medusa Accelerator model installed into: $jarPath"
     }
 
     # $exportToOpenClaw = Read-YesNo "Would you like to inject LinkMind into OpenClaw?"
@@ -388,7 +369,7 @@ function Install-LinkMind {
     Write-Host "Running installer..."
     # "--export-to-openclaw=$exportVal"
     # "--import-from-openclaw=$importVal"
-    java -cp $jarPath ai.starter.InstallerUtil "--runtime-choice=$runtimeChoice" "--skills-root=$skillsRoot" "--install-medusa=$installMedusa" "--inject-agent=$injectAgent" "--deer-flow-path=$deerFlowPath" "--openhuman-path=$openHumanPath"
+    java -cp $jarPath ai.starter.InstallerUtil "--skills-root=$skillsRoot" "--install-medusa=$installMedusa" "--inject-agent=$injectAgent" "--deer-flow-path=$deerFlowPath" "--openhuman-path=$openHumanPath"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Error: Installer exited with code $LASTEXITCODE"
         return

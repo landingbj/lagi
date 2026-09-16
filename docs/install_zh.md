@@ -20,16 +20,9 @@
   curl -fsSL https://cdn.linkmind.top/install.sh | bash
   ```
 
-### 选择运行模式
+### 可选安装项
 
-安装过程中，LinkMind 会提示你选择运行模式：
-
-| 模式 | 适用场景 |
-| --- | --- |
-| `Agent Mate` | 本机已经在使用 OpenClaw、Hermes Agent、DeerFlow 或 OpenHuman，希望 LinkMind 作为统一 AI 中间层接入 |
-| `Agent Server` | 先独立启动 LinkMind，直接体验控制台和 API，或做基础部署评估 |
-
-如果你是第一次试用，建议先选 `Agent Server`。
+LinkMind 只有一种统一运行形态。安装器会按需提供三个独立选项：接入本机已有的 OpenClaw、Hermes Agent、DeerFlow 或 OpenHuman；安装 popular skills；下载 Medusa 加速资源。它们可以任意组合，不再需要选择产品版本。
 
 ### 安装器会自动做什么
 
@@ -37,10 +30,10 @@
 
 1. 创建 LinkMind 主目录，通常是 Windows 下的 `%USERPROFILE%\\LinkMind`，或者 macOS / Linux 下的 `~/LinkMind`。
 2. 将 `LinkMind.jar` 下载到该目录。
-3. 询问你运行模式是 `Agent Mate` 还是 `Agent Server`。
-4. 如果选择 `Agent Mate`，继续询问要接入或同步哪个运行时：OpenClaw、DeerFlow、Hermes、OpenHuman。若选择 DeerFlow，会要求输入安装目录；若选择 OpenHuman，可以留空自动发现，也可以输入配置目录或 `config.toml` 文件。
-5. 如果选择 `Agent Server`，会自动下载 popular skills 压缩包，并解压到 `skills/popular_skills`。
-6. 调用运行时初始化逻辑，把首启所需的模式、技能与同步设置写好。
+3. 可选询问是否接入本机已有的 OpenClaw、DeerFlow、Hermes 或 OpenHuman。选择 DeerFlow 时会要求输入安装目录；选择 OpenHuman 时可以留空自动发现，也可以输入配置目录或 `config.toml` 文件。
+4. 可选询问是否下载 popular skills，并解压到 `skills/popular_skills`。
+5. 可选询问是否下载 Medusa 加速资源。
+6. 调用运行时初始化逻辑，写入所选 Skills、Medusa 与 Agent 集成设置。
 
 ### 首次启动
 
@@ -215,14 +208,6 @@ java -jar LinkMind.jar --host=0.0.0.0
   ```bash
   java -jar LinkMind.jar --config=/opt/linkmind/config --data-dir=/var/lib/linkmind/data
   ```
-
-### 预设运行模式
-
-```bash
-java -jar LinkMind.jar --runtime-choice=server
-```
-
-可选值为 `mate` 和 `server`。
 
 ### 指定 DeerFlow 同步目录
 

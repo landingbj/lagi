@@ -33,11 +33,11 @@ class InstallerUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void agentMatePreservesExistingSkillsSwitch() throws Exception {
+    void preservesExistingSkillsSwitchWithoutInstalledSkills() throws Exception {
         Path config = writeConfig("skills:\n  enable: true\n  roots:\n    - classpath:skills\n");
         System.setProperty(InstallerUtil.CONFIG_FILE_PROPERTY, config.toString());
 
-        invokeApplyRuntimeSkillsConfig(new String[] {"--runtime-choice=mate"});
+        invokeApplyRuntimeSkillsConfig(new String[0]);
 
         Map<String, Object> root = YmlLoader.loadYamlAsMap(config.toString());
         Map<String, Object> skills = (Map<String, Object>) root.get("skills");
@@ -46,11 +46,13 @@ class InstallerUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void agentServerEnablesSkills() throws Exception {
+    void installedSkillsEnableSkills() throws Exception {
         Path config = writeConfig("skills:\n  enable: false\n  roots:\n    - classpath:skills\n");
         System.setProperty(InstallerUtil.CONFIG_FILE_PROPERTY, config.toString());
 
-        invokeApplyRuntimeSkillsConfig(new String[] {"--runtime-choice=server"});
+        Path skillsRoot = tempDir.resolve("skills");
+        Files.createDirectories(skillsRoot);
+        invokeApplyRuntimeSkillsConfig(new String[] {"--skills-root=" + skillsRoot});
 
         Map<String, Object> root = YmlLoader.loadYamlAsMap(config.toString());
         Map<String, Object> skills = (Map<String, Object>) root.get("skills");
@@ -59,11 +61,11 @@ class InstallerUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void agentServerCanInstallMedusaAcceleratorConfig() throws Exception {
+    void canInstallMedusaAcceleratorConfig() throws Exception {
         Path config = writeConfig("stores:\n  medusa:\n    enable: false\n    algorithm: hash,graph,llm\n    aheads: 1\n");
         System.setProperty(InstallerUtil.CONFIG_FILE_PROPERTY, config.toString());
 
-        invokeApplyRuntimeSkillsConfig(new String[] {"--runtime-choice=server", "--install-medusa=true"});
+        invokeApplyRuntimeSkillsConfig(new String[] {"--install-medusa=true"});
 
         Map<String, Object> root = YmlLoader.loadYamlAsMap(config.toString());
         Map<String, Object> stores = (Map<String, Object>) root.get("stores");
@@ -77,11 +79,11 @@ class InstallerUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void agentMateKeepsMedusaConfigEvenWithInstallMedusaArg() throws Exception {
+    void preservesMedusaConfigWhenNotInstallingMedusa() throws Exception {
         Path config = writeConfig("stores:\n  medusa:\n    enable: false\n    algorithm: hash,graph,llm\n    aheads: 1\n");
         System.setProperty(InstallerUtil.CONFIG_FILE_PROPERTY, config.toString());
 
-        invokeApplyRuntimeSkillsConfig(new String[] {"--runtime-choice=mate", "--install-medusa=true"});
+        invokeApplyRuntimeSkillsConfig(new String[0]);
 
         Map<String, Object> root = YmlLoader.loadYamlAsMap(config.toString());
         Map<String, Object> stores = (Map<String, Object>) root.get("stores");
@@ -94,16 +96,16 @@ class InstallerUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void agentServerDisablesMedusaWhenAcceleratorIsNotInstalled() throws Exception {
+    void preservesEnabledMedusaWhenInstallerDoesNotChangeIt() throws Exception {
         Path config = writeConfig("stores:\n  medusa:\n    enable: true\n    algorithm: hash\n    core_pool_size: 5\n    maximum_pool_size: 30\n");
         System.setProperty(InstallerUtil.CONFIG_FILE_PROPERTY, config.toString());
 
-        invokeApplyRuntimeSkillsConfig(new String[] {"--runtime-choice=server", "--install-medusa=false"});
+        invokeApplyRuntimeSkillsConfig(new String[] {"--install-medusa=false"});
 
         Map<String, Object> root = YmlLoader.loadYamlAsMap(config.toString());
         Map<String, Object> stores = (Map<String, Object>) root.get("stores");
         Map<String, Object> medusa = (Map<String, Object>) stores.get("medusa");
-        assertEquals(Boolean.FALSE, medusa.get("enable"));
+        assertEquals(Boolean.TRUE, medusa.get("enable"));
         assertEquals("hash", medusa.get("algorithm"));
         assertEquals(5, medusa.get("core_pool_size"));
         assertEquals(30, medusa.get("maximum_pool_size"));
@@ -111,7 +113,7 @@ class InstallerUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void agentServerWritesDiscoverableSkillRootAndItemsFromNestedPopularSkills() throws Exception {
+    void writesDiscoverableSkillRootAndItemsFromNestedPopularSkills() throws Exception {
         Path config = writeConfig("skills:\n  enable: false\n  roots:\n    - classpath:skills\n  items:\n    - name: existing\n      description: existing skill\n");
         Path outerPopularSkills = tempDir.resolve("skills").resolve("popular_skills");
         Path innerPopularSkills = outerPopularSkills.resolve("popular_skills");
@@ -120,7 +122,6 @@ class InstallerUtilTest {
         System.setProperty(InstallerUtil.CONFIG_FILE_PROPERTY, config.toString());
 
         invokeApplyRuntimeSkillsConfig(new String[] {
-                "--runtime-choice=server",
                 "--skills-root=" + outerPopularSkills.toString()
         });
 

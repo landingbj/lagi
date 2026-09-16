@@ -86,6 +86,20 @@ If you start LinkMind with `-Dlinkmind.config=/path/to/lagi.yml`, the custom fil
 
 One easy-to-miss detail: in the current default `lagi.yml`, `workers` and `pnps` are nested under `skills`, not declared as standalone top-level blocks.
 
+## Interaction Cascade Configuration
+
+LinkMind no longer distinguishes Mate and Server. To forward interaction-channel and API Key management requests to another LinkMind node, explicitly configure the cascade address under `general`:
+
+```yaml
+general:
+  cascade_api_address: https://linkmind-node.example.com
+```
+
+- Leave it empty or omit it to process interaction and API Key requests on the current node.
+- When configured, the existing Interaction > Cascade page can view or update this address, and the related interaction/API Key proxy requests are forwarded to that node.
+- This field is only for interaction/API Key cascade proxying. `models[].api_address` is a model-provider upstream address; configuring Landing or another provider must not enable interaction cascade proxying.
+- Legacy `general.mode: mate/server` remains readable during the compatibility period but no longer controls behavior. Do not add it to new configurations.
+
 ## Models
 
 ### Single-Driver Example

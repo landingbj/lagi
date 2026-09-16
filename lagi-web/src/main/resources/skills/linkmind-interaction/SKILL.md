@@ -65,7 +65,9 @@ use should omit it so the hosted server is used.
 - Account/session bootstrap: resolve API key with `/apiKey/getUserId` and keep
   the agent side transparent to user IDs. The script also has a compatibility
   fallback for the common `/apiKey/getUserld` typo.
-- Running mode: `mode` maps to `GET /socialChannel/runningMode`.
+- Node status: `mode` maps to `GET /socialChannel/runningMode` and reports the
+  unified LinkMind runtime plus whether interaction/API Key cascade proxying is
+  explicitly enabled.
 - Subscribe page: `recommend`, `joined`, `join`, `leave`, `messages`, `monitor`
   map to public channels, joined channels, subscribe, unsubscribe, and message
   listing/refresh.

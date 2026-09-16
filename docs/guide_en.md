@@ -110,7 +110,7 @@ extraBody.setUserId("u_1001");
 request.setExtraBody(extraBody);
 ```
 
-This keeps the request object OpenAI-compatible while giving skills, social features, and other server-side extensions a typed place to read business context. If you run LinkMind through `LandingAdapter` in `Agent Mate` mode, the current login user can also be injected automatically, so existing call sites do not need invasive rewrites.
+This keeps the request object OpenAI-compatible while giving skills, social features, and other server-side extensions a typed place to read business context. When `general.cascade_api_address` is explicitly configured and a request has no user context, `LandingAdapter` can populate the current local login user without invasive rewrites at existing call sites.
 
 ### Speech Recognition
 

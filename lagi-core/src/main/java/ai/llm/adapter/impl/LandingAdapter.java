@@ -11,8 +11,6 @@ import ai.openai.pojo.ExtraBody;
 import ai.utils.ApikeyUtil;
 import io.reactivex.Observable;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -77,8 +75,6 @@ public class LandingAdapter extends OpenAIStandardAdapter {
     @Override
     public void setApiAddress(String apiAddress) {
         this.apiAddress = apiAddress;
-        String originalUrl = extractOrigin(apiAddress);
-        ConfigUtil.setCascadeApiAddress(originalUrl);
     }
 
     @Override
@@ -89,7 +85,7 @@ public class LandingAdapter extends OpenAIStandardAdapter {
     @Override
     public void setDefaultField(ChatCompletionRequest request) {
         ExtraBody extraBody;
-        if (ConfigUtil.getRunningMode().equals(ConfigUtil.MODE_MATE)) {
+        if (request.getExtraBody() == null && ConfigUtil.isCascadeProxyEnabled()) {
             extraBody = ExtraBodyUtil.getExtraBody();
         } else {
             extraBody = request.getExtraBody();
@@ -100,30 +96,4 @@ public class LandingAdapter extends OpenAIStandardAdapter {
         request.setUserApiKey(userApiKey);
     }
 
-    private String extractOrigin(String apiAddress) {
-        if (apiAddress == null) {
-            return null;
-        }
-        String trimmed = apiAddress.trim();
-        if (trimmed.isEmpty()) {
-            return trimmed;
-        }
-        try {
-            URI uri = new URI(trimmed);
-            if (uri.getScheme() != null && uri.getRawAuthority() != null) {
-                return uri.getScheme() + "://" + uri.getRawAuthority();
-            }
-        } catch (URISyntaxException ignored) {
-            // Fall back to a simple string split when the value is not a strict URI.
-        }
-
-        int schemeIdx = trimmed.indexOf("://");
-        if (schemeIdx >= 0) {
-            int pathStart = trimmed.indexOf('/', schemeIdx + 3);
-            if (pathStart >= 0) {
-                return trimmed.substring(0, pathStart);
-            }
-        }
-        return trimmed;
-    }
 }

@@ -135,7 +135,7 @@ public class SocialChannelServlet extends BaseServlet {
         if (!shouldProxyToCascade()) {
             return false;
         }
-        String cascadeApiAddress = ConfigUtil.CASCADE_API_ADDRESS.trim();
+        String cascadeApiAddress = ConfigUtil.getConfiguredCascadeApiAddress();
         String targetUrl = buildTargetUrl(cascadeApiAddress, req);
         resp.setContentType("application/json;charset=utf-8");
         try {
@@ -159,8 +159,7 @@ public class SocialChannelServlet extends BaseServlet {
     }
 
     private boolean shouldProxyToCascade() {
-        return ConfigUtil.MODE_MATE.equalsIgnoreCase(ConfigUtil.getRunningMode())
-                && StrUtil.isNotBlank(ConfigUtil.CASCADE_API_ADDRESS);
+        return ConfigUtil.isCascadeProxyEnabled();
     }
 
     private String buildTargetUrl(String cascadeApiAddress, HttpServletRequest req) {
@@ -204,10 +203,11 @@ public class SocialChannelServlet extends BaseServlet {
         resp.setContentType("application/json;charset=utf-8");
         Map<String, Object> result = new HashMap<String, Object>();
         try {
-            String runningMode = ConfigUtil.getRunningMode();
             result.put("status", "success");
-            result.put("runningMode", runningMode);
-            result.put("isMateMode", "mate".equals(runningMode));
+            result.put("runningMode", "linkmind");
+            // Retained during the compatibility period for older clients.
+            result.put("isMateMode", false);
+            result.put("cascadeProxyEnabled", ConfigUtil.isCascadeProxyEnabled());
             result.put("menuLoginRequired", isMenuLoginRequired());
         } catch (Exception e) {
             log.error("runningMode: {}", e.getMessage(), e);

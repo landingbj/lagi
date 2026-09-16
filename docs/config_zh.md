@@ -86,6 +86,20 @@ LinkMind 采用“主配置 + 按需拆分”的方式：
 
 有一个很容易忽略的点：当前默认 `lagi.yml` 里，`workers` 和 `pnps` 是挂在 `skills` 下面的，不是单独的顶层块。
 
+## 互动级联配置
+
+LinkMind 不再区分 Mate/Server。需要将互动频道和 API Key 管理请求转发到另一台 LinkMind 节点时，在 `general` 中显式配置级联地址：
+
+```yaml
+general:
+  cascade_api_address: https://linkmind-node.example.com
+```
+
+- 留空或不配置时，互动和 API Key 请求在当前节点处理。
+- 配置后，互动菜单中的“级联”页面可查看和修改这一地址；相应的互动/API Key 代理请求会转发到该节点。
+- 此字段只用于互动/API Key 级联代理。`models[].api_address` 是模型厂商上游地址，二者不能混用；配置 Landing 或其他模型上游不会开启互动级联代理。
+- 旧 `general.mode: mate/server` 在兼容期仍可被读取，但不再控制任何运行行为，新配置不应再填写它。
+
 ## 模型配置
 
 ### 单适配器示例

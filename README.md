@@ -116,12 +116,7 @@ Prerequisite: install **JDK 8 or later** first. If you still need Java setup ste
   curl -fsSL https://cdn.linkmind.top/install.sh | bash
   ```
 
-The installer supports two runtime choices:
-
-| Mode | Use when |
-| --- | --- |
-| `Agent Mate` | You already use OpenClaw, Hermes Agent, DeerFlow, or OpenHuman locally and want LinkMind to work as the shared middleware layer |
-| <code>Agent&nbsp;Server</code> | You want a standalone LinkMind service first, or you are evaluating the web console and API directly |
+LinkMind uses one unified runtime: deploy it as a team AI hub on an appliance, server, personal computer, or Docker. When OpenClaw, Hermes Agent, DeerFlow, OpenHuman, or another supported frontend already exists locally, connect it as an optional integration while retaining configuration synchronization.
 
 ### Option 2. Download Packaged Jar
 
@@ -190,7 +185,7 @@ This split gives two practical benefits for secondary development: zero-invasive
 - **DeerFlow**: LinkMind can import and export model settings through DeerFlow `config.yaml` and `.env`.
 - **OpenHuman**: LinkMind can add a local Bearer-auth `linkmind` provider to OpenHuman `config.toml`, bind the `provider:linkmind` auth profile, store the token in OpenHuman's desktop keychain file when available, and import supported OpenAI-compatible providers back into `lagi.yml`.
 
-If you want the shortest evaluation path, start with `Agent Server`, verify the web console and API, then switch to `Agent Mate` when you are ready to connect LinkMind to your existing agent runtime stack.
+For the shortest evaluation path, start LinkMind directly and verify the web console and API. Connect an existing Agent frontend when needed; no product-version switch is required.
 
 ## Core Features
 
@@ -216,7 +211,7 @@ Augment retrieval and intent understanding with graph-style context so the middl
 
 ### 6. Token Grid (Cascade Network)
 
-Token Grid connects many LinkMind nodes into a national-power-grid-like intelligence network. In this topology, Agent Servers in a multi-level architecture are not passive relay stations. Like cascade hydropower stations, every layer can mount its own "machine-model" capacity, including local models, provider routes, tools, skills, private knowledge, and policy controls. Every node in the grid is both a consumer of upstream capabilities and a provider of compute and domain capability to downstream nodes, while cascade links preserve physical and logical isolation for data and permissions.
+Token Grid connects many LinkMind nodes into a national-power-grid-like intelligence network. In this topology, LinkMind nodes in a multi-level architecture are not passive relay stations. Like cascade hydropower stations, every layer can mount its own "machine-model" capacity, including local models, provider routes, tools, skills, private knowledge, and policy controls. Every node in the grid is both a consumer of upstream capabilities and a provider of compute and domain capability to downstream nodes, while cascade links preserve physical and logical isolation for data and permissions.
 
 <a href="docs/images/token_grid_en.png">
   <img src="docs/images/token_grid_en.png" alt="Token Grid cascade network concept">

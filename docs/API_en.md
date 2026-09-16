@@ -1567,7 +1567,7 @@ Notes:
 
 - `extra_body` is the recommended place to carry out-of-band business context without changing the OpenAI-compatible message schema.
 - When the runtime injects skills, it may temporarily serialize this payload into an internal `<extra_body>...</extra_body>` block so the value survives tool execution. This is an internal transport detail; clients should keep sending normal JSON `extra_body`.
-- In `Agent Mate` mode, `LandingAdapter` can auto-populate the current login user for local runtime calls.
+- When `general.cascade_api_address` is explicitly configured and a request has no user context, `LandingAdapter` can populate the most recently logged-in local user.
 
 # Secondary Development Interfaces
 
@@ -1575,9 +1575,9 @@ Notes:
 
 | Route | Method | Required input | Purpose | Success payload |
 | --- | --- | --- | --- | --- |
-| `/socialChannel/runningMode` | GET | none | Inspect whether the current node is running in `mate` or `server` mode. | `runningMode`, `isMateMode` |
+| `/socialChannel/runningMode` | GET | none | Inspect the unified LinkMind node state and whether interaction/API Key cascade proxying is enabled. | `runningMode`, `cascadeProxyEnabled`; `isMateMode: false` remains during compatibility |
 | `/socialChannel/registerUser` | POST | `userId`, `username` | Register or synchronize a social user identity. | `created` |
-| `/socialChannel/saveLastLoginUser` | POST | `userId` | Persist the current login user so local `Agent Mate` calls can auto-inject user context. | `status` |
+| `/socialChannel/saveLastLoginUser` | POST | `userId` | Persist the current login user so a local request can receive user context when cascade proxying is enabled. | `status` |
 | `/socialChannel/createChannel` | POST | `userId`, `name` | Create a channel and subscribe the owner automatically. Optional `description` and `isPublic` are accepted as compatibility fields. | `channelId` |
 | `/socialChannel/subscribe` | POST | `userId`, `channelId` | Subscribe a user to a channel. | `msg: subscribed` |
 | `/socialChannel/unsubscribe` | POST | `userId`, `channelId` | Remove a subscription. Channel owners cannot unsubscribe themselves. | `msg: unsubscribed` |
@@ -1592,7 +1592,7 @@ Notes:
 
 Notes:
 
-- In `Agent Mate` mode, all social endpoints except `runningMode` and `saveLastLoginUser` can proxy automatically to the configured cascade server address.
+- When `general.cascade_api_address` is explicitly configured, social endpoints except `runningMode`, `saveLastLoginUser`, and `cascadeConfig` can proxy to that cascade node. A model upstream address does not enable this proxy.
 - The `social-channel` skill consumes these routes instead of embedding storage logic into the chat adapter path.
 
 ## User And Authentication APIs

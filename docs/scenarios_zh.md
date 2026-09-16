@@ -27,9 +27,9 @@ LLM / VLM / MLLM / ASR / TTS / Embedding / 向量库 / 私有数据库 / Tools
 
 | 当前业务状况 | 优先形态 | 核心目标 |
 | --- | --- | --- |
-| 已有多个 Agent 或多条业务线，需要共用能力 | Agent Server | 统一 Skill、Tool、模型路由、安全和观测 |
+| 已有多个 Agent 或多条业务线，需要共用能力 | LinkMind 团队 AI 枢纽 | 统一 Skill、Tool、模型路由、安全和观测 |
 | 有私有文档、数据库或制度知识，需要企业知识问答 | Knowledge Base Server | 通过 RAG 让回答基于企业真实知识 |
-| 已有 OpenClaw、Hermes Agent、DeerFlow 或其他 Agent 工作台 | Agent Mate | 透明接入，降低 Token 消耗，补安全边界 |
+| 已有 OpenClaw、Hermes Agent、DeerFlow 或其他 Agent 工作台 | LinkMind Agent 前端集成 | 透明接入，降低 Token 消耗，补安全边界 |
 | 本地一体机或边缘节点 GPU 资源有限，重复问答多 | Medusa 加速器 | 缓存复用，减少重复推理，降低 GPU 负载 |
 | 金融、医疗、政务等高合规场景 | Security Gateway | 统一过滤、权限、审计和电子围栏 |
 | 多部门、多系统共用 AI 能力 | AI 聚合中台 | 统一接入、编排、治理、观测和成本核算 |
@@ -37,7 +37,7 @@ LLM / VLM / MLLM / ASR / TTS / Embedding / 向量库 / 私有数据库 / Tools
 | 多区域、多团队、集团型组织需要统一代理出口 | Proxy + GEO + Cascade | 分布式组网、分层治理、跨区域接入 |
 | 准备上线、扩容或版本对比，需要容量与稳定性基线 | Benchmark 压力测试 | 固定并发、轮次、模型和数据集，沉淀可复跑结果 |
 
-这些形态可以组合使用。常见路径是先用 Agent Mate 或单节点 Agent Server 做 POC，用 Benchmark 压力测试建立容量基线，再逐步扩展为 Agent Server + Security Gateway + Knowledge Base Server 的完整企业 AI 中台。
+这些能力可以组合使用。常见路径是先用单节点 LinkMind 或已有 Agent 前端集成做 POC，用 Benchmark 压力测试建立容量基线，再逐步扩展为 LinkMind 团队 AI 枢纽 + Security Gateway + Knowledge Base Server 的完整企业 AI 中台。
 
 ## 三、业务接入的标准步骤
 
@@ -55,9 +55,9 @@ LLM / VLM / MLLM / ASR / TTS / Embedding / 向量库 / 私有数据库 / Tools
 
 ## 四、典型场景
 
-### 场景 1：Agent Server
+### 场景 1：团队 AI 枢纽
 
-Agent Server 适合多个 Agent、多个业务线或多个团队共用一套 AI 能力底座的情况。业务 Agent 不再各自维护模型 Key、工具注册、安全规则和观测逻辑，而是统一调用 LinkMind。
+LinkMind 适合多个 Agent、多个业务线或多个团队共用一套 AI 能力底座的情况。业务 Agent 不再各自维护模型 Key、工具注册、安全规则和观测逻辑，而是统一调用 LinkMind。
 
 业务怎么用：
 
@@ -92,9 +92,9 @@ Knowledge Base Server 适合企业已经拥有制度文档、产品资料、FAQ�
 4. 让业务系统调用聊天接口，由 LinkMind 自动完成检索增强。
 5. 对高价值知识库设置更新、审核和回滚流程，避免未确认内容直接进入生产问答。
 
-### 场景 3：Agent Mate
+### 场景 3：已有 Agent 前端接入
 
-Agent Mate 适合已有 OpenClaw、Hermes Agent、DeerFlow 或其他 Agent 工作台的团队。LinkMind 不替代现有系统，而是作为 OpenAI 兼容 Provider 或旁路中间层接入，透明增强现有 Agent。
+该场景适合已有 OpenClaw、Hermes Agent、DeerFlow 或其他 Agent 工作台的团队。LinkMind 不替代现有系统，而是作为 OpenAI 兼容 Provider 或旁路中间层接入，透明增强现有 Agent。
 
 业务怎么用：
 
@@ -105,7 +105,7 @@ Agent Mate 适合已有 OpenClaw、Hermes Agent、DeerFlow 或其他 Agent 工�
 
 怎么架设：
 
-1. 安装时选择 `Agent Mate`，或按 [配置参考](config_zh.md) 同步 OpenClaw、Hermes Agent、DeerFlow 的模型配置。
+1. 安装时按需选择接入 Agent 前端，或按 [配置参考](config_zh.md) 同步 OpenClaw、Hermes Agent、DeerFlow 的模型配置。
 2. 把现有 Agent 的模型 Provider 地址改为 LinkMind 的 OpenAI 兼容地址。
 3. 保持原有 Agent 代码不变，只替换 base URL、模型名和 Key。
 4. 开启过滤器、Token 统计和路由故障切换。

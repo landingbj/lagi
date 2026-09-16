@@ -5,7 +5,12 @@ import lombok.Data;
 
 @Data
 public class GeneralConfig {
-    private String mode = "server";
+    /**
+     * Legacy Agent Mate/Server configuration. It is read for compatibility only
+     * and no longer controls LinkMind behavior.
+     */
+    @Deprecated
+    private String mode;
 
     @JsonProperty("local_api_key_editable")
     private Boolean localApiKeyEditable = true;

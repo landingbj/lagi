@@ -110,7 +110,7 @@ extraBody.setUserId("u_1001");
 request.setExtraBody(extraBody);
 ```
 
-这种写法既保留了 OpenAI 兼容请求形态，也为 Skill、社交能力和其他服务端扩展提供了明确的业务上下文边界。如果你在 `Agent Mate` 模式下通过 `LandingAdapter` 运行 LinkMind，当前登录用户也可以由运行时自动注入，已有调用点不需要做侵入式改造。
+这种写法既保留了 OpenAI 兼容请求形态，也为 Skill、社交能力和其他服务端扩展提供了明确的业务上下文边界。当明确配置 `general.cascade_api_address` 且请求未携带用户上下文时，`LandingAdapter` 可以补齐当前本地登录用户，已有调用点不需要做侵入式改造。
 
 ### 语音识别
 

@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class CascadeConfigService {
@@ -69,15 +68,6 @@ public class CascadeConfigService {
             return new CascadeAddress(ConfigUtil.normalizeCascadeApiAddress(generalAddress), GENERAL);
         }
 
-        String landingAddress = getLandingCascadeAddress(root);
-        if (!isBlank(landingAddress)) {
-            return new CascadeAddress(ConfigUtil.normalizeCascadeApiAddress(landingAddress), "landing");
-        }
-
-        if (!isBlank(ConfigUtil.CASCADE_API_ADDRESS)) {
-            return new CascadeAddress(ConfigUtil.normalizeCascadeApiAddress(ConfigUtil.CASCADE_API_ADDRESS), "runtime");
-        }
-
         return new CascadeAddress("", "");
     }
 
@@ -89,32 +79,6 @@ public class CascadeConfigService {
         }
         Object addressObj = ((Map<String, Object>) generalObj).get(CASCADE_API_ADDRESS);
         return addressObj == null ? "" : String.valueOf(addressObj);
-    }
-
-    @SuppressWarnings("unchecked")
-    private String getLandingCascadeAddress(Map<String, Object> root) {
-        Object modelsObj = root.get("models");
-        if (!(modelsObj instanceof List)) {
-            return "";
-        }
-        for (Object item : (List<?>) modelsObj) {
-            if (!(item instanceof Map)) {
-                continue;
-            }
-            Map<String, Object> model = (Map<String, Object>) item;
-            Object nameObj = model.get("name");
-            Object typeObj = model.get("type");
-            String name = nameObj == null ? "" : String.valueOf(nameObj);
-            String type = typeObj == null ? "" : String.valueOf(typeObj);
-            if (!"landing".equalsIgnoreCase(name) && !"landing".equalsIgnoreCase(type)) {
-                continue;
-            }
-            Object addressObj = model.get("api_address");
-            if (addressObj != null && !isBlank(String.valueOf(addressObj))) {
-                return String.valueOf(addressObj);
-            }
-        }
-        return "";
     }
 
     private String normalizeServerAddress(String serverAddress) throws IOException {

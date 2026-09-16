@@ -18,7 +18,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -99,18 +98,6 @@ public class InstallerUtil {
 
     public static boolean resolveImportFromOpenClaw(String[] args) {
         return Boolean.parseBoolean(parseArg(args, IMPORT_FROM_OPENCLAW_ARG));
-    }
-
-    public static String resolveRuntimeChoice(String[] args) {
-        String value = parseArg(args, RUNTIME_CHOICE_ARG);
-        if (value == null || value.isEmpty()) {
-            return "mate";
-        }
-        String normalized = value.trim().toLowerCase();
-        if (Arrays.asList("2", "server").contains(normalized)) {
-            return "server";
-        }
-        return "mate";
     }
 
     public static boolean resolveEnableSync(String[] args) {
@@ -219,25 +206,22 @@ public class InstallerUtil {
             return;
         }
         Path configPath = Paths.get(configFile).toAbsolutePath().normalize();
-        String runtimeChoice = resolveRuntimeChoice(args);
-        boolean serverRuntime = "server".equals(runtimeChoice);
-        boolean installMedusa = serverRuntime && Boolean.parseBoolean(parseArg(args, INSTALL_MEDUSA_ARG));
+        warnDeprecatedRuntimeChoice(args);
+        boolean installMedusa = Boolean.parseBoolean(parseArg(args, INSTALL_MEDUSA_ARG));
         Path skillsRoot = null;
-        if (serverRuntime) {
-            String skillsRootArg = parseArg(args, SKILLS_ROOT_ARG);
-            if (skillsRootArg != null && !skillsRootArg.trim().isEmpty()) {
-                skillsRoot = Paths.get(skillsRootArg).toAbsolutePath().normalize();
-            }
+        String skillsRootArg = parseArg(args, SKILLS_ROOT_ARG);
+        if (skillsRootArg != null && !skillsRootArg.trim().isEmpty()) {
+            skillsRoot = Paths.get(skillsRootArg).toAbsolutePath().normalize();
         }
         try {
-            updateSkillsConfig(configPath, runtimeChoice, serverRuntime ? Boolean.TRUE : null, skillsRoot, serverRuntime, installMedusa);
+            updateSkillsConfig(configPath, skillsRoot == null ? null : Boolean.TRUE, skillsRoot, installMedusa);
         } catch (Exception e) {
             log.error("Skip runtime skills config due to invalid YAML at {}. Please fix this file and retry if needed.", configPath, e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static void updateSkillsConfig(Path configPath, String runtimeMode, Boolean enableSkills, Path skillsRoot, boolean serverRuntime, boolean installMedusa) throws IOException {
+    private static void updateSkillsConfig(Path configPath, Boolean enableSkills, Path skillsRoot, boolean installMedusa) throws IOException {
         // Default YAMLMapper can emit broken single-quoted multiline scalars (e.g. filters.rules), which then fail on re-read.
         YAMLFactory yamlFactory = new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
@@ -274,16 +258,7 @@ public class InstallerUtil {
         rootMap.put("skills", skillsMap);
         if (installMedusa) {
             applyMedusaAcceleratorConfig(rootMap);
-        } else if (serverRuntime) {
-            disableMedusaAcceleratorConfig(rootMap);
         }
-
-        Object generalObj = rootMap.get("general");
-        Map<String, Object> generalMap = generalObj instanceof Map
-                ? new LinkedHashMap<>((Map<String, Object>) generalObj)
-                : new LinkedHashMap<String, Object>();
-        generalMap.put("mode", runtimeMode);
-        rootMap.put("general", generalMap);
 
         if (configPath.getParent() != null) {
             Files.createDirectories(configPath.getParent());
@@ -307,19 +282,11 @@ public class InstallerUtil {
         rootMap.put("stores", storesMap);
     }
 
-    @SuppressWarnings("unchecked")
-    private static void disableMedusaAcceleratorConfig(Map<String, Object> rootMap) {
-        Object storesObj = rootMap.get("stores");
-        Map<String, Object> storesMap = storesObj instanceof Map
-                ? new LinkedHashMap<>((Map<String, Object>) storesObj)
-                : new LinkedHashMap<String, Object>();
-        Object medusaObj = storesMap.get("medusa");
-        Map<String, Object> medusaMap = medusaObj instanceof Map
-                ? new LinkedHashMap<>((Map<String, Object>) medusaObj)
-                : new LinkedHashMap<String, Object>();
-        medusaMap.put("enable", false);
-        storesMap.put("medusa", medusaMap);
-        rootMap.put("stores", storesMap);
+    private static void warnDeprecatedRuntimeChoice(String[] args) {
+        if (parseArg(args, RUNTIME_CHOICE_ARG) != null) {
+            log.warn("--runtime-choice is deprecated and no longer changes LinkMind behavior. "
+                    + "Use the independent Agent integration, Skills, and Medusa installation choices instead.");
+        }
     }
 
     /**

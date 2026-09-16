@@ -603,7 +603,7 @@ def build_parser() -> argparse.ArgumentParser:
     account.add_argument("--show-user-id", action="store_true")
     account.set_defaults(func=cmd_account)
 
-    mode = subparsers.add_parser("mode", help="Show social-channel running mode")
+    mode = subparsers.add_parser("mode", help="Show LinkMind interaction node status")
     mode.set_defaults(func=cmd_mode)
 
     recommend = subparsers.add_parser("recommend", help="List recommended public channels with joined state")

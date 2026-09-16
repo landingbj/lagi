@@ -213,7 +213,7 @@ public class ApiKeyServlet extends BaseServlet {
     private void invalidList(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=utf-8");
         if (shouldProxyToCascade()) {
-            String cascadeApiAddress = ConfigUtil.CASCADE_API_ADDRESS.trim();
+            String cascadeApiAddress = ConfigUtil.getConfiguredCascadeApiAddress();
             String targetUrl = buildTargetUrl(cascadeApiAddress, req);
             try {
                 String body = requestToJson(req);
@@ -246,8 +246,7 @@ public class ApiKeyServlet extends BaseServlet {
     }
 
     private boolean shouldProxyToCascade() {
-        return ConfigUtil.MODE_MATE.equalsIgnoreCase(ConfigUtil.getRunningMode())
-                && StrUtil.isNotBlank(ConfigUtil.CASCADE_API_ADDRESS);
+        return ConfigUtil.isCascadeProxyEnabled();
     }
 
     private String buildTargetUrl(String cascadeApiAddress, HttpServletRequest req) {

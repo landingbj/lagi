@@ -1567,7 +1567,7 @@ POST /uploadFile/deleteFile
 
 - `extra_body` 是承载带外业务上下文的推荐位置，不需要为此修改 OpenAI 兼容消息结构。
 - 当运行时注入 Skill 时，系统可能暂时把该载荷序列化到内部的 `<extra_body>...</extra_body>` 片段中，以便跨工具调用保留上下文。这只是内部传递细节，调用方仍然只需要发送标准 JSON `extra_body`。
-- 在 `Agent Mate` 模式下，`LandingAdapter` 也可以为本地运行时调用自动补齐当前登录用户。
+- 当显式配置 `general.cascade_api_address` 且请求未携带用户上下文时，`LandingAdapter` 可以为本地运行时调用补齐最近登录用户。
 
 # 二次开发接口
 
@@ -1575,9 +1575,9 @@ POST /uploadFile/deleteFile
 
 | 路径 | 方法 | 必要输入 | 用途 | 成功返回 |
 | --- | --- | --- | --- | --- |
-| `/socialChannel/runningMode` | GET | 无 | 查看当前节点运行在 `mate` 还是 `server` 模式。 | `runningMode`、`isMateMode` |
+| `/socialChannel/runningMode` | GET | 无 | 查看统一 LinkMind 节点状态及是否启用互动/API Key 级联代理。 | `runningMode`、`cascadeProxyEnabled`；兼容期仍返回 `isMateMode: false` |
 | `/socialChannel/registerUser` | POST | `userId`、`username` | 注册或同步社交用户身份。 | `created` |
-| `/socialChannel/saveLastLoginUser` | POST | `userId` | 保存当前登录用户，供 `Agent Mate` 模式自动注入用户上下文。 | `status` |
+| `/socialChannel/saveLastLoginUser` | POST | `userId` | 保存当前登录用户，供已启用级联代理的本地调用补齐用户上下文。 | `status` |
 | `/socialChannel/createChannel` | POST | `userId`、`name` | 创建频道并自动为所有者建立订阅。`description`、`isPublic` 可作为兼容字段传入。 | `channelId` |
 | `/socialChannel/subscribe` | POST | `userId`、`channelId` | 订阅频道。 | `msg: subscribed` |
 | `/socialChannel/unsubscribe` | POST | `userId`、`channelId` | 取消订阅。频道所有者不能取消自己的订阅。 | `msg: unsubscribed` |
@@ -1592,7 +1592,7 @@ POST /uploadFile/deleteFile
 
 说明：
 
-- 在 `Agent Mate` 模式下，除 `runningMode` 和 `saveLastLoginUser` 外，其余社交接口都可以自动代理到配置好的级联上级节点。
+- 当 `general.cascade_api_address` 明确配置时，除 `runningMode`、`saveLastLoginUser` 和 `cascadeConfig` 外的社交接口可以自动代理到该级联上级节点。模型上游地址不会启用此代理。
 - `social-channel` Skill 通过这些接口复用社交能力，而不是把存储逻辑写入聊天 Adapter 主路径。
 
 ## 用户与认证接口

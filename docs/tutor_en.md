@@ -159,7 +159,7 @@ Use the [API Reference](API_en.md) for request examples.
 
 If your local workflow already uses OpenClaw, Hermes Agent, DeerFlow, or OpenHuman:
 
-1. Reinstall or restart LinkMind in `Agent Mate` mode.
+1. Reinstall or restart unified LinkMind, then choose Agent frontend integration in the installer when needed.
 2. Verify that the runtime config path is correct.
 3. Let LinkMind act as the shared middleware layer instead of wiring every business app directly to each provider.
 
@@ -300,20 +300,20 @@ Different file categories are still handled differently:
 7. Presentation files: process page-by-page text and images together.
 8. Pure image files: use OCR or image understanding to turn them into retrievable content.
 
-## Part 3. Agent Client Hands-On Setup (Agent Mate)
+## Part 3. Agent Client Hands-On Setup
 
 This section shows how to connect LinkMind to OpenClaw, Hermes Agent, DeerFlow, and OpenHuman, then verify the full loop from client-side conversation to LinkMind usage records.
 
 ### 3.1 Integration Path Overview
 
-The overall flow is the same for all four clients: prepare the client runtime, install LinkMind in `Agent Mate` mode, configure LinkMind credits, API keys, and routes, then point the client model request path to LinkMind.
+The overall flow is the same for all four clients: prepare the client runtime, install LinkMind and choose the relevant optional Agent frontend integration, configure LinkMind credits, API keys, and routes, then point the client model request path to LinkMind.
 
 | Client | Entry / URL | LinkMind install choice | Core configuration | Verification |
 | --- | --- | --- | --- | --- |
-| OpenClaw | Web UI: `127.0.0.1:18789` | `Agent Mate`, framework `openclaw` | `lagi.yml`; select LinkMind middleware in the OpenClaw UI | Switch to `linkmind-Pro` and chat in OpenClaw |
-| Hermes Agent | PowerShell/WSL terminal: `hermes` | `Agent Mate`, framework `hermes` | `lagi.yml`, Hermes `config.yaml` | Type a message directly in the Hermes console |
-| DeerFlow | Frontend: `localhost:3000` or the URL printed by `make dev` | `Agent Mate`, framework `deer-flow`, with the project absolute path | `lagi.yml`, DeerFlow `config.yaml`, `.env` | Select the LinkMind model in the DeerFlow Chat page and send a message |
-| OpenHuman | Desktop app | `Agent Mate`, framework `openhuman`, optional config path | `lagi.yml`, OpenHuman `config.toml` | Send a message in OpenHuman and confirm a LinkMind `/v1/chat/completions` call |
+| OpenClaw | Web UI: `127.0.0.1:18789` | Choose `openclaw` integration | `lagi.yml`; select LinkMind middleware in the OpenClaw UI | Switch to `linkmind-Pro` and chat in OpenClaw |
+| Hermes Agent | PowerShell/WSL terminal: `hermes` | Choose `hermes` integration | `lagi.yml`, Hermes `config.yaml` | Type a message directly in the Hermes console |
+| DeerFlow | Frontend: `localhost:3000` or the URL printed by `make dev` | Choose `deer-flow` integration and provide the project absolute path | `lagi.yml`, DeerFlow `config.yaml`, `.env` | Select the LinkMind model in the DeerFlow Chat page and send a message |
+| OpenHuman | Desktop app | Choose `openhuman` integration with an optional config path | `lagi.yml`, OpenHuman `config.toml` | Send a message in OpenHuman and confirm a LinkMind `/v1/chat/completions` call |
 
 ### 3.2 Prepare The Agent Clients
 
@@ -413,14 +413,14 @@ macOS / Linux:
 curl -fsSL https://cdn.linkmind.top/install.sh | bash
 ```
 
-Choose `Agent Mate` as the runtime mode. The only difference between clients is the `Inject Agent Framework` choice:
+There is no runtime-mode choice. When connecting an Agent frontend, choose the relevant `Inject Agent Framework` option:
 
 | Current client | Runtime Choice | Inject Agent Framework | Extra input |
 | --- | --- | --- | --- |
-| OpenClaw | `1) as Agent Mate` | `1) openclaw` | None |
-| DeerFlow | `1) as Agent Mate` | `2) deer-flow` | DeerFlow project absolute path, for example `D:\workspace\code\deer-flow` |
-| Hermes Agent | `1) as Agent Mate` | `3) hermes` | None; if using WSL, verify the `base_url` later |
-| OpenHuman | `1) as Agent Mate` | `4) openhuman` | Optional OpenHuman config directory or `config.toml`; leave blank for auto-detect |
+| OpenClaw | Choose Agent frontend integration | `1) openclaw` | None |
+| DeerFlow | Choose Agent frontend integration | `2) deer-flow` | DeerFlow project absolute path, for example `D:\workspace\code\deer-flow` |
+| Hermes Agent | Choose Agent frontend integration | `3) hermes` | None; if using WSL, verify the `base_url` later |
+| OpenHuman | Choose Agent frontend integration | `4) openhuman` | Optional OpenHuman config directory or `config.toml`; leave blank for auto-detect |
 
 After installation, you can start LinkMind immediately. If you choose not to start it from the installer, enter the LinkMind directory later and run:
 

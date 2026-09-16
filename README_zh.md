@@ -116,12 +116,7 @@ LinkMind 是面向企业场景的多模态 AI 中间件，用来把业务系统�
   curl -fsSL https://cdn.linkmind.top/install.sh | bash
   ```
 
-安装器支持两种运行模式：
-
-| 模式 | 适用场景 |
-| --- | --- |
-| `Agent Mate` | 本机已经在使用 OpenClaw、Hermes Agent、DeerFlow、OpenHuman，希望 LinkMind 作为统一中间层接入 |
-| `Agent Server` | 先单独启动 LinkMind，直接体验控制台和 API，或做独立部署评估 |
+LinkMind 采用统一运行形态：可作为团队 AI 枢纽部署在硬件盒子、服务器、个人电脑或 Docker 中；若本机已有 OpenClaw、Hermes Agent、DeerFlow、OpenHuman 等前端，可按需接入并保留配置同步能力。
 
 ### 选项2：下载并运行 JAR 包
 
@@ -190,7 +185,7 @@ LinkMind 将二次开发能力放在清晰的面向对象边界之后，便于�
 - **DeerFlow**：可以通过 DeerFlow 的 `config.yaml` 和 `.env` 导入导出模型配置
 - **OpenHuman**：可以把带 Bearer 鉴权的 LinkMind 写入 OpenHuman `config.toml` 的 `linkmind` provider，绑定 `provider:linkmind` 鉴权 profile，并在 OpenHuman 桌面端 keychain 文件可用时写入 LinkMind token；也可以把支持的 OpenAI 兼容 provider 反向导入 `lagi.yml`
 
-如果你只是首次评估，建议先用 `Agent Server` 跑通控制台与 API；确认稳定后，再切到 `Agent Mate` 接入现有 Agent 运行时。
+首次评估可直接启动 LinkMind 跑通控制台与 API；需要时再接入现有 Agent 前端，不需要切换产品版本。
 
 ## 核心功能
 
@@ -216,7 +211,7 @@ LinkMind 将二次开发能力放在清晰的面向对象边界之后，便于�
 
 ### 6. Token Grid（级联网络）
 
-Token Grid 把多个 LinkMind 节点连接成类似“国家电网”的智能网络。在这套网络里，多级架构中的各级 Agent Server 并非仅仅是中转站。它更像梯级水电站，每一层都可以挂载自己的“机模”，包括本地模型、厂商路由、工具、技能、私有知识库和策略控制。全网所有节点既是上游能力的消费者，也是向下游输出算力与领域能力的提供者，同时通过级联链路保障数据和权限的物理与逻辑隔离。
+Token Grid 把多个 LinkMind 节点连接成类似“国家电网”的智能网络。在这套网络里，多级架构中的各级 LinkMind 节点并非仅仅是中转站。它更像梯级水电站，每一层都可以挂载自己的“机模”，包括本地模型、厂商路由、工具、技能、私有知识库和策略控制。全网所有节点既是上游能力的消费者，也是向下游输出算力与领域能力的提供者，同时通过级联链路保障数据和权限的物理与逻辑隔离。
 
 <a href="docs/images/token_grid_zh.png">
   <img src="docs/images/token_grid_zh.png" alt="Token Grid 级联网络概念图">

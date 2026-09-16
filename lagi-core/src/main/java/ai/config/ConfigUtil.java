@@ -5,8 +5,6 @@ import ai.config.pojo.GeneralConfig;
 public class ConfigUtil {
     public static String CASCADE_API_ADDRESS;
 
-    public static final String MODE_SERVER = "server";
-    public static final String MODE_MATE = "mate";
     public static String APP_HOST;
     public static int APP_PORT;
 
@@ -59,22 +57,21 @@ public class ConfigUtil {
         return normalized;
     }
 
-    public static String getRunningMode() {
+    public static boolean isCascadeProxyEnabled() {
+        return !getConfiguredCascadeApiAddress().isEmpty();
+    }
+
+    public static String getConfiguredCascadeApiAddress() {
         GlobalConfigurations globalConfigurations = ContextLoader.configuration;
         if (globalConfigurations == null) {
-            return MODE_SERVER;
+            return "";
         }
 
         GeneralConfig general = globalConfigurations.getGeneral();
-        if (general == null || general.getMode() == null) {
-            return MODE_SERVER;
+        if (general == null || general.getCascadeApiAddress() == null) {
+            return "";
         }
-
-        String mode = general.getMode().trim();
-        if (MODE_SERVER.equalsIgnoreCase(mode)) {
-            return MODE_SERVER;
-        }
-        return MODE_MATE;
+        return normalizeCascadeApiAddress(general.getCascadeApiAddress());
     }
 
     public static String getAppHost() {

@@ -27,9 +27,9 @@ The core idea is to keep model switching, failover, safety policies, RAG retriev
 
 | Current business situation | Recommended shape | Main goal |
 | --- | --- | --- |
-| Multiple agents or business lines need shared AI capabilities | Agent Server | Unified Skills, Tools, model routing, safety, and observability |
+| Multiple agents or business lines need shared AI capabilities | LinkMind team AI hub | Unified Skills, Tools, model routing, safety, and observability |
 | The team has private documents, databases, or policy knowledge | Knowledge Base Server | Use RAG so answers are grounded in enterprise knowledge |
-| The team already uses OpenClaw, Hermes Agent, DeerFlow, or another agent workspace | Agent Mate | Transparent enhancement, token reduction, and safety boundaries |
+| The team already uses OpenClaw, Hermes Agent, DeerFlow, or another agent workspace | LinkMind Agent frontend integration | Transparent enhancement, token reduction, and safety boundaries |
 | Local appliance or edge GPU capacity is limited and repeated questions are common | Medusa Accelerator | Reuse cache, reduce repeated inference, and lower GPU load |
 | Finance, healthcare, government, or other high-compliance environments | Security Gateway | Unified filters, permissions, audit, and AI guardrails |
 | Many departments and systems share AI capability | AI Aggregation Platform | Unified access, orchestration, governance, observability, and cost accounting |
@@ -37,7 +37,7 @@ The core idea is to keep model switching, failover, safety policies, RAG retriev
 | Multi-region, multi-team, or group-level organizations need a shared proxy exit | Proxy + GEO + Cascade | Distributed topology, layered governance, and regional access |
 | The team needs a capacity or stability baseline before launch, scaling, or version comparison | Benchmark Load Test | Fixed concurrency, run count, model, and dataset with repeatable result logs |
 
-These shapes can be combined. A common path is to start with Agent Mate or a single-node Agent Server for POC, use Benchmark load testing to establish a capacity baseline, then grow into Agent Server + Security Gateway + Knowledge Base Server as a full enterprise AI platform.
+These capabilities can be combined. A common path is to start with single-node LinkMind or an existing Agent frontend integration for POC, use Benchmark load testing to establish a capacity baseline, then grow into a LinkMind team AI hub + Security Gateway + Knowledge Base Server as a full enterprise AI platform.
 
 ## 3. Standard Business Integration Steps
 
@@ -55,9 +55,9 @@ A lightweight pilot can start from 8 CPU cores, 32 GB memory, and 200 GB storage
 
 ## 4. Typical Scenarios
 
-### Scenario 1: Agent Server
+### Scenario 1: Team AI Hub
 
-Agent Server is useful when multiple agents, business lines, or teams need one shared AI capability base. Business agents no longer manage model keys, tool registration, safety rules, and observability on their own; they call LinkMind.
+LinkMind is useful when multiple agents, business lines, or teams need one shared AI capability base. Business agents no longer manage model keys, tool registration, safety rules, and observability on their own; they call LinkMind.
 
 Business usage:
 
@@ -92,9 +92,9 @@ Setup:
 4. Let business systems call the chat API while LinkMind handles retrieval augmentation.
 5. Add review, update, and rollback workflows for high-value knowledge bases before production use.
 
-### Scenario 3: Agent Mate
+### Scenario 3: Existing Agent Frontend Integration
 
-Agent Mate is for teams that already use OpenClaw, Hermes Agent, DeerFlow, or another agent workspace. LinkMind does not replace the current system; it joins as an OpenAI-compatible provider or sidecar middleware.
+This scenario is for teams that already use OpenClaw, Hermes Agent, DeerFlow, or another agent workspace. LinkMind does not replace the current system; it joins as an OpenAI-compatible provider or sidecar middleware.
 
 Business usage:
 
@@ -105,7 +105,7 @@ Business usage:
 
 Setup:
 
-1. Choose `Agent Mate` during installation, or synchronize OpenClaw, Hermes Agent, or DeerFlow model settings through the [Configuration Reference](config_en.md).
+1. Choose optional Agent frontend integration during installation, or synchronize OpenClaw, Hermes Agent, or DeerFlow model settings through the [Configuration Reference](config_en.md).
 2. Change the existing agent model provider endpoint to LinkMind's OpenAI-compatible endpoint.
 3. Keep agent code unchanged and only replace base URL, model name, and key.
 4. Enable filters, token statistics, and routing failover.
