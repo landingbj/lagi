@@ -879,6 +879,77 @@ pre .key {
     height: 3rem;
 }
 
+/* The desktop sidebar contains the full navigation. On phones it becomes a drawer instead of
+ * reusing the small account menu, which only contains logout. */
+.mobile-nav-backdrop,
+.mobile-nav-close {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    body.mobile-nav-active {
+        overflow: hidden;
+    }
+
+    #navigation_bar.navigation_bar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 1201;
+        display: flex !important;
+        width: min(320px, calc(100vw - 44px));
+        height: 100dvh;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+        box-shadow: none;
+    }
+
+    #navigation_bar.navigation_bar.mobile-nav-open {
+        transform: translateX(0);
+        box-shadow: 14px 0 34px rgba(15, 23, 42, .24);
+    }
+
+    .mobile-nav-backdrop {
+        position: fixed;
+        z-index: 1200;
+        inset: 0;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        background: rgba(15, 23, 42, .42);
+        transition: opacity .2s ease, visibility .2s ease;
+    }
+
+    .mobile-nav-backdrop.mobile-nav-open {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .nav_header {
+        flex: 0 0 64px;
+        height: 64px;
+    }
+
+    .mobile-nav-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        margin-right: 4px;
+        border: 0;
+        border-radius: 6px;
+        color: #374151;
+        background: transparent;
+        font-size: 30px;
+        line-height: 1;
+    }
+
+    .nav_body {
+        padding: 12px 12px 20px 20px;
+        overscroll-behavior: contain;
+    }
+}
+
 #item-content {
     position: relative;
     z-index: 0;

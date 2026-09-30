@@ -56,6 +56,10 @@
             <div class="nav_header w-full">
                 <div class="logo_container" onclick="backToHello()">
                 </div>
+                <button id="mobile-nav-close" type="button" class="mobile-nav-close" onclick="closeMobileSidebar()"
+                        aria-label="关闭菜单">
+                    <span aria-hidden="true">×</span>
+                </button>
             </div>
             <div id="nav_body" class="nav_body w-full decorated-heading">
             </div>
@@ -79,11 +83,12 @@
                      </ul>
                    </div>
                    <svg t="1752903400975" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3997" width="24" height="24"><path d="M512 298.6496a85.3504 85.3504 0 1 0 0-170.6496 85.3504 85.3504 0 0 0 0 170.6496z" fill="#5A5A68" p-id="3998"></path><path d="M512 512m-85.3504 0a85.3504 85.3504 0 1 0 170.7008 0 85.3504 85.3504 0 1 0-170.7008 0Z" fill="#5A5A68" p-id="3999"></path><path d="M512 896a85.3504 85.3504 0 1 0 0-170.7008 85.3504 85.3504 0 0 0 0 170.7008z" fill="#5A5A68" p-id="4000"></path></svg>
-                 </div>
+                  </div>
+               </div>
               </div>
-             </div>
-           </div>
+            </div>
         </div>
+        <div id="mobile-nav-backdrop" class="mobile-nav-backdrop" onclick="closeMobileSidebar()" aria-hidden="true"></div>
 
         <!-- 左边导航条 -->
         <div class="relative flex h-full max-w-full flex-1 overflow-hidden">
@@ -93,7 +98,8 @@
                      class="sticky top-0 z-10 flex items-center border-b border-white/20 bg-gray-800 pl-1 pt-1 text-gray-200 sm:pl-3 md:hidden "
                      style="background-color: #023f63;">
                     <div>
-                        <button type="button" onclick="toggleUserMenu(event)"
+                        <button id="mobile-nav-toggle" type="button" onclick="toggleMobileSidebar()"
+                                aria-controls="navigation_bar" aria-expanded="false" aria-label="打开菜单"
                                 class="-ml-0.5 -mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white dark:hover:text-white">
                             <span class="sr-only">Open sidebar</span>
                             <svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24"

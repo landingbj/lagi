@@ -2541,6 +2541,54 @@ function loadNavBar() {
     });
 }
 
+function isMobileNavigation() {
+    return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+}
+
+function setMobileSidebarOpen(open) {
+    const sidebar = document.getElementById('navigation_bar');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    const toggle = document.getElementById('mobile-nav-toggle');
+    if (!sidebar || !backdrop) {
+        return;
+    }
+
+    sidebar.classList.toggle('mobile-nav-open', open);
+    backdrop.classList.toggle('mobile-nav-open', open);
+    document.body.classList.toggle('mobile-nav-active', open);
+    backdrop.setAttribute('aria-hidden', String(!open));
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', String(open));
+    }
+}
+
+function toggleMobileSidebar() {
+    if (!isMobileNavigation()) {
+        return;
+    }
+    const sidebar = document.getElementById('navigation_bar');
+    setMobileSidebarOpen(!(sidebar && sidebar.classList.contains('mobile-nav-open')));
+}
+
+function closeMobileSidebar() {
+    setMobileSidebarOpen(false);
+}
+
+window.toggleMobileSidebar = toggleMobileSidebar;
+window.closeMobileSidebar = closeMobileSidebar;
+
+window.addEventListener('resize', function () {
+    if (!isMobileNavigation()) {
+        closeMobileSidebar();
+    }
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+        closeMobileSidebar();
+    }
+});
+
 function refreshInteractionPublishNavState(isMateMode) {
     updateInteractionNavItemState(INTERACTION_PUBLISH_NAV_ID, isMateMode === true, 'Mate');
     updateInteractionNavItemState(INTERACTION_CASCADE_NAV_ID, isMateMode !== true, 'Server');
@@ -2640,5 +2688,8 @@ if (document.readyState === 'loading') {
         }
         clearNavBodyLeafActive();
         fileItem.classList.add('active');
+        if (isMobileNavigation()) {
+            closeMobileSidebar();
+        }
     });
 })();
