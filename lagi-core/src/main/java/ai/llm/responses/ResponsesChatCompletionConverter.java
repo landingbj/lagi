@@ -409,6 +409,7 @@ public final class ResponsesChatCompletionConverter {
                 }
                 responseTool.setDescription(tool.getFunction().getDescription());
                 Parameters parameters = tool.getFunction().getParameters();
+                normalizeObjectSchemas(parameters);
                 Boolean strict = tool.getFunction().getStrict();
                 // Azure/OpenAI strict function mode requires required[] to contain every property key.
                 // If incoming schema is not strict-compatible, downgrade strict to avoid hard request failure.
@@ -428,10 +429,35 @@ public final class ResponsesChatCompletionConverter {
             return true;
         }
         List<String> required = parameters.getRequired();
-        if (required == null) {
+        if (required == null || !required.containsAll(parameters.getProperties().keySet())) {
             return false;
         }
-        return required.containsAll(parameters.getProperties().keySet());
+        for (Property property : parameters.getProperties().values()) {
+            if (!isStrictCompatible(property.getItems())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The Responses API requires every object schema, including array items, to
+     * explicitly reject undeclared properties.
+     */
+    private static void normalizeObjectSchemas(Parameters parameters) {
+        if (parameters == null) {
+            return;
+        }
+        if ("object".equals(parameters.getType())
+                || (parameters.getProperties() != null && !parameters.getProperties().isEmpty())) {
+            parameters.setAdditionalProperties(false);
+        }
+        if (parameters.getProperties() == null) {
+            return;
+        }
+        for (Property property : parameters.getProperties().values()) {
+            normalizeObjectSchemas(property.getItems());
+        }
     }
 
     private static Object toToolChoice(String toolChoice, List<ResponseTool> requestTools) {
