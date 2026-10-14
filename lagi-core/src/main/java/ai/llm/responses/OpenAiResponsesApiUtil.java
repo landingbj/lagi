@@ -3,6 +3,9 @@ package ai.llm.responses;
 import ai.llm.pojo.LlmApiResponse;
 import ai.llm.utils.OpenAiApiUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import okhttp3.Response;
 
 import java.net.Proxy;
@@ -30,7 +33,7 @@ public final class OpenAiResponsesApiUtil {
                                                 Object request,
                                                 Function<Response, Integer> convertErrorFunc,
                                                 Map<String, String> headers) {
-        return OpenAiApiUtil.completions(apiKey, apiUrl, timeout, GSON.toJson(request),
+        return OpenAiApiUtil.completions(apiKey, apiUrl, timeout, serializeRequest(request),
                 ResponsesChatCompletionConverter::convertResponse,
                 convertErrorFunc,
                 headers,
@@ -44,7 +47,7 @@ public final class OpenAiResponsesApiUtil {
                                                 Function<Response, Integer> convertErrorFunc,
                                                 Map<String, String> headers,
                                                 Proxy proxy) {
-        return OpenAiApiUtil.completions(apiKey, apiUrl, timeout, json,
+        return OpenAiApiUtil.completions(apiKey, apiUrl, timeout, normalizeSchemaJson(json),
                 ResponsesChatCompletionConverter::convertResponse,
                 convertErrorFunc,
                 headers,
@@ -66,7 +69,7 @@ public final class OpenAiResponsesApiUtil {
                                                 Object request,
                                                 Function<Response, Integer> convertErrorFunc,
                                                 Map<String, String> headers) {
-        return OpenAiApiUtil.streamCompletions(apiKey, apiUrl, timeout, GSON.toJson(request),
+        return OpenAiApiUtil.streamCompletions(apiKey, apiUrl, timeout, serializeRequest(request),
                 ResponsesChatCompletionConverter::convertStreamEvent,
                 convertErrorFunc,
                 headers,
@@ -80,10 +83,44 @@ public final class OpenAiResponsesApiUtil {
                                                 Function<Response, Integer> convertErrorFunc,
                                                 Map<String, String> headers,
                                                 Proxy proxy) {
-        return OpenAiApiUtil.streamCompletions(apiKey, apiUrl, timeout, json,
+        return OpenAiApiUtil.streamCompletions(apiKey, apiUrl, timeout, normalizeSchemaJson(json),
                 ResponsesChatCompletionConverter::convertStreamEvent,
                 convertErrorFunc,
                 headers,
                 proxy);
+    }
+
+    static String serializeRequest(Object request) {
+        return normalizeSchemaJson(GSON.toJson(request));
+    }
+
+    private static String normalizeSchemaJson(String json) {
+        JsonElement root = JsonParser.parseString(json);
+        normalizeObjectSchemas(root);
+        return GSON.toJson(root);
+    }
+
+    private static void normalizeObjectSchemas(JsonElement element) {
+        if (element == null || element.isJsonNull()) {
+            return;
+        }
+        if (element.isJsonArray()) {
+            for (JsonElement item : element.getAsJsonArray()) {
+                normalizeObjectSchemas(item);
+            }
+            return;
+        }
+        if (!element.isJsonObject()) {
+            return;
+        }
+        JsonObject object = element.getAsJsonObject();
+        JsonElement type = object.get("type");
+        if ((type != null && type.isJsonPrimitive() && "object".equals(type.getAsString()))
+                || object.has("properties")) {
+            object.addProperty("additionalProperties", false);
+        }
+        for (java.util.Map.Entry<String, JsonElement> entry : object.entrySet()) {
+            normalizeObjectSchemas(entry.getValue());
+        }
     }
 }

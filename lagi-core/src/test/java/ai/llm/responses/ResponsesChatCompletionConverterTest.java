@@ -3,16 +3,12 @@ package ai.llm.responses;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatMessage;
 import ai.openai.pojo.ChatCompletionResult;
-import ai.openai.pojo.Function;
-import ai.openai.pojo.Parameters;
-import ai.openai.pojo.Property;
-import ai.openai.pojo.Tool;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,40 +18,23 @@ class ResponsesChatCompletionConverterTest {
 
     @Test
     void shouldAddAdditionalPropertiesToNestedArrayObjectToolSchema() throws Exception {
-        Parameters questionItem = new Parameters();
-        questionItem.setType("object");
-        questionItem.setAdditionalProperties(null);
-        Property question = new Property();
-        question.setType("string");
-        questionItem.setProperties(Collections.singletonMap("question", question));
-        questionItem.setRequired(Collections.singletonList("question"));
-
-        Property questions = new Property();
-        questions.setType("array");
-        questions.setItems(questionItem);
-        Parameters root = new Parameters();
-        root.setType("object");
-        LinkedHashMap<String, Property> rootProperties = new LinkedHashMap<>();
-        rootProperties.put("questions", questions);
-        root.setProperties(rootProperties);
-        root.setRequired(Collections.singletonList("questions"));
-
-        Function function = new Function();
-        function.setName("ask_user_question");
-        function.setParameters(root);
-        Tool tool = new Tool();
-        tool.setType("function");
-        tool.setFunction(function);
-        ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setTools(Collections.singletonList(tool));
+        String harnessRequest = "{\"model\":\"gpt-5.4\",\"messages\":[],\"tools\":[{"
+                + "\"type\":\"function\",\"function\":{\"name\":\"ask_user_question\","
+                + "\"parameters\":{\"type\":\"object\",\"properties\":{\"questions\":{"
+                + "\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{"
+                + "\"question\":{\"type\":\"string\"}},\"required\":[\"question\"]}}},"
+                + "\"required\":[\"questions\"]}}}]}";
+        ChatCompletionRequest request = MAPPER.readValue(harnessRequest, ChatCompletionRequest.class);
 
         ResponseCreateRequest responseRequest = ResponsesChatCompletionConverter.toRequest(
                 request, new ResponseSessionContext(), "gpt-5.4");
-        JsonNode itemSchema = MAPPER.readTree(MAPPER.writeValueAsString(responseRequest))
-                .at("/tools/0/parameters/properties/questions/items");
+        JsonObject itemSchema = JsonParser.parseString(OpenAiResponsesApiUtil.serializeRequest(responseRequest)).getAsJsonObject()
+                .getAsJsonArray("tools").get(0).getAsJsonObject()
+                .getAsJsonObject("parameters").getAsJsonObject("properties")
+                .getAsJsonObject("questions").getAsJsonObject("items");
 
-        assertFalse(itemSchema.isMissingNode());
-        assertFalse(itemSchema.get("additionalProperties").asBoolean());
+        assertTrue(itemSchema.has("additionalProperties"));
+        assertFalse(itemSchema.get("additionalProperties").getAsBoolean());
     }
 
     @Test

@@ -687,6 +687,7 @@ public class LlmApiServlet extends BaseServlet {
                                 PrintWriter out, ChatCompletionRequest chatCompletionRequest, String apiKey) {
         final ChatCompletionResult[] lastResult = {null};
         final Map<Integer, ThinkTagContentFilter> thinkFilters = new HashMap<>();
+        final StreamCompletionTerminator terminator = new StreamCompletionTerminator();
         String key = UUID.randomUUID().toString();
         observable.subscribe(
                 data -> {
@@ -698,6 +699,7 @@ public class LlmApiServlet extends BaseServlet {
                         return;
                     }
                     stripThinkBlocks(filter, thinkFilters);
+                    terminator.observe(filter);
                     if (filter.getChoices() != null && !filter.getChoices().isEmpty() && filter.getChoices().get(0).getFinish_reason() != null) {
                         ChatCompletionChoice chatCompletionChoice = filter.getChoices().get(0);
                         String finishReason = chatCompletionChoice.getFinish_reason();
@@ -739,6 +741,11 @@ public class LlmApiServlet extends BaseServlet {
                         return;
                     }
                     extracted(lastResult, indexSearchDataList, context, out);
+                    ChatCompletionResult terminal = terminator.missingFinishChunk();
+                    if (terminal != null) {
+                        outputChunk(out, gson.toJson(terminal));
+                    }
+                    out.print("data: [DONE]\n\n");
                     out.flush();
                     out.close();
                     if (medusaMonitor != null && promptInput != null && lastResult[0] != null) {
@@ -828,7 +835,6 @@ public class LlmApiServlet extends BaseServlet {
             out.print("data: " + gson.toJson(lastResult[0]) + "\n\n");
             out.flush();
         }
-        out.print("data: " + "[DONE]" + "\n\n");
     }
 
     private void embeddings(HttpServletRequest req, HttpServletResponse resp) throws IOException {
