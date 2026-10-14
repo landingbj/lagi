@@ -22,6 +22,7 @@ import ai.llm.service.CompletionsService;
 import ai.llm.service.LlmRouterDispatcher;
 import ai.llm.utils.CompletionUtil;
 import ai.llm.utils.LLMErrorConstants;
+import ai.llm.utils.ThinkTagContentFilter;
 import ai.manager.LlmManager;
 import ai.medusa.MedusaMonitor;
 import ai.medusa.MedusaService;
@@ -414,6 +415,7 @@ public class LlmApiServlet extends BaseServlet {
                     CompletionUtil.populateContext(result, indexSearchDataList, context.getContext());
                     addChunkIds(result, context);
                 }
+                stripThinkBlocks(result);
                 if (medusaMonitor != null) {
                     medusaMonitor.put(medusaService.getPromptInput(chatCompletionRequest), result);
                 }
@@ -684,6 +686,7 @@ public class LlmApiServlet extends BaseServlet {
                                 GetRagContext context, List<IndexSearchData> indexSearchDataList,
                                 PrintWriter out, ChatCompletionRequest chatCompletionRequest, String apiKey) {
         final ChatCompletionResult[] lastResult = {null};
+        final Map<Integer, ThinkTagContentFilter> thinkFilters = new HashMap<>();
         String key = UUID.randomUUID().toString();
         observable.subscribe(
                 data -> {
@@ -694,6 +697,7 @@ public class LlmApiServlet extends BaseServlet {
                     if (filter == null) {
                         return;
                     }
+                    stripThinkBlocks(filter, thinkFilters);
                     if (filter.getChoices() != null && !filter.getChoices().isEmpty() && filter.getChoices().get(0).getFinish_reason() != null) {
                         ChatCompletionChoice chatCompletionChoice = filter.getChoices().get(0);
                         String finishReason = chatCompletionChoice.getFinish_reason();
@@ -743,6 +747,48 @@ public class LlmApiServlet extends BaseServlet {
                     }
                 }
         );
+    }
+
+    private void stripThinkBlocks(ChatCompletionResult result) {
+        if (result == null || result.getChoices() == null) {
+            return;
+        }
+        for (ChatCompletionChoice choice : result.getChoices()) {
+            if (choice == null) {
+                continue;
+            }
+            ThinkTagContentFilter filter = new ThinkTagContentFilter();
+            ChatMessage message = choice.getMessage();
+            ChatMessage delta = choice.getDelta();
+            if (message != null && message.getContent() != null) {
+                message.setContent(filter.filter(message.getContent()));
+            } else if (delta != null && delta.getContent() != null) {
+                delta.setContent(filter.filter(delta.getContent()));
+            }
+        }
+    }
+
+    private void stripThinkBlocks(ChatCompletionResult result, Map<Integer, ThinkTagContentFilter> filters) {
+        if (result == null || result.getChoices() == null) {
+            return;
+        }
+        for (ChatCompletionChoice choice : result.getChoices()) {
+            if (choice == null) {
+                continue;
+            }
+            ThinkTagContentFilter filter = filters.computeIfAbsent(choice.getIndex(), ignored -> new ThinkTagContentFilter());
+            ChatMessage delta = choice.getDelta();
+            ChatMessage message = choice.getMessage();
+            if (delta != null && delta.getContent() != null) {
+                String visible = filter.filter(delta.getContent());
+                delta.setContent(visible);
+                if (message != null && message.getContent() != null) {
+                    message.setContent(visible);
+                }
+            } else if (message != null && message.getContent() != null) {
+                message.setContent(filter.filter(message.getContent()));
+            }
+        }
     }
 
     private void outputChunk(PrintWriter out, String msg) {
