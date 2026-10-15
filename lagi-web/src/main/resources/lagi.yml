@@ -359,7 +359,7 @@ filters:
           # Rule Explanation: A single rule supports regular expressions but requires using \\, to replace the original ,
           rules: >-
             your context,
-            根据\w{0\\,6}上下文,依据您提供的上下文,
+            根据\w{0\,6}上下文,依据您提供的上下文,
             ぶんみゃくにもとづいて,せいじてき,いけん,しそう
         # Block the output of sensitive words/sentences
         - level: block
