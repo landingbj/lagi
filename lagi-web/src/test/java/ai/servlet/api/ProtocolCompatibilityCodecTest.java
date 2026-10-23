@@ -4,6 +4,7 @@ import ai.openai.pojo.ChatCompletionChoice;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.openai.pojo.Tool;
 import ai.openai.pojo.ToolCall;
 import ai.openai.pojo.ToolCallFunction;
 import ai.openai.pojo.Usage;
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ProtocolCompatibilityCodecTest {
@@ -63,6 +65,22 @@ class ProtocolCompatibilityCodecTest {
         assertEquals("first request", converted.getMessages().get(1).getContent());
         assertEquals("assistant", converted.getMessages().get(2).getRole());
         assertEquals("current request", converted.getMessages().get(3).getContent());
+    }
+
+    @Test
+    void doesNotAddOpenAiStrictFlagToAnthropicTools() throws Exception {
+        JsonNode request = MAPPER.readTree("{"
+                + "\"model\":\"claude-sonnet\",\"max_tokens\":512,"
+                + "\"system\":\"Use the provided tools\","
+                + "\"messages\":[{\"role\":\"user\",\"content\":\"read a file\"}],"
+                + "\"tools\":[{\"name\":\"read_file\",\"description\":\"Read a file\","
+                + "\"input_schema\":{\"type\":\"object\"}}]}");
+
+        ChatCompletionRequest converted = codec.toAnthropicRequest(request);
+
+        Tool tool = converted.getTools().get(0);
+        assertEquals("read_file", tool.getFunction().getName());
+        assertNull(tool.getFunction().getStrict());
     }
 
     @Test

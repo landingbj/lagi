@@ -334,6 +334,9 @@ public final class ProtocolCompatibilityCodec {
             Function function = new Function();
             function.setName(requiredText(source, "name"));
             function.setDescription(text(source.get("description")));
+            // Anthropic tool schemas do not define OpenAI's strict flag. Do not
+            // synthesize it while routing Claude-compatible requests upstream.
+            function.setStrict(null);
             function.setParameters(toParameters(source.get("input_schema")));
             tool.setFunction(function);
             tools.add(tool);
