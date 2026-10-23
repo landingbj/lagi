@@ -123,8 +123,8 @@ final class ModelPriceCatalog {
         add(prices, "zai", "USD", "1.2", "4", "glm-5-turbo");
         add(prices, "zai", "USD", "1.4", "4.4", "glm-5.1");
 
-        add(prices, "minimax", "CNY", "2.1", "8.4", "MiniMax-M2.5", "MiniMax-M2.7");
-        add(prices, "minimax", "CNY", "4.2", "16.8", "MiniMax-M2.5-highspeed", "MiniMax-M2.7-highspeed");
+        add(prices, "minimax", "CNY", "2.1", "8.4", "MiniMax-M2.5");
+        add(prices, "minimax", "CNY", "4.2", "16.8", "MiniMax-M2.5-highspeed");
 
         add(prices, "ByteDance", "CNY", "3.2", "16", "doubao-seed-2-0-code-preview-260215", "doubao-seed-2-0-pro-260215");
         add(prices, "ByteDance", "CNY", "0.6", "3.6", "doubao-seed-2-0-lite-260215");
