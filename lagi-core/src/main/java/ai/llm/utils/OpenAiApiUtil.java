@@ -149,6 +149,7 @@ public class OpenAiApiUtil {
                 // Claude's current OpenAI-compatible endpoint rejects this
                 // deprecated parameter, even when it has the default value.
                 ((ObjectNode) root).remove("temperature");
+                removeOpenAiStrictFlagsFromClaudeTools((ObjectNode) root);
             }
             JsonNode messages = root.get("messages");
             if (messages == null || !messages.isArray()) {
@@ -184,6 +185,30 @@ public class OpenAiApiUtil {
         int providerSeparator = normalized.lastIndexOf('/');
         String modelName = providerSeparator >= 0 ? normalized.substring(providerSeparator + 1) : normalized;
         return modelName.startsWith("claude");
+    }
+
+    /**
+     * Claude's OpenAI-compatible endpoint accepts function tools but rejects
+     * OpenAI's optional {@code strict} extension. The internal Function POJO
+     * defaults it to true, so remove it only for Claude requests at the final
+     * outbound serialization boundary.
+     */
+    private static void removeOpenAiStrictFlagsFromClaudeTools(ObjectNode root) {
+        JsonNode tools = root.get("tools");
+        if (tools == null || !tools.isArray()) {
+            return;
+        }
+        for (JsonNode tool : tools) {
+            if (!(tool instanceof ObjectNode)) {
+                continue;
+            }
+            ObjectNode objectTool = (ObjectNode) tool;
+            objectTool.remove("strict");
+            JsonNode function = objectTool.get("function");
+            if (function instanceof ObjectNode) {
+                ((ObjectNode) function).remove("strict");
+            }
+        }
     }
 
     public static LlmApiResponse streamCompletions(String apikey, String apiUrl,
