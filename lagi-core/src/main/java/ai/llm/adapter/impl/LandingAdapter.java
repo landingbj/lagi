@@ -1,30 +1,26 @@
 package ai.llm.adapter.impl;
 
 
-import ai.common.db.HikariDS;
+import ai.common.exception.RRException;
 import ai.config.ConfigUtil;
+import ai.llm.adapter.ILlmAdapter;
+import ai.llm.utils.LLMErrorConstants;
 import ai.llm.utils.ExtraBodyUtil;
+import ai.manager.LlmManager;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.utils.MultimodalTraceUtil;
 import ai.openai.pojo.ExtraBody;
-import ai.utils.ApikeyUtil;
 import io.reactivex.Observable;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 public class LandingAdapter extends OpenAIStandardAdapter {
     private final String DEFAULT_BASE_URL = "https://lagi.saasai.top";
 
     @Override
     public ChatCompletionResult completions(ChatCompletionRequest chatCompletionRequest) {
-        if (isFinalServer()) {
-            normalizeModelNameIfSlashSeparated(chatCompletionRequest);
-            if (ApikeyUtil.isLandingKey(chatCompletionRequest.getApiKey())) {
-                chatCompletionRequest.setApiKey(ApikeyUtil.getModelKey(chatCompletionRequest.getModel()));
-            }
+        ILlmAdapter finalAdapter = resolveFinalAdapter(chatCompletionRequest);
+        if (finalAdapter != null) {
+            return finalAdapter.completions(chatCompletionRequest);
         }
         MultimodalTraceUtil.logRequest("landing-dispatch", chatCompletionRequest, getApiAddress());
         return super.completions(chatCompletionRequest);
@@ -32,14 +28,41 @@ public class LandingAdapter extends OpenAIStandardAdapter {
 
     @Override
     public Observable<ChatCompletionResult> streamCompletions(ChatCompletionRequest chatCompletionRequest) {
-        if (isFinalServer()) {
-            normalizeModelNameIfSlashSeparated(chatCompletionRequest);
-            if (ApikeyUtil.isLandingKey(chatCompletionRequest.getApiKey())) {
-                chatCompletionRequest.setApiKey(ApikeyUtil.getModelKey(chatCompletionRequest.getModel()));
-            }
+        ILlmAdapter finalAdapter = resolveFinalAdapter(chatCompletionRequest);
+        if (finalAdapter != null) {
+            return finalAdapter.streamCompletions(chatCompletionRequest);
         }
         MultimodalTraceUtil.logRequest("landing-dispatch", chatCompletionRequest, getApiAddress());
         return super.streamCompletions(chatCompletionRequest);
+    }
+
+    /**
+     * A box sends provider-prefixed cloud aliases back to the final LinkMind
+     * server. At that point the request must leave through the configured
+     * provider adapter, not call this server's HTTP endpoint again.
+     */
+    private ILlmAdapter resolveFinalAdapter(ChatCompletionRequest request) {
+        if (!isFinalServer() || request == null || request.getModel() == null
+                || request.getModel().indexOf('/') < 0) {
+            return null;
+        }
+        normalizeModelNameIfSlashSeparated(request);
+        ILlmAdapter target = LlmManager.getInstance().getAdapter(request.getModel());
+        if (target == null || isLandingAdapter(target)) {
+            throw new RRException(LLMErrorConstants.NO_AVAILABLE_MODEL,
+                    "{\"error\":\"No configured upstream for model: " + request.getModel() + ".\"}");
+        }
+
+        // A first-hop key must not override the target provider's configured key.
+        request.setSelectedBackendApiKey(null);
+        return target;
+    }
+
+    private boolean isLandingAdapter(ILlmAdapter adapter) {
+        if (adapter instanceof ProxyLlmAdapter) {
+            adapter = ((ProxyLlmAdapter) adapter).getLlmAdapter();
+        }
+        return adapter instanceof LandingAdapter;
     }
 
     /**
