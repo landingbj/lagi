@@ -3,6 +3,8 @@ package ai.llm.utils;
 import ai.openai.pojo.ChatCompletionRequest;
 import ai.openai.pojo.ChatCompletionResult;
 import ai.openai.pojo.ChatMessage;
+import ai.openai.pojo.Function;
+import ai.openai.pojo.Tool;
 import com.sun.net.httpserver.HttpServer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -131,6 +133,22 @@ class OpenAiApiUtilTest {
         JsonNode payload = MAPPER.readTree(OpenAiApiUtil.serializeChatCompletionRequest(request));
 
         assertFalse(payload.has("temperature"));
+    }
+
+    @Test
+    void omitsOpenAiStrictFlagFromClaudeTools() throws Exception {
+        Function function = new Function();
+        function.setName("read_file");
+        Tool tool = new Tool();
+        tool.setType("function");
+        tool.setFunction(function);
+        ChatCompletionRequest request = new ChatCompletionRequest();
+        request.setModel("claude-opus-5");
+        request.setTools(Collections.singletonList(tool));
+
+        JsonNode payload = MAPPER.readTree(OpenAiApiUtil.serializeChatCompletionRequest(request));
+
+        assertFalse(payload.path("tools").get(0).path("function").has("strict"));
     }
 
     @Test
